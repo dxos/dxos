@@ -16,13 +16,15 @@ class Client {
   toJSON()
   initialize()
   destroy()
+  getStatus()
   reset()
+  createSerializer()
 }
 Client --> ClientServicesProvider : _services
 Client --> HaloProxy : _halo
 Client --> EchoProxy : _echo
 class ClientServicesProvider {
-<interface>
+  <interface>
   descriptors
   services
   open()
@@ -31,16 +33,20 @@ class ClientServicesProvider {
 class HaloProxy {
   profile
   invitations
+  opened
   toJSON()
+  open()
+  close()
   subscribeToProfile()
   createProfile()
   recoverProfile()
   queryContacts()
-  createInvitation()
-  acceptInvitation()
   queryDevices()
+  createInvitation()
+  removeInvitation()
+  acceptInvitation()
 }
-HaloProxy *-- HaloInvitationsProxy : _invitationProxy
+HaloProxy --> HaloInvitationsProxy : _invitationProxy
 HaloProxy --> ClientServicesProvider : _serviceProvider
 class HaloInvitationsProxy {
   getInvitationOptions()
@@ -48,7 +54,10 @@ class HaloInvitationsProxy {
 class EchoProxy {
   modelFactory
   networkManager
+  opened
   toJSON()
+  open()
+  close()
   createSpace()
   cloneSpace()
   getSpace()
@@ -56,7 +65,7 @@ class EchoProxy {
   acceptInvitation()
 }
 EchoProxy *-- "Map" SpaceProxy : _spaces
-EchoProxy *-- SpaceInvitationsProxy : _invitationProxy
+EchoProxy --> SpaceInvitationsProxy : _invitationProxy
 EchoProxy --> ClientServicesProvider : _serviceProvider
 EchoProxy --> HaloProxy : _haloProxy
 class SpaceProxy {
@@ -73,7 +82,6 @@ class SpaceProxy {
   open()
   close()
   getDetails()
-  _setOpen()
   setActive()
   setTitle()
   getTitle()
@@ -81,7 +89,9 @@ class SpaceProxy {
   getProperty()
   queryMembers()
   createInvitation()
+  removeInvitation()
   createSnapshot()
+  _setOpen()
   _processSpaceUpdate()
 }
 SpaceProxy *-- SpaceInvitationsProxy : _invitationProxy
@@ -91,9 +101,7 @@ class SpaceInvitationsProxy {
   getInvitationOptions()
 }
 class Space {
-<interface>
-  initialize()
-  destroy()
+  <interface>
   open()
   close()
   setActive()
@@ -104,6 +112,7 @@ class Space {
   getProperty()
   queryMembers()
   createInvitation()
+  removeInvitation()
   createSnapshot()
 }
 ```
@@ -129,6 +138,8 @@ subgraph sdk [sdk]
   click dxos/client-services "dxos/dxos/tree/main/packages/sdk/client-services/docs"
   dxos/config("@dxos/config"):::def
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
+  dxos/errors("@dxos/errors"):::def
+  click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
 end
 
 subgraph common [common]
@@ -196,6 +207,10 @@ subgraph core [core]
     click dxos/network-generator "dxos/dxos/tree/main/packages/core/mesh/network-generator/docs"
     dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
     click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
+    dxos/teleport("@dxos/teleport"):::def
+    click dxos/teleport "dxos/dxos/tree/main/packages/core/mesh/teleport/docs"
+    dxos/teleport-plugin-replicator("@dxos/teleport-plugin-replicator"):::def
+    click dxos/teleport-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/teleport-plugin-replicator/docs"
     dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
     click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
   end
@@ -217,6 +232,7 @@ end
 dxos/async --> dxos/context
 dxos/client --> dxos/client-services
 dxos/client-services --> dxos/config
+dxos/config --> dxos/errors
 dxos/config --> dxos/protocols
 dxos/protocols --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf
@@ -249,6 +265,10 @@ dxos/protocol-plugin-replicator --> dxos/network-generator
 dxos/echo-db --> dxos/protocol-plugin-rpc
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol
 dxos/protocol-plugin-rpc --> dxos/messaging
+dxos/teleport --> dxos/rpc
+dxos/echo-db --> dxos/teleport-plugin-replicator
+dxos/teleport-plugin-replicator --> dxos/feed-store
+dxos/teleport-plugin-replicator --> dxos/teleport
 dxos/client-services --> dxos/text-model
 dxos/text-model --> dxos/echo-db
 dxos/client --> dxos/rpc-tunnel
@@ -262,13 +282,14 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |
 | [`@dxos/broadcast`](../../../core/mesh/broadcast/docs/README.md) |  |
 | [`@dxos/client-services`](../../client-services/docs/README.md) | &check; |
-| [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
+| [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) |  |
 | [`@dxos/config`](../../config/docs/README.md) | &check; |
 | [`@dxos/context`](../../../common/context/docs/README.md) |  |
-| [`@dxos/credentials`](../../../core/halo/credentials/docs/README.md) |  |
-| [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
+| [`@dxos/credentials`](../../../core/halo/credentials/docs/README.md) | &check; |
+| [`@dxos/crypto`](../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/echo-db`](../../../core/echo/echo-db/docs/README.md) | &check; |
+| [`@dxos/errors`](../../errors/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
 | [`@dxos/hypercore`](../../../common/hypercore/docs/README.md) |  |
 | [`@dxos/keyring`](../../../core/halo/keyring/docs/README.md) |  |
@@ -278,8 +299,8 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/messaging`](../../../core/mesh/messaging/docs/README.md) | &check; |
 | [`@dxos/model-factory`](../../../core/echo/model-factory/docs/README.md) | &check; |
 | [`@dxos/network-generator`](../../../core/mesh/network-generator/docs/README.md) |  |
-| [`@dxos/network-manager`](../../../core/mesh/network-manager/docs/README.md) |  |
-| [`@dxos/object-model`](../../../core/echo/object-model/docs/README.md) |  |
+| [`@dxos/network-manager`](../../../core/mesh/network-manager/docs/README.md) | &check; |
+| [`@dxos/object-model`](../../../core/echo/object-model/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-presence`](../../../core/mesh/protocol-plugin-presence/docs/README.md) |  |
 | [`@dxos/protocol-plugin-replicator`](../../../core/mesh/protocol-plugin-replicator/docs/README.md) |  |
 | [`@dxos/protocol-plugin-rpc`](../../../core/mesh/protocol-plugin-rpc/docs/README.md) |  |
@@ -287,6 +308,8 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) | &check; |
-| [`@dxos/text-model`](../../../core/echo/text-model/docs/README.md) |  |
-| [`@dxos/timeframe`](../../../common/timeframe/docs/README.md) | &check; |
+| [`@dxos/teleport`](../../../core/mesh/teleport/docs/README.md) |  |
+| [`@dxos/teleport-plugin-replicator`](../../../core/mesh/teleport-plugin-replicator/docs/README.md) |  |
+| [`@dxos/text-model`](../../../core/echo/text-model/docs/README.md) | &check; |
+| [`@dxos/timeframe`](../../../common/timeframe/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

@@ -7,7 +7,6 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Protocol } from '@dxos/mesh-protocol';
 import { Messenger, SignalManager } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
@@ -16,9 +15,11 @@ import { SignalConnection } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { TransportFactory } from './transport';
+import { WireProtocolProvider } from './wire-protocol';
 
-export type ProtocolProvider = (opts: { channel: Buffer; initiator: boolean }) => Protocol;
-
+/**
+ * Represents a single connection to a remote peer.
+ */
 export type SwarmConnection = {
   close(): Promise<void>;
 };
@@ -38,7 +39,7 @@ export type SwarmOptions = {
   /**
    * Protocol to use for every connection.
    */
-  protocol: ProtocolProvider;
+  protocolProvider: WireProtocolProvider;
 
   /**
    * Requested topology. Must be a new instance for every swarm.
@@ -48,6 +49,7 @@ export type SwarmOptions = {
   /**
    * Presence plugin for network mapping, if exists.
    */
+  // TODO(dmaretskyi): Remove this dependency.
   presence?: any;
 
   /**
@@ -134,7 +136,14 @@ export class NetworkManager {
    * Join the swarm.
    */
   // TODO(burdon): Join/Open? Swarm abstraction?
-  async joinSwarm({ topic, peerId, topology, protocol, presence, label }: SwarmOptions): Promise<SwarmConnection> {
+  async joinSwarm({
+    topic,
+    peerId,
+    topology,
+    protocolProvider: protocol,
+    presence,
+    label
+  }: SwarmOptions): Promise<SwarmConnection> {
     assert(PublicKey.isPublicKey(topic));
     assert(PublicKey.isPublicKey(peerId));
     assert(topology);

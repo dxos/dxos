@@ -21,6 +21,8 @@ subgraph sdk [sdk]
   click dxos/vite-plugin "dxos/dxos/tree/main/packages/sdk/vite-plugin/docs"
   dxos/config("@dxos/config"):::def
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
+  dxos/errors("@dxos/errors"):::def
+  click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
 end
 
 subgraph common [common]
@@ -62,6 +64,7 @@ end
 %% Links
 dxos/vite-plugin --> dxos/config
 dxos/async --> dxos/context
+dxos/config --> dxos/errors
 dxos/config --> dxos/protocols
 dxos/protocols --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf
@@ -80,6 +83,7 @@ dxos/protocols --> dxos/timeframe
 | [`@dxos/context`](../../../common/context/docs/README.md) |  |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
+| [`@dxos/errors`](../../errors/docs/README.md) |  |
 | [`@dxos/hypercore`](../../../common/hypercore/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) |  |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |

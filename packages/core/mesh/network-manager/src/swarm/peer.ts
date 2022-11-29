@@ -7,10 +7,10 @@ import assert from 'assert';
 import { synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Protocol } from '@dxos/mesh-protocol';
 
 import { SignalMessage, SignalMessenger } from '../signal';
 import { TransportFactory } from '../transport';
+import { WireProtocol } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
 
 interface PeerCallbacks {
@@ -59,7 +59,7 @@ export class Peer {
     signalMessaging: SignalMessenger,
     initiator: boolean,
     sessionId: PublicKey,
-    protocol: Protocol,
+    protocol: WireProtocol,
     transportFactory: TransportFactory
   ) {
     log('creating connection', {
