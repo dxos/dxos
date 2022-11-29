@@ -6,11 +6,22 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/echo/echo-db/src/index.ts",
-        "outputPath": "packages/core/echo/echo-db/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/echo/echo-db/dist/types",
         "tsConfig": "packages/core/echo/echo-db/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-db/src/index.ts",
+          "packages/core/echo/echo-db/src/packlets/testing/index.ts"
+        ],
+        "outputPath": "packages/core/echo/echo-db/dist/lib",
+        "platforms": ["node", "browser"]
       },
       "outputs": [
         "{options.outputPath}"
@@ -51,6 +62,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }
