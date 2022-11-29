@@ -346,7 +346,6 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
-      classnames: ^2.3.2
       debug: ^4.3.3
       phosphor-react: ^1.4.1
       react: ^18.2.0
@@ -378,7 +377,6 @@ importers:
       '@dxos/util': link:../../common/util
       '@react-hook/async': 3.1.1_react@18.2.0
       '@sentry/react': 7.20.0_react@18.2.0
-      classnames: 2.3.2
       debug: 4.3.4
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
