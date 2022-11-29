@@ -5,3 +5,4 @@
 import * as nodeCrypto from 'node:crypto';
 
 export const subtleCrypto = nodeCrypto.webcrypto.subtle;
+export const getRandomValues = nodeCrypto.webcrypto.getRandomValues;

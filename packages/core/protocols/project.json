@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/protocols/src/index.ts",
-        "outputPath": "packages/core/protocols/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/protocols/dist/types",
         "tsConfig": "packages/core/protocols/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/protocols/src/index.ts"
+        ],
+        "outputPath": "packages/core/protocols/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

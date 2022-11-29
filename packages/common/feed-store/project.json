@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/common/feed-store/src/index.ts"
+          "packages/common/feed-store/src/index.ts",
+          "packages/common/feed-store/src/testing/index.ts"
         ],
         "outputPath": "packages/common/feed-store/dist/lib",
         "platforms": [

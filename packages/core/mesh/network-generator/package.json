@@ -7,24 +7,28 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node.js",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "node:events": "events",
+    "node:stream": "readable-stream",
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "index.js",
-    "src",
-    "README.md"
+    "src"
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "end-of-stream": "^1.4.1",
+    "events": "^3.3.0",
     "ngraph.generators": "^19.0.1",
-    "ngraph.graph": "^19.0.1"
+    "ngraph.graph": "^19.0.1",
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@types/assert": "^1.5.4",

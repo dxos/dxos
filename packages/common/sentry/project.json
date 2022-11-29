@@ -20,7 +20,10 @@
           "packages/common/sentry/src/index.ts"
         ],
         "outputPath": "packages/common/sentry/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

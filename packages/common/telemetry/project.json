@@ -13,19 +13,6 @@
         "{options.outputPath}"
       ]
     },
-    "compile": {
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/common/telemetry/src/index.ts"
-        ],
-        "outputPath": "packages/common/telemetry/dist/lib",
-        "platforms": ["node", "browser"]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "bundle": {
       "executor": "@dxos/esbuild:bundle",
       "options": {
@@ -39,6 +26,22 @@
       },
       "outputs": [
         "{options.outfile}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/telemetry/src/index.ts"
+        ],
+        "outputPath": "packages/common/telemetry/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     },
     "lint": {

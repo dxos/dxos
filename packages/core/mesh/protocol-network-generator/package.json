@@ -7,20 +7,25 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node.js",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "node:events": "events",
+    "node:stream": "readable-stream",
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "index.js"
+    "src"
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/network-generator": "workspace:*",
     "assert": "^2.0.0",
-    "pump": "^3.0.0"
+    "events": "^3.3.0",
+    "pump": "^3.0.0",
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@dxos/mesh-protocol": "workspace:*",

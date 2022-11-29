@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-import { Duplex } from 'stream';
+import assert from 'node:assert';
+import { Duplex } from 'node:stream';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';

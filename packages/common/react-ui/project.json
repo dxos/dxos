@@ -13,6 +13,20 @@
         "{options.outputPath}"
       ]
     },
+    "compile": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile-lib react-ui",
+          "nx compile-plugin react-ui"
+        ],
+        "parallel": true
+      },
+      "outputs": [
+        "packages/common/react-ui/dist/lib",
+        "packages/common/react-ui/dist/plugin"
+      ]
+    },
     "compile-lib": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -20,7 +34,9 @@
           "packages/common/react-ui/src/index.ts"
         ],
         "outputPath": "packages/common/react-ui/dist/lib",
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -34,24 +50,12 @@
           "packages/common/react-ui/src/theme.css"
         ],
         "outputPath": "packages/common/react-ui/dist/plugin",
-        "platforms": ["node"]
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
-      ]
-    },
-    "compile": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx compile-lib react-ui",
-          "nx compile-plugin react-ui"
-        ],
-        "parallel": true
-      },
-      "outputs": [
-        "packages/common/react-ui/dist/lib",
-        "packages/common/react-ui/dist/plugin"
       ]
     },
     "lint": {

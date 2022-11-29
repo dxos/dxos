@@ -2,13 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import crypto from 'crypto';
 import eos from 'end-of-stream';
 import { EventEmitter } from 'events';
 import { EventedType } from 'ngraph.events';
 import createGraph, { Graph } from 'ngraph.graph';
 import assert from 'node:assert';
-import { PassThrough, Stream } from 'stream';
+import { PassThrough, Stream } from 'node:stream';
+
+import { getRandomValues } from '@dxos/crypto';
 
 export interface CreateStreamOptions {
   initiator?: boolean;
@@ -51,7 +52,7 @@ export class IdGenerator {
       return this._ids.get(id);
     }
 
-    const newId = crypto.randomBytes(32);
+    const newId = getRandomValues(new Uint8Array(32));
     this._ids.set(id, newId);
     return newId;
   }
@@ -162,7 +163,9 @@ export class Network extends EventEmitter {
 
     const fromHex = from.toString('hex');
     const toHex = to.toString('hex');
-    const id = `${fromHex}-${toHex}-${crypto.randomBytes(6).toString('hex')}`;
+    // TODO(wittjosiah): Utility to convert uint8array to hex.
+    const nonce = Buffer.from(getRandomValues(new Uint8Array(6))).toString('hex');
+    const id = `${fromHex}-${toHex}-${nonce}`;
 
     const connection = this._addConnection(from, to, conn).finally(() => {
       this._connectionsOpening.delete(id);
