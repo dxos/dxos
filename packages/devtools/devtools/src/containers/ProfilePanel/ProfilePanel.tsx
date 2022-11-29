@@ -4,18 +4,12 @@
 
 import React from 'react';
 
-import { useIdentity } from '@dxos/react-client';
+import { useDevices, useIdentity } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
 export const ProfilePanel = () => {
   const profile = useIdentity();
+  const devices = useDevices();
 
-  return (
-    <JsonTreeView
-      size='small'
-      depth={4}
-      data={profile}
-      sx={{ marginTop: 1 }}
-    />
-  );
+  return <JsonTreeView size='medium' data={{ ...profile, devices }} sx={{ marginTop: 1 }} truncateLength={65} />;
 };
