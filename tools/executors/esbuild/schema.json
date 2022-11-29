@@ -5,25 +5,30 @@
   "properties": {
     "bundle": {
       "type": "boolean",
-      "description": "",
+      "description": "Whether or not to bundle the build output",
       "default": true
     },
     "bundlePackages": {
       "type": "array",
-      "description": "",
+      "description": "List of packages to include in the bundle, anything not in this list will be marked as external",
       "default": []
     },
     "entryPoints": {
       "type": "array",
-      "description": ""
+      "description": "List of entrypoints for esbuild to build from"
+    },
+    "metafile": {
+      "type": "boolean",
+      "description": "Whether or not to output a build meta file",
+      "default": true
     },
     "outputPath": {
       "type": "string",
-      "description": ""
+      "description": "Directory to output build files"
     },
     "platforms": {
       "type": "array",
-      "description": "",
+      "description": "List of platforms to create individual bundles for",
       "default": ["neutral"]
     }
   },
