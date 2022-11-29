@@ -25,7 +25,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/mesh-protocol": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -40,6 +39,7 @@
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
+    "@dxos/mesh-protocol": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@swc-node/register": "^1.5.4",
@@ -47,7 +47,7 @@
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",
-    "fast-check": "~2.14.0",
+    "fast-check": "~3.3.0",
     "typescript": "^4.8.4"
   },
   "publishConfig": {
