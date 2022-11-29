@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@mdx-js/rollup": "^2.1.5",
+    "@react-pdf/renderer": "^3.0.1",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/typography": "^0.5.8",
     "@types/react": "^18.0.21",
