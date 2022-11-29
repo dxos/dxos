@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { extendTailwindMerge } from 'tailwind-merge';
+import { extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { withLogical } from './withLogical';
 
@@ -19,7 +19,8 @@ export const mx = extendTailwindMerge(
         'font-semibold',
         'font-bold',
         'font-extrabold',
-        'font-black'
+        'font-black',
+        validators.isArbitraryNumber
       ]
     }
   },
