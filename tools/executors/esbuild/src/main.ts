@@ -32,6 +32,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       const outdir = options.entryPoints.length > 1 ? `${options.outputPath}/${platform}` : undefined;
       const outfile = options.entryPoints.length <= 1 ? `${options.outputPath}/${platform}.js` : undefined;
 
+
       return build({
         entryPoints: options.entryPoints,
         outdir,
@@ -47,9 +48,14 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           }),
           {
             name: 'log-transform',
-            setup: ({ onLoad }) => {
+            setup: ({ onLoad, onEnd }) => {
+              let files = 0, time = 0;
+
               onLoad({ filter: /\.ts/ }, async (args) => {
                 const source = await readFile(args.path, 'utf8');
+
+                const startTime = Date.now();
+
                 const sourceFile = ts.createSourceFile(
                   args.path,
                   source,
@@ -58,11 +64,21 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                   ts.ScriptKind.TS
                 );
                 const transformed = transformSourceFile(sourceFile, (ts as any).nullTransformationContext);
+
+                time += Date.now() - startTime;
+                files++;
+
                 return {
                   contents: ts.createPrinter().printFile(transformed),
                   loader: 'ts'
                 };
               });
+
+              onEnd(() => {
+                if(false) {
+                  console.log(`Log preprocessing took ${time}ms for ${files} files (${(time / files).toFixed(0)} ms/file).`);
+                }
+              })
             }
           }
         ]
