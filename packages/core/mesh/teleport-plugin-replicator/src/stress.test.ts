@@ -165,6 +165,31 @@ describe('stress-tests', function () {
     );
   });
 
+  it('example with two feeds', async function () {
+    const keyring = new Keyring();
+    const feedKey1 = await keyring.createKey();
+    const feedKey2 = await keyring.createKey();
+
+    const system = await factory(keyring)();
+    afterTest(async () => {
+      await system.real.agent1.destroy();
+      await system.real.agent2.destroy();
+    });
+
+    await fc.asyncModelRun(
+      () => system,
+      [
+        new OpenFeedCommand('agent1', feedKey1),
+        new OpenFeedCommand('agent2', feedKey1),
+        new WriteToFeedCommand('agent1', feedKey1, 10),
+        new OpenFeedCommand('agent1', feedKey2),
+        new OpenFeedCommand('agent2', feedKey2),
+        new WriteToFeedCommand('agent1', feedKey2, 10),
+        new CheckCommand()
+      ]
+    );
+  });
+
   /**
    * Simulates two peers in a single session, replicating multiple feeds between each other.
    * Feeds are randomly created and appended.
