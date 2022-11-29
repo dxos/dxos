@@ -466,7 +466,6 @@ importers:
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      classnames: ^2.3.2
       prosemirror-model: ^1.7.1
       prosemirror-view: ^1.9.10
       react: ^18.2.0
@@ -488,7 +487,6 @@ importers:
       '@tiptap/extension-placeholder': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
       '@tiptap/starter-kit': 2.0.0-beta.199
-      classnames: 2.3.2
       prosemirror-model: 1.18.3
       prosemirror-view: 1.29.1
       react: 18.2.0
@@ -515,7 +513,6 @@ importers:
       '@types/lodash.debounce': ^4.0.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      classnames: ^2.3.2
       lodash.debounce: ^4.0.8
       phosphor-react: ^1.4.1
       react: ^18.2.0
@@ -529,7 +526,6 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
-      classnames: 2.3.2
       lodash.debounce: 4.0.8
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
