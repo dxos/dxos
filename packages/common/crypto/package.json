@@ -17,9 +17,6 @@
     "dist",
     "src"
   ],
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/keys": "workspace:*",
     "assert": "^2.0.0",

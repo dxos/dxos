@@ -16,9 +16,6 @@
   "scripts": {
     "book": "esbuild-server book"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/gem-core": "workspace:*",
     "clsx": "^1.1.1",

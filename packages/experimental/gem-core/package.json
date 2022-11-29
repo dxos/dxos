@@ -16,9 +16,6 @@
   "scripts": {
     "book": "esbuild-server book"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "assert": "^2.0.0",
     "csstype": "^3.0.10",
