@@ -4,6 +4,7 @@
 
 import * as process from 'process';
 import yargs from 'yargs';
+import { cosmiconfig } from "cosmiconfig";
 import { hideBin } from 'yargs/helpers';
 
 import { log } from '@dxos/log';
@@ -11,7 +12,29 @@ import { log } from '@dxos/log';
 import { PackageDependencyBuilder, WorkspaceProcessor } from './nx';
 import { getBaseDir } from './util';
 
-const main = () => {
+export type Config = {
+  exclude?: string[];
+}
+
+const defaultExclude = [
+  '@dxos/async',
+  '@dxos/debug',
+  '@dxos/feeds',
+  '@dxos/keys',
+  '@dxos/log',
+  '@dxos/testutils',
+  '@dxos/util'
+];
+
+const loadConfig = async (): Promise<Config> => {
+  const explorer = cosmiconfig('beast');
+  const searchResult = await explorer.search();
+  return searchResult?.config;
+}
+
+const main = async () => {
+  const config = await loadConfig();
+
   log.info('Started');
 
   yargs(hideBin(process.argv))
@@ -112,15 +135,7 @@ const main = () => {
             description: 'Excluded files',
             type: 'string',
             // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
-            default: [
-              '@dxos/async',
-              '@dxos/debug',
-              '@dxos/feeds',
-              '@dxos/keys',
-              '@dxos/log',
-              '@dxos/testutils',
-              '@dxos/util'
-            ].join(',')
+            default: (config?.exclude ?? defaultExclude).join(',')
           }),
       handler: ({
         verbose,
