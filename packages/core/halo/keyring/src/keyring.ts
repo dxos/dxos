@@ -121,8 +121,17 @@ export class Keyring implements Signer {
   }
 
   // TODO(burdon): ???
-  list(): Promise<PublicKey[]> {
-    return todo('We need a method to enumerate files in a directory.');
+  async list(): Promise<PublicKey[]> {
+    const files = this._storage.getFiles();
+    const keyPairs: CryptoKeyPair[] = [];
+    for (const path of files.keys()) {
+      keyPairs.push(await this._getKey(PublicKey.fromHex(path)));
+    }
+    const keys: PublicKey[] = [];
+    for (const keyPair of keyPairs) {
+      keys.push(await keyPairToPublicKey(keyPair));
+    }
+    return keys;
   }
 }
 
