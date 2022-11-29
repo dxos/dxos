@@ -10,6 +10,7 @@ import { truncateKey } from '@dxos/debug';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { CopyText, HashIcon } from '@dxos/react-components';
 import { Timeframe } from '@dxos/timeframe';
+import { humanize } from '@dxos/util';
 
 import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
 import { Table, TableCell } from '../Table';
@@ -35,6 +36,7 @@ export const SpaceTable = ({ spaces }: SpaceTableProps) => (
       <TableRow>
         <TableCell sx={{ width: 40 }} />
         <TableCell>Space Key</TableCell>
+        <TableCell>Label</TableCell>
         <TableCell sx={{ width: 40 }}>Open</TableCell>
         <TableCell sx={{ width: 40 }}>Genesis Feed</TableCell>
         <TableCell sx={{ width: 40 }}>Control Feed</TableCell>
@@ -50,6 +52,9 @@ export const SpaceTable = ({ spaces }: SpaceTableProps) => (
           </TableCell>
           <TableCell title={key!.toHex()}>
             <CopyText monospace variant='h6' value={key!.toHex()} length={8} />
+          </TableCell>
+          <TableCell title={key!.toHex()}>
+            <CopyText monospace variant='h6' value={humanize(key.toHex())} />
           </TableCell>
           <TableCell align='center'>
             <BooleanIcon value={isOpen} />

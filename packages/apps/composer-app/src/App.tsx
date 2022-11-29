@@ -3,7 +3,7 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -43,12 +43,12 @@ const Routes = () => {
   // TODO(wittjosiah): Config defaults should be available from the config.
   const remoteSource = new URL(config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
 
-  const handleSpaceCreate = async (space: Space) => {
+  const handleSpaceCreate = useCallback(async (space: Space) => {
     await space.database.createItem({
       model: TextModel,
       type: DOCUMENT_TYPE
     });
-  };
+  }, []);
 
   return useRoutes([
     {
@@ -57,11 +57,11 @@ const Routes = () => {
       children: [
         {
           path: '/',
-          element: <AppLayout onSpaceCreate={handleSpaceCreate} />,
+          element: <AppLayout spacesPath='/' />,
           children: [
             {
               path: '/',
-              element: <SpacesPage />
+              element: <SpacesPage onSpaceCreate={handleSpaceCreate} />
             },
             {
               path: '/spaces/:space',

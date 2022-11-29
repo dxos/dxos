@@ -57,6 +57,7 @@ export const FeedsPanel = () => {
             keys={spaces.map(({ key }) => key)}
             selected={selectedSpaceKey}
             onChange={handleSpaceChange}
+            humanize={true}
           />
           <KeySelect
             id='feed-select'

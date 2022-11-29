@@ -6,6 +6,7 @@ import React from 'react';
 
 // https://mui.com/components/material-icons
 import {
+  AccountCircle as ProfileIcon,
   Grain as ItemsIcon,
   FilterTiltShift as SwarmIcon,
   Group as SpacesIcon,
@@ -20,6 +21,7 @@ import {
   FeedsPanel,
   ItemsPanel,
   // NetworkPanel,
+  ProfilePanel,
   SpacesPanel,
   Section,
   SignalPanel,
@@ -44,29 +46,29 @@ export const sections: Section[] = [
       // }
     ]
   },
-  // {
-  //   title: 'HALO',
-  //   items: [
-  //     {
-  //       id: 'halo.profile',
-  //       title: 'Profile',
-  //       icon: <ProfileIcon />,
-  //       panel: <ProfilePanel />
-  //     },
-  //     {
-  //       id: 'halo.keyring',
-  //       title: 'Keyring',
-  //       icon: <KeyIcon />,
-  //       panel: <KeyringPanel />
-  //     },
-  //     {
-  //       id: 'halo.messagess',
-  //       title: 'Messages',
-  //       icon: <MessagesIcon />,
-  //       panel: <CredentialMessagesPanel />
-  //     }
-  //   ]
-  // },
+  {
+    title: 'HALO',
+    items: [
+      {
+        id: 'halo.profile',
+        title: 'Profile',
+        icon: <ProfileIcon />,
+        panel: <ProfilePanel />
+      }
+      //     {
+      //       id: 'halo.keyring',
+      //       title: 'Keyring',
+      //       icon: <KeyIcon />,
+      //       panel: <KeyringPanel />
+      //     },
+      //     {
+      //       id: 'halo.messagess',
+      //       title: 'Messages',
+      //       icon: <MessagesIcon />,
+      //       panel: <CredentialMessagesPanel />
+      //     }
+    ]
+  },
   {
     title: 'ECHO',
     items: [
