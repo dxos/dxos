@@ -9,7 +9,13 @@ import { generatePasscode } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
+import {
+  adaptProtocolProvider,
+  createProtocolFactory,
+  NetworkManager,
+  StarTopology,
+  SwarmConnection
+} from '@dxos/network-manager';
 import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -143,7 +149,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
       swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
-        protocol: createProtocolFactory(topic, peerId, [plugin]),
+        protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
         topology: new StarTopology(topic)
       });
 
@@ -243,7 +249,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
       swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
-        protocol: createProtocolFactory(topic, peerId, [plugin]),
+        protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
         topology: new StarTopology(topic)
       });
 
