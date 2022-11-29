@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// TODO(burdon): Create TS plugin (see @dxos/react-ui)
+// TODO(burdon): Create TS plugin for re-use (see @dxos/react-ui).
 
 const tailwindcss = require('tailwindcss/plugin');
 
@@ -11,7 +11,6 @@ module.exports = {
   content: [
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
-    // './node_modules/tw-elements/dist/js/**/*.js'
   ],
 
   // https://tailwindcss.com/docs/theme#customizing-the-default-theme
@@ -41,8 +40,6 @@ module.exports = {
 
   // https://tailwindcss.com/docs/plugins
   plugins: [
-    // require('@tailwindcss/aspect-ratio'),
-
     // https://tailwindcss.com/docs/typography-plugin
     // require('@tailwindcss/typography'),
 
@@ -51,11 +48,12 @@ module.exports = {
 
     tailwindcss(function({ addBase, theme }) {
       addBase({
-        'h1': { fontSize: theme('fontSize.8xl') },
-        'h2': { fontSize: theme('fontSize.6xl') },
-        'h3': { fontSize: theme('fontSize.4xl') },
-        'body': { fontSize: theme('fontSize.4xl') },
-        'code': { fontSize: theme('fontSize.2xl') },
+        // TODO(burdon): Compare to Keynote.
+        'h1': { fontSize: theme('fontSize.8xl') },  // #
+        'h2': { fontSize: theme('fontSize.7xl') },  // ##
+        'h3': { fontSize: theme('fontSize.6xl') },  // ###
+        'body': { fontSize: theme('fontSize.5xl') },
+        'code': { fontSize: theme('fontSize.4xl') },
       })
     })
   ]

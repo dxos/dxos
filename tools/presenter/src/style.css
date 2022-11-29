@@ -50,7 +50,7 @@
     left: -1.0em;
     position: absolute;
     content: "\203A";
-    @apply text-orange-600; /** TODO: Style. */
+    @apply text-orange-600; /** TODO(burdon): Style. */
   }
   ul > li > ul > li {
     font-size: 80%;
@@ -76,10 +76,13 @@
     position: absolute;
     /*content: "§";*/
     content: counter(paragraph) ". ";
-    @apply text-orange-600; /** TODO: Style. */
+    @apply text-orange-600; /** TODO(burdon): Style. */
   }
 
-  /** TODO(burdon): How to properly override hljs theme? */
+  /**
+   * Source code.
+   * TODO(burdon): How to properly override hljs theme?
+   */
   code {
     @apply mt-1 !important;
     @apply mb-1 !important;
@@ -89,9 +92,11 @@
 
 /**
  * Custom styles.
- * TODO(burdon): Custom palette.
- * https://tailwindcss.com/docs/background-color#changing-the-opacity
  */
+
+.bg-slide {
+  @apply bg-white;
+}
 
 .bg-slide-header {
   @apply bg-gray-200;
@@ -99,6 +104,19 @@
   font-family: Sharp Sans, ui-sans-serif;
 }
 
+.text-title {
+  font-size: 10rem;
+}
+
+.text-subtitle {
+  font-size: 8rem;
+}
+
 .font-caps {
   font-variant: all-petite-caps;
+}
+
+.font-dxos {
+  /*noinspection CssNoGenericFontName*/
+  font-family: 'Sharp Sans';
 }

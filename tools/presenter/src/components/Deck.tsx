@@ -5,7 +5,8 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-// TODO(burdon): Insert React control via remark layout plugin?
+import { usePageHandler } from '../hooks';
+
 export const Pager: FC<{ page: number; length: number }> = ({ page, length }) => {
   return (
     <div className='absolute bottom-1 right-1 font-mono text-3xl'>
@@ -14,77 +15,24 @@ export const Pager: FC<{ page: number; length: number }> = ({ page, length }) =>
   );
 };
 
-// TODO(burdon): Factor out hooks.
-export const usePageHandler = (length: number) => {
-  const [page, setPage] = useState<number>(0);
-  useEffect(() => {
-    // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent
-    const handler = (ev: KeyboardEvent) => {
-      switch (ev.key) {
-        case 'ArrowLeft': {
-          setPage((page) => (page > 0 ? page - 1 : page));
-          break;
-        }
-        case 'ArrowRight': {
-          setPage((page) => (page === length - 1 ? page : page + 1));
-          break;
-        }
-        default: {
-          // console.log(ev.key);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  });
-
-  return page;
-};
-
-const count = 0;
-
+/**
+ * Main slide deck container.
+ */
 export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
-  /*
   useEffect(() => {
-    console.log('!');
-    // TODO(burdon): Doesn't work.
+    // TODO(burdon): This isn't working.
+    // TODO(burdon): Key hook to trigger fullscreen model.
     // https://developer.mozilla.org/en-US/docs/Web/API/Document/fullscreenchange_event
     document.addEventListener('fullscreenchange', (event) => {
-      console.log('???');
+      console.log('fullscreenchange');
     });
   }, []);
-  */
 
-  /*
-  useEffect(() => {
-    return;
-
-    // NOTE: This trick doesn't work due to the notch.
-    // height: 1080 vs 1117 (36 + 1 pixels for notch).
-    const [maxX, maxY] = [1728, 1080];
-    console.log(window.innerHeight, window.screen.height);
-    console.log(document.fullscreenElement);
-
-    // const scale = 0.9; // Scale when not maximized.
-    // const fullScreen = !!(window.screenTop && window.screenY);
-
-    // const ox = -(window.screen.availWidth - width) / 2;
-    // const oy = -(window.screen.availHeight - height) / 2;
-
-    // TODO(burdon): Translate.
-    // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
-    // NOTE: Only transformable elements can be transformed (tables?)
-    // Object.assign(outerRef.current.body.style, {
-    //   width: `${window.screen.availWidth}px`,
-    //   height: `${window.screen.availHeight}px`,
-    //   transform: `scale(${scale})`
-    // });
-  }, [width, height]);
-  */
-
+  // Current page.
   const page = usePageHandler(slides.length);
+  const Page = () => slides[page];
 
+  // Scaled props.
   const contentRef = useRef<HTMLDivElement>(null);
   const [props, setProps] = useState({});
 
@@ -108,24 +56,19 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
       const nominalWidth = 2560;
       const nominalHeight = nominalWidth / aspectRatio;
 
+      // Compute scaling factor required.
       // TODO(burdon): If not fullscreen then make scale slightly smaller.
       const scale = Math.min(width / nominalWidth, height / nominalHeight);
 
-      // Offset.
-      const dx = (width - nominalWidth) / 2;
-      const dy = (height - nominalHeight) / 2;
-
       setProps({
-        left: dx,
-        top: dy,
+        left: (width - nominalWidth) / 2,
+        top: (height - nominalHeight) / 2,
         width: nominalWidth,
         height: nominalHeight,
         transform: `scale(${scale})`
       });
     }
   });
-
-  const Page = () => slides[page];
 
   // prettier-ignore
   return (
@@ -137,23 +80,19 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
         right: 0,
         top: 0,
         bottom: 0,
-        display: 'flex',
-        overflow: 'hidden',
-        flexDirection: 'column',
-        backgroundColor: '#333'
+        overflow: 'hidden'
       }}
     >
       <div
         ref={contentRef}
+        className='bg-slide'
         style={{
           position: 'absolute',
           display: 'flex',
-          backgroundColor: '#FFF', // TODO(burdon): Theme.
+          flexDirection: 'column',
           ...props
         }}
       >
-        {/* <div style={{ position: 'absolute' }}>{JSON.stringify(props)}</div> */}
-
         {/* TODO(burdon): Show/hide based on front-matter. */}
         <Pager page={page} length={slides.length} />
 

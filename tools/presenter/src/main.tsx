@@ -4,17 +4,17 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import 'tw-elements';
+
+// https://www.npmjs.com/package/vite-plugin-fonts
 import 'virtual:fonts.css';
 
 import Index from './slides/index.mdx';
+import './style.css';
 
 // TODO(burdon): Image layout plugin (sizing, position, bleed options).
-// TODO(burdon): Create Library with light-weight projects using template.
 // TODO(burdon): Router for pager (change URL).
-// TODO(burdon): Form-factor (e.g., 16x9) with max dimensions.
-//  - https://developer.mozilla.org/en-US/docs/Web/HTML/Viewport_meta_tag
-//  - Google slides creates an SVG.
+
+// TODO(burdon): Create Library with light-weight projects using template.
 // TODO(burdon): Storybook/live components (task list, chess, kitchen sink, kube, fish).
 
 // TODO(burdon): Templates:
@@ -24,8 +24,6 @@ import Index from './slides/index.mdx';
 //  - https://tailwind-elements.com
 //    - https://tailwind-elements.com/docs/standard/designblocks/cta/
 //  - https://flowbite.com/#components
-
-import './style.css';
 
 const start = async () => {
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

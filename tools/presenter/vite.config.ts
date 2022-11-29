@@ -25,7 +25,7 @@ const mdxOptions: Options = {
     // https://github.com/remarkjs/remark-frontmatter
     [remarkFrontmatter, 'yaml'],
 
-    // TODO(burdon): Parsing works, but how to access parsed frontmatter?
+    // TODO(burdon): Parsing works, but cannot access parsed frontmatter in plugin.
     // https://www.npmjs.com/package/remark-parse-frontmatter
     [remarkUnwrapTexts],
     [
@@ -52,18 +52,11 @@ const mdxOptions: Options = {
     [codeImport]
   ],
 
-  // TODO(burdon): Mermaid:
+  // TODO(burdon): Additional plugins:
   //  https://github.com/remcohaszing/remark-mermaidjs
-  //  https://mermaid-js.github.io/mermaid/#/Setup
-
-  // TODO(burdon): Simpler image syntax:
   //  https://github.com/remarkjs/remark-images
-
-  // TODO(burdon): Github links:
   //  https://github.com/remarkjs/remark-github
-
-  // TODO(burdon): Code sandbox:
-  //  TODO(burdon): https://github.com/kevin940726/remark-codesandbox
+  //  https://github.com/kevin940726/remark-codesandbox
 
   // Rehype transforms HTML.
   // https://github.com/rehypejs/rehype/blob/main/doc/plugins.md#list-of-plugins
@@ -80,8 +73,8 @@ export default defineConfig({
     mdx(mdxOptions),
 
     // https://www.npmjs.com/package/vite-plugin-fonts
+    // https://fonts.google.com
     VitePluginFonts({
-      // TODO(burdon): https://fonts.google.com/specimen/DM+Sans
       google: {
         injectTo: 'head-prepend',
         // prettier-ignore
@@ -95,8 +88,8 @@ export default defineConfig({
       },
 
       custom: {
+        preload: false,
         injectTo: 'head-prepend',
-        display: 'auto',
         families: [
           {
             name: 'Sharp Sans',
