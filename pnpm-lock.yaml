@@ -1070,6 +1070,7 @@ importers:
       '@radix-ui/react-navigation-menu': ^1.1.1
       '@radix-ui/react-popover': ^1.0.2
       '@radix-ui/react-toast': ^1.1.1
+      '@radix-ui/react-toolbar': ^1.0.1
       '@radix-ui/react-tooltip': ^1.0.2
       '@tailwindcss/forms': ^0.5.3
       '@types/react': ^18.0.21
@@ -1086,6 +1087,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       storybook-dark-mode: ^1.1.2
+      tailwind-merge: ^1.8.0
       tailwindcss: ^3.1.8
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.6.0
@@ -1101,6 +1103,7 @@ importers:
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-popover': 1.0.2_2zx2umvpluuhvlq44va5bta2da
       '@radix-ui/react-toast': 1.1.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tooltip': 1.0.2_2zx2umvpluuhvlq44va5bta2da
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.2.4
       alea: 1.0.1
@@ -1110,6 +1113,7 @@ importers:
       postcss: 8.4.19
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
+      tailwind-merge: 1.8.0
       tailwindcss: 3.2.4
       tailwindcss-logical: 3.0.0_2lwn2upnx27dqeg6hqdu7sq75m
       tailwindcss-radix: 2.6.1
@@ -2270,6 +2274,7 @@ importers:
       '@dxos/registry-client': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
@@ -2314,6 +2319,7 @@ importers:
       '@dxos/registry-client': link:../../experimental/registry-client
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/util': link:../../common/util
       '@emotion/react': 11.10.5_cuziicjcvwawlf5iuhzacuhqcy
       '@emotion/styled': 11.10.5_hmjty4frusbltjhl3xd7udcm2y
       '@mui/icons-material': 5.10.14_edp4dc7hnxdrqofuyrrjp2id7y
@@ -3619,14 +3625,17 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
+      '@radix-ui/react-toolbar': ^1.0.1
       '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
+      '@types/lodash.throttle': ^4.1.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       classnames: ^2.3.2
       debug: ^4.3.3
       i18next: ^21.10.0
+      lodash.throttle: ^4.1.1
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -3642,15 +3651,18 @@ importers:
       '@dxos/react-client': link:../react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/util': link:../../common/util
+      '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@react-hook/async': 3.1.1_react@18.2.0
       classnames: 2.3.2
       debug: 4.3.4
       i18next: 21.10.0
+      lodash.throttle: 4.1.1
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
       url-join: 5.0.0
     devDependencies:
       '@dxos/vite-plugin': link:../vite-plugin
       '@types/debug': 4.1.7
+      '@types/lodash.throttle': 4.1.7
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
       '@vitejs/plugin-react': 2.2.0_vite@3.0.9
@@ -8638,6 +8650,38 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: false
 
+  /@radix-ui/react-roving-focus/1.0.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-TB76u5TIxKpqMpUAuYH2VqMhHYKa+4Vs1NHygo/llLvlffN6mLVsFhz0AnSFlSBAvTBYVHYAkHAyEt7x1gPJOA==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.20.1
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-collection': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-direction': 1.0.0_react@18.2.0
+      '@radix-ui/react-id': 1.0.0_react@18.2.0
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-callback-ref': 1.0.0_react@18.2.0
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@radix-ui/react-separator/1.0.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-uc6Izot0D8uVz6T2nSb/HI7OaxkeaD50GgKr3W6HORnbfGVrG7LWuy+g6Fd58n8wHbrRblSYJZEfcjgymMlJjw==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.20.1
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
   /@radix-ui/react-slot/1.0.1_react@18.2.0:
     resolution: {integrity: sha512-avutXAFL1ehGvAXtPquu0YK5oz6ctS474iM3vNGQIkswrVhdrS52e3uoMQBzZhNRAIE0jBnUyXWNmSjGHhCFcw==}
     peerDependencies:
@@ -8667,6 +8711,56 @@ packages:
       '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
       '@radix-ui/react-visually-hidden': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@radix-ui/react-toggle-group/1.0.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-eye/gYvzy82xtoSSeu5Pwlzrh6N2rOcDIwAI7xMatu622Qjlg64LtwB0PSh3iWdmn6Wqy1Fjo5twNPQsp0guiw==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.20.1
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-direction': 1.0.0_react@18.2.0
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-roving-focus': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-toggle': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@radix-ui/react-toggle/1.0.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-hZIp9ZKnw4NwVqeB4evWBLa91ryaSJhAO0Ed82wkzRPgg/I29ypcY6SuBb3AMZW+GsuBZpIVujpCq+33TdEcyg==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.20.1
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@radix-ui/react-toolbar/1.0.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-GK7dHP1otPYMgdZCpB2I1gfu4ttRB5OV37x5DzPgeKIDRjQ4u6pTuVTiRXfOtAnWuANo3Vq20ISI84iOGAfkYw==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.20.1
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-direction': 1.0.0_react@18.2.0
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-roving-focus': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-separator': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-toggle-group': 1.0.1_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     dev: false
@@ -12707,6 +12801,12 @@ packages:
 
   /@types/lodash.sortby/4.7.7:
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
+    dependencies:
+      '@types/lodash': 4.14.189
+    dev: true
+
+  /@types/lodash.throttle/4.1.7:
+    resolution: {integrity: sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==}
     dependencies:
       '@types/lodash': 4.14.189
     dev: true
@@ -23775,6 +23875,10 @@ packages:
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
 
+  /lodash.throttle/4.1.1:
+    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
+    dev: false
+
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
     dev: true
@@ -30402,6 +30506,10 @@ packages:
   /tail/2.2.4:
     resolution: {integrity: sha512-PX8klSxW1u3SdgDrDeewh5GNE+hkJ4h02JvHfV6YrHqWOVJ88nUdSQqtsUf/gWhgZlPAws3fiZ+F1f8euspcuQ==}
     engines: {node: '>= 6.0.0'}
+    dev: false
+
+  /tailwind-merge/1.8.0:
+    resolution: {integrity: sha512-tER/2SbYRdfPYg6m4pDWZSlbymLTmDi+dx4iCsJmgmz4UDGzgnVelOvBe3GNtGCw9Bmc4MiObfJJbKeVL+KnMQ==}
     dev: false
 
   /tailwindcss-logical/3.0.0_2lwn2upnx27dqeg6hqdu7sq75m:

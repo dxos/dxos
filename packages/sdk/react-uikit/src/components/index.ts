@@ -5,6 +5,6 @@
 export * from './AuthChoices';
 export * from './InvitationStatus';
 export * from './Join';
-export * from './Presence';
+export * from './Menubar';
 export * from './SingleInputStep';
 export * from './UiKitProvider';

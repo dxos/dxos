@@ -3,6 +3,7 @@
 //
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import cx from 'classnames';
 import { X } from 'phosphor-react';
 import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
@@ -15,6 +16,7 @@ export interface PopoverProps extends Omit<ComponentProps<typeof PopoverPrimitiv
   closeLabel?: string;
   initiallyOpen?: boolean;
   mountAsSibling?: boolean;
+  triggerIsInToolbar?: boolean;
 }
 
 type KeyUpEvent = Parameters<Exclude<ComponentProps<typeof PopoverPrimitive.Trigger>['onKeyUp'], undefined>>[0];
@@ -25,6 +27,7 @@ export const Popover = ({
   closeLabel,
   initiallyOpen,
   mountAsSibling,
+  triggerIsInToolbar,
   ...contentProps
 }: PopoverProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
@@ -65,11 +68,15 @@ export const Popover = ({
     </PopoverPrimitive.Content>
   );
 
+  const triggerContent = (
+    <PopoverPrimitive.Trigger asChild onKeyUp={onKeyUp} data-keyupid='open'>
+      {openTrigger}
+    </PopoverPrimitive.Trigger>
+  );
+
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverPrimitive.Trigger asChild onKeyUp={onKeyUp} data-keyupid='open'>
-        {openTrigger}
-      </PopoverPrimitive.Trigger>
+      {triggerIsInToolbar ? <ToolbarButtonItem asChild>{triggerContent}</ToolbarButtonItem> : triggerContent}
       {mountAsSibling ? popoverContent : <PopoverPrimitive.Portal>{popoverContent}</PopoverPrimitive.Portal>}
     </PopoverPrimitive.Root>
   );
