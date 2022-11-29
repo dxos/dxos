@@ -120,7 +120,7 @@ export class Keyring implements Signer {
     return todo('We need a method to delete a file.');
   }
 
-  async list(): Promise<PublicKey[]> {
+  list(): PublicKey[] {
     const keys: PublicKey[] = [];
     for (const path of this._storage.getFiles().keys()) {
       const fileName = path.split('/').pop();
