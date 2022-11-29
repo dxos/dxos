@@ -10,12 +10,5 @@ import { JsonTreeView } from '@dxos/react-components';
 export const ProfilePanel = () => {
   const profile = useIdentity();
 
-  return (
-    <JsonTreeView
-      size='small'
-      depth={4}
-      data={profile}
-      sx={{ marginTop: 1 }}
-    />
-  );
+  return <JsonTreeView size='medium' data={profile} sx={{ marginTop: 1 }} truncateLength={32} />;
 };
