@@ -141,7 +141,8 @@ export class SpaceProtocol {
 
         return session;
       };
-    } else { // TODO(dmaretskyi): Remove once the transition is over.
+    } else {
+      // TODO(dmaretskyi): Remove once the transition is over.
       return adaptProtocolProvider(({ channel, initiator }) => {
         const protocol = new Protocol({
           streamOptions: {

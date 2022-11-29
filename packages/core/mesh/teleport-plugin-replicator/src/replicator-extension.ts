@@ -207,8 +207,8 @@ export class ReplicatorExtension implements TeleportExtension {
 
   private _replicateFeed(info: FeedInfo, streamTag: string) {
     console.log('replicating feed', { info, streams: this._streams.size });
-    if(this._streams.size > 0) {
-      log.error('THROWING')
+    if (this._streams.size > 0) {
+      log.error('THROWING');
       throw new Error('Only one feed is supported');
       return;
     }

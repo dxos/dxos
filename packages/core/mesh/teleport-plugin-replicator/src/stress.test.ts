@@ -66,7 +66,7 @@ class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
 
   // TODO(dmaretskyi): model, real.
   run = async (m: Model, r: Real) => {
-    if(!m.feeds.has(this.feedKey)) {
+    if (!m.feeds.has(this.feedKey)) {
       m.feeds.set(this.feedKey, 0);
     }
 
@@ -181,13 +181,13 @@ describe('stress-tests', function () {
       fc
         .tuple(arbAgentName, arbFeedKey, fc.integer({ min: 1, max: 10 }))
         .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count)),
-        
+
       fc.constant(new CheckCommand())
     ];
 
     await fc.assert(
       fc.asyncProperty(fc.commands(allCommands, { maxCommands: 100 }), async (cmds) => {
-        console.log([...cmds].map(c => c.toString()).join('\n'))
+        console.log([...cmds].map((c) => c.toString()).join('\n'));
 
         const system = await factory(keyring)();
         try {
@@ -197,7 +197,7 @@ describe('stress-tests', function () {
           await system.real.agent1.destroy();
           await system.real.agent2.destroy();
         }
-      }),
+      })
     );
   }).timeout(100_000);
 });

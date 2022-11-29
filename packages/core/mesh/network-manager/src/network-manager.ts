@@ -136,7 +136,14 @@ export class NetworkManager {
    * Join the swarm.
    */
   // TODO(burdon): Join/Open? Swarm abstraction?
-  async joinSwarm({ topic, peerId, topology, protocolProvider: protocol, presence, label }: SwarmOptions): Promise<SwarmConnection> {
+  async joinSwarm({
+    topic,
+    peerId,
+    topology,
+    protocolProvider: protocol,
+    presence,
+    label
+  }: SwarmOptions): Promise<SwarmConnection> {
     assert(PublicKey.isPublicKey(topic));
     assert(PublicKey.isPublicKey(peerId));
     assert(topology);
