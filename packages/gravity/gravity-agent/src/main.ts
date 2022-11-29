@@ -11,6 +11,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
+import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Agent } from './agent';
 
@@ -37,14 +38,27 @@ const main = () => {
 
     .command({
       command: 'start',
-      handler: async ({ verbose, config: configFilepath }: { verbose?: boolean; config: string }) => {
+      handler: async ({
+        verbose,
+        config: configFilepath,
+        spec: specFilepath
+      }: {
+        verbose?: boolean;
+        config: string;
+        spec: string;
+      }) => {
         const config: ConfigProto = yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
         if (verbose) {
           log('config', { config });
         }
 
+        const spec: AgentSpec = yaml.load(fs.readFileSync(specFilepath).toString()) as ConfigProto;
+        if (verbose) {
+          log('spec', { spec });
+        }
+
         // TODO(burdon): Start with config; e.g., create party and invitation from pre-configured swarm.
-        const agent = await new Agent(config);
+        const agent = await new Agent({ config, spec });
         await agent.initialize();
         await agent.start();
       }
