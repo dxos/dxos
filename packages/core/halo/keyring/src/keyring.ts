@@ -125,7 +125,7 @@ export class Keyring implements Signer {
     const files = this._storage.getFiles();
     const keyPairs: CryptoKeyPair[] = [];
     for (const path of files.keys()) {
-      keyPairs.push(await this._getKey(PublicKey.fromHex(path)));
+      keyPairs.push(await this._getKey(PublicKey.fromHex(path.split('/').at(-1))));
     }
     const keys: PublicKey[] = [];
     for (const keyPair of keyPairs) {
