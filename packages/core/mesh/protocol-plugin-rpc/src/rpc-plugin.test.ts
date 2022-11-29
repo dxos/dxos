@@ -44,7 +44,7 @@ const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port:
   await networkManager.joinSwarm({
     topic,
     peerId,
-    protocol: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
+    protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
     topology: new StarTopology(topic)
   });
 

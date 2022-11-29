@@ -8,7 +8,7 @@ package dxos.mesh.muxer;
 
 /// Root type for messages sent over the stream.
 message Command {
-  oneof content {
+  oneof payload {
     OpenChannel open_channel = 1;
     Data data = 2;
     Destroy destroy = 3;
@@ -24,7 +24,10 @@ message Command {
  * The local peer must buffer any data messages until the remote peer replies with OpenChannel for this tag. 
  */
 message OpenChannel {
+  /// Session-specific ID for the channel.
   int32 id = 1;
+
+  /// Stable identifier for the channel that is agreed upon by both peers.
   string tag = 2;
    
   /// Optional Mime-type or URL describing the protocol that is hosted ober this stream. Used for introspection.
@@ -34,9 +37,7 @@ message OpenChannel {
 message Data {
   /**
    * Identifier for the channel as assigned by the remote peer.
-   * 
    * NOTE: An OpenChannel message must received before any data is sent on a channel.
-   *
    * Any data messages sent before that, should be ignored.
    */ 
   int32 channel_id = 1;

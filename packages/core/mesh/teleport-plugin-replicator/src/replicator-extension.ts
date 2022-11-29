@@ -22,13 +22,9 @@ export type ReplicationOptions = {
   upload: boolean;
 };
 
-type ActiveStream = {
-  streamTag: string;
-  networkStream: Duplex;
-  replicationStream: ProtocolStream;
-  info: FeedInfo;
-};
-
+/**
+ * Manages replication between a set of feeds for a single teleport session.
+ */
 export class ReplicatorExtension implements TeleportExtension {
   private readonly _ctx = new Context({
     onError: (err) => {
@@ -38,25 +34,16 @@ export class ReplicatorExtension implements TeleportExtension {
   });
 
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
+  private readonly _streams = new ComplexMap<PublicKey, ActiveStream>(PublicKey.hash);
+
+  private _rpc?: ProtoRpcPeer<ServiceBundle>;
+  private _extensionContext?: ExtensionContext;
+
   private _options: ReplicationOptions = {
     upload: false
   };
 
-  private _rpc?: ProtoRpcPeer<ServiceBundle>;
-  private _extensionContext?: ExtensionContext;
-  private readonly _streams = new ComplexMap<PublicKey, ActiveStream>(PublicKey.hash);
-
-  @logInfo
-  private get extensionInfo() {
-    return {
-      initiator: this._extensionContext?.initiator,
-      localPeerId: this._extensionContext?.localPeerId,
-      remotePeerId: this._extensionContext?.remotePeerId,
-      feeds: Array.from(this._feeds.keys())
-    };
-  }
-
-  private readonly updateTask = new DeferredTask(this._ctx, async () => {
+  private readonly _updateTask = new DeferredTask(this._ctx, async () => {
     try {
       if (this._extensionContext!.initiator === false) {
         await this._rpc!.rpc.ReplicatorService.updateFeeds({
@@ -77,11 +64,21 @@ export class ReplicatorExtension implements TeleportExtension {
     }
   });
 
+  @logInfo
+  private get extensionInfo() {
+    return {
+      initiator: this._extensionContext?.initiator,
+      localPeerId: this._extensionContext?.localPeerId,
+      remotePeerId: this._extensionContext?.remotePeerId,
+      feeds: Array.from(this._feeds.keys())
+    };
+  }
+
   setOptions(options: ReplicationOptions): this {
     this._options = options;
     log('setOptions', { options });
     if (this._extensionContext) {
-      this.updateTask.schedule();
+      this._updateTask.schedule();
     }
     return this;
   }
@@ -90,7 +87,7 @@ export class ReplicatorExtension implements TeleportExtension {
     this._feeds.set(feed.key, feed);
     log('addFeed', { feedKey: feed.key });
     if (this._extensionContext) {
-      this.updateTask.schedule();
+      this._updateTask.schedule();
     }
   }
 
@@ -110,10 +107,10 @@ export class ReplicatorExtension implements TeleportExtension {
           updateFeeds: async ({ feeds }) => {
             log('received feed info', { feeds });
             assert(this._extensionContext!.initiator === true, 'Invalid call');
-            this.updateTask.schedule();
+            this._updateTask.schedule();
           },
           startReplication: async ({ info }) => {
-            log('startReplication', { info });
+            log('starting replication...', { info });
             assert(this._extensionContext!.initiator === false, 'Invalid call');
 
             const streamTag = await this._acceptReplication(info);
@@ -122,7 +119,7 @@ export class ReplicatorExtension implements TeleportExtension {
             };
           },
           stopReplication: async ({ info }) => {
-            log('stopReplication', { info });
+            log('stopping replication...', { info });
             // TODO(dmaretskyi): Make sure any peer can stop replication.
             assert(this._extensionContext!.initiator === false, 'Invalid call');
 
@@ -136,7 +133,7 @@ export class ReplicatorExtension implements TeleportExtension {
     });
     await this._rpc.open();
 
-    this.updateTask.schedule();
+    this._updateTask.schedule();
   }
 
   async onClose(err?: Error | undefined) {
@@ -150,7 +147,7 @@ export class ReplicatorExtension implements TeleportExtension {
 
   @synchronized
   private async _reevaluateFeeds() {
-    log('reevaluateFeeds');
+    log('_reevaluateFeeds');
     for (const feedKey of this._feeds.keys()) {
       if (this._ctx.disposed) {
         return;
@@ -261,4 +258,11 @@ export class ReplicatorExtension implements TeleportExtension {
 
 type ServiceBundle = {
   ReplicatorService: ReplicatorService;
+};
+
+type ActiveStream = {
+  streamTag: string;
+  networkStream: Duplex;
+  replicationStream: ProtocolStream;
+  info: FeedInfo;
 };

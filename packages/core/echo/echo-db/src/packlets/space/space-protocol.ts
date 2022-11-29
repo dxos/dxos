@@ -110,7 +110,7 @@ export class SpaceProtocol {
 
     log('starting...');
     this._connection = await this._networkManager.joinSwarm({
-      protocol: this._createProtocolProvider(credentials),
+      protocolProvider: this._createProtocolProvider(credentials),
       peerId: this._peerId,
       topic: this._discoveryKey,
       presence: this._presencePlugin,
@@ -141,7 +141,7 @@ export class SpaceProtocol {
 
         return session;
       };
-    } else {
+    } else { // TODO(dmaretskyi): Remove once the transition is over.
       return adaptProtocolProvider(({ channel, initiator }) => {
         const protocol = new Protocol({
           streamOptions: {
@@ -184,14 +184,23 @@ export class SpaceProtocol {
   }
 }
 
+// TODO(dmaretskyi): Move to a separate file.
+/**
+ * Represents a single connection to a remote peer
+ */
 export class SpaceProtocolSession implements WireProtocol {
   private readonly _teleport: Teleport;
 
   // TODO(dmaretskyi): Start with upload=false when switching it on the fly works.
   public readonly replicator = new TeleportReplicatorExtension().setOptions({ upload: true });
 
+  // TODO(dmaretskyi): Allow to pass in extra extensions.
   constructor({ initiator, localPeerId, remotePeerId }: WireProtocolParams) {
     this._teleport = new Teleport({ initiator, localPeerId, remotePeerId });
+  }
+
+  get stream() {
+    return this._teleport.stream;
   }
 
   async initialize(): Promise<void> {
@@ -201,9 +210,5 @@ export class SpaceProtocolSession implements WireProtocol {
 
   async destroy(): Promise<void> {
     await this._teleport.close();
-  }
-
-  get stream() {
-    return this._teleport.stream;
   }
 }

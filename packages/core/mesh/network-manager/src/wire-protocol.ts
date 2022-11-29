@@ -19,17 +19,25 @@ export type WireProtocolParams = {
 
 export type WireProtocolProvider = (params: WireProtocolParams) => WireProtocol;
 
+/**
+ * Application-specific network protocol that is used when a connection to a peer is established.
+ * Will implement high-level logic, like replication, authentication, etc.
+ */
 export interface WireProtocol {
-  initialize(): Promise<void>;
-  destroy(): Promise<void>;
   stream: Duplex;
 
   /**
    * @deprecated Only for devtools comapatibility.
    */
   protocol?: Protocol;
+
+  initialize(): Promise<void>;
+  destroy(): Promise<void>;
 }
 
+/**
+ * @deprecated
+ */
 export const adaptProtocolProvider =
   (factory: MeshProtocolProvider): WireProtocolProvider =>
   ({ initiator, localPeerId, remotePeerId, topic }) => {

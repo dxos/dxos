@@ -125,7 +125,7 @@ export const propertyTestSuite = () => {
         await peer.networkManager.joinSwarm({
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
-          protocol: adaptProtocolProvider(protocol),
+          protocolProvider: adaptProtocolProvider(protocol),
           topology: new FullyConnectedTopology(),
           presence
         });

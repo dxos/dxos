@@ -10,7 +10,7 @@ export type ClearCallback = () => void;
 /**
  * A task that can be scheduled to run in the next event loop iteration.
  * Could be triggered multiple times, but only runs once.
- * If the task is triggered while it is running, the next run would occur immediately after the current run has finished.
+ * If a new task is triggered while a previous one is running, the next run would occur immediately after the current run has finished.
  */
 export class DeferredTask {
   private _scheduled = false;
@@ -65,7 +65,7 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
 /**
  * Run the task in the next event loop iteration, and then repeat in `interval` ms after the previous iteration completes.
  */
-export const repeatTask = (ctx: Context, task: () => Promise<void>, interval: number) => {
+export const scheduleTaskInterval = (ctx: Context, task: () => Promise<void>, interval: number) => {
   const run = async () => {
     await task();
     scheduleTask(ctx, run, interval);

@@ -169,7 +169,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
       swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
-        protocol: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
+        protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
         topology: new StarTopology(topic)
       });
 
@@ -269,7 +269,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
       swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
-        protocol: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
+        protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
         topology: new StarTopology(topic)
       });
 

@@ -5,7 +5,7 @@
 import assert from 'assert';
 import { Duplex } from 'stream';
 
-import { asyncTimeout, repeatTask, runInContextAsync, synchronized, scheduleTask } from '@dxos/async';
+import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -237,7 +237,7 @@ class ControlExtension implements TeleportExtension {
 
     await this._rpc.open();
 
-    repeatTask(
+    scheduleTaskInterval(
       this._ctx,
       async () => {
         try {

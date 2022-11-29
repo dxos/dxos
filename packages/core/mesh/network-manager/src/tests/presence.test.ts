@@ -33,7 +33,7 @@ const createPeer = async (topic: PublicKey) => {
 
   await networkManager.joinSwarm({
     peerId,
-    protocol: adaptProtocolProvider(createProtocolFactory(topic, peerId, [presencePlugin])),
+    protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [presencePlugin])),
     topic,
     topology: new FullyConnectedTopology()
   });

@@ -42,7 +42,6 @@ message StopReplicationRequest {
   FeedInfo info = 1;
 }
 
-
 /**
  * RPC verbs for replication teleport extension.
  * Assumes one peer is designated an initiator. 

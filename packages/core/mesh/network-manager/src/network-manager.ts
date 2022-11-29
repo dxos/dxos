@@ -17,6 +17,9 @@ import { Topology } from './topology';
 import { TransportFactory } from './transport';
 import { WireProtocolProvider } from './wire-protocol';
 
+/**
+ * Represents a single connection to a remote peer.
+ */
 export type SwarmConnection = {
   close(): Promise<void>;
 };
@@ -36,7 +39,7 @@ export type SwarmOptions = {
   /**
    * Protocol to use for every connection.
    */
-  protocol: WireProtocolProvider;
+  protocolProvider: WireProtocolProvider;
 
   /**
    * Requested topology. Must be a new instance for every swarm.
@@ -133,7 +136,7 @@ export class NetworkManager {
    * Join the swarm.
    */
   // TODO(burdon): Join/Open? Swarm abstraction?
-  async joinSwarm({ topic, peerId, topology, protocol, presence, label }: SwarmOptions): Promise<SwarmConnection> {
+  async joinSwarm({ topic, peerId, topology, protocolProvider: protocol, presence, label }: SwarmOptions): Promise<SwarmConnection> {
     assert(PublicKey.isPublicKey(topic));
     assert(PublicKey.isPublicKey(peerId));
     assert(topology);
