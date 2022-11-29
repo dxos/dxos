@@ -5,9 +5,14 @@
     "build": {
       "executor": "@dxos/esbuild:build",
       "options": {
-        "entryPoints": ["packages/common/async/src/index.ts"],
+        "entryPoints": [
+          "packages/common/async/src/index.ts"
+        ],
         "outputPath": "packages/common/async/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -49,9 +54,6 @@
       "options": {
         "main": "packages/common/async/src/index.ts",
         "outputPath": "packages/common/async/dist/types",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
         "tsConfig": "packages/common/async/tsconfig.json"
       },
       "outputs": [

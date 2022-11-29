@@ -17,7 +17,7 @@
   ],
   "references": [
     {
-      "path": "../../common/esbuild-plugins"
+      "path": "../../tools/esbuild-plugins"
     },
     {
       "path": "../gem-core"

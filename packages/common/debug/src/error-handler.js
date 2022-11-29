@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 /**
  * Listens for global errors.

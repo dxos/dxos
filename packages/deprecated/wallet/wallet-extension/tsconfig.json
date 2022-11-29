@@ -27,9 +27,6 @@
       "path": "../../../common/codec-protobuf"
     },
     {
-      "path": "../../../common/esbuild-plugins"
-    },
-    {
       "path": "../../../common/util"
     },
     {
@@ -52,6 +49,9 @@
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../tools/esbuild-plugins"
     },
     {
       "path": "../../react-components"

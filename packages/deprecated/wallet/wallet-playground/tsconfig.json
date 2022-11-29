@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/esbuild-plugins"
-    },
-    {
       "path": "../../../sdk/client"
     },
     {
@@ -28,6 +25,9 @@
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../tools/esbuild-plugins"
     },
     {
       "path": "../../react-components"

@@ -2,6 +2,18 @@
   "sourceRoot": "packages/common/crypto-names/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/crypto-names/src/names.ts"
+        ],
+        "outputPath": "packages/common/crypto-names/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -37,10 +49,7 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/crypto-names/src/index.ts",
-        "outputPath": "packages/common/crypto-names/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/common/crypto-names/dist/types",
         "tsConfig": "packages/common/crypto-names/tsconfig.json"
       },
       "outputs": [
@@ -49,6 +58,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

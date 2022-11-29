@@ -14,10 +14,10 @@
   ],
   "references": [
     {
-      "path": "../../common/esbuild-plugins"
+      "path": "../../experimental/gem-core"
     },
     {
-      "path": "../../experimental/gem-core"
+      "path": "../../tools/esbuild-plugins"
     }
   ]
 }

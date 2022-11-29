@@ -15,9 +15,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/esbuild-plugins"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -46,6 +43,9 @@
     },
     {
       "path": "../../experimental/gem-spore"
+    },
+    {
+      "path": "../../tools/esbuild-plugins"
     }
   ]
 }

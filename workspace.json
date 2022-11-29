@@ -31,7 +31,7 @@
     "echo-db": "packages/core/echo/echo-db",
     "errors": "packages/sdk/errors",
     "esbuild": "tools/executors/esbuild",
-    "esbuild-plugins": "packages/common/esbuild-plugins",
+    "esbuild-plugins": "packages/tools/esbuild-plugins",
     "eslint-plugin": "tools/eslint-plugin",
     "eslint-plugin-rules": "tools/eslint-rules",
     "feed-store": "packages/common/feed-store",

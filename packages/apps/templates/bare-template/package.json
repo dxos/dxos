@@ -9,11 +9,11 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "types": "tsc",
     "bundle": "vite build",
     "deploy": "dx app publish",
     "preview": "vite preview",
-    "serve": "vite"
+    "serve": "vite",
+    "types": "tsc"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",

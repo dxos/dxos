@@ -26,9 +26,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/esbuild-plugins"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -57,6 +54,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../tools/esbuild-plugins"
     },
     {
       "path": "../react-components"
