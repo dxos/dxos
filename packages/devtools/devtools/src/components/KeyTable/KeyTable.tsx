@@ -16,14 +16,11 @@ import { Table, TableCell } from '../Table';
 const sorter = (a: KeyRecord, b: KeyRecord) => (a.type < b.type ? -1 : a.type > b.type ? 1 : a.own ? -1 : 1);
 
 export interface KeyTableProps {
-  keys: KeyRecord[]
+  keys: KeyRecord[];
 }
 
 export const KeyTable = ({ keys }: KeyTableProps) => (
-  <Table
-    stickyHeader
-    size='small'
-  >
+  <Table stickyHeader size='small'>
     <TableHead>
       <TableRow>
         <TableCell sx={{ width: 80 }}>Type</TableCell>
@@ -38,15 +35,11 @@ export const KeyTable = ({ keys }: KeyTableProps) => (
         const key = publicKey.toHex();
         return (
           <TableRow key={key}>
-            <TableCell monospace>
-              {type}
-            </TableCell>
+            <TableCell monospace>{type}</TableCell>
             <TableCell title={key}>
               <CopyText monospace variant='h6' value={key} length={8} />
             </TableCell>
-            <TableCell title={added}>
-              {moment(added).fromNow()}
-            </TableCell>
+            <TableCell title={added}>{moment(added).fromNow()}</TableCell>
             <TableCell align='center'>
               <BooleanIcon value={own} />
             </TableCell>
