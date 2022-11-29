@@ -113,6 +113,47 @@ service ProfileService {
   rpc SubscribeProfile (google.protobuf.Empty) returns (stream SubscribeProfileResponse);
 }
 
+message AddKeyRecordRequest {
+  dxos.halo.keys.KeyRecord key_record = 1;
+}
+
+message SignRequest {
+  /// The public key of the key that is supposed to be used for signing.
+  dxos.keys.PublicKey public_key = 1;
+
+  bytes payload = 2;
+}
+
+message SignResponse {
+  bytes signed = 2;
+}
+
+message SetPreferenceRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message GetPreferenceRequest {
+  string key = 1;
+}
+
+message GetPreferenceResponse {
+  string value = 1;
+}
+
+service HaloService {
+  rpc Sign(SignRequest) returns (SignResponse);
+  rpc AddKeyRecord(AddKeyRecordRequest) returns (google.protobuf.Empty);
+
+  rpc SubscribeContacts(google.protobuf.Empty) returns (stream Contacts);
+
+  rpc SetGlobalPreference(SetPreferenceRequest) returns (google.protobuf.Empty);
+  rpc GetGlobalPreference(GetPreferenceRequest) returns (GetPreferenceResponse);
+
+  rpc SetDevicePreference(SetPreferenceRequest) returns (google.protobuf.Empty);
+  rpc GetDevicePreference(GetPreferenceRequest) returns (GetPreferenceResponse);
+}
+
 //
 // Spaces
 //
