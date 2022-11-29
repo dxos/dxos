@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ReactNode, useEffect, useState } from 'react';
+import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 // TODO(burdon): Insert React control via remark layout plugin?
@@ -42,13 +42,10 @@ export const usePageHandler = (length: number) => {
   return page;
 };
 
+const count = 0;
+
 export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
-  const page = usePageHandler(slides.length);
-
-  // TODO(burdon): Debounce.
-  // TODO(burdon): Resize isn't called after size and scale is set.
-  const { ref, width, height } = useResizeDetector();
-
+  /*
   useEffect(() => {
     console.log('!');
     // TODO(burdon): Doesn't work.
@@ -57,7 +54,9 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
       console.log('???');
     });
   }, []);
+  */
 
+  /*
   useEffect(() => {
     return;
 
@@ -67,30 +66,71 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
     console.log(window.innerHeight, window.screen.height);
     console.log(document.fullscreenElement);
 
-    const scale = 0.9; // Scale when not maximized.
-    const fullScreen = !!(window.screenTop && window.screenY);
+    // const scale = 0.9; // Scale when not maximized.
+    // const fullScreen = !!(window.screenTop && window.screenY);
 
-    const ox = -(window.screen.availWidth - width) / 2;
-    const oy = -(window.screen.availHeight - height) / 2;
+    // const ox = -(window.screen.availWidth - width) / 2;
+    // const oy = -(window.screen.availHeight - height) / 2;
 
     // TODO(burdon): Translate.
     // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
     // NOTE: Only transformable elements can be transformed (tables?)
-    Object.assign(document.body.style, {
-      width: `${window.screen.availWidth}px`,
-      height: `${window.screen.availHeight}px`,
-      transform: `scale(${scale})`
-    });
+    // Object.assign(outerRef.current.body.style, {
+    //   width: `${window.screen.availWidth}px`,
+    //   height: `${window.screen.availHeight}px`,
+    //   transform: `scale(${scale})`
+    // });
   }, [width, height]);
+  */
+
+  const page = usePageHandler(slides.length);
+
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [props, setProps] = useState({});
+
+  // https://www.npmjs.com/package/react-resize-detector
+  const { ref: containerRef } = useResizeDetector({
+    refreshMode: 'debounce',
+    refreshRate: 200,
+    onResize: (width, height) => {
+      if (!width || !height) {
+        return;
+      }
+
+      // Display resolutions:
+      //          5K Studio       16.2-inch Macbook Pro
+      // Max      5120 x 2880     3456 x 2234
+      // Default  2560 x 1440     1728 x 1117 (Actual height 1080 - 37 pixel notch)
+      // Aspect   1.77 (16/9)     1.54
+
+      // Config.
+      const aspectRatio = 16 / 9;
+      const nominalWidth = 2560;
+      const nominalHeight = nominalWidth / aspectRatio;
+
+      // TODO(burdon): If not fullscreen then make scale slightly smaller.
+      const scale = Math.min(width / nominalWidth, height / nominalHeight);
+
+      // Offset.
+      const dx = (width - nominalWidth) / 2;
+      const dy = (height - nominalHeight) / 2;
+
+      setProps({
+        left: dx,
+        top: dy,
+        width: nominalWidth,
+        height: nominalHeight,
+        transform: `scale(${scale})`
+      });
+    }
+  });
 
   const Page = () => slides[page];
 
   // prettier-ignore
   return (
     <div
-      ref={ref}
-
-      // TODO(burdon): Use tailwind.
+      ref={containerRef}
       style={{
         position: 'absolute',
         left: 0,
@@ -100,15 +140,27 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
         display: 'flex',
         overflow: 'hidden',
         flexDirection: 'column',
-        backgroundColor: 'white'
+        backgroundColor: '#333'
       }}
     >
-      {/* TODO(burdon): Show/hide based on front-matter. */}
-      <Pager page={page} length={slides.length} />
+      <div
+        ref={contentRef}
+        style={{
+          position: 'absolute',
+          display: 'flex',
+          backgroundColor: '#FFF', // TODO(burdon): Theme.
+          ...props
+        }}
+      >
+        {/* <div style={{ position: 'absolute' }}>{JSON.stringify(props)}</div> */}
 
-      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-      {/* @ts-ignore */}
-      <Page />
+        {/* TODO(burdon): Show/hide based on front-matter. */}
+        <Pager page={page} length={slides.length} />
+
+        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+        {/* @ts-ignore */}
+        <Page />
+      </div>
     </div>
   );
 };
