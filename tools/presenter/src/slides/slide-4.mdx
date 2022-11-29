@@ -4,19 +4,12 @@ layout: col-2
 ---
 
 import BG from './images/deck-google-slide-bg_00_pa_5.png';
+import { ImageContainer  } from '../components';
 
-[//]: # (TODO: Image offset; Fix aspect ratio/scale.)
-
-<div
-  className='flex flex-1'
-  style={{
-    margin: -64,
-    opacity: 0.9,
-    backgroundImage: `url(${BG})`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: '-150px center',
-    backgroundSize: 'cover'
-  }}
+<ImageContainer
+  backgroundImage={`url(${BG})`}
+  backgroundPosition='-150px center'
+  opacity={0.9}
 />
 
 <br/>

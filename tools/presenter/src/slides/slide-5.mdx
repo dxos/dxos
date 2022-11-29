@@ -4,6 +4,7 @@ layout: col-2
 ---
 
 import BG from './images/deck-google-slide-bg_00_pa_2.png';
+import { ImageContainer  } from '../components';
 
 ## Numbered List
 
@@ -16,16 +17,8 @@ import BG from './images/deck-google-slide-bg_00_pa_2.png';
 
 <br/>
 
-[//]: # (TODO: Full bleed background div; both RHS and global options; see negative margin below.)
-
-<div
-  className='flex flex-1'
-  style={{
-    margin: -64,
-    opacity: 0.9,
-    backgroundImage: `url(${BG})`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: '-550px center',
-    backgroundSize: 'cover'
-  }}
+<ImageContainer
+  backgroundImage={`url(${BG})`}
+  backgroundPosition='-550px center'
+  opacity={0.9}
 />

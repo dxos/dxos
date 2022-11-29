@@ -3,20 +3,14 @@ title: DXOS
 layout: full
 ---
 
+import { Cover } from '../components';
 import BG from './images/bg-dark.png';
 
-[//]: # (TODO: Create plugin/directive.)
-<div
-  className='flex flex-1'
-  style={{
-    backgroundImage: `url(${BG})`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'center center',
-    backgroundSize: 'cover'
-  }}
-/>
+<Cover backgroundImage={`url(${BG})`} />
 
-[//]: # (TODO: Color doesn't work.)
-[//]: # (TODO: Position left doesn't work.)
-
-<p style={{ color: '#555' }} className='absolute left-1 bottom-1 font-mono text-3xl text-red-700'>dmg://fce21ec4-af2c-42cf-b37b-e25d2ad7b7e6</p>
+<p
+  className='absolute font-mono text-3xl'
+  style={{ left: 32, bottom: 32, color: '#555',  }}
+>
+  {'dmg://fce21ec4-af2c-42cf-b37b-e25d2ad7b7e6'}
+</p>

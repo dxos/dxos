@@ -4,9 +4,8 @@ subheading: The Decentralized Operating System
 layout: col-2
 ---
 
-[//]: # (import Image from './images/topology-realtime.png';)
-
 import Image from './images/sphere.svg';
+import { ImageContainer  } from '../components';
 
 ## List Items
 
@@ -21,6 +20,9 @@ import Image from './images/sphere.svg';
 
 <br/>
 
-[//]: # (TODO: Image layout options.)
-
-<img src={Image} />
+<ImageContainer
+  backgroundImage={`url(${Image})`}
+  backgroundSize='contain'
+  fullBleed={false}
+  opacity={0.9}
+/>
