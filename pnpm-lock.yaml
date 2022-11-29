@@ -1221,6 +1221,8 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/teleport': workspace:*
+      '@dxos/teleport-plugin-replicator': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -1252,6 +1254,8 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/rpc': link:../../mesh/rpc
+      '@dxos/teleport': link:../../mesh/teleport
+      '@dxos/teleport-plugin-replicator': link:../../mesh/teleport-plugin-replicator
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
@@ -1636,7 +1640,7 @@ importers:
       '@types/ws': ^7.4.0
       assert: ^2.0.0
       earljs: ~0.1.10
-      fast-check: ~2.14.0
+      fast-check: ~3.3.0
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
       simple-peer: 9.11.0
@@ -1651,7 +1655,6 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
-      '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/messaging': link:../messaging
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/protocols': link:../../protocols
@@ -1665,6 +1668,7 @@ importers:
       ws: 7.5.9
       xor-distance: 2.0.0
     devDependencies:
+      '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/signal': link:../signal
       '@dxos/testutils': link:../../../common/testutils
       '@swc-node/register': 1.5.4_ie5offz2yl6qk2o42uszmzfabu
@@ -1672,7 +1676,7 @@ importers:
       '@types/simple-peer': 9.11.3
       '@types/ws': 7.4.7
       earljs: 0.1.12_typescript@4.9.3
-      fast-check: 2.14.0
+      fast-check: 3.3.0
       typescript: 4.9.3
 
   packages/core/mesh/protocol-network-generator:
@@ -1862,6 +1866,80 @@ importers:
       '@types/debug': 4.1.7
       '@types/node': 18.11.9
       '@types/node-fetch': 2.6.2
+
+  packages/core/mesh/teleport:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@types/varint': ^6.0.0
+      assert: ^2.0.0
+      debug: ^4.3.3
+      typescript: ^4.8.4
+      varint: ^6.0.0
+      wait-for-expect: ^3.0.2
+    dependencies:
+      '@dxos/context': link:../../../common/context
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../protocols
+      '@dxos/rpc': link:../rpc
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+      debug: 4.3.4
+      varint: 6.0.0
+    devDependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/testutils': link:../../../common/testutils
+      '@types/varint': 6.0.1
+      typescript: 4.9.3
+      wait-for-expect: 3.0.2
+
+  packages/core/mesh/teleport-plugin-replicator:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/teleport': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      add: ^2.0.6
+      assert: ^2.0.0
+      fast-check: ~3.3.0
+      typescript: ^4.8.4
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/context': link:../../../common/context
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../protocols
+      '@dxos/rpc': link:../rpc
+      '@dxos/teleport': link:../teleport
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+    devDependencies:
+      '@dxos/keyring': link:../../halo/keyring
+      '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/testutils': link:../../../common/testutils
+      add: 2.0.6
+      fast-check: 3.3.0
+      typescript: 4.9.3
 
   packages/core/protocols:
     specifiers:
@@ -13084,6 +13162,12 @@ packages:
     resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
     dev: true
 
+  /@types/varint/6.0.1:
+    resolution: {integrity: sha512-fQdOiZpDMBvaEdl12P1x7xlTPRAtd7qUUtVaWgkCy8DC//wCv19nqFFtrnR3y/ac6VFY0UUvYuQqfKzZTSE26w==}
+    dependencies:
+      '@types/node': 18.11.9
+    dev: true
+
   /@types/vinyl/2.0.7:
     resolution: {integrity: sha512-4UqPv+2567NhMQuMLdKAyK4yzrfCqwaTt6bLhHEs8PFcxbHILsrxaY63n4wgE/BRLDWDQeI+WcTmkXKExh9hQg==}
     dependencies:
@@ -13785,6 +13869,10 @@ packages:
     resolution: {integrity: sha512-7zFpHzhnqYKrkYdUjF1HI1bzd0VygEGX8lFk4k5zVMqHEoES+P+7TKI+EvLO9WVMJ8eekdO0aDEK044xTXwPPA==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  /add/2.0.6:
+    resolution: {integrity: sha512-j5QzrmsokwWWp6kUcJQySpbG+xfOBqqKnup3OIk1pz+kB/80SLorZ9V8zHFLO92Lcd+hbvq8bT+zOGoPkmBV0Q==}
+    dev: true
 
   /addons-linter/4.4.0_k5m3pyij6ftsjglkv3cqpdg7bi:
     resolution: {integrity: sha512-2N8oo97y2w2MJX/bcvnSb5BG2s+0BOlOu/0Q06wp5bnyEwWbfKFOVX/CorivGkRteY0fbSUWvU55LXgIiLyH5w==}
@@ -19183,11 +19271,11 @@ packages:
       count-trailing-zeros: 1.0.1
     dev: false
 
-  /fast-check/2.14.0:
-    resolution: {integrity: sha512-4hm0ioyEVCwgjBLBqriwAFYu3/yc7pNH9fBfvzi6JRWRs4R3mwZwrr/d4MHbY0fTBJ0Uakg4TaMAAQ8Cnt2+KQ==}
+  /fast-check/3.3.0:
+    resolution: {integrity: sha512-Zu6tZ4g0T4H9Tiz3tdNPEHrSbuICj7yhdOM9RCZKNMkpjZ9avDV3ORklXaEmh4zvkX24/bGZ9DxKKqWfXttUqw==}
     engines: {node: '>=8.0.0'}
     dependencies:
-      pure-rand: 4.2.1
+      pure-rand: 5.0.5
     dev: true
 
   /fast-deep-equal/2.0.1:
@@ -27576,8 +27664,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /pure-rand/4.2.1:
-    resolution: {integrity: sha512-ESI2eqHP9JlrnTb7H7fgczRUWB6VxMMJ2m9870WCIBhYkBzSGd6gml6WhQVXHK+ZM8k70TqsyI28ixaLPaNz5g==}
+  /pure-rand/5.0.5:
+    resolution: {integrity: sha512-BwQpbqxSCBJVpamI6ydzcKqyFmnd5msMWUGvzXLm1aXvusbbgkbOto/EUPM00hjveJEaJtdbhUjKSzWRhQVkaw==}
     dev: true
 
   /qqjs/0.3.11:

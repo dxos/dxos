@@ -9,13 +9,16 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 
-import { ProtocolProvider } from './network-manager';
-
 interface ProtocolFactoryOptions {
   plugins: any[];
   getTopics: () => Buffer[];
   session: Record<string, any>;
 }
+
+/**
+ * @deprecated Replaced by WireProtocolProvider.
+ */
+export type MeshProtocolProvider = (params: { channel: Buffer; initiator: boolean }) => Protocol;
 
 /**
  * Returns a function that takes a channel parameter, returns a Protocol object
@@ -30,7 +33,7 @@ export const protocolFactory = ({
   session = {},
   plugins = [],
   getTopics
-}: ProtocolFactoryOptions): ProtocolProvider => {
+}: ProtocolFactoryOptions): MeshProtocolProvider => {
   assert(getTopics);
 
   // eslint-disable-next-line no-unused-vars
@@ -76,7 +79,7 @@ export const transportProtocolProvider = (
   rendezvousKey: Buffer,
   peerId: Buffer,
   protocolPlugin: any
-): ProtocolProvider => {
+): MeshProtocolProvider => {
   return protocolFactory({
     getTopics: () => [rendezvousKey],
     session: { peerId: PublicKey.stringify(peerId) },

@@ -22,6 +22,8 @@ subgraph common [common]
 
   subgraph _ [ ]
     style _ fill:transparent
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
   end
@@ -32,4 +34,5 @@ end
 
 | Module | Direct |
 |---|---|
+| [`@dxos/debug`](../../debug/docs/README.md) | &check; |
 | [`@dxos/log`](../../log/docs/README.md) | &check; |
