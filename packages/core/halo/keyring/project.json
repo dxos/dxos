@@ -20,7 +20,10 @@
           "packages/core/halo/keyring/src/index.ts"
         ],
         "outputPath": "packages/core/halo/keyring/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

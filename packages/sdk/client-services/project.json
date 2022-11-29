@@ -20,7 +20,10 @@
           "packages/sdk/client-services/src/index.ts"
         ],
         "outputPath": "packages/sdk/client-services/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

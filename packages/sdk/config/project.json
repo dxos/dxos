@@ -13,6 +13,16 @@
         "{options.outputPath}"
       ]
     },
+    "compile": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile-lib config",
+          "nx compile-plugin config"
+        ],
+        "parallel": true
+      }
+    },
     "compile-lib": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -20,7 +30,10 @@
           "packages/sdk/config/src/index.ts"
         ],
         "outputPath": "packages/sdk/config/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -34,17 +47,9 @@
           "packages/sdk/config/src/plugin/rollup-plugin.js"
         ],
         "outputPath": "packages/sdk/config/dist/plugin",
-        "platforms": ["node"]
-      }
-    },
-    "compile": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx compile-lib config",
-          "nx compile-plugin config"
-        ],
-        "parallel": true
+        "platforms": [
+          "node"
+        ]
       }
     },
     "lint": {

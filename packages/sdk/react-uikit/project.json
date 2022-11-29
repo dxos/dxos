@@ -20,7 +20,9 @@
           "packages/sdk/react-uikit/src/index.ts"
         ],
         "outputPath": "packages/sdk/react-uikit/dist/lib",
-        "platforms": ["browser"]
+        "platforms": [
+          "browser"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

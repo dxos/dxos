@@ -21,7 +21,10 @@
           "packages/sdk/client/src/packlets/testing/index.ts"
         ],
         "outputPath": "packages/sdk/client/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

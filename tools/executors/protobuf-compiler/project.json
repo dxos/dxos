@@ -3,6 +3,12 @@
   "projectType": "library",
   "targets": {
     "build-internal": {
+      "dependsOn": [
+        "^build",
+        "^build-internal",
+        "^compile",
+        "prebuild"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/protobuf-compiler/src/index.ts",

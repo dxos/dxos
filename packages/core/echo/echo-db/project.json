@@ -21,7 +21,10 @@
           "packages/core/echo/echo-db/src/packlets/testing/index.ts"
         ],
         "outputPath": "packages/core/echo/echo-db/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

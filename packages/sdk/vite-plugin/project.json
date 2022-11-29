@@ -20,7 +20,9 @@
           "packages/sdk/vite-plugin/src/index.ts"
         ],
         "outputPath": "packages/sdk/vite-plugin/dist/lib",
-        "platforms": ["node"]
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

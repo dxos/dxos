@@ -20,7 +20,10 @@
           "packages/core/echo/model-factory/src/index.ts"
         ],
         "outputPath": "packages/core/echo/model-factory/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

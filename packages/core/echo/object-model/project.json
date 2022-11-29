@@ -20,7 +20,10 @@
           "packages/core/echo/object-model/src/index.ts"
         ],
         "outputPath": "packages/core/echo/object-model/dist/lib",
-        "platforms": ["node", "browser"]
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

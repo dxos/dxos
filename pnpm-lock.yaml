@@ -3715,8 +3715,6 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@types/use-subscription': ^1.0.0
-      assert: ^2.0.0
-      debug: ^4.3.3
       level-js: ^5.0.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -3736,8 +3734,6 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      debug: 4.3.4
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
       '@dxos/react-ui': link:../../common/react-ui
