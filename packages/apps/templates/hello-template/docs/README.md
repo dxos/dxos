@@ -30,6 +30,8 @@ subgraph apps [apps]
     click dxos/react-appkit "dxos/dxos/tree/main/packages/apps/patterns/react-appkit/docs"
     dxos/react-composer("@dxos/react-composer"):::def
     click dxos/react-composer "dxos/dxos/tree/main/packages/apps/patterns/react-composer/docs"
+    dxos/react-list("@dxos/react-list"):::def
+    click dxos/react-list "dxos/dxos/tree/main/packages/apps/patterns/react-list/docs"
   end
 end
 
@@ -41,6 +43,8 @@ subgraph sdk [sdk]
   click dxos/client-services "dxos/dxos/tree/main/packages/sdk/client-services/docs"
   dxos/config("@dxos/config"):::def
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
+  dxos/errors("@dxos/errors"):::def
+  click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
   dxos/react-client("@dxos/react-client"):::def
   click dxos/react-client "dxos/dxos/tree/main/packages/sdk/react-client/docs"
   dxos/react-uikit("@dxos/react-uikit"):::def
@@ -122,6 +126,10 @@ subgraph core [core]
     click dxos/network-generator "dxos/dxos/tree/main/packages/core/mesh/network-generator/docs"
     dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
     click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
+    dxos/teleport("@dxos/teleport"):::def
+    click dxos/teleport "dxos/dxos/tree/main/packages/core/mesh/teleport/docs"
+    dxos/teleport-plugin-replicator("@dxos/teleport-plugin-replicator"):::def
+    click dxos/teleport-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/teleport-plugin-replicator/docs"
     dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
     click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
   end
@@ -143,6 +151,7 @@ end
 dxos/async --> dxos/context
 dxos/client --> dxos/client-services
 dxos/client-services --> dxos/config
+dxos/config --> dxos/errors
 dxos/config --> dxos/protocols
 dxos/protocols --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf
@@ -175,11 +184,14 @@ dxos/protocol-plugin-replicator --> dxos/network-generator
 dxos/echo-db --> dxos/protocol-plugin-rpc
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol
 dxos/protocol-plugin-rpc --> dxos/messaging
+dxos/teleport --> dxos/rpc
+dxos/echo-db --> dxos/teleport-plugin-replicator
+dxos/teleport-plugin-replicator --> dxos/feed-store
+dxos/teleport-plugin-replicator --> dxos/teleport
 dxos/client-services --> dxos/text-model
 dxos/text-model --> dxos/echo-db
 dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
-dxos/hello-template --> dxos/react-appkit
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
 dxos/react-appkit --> dxos/react-uikit
@@ -191,6 +203,8 @@ dxos/hello-template --> dxos/react-composer
 dxos/react-composer --> dxos/react-uikit
 dxos/react-composer --> dxos/vite-plugin
 dxos/vite-plugin --> dxos/config
+dxos/hello-template --> dxos/react-list
+dxos/react-list --> dxos/react-appkit
 ```
 
 ## Dependencies
@@ -208,6 +222,7 @@ dxos/vite-plugin --> dxos/config
 | [`@dxos/crypto`](../../../../common/crypto/docs/README.md) |  |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) |  |
 | [`@dxos/echo-db`](../../../../core/echo/echo-db/docs/README.md) |  |
+| [`@dxos/errors`](../../../../sdk/errors/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md) |  |
 | [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md) |  |
 | [`@dxos/keyring`](../../../../core/halo/keyring/docs/README.md) |  |
@@ -228,12 +243,15 @@ dxos/vite-plugin --> dxos/config
 | [`@dxos/react-async`](../../../../common/react-async/docs/README.md) |  |
 | [`@dxos/react-client`](../../../../sdk/react-client/docs/README.md) | &check; |
 | [`@dxos/react-composer`](../../../patterns/react-composer/docs/README.md) | &check; |
+| [`@dxos/react-list`](../../../patterns/react-list/docs/README.md) | &check; |
 | [`@dxos/react-ui`](../../../../common/react-ui/docs/README.md) | &check; |
 | [`@dxos/react-uikit`](../../../../sdk/react-uikit/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../../core/mesh/rpc/docs/README.md) |  |
 | [`@dxos/rpc-tunnel`](../../../../core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/sentry`](../../../../common/sentry/docs/README.md) |  |
 | [`@dxos/telemetry`](../../../../common/telemetry/docs/README.md) |  |
+| [`@dxos/teleport`](../../../../core/mesh/teleport/docs/README.md) |  |
+| [`@dxos/teleport-plugin-replicator`](../../../../core/mesh/teleport-plugin-replicator/docs/README.md) |  |
 | [`@dxos/text-model`](../../../../core/echo/text-model/docs/README.md) | &check; |
 | [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md) |  |
 | [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |
