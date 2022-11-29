@@ -57,8 +57,8 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
           await writeAndCheck(file, buffer);
         }
 
-        const list = directory.getFiles();
-        expect(list).toHaveLength(count);
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(count);
       }
 
       {
@@ -69,8 +69,8 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
           await file.destroy();
         }
 
-        const list = directory.getFiles();
-        expect(list).toHaveLength(count - amountToDelete);
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(count - amountToDelete);
       }
 
       // Cleanup.

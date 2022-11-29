@@ -45,7 +45,7 @@ export abstract class AbstractStorage implements Storage {
     return new Directory(
       this.type,
       getFullPath(this.path, sub),
-      () => Array.from(this._getFiles(sub).values()),
+      () => this._getFiles(sub),
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub)
     );
@@ -113,7 +113,7 @@ export abstract class AbstractStorage implements Storage {
   private _getFiles(path: string): Map<string, File> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
-      Array.from(this._files.entries()).filter(([path, file]) => path.includes(fullPath) && file.destroyed !== true)
+      [...this._files.entries()].filter(([path, file]) => path.includes(fullPath) && file.destroyed !== true)
     );
   }
 
