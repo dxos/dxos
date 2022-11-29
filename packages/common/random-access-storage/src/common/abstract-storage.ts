@@ -113,9 +113,7 @@ export abstract class AbstractStorage implements Storage {
   private _getFiles(path: string): Map<string, File> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
-      Array.from(this._files.entries()).filter(([path]) => {
-        return path.includes(fullPath);
-      })
+      Array.from(this._files.entries()).filter(([path, file]) => path.includes(fullPath) && file.destroyed !== true)
     );
   }
 
