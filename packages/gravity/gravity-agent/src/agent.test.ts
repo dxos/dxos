@@ -99,6 +99,8 @@ describe('Agent', function () {
     // TODO(burdon): Error handling.
 
     const testBuilder = new TestBuilder();
+
+    // TODO(burdon): Extend TestBuilder pattern for gravity-agent package.
     const agent1 = new Agent({
       config,
       services: testBuilder.createClientServicesHost(),
