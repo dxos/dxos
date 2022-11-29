@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "agent": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.ts",
+    "build": "tsc",
     "check": "true"
   },
   "dependencies": {
@@ -39,7 +40,8 @@
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^18.11.9",
     "@types/yargs": "~16.0.1",
-    "source-map-support": "^0.5.12"
+    "source-map-support": "^0.5.12",
+    "typescript": "^4.8.4"
   },
   "engines": {
     "node": ">=12.0.0"
