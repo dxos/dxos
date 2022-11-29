@@ -55,7 +55,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
               let files = 0;
               let time = 0;
 
-              onLoad({ filter: /\.ts/ }, async (args) => {
+              onLoad({ namespace: 'file', filter: /\.ts(x?)$/ }, async (args) => {
                 const source = await readFile(args.path, 'utf8');
 
                 const startTime = Date.now();
@@ -65,7 +65,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                   source,
                   ts.ScriptTarget.ESNext,
                   false,
-                  ts.ScriptKind.TS
+                  args.path.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
                 );
                 const transformed = transformSourceFile(sourceFile, (ts as any).nullTransformationContext);
 
@@ -74,7 +74,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
                 return {
                   contents: ts.createPrinter().printFile(transformed),
-                  loader: 'ts'
+                  loader: args.path.endsWith('x') ? 'tsx' : 'ts'
                 };
               });
 

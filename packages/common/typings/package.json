@@ -8,8 +8,5 @@
   "license": "MIT",
   "author": "DXOS.org",
   "types": "./src/index.d.ts",
-  "scripts": {
-    "build": "true"
-  },
   "typeScriptVersion": "2.0"
 }
