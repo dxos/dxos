@@ -1,0 +1,57 @@
+{
+  "sourceRoot": "packages/core/mesh/teleport/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/teleport/src/index.ts",
+        "outputPath": "packages/core/mesh/teleport/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/core/mesh/teleport/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/mesh/teleport/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/core/mesh/teleport",
+        "outputPath": "tmp/mocha/packages/core/mesh/teleport",
+        "resultsPath": "test-results/packages/core/mesh/teleport",
+        "testPatterns": [
+          "packages/core/mesh/teleport/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/mesh/teleport/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

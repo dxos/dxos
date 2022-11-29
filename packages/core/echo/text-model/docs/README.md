@@ -60,6 +60,10 @@ subgraph core [core]
     click dxos/network-generator "dxos/dxos/tree/main/packages/core/mesh/network-generator/docs"
     dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
     click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
+    dxos/teleport("@dxos/teleport"):::def
+    click dxos/teleport "dxos/dxos/tree/main/packages/core/mesh/teleport/docs"
+    dxos/teleport-plugin-replicator("@dxos/teleport-plugin-replicator"):::def
+    click dxos/teleport-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/teleport-plugin-replicator/docs"
   end
 end
 
@@ -129,6 +133,10 @@ dxos/protocol-plugin-replicator --> dxos/network-generator
 dxos/echo-db --> dxos/protocol-plugin-rpc
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol
 dxos/protocol-plugin-rpc --> dxos/messaging
+dxos/teleport --> dxos/rpc
+dxos/echo-db --> dxos/teleport-plugin-replicator
+dxos/teleport-plugin-replicator --> dxos/feed-store
+dxos/teleport-plugin-replicator --> dxos/teleport
 ```
 
 ## Dependencies
@@ -160,5 +168,7 @@ dxos/protocol-plugin-rpc --> dxos/messaging
 | [`@dxos/protocols`](../../../protocols/docs/README.md) |  |
 | [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/rpc`](../../../mesh/rpc/docs/README.md) |  |
+| [`@dxos/teleport`](../../../mesh/teleport/docs/README.md) |  |
+| [`@dxos/teleport-plugin-replicator`](../../../mesh/teleport-plugin-replicator/docs/README.md) |  |
 | [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md) |  |
 | [`@dxos/util`](../../../../common/util/docs/README.md) |  |

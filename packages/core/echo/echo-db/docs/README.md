@@ -8,6 +8,140 @@ ECHO database.
 classDiagram
 direction TB
 
+class Space {
+  key
+  isOpen
+  database
+  genesisFeedKey
+  controlFeedKey
+  dataFeedKey
+  spaceState
+  controlPipeline
+  open()
+  close()
+}
+Space --> ControlPipeline : _controlPipeline
+Space --> SpaceProtocol : _protocol
+Space --> Pipeline : _dataPipeline
+Space --> DatabaseBackendHost : _databaseBackend
+Space --> Database : _database
+class ControlPipeline {
+  spaceState
+  pipeline
+  setWriteFeed()
+  start()
+  stop()
+}
+ControlPipeline --> Pipeline : _pipeline
+class Pipeline {
+  state
+  writer
+  addFeed()
+  setWriteFeed()
+  start()
+  stop()
+  consume()
+}
+Pipeline *-- TimeframeClock : _timeframeClock
+Pipeline *-- PipelineState : _state
+class TimeframeClock {
+  timeframe
+  updateTimeframe()
+  hasGaps()
+  waitUntilReached()
+}
+class PipelineState {
+  endTimeframe
+  timeframe
+  waitUntilTimeframe()
+}
+PipelineState --> TimeframeClock : _timeframeClock
+class SpaceProtocol {
+  peers
+  addFeed()
+  start()
+  stop()
+}
+SpaceProtocol *-- ReplicatorPlugin : _replicator
+SpaceProtocol --> SwarmIdentity : _swarmIdentity
+SpaceProtocol --> AuthPlugin : _authPlugin
+SpaceProtocol --> "Map" SpaceProtocolSession : _sessions
+class ReplicatorPlugin {
+  addFeed()
+}
+class SwarmIdentity {
+  <interface>
+  peerKey
+  credentialProvider
+  credentialAuthenticator
+}
+class AuthPlugin {
+  createExtension()
+}
+AuthPlugin --> SwarmIdentity : _swarmIdentity
+class SpaceProtocolSession {
+  stream
+  initialize()
+  destroy()
+}
+class DatabaseBackendHost {
+  isReadOnly
+  echoProcessor
+  open()
+  close()
+  getWriteStream()
+  createSnapshot()
+  createDataServiceHost()
+}
+DatabaseBackendHost --> ItemManager : _itemManager
+DatabaseBackendHost --> ItemDemuxer : _itemDemuxer
+DatabaseBackendHost *-- ItemDemuxerOptions : _options
+class ItemManager {
+  entities
+  items
+  links
+  createItem()
+  createLink()
+  constructItem()
+  constructLink()
+  processModelMessage()
+  getItem()
+  getUninitializedEntities()
+  deconstructItem()
+  initializeModel()
+}
+ItemManager *-- "Map" Entity : _entities
+class Entity {
+  id
+  type
+  modelType
+  modelMeta
+  model
+  subscribe()
+}
+Entity --> ItemManager : _itemManager
+class ItemDemuxer {
+  open()
+  createSnapshot()
+  createItemSnapshot()
+  createLinkSnapshot()
+  restoreFromSnapshot()
+}
+ItemDemuxer --> ItemManager : _itemManager
+ItemDemuxer *-- ItemDemuxerOptions : _options
+class ItemDemuxerOptions {
+  <interface>
+  snapshots
+}
+class Database {
+  addType()
+  create()
+}
+```
+```mermaid
+classDiagram
+direction TB
+
 class Database {
   state
   isReadOnly
@@ -51,7 +185,7 @@ class Entity {
 }
 Entity --> ItemManager : _itemManager
 class DatabaseBackend {
-<interface>
+  <interface>
   isReadOnly
   open()
   close()
@@ -110,7 +244,7 @@ class ItemDemuxer {
 ItemDemuxer --> ItemManager : _itemManager
 ItemDemuxer *-- ItemDemuxerOptions : _options
 class ItemDemuxerOptions {
-<interface>
+  <interface>
   snapshots
 }
 class DatabaseBackendProxy {
@@ -180,6 +314,10 @@ subgraph core [core]
     click dxos/network-generator "dxos/dxos/tree/main/packages/core/mesh/network-generator/docs"
     dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
     click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
+    dxos/teleport("@dxos/teleport"):::def
+    click dxos/teleport "dxos/dxos/tree/main/packages/core/mesh/teleport/docs"
+    dxos/teleport-plugin-replicator("@dxos/teleport-plugin-replicator"):::def
+    click dxos/teleport-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/teleport-plugin-replicator/docs"
   end
 end
 
@@ -248,6 +386,10 @@ dxos/protocol-plugin-replicator --> dxos/network-generator
 dxos/echo-db --> dxos/protocol-plugin-rpc
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol
 dxos/protocol-plugin-rpc --> dxos/messaging
+dxos/teleport --> dxos/rpc
+dxos/echo-db --> dxos/teleport-plugin-replicator
+dxos/teleport-plugin-replicator --> dxos/feed-store
+dxos/teleport-plugin-replicator --> dxos/teleport
 ```
 
 ## Dependencies
@@ -278,5 +420,7 @@ dxos/protocol-plugin-rpc --> dxos/messaging
 | [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
 | [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../mesh/rpc/docs/README.md) | &check; |
+| [`@dxos/teleport`](../../../mesh/teleport/docs/README.md) | &check; |
+| [`@dxos/teleport-plugin-replicator`](../../../mesh/teleport-plugin-replicator/docs/README.md) | &check; |
 | [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md) | &check; |
 | [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |
