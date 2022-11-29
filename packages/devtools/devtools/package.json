@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -33,6 +33,7 @@
     "@dxos/registry-client": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.8.0",

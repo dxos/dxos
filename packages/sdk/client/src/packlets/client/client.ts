@@ -18,7 +18,7 @@ import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
 import { EXPECTED_CONFIG_VERSION } from './config';
 import { SpaceSerializer } from './serializer';
-import { fromConfig, fromIFrame } from './utils';
+import { fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 

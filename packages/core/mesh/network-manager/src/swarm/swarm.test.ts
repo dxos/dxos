@@ -16,6 +16,7 @@ import { afterTest } from '@dxos/testutils';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory } from '../transport';
+import { adaptProtocolProvider } from '../wire-protocol';
 import { Swarm } from './swarm';
 
 describe('Swarm', function () {
@@ -33,7 +34,7 @@ describe('Swarm', function () {
       topic,
       peerId,
       new FullyConnectedTopology(),
-      testProtocolProvider(topic.asBuffer(), peerId, plugin),
+      adaptProtocolProvider(testProtocolProvider(topic.asBuffer(), peerId, plugin)),
       new Messenger({ signalManager }),
       createWebRTCTransportFactory(),
       undefined

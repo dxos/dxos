@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,6 +37,8 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/teleport": "workspace:*",
+    "@dxos/teleport-plugin-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
@@ -54,6 +56,9 @@
   },
   "beast": {
     "classDiagrams": [
+      {
+        "root": "src/packlets/space/space.ts"
+      },
       {
         "root": "src/packlets/database/database.ts"
       },
