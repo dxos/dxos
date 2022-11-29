@@ -83,9 +83,10 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               };
             },
 
-            authenticate: async ({ authenticationCode: code }) => {
+            async authenticate({ authenticationCode: code }) {
               log('received authentication request', { authenticationCode: code });
               authenticationCode = code;
+              return invitation;
             },
 
             // TODO(burdon): Not used: controlFeedKey, dataFeedKey.

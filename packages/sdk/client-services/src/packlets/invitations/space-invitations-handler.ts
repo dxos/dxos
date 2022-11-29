@@ -27,6 +27,8 @@ import {
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
 
+const MAX_OTP_ATTEMPTS = 3;
+
 /**
  * Handles the life-cycle of Space invitations between peers.
  */
@@ -63,6 +65,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     });
 
     let authenticationCode: string;
+    let authenticationRetry = 0;
+
     const complete = new Trigger<PublicKey>();
     const plugin = new RpcPlugin(async (port) => {
       let guestProfile: ProfileDocument | undefined;
@@ -93,21 +97,25 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
             authenticate: async ({ authenticationCode: code }) => {
               log('received authentication request', { authenticationCode: code });
-              authenticationCode = code;
+              const invitationResponse: Invitation = {};
+              if (invitation.authenticationCode) {
+                if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
+                  invitationResponse.error = Invitation.Error.INVALID_OPT_ATTEMPTS;
+                } else if (code !== invitation.authenticationCode) {
+                  invitationResponse.error = Invitation.Error.INVALID_OTP;
+                } else {
+                  authenticationCode = code;
+                }
+              }
+
+              return invitationResponse;
             },
 
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
-                // Check authenticated.
-                if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-                  if (
-                    invitation.authenticationCode === undefined ||
-                    authenticationCode !== invitation.authenticationCode
-                  ) {
-                    invitation.authenticationCode &&
-                      log.error('bad auth code', { code: authenticationCode, expected: invitation.authenticationCode });
-                    throw new Error('authentication code not set');
-                  }
+                if (invitation.authenticationCode && invitation.authenticationCode !== authenticationCode) {
+                  log.error('bad auth code', { code: authenticationCode, expected: invitation.authenticationCode });
+                  throw new Error('authentication code not set');
                 }
 
                 log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
