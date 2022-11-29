@@ -70,7 +70,7 @@ export class Keyring implements Signer {
       const record = schema.getCodecForType('dxos.halo.keyring.KeyRecord').decode(recordBytes);
       const publicKey = PublicKey.from(record.publicKey);
       assert(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
-
+      assert(record.privateKey, 'Corrupted keyring: Missing private key');
       const keyPair: CryptoKeyPair = {
         publicKey: await subtleCrypto.importKey(
           'raw',
