@@ -46,7 +46,7 @@ describe('Context', () => {
     expect((undefined as any) instanceof Context).toBeFalsy();
   });
 
-  it('dispose is idempotent', function () {
+  test('dispose is idempotent', () => {
     const ctx = new Context();
 
     let called = false;

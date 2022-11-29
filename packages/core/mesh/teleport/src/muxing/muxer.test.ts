@@ -141,7 +141,7 @@ describe('Muxer', () => {
     pipeline(
       stream1,
       new Transform({
-        transform(chunk, encoding, callback) {
+        transform: (chunk, encoding, callback) => {
           callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
         }
       }),
