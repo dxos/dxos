@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ChangeEvent, useCallback, useState, useTransition } from 'react';
 
 import { useId } from '../../hooks';
 import { defaultDescription, valenceColorText } from '../../styles';
+import { mx } from '../../util';
 import { BarePinInput } from './BarePinInput';
 import { BareTextInput } from './BareTextInput';
 import { BareTextareaInput, BareTextareaInputProps } from './BareTextareaInput';
@@ -87,10 +87,10 @@ export const Input = ({
     );
 
   return (
-    <div role='none' className={cx(spacing ?? 'mlb-4', className)}>
+    <div role='none' className={mx(spacing ?? 'mlb-4', className)}>
       <label
         htmlFor={inputId}
-        className={cx(
+        className={mx(
           'block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
           labelVisuallyHidden && 'sr-only'
         )}
@@ -101,7 +101,7 @@ export const Input = ({
       {(description || validationMessage) && (
         <p
           {...(!isInvalid && { id: descriptionId })}
-          className={cx(descriptionVisuallyHidden && !isInvalid && 'sr-only')}
+          className={mx(descriptionVisuallyHidden && !isInvalid && 'sr-only')}
         >
           {validationMessage && (
             <span id={validationId} className={valenceColorText(validationValence)}>
@@ -110,7 +110,7 @@ export const Input = ({
           )}
           <span
             {...(isInvalid && { id: descriptionId })}
-            className={cx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
+            className={mx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
           >
             {description}
           </span>

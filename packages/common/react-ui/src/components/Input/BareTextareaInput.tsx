@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ComponentProps } from 'react';
 
 import { defaultInput } from '../../styles/input';
+import { mx } from '../../util';
 import { TextareaProps } from './InputProps';
 
 export type BareTextareaInputProps = Omit<TextareaProps, 'label' | 'initialValue' | 'onChange'> &
@@ -23,7 +23,7 @@ export const BareTextareaInput = ({
   return (
     <textarea
       {...inputProps}
-      className={cx(
+      className={mx(
         defaultInput({
           borders,
           typography,

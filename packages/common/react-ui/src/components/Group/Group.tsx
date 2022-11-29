@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ReactNode } from 'react';
 
 import { useId } from '../../hooks';
-import { defaultGroup } from '../../styles/group';
+import { defaultGroup } from '../../styles';
+import { mx } from '../../util';
 import { Heading, HeadingProps } from '../Heading';
 
 export interface GroupProps extends React.ComponentProps<'div'> {
@@ -19,8 +19,8 @@ export interface GroupProps extends React.ComponentProps<'div'> {
 export const Group = ({ elevation = 3, children, label, labelVisuallyHidden, className, ...props }: GroupProps) => {
   const labelId = useId('groupLabel');
   return (
-    <div role='group' aria-labelledby={labelId} className={cx(defaultGroup({ elevation }), className)} {...props}>
-      <Heading {...label} id={labelId} className={cx(labelVisuallyHidden && 'sr-only', 'mb-2', label?.className)} />
+    <div role='group' aria-labelledby={labelId} className={mx(defaultGroup({ elevation }), className)} {...props}>
+      <Heading {...label} id={labelId} className={mx(labelVisuallyHidden && 'sr-only', 'mb-2', label?.className)} />
       {children}
     </div>
   );

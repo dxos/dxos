@@ -4,11 +4,11 @@
 
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
-import cx from 'classnames';
 import React, { ComponentProps, ReactNode, useState } from 'react';
 
 import { useId } from '../../hooks';
 import { defaultTooltip } from '../../styles';
+import { mx } from '../../util';
 
 export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
   content: ReactNode;
@@ -37,7 +37,7 @@ export const Tooltip = ({
     <TooltipPrimitive.Content
       forceMount
       {...contentProps}
-      className={cx(
+      className={mx(
         'radix-side-top:animate-slide-down-fade',
         'radix-side-right:animate-slide-left-fade',
         'radix-side-bottom:animate-slide-up-fade',

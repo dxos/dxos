@@ -3,11 +3,11 @@
 //
 
 import '@dxosTheme';
-import cx from 'classnames';
 import React from 'react';
 
 import { defaultFocus, defaultHover, defaultActive } from '../../styles';
 import { templateForComponent } from '../../testing';
+import { mx } from '../../util';
 import { Avatar } from '../Avatar';
 import { Button } from '../Button';
 import { Popover, PopoverProps } from './Popover';
@@ -37,7 +37,7 @@ export const AvatarTrigger = templateForComponent(Template)({
       tabIndex={0}
       label={<span className='sr-only'>Open popover</span>}
       fallbackValue='open popover'
-      className={cx('button-elevation cursor-pointer rounded-md', defaultHover({}), defaultFocus, defaultActive)}
+      className={mx('button-elevation cursor-pointer rounded-md', defaultHover({}), defaultFocus, defaultActive)}
     />
   ),
   closeLabel: 'Close',

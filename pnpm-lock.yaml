@@ -1142,7 +1142,6 @@ importers:
       '@vitejs/plugin-react': ^2.0.1
       alea: ^1.0.1
       autoprefixer: ^10.4.12
-      classnames: ^2.3.2
       jdenticon: ^3.2.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
@@ -1172,7 +1171,6 @@ importers:
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.2.4
       alea: 1.0.1
       autoprefixer: 10.4.13_postcss@8.4.19
-      classnames: 2.3.2
       jdenticon: 3.2.0
       postcss: 8.4.19
       qrcode.react: 3.1.0_react@18.2.0

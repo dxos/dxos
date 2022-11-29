@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React from 'react';
 
 import { useId } from '../../hooks';
+import { mx } from '../../util';
 
 export type LoadingSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -29,11 +29,11 @@ export const Loading = ({ size, color, className, label }: LoadingProps & { labe
   const labelId = useId('loading-label');
   const sizeClassName = sizeMap.get(size ?? 'md');
   return (
-    <div role='status' className={cx('flex justify-center p-4', className)} aria-labelledby={labelId}>
+    <div role='status' className={mx('flex justify-center p-4', className)} aria-labelledby={labelId}>
       <svg
         role='none'
         aria-hidden='true'
-        className={cx(
+        className={mx(
           sizeClassName,
           'text-neutral-200/50 animate-spin dark:text-neutral-600/50',
           color === 'neutral' ? 'fill-neutral-400' : 'fill-primary-400'
