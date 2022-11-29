@@ -6,11 +6,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "browser": {
-    "node:util": "util"
-  },
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/neutral.js",
+  "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -26,8 +23,6 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
-    "debug": "^4.3.3",
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {

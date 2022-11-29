@@ -6,15 +6,46 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/sdk/config/src/index.ts",
-        "outputPath": "packages/sdk/config/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/sdk/config/dist/types",
         "tsConfig": "packages/sdk/config/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
       ]
+    },
+    "compile-lib": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/config/src/index.ts"
+        ],
+        "outputPath": "packages/sdk/config/dist/lib",
+        "platforms": ["node", "browser"]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-plugin": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/config/src/plugin/esbuild-plugin.ts",
+          "packages/sdk/config/src/plugin/rollup-plugin.js"
+        ],
+        "outputPath": "packages/sdk/config/dist/plugin",
+        "platforms": ["node"]
+      }
+    },
+    "compile": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile-lib config",
+          "nx compile-plugin config"
+        ],
+        "parallel": true
+      }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
@@ -49,6 +80,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

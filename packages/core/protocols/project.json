@@ -44,7 +44,7 @@
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
-        "exportPath": "packages/core/protocols/dist/src/proto/gen"
+        "exportPath": "packages/core/protocols/dist/types/src/proto/gen"
       },
       "outputs": [
         "packages/core/protocols/proto",

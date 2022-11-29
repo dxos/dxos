@@ -9,7 +9,7 @@
   "main": "dist/src/index.js",
   "browser": {
     "node:assert": "assert",
-    "./dist/src/loaders/index.js": "./dist/src/loaders/browser.js"
+    "./src/loaders/index.ts": "./src/loaders/browser.js"
   },
   "types": "dist/src/index.d.ts",
   "files": [
