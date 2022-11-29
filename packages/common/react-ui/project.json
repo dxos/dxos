@@ -2,6 +2,23 @@
   "sourceRoot": "packages/common/react-ui/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "assets": [
+          "packages/common/react-ui/src/theme.css"
+        ],
+        "main": "packages/common/react-ui/src/index.ts",
+        "outputPath": "packages/common/react-ui/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/common/react-ui/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -27,23 +44,6 @@
         },
         "uiFramework": "@storybook/react"
       }
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "assets": [
-          "packages/common/react-ui/src/theme.css"
-        ],
-        "main": "packages/common/react-ui/src/index.ts",
-        "outputPath": "packages/common/react-ui/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/common/react-ui/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
     }
   }
 }

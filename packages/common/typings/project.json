@@ -2,7 +2,7 @@
   "sourceRoot": "packages/common/typings/src",
   "projectType": "library",
   "targets": {
-    "types": {
+    "build": {
       "executor": "nx:run-script",
       "options": {
         "script": "build",

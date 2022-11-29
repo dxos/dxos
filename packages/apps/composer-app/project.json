@@ -2,6 +2,20 @@
   "sourceRoot": "packages/apps/composer-app/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/composer-app/src/index.ts",
+        "outputPath": "packages/apps/composer-app/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/apps/composer-app/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "bundle": {
       "executor": "@nxext/vite:build",
       "inputs": [
@@ -73,20 +87,6 @@
         ],
         "parallel": true
       }
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/apps/composer-app/src/index.ts",
-        "outputPath": "packages/apps/composer-app/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/apps/composer-app/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
     }
   }
 }

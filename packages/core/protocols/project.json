@@ -2,6 +2,20 @@
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/protocols/src/index.ts",
+        "outputPath": "packages/core/protocols/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/core/protocols/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -15,6 +29,9 @@
       ]
     },
     "prebuild": {
+      "dependsOn": [
+        "^build-internal"
+      ],
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
@@ -47,20 +64,6 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/core/protocols/src/index.ts",
-        "outputPath": "packages/core/protocols/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/protocols/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   },

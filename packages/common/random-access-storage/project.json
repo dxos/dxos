@@ -3,6 +3,17 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/random-access-storage/src/index.ts",
+        "outputPath": "packages/common/random-access-storage/dist/types",
+        "tsConfig": "packages/common/random-access-storage/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -47,17 +58,6 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/common/random-access-storage/src/index.ts",
-        "outputPath": "packages/common/random-access-storage/dist/types",
-        "tsConfig": "packages/common/random-access-storage/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   },

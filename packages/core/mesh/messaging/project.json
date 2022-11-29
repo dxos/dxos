@@ -2,6 +2,20 @@
   "sourceRoot": "packages/core/mesh/messaging/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/messaging/src/index.ts",
+        "outputPath": "packages/core/mesh/messaging/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/core/mesh/messaging/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -34,20 +48,6 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/messaging/src/index.ts",
-        "outputPath": "packages/core/mesh/messaging/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/mesh/messaging/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   },

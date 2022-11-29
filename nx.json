@@ -11,12 +11,13 @@
       "options": {
         "cacheableOperations": [
           "build",
+          "bundle",
+          "compile",
           "e2e",
           "lint",
           "prebuild",
           "prerelease",
-          "test",
-          "types"
+          "test"
         ],
         "parallel": 6,
         "accessToken": "ZGVlNTQ0ODctNGI4ZS00MTc0LTljZDQtMzFlMzJkOTViMmQyfHJlYWQtd3JpdGU="
@@ -46,6 +47,23 @@
   },
   "targetDefaults": {
     "build": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build",
+        "compile",
+        "prebuild"
+      ]
+    },
+    // TODO(wittjosiah): This target needs a better name.
+    "build-internal": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build-internal",
+        "^build",
+        "prebuild"
+      ]
+    },
+    "bundle": {
       "inputs": [
         "production",
         "^production",
@@ -54,7 +72,14 @@
         }
       ],
       "dependsOn": [
-        "^build",
+        "^compile"
+      ]
+    },
+    "compile": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build-internal",
+        "^compile",
         "prebuild"
       ]
     },
@@ -70,7 +95,7 @@
     "prebuild": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build"
+        "^compile"
       ]
     },
     "prerelease": {
@@ -82,7 +107,7 @@
     "serve": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build"
+        "^compile"
       ]
     },
     "test": {
@@ -100,14 +125,8 @@
         }
       ],
       "dependsOn": [
-        "^build"
-      ]
-    },
-    "types": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^types",
-        "prebuild"
+        "^build-internal",
+        "^compile"
       ]
     }
   },

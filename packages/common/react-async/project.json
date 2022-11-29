@@ -2,6 +2,20 @@
   "sourceRoot": "packages/common/react-async/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/react-async/src/index.ts",
+        "outputPath": "packages/common/react-async/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/common/react-async/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -33,20 +47,6 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/common/react-async/src/index.ts",
-        "outputPath": "packages/common/react-async/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/common/react-async/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   },

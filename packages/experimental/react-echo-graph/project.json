@@ -2,19 +2,7 @@
   "sourceRoot": "packages/experimental/react-echo-graph/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/experimental/react-echo-graph/**/*.{ts,tsx,js,jsx}"
-        ]
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "types": {
+    "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/react-echo-graph/src/index.ts",
@@ -26,6 +14,18 @@
       },
       "outputs": [
         "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/experimental/react-echo-graph/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
       ]
     }
   }

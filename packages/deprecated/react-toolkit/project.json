@@ -2,19 +2,7 @@
   "sourceRoot": "packages/deprecated/react-toolkit/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/deprecated/react-toolkit/**/*.{ts,tsx,js,jsx}"
-        ]
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "types": {
+    "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/deprecated/react-toolkit/src/index.ts",
@@ -26,6 +14,18 @@
       },
       "outputs": [
         "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/deprecated/react-toolkit/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
       ]
     }
   }

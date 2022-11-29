@@ -2,6 +2,20 @@
   "sourceRoot": "packages/common/telemetry/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/telemetry/src/index.ts",
+        "outputPath": "packages/common/telemetry/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/common/telemetry/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "bundle": {
       "executor": "@dxos/esbuild:bundle",
       "options": {
@@ -27,20 +41,6 @@
       },
       "outputs": [
         "{options.outputFile}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/common/telemetry/src/index.ts",
-        "outputPath": "packages/common/telemetry/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/common/telemetry/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   }

@@ -3,6 +3,17 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/feed-store/src/index.ts",
+        "outputPath": "packages/common/feed-store/dist/types",
+        "tsConfig": "packages/common/feed-store/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -47,17 +58,6 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/common/feed-store/src/index.ts",
-        "outputPath": "packages/common/feed-store/dist/types",
-        "tsConfig": "packages/common/feed-store/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   },

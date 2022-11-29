@@ -2,7 +2,7 @@
   "sourceRoot": "tools/log-hook/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "build-internal": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/log-hook/src/index.ts",

@@ -2,6 +2,20 @@
   "sourceRoot": "packages/sdk/react-client/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/react-client/src/index.ts",
+        "outputPath": "packages/sdk/react-client/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/sdk/react-client/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "e2e": {
       "executor": "@dxos/playwright:playwright",
       "options": {
@@ -60,20 +74,6 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/sdk/react-client/src/index.ts",
-        "outputPath": "packages/sdk/react-client/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/sdk/react-client/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   },

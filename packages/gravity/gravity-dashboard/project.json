@@ -2,19 +2,7 @@
   "sourceRoot": "packages/gravity/gravity-dashboard/src",
   "projectType": "application",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/gravity/gravity-dashboard/**/*.{ts,tsx,js,jsx}"
-        ]
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "types": {
+    "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/gravity/gravity-dashboard/src/index.ts",
@@ -26,6 +14,18 @@
       },
       "outputs": [
         "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/gravity/gravity-dashboard/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
       ]
     }
   }

@@ -2,6 +2,20 @@
   "sourceRoot": "packages/apps/halo-app/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/halo-app/src/index.ts",
+        "outputPath": "packages/apps/halo-app/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/apps/halo-app/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "build-storybook": {
       "configurations": {
         "ci": {
@@ -88,20 +102,6 @@
         },
         "uiFramework": "@storybook/react"
       }
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/apps/halo-app/src/index.ts",
-        "outputPath": "packages/apps/halo-app/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/apps/halo-app/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
     }
   }
 }

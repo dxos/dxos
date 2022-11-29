@@ -2,7 +2,7 @@
   "sourceRoot": "tools/executors/test/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "build-internal": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/mocha/src/main.ts",

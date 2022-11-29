@@ -2,7 +2,7 @@
   "sourceRoot": "tools/protobuf-test/src",
   "projectType": "library",
   "targets": {
-    "types": {
+    "build": {
       "executor": "nx:run-script",
       "options": {
         "script": "build",

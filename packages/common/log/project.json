@@ -3,6 +3,17 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/log/src/index.ts",
+        "outputPath": "packages/common/log/dist/types",
+        "tsConfig": "packages/common/log/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -47,17 +58,6 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/common/log/src/index.ts",
-        "outputPath": "packages/common/log/dist/types",
-        "tsConfig": "packages/common/log/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   },

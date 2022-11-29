@@ -2,19 +2,7 @@
   "sourceRoot": "packages/experimental/react-client-testing/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/experimental/react-client-testing/**/*.{ts,tsx,js,jsx}"
-        ]
-      },
-      "outputs": [
-        "{options.outputFile}"
-      ]
-    },
-    "types": {
+    "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/react-client-testing/src/index.ts",
@@ -26,6 +14,18 @@
       },
       "outputs": [
         "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/experimental/react-client-testing/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
       ]
     }
   },

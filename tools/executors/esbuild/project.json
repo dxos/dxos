@@ -1,7 +1,7 @@
 {
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
-    "build": {
+    "build-internal": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/esbuild/src/index.ts",
