@@ -32,7 +32,7 @@ const mdxOptions: Options = {
       remarkParseFrontmatter,
       {
         properties: {
-          title: { type: 'string', required: true },
+          title: { type: 'string', required: false },
           subheading: { type: 'string' },
           layout: { type: 'string' },
           tags: { type: 'array', maxItems: 4 }

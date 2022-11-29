@@ -1,24 +1,21 @@
 ---
-title: Slide 2
+layout: col-2
 ---
 
-import { Test } from '../components';
+import Image from './images/sphere.svg';
+import { ImageContainer  } from '../components';
 
-export const now = new Date();
+<ImageContainer
+  backgroundImage={`url(${Image})`}
+  backgroundSize='contain'
+  fullBleed={false}
+  opacity={0.9}
+/>
 
-[//]: # (TODO: Layout with top and two columns.)
+<br/>
 
-- This slide was created on {now.toDateString()} at {now.toTimeString()}.
+## Demo
 
-```ts
-// This is inline.
+```ts file=./code/example.tsx
 const x = 100;
 ```
-
-```ts file=./code/example.ts
-const x = 100;
-```
-
-This is a React component:
-
-<Test />

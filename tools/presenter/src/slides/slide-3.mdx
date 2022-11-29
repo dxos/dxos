@@ -1,24 +1,13 @@
 ---
-title: HALO
+title: Components
 layout: col-2
 ---
 
-import BG from './images/deck-google-slide-bg_00_pa_6.png';
-import { ImageContainer  } from '../components';
+import { Test } from '../components';
 
-## Numbered List
+export const now = new Date();
 
-1. A
-    - x
-    - y
-2. B
-3. C
-    - z
+- This slide was created on {now.toDateString()} at {now.toTimeString()}.
+- This is a React component:
 
-<br/>
-
-<ImageContainer
-  backgroundImage={`url(${BG})`}
-  backgroundPosition='-650px center'
-  opacity={0.9}
-/>
+<Test />

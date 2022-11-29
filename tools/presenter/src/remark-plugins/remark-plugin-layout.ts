@@ -52,12 +52,17 @@ export const remarkPluginLayout = (options: Options) => (tree: any) => {
 const createLayout = (meta: Meta, children: Node[]) => {
   const { layout, title, subheading } = meta;
   const page = (body: Node) => {
-    const header = div({ className: 'flex flex-col pl-2 pr-2 pt-1 pb-1 bg-slide-header' }, [
-      u('heading', { depth: 1 }, [u('text', title ?? '')]),
-      u('heading', { depth: 3 }, [u('text', subheading ?? '')])
-    ]);
+    const parts = [body];
+    if (title) {
+      parts.unshift(
+        div({ className: 'flex flex-col pl-2 pr-2 pt-1 pb-1 bg-slide-header' }, [
+          u('heading', { depth: 1 }, [u('text', title ?? '')]),
+          u('heading', { depth: 3 }, [u('text', subheading ?? '')])
+        ])
+      );
+    }
 
-    return div({ className: 'flex flex-col flex-1 overflow-hidden' }, [header, body]);
+    return div({ className: 'flex flex-col flex-1 overflow-hidden' }, parts);
   };
 
   switch (layout) {
