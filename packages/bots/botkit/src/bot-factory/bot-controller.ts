@@ -40,7 +40,7 @@ export class BotController {
     this._connection = await this._networkManager.joinSwarm({
       topic,
       peerId: topic,
-      protocol: adaptProtocolProvider(createProtocolFactory(topic, topic, [plugin])),
+      protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, topic, [plugin])),
       topology: new StarTopology(topic)
     });
 
