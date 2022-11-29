@@ -103,13 +103,17 @@ export const createIFrame = (source: string, id: string) => {
     return iframe;
   };
 
-  console.log(
-    'DXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
-  );
+  {
+    const cssStyle = 'font-family:system-ui; border:1px solid black; display:block;padding:10px; font-size:1.2rem;';
 
-  console.log(
-    `To inspect internals of ECHO, HALO and MESH use the following URL: https://devtools.dxos.org/?target=vault:${source}`
-  );
+    console.log(
+      'DXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
+    );
+    console.log(
+      `%cTo inspect internals of ECHO, HALO and MESH use the following URL: https://devtools.dxos.org/?target=vault:${source}`,
+      cssStyle
+    );
+  }
 
   return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };
