@@ -135,13 +135,21 @@ export interface JsonTreeViewProps {
   depth?: number;
   data?: any;
   onSelect?: () => void;
+  truncateLength?: number;
 }
 
 /**
  * Visualizes an object as a tree view of all properties.
  * Works with JSON and other objects with nested values.
  */
-export const JsonTreeView = ({ sx, size, depth = Infinity, data = {}, onSelect }: JsonTreeViewProps) => {
+export const JsonTreeView = ({
+  sx,
+  size,
+  depth = Infinity,
+  data = {},
+  onSelect,
+  truncateLength = 8
+}: JsonTreeViewProps) => {
   if (!data) {
     data = {};
   }
@@ -193,9 +201,9 @@ export const JsonTreeView = ({ sx, size, depth = Infinity, data = {}, onSelect }
     // TODO(burdon): Pluggable types (eg, date, string, number, boolean, etc).
     let itemValue;
     if (value instanceof Uint8Array) {
-      itemValue = <KeyValue size={size}>{truncateKey(PublicKey.stringify(value), 8)}</KeyValue>;
+      itemValue = <KeyValue size={size}>{truncateKey(PublicKey.stringify(value), truncateLength)}</KeyValue>;
     } else if (value instanceof PublicKey) {
-      itemValue = <KeyValue size={size}>{truncateKey(value.toHex(), 8)}</KeyValue>;
+      itemValue = <KeyValue size={size}>{truncateKey(value.toHex(), truncateLength)}</KeyValue>;
     } else if (value === null) {
       itemValue = <ConstValue size={size}>null</ConstValue>;
     } else if (typeof value === 'boolean') {

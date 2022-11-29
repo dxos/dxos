@@ -123,7 +123,6 @@ describe('space/control-pipeline', function () {
       });
 
       const end = controlPipeline.pipeline.state.endTimeframe;
-      console.log({ end });
       await controlPipeline.pipeline.state.waitUntilTimeframe(end);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }

@@ -43,4 +43,17 @@ describe('Context', function () {
 
     expect((undefined as any) instanceof Context).toBeFalsy();
   });
+
+  it('dispose is idempotent', function () {
+    const ctx = new Context();
+
+    let called = false;
+    ctx.onDispose(() => {
+      called = true;
+    });
+
+    void ctx.dispose();
+    void ctx.dispose();
+    expect(called).toBeTruthy();
+  });
 });
