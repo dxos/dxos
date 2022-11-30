@@ -58,6 +58,8 @@ export class Peer {
    */
   public advertizing = false;
 
+  public initiating = false;
+
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
@@ -75,7 +77,7 @@ export class Peer {
     const remoteId = message.author;
 
     // Check if we are already trying to connect to that peer.
-    if (this.connection) {
+    if (this.connection || this.initiating) {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this.localPeerId.toHex()) {
         log.info("closing local connection and accepting remote peer's offer", {
@@ -83,8 +85,11 @@ export class Peer {
           topic: this.topic,
           peerId: this.localPeerId
         });
-        // Close our connection and accept remote peer's connection.
-        await this.closeConnection();
+
+        if(this.connection) {
+          // Close our connection and accept remote peer's connection.
+          await this.closeConnection();
+        }
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
         return { accept: false };
@@ -115,10 +120,12 @@ export class Peer {
    * Initiate a connection to the remote peer.
    */
   async initiateConnection() {
+    assert(!this.initiating, 'Initiation in progress.');
     assert(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
     log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
     const connection = this._createConnection(true, sessionId);
+    this.initiating = true;
 
     try {
       const answer = await this._signalMessaging.offer({
@@ -145,6 +152,8 @@ export class Peer {
       // Calls `onStateChange` with CLOSED state.
       await this.closeConnection();
       throw err;
+    } finally {
+      this.initiating = false;
     }
   }
 
