@@ -9,6 +9,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "scripts": {
+    "beast": "beast docs",
     "build": "nx run-many --target=build",
     "changed-packages": "scripts/changed",
     "check-dependencies": "syncpack list-mismatches",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/async": "workspace:*",
+    "@dxos/beast": "workspace:*",
     "@dxos/esbuild": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin": "workspace:*",
