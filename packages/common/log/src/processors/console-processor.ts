@@ -97,7 +97,9 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
     // Additional context from Error.
     const c = (context as any).context;
     // If ERROR then show stacktrace.
-    parts.context = inspect(level === LogLevel.ERROR ? context : { error: String(context), ...c }, { colors: true });
+    parts.context = inspect(level === LogLevel.ERROR ? context : { error: context?.stack ?? String(context), ...c }, {
+      colors: true
+    });
   } else if (context && Object.keys(context).length > 0) {
     // Remove undefined fields.
     // https://nodejs.org/api/util.html#utilinspectobject-options

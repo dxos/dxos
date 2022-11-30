@@ -14,6 +14,7 @@ import { NetworkManager } from '../network-manager';
 import { createProtocolFactory } from '../protocol-factory';
 import { FullyConnectedTopology } from '../topology';
 import { MemoryTransportFactory } from '../transport';
+import { adaptProtocolProvider } from '../wire-protocol';
 
 const signalContext = new MemorySignalManagerContext();
 
@@ -32,7 +33,7 @@ const createPeer = async (topic: PublicKey) => {
 
   await networkManager.joinSwarm({
     peerId,
-    protocol: createProtocolFactory(topic, peerId, [presencePlugin]),
+    protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [presencePlugin])),
     topic,
     topology: new FullyConnectedTopology()
   });
