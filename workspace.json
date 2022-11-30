@@ -95,6 +95,7 @@
     "test": "tools/executors/test",
     "text-model": "packages/core/echo/text-model",
     "timeframe": "packages/common/timeframe",
+    "todomvc": "packages/apps/todomvc",
     "toolbox": "tools/executors/toolbox",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
