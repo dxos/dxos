@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=browser
+// @dxos/test platform=browser
 
 // import expect from 'expect';
 
 // import { schema } from '../../../tools/executors/protobuf-compiler/test/proto/gen';
 // import { Scalars } from '../../../tools/executors/protobuf-compiler/test/proto/gen/dxos/test';
 
-// it('bytes fields get decoded to Uint8Array', function () {
+// test('bytes fields get decoded to Uint8Array', function () {
 //   const codec = schema.getCodecForType('dxos.test.Scalars');
 
 //   const initial: Scalars = {

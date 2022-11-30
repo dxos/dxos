@@ -5,11 +5,12 @@
 import expect from 'expect';
 
 import { Event, sleep } from '@dxos/async';
+import { describe, test } from '@dxos/test';
 
 import { createReplicatorPair, TestBuilder } from './testing';
 
-describe('ReplicatorExtension', function () {
-  it('replicates a feed', async function () {
+describe('ReplicatorExtension', () => {
+  test('replicates a feed', async () => {
     const builder = new TestBuilder();
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
@@ -28,7 +29,7 @@ describe('ReplicatorExtension', function () {
     await Event.wrap(feed2, 'download').waitForCondition(() => feed2.length === 10);
   });
 
-  it('does not upload data when upload is off', async function () {
+  test('does not upload data when upload is off', async () => {
     const builder = new TestBuilder();
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
@@ -50,7 +51,7 @@ describe('ReplicatorExtension', function () {
     expect(feed2.length).toEqual(0);
   });
 
-  it('selectively replicates 2 feeds in both directions', async function () {
+  test('selectively replicates 2 feeds in both directions', async () => {
     const builder = new TestBuilder();
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
@@ -77,7 +78,7 @@ describe('ReplicatorExtension', function () {
     expect(feed2A.length).toEqual(0);
   });
 
-  it('add another feed mid replication', async function () {
+  test('add another feed mid replication', async () => {
     const builder = new TestBuilder();
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
@@ -104,7 +105,7 @@ describe('ReplicatorExtension', function () {
 
   // TODO: not working yet.
   // eslint-disable-next-line mocha/no-skipped-tests
-  it.skip('enabling upload mid replication', async function () {
+  test.skip('enabling upload mid replication', async () => {
     const builder = new TestBuilder();
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();

@@ -5,8 +5,10 @@
 import expect from 'expect';
 import MiniSearch from 'minisearch';
 
-describe('Search', function () {
-  it('minisearch', async function () {
+import { describe, test } from '@dxos/test';
+
+describe('Search', () => {
+  test('minisearch', async () => {
     // https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html
     const miniSearch = new MiniSearch({
       idField: 'id',

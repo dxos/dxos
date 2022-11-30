@@ -5,12 +5,14 @@
 import { expect } from 'chai';
 import { EventEmitter } from 'node:events';
 
+import { describe, test } from '@dxos/test';
+
 import { onEvent, waitForEvent } from './event-emitter';
 import { latch } from './latch';
 import { asyncTimeout } from './timeout';
 
-describe('event-emitter', function () {
-  it('onEvent', async function () {
+describe('event-emitter', () => {
+  test('onEvent', async () => {
     const emitter = new EventEmitter();
 
     const [done, resolve] = latch();
@@ -27,7 +29,7 @@ describe('event-emitter', function () {
     await done();
   });
 
-  it('waitForEvent', async function () {
+  test('waitForEvent', async () => {
     const emitter = new EventEmitter();
     const waiting = waitForEvent(emitter, 'test');
 
@@ -38,7 +40,7 @@ describe('event-emitter', function () {
     expect(emitter.listenerCount('test')).to.equal(0);
   });
 
-  it('waitForEvent (with test)', async function () {
+  test('waitForEvent (with test)', async () => {
     const emitter = new EventEmitter();
     const waiting = waitForEvent(emitter, 'test', (value) => value === 300 && value);
 
@@ -51,7 +53,7 @@ describe('event-emitter', function () {
     expect(emitter.listenerCount('test')).to.equal(0);
   });
 
-  it('waitForEvent (expired)', async function () {
+  test('waitForEvent (expired)', async () => {
     const emitter = new EventEmitter();
 
     await expect(() => waitForEvent(emitter, 'test', undefined, 100)).to.throw;
