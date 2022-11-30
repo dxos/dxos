@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { Warning } from 'phosphor-react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
-import { Tooltip, valenceColorText, defaultFocus, useTranslation } from '@dxos/react-uikit';
+import { Tooltip, valenceColorText, defaultFocus, useTranslation, mx } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 
 export interface ErrorContextState {
@@ -61,11 +60,11 @@ export const ErrorProvider = ({ children }: PropsWithChildren<{}>) => {
   return (
     <ErrorContext.Provider value={{ errors, addError, resetErrors }}>
       {children}
-      <div role='none' className={cx('fixed bottom-4 right-4', valenceColorText('warning'))}>
+      <div role='none' className={mx('fixed bottom-4 right-4', valenceColorText('warning'))}>
         {/* TODO(wittjosiah): Render this warning conditionally based on a prop (e.g., isInternalUser?). */}
         {!!errors.length && (
           <Tooltip content={t('caught error message')}>
-            <Warning tabIndex={0} weight='duotone' className={cx('w-6 h-6 rounded-md', defaultFocus)} />
+            <Warning tabIndex={0} weight='duotone' className={mx('w-6 h-6 rounded-md', defaultFocus)} />
           </Tooltip>
         )}
       </div>

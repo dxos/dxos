@@ -2,18 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React from 'react';
 
-import { Tooltip } from '@dxos/react-ui';
-import { useTranslation, valenceColorText } from '@dxos/react-uikit';
+import { Tooltip, useTranslation, valenceColorText, mx } from '@dxos/react-uikit';
 
 // TODO(burdon): Extend to show heartbeat, network status, etc.
 // TODO(burdon): Merge with ErrorBoundary indicator since overlaps.
 export const StatusIndicator = ({ status }: { status: boolean }) => {
   const { t } = useTranslation();
   return (
-    <div role='none' className={cx('fixed bottom-4 right-4', valenceColorText('success'))}>
+    <div role='none' className={mx('fixed bottom-4 right-4', valenceColorText('success'))}>
       {status && (
         <span className='flex h-3 w-3'>
           <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-green-600 opacity-75'></span>

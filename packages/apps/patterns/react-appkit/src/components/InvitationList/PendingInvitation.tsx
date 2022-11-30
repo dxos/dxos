@@ -2,14 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { ProhibitInset, XCircle } from 'phosphor-react';
 import React, { useCallback } from 'react';
 
 import { Invitation, CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import { Avatar, Button, CompactQrCode, defaultGroup, getSize, Loading, Tooltip } from '@dxos/react-ui';
-import { InvitationStatus, useTranslation } from '@dxos/react-uikit';
+import {
+  Avatar,
+  Button,
+  CompactQrCode,
+  defaultGroup,
+  getSize,
+  Loading,
+  Tooltip,
+  InvitationStatus,
+  useTranslation,
+  mx
+} from '@dxos/react-uikit';
 
 import { HeadingWithActions } from '../HeadingWithActions';
 
@@ -33,7 +42,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
   }, []);
 
   return (
-    <div role='group' className={cx(defaultGroup({ elevation: 1 }), 'mbe-2')}>
+    <div role='group' className={mx(defaultGroup({ elevation: 1 }), 'mbe-2')}>
       {wrapper.invitation ? (
         <>
           <HeadingWithActions

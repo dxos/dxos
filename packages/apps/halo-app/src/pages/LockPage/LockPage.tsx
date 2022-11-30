@@ -2,13 +2,22 @@
 // Copyright 2021 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Client, Space } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
-import { AuthChoices, Avatar, Button, defaultGroup, Heading, useTranslation, Trans, getSize } from '@dxos/react-uikit';
+import {
+  AuthChoices,
+  Avatar,
+  Button,
+  defaultGroup,
+  Heading,
+  useTranslation,
+  Trans,
+  getSize,
+  mx
+} from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 import lightThemeLogo from '../../assets/icon-halo-black.png';
@@ -59,11 +68,11 @@ export const LockPage = () => {
       ) : (
         <div role='none' className='flex flex-col gap-2 items-center'>
           <img
-            className={cx(getSize(32), 'block dark:hidden mli-auto')}
+            className={mx(getSize(32), 'block dark:hidden mli-auto')}
             alt={t('halo logo alt')}
             src={lightThemeLogo}
           />
-          <img className={cx(getSize(32), 'hidden dark:block mli-auto')} alt={t('halo logo alt')} src={darkThemeLogo} />
+          <img className={mx(getSize(32), 'hidden dark:block mli-auto')} alt={t('halo logo alt')} src={darkThemeLogo} />
           <Heading className='text-center'>{t('halo label')}</Heading>
           <p className='text-center'>{t('identities empty message')}</p>
           <AuthChoices

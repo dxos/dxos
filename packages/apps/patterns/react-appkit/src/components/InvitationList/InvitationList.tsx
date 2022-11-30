@@ -2,12 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React from 'react';
 
 import { CancellableInvitationObservable } from '@dxos/client';
-import { defaultDisabled, Group } from '@dxos/react-ui';
-import { useTranslation } from '@dxos/react-uikit';
+import { defaultDisabled, Group, useTranslation, mx } from '@dxos/react-uikit';
 
 import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
 
@@ -26,7 +24,7 @@ export const InvitationList = ({ createInvitationUrl, invitations, onClickRemove
       label={{
         level: 2,
         children: !empty ? t('invitations label') : t('empty invitations message'),
-        className: cx('text-xl', empty && defaultDisabled)
+        className: mx('text-xl', empty && defaultDisabled)
       }}
       elevation={0}
     >

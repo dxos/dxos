@@ -3,10 +3,10 @@
 //
 
 import * as ToastPrimitive from '@radix-ui/react-toast';
-import cx from 'classnames';
 import React, { cloneElement, ComponentProps, ReactHTMLElement, ReactNode, useState } from 'react';
 
 import { defaultDescription, defaultFocus } from '../../styles';
+import { mx } from '../../util';
 import { Button } from '../Button';
 
 export interface ToastProps extends Omit<ComponentProps<typeof ToastPrimitive.Root>, 'title'> {
@@ -43,7 +43,7 @@ export const Toast = ({
         open={isOpen}
         onOpenChange={setIsOpen}
         {...rootProps}
-        className={cx(
+        className={mx(
           'shadow-lg rounded-lg',
           'bg-white dark:bg-neutral-800',
           'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
@@ -59,7 +59,7 @@ export const Toast = ({
         <div role='none' className='flex'>
           <div role='none' className='w-0 flex-1 flex items-center pl-5 py-4 min-h-full'>
             <div role='none' className='w-full radix flex flex-col justify-center min-h-full gap-1'>
-              <ToastPrimitive.Title className={cx('text-md font-medium', titleVisuallyHidden && 'sr-only')}>
+              <ToastPrimitive.Title className={mx('text-md font-medium', titleVisuallyHidden && 'sr-only')}>
                 {title}
               </ToastPrimitive.Title>
               {description && (

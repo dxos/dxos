@@ -6,11 +6,10 @@ import Collaboration from '@tiptap/extension-collaboration';
 import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import cx from 'classnames';
 import React from 'react';
 
 import { Item } from '@dxos/client';
-import { useTranslation } from '@dxos/react-uikit';
+import { useTranslation, mx } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
 export interface ComposerProps {
@@ -32,7 +31,7 @@ export const Composer = ({ item, className }: ComposerProps) => {
       ],
       editorProps: {
         attributes: {
-          class: cx('focus:outline-none focus-visible:outline-none', className)
+          class: mx('focus:outline-none focus-visible:outline-none', className)
         }
       }
     },
