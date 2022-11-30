@@ -6,11 +6,23 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/apps/patterns/react-composer/src/index.ts",
-        "outputPath": "packages/apps/patterns/react-composer/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/apps/patterns/react-composer/dist/types",
         "tsConfig": "packages/apps/patterns/react-composer/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/apps/patterns/react-composer/src/index.ts"
+        ],
+        "outputPath": "packages/apps/patterns/react-composer/dist/lib",
+        "platforms": [
+          "browser"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -42,5 +54,8 @@
         "uiFramework": "@storybook/react"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }

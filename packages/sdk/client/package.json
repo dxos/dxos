@@ -7,7 +7,7 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node.js",
+  "main": "dist/lib/node/index.js",
   "browser": {
     "node:assert": "assert",
     "node:util": "util",

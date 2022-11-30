@@ -24,8 +24,7 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "license": "MIT",
   "author": "DXOS.org",
   ` : ''}"scripts": {
-    "types": "tsc",
-    "bundle": "vite build",
+    "build": "tsc --noEmit && vite build",
     "deploy": "dx app publish",
     "preview": "vite preview",
     "serve": "vite"

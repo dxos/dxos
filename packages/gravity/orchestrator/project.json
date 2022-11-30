@@ -20,7 +20,9 @@
           "packages/gravity/orchestrator/src/index.ts"
         ],
         "outputPath": "packages/gravity/orchestrator/dist/lib",
-        "platforms": ["node"]
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

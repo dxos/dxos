@@ -9,12 +9,11 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "bundle": "NODE_OPTIONS=\"--max-old-space-size=4096\" vite build",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit && vite build",
     "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
     "preview": "vite preview",
     "serve": "vite",
-    "storybook": "start-storybook -p 9009 --no-open",
-    "types": "tsc"
+    "storybook": "start-storybook -p 9009 --no-open"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",

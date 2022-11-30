@@ -21,8 +21,8 @@
         ],
         "outputPath": "packages/bots/bot-factory-client/dist/lib",
         "platforms": [
-          "node",
-          "browser"
+          "browser",
+          "node"
         ]
       },
       "outputs": [
