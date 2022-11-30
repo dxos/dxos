@@ -6,13 +6,14 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Context } from '@dxos/context';
+import { describe, test } from '@dxos/test';
 
 import { scheduleTask } from './task-scheduling';
 import { sleep } from './timeout';
 
-describe('task-scheduling', function () {
-  describe('scheduleTask', function () {
-    it('errors get propagated', async function () {
+describe('task-scheduling', () => {
+  describe('scheduleTask', () => {
+    test('errors get propagated', async () => {
       let error!: Error;
       const ctx = new Context({
         onError: (err) => {
@@ -29,7 +30,7 @@ describe('task-scheduling', function () {
       });
     });
 
-    it('cancelation', async function () {
+    test('cancelation', async () => {
       const ctx = new Context();
 
       let called = false;

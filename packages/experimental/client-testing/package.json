@@ -34,7 +34,6 @@
   "devDependencies": {
     "@dxos/model-factory": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@types/columnify": "^1.5.1",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",

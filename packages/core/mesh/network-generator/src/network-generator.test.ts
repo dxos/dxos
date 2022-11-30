@@ -8,6 +8,7 @@ import { PassThrough } from 'node:stream';
 import waitForExpect from 'wait-for-expect';
 
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { Network } from './network';
 import { NetworkGenerator } from './network-generator';
@@ -37,8 +38,8 @@ const testShutdown = async (network: Network) => {
   expect(network.connections.length).to.equal(0);
 };
 
-describe('NetworkGenerator', function () {
-  it('generate a grid topology', async function () {
+describe('NetworkGenerator', () => {
+  test('generate a grid topology', async () => {
     const generator = new NetworkGenerator({
       createPeer: async (id) => ({ id, name: `peer${id}` })
     });
@@ -51,7 +52,7 @@ describe('NetworkGenerator', function () {
     await testShutdown(network);
   });
 
-  it('generate a balancedBinTree of 2 n', async function () {
+  test('generate a balancedBinTree of 2 n', async () => {
     const generator = new NetworkGenerator({
       createPeer: async (id) => ({ id, name: `peer${id}` }),
       createConnection: async (fromPeer, toPeer) => new PassThrough()
@@ -65,7 +66,7 @@ describe('NetworkGenerator', function () {
     await testShutdown(network);
   });
 
-  it('insert pre-made peers', async function () {
+  test('insert pre-made peers', async () => {
     let createPeerCalledCount = 0;
     const generator = new NetworkGenerator({
       createPeer: async (id) => {

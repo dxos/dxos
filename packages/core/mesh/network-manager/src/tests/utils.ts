@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { latch, Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { afterTest } from '@dxos/testutils';
+import { afterTest } from '@dxos/test';
 import { Provider } from '@dxos/util';
 
 import { TestPeer, TestSwarmConnection } from '../testing';

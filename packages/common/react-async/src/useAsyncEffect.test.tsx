@@ -9,6 +9,8 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
+import { afterEach, beforeEach, describe, test } from '@dxos/test';
+
 import { useAsyncEffect } from './useAsyncEffect';
 
 const doAsync = async <T,>(value: T) =>
@@ -32,17 +34,17 @@ const Test = () => {
 
 let rootContainer: HTMLElement;
 
-describe('useAsyncEffect', function () {
-  beforeEach(function () {
+describe('useAsyncEffect', () => {
+  beforeEach(() => {
     rootContainer = document.createElement('div');
     document.body.appendChild(rootContainer);
   });
 
-  afterEach(function () {
+  afterEach(() => {
     document.body.removeChild(rootContainer!);
   });
 
-  it('gets async value.', async function () {
+  test('gets async value.', async () => {
     void act(() => {
       createRoot(rootContainer).render(<Test />);
     });

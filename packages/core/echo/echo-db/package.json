@@ -45,7 +45,6 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
     "hypercore-protocol": "^8.0.7",
     "source-map-support": "^0.5.12",

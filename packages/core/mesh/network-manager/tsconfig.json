@@ -5,10 +5,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    "types": [
-      "mocha"
-    ]
+    "outDir": "dist"
   },
   "include": [
     "src",
@@ -35,9 +32,6 @@
     },
     {
       "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/testutils"
     },
     {
       "path": "../../../common/util"
