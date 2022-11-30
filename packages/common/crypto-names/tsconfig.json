@@ -2,14 +2,12 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "resolveJsonModule": true,
     "types": [
       "@dxos/test",
       "@dxos/typings"
     ]
   },
   "include": [
-    "data/**/*.json",
     "scripts",
     "src"
   ],
