@@ -91,7 +91,6 @@ export const withLogical = (prevConfig: Config): Config => {
       'logical.rounded-be': ['logical.rounded-es', 'logical.rounded-ee'],
       'logical.rounded-is': ['logical.rounded-ss', 'logical.rounded-es'],
       'logical.rounded-ie': ['logical.rounded-ee', 'logical.rounded-se'],
-      // 'divide-x': ['logical.divide-b','logical.divide-i',],
       'border-color': [
         'logical.border-color-bs',
         'logical.border-color-be',
