@@ -84,7 +84,7 @@ export class Peer {
         await this.closeConnection();
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
-        return { accept: true };
+        return { accept: false };
       }
     }
 
@@ -99,7 +99,7 @@ export class Peer {
         } catch (err: any) {
           log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
           // Calls `onStateChange` with CLOSED state.
-          void this.closeConnection();
+          await this.closeConnection();
         }
 
         accept = true;
