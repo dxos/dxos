@@ -38,7 +38,7 @@ export const KeyTable = ({ keys }: KeyTableProps) => (
               <CopyText monospace variant='h6' value={key} length={8} />
             </TableCell>
             <TableCell>
-              <CopyText monospace variant='h6' value={key} />
+              <CopyText monospace variant='h6' value={humanize(key)} />
             </TableCell>
           </TableRow>
         );
