@@ -47,8 +47,5 @@
     "faker": "^5.5.3",
     "rmdir": "~1.2.0",
     "uuid": "^8.3.2"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }

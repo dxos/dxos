@@ -7,7 +7,7 @@ import { pipeline } from 'stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { afterTest } from '@dxos/testutils';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { Teleport } from './teleport';
 import { TestExtension } from './test-extension';
@@ -35,8 +35,8 @@ const setup = () => {
   return { peer1, peer2 };
 };
 
-describe('Teleport', function () {
-  it('sends rpc via TestExtension', async function () {
+describe('Teleport', () => {
+  test('sends rpc via TestExtension', async () => {
     const { peer1, peer2 } = setup();
 
     await Promise.all([peer1.open(), peer2.open()]);

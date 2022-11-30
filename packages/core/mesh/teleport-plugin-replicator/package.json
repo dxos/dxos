@@ -34,7 +34,6 @@
   "devDependencies": {
     "@dxos/keyring": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "add": "^2.0.6",
     "fast-check": "~3.3.0",
     "typescript": "^4.8.4"

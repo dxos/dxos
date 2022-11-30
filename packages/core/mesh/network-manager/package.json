@@ -42,7 +42,6 @@
   "devDependencies": {
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@swc-node/register": "^1.5.4",
     "@swc/core": "^1.3.9",
     "@types/simple-peer": "9.11.3",

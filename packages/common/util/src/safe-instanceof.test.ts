@@ -4,10 +4,12 @@
 
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/test';
+
 import { safeInstanceof } from './safe-instanceof';
 
-describe('safeInstanceOf', function () {
-  it('different classes with the same tag are compatible', function () {
+describe('safeInstanceOf', () => {
+  test('different classes with the same tag are compatible', () => {
     @safeInstanceof('testTag')
     class Tagged1 {}
 
@@ -30,7 +32,7 @@ describe('safeInstanceOf', function () {
     );
   });
 
-  it('works with undefined', function () {
+  test('works with undefined', () => {
     @safeInstanceof('testTag')
     class Tagged {}
 

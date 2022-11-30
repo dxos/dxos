@@ -3,9 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "@dxos/mocha",
+      "@dxos/test",
       "@dxos/typings",
-      "mocha",
       "node"
     ]
   },
