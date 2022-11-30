@@ -4,7 +4,8 @@
 
 import assert from 'node:assert';
 
-import { Event, sleep } from '@dxos/async';
+import { Event, scheduleTask, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,7 +37,7 @@ export class Swarm {
 
   private readonly _swarmMessenger: MessageRouter;
 
-  private _destroyed = false;
+  private _ctx = new Context();
 
   /**
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
@@ -118,8 +119,8 @@ export class Swarm {
   // TODO(burdon): async open?
   async destroy() {
     log('destroying', { id: this.id, topic: this._topic });
-    this._destroyed = true;
     await this._topology.destroy();
+    await this._ctx.dispose();
     await Promise.all(Array.from(this._peers.keys()).map((key) => this._closeConnection(key)));
   }
 
@@ -194,7 +195,7 @@ export class Swarm {
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { id: this.id, topic: this._topic, swarmEvent }); // TODO(burdon): Stringify.
-    if (this._destroyed) {
+    if (this._ctx.disposed) {
       log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
       return;
     }
@@ -221,7 +222,7 @@ export class Swarm {
 
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { id: this.id, topic: this._topic, message });
-    if (this._destroyed) {
+    if (this._ctx.disposed) {
       log.info('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
       return { accept: false };
     }
@@ -245,7 +246,7 @@ export class Swarm {
 
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { id: this.id, topic: this._topic, message });
-    if (this._destroyed) {
+    if (this._ctx.disposed) {
       log.info('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
       return;
     }
@@ -271,10 +272,30 @@ export class Swarm {
           .filter((peer) => !peer.connection && peer.advertizing)
           .map((peer) => peer.id)
       }),
-      connect: (peer) => this._initiateConnection(peer),
+      connect: (peer) => {
+        if (this._ctx.disposed) {
+          return;
+        }
+
+        // Run in a separate non-blocking task.
+        scheduleTask(this._ctx, async () => {
+          try {
+            await this._initiateConnection(peer);
+          } catch (err: any) {
+            log.warn('initiation error', err);
+          }
+        });
+      },
       disconnect: async (peer) => {
-        await this._closeConnection(peer);
-        this._topology.update();
+        if (this._ctx.disposed) {
+          return;
+        }
+
+        // Run in a separate non-blocking task.
+        scheduleTask(this._ctx, async () => {
+          await this._closeConnection(peer);
+          this._topology.update();
+        });
       }
     };
   }
@@ -289,17 +310,14 @@ export class Swarm {
       await sleep(INITIATION_DELAY);
     }
 
-    if (this._peers.get(remoteId)?.connection) {
+    const peer = this._getOrCreatePeer(remoteId);
+
+    if (peer.connection) {
       // Do nothing if peer is already connected.
       return;
     }
 
-    const sessionId = PublicKey.random();
-
-    log('initiating...', { id: this.id, topic: this._topic, peerId: remoteId, sessionId });
-    const peer = this._getOrCreatePeer(remoteId);
-    const connection = peer.createConnection(true, sessionId);
-    connection.initiate();
+    await peer.initiateConnection();
     this._topology.update();
     log('initiated', { id: this.id, topic: this._topic });
   }

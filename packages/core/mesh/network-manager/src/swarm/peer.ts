@@ -7,12 +7,12 @@ import assert from 'assert';
 import { synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';
 import { TransportFactory } from '../transport';
-import { WireProtocol, WireProtocolProvider } from '../wire-protocol';
+import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
-import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 interface PeerCallbacks {
   /**
@@ -68,6 +68,9 @@ export class Peer {
     private readonly _callbacks: PeerCallbacks
   ) {}
 
+  /**
+   * Respond to remote offer.
+   */
   async onOffer(message: OfferMessage): Promise<Answer> {
     const remoteId = message.author;
 
@@ -78,7 +81,7 @@ export class Peer {
         log.info("closing local connection and accepting remote peer's offer", {
           id: this.id,
           topic: this.topic,
-          peerId: this.localPeerId,
+          peerId: this.localPeerId
         });
         // Close our connection and accept remote peer's connection.
         await this.closeConnection();
@@ -93,7 +96,7 @@ export class Peer {
       if (!this.connection) {
         // Connection might have been already established.
         assert(message.sessionId);
-        const connection = this.createConnection(false, message.sessionId);
+        const connection = this._createConnection(false, message.sessionId);
         try {
           connection.openConnection();
         } catch (err: any) {
@@ -109,10 +112,47 @@ export class Peer {
   }
 
   /**
+   * Initiate a connection to the remote peer.
+   */
+  async initiateConnection() {
+    assert(!this.connection, 'Already connected.');
+    const sessionId = PublicKey.random();
+    log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
+    const connection = this._createConnection(true, sessionId);
+
+    try {
+      const answer = await this._signalMessaging.offer({
+        author: this.localPeerId,
+        recipient: this.id,
+        sessionId,
+        topic: this.topic,
+        data: { offer: {} }
+      });
+      log('received', { answer, topic: this.topic, ownId: this.localPeerId, remoteId: this.id });
+      if (connection.state !== ConnectionState.INITIAL) {
+        log('ignoring response');
+        return;
+      }
+
+      if (!answer.accept) {
+        this._callbacks.onRejected();
+        return;
+      }
+      connection.openConnection();
+      this._callbacks.onAccepted();
+    } catch (err: any) {
+      log.warn('initiation error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+      // Calls `onStateChange` with CLOSED state.
+      await this.closeConnection();
+      throw err;
+    }
+  }
+
+  /**
    * Create new connection.
    * Either we're initiating a connection or creating one in response to an offer from the other peer.
    */
-  createConnection(initiator: boolean, sessionId: PublicKey) {
+  private _createConnection(initiator: boolean, sessionId: PublicKey) {
     log('creating connection', {
       topic: this.topic,
       peerId: this.localPeerId,
@@ -138,16 +178,6 @@ export class Peer {
       switch (state) {
         case ConnectionState.CONNECTED: {
           this._callbacks.onConnected();
-          break;
-        }
-
-        case ConnectionState.REJECTED: {
-          this._callbacks.onRejected();
-          break;
-        }
-
-        case ConnectionState.ACCEPTED: {
-          this._callbacks.onAccepted();
           break;
         }
 
