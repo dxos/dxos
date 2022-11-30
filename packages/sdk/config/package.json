@@ -18,6 +18,9 @@
     "esbuild-plugin.js",
     "rollup-plugin.js"
   ],
+  "scripts": {
+    "test-build": "node ./src/testing/build.js"
+  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
