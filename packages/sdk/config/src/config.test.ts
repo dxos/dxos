@@ -7,8 +7,8 @@ import expect from 'expect';
 import { test } from '@dxos/test';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
-import defaults from './testing/defaults.json';
-import envmap from './testing/envs-map.json';
+const defaults = require('./testing/defaults.json');
+const envmap = require('./testing/envs-map.json');
 
 test('Empty config', () => {
   const config = new Config({});
