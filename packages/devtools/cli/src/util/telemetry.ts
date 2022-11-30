@@ -11,9 +11,7 @@ import { v4 as uuid, validate as validateUuid } from 'uuid';
 import { captureException } from '@dxos/sentry';
 import { init, event } from '@dxos/telemetry';
 
-// TODO(wittjosiah): Including JSON in typescript build breaks for unknown reason.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const telemetryrc = require('./telemetryrc.json');
+import telemetryrc from './telemetryrc.json';
 
 export const DX_ENVIRONMENT = telemetryrc.DX_ENVIRONMENT ?? undefined;
 export const DX_RELEASE = telemetryrc.DX_RELEASE ?? undefined;
