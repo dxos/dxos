@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ReactNode } from 'react';
 
 import { useId } from '../../hooks';
 import { defaultDescription, primaryDescription } from '../../styles';
+import { mx } from '../../util';
 import { ButtonProps, buttonStyles } from '../Button';
 
 export interface CompoundButtonProps extends ButtonProps {
@@ -23,7 +23,7 @@ export const CompoundButton = ({ children, description, before, after, ...button
   return (
     <button
       {...buttonProps}
-      className={cx(buttonStyles(buttonProps), 'flex items-center gap-4 py-2.5', buttonProps.className)}
+      className={mx(buttonStyles(buttonProps), 'flex items-center gap-4 py-2.5', buttonProps.className)}
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
@@ -37,7 +37,7 @@ export const CompoundButton = ({ children, description, before, after, ...button
         {description && (
           <p
             id={descriptionId}
-            className={cx('text-xs font-normal mb-1', variant === 'primary' ? primaryDescription : defaultDescription)}
+            className={mx('text-xs font-normal mb-1', variant === 'primary' ? primaryDescription : defaultDescription)}
           >
             {description}
           </p>

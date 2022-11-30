@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import debounce from 'lodash.debounce';
 import { Minus, Plus } from 'phosphor-react';
 import React, { ComponentProps, useCallback, useMemo, useState, KeyboardEvent } from 'react';
@@ -15,7 +14,8 @@ import {
   Button,
   randomString,
   defaultGroup,
-  defaultHover
+  defaultHover,
+  mx
 } from '@dxos/react-uikit';
 
 import { usePropStatefully } from '../../hooks';
@@ -190,7 +190,7 @@ const ListItemPrimitive = ({
           ...(description && {
             'aria-describedby': descriptionId
           }),
-          className: cx(
+          className: mx(
             getSize(5),
             'text-primary-600 bg-neutral-50 rounded-full border-neutral-300 dark:bg-neutral-800 dark:border-neutral-600 cursor-pointer',
             defaultFocus,
@@ -398,7 +398,7 @@ export const ListPrimitive = ({
     <div
       role='group'
       {...divProps}
-      className={cx(defaultGroup({ elevation: 3, spacing: 'pbs-2 pbe-1' }), divProps.className)}
+      className={mx(defaultGroup({ elevation: 3, spacing: 'pbs-2 pbe-1' }), divProps.className)}
       aria-labelledby={titleId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
