@@ -14,7 +14,7 @@ export class Directory {
     public readonly type: StorageType,
     public readonly path: string,
     // TODO(burdon): Create interface for these methods (shared with AbstractStorage).
-    private readonly _getFiles: () => File[],
+    private readonly _getFiles: () => Map<string, File>,
     private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => File,
     private readonly _delete: () => Promise<void>
   ) {}
@@ -33,7 +33,7 @@ export class Directory {
   /**
    * Get all files in the current directory.
    */
-  getFiles(): File[] {
+  getFiles(): Map<string, File> {
     return this._getFiles();
   }
 

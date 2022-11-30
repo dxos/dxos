@@ -42,21 +42,38 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       await file.close();
     });
 
-    it('create files', async () => {
+    it('list files', async () => {
       const storage = createStorage();
-      const directory = storage.createDirectory();
+      const directoryName = randomText();
+      const directory = storage.createDirectory(directoryName);
 
       const count = 10;
-      const files = [...Array(count)].map(() => directory.getOrCreateFile(randomText()));
+      const files = [...Array(count)].map((name) => directory.getOrCreateFile(randomText()));
 
-      for (const file of files) {
-        const buffer = Buffer.from(randomText());
-        await writeAndCheck(file, buffer);
+      {
+        // Create and check files amount.
+        for (const file of files) {
+          const buffer = Buffer.from(randomText());
+          await writeAndCheck(file, buffer);
+        }
+
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(count);
       }
 
-      const list = directory.getFiles();
-      expect(list).toHaveLength(count);
+      {
+        // Check files amount after partial deletion.
+        const amountToDelete = 5;
+        const filesToDelete = files.slice(0, amountToDelete);
+        for (const file of filesToDelete) {
+          await file.destroy();
+        }
 
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(count - amountToDelete);
+      }
+
+      // Cleanup.
       for (const file of files) {
         await file.close();
       }
