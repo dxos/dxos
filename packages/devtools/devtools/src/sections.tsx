@@ -13,7 +13,8 @@ import {
   List as FeedsIcon,
   // AppRegistration as RegistryIcon,
   Router as SignalIcon,
-  Settings as ConfigIcon
+  Settings as ConfigIcon,
+  VpnKey as KeyIcon
 } from '@mui/icons-material';
 
 import {
@@ -22,6 +23,7 @@ import {
   IdentityPanel,
   ItemsPanel,
   // NetworkPanel,
+  KeyringPanel,
   SpacesPanel,
   Section,
   SignalPanel,
@@ -54,13 +56,13 @@ export const sections: Section[] = [
         title: 'Identity',
         icon: <IdentityIcon />,
         panel: <IdentityPanel />
+      },
+      {
+        id: 'halo.keyring',
+        title: 'Keyring',
+        icon: <KeyIcon />,
+        panel: <KeyringPanel />
       }
-      //     {
-      //       id: 'halo.keyring',
-      //       title: 'Keyring',
-      //       icon: <KeyIcon />,
-      //       panel: <KeyringPanel />
-      //     },
       //     {
       //       id: 'halo.messagess',
       //       title: 'Messages',

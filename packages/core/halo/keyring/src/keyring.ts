@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { subtleCrypto, Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -18,6 +18,7 @@ import { ComplexMap } from '@dxos/util';
  */
 export class Keyring implements Signer {
   private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(PublicKey.hash);
+  readonly keysUpdate = new Event();
 
   constructor(
     private readonly _storage: Directory = createStorage({
@@ -113,6 +114,7 @@ export class Keyring implements Signer {
     const file = this._storage.getOrCreateFile(publicKey.toHex());
     await file.write(0, Buffer.from(schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)));
     await file.close();
+    this.keysUpdate.emit();
   }
 
   // TODO(burdon): ???
