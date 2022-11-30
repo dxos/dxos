@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+// @dxos/test platform=nodejs
 
 import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
@@ -10,18 +10,19 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { createTestBroker, TestBroker } from '@dxos/signal';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { MessageRouter } from './message-router';
 import { SignalMessage } from './signal-messenger';
 
-describe('Signal Integration Test', function () {
+describe('Signal Integration Test', () => {
   let broker: TestBroker;
 
-  before(async function () {
+  beforeAll(async () => {
     broker = await createTestBroker();
   });
 
-  after(function () {
+  afterAll(() => {
     broker.stop();
   });
 
@@ -47,7 +48,7 @@ describe('Signal Integration Test', function () {
     };
   };
 
-  it('two peers connecting', async function () {
+  test('two peers connecting', async () => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();

@@ -9,7 +9,6 @@
     "skipLibCheck": true,
     "types": [
       "@dxos/typings",
-      "mocha",
       "node"
     ]
   },

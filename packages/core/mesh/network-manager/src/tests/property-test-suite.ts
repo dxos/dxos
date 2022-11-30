@@ -8,7 +8,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { afterTest } from '@dxos/testutils';
+import { afterTest, test } from '@dxos/test';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
@@ -21,7 +21,7 @@ import { adaptProtocolProvider } from '../wire-protocol';
  */
 // TODO(dmaretskyi): Run this with actual webrtc and signal servers.
 export const propertyTestSuite = () => {
-  it.skip('property-based tests', async function () {
+  test.skip('property-based tests', async function () {
     /**
      * The simplified model of the system.
      */

@@ -71,8 +71,8 @@ Failed with exit code 1 in chromium
 
 // TODO(burdon): Test parser with test errors (not just build).
 
-describe('Log parser', function () {
-  it.only('parses log', async function () {
+describe('Log parser', () => {
+  it.only('parses log', async () => {
     const parser = new LogParser();
     const sections = parser.parse(log);
     expect(sections).to.have.length(5);

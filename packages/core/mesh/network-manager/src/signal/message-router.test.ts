@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+// @dxos/test platform=nodejs
 
 import { expect } from 'earljs';
-import { it, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { Awaited } from '@dxos/async';
@@ -13,25 +12,25 @@ import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createTestBroker } from '@dxos/signal';
-import { afterTest } from '@dxos/testutils';
+import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { MessageRouter } from './message-router';
 import { OfferMessage, SignalMessage } from './signal-messenger';
 
-describe('MessageRouter', function () {
+describe('MessageRouter', () => {
   let topic: PublicKey;
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;
 
-  before(async function () {
+  beforeAll(async () => {
     broker1 = await createTestBroker();
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     topic = PublicKey.random();
   });
 
-  after(function () {
+  afterAll(() => {
     broker1.stop();
   });
 
@@ -72,7 +71,7 @@ describe('MessageRouter', function () {
     };
   };
 
-  it('signaling between 2 clients', async () => {
+  test('signaling between 2 clients', async () => {
     const received: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);
@@ -108,7 +107,7 @@ describe('MessageRouter', function () {
     }, 4_000);
   }).timeout(5_000);
 
-  it('offer/answer', async () => {
+  test('offer/answer', async () => {
     const {
       signalManager: signalManager1,
       router: router1,
@@ -138,7 +137,7 @@ describe('MessageRouter', function () {
     expect(answer.accept).toEqual(true);
   }).timeout(5_000);
 
-  it('signaling between 3 clients', async () => {
+  test('signaling between 3 clients', async () => {
     const received1: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received1.push(msg);
@@ -226,7 +225,7 @@ describe('MessageRouter', function () {
     }, 4_000);
   }).timeout(5_000);
 
-  it('two offers', async () => {
+  test('two offers', async () => {
     const {
       signalManager: signalManager1,
       router: router1,

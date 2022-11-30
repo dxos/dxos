@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { Gift } from 'phosphor-react';
 import React from 'react';
 
-import { useTranslation, Toast, Button, getSize, useTranslationsContext } from '@dxos/react-uikit';
+import { useTranslation, Toast, Button, getSize, mx, useTranslationsContext } from '@dxos/react-uikit';
 
 interface NeedRefreshToastProps {
   variant: 'needRefresh';
@@ -31,7 +30,7 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
       title={
         variant === 'needRefresh' ? (
           <>
-            <Gift className={cx(getSize(5), 'inline mr-1')} weight='duotone' />
+            <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
             <span>{t('need refresh label')}</span>
           </>
         ) : (

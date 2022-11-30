@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "run": {
+      "implementation": "./dist/src/main",
+      "schema": "./schema.json",
+      "description": "Runs tests in multiple environments."
+    }
+  }
+}

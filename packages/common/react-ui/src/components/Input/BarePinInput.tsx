@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { CodeInput, getSegmentCssWidth } from 'rci';
 import React, { forwardRef, useCallback, ComponentProps } from 'react';
 
 import { useForwardedRef, useIsFocused } from '../../hooks';
 import { staticInput } from '../../styles/input';
+import { mx } from '../../util';
 import { InputProps } from './InputProps';
 
 const bareInputStyleProps = {
@@ -49,7 +49,7 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
           ...inputProps,
           ...bareInputStyleProps,
           inputRef,
-          className: cx(
+          className: mx(
             'font-mono selection:bg-transparent mli-auto',
             inputProps.disabled && 'cursor-not-allowed',
             inputProps.className

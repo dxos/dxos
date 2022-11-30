@@ -22,7 +22,6 @@
     "@dxos/util": "workspace:*",
     "@radix-ui/react-toolbar": "^1.0.1",
     "@react-hook/async": "^3.1.1",
-    "classnames": "^2.3.2",
     "debug": "^4.3.3",
     "i18next": "^21.10.0",
     "lodash.throttle": "^4.1.1",
