@@ -5,9 +5,9 @@
     "build-internal": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "tools/executors/mocha/src/main.ts",
-        "outputPath": "tools/executors/mocha/dist",
-        "tsConfig": "tools/executors/mocha/tsconfig.json"
+        "main": "tools/executors/test/src/main.ts",
+        "outputPath": "tools/executors/test/dist",
+        "tsConfig": "tools/executors/test/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -18,7 +18,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "tools/executors/mocha/**/*.{ts,js}"
+          "tools/executors/test/**/*.{ts,js}"
         ]
       },
       "outputs": [

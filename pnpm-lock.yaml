@@ -1961,9 +1961,12 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
+      '@types/randombytes': ^2.0.0
       '@types/varint': ^6.0.0
       assert: ^2.0.0
       debug: ^4.3.3
+      randombytes: ^2.1.0
+      readable-stream: ^3.6.0
       typescript: ^4.8.4
       varint: ^6.0.0
       wait-for-expect: ^3.0.2
@@ -1977,9 +1980,12 @@ importers:
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       debug: 4.3.4
+      randombytes: 2.1.0
+      readable-stream: 3.6.0
       varint: 6.0.0
     devDependencies:
       '@dxos/async': link:../../../common/async
+      '@types/randombytes': 2.0.0
       '@types/varint': 6.0.0
       typescript: 4.8.4
       wait-for-expect: 3.0.2
