@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=browser
+// @dxos/test platform=browser
 
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
@@ -10,7 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { TestFeedBuilder } from '../common';
@@ -21,8 +21,8 @@ import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
-describe('space/space-protocol', function () {
-  it('two peers discover each other', async function () {
+describe('space/space-protocol', () => {
+  test('two peers discover each other', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -44,7 +44,7 @@ describe('space/space-protocol', function () {
     });
   });
 
-  it('replicates a feed', async function () {
+  test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -88,12 +88,7 @@ describe('space/space-protocol', function () {
     await builder.close();
   });
 
-  it('replicates a feed through a webrtc connection', async function () {
-    // Some storage drivers may break when there are multiple storage instances.
-    if (mochaExecutor.environment === 'webkit') {
-      this.skip();
-    }
-
+  test('replicates a feed through a webrtc connection', async () => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
@@ -135,5 +130,5 @@ describe('space/space-protocol', function () {
     });
 
     await builder.close();
-  });
+  }).skipEnvironments('webkit'); // Some storage drivers may break when there are multiple storage instances.
 });

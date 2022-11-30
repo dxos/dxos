@@ -8,7 +8,6 @@
     "outDir": "dist",
     "target": "ESNext",
     "types": [
-      "mocha",
       "node"
     ]
   },

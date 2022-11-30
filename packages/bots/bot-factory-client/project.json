@@ -46,6 +46,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha"
+    "test"
   ]
 }

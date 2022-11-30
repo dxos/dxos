@@ -9,7 +9,7 @@ import * as varint from 'varint';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
-import { afterTest } from '@dxos/testutils';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { Framer, readFrame } from './framer';
 
@@ -49,8 +49,8 @@ const pipe = (a: NodeJS.ReadWriteStream, b: NodeJS.ReadWriteStream): (() => void
   };
 };
 
-describe('Framer', function () {
-  it('varints', function () {
+describe('Framer', () => {
+  test('varints', () => {
     const values = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
     for (const value of values) {
       const encoded = varint.encode(value, Buffer.allocUnsafe(4)).slice(0, varint.encode.bytes);
@@ -63,7 +63,7 @@ describe('Framer', function () {
     }
   });
 
-  it('frame encoding', function () {
+  test('frame encoding', () => {
     const sizes = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
     for (const size of sizes) {
       const tag = varint.encode(size, Buffer.allocUnsafe(4)).slice(0, varint.encode.bytes);
@@ -76,7 +76,7 @@ describe('Framer', function () {
   });
 
   // This test is a bit slow because of sleep and flush on interval.
-  it('end-to-end stress test', async function () {
+  test('end-to-end stress test', async () => {
     const peer1 = new Framer();
     const peer2 = new Framer();
 
@@ -126,7 +126,7 @@ describe('Framer', function () {
     }
   });
 
-  it('bench', async function () {
+  test('bench', async () => {
     const peer1 = new Framer();
     const peer2 = new Framer();
 

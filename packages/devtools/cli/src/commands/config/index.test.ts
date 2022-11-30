@@ -7,6 +7,8 @@ import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import path from 'path';
 
+import { describe } from '@dxos/test';
+
 // TODO(burdon): Import (configure esbuild).
 // TODO(burdon): Lint issue.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -14,7 +16,7 @@ import path from 'path';
 // import config from '../../../config/config.yml';
 
 // TODO(burdon): SecurityError: localStorage is not available for opaque origins
-describe('config', function () {
+describe('config', () => {
   const configPath = path.join(__dirname, '../../../config/config.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 

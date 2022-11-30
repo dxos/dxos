@@ -29,7 +29,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/common/random-access-storage",
         "outputPath": "tmp/mocha/packages/common/random-access-storage",
@@ -49,6 +49,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "test"
   ]
 }

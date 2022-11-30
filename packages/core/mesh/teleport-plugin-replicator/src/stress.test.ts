@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { Teleport } from '@dxos/teleport';
-import { afterTest } from '@dxos/testutils';
+import { afterTest, describe, test } from '@dxos/test';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
 import { ReplicatorExtension } from './replicator-extension';
@@ -143,8 +143,8 @@ const factory =
     };
   };
 
-describe('stress-tests', function () {
-  it('example', async function () {
+describe('stress-tests', () => {
+  test('example', async () => {
     const keyring = new Keyring();
     const feedKey = await keyring.createKey();
 
@@ -164,7 +164,7 @@ describe('stress-tests', function () {
     );
   });
 
-  it('example with two feeds', async function () {
+  test('example with two feeds', async () => {
     const keyring = new Keyring();
     const feedKey1 = await keyring.createKey();
     const feedKey2 = await keyring.createKey();
@@ -192,34 +192,36 @@ describe('stress-tests', function () {
    * Simulates two peers in a single session, replicating multiple feeds between each other.
    * Feeds are randomly created and appended.
    */
-  it.skip('generic (disable if flaky)', async function () {
-    const keyring = new Keyring();
+  test
+    .skip('generic (disable if flaky)', async () => {
+      const keyring = new Keyring();
 
-    const keys = await Promise.all(range(MAX_NUM_FEEDS).map(() => keyring.createKey()));
-    const arbFeedKey = fc.constantFrom(...keys);
+      const keys = await Promise.all(range(MAX_NUM_FEEDS).map(() => keyring.createKey()));
+      const arbFeedKey = fc.constantFrom(...keys);
 
-    const allCommands = [
-      fc.tuple(arbAgentName, arbFeedKey).map(([agent, feedKey]) => new OpenFeedCommand(agent, feedKey)),
+      const allCommands = [
+        fc.tuple(arbAgentName, arbFeedKey).map(([agent, feedKey]) => new OpenFeedCommand(agent, feedKey)),
 
-      fc
-        .tuple(arbAgentName, arbFeedKey, fc.integer({ min: 1, max: 10 }))
-        .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count))
-    ];
+        fc
+          .tuple(arbAgentName, arbFeedKey, fc.integer({ min: 1, max: 10 }))
+          .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count))
+      ];
 
-    await fc.assert(
-      fc.asyncProperty(fc.commands(allCommands, { maxCommands: 100 }), async (cmds) => {
-        console.log('\n=====');
-        console.log([...cmds].map((c) => c.toString()).join('\n'));
+      await fc.assert(
+        fc.asyncProperty(fc.commands(allCommands, { maxCommands: 100 }), async (cmds) => {
+          console.log('\n=====');
+          console.log([...cmds].map((c) => c.toString()).join('\n'));
 
-        const system = await factory(keyring)();
-        try {
-          await fc.asyncModelRun(() => system, cmds);
-        } finally {
-          // TODO(dmaretskyi): Destroy breaks the test.
-          await system.real.agent1.destroy();
-          await system.real.agent2.destroy();
-        }
-      })
-    );
-  }).timeout(100_000);
+          const system = await factory(keyring)();
+          try {
+            await fc.asyncModelRun(() => system, cmds);
+          } finally {
+            // TODO(dmaretskyi): Destroy breaks the test.
+            await system.real.agent1.destroy();
+            await system.real.agent2.destroy();
+          }
+        })
+      );
+    })
+    .timeout(100_000);
 });
