@@ -44,6 +44,11 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         metafile: options.metafile,
         bundle: options.bundle,
         platform,
+        // https://esbuild.github.io/api/#log-override
+        logOverride: {
+          // The log transform was generating this warning.
+          'this-is-undefined-in-esm': 'info'
+        },
         plugins: [
           nodeExternalsPlugin({
             packagePath,
