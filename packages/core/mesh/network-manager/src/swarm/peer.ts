@@ -71,6 +71,23 @@ export class Peer {
   async onOffer(message: OfferMessage): Promise<Answer> {
     const remoteId = message.author;
 
+    // Check if we are already trying to connect to that peer.
+    if (this.connection) {
+      // Peer with the highest Id closes its connection, and accepts remote peer's offer.
+      if (remoteId.toHex() < this.localPeerId.toHex()) {
+        log.info("closing local connection and accepting remote peer's offer", {
+          id: this.id,
+          topic: this.topic,
+          peerId: this.localPeerId,
+        });
+        // Close our connection and accept remote peer's connection.
+        await this.closeConnection();
+      } else {
+        // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
+        return { accept: true };
+      }
+    }
+
     let accept = false;
     if (await this._callbacks.onOffer(remoteId)) {
       if (!this.connection) {
@@ -82,9 +99,7 @@ export class Peer {
         } catch (err: any) {
           log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
           // Calls `onStateChange` with CLOSED state.
-          void this.closeConnection().catch(() => {
-            log.catch(err);
-          });
+          void this.closeConnection();
         }
 
         accept = true;

@@ -228,7 +228,6 @@ export class Swarm {
 
     // Id of the peer offering us the connection.
     assert(message.author);
-    const remoteId = message.author;
     if (!message.recipient?.equals(this._ownPeerId)) {
       log('rejecting offer with incorrect peerId', { id: this.id, topic: this._topic, message });
       return { accept: false };
@@ -238,27 +237,7 @@ export class Swarm {
       return { accept: false };
     }
 
-    const peer = this._getOrCreatePeer(remoteId);
-
-    // Check if we are already trying to connect to that peer.
-    if (peer.connection) {
-      // Peer with the highest Id closes its connection, and accepts remote peer's offer.
-      if (remoteId.toHex() < this._ownPeerId.toHex()) {
-        log.info("closing local connection and accepting remote peer's offer", {
-          id: this.id,
-          topic: this._topic,
-          peerId: this._ownPeerId
-        });
-        // Close our connection and accept remote peer's connection.
-        await this._closeConnection(remoteId).catch((err) => {
-          this.errors.raise(err);
-        });
-      } else {
-        // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
-        return { accept: true };
-      }
-    }
-
+    const peer = this._getOrCreatePeer(message.author);
     const answer = await peer.onOffer(message);
     this._topology.update();
     return answer;
@@ -294,11 +273,7 @@ export class Swarm {
       }),
       connect: (peer) => this._initiateConnection(peer),
       disconnect: async (peer) => {
-        try {
-          await this._closeConnection(peer);
-        } catch (err: any) {
-          this.errors.raise(err);
-        }
+        await this._closeConnection(peer);
         this._topology.update();
       }
     };
