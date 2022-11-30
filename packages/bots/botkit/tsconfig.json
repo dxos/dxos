@@ -5,7 +5,6 @@
   },
   "include": [
     "src",
-    "src/**/*.json",
     "stories"
   ],
   "references": [

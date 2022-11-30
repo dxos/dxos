@@ -8,8 +8,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
-    "src/util/telemetryrc.json"
+    "src"
   ],
   "references": [
     {

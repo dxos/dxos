@@ -11,7 +11,7 @@
     "node:assert": "assert",
     "./src/loaders/index.ts": "./src/loaders/browser.js"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "esbuild-plugin.js",

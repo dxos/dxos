@@ -7,8 +7,11 @@ import { join } from 'path';
 
 import { Config, mapFromKeyValues } from '@dxos/config';
 
-import defaults from './defaults.json';
-import envmap from './env-map.json';
+// TODO(wittjosiah): Including JSON in typescript build breaks for unknown reason.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const defaults = require('./defaults.json');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const envmap = require('./env-map.json');
 
 export const BOT_CONFIG_FILENAME = 'bot.yml';
 
