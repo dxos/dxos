@@ -8,9 +8,10 @@ import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import { CopyText, HashIcon } from '@dxos/react-components';
+import { CopyText } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
+import { Avatar } from '../Avatar';
 import { Table, TableCell } from '../Table';
 
 export interface KeyTableProps {
@@ -32,12 +33,14 @@ export const KeyTable = ({ keys }: KeyTableProps) => (
         return (
           <TableRow key={key}>
             <TableCell>
-              <HashIcon value={key} />
+              <Avatar size={12} fallbackValue={PublicKey.from(key).toHex()} />
             </TableCell>
             <TableCell title={key}>
               <CopyText monospace variant='h6' value={key} length={8} />
             </TableCell>
-            <TableCell>{humanize(publicKey)}</TableCell>
+            <TableCell>
+              <CopyText monospace variant='h6' value={humanize(key)} />
+            </TableCell>
           </TableRow>
         );
       })}
