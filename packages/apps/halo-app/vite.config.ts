@@ -21,8 +21,9 @@ const manualChunks = {
   phosphor: ['phosphor-react']
 };
 
+// TODO(wittjosiah): Try again after ESM switch.
 // From https://sambitsahoo.com/blog/vite-code-splitting-that-works.html
-const renderChunks = (deps: Record<string, string>) => {
+const _renderChunks = (deps: Record<string, string>) => {
   const chunks = {};
   const manual = Object.keys(manualChunks)
     .map((key) => manualChunks[key])
