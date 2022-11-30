@@ -6,10 +6,7 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/bots/bender-bot/src/index.ts",
-        "outputPath": "packages/bots/bender-bot/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/bots/bender-bot/dist/types",
         "tsConfig": "packages/bots/bender-bot/tsconfig.json"
       },
       "outputs": [
