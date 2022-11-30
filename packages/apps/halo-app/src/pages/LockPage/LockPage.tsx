@@ -53,7 +53,7 @@ export const LockPage = () => {
             label={profile.displayName ?? humanize(profile.identityKey)}
             className={defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' })}
           />
-          <Heading>{t('halo label')}</Heading>
+          <Heading>{t('current app name')}</Heading>
           <p className='text-center'>
             <Trans
               {...{
@@ -73,7 +73,7 @@ export const LockPage = () => {
             src={lightThemeLogo}
           />
           <img className={mx(getSize(32), 'hidden dark:block mli-auto')} alt={t('halo logo alt')} src={darkThemeLogo} />
-          <Heading className='text-center'>{t('halo label')}</Heading>
+          <Heading className='text-center'>{t('current app name')}</Heading>
           <p className='text-center'>{t('identities empty message')}</p>
           <AuthChoices
             {...{
