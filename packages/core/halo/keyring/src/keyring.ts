@@ -70,7 +70,7 @@ export class Keyring implements Signer {
       const record = schema.getCodecForType('dxos.halo.keyring.KeyRecord').decode(recordBytes);
       const publicKey = PublicKey.from(record.publicKey);
       assert(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
-
+      assert(record.privateKey, 'Corrupted keyring: Missing private key');
       const keyPair: CryptoKeyPair = {
         publicKey: await subtleCrypto.importKey(
           'raw',
@@ -120,12 +120,12 @@ export class Keyring implements Signer {
     return todo('We need a method to delete a file.');
   }
 
-  list(): PublicKey[] {
-    const keys: PublicKey[] = [];
+  list(): KeyRecord[] {
+    const keys: KeyRecord[] = [];
     for (const path of this._storage.getFiles().keys()) {
       const fileName = path.split('/').pop();
       assert(fileName, 'Invalid file name');
-      keys.push(PublicKey.fromHex(fileName));
+      keys.push({ publicKey: PublicKey.fromHex(fileName).asUint8Array() });
     }
     return keys;
   }

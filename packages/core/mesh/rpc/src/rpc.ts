@@ -254,10 +254,6 @@ export class RpcPeer {
         this._outgoingRequests.set(id, new PendingRpcRequest(resolve, reject, false));
       });
 
-      responseReceived.catch((err) => {
-        log.warn(err);
-      });
-
       // Send request call.
       const sending = this._sendMessage({
         request: {

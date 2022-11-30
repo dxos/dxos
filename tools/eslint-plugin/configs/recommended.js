@@ -91,6 +91,7 @@ module.exports = {
         args: 'none'
       }
     ],
-    'yield-star-spacing': 'off'
+    'yield-star-spacing': 'off',
+    'n/handle-callback-err': 'off'
   }
 };

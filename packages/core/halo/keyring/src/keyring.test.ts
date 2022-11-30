@@ -71,7 +71,7 @@ describe('Keyring', function () {
     for (let i = 0; i < count; i++) {
       hexKeys.push((await keyring.createKey()).toHex());
     }
-    expect(keyring.list().every((key) => hexKeys.includes(key.toHex()))).toBeTruthy();
+    expect(keyring.list().every((key) => hexKeys.includes(PublicKey.from(key.publicKey).toHex()))).toBeTruthy();
   });
 
   it('delete key');
