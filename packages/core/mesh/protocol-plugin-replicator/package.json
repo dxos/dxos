@@ -10,7 +10,7 @@
   "main": "dist/lib/node.js",
   "browser": {
     "node:assert": "assert",
-    "./dist/lib/node.js": "./dist/lib/browser.jindexs"
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

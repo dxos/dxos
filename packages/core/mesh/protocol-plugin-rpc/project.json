@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/core/mesh/mesh-protocol/src/index.ts"
+          "packages/core/mesh/protocol-plugin-rpc/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/mesh-protocol/dist/lib",
+        "outputPath": "packages/core/mesh/protocol-plugin-rpc/dist/lib",
         "platforms": [
           "browser",
           "node"

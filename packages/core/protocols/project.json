@@ -2,24 +2,17 @@
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "build-internal": {
+      "dependsOn": [
+        "^build-internal",
+        "^compile",
+        "prebuild"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/protocols/src/index.ts",
-        "outputPath": "packages/core/protocols/dist/types",
+        "outputPath": "packages/core/protocols/dist",
         "tsConfig": "packages/core/protocols/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "compile": {
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/core/protocols/src/index.ts"
-        ],
-        "outputPath": "packages/core/protocols/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -44,7 +37,7 @@
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
-        "exportPath": "packages/core/protocols/dist/types/src/proto/gen"
+        "exportPath": "packages/core/protocols/dist/src/proto/gen"
       },
       "outputs": [
         "packages/core/protocols/proto",
