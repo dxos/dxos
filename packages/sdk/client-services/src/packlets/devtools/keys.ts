@@ -8,8 +8,12 @@ import { SubscribeToKeyringKeysResponse } from '@dxos/protocols/proto/dxos/devto
 
 export const subscribeToKeyringKeys = ({ keyring }: { keyring: Keyring }) =>
   new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {
-    next({ keys: keyring.keys });
-    return keyring.keysUpdate.on((keys) => {
-      next({ keys });
-    });
+    const update = () => {
+      next({
+        keys: keyring.list()
+      });
+    };
+    const unsubscribe = keyring.keysUpdate.on(update);
+    update();
+    return unsubscribe;
   });
