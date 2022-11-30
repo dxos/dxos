@@ -33,7 +33,7 @@ export const KeyTable = ({ keys }: KeyTableProps) => (
         return (
           <TableRow key={key}>
             <TableCell>
-              <Avatar size={12} fallbackValue={key.toHex()} />
+              <Avatar size={12} fallbackValue={PublicKey.from(key).toHex()} />
             </TableCell>
             <TableCell title={key}>
               <CopyText monospace variant='h6' value={key} length={8} />
