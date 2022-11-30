@@ -21,7 +21,11 @@
           "nx compile-plugin config"
         ],
         "parallel": true
-      }
+      },
+      "outputs": [
+        "packages/sdk/config/dist/lib",
+        "packages/sdk/config/dist/plugin"
+      ]
     },
     "compile-lib": {
       "executor": "@dxos/esbuild:build",
