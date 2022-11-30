@@ -8,12 +8,18 @@ import { synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SignalMessage, SignalMessenger } from '../signal';
+import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';
 import { TransportFactory } from '../transport';
-import { WireProtocol } from '../wire-protocol';
+import { WireProtocol, WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
+import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 interface PeerCallbacks {
+  /**
+   * Connection attempt initiated.
+   */
+  onInitiated: (connection: Connection) => void;
+
   /**
    * Connection opened.
    */
@@ -33,8 +39,17 @@ interface PeerCallbacks {
    * Peer rejected our offer to connect.
    */
   onRejected: () => void;
+
+  /**
+   * Returns true if the remote peer's offer should be accepted.
+   */
+  onOffer: (remoteId: PublicKey) => Promise<boolean>;
 }
 
+/**
+ * State of remote peer during the lifetime of a swarm connection.
+ * Can open and close multiple connections to the remote peer.
+ */
 export class Peer {
   public connection?: Connection;
 
@@ -47,21 +62,42 @@ export class Peer {
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
     public readonly localPeerId: PublicKey,
+    private readonly _signalMessaging: SignalMessenger,
+    private readonly _protocolProvider: WireProtocolProvider,
+    private readonly _transportFactory: TransportFactory,
     private readonly _callbacks: PeerCallbacks
   ) {}
+
+  async onOffer(message: OfferMessage): Promise<Answer> {
+    const remoteId = message.author;
+
+    let accept = false;
+    if (await this._callbacks.onOffer(remoteId)) {
+      if (!this.connection) {
+        // Connection might have been already established.
+        assert(message.sessionId);
+        const connection = this.createConnection(false, message.sessionId);
+        try {
+          connection.openConnection();
+        } catch (err: any) {
+          log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+          // Calls `onStateChange` with CLOSED state.
+          void this.closeConnection().catch(() => {
+            log.catch(err);
+          });
+        }
+
+        accept = true;
+      }
+    }
+    return { accept };
+  }
 
   /**
    * Create new connection.
    * Either we're initiating a connection or creating one in response to an offer from the other peer.
    */
-  createConnection(
-    // TODO(dmaretskyi): Move into constructor?
-    signalMessaging: SignalMessenger,
-    initiator: boolean,
-    sessionId: PublicKey,
-    protocol: WireProtocol,
-    transportFactory: TransportFactory
-  ) {
+  createConnection(initiator: boolean, sessionId: PublicKey) {
     log('creating connection', {
       topic: this.topic,
       peerId: this.localPeerId,
@@ -70,16 +106,19 @@ export class Peer {
       sessionId
     });
     assert(!this.connection, 'Already connected.');
+
     const connection = new Connection(
       this.topic,
       this.localPeerId,
       this.id,
       sessionId,
       initiator,
-      signalMessaging,
-      protocol,
-      transportFactory
+      this._signalMessaging,
+      // TODO(dmaretskyi): Init only when connection is established.
+      this._protocolProvider({ initiator, localPeerId: this.localPeerId, remotePeerId: this.id, topic: this.topic }),
+      this._transportFactory
     );
+    this._callbacks.onInitiated(connection);
     connection.stateChanged.on((state) => {
       switch (state) {
         case ConnectionState.CONNECTED: {

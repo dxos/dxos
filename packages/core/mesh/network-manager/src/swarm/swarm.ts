@@ -143,29 +143,43 @@ export class Swarm {
   private _getOrCreatePeer(peerId: PublicKey): Peer {
     let peer = this._peers.get(peerId);
     if (!peer) {
-      peer = new Peer(peerId, this._topic, this._ownPeerId, {
-        onConnected: () => {
-          this.connected.emit(peerId);
-        },
-        onDisconnected: async () => {
-          if (!peer!.advertizing) {
-            await this._destroyPeer(peer!.id);
-          }
+      peer = new Peer(
+        peerId,
+        this._topic,
+        this._ownPeerId,
+        this._swarmMessenger,
+        this._protocolProvider,
+        this._transportFactory,
+        {
+          onInitiated: (connection) => {
+            this.connectionAdded.emit(connection);
+          },
+          onConnected: () => {
+            this.connected.emit(peerId);
+          },
+          onDisconnected: async () => {
+            if (!peer!.advertizing) {
+              await this._destroyPeer(peer!.id);
+            }
 
-          this.disconnected.emit(peerId);
-          this._topology.update();
-        },
-        onRejected: () => {
-          // If the peer rejected our connection remove it from the set of candidates.
-          // TODO(dmaretskyi): Set flag instead.
-          if (this._peers.has(peerId)) {
-            void this._destroyPeer(peerId);
+            this.disconnected.emit(peerId);
+            this._topology.update();
+          },
+          onRejected: () => {
+            // If the peer rejected our connection remove it from the set of candidates.
+            // TODO(dmaretskyi): Set flag instead.
+            if (this._peers.has(peerId)) {
+              void this._destroyPeer(peerId);
+            }
+          },
+          onAccepted: () => {
+            this._topology.update();
+          },
+          onOffer: (remoteId) => {
+            return this._topology.onOffer(remoteId);
           }
-        },
-        onAccepted: () => {
-          this._topology.update();
         }
-      });
+      );
       this._peers.set(peerId, peer);
     }
 
@@ -208,7 +222,7 @@ export class Swarm {
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { id: this.id, topic: this._topic, message });
     if (this._destroyed) {
-      log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+      log.info('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
       return { accept: false };
     }
 
@@ -230,7 +244,7 @@ export class Swarm {
     if (peer.connection) {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this._ownPeerId.toHex()) {
-        log("closing local connection and accepting remote peer's offer", {
+        log.info("closing local connection and accepting remote peer's offer", {
           id: this.id,
           topic: this._topic,
           peerId: this._ownPeerId
@@ -245,30 +259,15 @@ export class Swarm {
       }
     }
 
-    let accept = false;
-    if (await this._topology.onOffer(remoteId)) {
-      if (!peer.connection) {
-        // Connection might have been already established.
-        assert(message.sessionId);
-        const connection = this._createConnection(false, message.author, message.sessionId);
-        try {
-          connection.openConnection();
-        } catch (err: any) {
-          this.errors.raise(err);
-        }
-
-        accept = true;
-      }
-    }
-
+    const answer = await peer.onOffer(message);
     this._topology.update();
-    return { accept };
+    return answer;
   }
 
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { id: this.id, topic: this._topic, message });
     if (this._destroyed) {
-      log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+      log.info('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
       return;
     }
     assert(
@@ -323,29 +322,11 @@ export class Swarm {
     const sessionId = PublicKey.random();
 
     log('initiating...', { id: this.id, topic: this._topic, peerId: remoteId, sessionId });
-    const connection = this._createConnection(true, remoteId, sessionId);
+    const peer = this._getOrCreatePeer(remoteId);
+    const connection = peer.createConnection(true, sessionId);
     connection.initiate();
     this._topology.update();
     log('initiated', { id: this.id, topic: this._topic });
-  }
-
-  /**
-   * Synchronously create a connection, which must be initialized.
-   */
-  private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey): Connection {
-    const peer = this._getOrCreatePeer(remoteId);
-
-    const connection = peer.createConnection(
-      this._swarmMessenger,
-      initiator,
-      sessionId,
-      // TODO(dmaretskyi): Init only when connection is established.
-      this._protocolProvider({ initiator, localPeerId: this._ownPeerId, remotePeerId: remoteId, topic: this._topic }),
-      this._transportFactory
-    );
-
-    this.connectionAdded.emit(connection);
-    return connection;
   }
 
   private async _closeConnection(peerId: PublicKey) {
