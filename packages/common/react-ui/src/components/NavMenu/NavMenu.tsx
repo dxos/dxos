@@ -3,10 +3,10 @@
 //
 
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
-import cx from 'classnames';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
 import { defaultFocus, defaultHover, defaultInlineSeparator } from '../../styles';
+import { mx } from '../../util';
 import { defaultButtonColors, primaryButtonColors } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
 
@@ -49,7 +49,7 @@ const NavMenuInvokerItem = forwardRef(
     return (
       <NavigationMenuPrimitive.Item ref={ref}>
         <NavigationMenuPrimitive.Trigger
-          className={cx(
+          className={mx(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryButtonColors : defaultButtonColors,
             defaultFocus,
@@ -59,7 +59,7 @@ const NavMenuInvokerItem = forwardRef(
           {children}
         </NavigationMenuPrimitive.Trigger>
         <NavigationMenuPrimitive.Content
-          className={cx(
+          className={mx(
             'absolute w-auto top-0 left-0 rounded-lg',
             'radix-motion-from-start:animate-enter-from-left',
             'radix-motion-from-end:animate-enter-from-right',
@@ -80,7 +80,7 @@ const NavMenuLinkItem = forwardRef(
       <NavigationMenuPrimitive.Link
         {...triggerLinkProps}
         active={active}
-        className={cx(
+        className={mx(
           'px-3 py-2 text-sm rounded-md transition-color',
           active ? primaryButtonColors : defaultButtonColors,
           active ? 'font-medium' : 'font-normal',
@@ -103,7 +103,7 @@ const NavMenuTooltipLinkItem = forwardRef(
         <NavigationMenuPrimitive.Link
           {...triggerLinkProps}
           active={active}
-          className={cx(
+          className={mx(
             'px-3 py-2 text-sm rounded-md transition-color',
             active ? primaryButtonColors : defaultButtonColors,
             active ? 'font-medium' : 'font-normal',
@@ -122,7 +122,7 @@ const NavMenuTooltipLinkItem = forwardRef(
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
 export const NavMenuSeparatorItem = (_props: NavMenuSeparatorProps) => {
-  return <span role='none' className={cx(defaultInlineSeparator, 'bs-5')} />;
+  return <span role='none' className={mx(defaultInlineSeparator, 'bs-5')} />;
 };
 
 const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps => 'tooltip' in o;
@@ -131,7 +131,7 @@ const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
 
 export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
   return (
-    <NavigationMenuPrimitive.Root {...rootProps} className={cx('flex justify-center', rootProps.className)}>
+    <NavigationMenuPrimitive.Root {...rootProps} className={mx('flex justify-center', rootProps.className)}>
       <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-1 rounded-lg bg-white dark:bg-neutral-750 p-1 button-elevation overflow-x-auto'>
         {items.map((item: NavMenuItem, i) => {
           return isTooltipLinkItem(item) ? (
@@ -146,7 +146,7 @@ export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
         })}
 
         <NavigationMenuPrimitive.Indicator
-          className={cx(
+          className={mx(
             'z-10',
             'top-[100%] flex items-end justify-center h-2 overflow-hidden',
             'radix-state-visible:animate-fade-in',
@@ -159,13 +159,13 @@ export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
       </NavigationMenuPrimitive.List>
 
       <div
-        className={cx('absolute flex justify-center', 'w-[140%] left-[-20%] top-[100%]')}
+        className={mx('absolute flex justify-center', 'w-[140%] left-[-20%] top-[100%]')}
         style={{
           perspective: '2000px'
         }}
       >
         <NavigationMenuPrimitive.Viewport
-          className={cx(
+          className={mx(
             'relative mt-2 shadow-lg rounded-md bg-white dark:bg-neutral-750 overflow-hidden',
             'w-radix-navigation-menu-viewport',
             'h-radix-navigation-menu-viewport',
