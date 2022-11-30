@@ -123,7 +123,7 @@ export class Keyring implements Signer {
   list(): KeyRecord[] {
     const keys: KeyRecord[] = [];
     for (const path of this._storage.getFiles().keys()) {
-      const fileName = path.split('/').pop();
+      const fileName = path.split('/').pop(); // get last portion of the path
       assert(fileName, 'Invalid file name');
       keys.push({ publicKey: PublicKey.fromHex(fileName).asUint8Array() });
     }
