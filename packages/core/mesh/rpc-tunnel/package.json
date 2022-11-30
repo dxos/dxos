@@ -6,10 +6,9 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node.js",
+  "main": "dist/lib/browser.js",
   "browser": {
-    "node:assert": "assert",
-    "./dist/lib/node.js": "./dist/lib/browser.js"
+    "node:assert": "assert"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

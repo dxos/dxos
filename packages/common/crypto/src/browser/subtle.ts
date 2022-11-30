@@ -5,4 +5,3 @@
 // Replacement implementation for the browser (see package.json).
 
 export const subtleCrypto = crypto.subtle;
-export const getRandomValues = crypto.getRandomValues;

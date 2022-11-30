@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/crypto": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "end-of-stream": "^1.4.1",

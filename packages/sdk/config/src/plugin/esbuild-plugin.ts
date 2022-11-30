@@ -9,7 +9,6 @@ import { readFile } from 'node:fs/promises';
 import { definitions } from './definitions';
 import { ConfigPluginOpts } from './types';
 
-// TODO(wittjosiah): Test config plugin properly injects config when used with loaders.
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
   const dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : options.dynamic ?? false;
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
