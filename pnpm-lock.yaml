@@ -689,6 +689,43 @@ importers:
       webpack: 5.74.0
       workbox-window: 6.5.4
 
+  packages/apps/todomvc:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/util': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^2.0.1
+      classnames: ^2.3.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-router-dom: ^6.3.0
+      todomvc-app-css: ^2.4.2
+      todomvc-common: ^1.0.5
+      vite: 3.0.9
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/log': link:../../common/log
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/util': link:../../common/util
+      classnames: 2.3.2
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      todomvc-app-css: 2.4.2
+      todomvc-common: 1.0.5
+    devDependencies:
+      '@dxos/vite-plugin': link:../../sdk/vite-plugin
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+
   packages/bots/bender-bot:
     specifiers:
       '@dxos/async': workspace:*
@@ -32387,6 +32424,14 @@ packages:
     dependencies:
       is-buffer: 2.0.5
       vfile: 5.3.6
+    dev: false
+
+  /todomvc-app-css/2.4.2:
+    resolution: {integrity: sha512-ViAkQ7ed89rmhFIGRsT36njN+97z8+s3XsJnB8E2IKOq+/SLD/6PtSvmTtiwUcVk39qPcjAc/OyeDys4LoJUVg==}
+    dev: false
+
+  /todomvc-common/1.0.5:
+    resolution: {integrity: sha512-D8kEJmxVMQIWwztEdH+WeiAfXRbbSCpgXq4NkYi+gduJ2tr8CNq7sYLfJvjpQ10KD9QxJwig57rvMbV2QAESwQ==}
     dev: false
 
   /toggle-selection/1.0.6:

@@ -15,8 +15,8 @@
     },
     "bundle": {
       "dependsOn": [
-        "^bundle",
-        "^build"
+        "^build",
+        "^bundle"
       ],
       "executor": "nx:run-script",
       "options": {
