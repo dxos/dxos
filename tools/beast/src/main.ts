@@ -4,7 +4,7 @@
 
 import * as process from 'process';
 import yargs from 'yargs';
-import { cosmiconfig } from "cosmiconfig";
+import { cosmiconfig } from 'cosmiconfig';
 import { hideBin } from 'yargs/helpers';
 
 import { log } from '@dxos/log';
@@ -14,7 +14,7 @@ import { getBaseDir } from './util';
 
 export type Config = {
   exclude?: string[];
-}
+};
 
 const defaultExclude = [
   '@dxos/async',
@@ -26,16 +26,15 @@ const defaultExclude = [
   '@dxos/util'
 ];
 
-const loadConfig = async (): Promise<Config> => {
+const loadConfig = async () => {
   const explorer = cosmiconfig('beast');
-  const searchResult = await explorer.search();
-  return searchResult?.config;
-}
+  return explorer.search();
+};
 
 const main = async () => {
   const config = await loadConfig();
 
-  log.info('Started');
+  log.info(`beast config: ${config?.filepath ?? 'internal defaults'}`);
 
   yargs(hideBin(process.argv))
     .scriptName('beast')
@@ -135,7 +134,7 @@ const main = async () => {
             description: 'Excluded files',
             type: 'string',
             // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
-            default: (config?.exclude ?? defaultExclude).join(',')
+            default: (config?.config?.exclude ?? defaultExclude).join(',')
           }),
       handler: ({
         verbose,
@@ -159,12 +158,10 @@ const main = async () => {
           verbose,
           exclude: exclude?.split(',')
         });
-
         processor.getProjects(pattern).forEach((project) => {
           if (verbose) {
             console.log(`Updating: ${project.name.padEnd(32)} ${project.subDir}`);
           }
-
           builder.createDocs(project, outDir, baseUrl);
         });
       }
