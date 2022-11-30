@@ -39,6 +39,7 @@ import {
 
 import { ServiceContext } from '../services';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
+import { subscribeToKeyringKeys } from './keys';
 import { subscribeToNetworkStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
 
@@ -83,7 +84,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   subscribeToKeyringKeys(request: SubscribeToKeyringKeysRequest): Stream<SubscribeToKeyringKeysResponse> {
-    throw new Error();
+    return subscribeToKeyringKeys({ keyring: this.params.context.keyring });
   }
 
   subscribeToCredentialMessages(
