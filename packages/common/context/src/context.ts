@@ -18,6 +18,7 @@ export class Context {
   private readonly _onError: ContextErrorHandler;
   private readonly _disposeCallbacks: DisposeCallback[] = [];
   private _isDisposed = false;
+  private _disposePromise?: Promise<void>;
 
   constructor({
     onError = (error) => {
@@ -28,6 +29,10 @@ export class Context {
     }
   }: CreateContextParams = {}) {
     this._onError = onError;
+  }
+
+  get disposed() {
+    return this._isDisposed;
   }
 
   /**
@@ -52,8 +57,8 @@ export class Context {
    * Disposing context means that onDispose will throw an error and any errors raised will be logged and not propagated.
    */
   dispose(): Promise<void> {
-    if (this._isDisposed) {
-      throw new Error('Context is already disposed');
+    if (this._disposePromise) {
+      return this._disposePromise;
     }
     this._isDisposed = true;
 
@@ -71,7 +76,7 @@ export class Context {
     }
     this._disposeCallbacks.length = 0;
 
-    return Promise.all(promises).then(() => {});
+    return (this._disposePromise = Promise.all(promises).then(() => {}));
   }
 
   /**
@@ -81,7 +86,7 @@ export class Context {
    */
   raise(error: Error): void {
     if (this._isDisposed) {
-      log.error(`Error in disposed context: ${error}`);
+      log.warn('Error in disposed context', error);
       return;
     }
 

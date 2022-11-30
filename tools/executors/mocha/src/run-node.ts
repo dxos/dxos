@@ -22,6 +22,7 @@ export type NodeOptions = {
   forceExit: boolean;
   domRequired: boolean;
   reporter?: string;
+  inspect?: boolean;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -50,7 +51,8 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     '-t',
     String(options.timeout),
     ...(options.checkLeaks ? ['--checkLeaks'] : []),
-    ...(options.forceExit ? ['--exit'] : [])
+    ...(options.forceExit ? ['--exit'] : []),
+    ...(options.inspect ? ['--inspect'] : [])
   ];
 
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');

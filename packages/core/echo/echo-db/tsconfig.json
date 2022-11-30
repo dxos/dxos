@@ -78,6 +78,12 @@
       "path": "../../mesh/rpc"
     },
     {
+      "path": "../../mesh/teleport"
+    },
+    {
+      "path": "../../mesh/teleport-plugin-replicator"
+    },
+    {
       "path": "../../protocols"
     },
     {

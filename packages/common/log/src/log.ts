@@ -53,7 +53,7 @@ const createLog = (): LogImp => {
   log.error = (...params) => processLog(LogLevel.ERROR, ...params);
 
   // Catch only shows error message, not stacktrace.
-  log.catch = (error: Error | any, context, meta) => processLog(LogLevel.ERROR, error.message, context, meta);
+  log.catch = (error: Error | any, context, meta) => processLog(LogLevel.ERROR, error.stack, context, meta);
 
   // Show break.
   log.break = () => log.info('——————————————————————————————————————————————————');
