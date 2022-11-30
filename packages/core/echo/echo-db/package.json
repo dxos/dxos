@@ -37,13 +37,14 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/teleport": "workspace:*",
+    "@dxos/teleport-plugin-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
     "hypercore-protocol": "^8.0.7",
     "source-map-support": "^0.5.12",
@@ -54,6 +55,9 @@
   },
   "beast": {
     "classDiagrams": [
+      {
+        "root": "src/packlets/space/space.ts"
+      },
       {
         "root": "src/packlets/database/database.ts"
       },

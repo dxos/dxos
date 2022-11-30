@@ -88,6 +88,10 @@ subgraph core [core]
     click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator/docs"
     dxos/network-generator("@dxos/network-generator"):::def
     click dxos/network-generator "dxos/dxos/tree/main/packages/core/mesh/network-generator/docs"
+    dxos/teleport("@dxos/teleport"):::def
+    click dxos/teleport "dxos/dxos/tree/main/packages/core/mesh/teleport/docs"
+    dxos/teleport-plugin-replicator("@dxos/teleport-plugin-replicator"):::def
+    click dxos/teleport-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/teleport-plugin-replicator/docs"
     dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
     click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
     dxos/signal("@dxos/signal"):::def
@@ -119,6 +123,8 @@ subgraph sdk [sdk]
   style sdk fill:transparent
   dxos/config("@dxos/config"):::def
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
+  dxos/errors("@dxos/errors"):::def
+  click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
   dxos/client("@dxos/client"):::def
   click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs"
   dxos/client-services("@dxos/client-services"):::def
@@ -146,6 +152,7 @@ dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
 dxos/gravity-orchestrator --> dxos/botkit
 dxos/botkit --> dxos/bot-factory-client
+dxos/config --> dxos/errors
 dxos/config --> dxos/protocols
 dxos/network-manager --> dxos/credentials
 dxos/credentials --> dxos/feed-store
@@ -172,6 +179,10 @@ dxos/protocol-plugin-replicator --> dxos/keyring
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol
 dxos/protocol-plugin-replicator --> dxos/network-generator
 dxos/echo-db --> dxos/protocol-plugin-rpc
+dxos/teleport --> dxos/rpc
+dxos/echo-db --> dxos/teleport-plugin-replicator
+dxos/teleport-plugin-replicator --> dxos/feed-store
+dxos/teleport-plugin-replicator --> dxos/teleport
 dxos/client-services --> dxos/text-model
 dxos/text-model --> dxos/echo-db
 dxos/client --> dxos/rpc-tunnel
@@ -196,6 +207,7 @@ dxos/gravity-orchestrator --> dxos/signal
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/echo-db`](../../../core/echo/echo-db/docs/README.md) | &check; |
+| [`@dxos/errors`](../../../sdk/errors/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
 | [`@dxos/hypercore`](../../../common/hypercore/docs/README.md) |  |
 | [`@dxos/keyring`](../../../core/halo/keyring/docs/README.md) |  |
@@ -216,6 +228,8 @@ dxos/gravity-orchestrator --> dxos/signal
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/signal`](../../../core/mesh/signal/docs/README.md) | &check; |
+| [`@dxos/teleport`](../../../core/mesh/teleport/docs/README.md) |  |
+| [`@dxos/teleport-plugin-replicator`](../../../core/mesh/teleport-plugin-replicator/docs/README.md) |  |
 | [`@dxos/testutils`](../../../common/testutils/docs/README.md) | &check; |
 | [`@dxos/text-model`](../../../core/echo/text-model/docs/README.md) |  |
 | [`@dxos/timeframe`](../../../common/timeframe/docs/README.md) |  |

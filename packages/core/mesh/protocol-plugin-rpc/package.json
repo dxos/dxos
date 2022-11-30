@@ -24,8 +24,7 @@
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/testutils": "workspace:*"
+    "@dxos/protocols": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

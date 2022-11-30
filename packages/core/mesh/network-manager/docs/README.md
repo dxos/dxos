@@ -9,64 +9,86 @@ classDiagram
 direction TB
 
 class NetworkManager {
-  signal
-  topics
   connectionLog
+  signalManager
+  topics
   getSwarmMap()
   getSwarm()
-  openSwarmConnection()
-  closeSwarmConnection()
-  start()
-  destroy()
+  close()
+  joinSwarm()
+  leaveSwarm()
 }
-NetworkManager --> TransportFactory : _transportFactory
 NetworkManager *-- "Map" Swarm : _swarms
 NetworkManager *-- "Map" SwarmMapper : _mappers
+NetworkManager --> TransportFactory : _transportFactory
 NetworkManager --> SignalConnection : _signalConnection
 NetworkManager --> ConnectionLog : _connectionLog
-class TransportFactory {
-<interface>
-  create()
-}
 class Swarm {
   connections
   ownPeerId
   label
   topic
+  destroy()
+  setTopology()
   onSwarmEvent()
   onOffer()
   onSignal()
-  setTopology()
-  destroy()
 }
-Swarm *-- "Map" Connection : _connections
+Swarm *-- "Map" Peer : _peers
 Swarm --> MessageRouter : _swarmMessenger
 Swarm --> Topology : _topology
 Swarm --> TransportFactory : _transportFactory
+class Peer {
+  createConnection()
+  closeConnection()
+  onSignal()
+  destroy()
+}
+Peer --> Connection : connection
+Peer --> PeerCallbacks : _callbacks
 class Connection {
   state
   transport
   protocol
   initiate()
-  open()
+  openConnection()
   close()
   signal()
 }
 Connection --> Transport : _transport
-Connection --> SignalMessaging : _signalMessaging
+Connection --> SignalMessenger : _signalMessaging
+Connection --> WireProtocol : _protocol
 Connection --> TransportFactory : _transportFactory
 class Transport {
-<interface>
+  <interface>
   closed
   connected
   errors
+  destroy()
   signal()
-  close()
 }
-class SignalMessaging {
-<interface>
+class SignalMessenger {
+  <interface>
   offer()
   signal()
+}
+class WireProtocol {
+  <interface>
+  stream
+  protocol
+  initialize()
+  destroy()
+}
+class TransportFactory {
+  <interface>
+  createTransport()
+}
+class PeerCallbacks {
+  <interface>
+  onConnected
+  onDisconnected
+  onAccepted
+  onRejected
 }
 class MessageRouter {
   receiveMessage()
@@ -76,19 +98,19 @@ class MessageRouter {
 MessageRouter *-- "Map" OfferRecord : _offerRecords
 MessageRouter --> MessageRouterOptions : { sendMessage, onSignal, onOffer, topic }
 class OfferRecord {
-<interface>
+  <interface>
   resolve
   reject
 }
 class MessageRouterOptions {
-<interface>
+  <interface>
   sendMessage
   onOffer
   onSignal
   topic
 }
 class Topology {
-<interface>
+  <interface>
   init()
   update()
   onOffer()
@@ -101,13 +123,13 @@ class SwarmMapper {
 SwarmMapper *-- "Map" PeerInfo : _peers
 SwarmMapper --> Swarm : _swarm
 class PeerInfo {
-<interface>
+  <interface>
   id
   state
   connections
 }
 class SignalConnection {
-<interface>
+  <interface>
   join()
   leave()
 }
@@ -233,7 +255,7 @@ dxos/protocol-plugin-presence --> dxos/mesh-protocol
 | [`@dxos/keyring`](../../../halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../common/log/docs/README.md) | &check; |
-| [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md) | &check; |
+| [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../messaging/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-presence`](../../protocol-plugin-presence/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |

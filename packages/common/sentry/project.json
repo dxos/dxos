@@ -29,7 +29,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/common/sentry",
         "outputPath": "tmp/mocha/packages/common/sentry",
@@ -49,6 +49,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "test"
   ]
 }

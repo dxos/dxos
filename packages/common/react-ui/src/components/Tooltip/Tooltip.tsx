@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
-import cx from 'classnames';
 import React, { ComponentProps, ReactNode, useState } from 'react';
 
 import { useId } from '../../hooks';
 import { defaultTooltip } from '../../styles';
+import { mx } from '../../util';
 
 export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
   content: ReactNode;
@@ -15,6 +16,7 @@ export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitiv
   compact?: boolean;
   tooltipLabelsTrigger?: boolean;
   mountAsSibling?: boolean;
+  triggerIsInToolbar?: boolean;
   zIndex?: string;
 }
 
@@ -24,6 +26,7 @@ export const Tooltip = ({
   compact,
   tooltipLabelsTrigger,
   mountAsSibling,
+  triggerIsInToolbar,
   zIndex = 'z-[2]',
   ...contentProps
 }: TooltipProps) => {
@@ -34,7 +37,7 @@ export const Tooltip = ({
     <TooltipPrimitive.Content
       forceMount
       {...contentProps}
-      className={cx(
+      className={mx(
         'radix-side-top:animate-slide-down-fade',
         'radix-side-right:animate-slide-left-fade',
         'radix-side-bottom:animate-slide-up-fade',
@@ -53,11 +56,15 @@ export const Tooltip = ({
     </TooltipPrimitive.Content>
   );
 
+  const triggerContent = (
+    <TooltipPrimitive.Trigger asChild {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}>
+      {children}
+    </TooltipPrimitive.Trigger>
+  );
+
   return (
     <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <TooltipPrimitive.Trigger asChild {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}>
-        {children}
-      </TooltipPrimitive.Trigger>
+      {triggerIsInToolbar ? <ToolbarButtonItem asChild>{triggerContent}</ToolbarButtonItem> : triggerContent}
       {tooltipLabelsTrigger && (
         <span id={labelId} className='sr-only'>
           {content}

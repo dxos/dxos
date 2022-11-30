@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { TestFeedBuilder } from '../common';
 import { Pipeline } from './pipeline';
 
-describe('pipeline/Pipeline', function () {
-  it('asynchronous reader & writer without ordering', async function () {
+describe('pipeline/Pipeline', () => {
+  test('asynchronous reader & writer without ordering', async () => {
     const pipeline = new Pipeline(new Timeframe());
     afterTest(() => pipeline.stop());
 

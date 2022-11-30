@@ -8,6 +8,7 @@ import faker from 'faker';
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
@@ -15,11 +16,11 @@ import { batch, createDataItem, TestDataItem } from './testing';
 
 const noop = () => {};
 
-describe('Replication', function () {
+describe('Replication', () => {
   const factory1 = new HypercoreFactory();
   const factory2 = new HypercoreFactory();
 
-  it('replicates feeds', async function () {
+  test('replicates feeds', async () => {
     const { publicKey, secretKey } = createKeyPair();
     const core1 = factory1.createFeed(publicKey, { secretKey });
     const core2 = factory2.createFeed(publicKey);
@@ -72,7 +73,7 @@ describe('Replication', function () {
     expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
   });
 
-  it('replicates feeds in batches', async function () {
+  test('replicates feeds in batches', async () => {
     const numBlocks = 100;
 
     // Replicating feeds must have the same public key.
@@ -171,7 +172,7 @@ describe('Replication', function () {
     }
   }).timeout(5_000);
 
-  it('replicates feeds with read stream', async function () {
+  test('replicates feeds with read stream', async () => {
     const numBlocks = 10;
 
     const { publicKey, secretKey } = createKeyPair();

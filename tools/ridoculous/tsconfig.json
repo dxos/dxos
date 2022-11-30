@@ -6,10 +6,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "dist",
-    "target": "ESNext",
-    "types": [
-      "mocha"
-    ]
+    "target": "ESNext"
   },
   "exclude": [
     "dist",

@@ -2,13 +2,21 @@
 // Copyright 2021 DXOS.org
 //
 
-import cx from 'classnames';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
-import { Heading } from '@dxos/react-ui';
-import { Avatar, defaultGroup, defaultHover, defaultFocus } from '@dxos/react-uikit';
+import {
+  Avatar,
+  defaultGroup,
+  defaultHover,
+  defaultFocus,
+  useTranslation,
+  defaultDisabled,
+  Group,
+  Heading,
+  mx
+} from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface SpaceListProps {
@@ -16,8 +24,9 @@ export interface SpaceListProps {
 }
 
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
-  return (
-    <div role='none' className='m-0 flex flex-col gap-2'>
+  const { t } = useTranslation('appkit');
+  return spaces.length ? (
+    <>
       {spaces.map((space) => {
         const keyHex = space.key.toHex();
         const title = space.properties.get('title') ?? humanize(keyHex);
@@ -27,14 +36,14 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             to={`/spaces/${keyHex}`}
             role='group'
             key={keyHex}
-            className={cx(
-              defaultGroup({ elevation: 1, spacing: 'p-2', rounding: 'rounded' }),
-              'flex items-stretch gap-2',
+            className={mx(
+              defaultGroup({ elevation: 1, rounding: 'rounded', spacing: 'p-2' }),
+              'flex items-stretch gap-2 mbe-2',
               defaultHover({}),
               defaultFocus
             )}
           >
-            <Heading level={2} className='grow flex items-center mb-0'>
+            <Heading level={2} className='grow flex items-center mbe-0'>
               <Avatar
                 size={12}
                 fallbackValue={keyHex}
@@ -45,6 +54,18 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
           </Link>
         );
       })}
-    </div>
+    </>
+  ) : (
+    <Group
+      className='mlb-4'
+      label={{
+        level: 2,
+        children: t('empty spaces label'),
+        className: mx('text-xl', defaultDisabled)
+      }}
+      elevation={0}
+    >
+      <p className={defaultDisabled}>{t('empty spaces message')}</p>
+    </Group>
   );
 };

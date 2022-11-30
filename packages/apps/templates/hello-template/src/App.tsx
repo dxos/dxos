@@ -38,6 +38,7 @@ export const App = () => {
     <UiKitProvider
       resourceExtensions={[translations, translationResources]}
       fallback={<Fallback message='Loading...' />}
+      appNs='hello'
     >
       <ClientProvider config={configProvider} fallback={<GenericFallback />}>
         <HashRouter>
@@ -71,11 +72,11 @@ const Routes = () => {
       children: [
         {
           path: '/',
-          element: <AppLayout onSpaceCreate={handleSpaceCreate} />,
+          element: <AppLayout spacesPath='/' />,
           children: [
             {
               path: '/',
-              element: <SpacesPage />
+              element: <SpacesPage onSpaceCreate={handleSpaceCreate} />
             },
             {
               path: '/spaces/:space',

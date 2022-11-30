@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+// @dxos/test platform=nodejs
 
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Module } from '@dxos/protocols/proto/dxos/config';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { Metagraph } from './metagraph';
 import { TestServer } from './testing';
@@ -40,18 +41,18 @@ const modules: Module[] = [
   }
 ];
 
-describe('Metagraph queries', function () {
+describe('Metagraph queries', () => {
   const testServer = new TestServer({ modules });
 
-  before(function () {
+  beforeAll(() => {
     testServer.start();
   });
 
-  after(function () {
+  afterAll(() => {
     testServer.stop();
   });
 
-  it('basic module queries', async function () {
+  test('basic module queries', async () => {
     const metagraph = new Metagraph(
       new Config({
         runtime: {
@@ -75,7 +76,7 @@ describe('Metagraph queries', function () {
       const trigger = new Trigger<number>();
       const observable = await metagraph.modules.query({ tags: ['prod'] });
       const unsubscribe = observable.subscribe({
-        onUpdate(results: Module[]) {
+        onUpdate: (results: Module[]) => {
           trigger.wake(results.length);
         }
       });

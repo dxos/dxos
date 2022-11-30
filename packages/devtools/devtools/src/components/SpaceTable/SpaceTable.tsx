@@ -8,9 +8,11 @@ import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { truncateKey } from '@dxos/debug';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { CopyText, HashIcon } from '@dxos/react-components';
+import { CopyText } from '@dxos/react-components';
 import { Timeframe } from '@dxos/timeframe';
+import { humanize } from '@dxos/util';
 
+import { Avatar } from '../Avatar';
 import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
 import { Table, TableCell } from '../Table';
 
@@ -35,6 +37,7 @@ export const SpaceTable = ({ spaces }: SpaceTableProps) => (
       <TableRow>
         <TableCell sx={{ width: 40 }} />
         <TableCell>Space Key</TableCell>
+        <TableCell>Label</TableCell>
         <TableCell sx={{ width: 40 }}>Open</TableCell>
         <TableCell sx={{ width: 40 }}>Genesis Feed</TableCell>
         <TableCell sx={{ width: 40 }}>Control Feed</TableCell>
@@ -46,24 +49,27 @@ export const SpaceTable = ({ spaces }: SpaceTableProps) => (
       {spaces.map(({ key, isOpen, genesisFeed, controlFeed, dataFeed, timeframe }) => (
         <TableRow key={key!.toHex()}>
           <TableCell>
-            <HashIcon value={key!.toHex()!} />
+            <Avatar size={12} fallbackValue={key.toHex()} />
           </TableCell>
           <TableCell title={key!.toHex()}>
             <CopyText monospace variant='h6' value={key!.toHex()} length={8} />
+          </TableCell>
+          <TableCell title={key!.toHex()}>
+            <CopyText monospace variant='h6' value={humanize(key.toHex())} />
           </TableCell>
           <TableCell align='center'>
             <BooleanIcon value={isOpen} />
           </TableCell>
           <TableCell align='center'>
-            <HashIcon value={genesisFeed.toHex()!} />
+            <Avatar size={10} fallbackValue={genesisFeed.toHex()} />
             <CopyText monospace variant='h6' value={genesisFeed!.toHex()} length={8} />
           </TableCell>
           <TableCell align='center'>
-            <HashIcon value={controlFeed.toHex()!} />
+            <Avatar size={10} fallbackValue={controlFeed.toHex()} />
             <CopyText monospace variant='h6' value={controlFeed!.toHex()} length={8} />
           </TableCell>
           <TableCell align='center'>
-            <HashIcon value={dataFeed.toHex()!} />
+            <Avatar size={10} fallbackValue={dataFeed.toHex()} />
             <CopyText monospace variant='h6' value={dataFeed!.toHex()} length={8} />
           </TableCell>
           <TableCell monospace>{timeframe && <TimeFrame value={timeframe as any} />}</TableCell>

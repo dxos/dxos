@@ -50,7 +50,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "coveragePath": "coverage/packages/sdk/client",
@@ -74,6 +74,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha"
+    "test"
   ]
 }

@@ -31,9 +31,6 @@
       "path": "../../../common/react-async"
     },
     {
-      "path": "../../../common/react-ui"
-    },
-    {
       "path": "../../../common/sentry"
     },
     {

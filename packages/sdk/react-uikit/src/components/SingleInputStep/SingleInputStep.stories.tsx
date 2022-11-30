@@ -3,11 +3,10 @@
 //
 
 import '@dxosTheme';
-import cx from 'classnames';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Group } from '@dxos/react-ui';
+import { Group, mx } from '@dxos/react-ui';
 
 import { templateForComponent } from '../../testing';
 import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
@@ -32,7 +31,7 @@ const Template = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: st
         className: 'mb-2 text-3xl',
         children: t(rootLabel)
       }}
-      className={cx('p-5 rounded-xl max-w-md mx-auto my-4')}
+      className={mx('p-5 rounded-xl max-w-md mx-auto my-4')}
     >
       <SingleInputStep {...args} className='max-w-md mx-auto my-4' />
     </Group>

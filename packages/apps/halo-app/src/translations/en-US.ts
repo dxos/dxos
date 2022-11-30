@@ -3,7 +3,7 @@
 //
 
 export const halo = {
-  'halo label': 'HALO',
+  'current app name': 'HALO',
   'identities empty message': 'There are no identities on this device yet.',
   'copy qrcode label': 'Copy your profile code',
   'using halo as message': 'Using HALO as <nameStyle>{{displayName}}</nameStyle>.',
@@ -30,7 +30,5 @@ export const halo = {
   'current device label': 'This device',
   'empty apps message': 'No apps to display… yet',
   'empty contacts message': 'No contacts to display… yet',
-  'device invitations label': 'Devices pending authentication',
-  'empty spaces label': 'No spaces here',
-  'empty spaces message': 'Why not try creating one, or joining one in an app?'
+  'device invitations label': 'Devices pending authentication'
 };

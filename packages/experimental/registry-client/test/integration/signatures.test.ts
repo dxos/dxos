@@ -14,6 +14,7 @@ import chaiAsPromised from 'chai-as-promised';
 import assert from 'node:assert';
 
 import { Client, Config } from '@dxos/client';
+import { afterEach, beforeAll, beforeEach, describe, test } from '@dxos/test';
 
 import {
   ClientSigner,
@@ -43,7 +44,7 @@ class TxSigner implements Partial<Signer> {
   }
 }
 
-describe.skip('Signatures', function () {
+describe.skip('Signatures', () => {
   let client: Client;
   let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
@@ -53,11 +54,11 @@ describe.skip('Signatures', function () {
 
   const auctionName = () => Math.random().toString(36).substring(2);
 
-  before(async function () {
+  beforeAll(async () => {
     await cryptoWaitReady();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     apiPromise = await createApiPromise(DEFAULT_DXNS_ENDPOINT);
 
     const keyring = await createKeyring();
@@ -87,12 +88,12 @@ describe.skip('Signatures', function () {
     // });
   });
 
-  afterEach(async function () {
+  afterEach(async () => {
     await apiPromise.disconnect();
     await client.destroy();
   });
 
-  it('Can send transactions with normal signer', async function () {
+  test('Can send transactions with normal signer', async () => {
     {
       const auctionsApi = new PolkadotAuctions(apiPromise, keypair);
       await auctionsApi.createAuction(auctionName(), 100000);
@@ -104,7 +105,7 @@ describe.skip('Signatures', function () {
     }
   });
 
-  it('Can send transactions with lower-level external signer', async function () {
+  test('Can send transactions with lower-level external signer', async () => {
     const signTxFunction: SignTxFunction = async (tx) =>
       await tx.signAsync(keypair.address, { signer: new TxSigner(keypair) });
 
@@ -112,7 +113,7 @@ describe.skip('Signatures', function () {
     await auctionsApi.createAuction(auctionName(), 100000);
   });
 
-  it('Can send transactions with external signer using Client', async function () {
+  test('Can send transactions with external signer using Client', async () => {
     const signTxFunction: SignTxFunction = async (tx) =>
       await tx.signAsync(keypair.address, {
         signer: new ClientSigner(client, apiPromise.registry, keypair.address)

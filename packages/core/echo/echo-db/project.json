@@ -30,7 +30,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/echo/echo-db",
         "forceExit": true,
@@ -52,6 +52,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "test"
   ]
 }

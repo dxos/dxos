@@ -46,7 +46,6 @@
   },
   "devDependencies": {
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@types/node": "^18.11.9",
     "source-map-support": "^0.5.12"
   },

@@ -5,11 +5,13 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
+import { describe, test } from '@dxos/test';
+
 import { File, Storage, StorageType } from '../common';
 
 export const randomText = () => Math.random().toString(36).substring(2);
 
-export function storageTests(testGroupName: StorageType, createStorage: () => Storage) {
+export const storageTests = (testGroupName: StorageType, createStorage: () => Storage) => {
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
     await file.write(offset, data);
     const bufferRead = await file.read(offset, data.length);
@@ -18,7 +20,7 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
   };
 
   describe(testGroupName, () => {
-    it('open & close', async () => {
+    test('open & close', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
@@ -26,7 +28,7 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       await file.close();
     });
 
-    it('open file, read & write', async () => {
+    test('open file, read & write', async () => {
       const storage = createStorage();
       const fileName = randomText();
       const directory = storage.createDirectory();
@@ -42,27 +44,44 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       await file.close();
     });
 
-    it('create files', async () => {
+    test('list files', async () => {
       const storage = createStorage();
-      const directory = storage.createDirectory();
+      const directoryName = randomText();
+      const directory = storage.createDirectory(directoryName);
 
       const count = 10;
-      const files = [...Array(count)].map(() => directory.getOrCreateFile(randomText()));
+      const files = [...Array(count)].map((name) => directory.getOrCreateFile(randomText()));
 
-      for (const file of files) {
-        const buffer = Buffer.from(randomText());
-        await writeAndCheck(file, buffer);
+      {
+        // Create and check files amount.
+        for (const file of files) {
+          const buffer = Buffer.from(randomText());
+          await writeAndCheck(file, buffer);
+        }
+
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(count);
       }
 
-      const list = directory.getFiles();
-      expect(list).toHaveLength(count);
+      {
+        // Check files amount after partial deletion.
+        const amountToDelete = 5;
+        const filesToDelete = files.slice(0, amountToDelete);
+        for (const file of filesToDelete) {
+          await file.destroy();
+        }
 
+        const mapFiles = directory.getFiles();
+        expect([...mapFiles.keys()]).toHaveLength(count - amountToDelete);
+      }
+
+      // Cleanup.
       for (const file of files) {
         await file.close();
       }
     });
 
-    it('read from empty file', async () => {
+    test('read from empty file', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
 
@@ -73,7 +92,7 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       expect(Buffer.from('').equals(data)).toBeTruthy();
     });
 
-    it('reopen and check if data is the same', async () => {
+    test('reopen and check if data is the same', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
@@ -93,7 +112,7 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       }
     });
 
-    it('destroy clears all data', async () => {
+    test('destroy clears all data', async () => {
       if (new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(testGroupName)) {
         return;
       }
@@ -117,7 +136,7 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       }
     });
 
-    it('sub-directories', async () => {
+    test('sub-directories', async () => {
       // 1. Create storage and two subdirectories
       const storage = createStorage();
       const dir1 = storage.createDirectory('dir1');
@@ -140,7 +159,7 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       expect(await file2.read(0, buffer2.length)).toStrictEqual(buffer2);
     });
 
-    it('write in directory/sub-directory/file', async () => {
+    test('write in directory/sub-directory/file', async () => {
       const storage = createStorage();
       const dir = storage.createDirectory('directory');
       const subDir = dir.createDirectory('subDirectory');
@@ -154,7 +173,7 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       await file.close();
     });
 
-    it('delete directory', async () => {
+    test('delete directory', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile('file');
@@ -166,13 +185,8 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
       await assert.rejects(async () => await file.read(0, buffer.length), Error, 'Closed');
     });
 
-    it('del method', async function () {
+    test('del method', async () => {
       const storage = createStorage();
-
-      // File.del() throws 'Not deletable' error for IDb.
-      if (storage.type === StorageType.IDB) {
-        this.skip();
-      }
 
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
@@ -191,13 +205,13 @@ export function storageTests(testGroupName: StorageType, createStorage: () => St
         Error,
         'Could not satisfy length'
       );
-    });
+    }).onlyEnvironments('nodejs'); // File.del() throws 'Not deletable' error for IDb.
 
-    it('stat of new file', async () => {
+    test('stat of new file', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
       expect((await file.stat()).size).toBe(0);
     });
   });
-}
+};

@@ -4,8 +4,10 @@
 
 import { expect } from 'chai';
 
+import { test } from '@dxos/test';
+
 import { createId } from './keys';
 
-it('Create id is unique', function () {
+test('Create id is unique', () => {
   expect(createId()).not.to.equal(createId());
 });

@@ -7,11 +7,12 @@ import expect from 'expect';
 import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { describe, test } from '@dxos/test';
 
 import { Keyring } from './keyring';
 
-describe('Keyring', function () {
-  it('sign & verify', async function () {
+describe('Keyring', () => {
+  test('sign & verify', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
     const key = await keyring.createKey();
@@ -21,7 +22,7 @@ describe('Keyring', function () {
     expect(await verifySignature(key, message, signature)).toBeTruthy();
   });
 
-  it('signature verification fails on invalid signature', async function () {
+  test('signature verification fails on invalid signature', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
     const key = await keyring.createKey();
@@ -31,7 +32,7 @@ describe('Keyring', function () {
     expect(await verifySignature(key, message, Buffer.from([1, 2, 3]))).toBeFalsy();
   });
 
-  it('signature verification fails on invalid input data', async function () {
+  test('signature verification fails on invalid input data', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
     const key = await keyring.createKey();
@@ -41,7 +42,7 @@ describe('Keyring', function () {
     expect(await verifySignature(key, Buffer.from([1, 2, 3]), signature)).toBeFalsy();
   });
 
-  it('signature verification fails on invalid key', async function () {
+  test('signature verification fails on invalid key', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
     const key = await keyring.createKey();
@@ -51,7 +52,7 @@ describe('Keyring', function () {
     expect(await verifySignature(PublicKey.random(), message, signature)).toBeFalsy();
   });
 
-  it('reload from storage', async function () {
+  test('reload from storage', async () => {
     const storage = createStorage({ type: StorageType.RAM }).createDirectory('keyring');
 
     const keyring1 = new Keyring(storage);
@@ -64,7 +65,26 @@ describe('Keyring', function () {
     expect(await verifySignature(key, message, signature)).toBeTruthy();
   });
 
-  it('list keys');
+  test('list keys', async () => {
+    const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
+    const count = 10;
+    const hexKeys: string[] = [];
+    for (let i = 0; i < count; i++) {
+      hexKeys.push((await keyring.createKey()).toHex());
+    }
+    expect(keyring.list().every((key) => hexKeys.includes(PublicKey.from(key.publicKey).toHex()))).toBeTruthy();
+  });
 
-  it('delete key');
+  test('event emits', async () => {
+    const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
+    const count = 10;
+    let emittedCount = 0;
+    keyring.keysUpdate.on(() => emittedCount++);
+    for (let i = 0; i < count; i++) {
+      await keyring.createKey();
+    }
+    expect(emittedCount).toBe(count);
+  });
+
+  test('delete key', () => {});
 });

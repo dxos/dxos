@@ -8,6 +8,7 @@ import React, { Component, PropsWithChildren } from 'react';
 
 import { Client, Config, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { ClientProvider, useClient } from './ClientContext';
 
@@ -24,7 +25,7 @@ const TestComponent = () => {
 describe('Client hook', function () {
   const render = () => useClient();
 
-  it.skip('should throw when used outside a context', function () {
+  test.skip('should throw when used outside a context', function () {
     // TODO(wittjosiah): Fix and factor out.
     // Based on https://github.com/testing-library/react-testing-library/pull/991#issuecomment-1207138334
     let error;
@@ -55,7 +56,7 @@ describe('Client hook', function () {
     expect(result).not.toBeDefined();
   });
 
-  it('should return client when used properly in a context', function () {
+  test('should return client when used properly in a context', () => {
     const config = new Config({
       version: 1,
       runtime: {
@@ -74,20 +75,20 @@ describe('Client hook', function () {
   });
 });
 
-describe('ClientProvider', function () {
+describe('ClientProvider', () => {
   let client: Client;
 
-  before(async function () {
+  beforeAll(async () => {
     client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createProfile({ displayName: 'test-user' });
   });
 
-  after(async function () {
+  afterAll(async () => {
     await client.destroy();
   });
 
-  it('Renders with children', async function () {
+  test('Renders with children', async () => {
     render(
       <ClientProvider client={client}>
         <TestComponent />
@@ -97,7 +98,7 @@ describe('ClientProvider', function () {
     expect(() => screen.getByText('Hello World')).not.toThrow();
   });
 
-  it('Provides the client', async function () {
+  test('Provides the client', async () => {
     render(
       <ClientProvider client={client}>
         <TestComponent />

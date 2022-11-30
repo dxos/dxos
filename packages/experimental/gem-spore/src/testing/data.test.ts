@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { convertTreeToGraph, createTree } from './data';
 
-it('createTree', function () {
+test('createTree', () => {
   const data = convertTreeToGraph(createTree());
   expect(data).to.exist; // TODO(burdon): Test lengths.
 });

@@ -4,6 +4,8 @@
 
 import expect from 'expect';
 
-it('Sanity', function () {
+import { test } from '@dxos/test';
+
+test('Sanity', () => {
   expect(true).toBeTruthy();
 });

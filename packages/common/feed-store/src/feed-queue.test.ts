@@ -6,16 +6,17 @@ import { expect } from 'chai';
 
 import { latch, asyncTimeout, sleep, untilError, untilPromise } from '@dxos/async';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { TestItemBuilder } from './testing';
 
-describe('FeedQueue', function () {
+describe('FeedQueue', () => {
   const builder = new TestItemBuilder();
   const factory = builder.createFeedFactory();
 
-  it('opens and closes a queue multiple times', async function () {
+  test('opens and closes a queue multiple times', async () => {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
@@ -30,7 +31,7 @@ describe('FeedQueue', function () {
     // await feedStore.close();
   });
 
-  it('queue closed while reading', async function () {
+  test('queue closed while reading', async () => {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
@@ -67,7 +68,7 @@ describe('FeedQueue', function () {
     expect(queue.feed.properties.closed).to.be.false;
   });
 
-  it('feed closed while reading', async function () {
+  test('feed closed while reading', async () => {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
@@ -104,7 +105,7 @@ describe('FeedQueue', function () {
     expect(queue.feed.properties.closed).to.be.true;
   });
 
-  it('responds immediately when feed is appended', async function () {
+  test('responds immediately when feed is appended', async () => {
     const key = await builder.keyring.createKey();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
@@ -155,7 +156,7 @@ describe('FeedQueue', function () {
     expect(queue.isOpen).to.be.false;
   }).timeout(1000);
 
-  it('peeks ahead', async function () {
+  test('peeks ahead', async () => {
     const key = await builder.keyring.createKey();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();

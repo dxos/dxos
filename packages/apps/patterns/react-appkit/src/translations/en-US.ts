@@ -16,17 +16,18 @@ export const appkit = {
   'delete list item label': 'Remove list item',
   'add list item label': 'Add list item',
   'need refresh label': 'Refresh now to get app updates',
-  'need refresh description': 'You’ll likely need these updates to continue using DXOS without interruption.',
+  'need refresh description': 'You’ll need these updates to continue without interruption.',
   'refresh label': 'Refresh',
   'refresh alt': 'Click your browser’s refresh button or use the refresh keyboard shortcut.',
-  'offline ready label': 'HALO is ready to use offline.',
+  'offline ready label': '{appName} is ready to use offline.',
   'spaces label': 'Spaces',
-  'back to spaces label': 'Back to spaces',
   'empty invitations message': 'No pending invitations',
   'invitations label': 'Invitations',
   'create invitation label': 'Invite',
   'current identity label': 'You',
   'empty members message': 'No members in this space',
   'composer placeholder': 'Write something…',
-  'heartbeat stalled': 'Heartbeat stalled'
+  'heartbeat stalled': 'Heartbeat stalled',
+  'empty spaces label': 'No spaces here',
+  'empty spaces message': 'Why not try creating or joining one?'
 };

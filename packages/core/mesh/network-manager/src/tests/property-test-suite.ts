@@ -8,19 +8,20 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { afterTest } from '@dxos/testutils';
+import { afterTest, test } from '@dxos/test';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
 import { createProtocolFactory } from '../protocol-factory';
 import { FullyConnectedTopology } from '../topology';
+import { adaptProtocolProvider } from '../wire-protocol';
 
 /**
  * Performs random actions in the real system and compares its state with a simplified model.
  */
 // TODO(dmaretskyi): Run this with actual webrtc and signal servers.
 export const propertyTestSuite = () => {
-  it.skip('property-based tests', async function () {
+  test.skip('property-based tests', async function () {
     /**
      * The simplified model of the system.
      */
@@ -124,7 +125,7 @@ export const propertyTestSuite = () => {
         await peer.networkManager.joinSwarm({
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
-          protocol,
+          protocolProvider: adaptProtocolProvider(protocol),
           topology: new FullyConnectedTopology(),
           presence
         });

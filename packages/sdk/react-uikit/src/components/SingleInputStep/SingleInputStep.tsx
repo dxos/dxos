@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { useCallback, KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button, GroupProps, Input, InputProps, Loading } from '@dxos/react-ui';
+import { Button, GroupProps, Input, InputProps, Loading, mx } from '@dxos/react-ui';
 
 export interface SingleInputStepProps extends Omit<GroupProps, 'label' | 'onChange'> {
   inputLabel: string;
@@ -61,7 +60,7 @@ export const SingleInputStep = ({
           </Button>
         )}
         <div role='none' className='grow' />
-        <div role='none' className={cx(!pending && 'hidden')}>
+        <div role='none' className={mx(!pending && 'hidden')}>
           <Loading label={loadingLabel || t('generic loading label')} className='p-0 ml-0' />
         </div>
         {onCancelPending && (

@@ -50,7 +50,6 @@
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@types/level-js": "~4.0.1",
     "@types/memdown": "^3.0.0",
     "@types/readable-stream": "^2.3.9"

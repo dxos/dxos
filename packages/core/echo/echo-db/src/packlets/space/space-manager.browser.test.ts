@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=browser
+// @dxos/test platform=browser
 
 import { expect } from 'chai';
 
 import { createStorage } from '@dxos/random-access-storage';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 
@@ -15,8 +15,8 @@ import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
-describe('space-manager', function () {
-  it('invitations', async function () {
+describe('space-manager', () => {
+  test('invitations', async () => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)

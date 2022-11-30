@@ -4,8 +4,8 @@
 
 import assert from 'node:assert';
 
-import { Event, sleep } from '@dxos/async';
-import { discoveryKey } from '@dxos/crypto';
+import { Event, scheduleTask, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,11 +14,11 @@ import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { ProtocolProvider } from '../network-manager';
 import { MessageRouter, OfferMessage, SignalMessage } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
+import { WireProtocolProvider } from '../wire-protocol';
 import { Connection } from './connection';
 import { Peer } from './peer';
 
@@ -37,7 +37,7 @@ export class Swarm {
 
   private readonly _swarmMessenger: MessageRouter;
 
-  private _destroyed = false;
+  private _ctx = new Context();
 
   /**
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
@@ -71,7 +71,7 @@ export class Swarm {
     private readonly _topic: PublicKey,
     private readonly _ownPeerId: PublicKey,
     private _topology: Topology,
-    private readonly _protocolProvider: ProtocolProvider,
+    private readonly _protocolProvider: WireProtocolProvider,
     private readonly _messenger: Messenger,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
@@ -119,8 +119,8 @@ export class Swarm {
   // TODO(burdon): async open?
   async destroy() {
     log('destroying', { id: this.id, topic: this._topic });
-    this._destroyed = true;
     await this._topology.destroy();
+    await this._ctx.dispose();
     await Promise.all(Array.from(this._peers.keys()).map((key) => this._closeConnection(key)));
   }
 
@@ -144,29 +144,43 @@ export class Swarm {
   private _getOrCreatePeer(peerId: PublicKey): Peer {
     let peer = this._peers.get(peerId);
     if (!peer) {
-      peer = new Peer(peerId, this._topic, this._ownPeerId, {
-        onConnected: () => {
-          this.connected.emit(peerId);
-        },
-        onDisconnected: async () => {
-          if (!peer!.advertizing) {
-            await this._destroyPeer(peer!.id);
-          }
+      peer = new Peer(
+        peerId,
+        this._topic,
+        this._ownPeerId,
+        this._swarmMessenger,
+        this._protocolProvider,
+        this._transportFactory,
+        {
+          onInitiated: (connection) => {
+            this.connectionAdded.emit(connection);
+          },
+          onConnected: () => {
+            this.connected.emit(peerId);
+          },
+          onDisconnected: async () => {
+            if (!peer!.advertizing) {
+              await this._destroyPeer(peer!.id);
+            }
 
-          this.disconnected.emit(peerId);
-          this._topology.update();
-        },
-        onRejected: () => {
-          // If the peer rejected our connection remove it from the set of candidates.
-          // TODO(dmaretskyi): Set flag instead.
-          if (this._peers.has(peerId)) {
-            void this._destroyPeer(peerId);
+            this.disconnected.emit(peerId);
+            this._topology.update();
+          },
+          onRejected: () => {
+            // If the peer rejected our connection remove it from the set of candidates.
+            // TODO(dmaretskyi): Set flag instead.
+            if (this._peers.has(peerId)) {
+              void this._destroyPeer(peerId);
+            }
+          },
+          onAccepted: () => {
+            this._topology.update();
+          },
+          onOffer: (remoteId) => {
+            return this._topology.onOffer(remoteId);
           }
-        },
-        onAccepted: () => {
-          this._topology.update();
         }
-      });
+      );
       this._peers.set(peerId, peer);
     }
 
@@ -181,7 +195,7 @@ export class Swarm {
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { id: this.id, topic: this._topic, swarmEvent }); // TODO(burdon): Stringify.
-    if (this._destroyed) {
+    if (this._ctx.disposed) {
       log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
       return;
     }
@@ -208,14 +222,13 @@ export class Swarm {
 
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { id: this.id, topic: this._topic, message });
-    if (this._destroyed) {
-      log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+    if (this._ctx.disposed) {
+      log.info('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
       return { accept: false };
     }
 
     // Id of the peer offering us the connection.
     assert(message.author);
-    const remoteId = message.author;
     if (!message.recipient?.equals(this._ownPeerId)) {
       log('rejecting offer with incorrect peerId', { id: this.id, topic: this._topic, message });
       return { accept: false };
@@ -225,51 +238,16 @@ export class Swarm {
       return { accept: false };
     }
 
-    const peer = this._getOrCreatePeer(remoteId);
-
-    // Check if we are already trying to connect to that peer.
-    if (peer.connection) {
-      // Peer with the highest Id closes its connection, and accepts remote peer's offer.
-      if (remoteId.toHex() < this._ownPeerId.toHex()) {
-        log("closing local connection and accepting remote peer's offer", {
-          id: this.id,
-          topic: this._topic,
-          peerId: this._ownPeerId
-        });
-        // Close our connection and accept remote peer's connection.
-        await this._closeConnection(remoteId).catch((err) => {
-          this.errors.raise(err);
-        });
-      } else {
-        // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
-        return { accept: true };
-      }
-    }
-
-    let accept = false;
-    if (await this._topology.onOffer(remoteId)) {
-      if (!peer.connection) {
-        // Connection might have been already established.
-        assert(message.sessionId);
-        const connection = this._createConnection(false, message.author, message.sessionId);
-        try {
-          connection.openConnection();
-        } catch (err: any) {
-          this.errors.raise(err);
-        }
-
-        accept = true;
-      }
-    }
-
+    const peer = this._getOrCreatePeer(message.author);
+    const answer = await peer.onOffer(message);
     this._topology.update();
-    return { accept };
+    return answer;
   }
 
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { id: this.id, topic: this._topic, message });
-    if (this._destroyed) {
-      log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+    if (this._ctx.disposed) {
+      log.info('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
       return;
     }
     assert(
@@ -294,14 +272,30 @@ export class Swarm {
           .filter((peer) => !peer.connection && peer.advertizing)
           .map((peer) => peer.id)
       }),
-      connect: (peer) => this._initiateConnection(peer),
-      disconnect: async (peer) => {
-        try {
-          await this._closeConnection(peer);
-        } catch (err: any) {
-          this.errors.raise(err);
+      connect: (peer) => {
+        if (this._ctx.disposed) {
+          return;
         }
-        this._topology.update();
+
+        // Run in a separate non-blocking task.
+        scheduleTask(this._ctx, async () => {
+          try {
+            await this._initiateConnection(peer);
+          } catch (err: any) {
+            log.warn('initiation error', err);
+          }
+        });
+      },
+      disconnect: async (peer) => {
+        if (this._ctx.disposed) {
+          return;
+        }
+
+        // Run in a separate non-blocking task.
+        scheduleTask(this._ctx, async () => {
+          await this._closeConnection(peer);
+          this._topology.update();
+        });
       }
     };
   }
@@ -316,36 +310,16 @@ export class Swarm {
       await sleep(INITIATION_DELAY);
     }
 
-    if (this._peers.get(remoteId)?.connection) {
+    const peer = this._getOrCreatePeer(remoteId);
+
+    if (peer.connection) {
       // Do nothing if peer is already connected.
       return;
     }
 
-    const sessionId = PublicKey.random();
-
-    log('initiating...', { id: this.id, topic: this._topic, peerId: remoteId, sessionId });
-    const connection = this._createConnection(true, remoteId, sessionId);
-    connection.initiate();
+    await peer.initiateConnection();
     this._topology.update();
     log('initiated', { id: this.id, topic: this._topic });
-  }
-
-  /**
-   * Synchronously create a connection, which must be initialized.
-   */
-  private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey): Connection {
-    const peer = this._getOrCreatePeer(remoteId);
-
-    const connection = peer.createConnection(
-      this._swarmMessenger,
-      initiator,
-      sessionId,
-      this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
-      this._transportFactory
-    );
-
-    this.connectionAdded.emit(connection);
-    return connection;
   }
 
   private async _closeConnection(peerId: PublicKey) {

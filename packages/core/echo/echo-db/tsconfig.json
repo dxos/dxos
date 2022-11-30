@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "@dxos/mocha",
+      "@dxos/test",
       "@dxos/typings"
     ]
   },
@@ -42,9 +42,6 @@
       "path": "../../../common/random-access-storage"
     },
     {
-      "path": "../../../common/testutils"
-    },
-    {
       "path": "../../../common/timeframe"
     },
     {
@@ -76,6 +73,12 @@
     },
     {
       "path": "../../mesh/rpc"
+    },
+    {
+      "path": "../../mesh/teleport"
+    },
+    {
+      "path": "../../mesh/teleport-plugin-replicator"
     },
     {
       "path": "../../protocols"
