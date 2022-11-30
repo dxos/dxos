@@ -7,12 +7,13 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "./dist/src/index.js",
+  "main": "./dist/lib/node.js",
   "browser": {
     "node:assert": "assert",
-    "node:util": "util"
+    "node:util": "util",
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "./dist/src/index.d.ts",
+  "types": "./dist/types/src/index.d.ts",
   "scripts": {
     "generate:defs": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/polkadot/interfaces",
     "generate:meta": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ws://127.0.0.1:9944 --output ./src/polkadot/interfaces",
@@ -26,6 +27,7 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",

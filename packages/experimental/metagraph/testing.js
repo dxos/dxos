@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-module.exports = require('./dist/src/testing/index.js');
+module.exports = require('./dist/testing/node.js');

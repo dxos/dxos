@@ -2759,7 +2759,6 @@ importers:
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/js-yaml': ^4.0.5
-      assert: ^2.0.0
       chalk: ^4.1.0
       columnify: ^1.6.0
       debug: ^4.3.3
@@ -2773,7 +2772,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
       debug: 4.3.4
       faker: 5.5.3
       js-yaml: 4.1.0
@@ -3261,10 +3259,12 @@ importers:
       ipfs-http-client: ~56.0.1
       node-fetch: ^2.6.0
       react: ^18.2.0
+      url-join: ^5.0.0
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/react-client': link:../../sdk/react-client
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
+      url-join: 5.0.0
     devDependencies:
       '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
@@ -3312,6 +3312,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
@@ -3340,6 +3341,7 @@ importers:
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
       '@dxos/protocols': link:../../core/protocols
