@@ -5,11 +5,23 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/devtools/plate/src/index.ts",
-        "outputPath": "packages/devtools/plate/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/devtools/plate/dist/types",
         "tsConfig": "packages/devtools/plate/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/devtools/plate/src/index.ts"
+        ],
+        "outputPath": "packages/devtools/plate/dist/lib",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -36,5 +48,8 @@
         "{options.outputFile}"
       ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }
