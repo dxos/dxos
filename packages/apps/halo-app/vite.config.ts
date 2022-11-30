@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { writeFileSync } from 'node:fs';
+import { existsSync, mkdir, mkdirSync, rm, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -142,7 +142,11 @@ export default defineConfig({
           }
         }
 
-        writeFileSync(join(__dirname, 'out/graph.json'), JSON.stringify(deps, null, 2));
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir)
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       }
     }
   ],
