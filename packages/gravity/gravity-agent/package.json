@@ -7,8 +7,8 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/node.js",
+  "types": "dist/types/src/index.d.ts",
   "bin": {
     "agent": "./bin/agent.js"
   },
@@ -17,8 +17,7 @@
     "src"
   ],
   "scripts": {
-    "agent": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.ts",
-    "check": "true"
+    "agent": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.ts"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",

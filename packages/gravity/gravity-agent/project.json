@@ -6,11 +6,21 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/gravity/gravity-agent/src/index.ts",
-        "outputPath": "packages/gravity/gravity-agent/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/gravity/gravity-agent/dist/types",
         "tsConfig": "packages/gravity/gravity-agent/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/gravity/gravity-agent/src/main.ts"
+        ],
+        "outputPath": "packages/gravity/gravity-agent/dist/lib",
+        "platforms": ["node"]
       },
       "outputs": [
         "{options.outputPath}"
@@ -53,6 +63,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }
