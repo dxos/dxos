@@ -86,7 +86,7 @@ export class Peer {
           peerId: this.localPeerId
         });
 
-        if(this.connection) {
+        if (this.connection) {
           // Close our connection and accept remote peer's connection.
           await this.closeConnection();
         }
@@ -96,7 +96,6 @@ export class Peer {
       }
     }
 
-    let accept = false;
     if (await this._callbacks.onOffer(remoteId)) {
       if (!this.connection) {
         // Connection might have been already established.
@@ -110,10 +109,10 @@ export class Peer {
           await this.closeConnection();
         }
 
-        accept = true;
+        return { accept: true };
       }
     }
-    return { accept };
+    return { accept: false };
   }
 
   /**
