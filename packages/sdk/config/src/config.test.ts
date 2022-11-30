@@ -7,12 +7,8 @@ import expect from 'expect';
 import { test } from '@dxos/test';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
-
-// TODO(wittjosiah): Including JSON in typescript build breaks for unknown reason.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const defaults = require('./testing/defaults.json');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const envmap = require('./testing/envs-map.json');
+import defaults from './testing/defaults.json';
+import envmap from './testing/envs-map.json';
 
 test('Empty config', () => {
   const config = new Config();
