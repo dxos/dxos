@@ -14,8 +14,7 @@ export const buttonStyles = (props: ButtonProps) => {
   const resolvedVariant = props.variant || 'default';
   return mx(
     'inline-flex select-none items-center justify-center text-sm font-medium',
-    props.rounding ?? 'rounded-md',
-    props.spacing ?? (props.compact ? 'p-1.5' : 'pli-4 plb-2'),
+    props.compact ? 'p-1.5' : 'pli-4 plb-2',
     'transition-color duration-100',
     defaultHover(props),
     resolvedVariant === 'default' && 'border border-neutral-100 dark:border-neutral-650',
