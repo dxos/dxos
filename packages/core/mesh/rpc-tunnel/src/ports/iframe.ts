@@ -104,13 +104,13 @@ export const createIFrame = (source: string, id: string) => {
   };
 
   {
-    const cssStyle = 'font-family:system-ui; border:1px solid black; display:block;padding:10px; font-size:1.2rem;';
+    const cssStyle = 'color:#C026D3;font-weight:bold';
 
     console.log(
-      'DXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
-    );
+      '%cDXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
+    ,cssStyle);
     console.log(
-      `%cTo inspect internals of ECHO, HALO and MESH use the following URL: https://devtools.dxos.org/?target=vault:${source}`,
+      `%cTo inspect this application, click here: https://devtools.dxos.org/?target=vault:${source}`,
       cssStyle
     );
   }
