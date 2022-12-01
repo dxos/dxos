@@ -14,13 +14,10 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { TestFeedBuilder } from '../common';
 import { Database, DataServiceSubscriptions } from '../database';
 import { MetadataStore } from '../metadata';
-import { AuthProvider, AuthVerifier } from './auth-plugin';
-import { Space } from './space';
-import { SpaceManager } from './space-manager';
-import { SpaceProtocol } from './space-protocol';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
+import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => NetworkManager;
 
@@ -39,9 +36,6 @@ export const WebsocketNetworkManagerProvider =
       signalManager: new WebsocketSignalManager([signalUrl]),
       transportFactory: createWebRTCTransportFactory()
     });
-
-export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
-export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
 
 export type TestAgentBuilderOptions = {
   storage?: Storage;

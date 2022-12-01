@@ -12,6 +12,8 @@
   },
   "types": "dist/src/index.d.ts",
   "files": [
+    "testing.d.ts",
+    "testing.js",
     "dist",
     "src"
   ],

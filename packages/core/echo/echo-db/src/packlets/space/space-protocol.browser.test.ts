@@ -13,9 +13,8 @@ import { createStorage } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
-import { TestFeedBuilder } from '../common';
+import { TestFeedBuilder, TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
 import { ReplicatorPlugin } from './replicator-plugin';
-import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.
