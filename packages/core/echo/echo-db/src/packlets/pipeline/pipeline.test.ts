@@ -6,7 +6,7 @@ import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { TestFeedBuilder } from '../common';
+import { TestFeedBuilder } from '../testing';
 import { Pipeline } from './pipeline';
 
 describe('pipeline/Pipeline', () => {
