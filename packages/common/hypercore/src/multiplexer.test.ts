@@ -14,7 +14,8 @@ import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { Multiplexer } from './multiplexer';
-import { noop, py } from './testing';
+import { noop } from './testing';
+import { py } from './util';
 
 describe('Multiplexing', () => {
   test('multiplexes feeds', async () => {
