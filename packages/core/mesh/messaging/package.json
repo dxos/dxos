@@ -7,11 +7,11 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node.js",
+  "types": "src/index.ts",
   "browser": {
     "node:assert": "assert",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src",
@@ -38,6 +38,7 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

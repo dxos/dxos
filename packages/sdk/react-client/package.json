@@ -7,7 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/neutral.js",
-  "types": "dist/types/src/index.d.ts",
+  "types": "src/index.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -45,6 +45,7 @@
     "react-dom": "*"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

@@ -7,11 +7,11 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/lib/node.js",
+  "types": "src/index.ts",
   "browser": {
     "node:assert": "assert",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -33,6 +33,7 @@
     "@types/node": "^18.11.9"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

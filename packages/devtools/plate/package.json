@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/lib/neutral.js",
-  "types": "dist/types/src/index.d.ts",
+  "types": "src/index.ts",
   "bin": {
     "plate": "bin/plate.js"
   },
@@ -41,6 +41,7 @@
     "typescript": "^4.8.4"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

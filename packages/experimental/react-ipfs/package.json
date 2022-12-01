@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/neutral.js",
-  "types": "dist/types/src/index.d.ts",
+  "types": "src/index.ts",
   "scripts": {
     "book": "esbuild-server book"
   },
@@ -28,5 +28,8 @@
   },
   "peerDependencies": {
     "react": "*"
+  },
+  "publishConfig": {
+    "types": "dist/types/src/index.d.ts"
   }
 }

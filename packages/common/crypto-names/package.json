@@ -7,7 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/neutral.js",
-  "types": "dist/types/src/index.d.ts",
+  "types": "src/names.ts",
   "files": [
     "data",
     "dist",
@@ -27,6 +27,7 @@
     "uniq": "^1.0.1"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/names.d.ts"
   }
 }

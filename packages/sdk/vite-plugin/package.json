@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node.js",
-  "types": "dist/types/src/index.d.ts",
+  "types": "src/index.ts",
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
@@ -17,6 +17,7 @@
     "vite": "3.0.9"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

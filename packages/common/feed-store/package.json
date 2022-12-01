@@ -7,13 +7,13 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/lib/node/index.js",
+  "types": "src/index.ts",
   "browser": {
     "node:assert": "assert",
     "node:util": "util",
     "./dist/lib/node/index.js": "./dist/lib/browser/index.js",
     "./dist/lib/node/testing/index.js": "./dist/lib/browser/testing/index.js"
   },
-  "types": "dist/types/src/index.d.ts",
   "files": [
     "testing.d.ts",
     "testing.js",
@@ -53,7 +53,8 @@
     "faker": "^5.5.3"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   },
   "beast": {
     "classDiagrams": [
