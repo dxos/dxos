@@ -8,12 +8,12 @@ import { mx } from '../../util';
 import { ButtonProps } from './ButtonProps';
 import { buttonStyles } from './buttonStyles';
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ children, compact, variant, ...props }, ref) => (
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ children, compact, variant, ...rootSlot }, ref) => (
   <button
     ref={ref}
-    {...props}
-    className={mx(buttonStyles({ compact, variant, disabled: props.disabled }), props.className)}
-    {...(props.disabled && { disabled: true })}
+    {...rootSlot}
+    className={mx(buttonStyles({ compact, variant, disabled: rootSlot.disabled }), rootSlot.className)}
+    {...(rootSlot.disabled && { disabled: true })}
   >
     {children}
   </button>

@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { PropsWithChildren, ReactNode } from 'react';
+import React, { ComponentProps, PropsWithChildren, ReactNode } from 'react';
 
 import { MessageValence } from '../../props';
 import { mx } from '../../util';
 
-export interface TagProps extends React.ComponentProps<'span'> {
+export interface TagProps extends ComponentProps<'span'> {
   valence?: MessageValence;
   children?: ReactNode;
 }
@@ -20,11 +20,11 @@ const valenceColorMap: Record<MessageValence, string> = {
   error: 'bg-error-100 text-error-800 dark:bg-error-700 dark:text-error-300'
 };
 
-export const Tag = ({ children, valence = 'neutral', ...props }: PropsWithChildren<TagProps>) => {
+export const Tag = ({ children, valence = 'neutral', ...rootSlot }: PropsWithChildren<TagProps>) => {
   return (
     <span
-      {...props}
-      className={mx('text-xs font-semibold px-2.5 py-0.5 rounded', valenceColorMap[valence], props.className)}
+      {...rootSlot}
+      className={mx('text-xs font-semibold px-2.5 py-0.5 rounded', valenceColorMap[valence], rootSlot?.className)}
     >
       {children}
     </span>
