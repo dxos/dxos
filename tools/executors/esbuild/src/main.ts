@@ -18,6 +18,7 @@ export interface EsbuildExecutorOptions {
   metafile: boolean;
   outputPath: string;
   platforms: Platform[];
+  sourcemap: boolean;
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -41,6 +42,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         outfile,
         format: 'cjs',
         write: true,
+        sourcemap: options.sourcemap,
         metafile: options.metafile,
         bundle: options.bundle,
         platform,
