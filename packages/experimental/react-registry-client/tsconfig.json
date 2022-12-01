@@ -19,13 +19,13 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/esbuild-plugins"
+    },
+    {
       "path": "../../common/util"
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../tools/esbuild-plugins"
     },
     {
       "path": "../registry-client"

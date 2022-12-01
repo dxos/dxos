@@ -14,7 +14,7 @@
   ],
   "references": [
     {
-      "path": "../../tools/esbuild-plugins"
+      "path": "../esbuild-plugins"
     }
   ]
 }

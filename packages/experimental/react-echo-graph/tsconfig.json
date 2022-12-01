@@ -20,6 +20,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/esbuild-plugins"
+    },
+    {
       "path": "../../common/react-async"
     },
     {
@@ -30,9 +33,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../tools/esbuild-plugins"
     },
     {
       "path": "../gem-core"

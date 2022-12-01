@@ -1,16 +1,16 @@
 {
-  "sourceRoot": "packages/tools/esbuild-plugins/src",
+  "sourceRoot": "packages/common/esbuild-plugins/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/tools/esbuild-plugins/src/index.ts",
-        "outputPath": "packages/tools/esbuild-plugins/dist",
+        "main": "packages/common/esbuild-plugins/src/index.ts",
+        "outputPath": "packages/common/esbuild-plugins/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/tools/esbuild-plugins/tsconfig.json"
+        "tsConfig": "packages/common/esbuild-plugins/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -21,7 +21,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/tools/esbuild-plugins/**/*.{ts,js}"
+          "packages/common/esbuild-plugins/**/*.{ts,js}"
         ]
       },
       "outputs": [
