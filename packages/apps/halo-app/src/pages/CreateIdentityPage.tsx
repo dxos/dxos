@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
-export const CreateIdentityPage = () => {
+const CreateIdentityPage = () => {
   const { t } = useTranslation();
   const client = useClient();
   const identity = useIdentity();
@@ -52,3 +52,5 @@ export const CreateIdentityPage = () => {
     </main>
   );
 };
+
+export default CreateIdentityPage;

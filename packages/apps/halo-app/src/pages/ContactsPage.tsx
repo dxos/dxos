@@ -8,7 +8,7 @@ import React from 'react';
 import { HeadingWithActions } from '@dxos/react-appkit';
 import { useTranslation, Button, getSize, defaultDisabled, Group, mx } from '@dxos/react-uikit';
 
-export const ContactsPage = () => {
+const ContactsPage = () => {
   const { t } = useTranslation('halo');
   return (
     <>
@@ -34,3 +34,5 @@ export const ContactsPage = () => {
     </>
   );
 };
+
+export default ContactsPage;

@@ -10,7 +10,7 @@ import { useSafeSpaceKey, ProfileList } from '@dxos/react-appkit';
 import { useMembers } from '@dxos/react-client';
 import { Heading, useTranslation } from '@dxos/react-uikit';
 
-export const SpacePage = () => {
+const SpacePage = () => {
   const { t } = useTranslation('halo');
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
@@ -28,3 +28,5 @@ export const SpacePage = () => {
     </>
   );
 };
+
+export default SpacePage;
