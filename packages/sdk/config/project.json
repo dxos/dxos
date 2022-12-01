@@ -54,7 +54,10 @@
         "platforms": [
           "node"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",

@@ -67,7 +67,8 @@
     },
     "test": {
       "dependsOn": [
-        "build"
+        "build",
+        "prebuild"
       ],
       "executor": "@dxos/test:run",
       "options": {
