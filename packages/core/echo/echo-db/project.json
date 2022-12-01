@@ -19,7 +19,6 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
-        "eslintConfig": "packages/core/echo/echo-db/eslint-config.json",
         "format": "unix",
         "lintFilePatterns": [
           "packages/core/echo/echo-db/src/packlets/**/*.{ts,js}"

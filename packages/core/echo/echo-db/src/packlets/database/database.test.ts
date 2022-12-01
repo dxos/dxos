@@ -9,10 +9,10 @@ import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { describe, test, afterTest } from '@dxos/test';
 
+import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemFilterDeleted } from './selection';
-import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
 const OBJECT_ORG = 'example:object/org';
 const OBJECT_PERSON = 'example:object/person';
