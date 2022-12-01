@@ -1,5 +1,5 @@
 diff --git a/src/utilities/typescript/compilation.js b/src/utilities/typescript/compilation.js
-index 597b15282ab98d0a4bff941cd8aa8b6e063f8d81..7fd5328b575f6a3b74411870e6d6372c1593cc54 100644
+index 597b15282ab98d0a4bff941cd8aa8b6e063f8d81..5b41f73428a773cf58740a8f952e58958813ee66 100644
 --- a/src/utilities/typescript/compilation.js
 +++ b/src/utilities/typescript/compilation.js
 @@ -88,7 +88,8 @@ function createProgram(tsconfig, { projectName, getCustomTransformers }) {
@@ -8,7 +8,7 @@ index 597b15282ab98d0a4bff941cd8aa8b6e063f8d81..7fd5328b575f6a3b74411870e6d6372c
      devkit_1.logger.info(`Compiling TypeScript files for project "${projectName}"...`);
 -    const results = program.emit(undefined, undefined, undefined, undefined, getCustomTransformers === null || getCustomTransformers === void 0 ? void 0 : getCustomTransformers(program));
 +    // NOTE: Without patch importing json in typescript fails silently.
-+    const results = program.emit(undefined, undefined, undefined, undefined, getCustomTransformers === null || getCustomTransformers === void 0 ? void 0 : getCustomTransformers(program), true);
++    const results = program.emit(undefined, undefined, undefined, undefined, getCustomTransformers === null || getCustomTransformers === void 0 ? void 0 : getCustomTransformers(program), !tsconfig.options.noEmit);
      if (results.emitSkipped) {
          const diagnostics = ts.formatDiagnosticsWithColorAndContext(results.diagnostics, {
              getCurrentDirectory: () => ts.sys.getCurrentDirectory(),

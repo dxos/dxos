@@ -5,7 +5,7 @@ patchedDependencies:
     hash: bxoxcpizsxtnps3phoopaywp7q
     path: patches/@nrwl__js@15.2.1.patch
   '@nrwl/workspace@15.2.1':
-    hash: 4vcrvh34efvldb7bqeny5pzcpq
+    hash: nhhgiw2u2ngnmolqtuqpqiwvze
     path: patches/@nrwl__workspace@15.2.1.patch
   '@nxext/vite@15.0.0':
     hash: yhihq6rejpjgfdxtvvnsfkkkhu
@@ -141,7 +141,7 @@ importers:
       '@nrwl/linter': 15.2.1_3c6gealjpi6amj6l35f27gyw6a
       '@nrwl/nx-cloud': 15.0.2
       '@nrwl/storybook': 15.2.1_l2p6m2iqt73greviseo6cppfo4
-      '@nrwl/workspace': 15.2.1_4vcrvh34efvldb7bqeny5pzcpq_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@nxext/vite': 15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_vgzbd6eyqh3774sotrndik62hu
       '@playwright/test': 1.27.1
       '@rushstack/eslint-patch': 1.2.0
@@ -7503,7 +7503,7 @@ packages:
       '@cypress/webpack-preprocessor': 5.14.0_vdmc5sirvjcb6dwolyid2oesfa
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
       '@nrwl/linter': 15.2.1_3c6gealjpi6amj6l35f27gyw6a
-      '@nrwl/workspace': 15.2.1_4vcrvh34efvldb7bqeny5pzcpq_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
       babel-loader: 8.2.5_wfdvla2jorjoj23kkavho2upde
       chalk: 4.1.0
@@ -7573,7 +7573,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
-      '@nrwl/workspace': 15.2.1_4vcrvh34efvldb7bqeny5pzcpq_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@typescript-eslint/utils': 5.40.0_z4bbprzjrhnsfa24uvmcbu7f5q
       chalk: 4.1.0
@@ -7623,7 +7623,7 @@ packages:
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
       '@nrwl/jest': 15.2.1_2kh5534ppdzwbydfkvy3brqz4q
       '@nrwl/linter': 15.2.1_3c6gealjpi6amj6l35f27gyw6a
-      '@nrwl/workspace': 15.2.1_4vcrvh34efvldb7bqeny5pzcpq_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@parcel/watcher': 2.0.4
       chalk: 4.1.0
       fast-glob: 3.2.7
@@ -7696,7 +7696,7 @@ packages:
       '@nrwl/cypress': 15.2.1_l2p6m2iqt73greviseo6cppfo4
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
       '@nrwl/linter': 15.2.1_3c6gealjpi6amj6l35f27gyw6a
-      '@nrwl/workspace': 15.2.1_4vcrvh34efvldb7bqeny5pzcpq_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       dotenv: 10.0.0
       semver: 7.3.4
     transitivePeerDependencies:
@@ -7729,7 +7729,7 @@ packages:
       - debug
     dev: true
 
-  /@nrwl/workspace/15.2.1_4vcrvh34efvldb7bqeny5pzcpq_gxnbstpby6xsj4e72rxxqo5gly:
+  /@nrwl/workspace/15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly:
     resolution: {integrity: sha512-nqF1gP2KuVmQCjgyrX6TECAGFldJ55KEQs6WJIBsjYvmrWvAv341VVb565IEWpPGglb2/8NhJLBMdQ0ZpLG+tg==}
     peerDependencies:
       prettier: ^2.6.2
@@ -7784,7 +7784,7 @@ packages:
       vite: ^3.0.5
     dependencies:
       '@nrwl/devkit': 15.0.10_nx@15.2.1+typescript@4.8.4
-      '@nrwl/workspace': 15.2.1_4vcrvh34efvldb7bqeny5pzcpq_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@nxext/vitest': 15.0.0_@nrwl+devkit@15.0.10
       globrex: 0.1.2
       rxjs: 7.5.7
@@ -8203,7 +8203,7 @@ packages:
       react-refresh: 0.11.0
       schema-utils: 3.1.1
       source-map: 0.7.4
-      webpack: 5.74.0
+      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
     dev: true
 
   /@polkadot/api-derive/4.17.1:
@@ -10317,7 +10317,7 @@ packages:
       typescript: 4.8.4
       unfetch: 4.2.0
       util-deprecate: 1.0.2
-      webpack: 5.74.0
+      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
     dev: true
 
   /@storybook/core-client/6.5.12_vknrbelhugdkckamahrfl2bl2m:
@@ -11020,7 +11020,7 @@ packages:
       react-docgen-typescript: 2.2.2_typescript@4.8.4
       tslib: 2.4.0
       typescript: 4.8.4
-      webpack: 5.74.0
+      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -15166,7 +15166,7 @@ packages:
       loader-utils: 2.0.2
       make-dir: 3.1.0
       schema-utils: 2.7.1
-      webpack: 5.74.0
+      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
     dev: true
 
   /babel-plugin-add-module-exports/1.0.4:
@@ -26542,6 +26542,7 @@ packages:
 
   /nan/2.17.0:
     resolution: {integrity: sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==}
+    requiresBuild: true
 
   /nanoassert/1.1.0:
     resolution: {integrity: sha512-C40jQ3NzfkP53NsO8kEOFd79p4b9kDXQMwgiY1z8ZwrDZgUyom0AHwGegF4Dm99L+YoYhuaB0ceerUcXmqr1rQ==}
