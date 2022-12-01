@@ -7,12 +7,13 @@ import { expect } from 'chai';
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { Agent } from './agent';
 
 // TODO(burdon): Run local signal server for tests.
-describe('Agent', function () {
-  it('creates and starts a basic agent', async function () {
+describe('Agent', () => {
+  test('creates and starts a basic agent', async () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent(config);
     await agent.initialize();
@@ -25,7 +26,7 @@ describe('Agent', function () {
     await agent.destroy();
   });
 
-  it.only('creates a space', async function () {
+  test('creates a space', async () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent(config);
     await agent.initialize();
@@ -35,7 +36,7 @@ describe('Agent', function () {
     await agent.destroy();
   });
 
-  it('creates agents and shares space invitation', async function () {
+  test('creates agents and shares space invitation', async () => {
     const config: ConfigProto = { version: 1 };
     const swarmKey = PublicKey.random();
 

@@ -8,13 +8,14 @@ import faker from 'faker';
 
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { describe, test } from '@dxos/test';
 
 import { TestItemBuilder } from './testing';
 
 chai.use(chaiAsPromised);
 
-describe('FeedStore', function () {
-  it('creates feeds', async function () {
+describe('FeedStore', () => {
+  test('creates feeds', async () => {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
 
@@ -45,7 +46,7 @@ describe('FeedStore', function () {
     }
   });
 
-  it('gets an opened feed', async function () {
+  test('gets an opened feed', async () => {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
     const feedKey = PublicKey.random();
@@ -65,7 +66,7 @@ describe('FeedStore', function () {
     }
   });
 
-  it('tries to open an existing readable feed as writable', async function () {
+  test('tries to open an existing readable feed as writable', async () => {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
     const feedKey = PublicKey.random();
@@ -83,12 +84,7 @@ describe('FeedStore', function () {
     }
   });
 
-  it('reopens a feed and reads data from storage', async function () {
-    // NOTE: Must use Node so that data is persistent across invocations.
-    if (mochaExecutor.environment !== 'nodejs') {
-      this.skip();
-    }
-
+  test('reopens a feed and reads data from storage', async () => {
     const builder = new TestItemBuilder();
     const feedKey = await builder.keyring!.createKey();
 
@@ -129,5 +125,5 @@ describe('FeedStore', function () {
       const feed = await feedStore.openFeed(feedKey);
       expect(feed.properties.length).to.eq(0);
     }
-  });
+  }).onlyEnvironments('nodejs'); // NOTE: Must use Node so that data is persistent across invocations.
 });

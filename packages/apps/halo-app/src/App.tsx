@@ -108,7 +108,11 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider resourceExtensions={[translations, haloTranslations]} fallback={<Fallback message='Loading...' />}>
+    <UiKitProvider
+      resourceExtensions={[translations, haloTranslations]}
+      fallback={<Fallback message='Loading...' />}
+      appNs='halo'
+    >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>

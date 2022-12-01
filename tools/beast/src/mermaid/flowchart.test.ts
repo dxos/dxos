@@ -4,10 +4,12 @@
 
 import expect from 'expect';
 
+import { describe, test } from '@dxos/test';
+
 import { Flowchart } from './flowchart';
 
-describe('Mermaid builder', function () {
-  it('Flowchart', function () {
+describe('Mermaid builder', () => {
+  test('Flowchart', () => {
     const flowchart = new Flowchart({
       linkStyle: { stroke: 'green' }
     });

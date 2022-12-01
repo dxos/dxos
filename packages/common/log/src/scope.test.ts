@@ -2,11 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { describe, test } from '@dxos/test';
+
 import { log } from './log';
 import { logInfo } from './scope';
 
 describe('Scope capture', function () {
-  it('field instance', function () {
+  test('field instance', function () {
     class Container {
       constructor(private readonly _id: string) {}
 

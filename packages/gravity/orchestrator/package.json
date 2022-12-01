@@ -29,7 +29,6 @@
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@dxos/util": "workspace:*",
     "debug": "^4.3.3",
     "node-fetch": "^2.6.0",
@@ -37,7 +36,6 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7"
   }
 }

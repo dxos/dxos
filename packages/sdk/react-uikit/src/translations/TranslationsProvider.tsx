@@ -3,7 +3,7 @@
 //
 
 import i18Next, { Resource } from 'i18next';
-import React, { PropsWithChildren, ReactNode, Suspense, useEffect } from 'react';
+import React, { PropsWithChildren, ReactNode, Suspense, useEffect, createContext, useContext } from 'react';
 import { initReactI18next, useTranslation } from 'react-i18next';
 
 import { Loading } from '@dxos/react-ui';
@@ -29,6 +29,7 @@ export interface TranslationsProviderProps {
   children?: ReactNode;
   fallback?: ReactNode;
   resourceExtensions?: Resource[];
+  appNs?: string;
 }
 
 const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
@@ -36,7 +37,13 @@ const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
   return <>{children}</>;
 };
 
-export const TranslationsProvider = ({ fallback, resourceExtensions, children }: TranslationsProviderProps) => {
+export const TranslationsContext = createContext({
+  appNs: basicNS
+});
+
+export const useTranslationsContext = () => useContext(TranslationsContext);
+
+export const TranslationsProvider = ({ fallback, resourceExtensions, children, appNs }: TranslationsProviderProps) => {
   useEffect(() => {
     if (resourceExtensions && resourceExtensions.length) {
       resourceExtensions.forEach((resource) => {
@@ -49,8 +56,10 @@ export const TranslationsProvider = ({ fallback, resourceExtensions, children }:
     }
   }, [resourceExtensions]);
   return (
-    <Suspense fallback={fallback ?? <Loading label={enUS[basicNS]['loading translations']} />}>
-      <TranslationsProviderLoaded>{children}</TranslationsProviderLoaded>
-    </Suspense>
+    <TranslationsContext.Provider value={{ appNs: appNs ?? basicNS }}>
+      <Suspense fallback={fallback ?? <Loading label={enUS[basicNS]['loading translations']} />}>
+        <TranslationsProviderLoaded>{children}</TranslationsProviderLoaded>
+      </Suspense>
+    </TranslationsContext.Provider>
   );
 };

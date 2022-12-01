@@ -4,8 +4,10 @@
 
 import { expect } from 'chai';
 
-describe('Test', function () {
-  it('checks sanity', async function () {
+import { describe, test } from '@dxos/test';
+
+describe('Test', () => {
+  test('checks sanity', async () => {
     expect(true).to.be.true;
   });
 });

@@ -5,7 +5,7 @@
 import { TestBuilder } from '../testing';
 import { basicTestSuite } from './basic-test-suite';
 
-describe('Memory transport', function () {
+describe('Memory transport', () => {
   const testBuilder = new TestBuilder();
   basicTestSuite(testBuilder);
 });

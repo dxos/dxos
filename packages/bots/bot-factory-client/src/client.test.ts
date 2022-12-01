@@ -6,11 +6,12 @@ import expect from 'expect';
 
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { describe, test } from '@dxos/test';
 
 import { BotFactoryClient } from './client';
 
-describe('In-Memory', function () {
-  it('Can be initialized', async function () {
+describe('In-Memory', () => {
+  test('Can be initialized', async () => {
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
       transportFactory: MemoryTransportFactory

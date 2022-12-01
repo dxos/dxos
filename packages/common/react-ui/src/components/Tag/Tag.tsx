@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { PropsWithChildren, ReactNode } from 'react';
 
 import { MessageValence } from '../../props';
+import { mx } from '../../util';
 
 export interface TagProps extends React.ComponentProps<'span'> {
   valence?: MessageValence;
@@ -24,7 +24,7 @@ export const Tag = ({ children, valence = 'neutral', ...props }: PropsWithChildr
   return (
     <span
       {...props}
-      className={cx('text-xs font-semibold px-2.5 py-0.5 rounded', valenceColorMap[valence], props.className)}
+      className={mx('text-xs font-semibold px-2.5 py-0.5 rounded', valenceColorMap[valence], props.className)}
     >
       {children}
     </span>

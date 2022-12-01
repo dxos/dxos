@@ -9,7 +9,7 @@ import "google/protobuf/empty.proto";
 
 import "dxos/echo/feed.proto";
 import "dxos/echo/snapshot.proto";
-import "dxos/halo/keys.proto";
+import "dxos/halo/keyring.proto";
 import "dxos/halo/signed.proto";
 import "dxos/keys.proto";
 import "dxos/rpc.proto";
@@ -106,7 +106,7 @@ message DisableDebugLoggingResponse {
 message SubscribeToKeyringKeysRequest {}
 
 message SubscribeToKeyringKeysResponse {
-  repeated dxos.halo.keys.KeyRecord keys = 1;
+  repeated dxos.halo.keyring.KeyRecord keys = 1;
 }
 
 // SubscribeToCredential

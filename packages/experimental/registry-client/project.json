@@ -50,7 +50,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/experimental/registry-client",
         "outputPath": "tmp/mocha/packages/experimental/registry-client",
@@ -71,6 +71,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha"
+    "test"
   ]
 }

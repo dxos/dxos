@@ -1,0 +1,19 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.mesh.teleport.control;
+
+message RegisterExtensionRequest {
+  /// Must not contain slashes: /[\w_.]+/. Example: `dxos.mesh.teleport.control`.
+  string name = 1;
+}
+
+/// Controls the lifycycle of the teleport session and its exentsions.
+service ControlService {
+  rpc RegisterExtension (RegisterExtensionRequest) returns (google.protobuf.Empty);
+
+  rpc Heartbeat(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

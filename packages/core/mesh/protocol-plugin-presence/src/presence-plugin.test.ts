@@ -12,6 +12,7 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import { test } from '@dxos/test';
 
 import { PresencePlugin } from './presence-plugin';
 
@@ -51,9 +52,7 @@ const links = (graph: Graph) => {
   return links;
 };
 
-it('presence', async function () {
-  this.timeout(TIMEOUT);
-
+test('presence', async () => {
   const topic = crypto.randomBytes(32);
   const network = await generator.balancedBinTree({
     topic,
@@ -115,4 +114,4 @@ it('presence', async function () {
     TIMEOUT,
     2 * 1000
   );
-});
+}).timeout(TIMEOUT);

@@ -22,6 +22,9 @@ class FeedWrapper {
   key
   core
   properties
+  opened
+  closed
+  length
   toJSON()
   createReadableStream()
   createFeedWriter()
@@ -30,7 +33,7 @@ class FeedFactory {
   createFeed()
 }
 class FeedStoreOptions {
-<interface>
+  <interface>
   factory
 }
 ```
@@ -71,6 +74,9 @@ class FeedWrapper {
   key
   core
   properties
+  opened
+  closed
+  length
   toJSON()
   createReadableStream()
   createFeedWriter()

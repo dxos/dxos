@@ -8,11 +8,11 @@ import { Event, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Protocol } from '@dxos/mesh-protocol';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';
+import { WireProtocol } from '../wire-protocol';
 
 /**
  * State machine for each connection.
@@ -25,24 +25,9 @@ export enum ConnectionState {
   INITIAL = 'INITIAL',
 
   /**
-   * Originating a connection.
-   */
-  INITIATING_CONNECTION = 'INITIATING_CONNECTION',
-
-  /**
-   * Waiting for a connection to be originated from the remote peer.
+   * Trying to establish connection.
    */
   CONNECTING = 'CONNECTING',
-
-  /**
-   * Peer rejected offer.
-   */
-  ACCEPTED = 'ACCEPTED',
-
-  /**
-   * Peer rejected offer.
-   */
-  REJECTED = 'REJECTED',
 
   /**
    * Connection is established.
@@ -57,6 +42,7 @@ export enum ConnectionState {
 
 /**
  * Represents a connection to a remote peer.
+ * Owns a transport paired together with a wire-protocol.
  */
 export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
@@ -73,7 +59,7 @@ export class Connection {
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
     private readonly _signalMessaging: SignalMessenger,
-    private readonly _protocol: Protocol,
+    private readonly _protocol: WireProtocol,
     private readonly _transportFactory: TransportFactory
   ) {}
 
@@ -89,48 +75,18 @@ export class Connection {
     return this._protocol;
   }
 
-  // TODO(burdon): Make async.
-  initiate() {
-    this._signalMessaging
-      .offer({
-        author: this.ownId,
-        recipient: this.remoteId,
-        sessionId: this.sessionId,
-        topic: this.topic,
-        data: { offer: {} }
-      })
-      .then((answer) => {
-        log('received', { answer, topic: this.topic, ownId: this.ownId, remoteId: this.remoteId });
-        if (this.state !== ConnectionState.INITIAL) {
-          log('ignoring response');
-          return;
-        }
-
-        if (answer.accept) {
-          try {
-            this.openConnection();
-          } catch (err: any) {
-            this.errors.raise(err);
-          }
-        } else {
-          // If the peer rejected our connection remove it from the set of candidates.
-          this._changeState(ConnectionState.REJECTED);
-        }
-
-        this._changeState(ConnectionState.ACCEPTED);
-      })
-      .catch((err) => {
-        this.errors.raise(err);
-      });
-  }
-
   /**
    * Create an underlying transport and prepares it for the connection.
    */
   // TODO(burdon): Make async?
   openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
-    this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.CONNECTING);
+    this._changeState(ConnectionState.CONNECTING);
+
+    // TODO(dmaretskyi): Initialize only after the transport has established connection.
+    this._protocol.initialize().catch((err) => {
+      this.errors.raise(err);
+    });
 
     assert(!this._transport);
     this._transport = this._transportFactory.createTransport({
@@ -176,7 +132,7 @@ export class Connection {
 
     try {
       // Gracefully close the stream flushing any unsent data packets.
-      await this._protocol.close();
+      await this._protocol.destroy();
     } catch (err: any) {
       log.catch(err);
     }

@@ -12,14 +12,14 @@ import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 import { ControlPipeline } from './control-pipeline';
 
-describe('space/control-pipeline', function () {
-  it('admits feeds', async function () {
+describe('space/control-pipeline', () => {
+  test('admits feeds', async () => {
     const keyring = new Keyring();
     const spaceKey = await keyring.createKey();
     const identityKey = await keyring.createKey();
@@ -123,7 +123,6 @@ describe('space/control-pipeline', function () {
       });
 
       const end = controlPipeline.pipeline.state.endTimeframe;
-      console.log({ end });
       await controlPipeline.pipeline.state.waitUntilTimeframe(end);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }

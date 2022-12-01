@@ -3,6 +3,7 @@
 //
 
 export const hello = {
+  'current app name': 'Hello World Template',
   'hello label': 'Hello!',
   'no identity label': 'In order to use this app you must first have an identity in your HALO.',
   'go to halo label': 'Go to HALO',
