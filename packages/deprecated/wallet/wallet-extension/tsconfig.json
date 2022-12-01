@@ -27,6 +27,9 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/esbuild-plugins"
+    },
+    {
       "path": "../../../common/util"
     },
     {

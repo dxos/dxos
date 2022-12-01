@@ -12,5 +12,9 @@
     "src",
     "stories"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../esbuild-plugins"
+    }
+  ]
 }

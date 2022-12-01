@@ -11,7 +11,7 @@
   "types": "dist/src/index.d.ts",
   "dependencies": {
     "@dxos/config": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-plugins": "workspace:*",
     "rollup": "~2.77.3",
     "rollup-plugin-polyfill-node": "^0.10.2",
     "vite": "3.0.9"
