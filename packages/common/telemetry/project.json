@@ -13,21 +13,6 @@
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
-      "options": {
-        "bundlePackages": [
-          "@segment/snippet"
-        ],
-        "entryPoints": [
-          "packages/common/telemetry/src/index.ts"
-        ],
-        "outfile": "packages/common/telemetry/dist/browser.js"
-      },
-      "outputs": [
-        "{options.outfile}"
-      ]
-    },
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
