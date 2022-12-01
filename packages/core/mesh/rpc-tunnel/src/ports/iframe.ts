@@ -107,10 +107,11 @@ export const createIFrame = (source: string, id: string) => {
     const cssStyle = 'color:#C026D3;font-weight:bold';
 
     console.log(
-      '%cDXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
-    ,cssStyle);
+      `%cDXOS Client is communicating with the shared worker on ${source}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
+      cssStyle
+    );
     console.log(
-      `%cTo inspect this application, click here: https://devtools.dxos.org/?target=vault:${source}`,
+      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${source}`,
       cssStyle
     );
   }
