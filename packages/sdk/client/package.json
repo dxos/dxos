@@ -10,8 +10,7 @@
   "main": "dist/src/index.js",
   "browser": {
     "node:assert": "assert",
-    "node:util": "util",
-    "./dist/src/index.js": "./dist/browser/index.js"
+    "node:util": "util"
   },
   "types": "dist/src/index.d.ts",
   "files": [
