@@ -126,7 +126,7 @@ importers:
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
       '@dxos/log-hook': link:tools/log-hook
-      '@dxos/plate': link:packages/devtools/plate
+      '@dxos/plate': link:packages/common/plate
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/signal': link:packages/core/mesh/signal
@@ -1118,6 +1118,55 @@ importers:
       '@types/node': 18.11.9
       pirates: 4.0.5
       sorcery: 0.10.0
+      typescript: 4.8.4
+
+  packages/common/plate:
+    specifiers:
+      '@swc/core': ^1.3.9
+      '@types/lodash.flatten': ^4.4.6
+      '@types/lodash.merge': ^4.6.6
+      '@types/lodash.zip': ^4.2.6
+      '@types/minimatch': ^5.1.2
+      '@types/mkdirp': ^1.0.2
+      '@types/node': ^18.11.9
+      '@types/prettier': ^2.7.1
+      '@types/recursive-readdir': ^2.2.0
+      '@types/yargs': ~16.0.1
+      esbuild: ~0.14.1
+      lodash.flatten: ^4.4.0
+      lodash.merge: ^4.6.2
+      lodash.zip: ^4.2.0
+      minimatch: ^5.1.0
+      mkdirp: ^1.0.4
+      prettier: ^2.7.1
+      recursive-readdir: ^2.2.2
+      ts-node: 10.9.1
+      typescript: ^4.8.4
+      yaml: ^2.1.3
+      yargs: ~16.2.0
+    dependencies:
+      '@swc/core': 1.3.9
+      esbuild: 0.14.54
+      lodash.flatten: 4.4.0
+      lodash.merge: 4.6.2
+      lodash.zip: 4.2.0
+      minimatch: 5.1.0
+      mkdirp: 1.0.4
+      prettier: 2.7.1
+      recursive-readdir: 2.2.2
+      ts-node: 10.9.1_avwejrfg7abipkjwvznwy27qia
+      yaml: 2.1.3
+      yargs: 16.2.0
+    devDependencies:
+      '@types/lodash.flatten': 4.4.7
+      '@types/lodash.merge': 4.6.7
+      '@types/lodash.zip': 4.2.7
+      '@types/minimatch': 5.1.2
+      '@types/mkdirp': 1.0.2
+      '@types/node': 18.11.9
+      '@types/prettier': 2.7.1
+      '@types/recursive-readdir': 2.2.1
+      '@types/yargs': 16.0.4
       typescript: 4.8.4
 
   packages/common/random-access-storage:
@@ -2391,7 +2440,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/plate': link:../plate
+      '@dxos/plate': link:../../common/plate
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
@@ -2678,55 +2727,6 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-
-  packages/devtools/plate:
-    specifiers:
-      '@swc/core': ^1.3.9
-      '@types/lodash.flatten': ^4.4.6
-      '@types/lodash.merge': ^4.6.6
-      '@types/lodash.zip': ^4.2.6
-      '@types/minimatch': ^5.1.2
-      '@types/mkdirp': ^1.0.2
-      '@types/node': ^18.11.9
-      '@types/prettier': ^2.7.1
-      '@types/recursive-readdir': ^2.2.0
-      '@types/yargs': ~16.0.1
-      esbuild: ~0.14.1
-      lodash.flatten: ^4.4.0
-      lodash.merge: ^4.6.2
-      lodash.zip: ^4.2.0
-      minimatch: ^5.1.0
-      mkdirp: ^1.0.4
-      prettier: ^2.7.1
-      recursive-readdir: ^2.2.2
-      ts-node: 10.9.1
-      typescript: ^4.8.4
-      yaml: ^2.1.3
-      yargs: ~16.2.0
-    dependencies:
-      '@swc/core': 1.3.9
-      esbuild: 0.14.54
-      lodash.flatten: 4.4.0
-      lodash.merge: 4.6.2
-      lodash.zip: 4.2.0
-      minimatch: 5.1.0
-      mkdirp: 1.0.4
-      prettier: 2.7.1
-      recursive-readdir: 2.2.2
-      ts-node: 10.9.1_avwejrfg7abipkjwvznwy27qia
-      yaml: 2.1.3
-      yargs: 16.2.0
-    devDependencies:
-      '@types/lodash.flatten': 4.4.7
-      '@types/lodash.merge': 4.6.7
-      '@types/lodash.zip': 4.2.7
-      '@types/minimatch': 5.1.2
-      '@types/mkdirp': 1.0.2
-      '@types/node': 18.11.9
-      '@types/prettier': 2.7.1
-      '@types/recursive-readdir': 2.2.1
-      '@types/yargs': 16.0.4
-      typescript: 4.8.4
 
   packages/e2e/rpc-tunnel-e2e:
     specifiers:
@@ -3879,7 +3879,7 @@ importers:
       unist-util-visit: ^4.1.0
       vfile: ^5.3.6
     devDependencies:
-      '@dxos/plate': link:../../packages/devtools/plate
+      '@dxos/plate': link:../../packages/common/plate
       '@linkedmd/markdown-it-directive': 1.0.1
       '@types/lodash.memoize': 4.1.7
       '@types/markdown-it': 12.2.3
@@ -3970,7 +3970,7 @@ importers:
       recursive-readdir: ^2.2.2
       yargs: ~16.2.0
     dependencies:
-      '@dxos/plate': link:../../packages/devtools/plate
+      '@dxos/plate': link:../../packages/common/plate
       minimatch: 5.1.0
       recursive-readdir: 2.2.2
       yargs: 16.2.0
@@ -5987,7 +5987,7 @@ packages:
       rehype-highlight: 5.0.2
       styled-components: 5.3.6_7i5myeigehqah43i5u7wbekgba
       theme-ui: 0.14.7_32e6hmjmipifwklgo2b5eqxcl4
-      yargs: 17.6.0
+      yargs: 17.6.2
     transitivePeerDependencies:
       - '@types/react'
       - supports-color
@@ -6018,7 +6018,7 @@ packages:
       rehype-highlight: 5.0.2
       styled-components: 5.3.6_7i5myeigehqah43i5u7wbekgba
       theme-ui: 0.14.7_32e6hmjmipifwklgo2b5eqxcl4
-      yargs: 17.6.0
+      yargs: 17.6.2
     transitivePeerDependencies:
       - '@types/react'
       - supports-color
@@ -8203,7 +8203,7 @@ packages:
       react-refresh: 0.11.0
       schema-utils: 3.1.1
       source-map: 0.7.4
-      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
+      webpack: 5.74.0
     dev: true
 
   /@polkadot/api-derive/4.17.1:
@@ -8320,7 +8320,7 @@ packages:
       '@polkadot/util': 6.11.1
       handlebars: 4.7.7
       websocket: 1.0.34
-      yargs: 17.6.0
+      yargs: 17.6.2
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -10317,7 +10317,7 @@ packages:
       typescript: 4.8.4
       unfetch: 4.2.0
       util-deprecate: 1.0.2
-      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
+      webpack: 5.74.0
     dev: true
 
   /@storybook/core-client/6.5.12_vknrbelhugdkckamahrfl2bl2m:
@@ -11020,7 +11020,7 @@ packages:
       react-docgen-typescript: 2.2.2_typescript@4.8.4
       tslib: 2.4.0
       typescript: 4.8.4
-      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
+      webpack: 5.74.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -15166,7 +15166,7 @@ packages:
       loader-utils: 2.0.2
       make-dir: 3.1.0
       schema-utils: 2.7.1
-      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
+      webpack: 5.74.0
     dev: true
 
   /babel-plugin-add-module-exports/1.0.4:
@@ -34877,19 +34877,6 @@ packages:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 20.2.9
-    dev: true
-
-  /yargs/17.6.0:
-    resolution: {integrity: sha512-8H/wTDqlSwoSnScvV2N/JHfLWOKuh5MVla9hqLjK3nsfyy6Y4kDSYSvkU5YCUEPOSnRXfIyx3Sq+B/IWudTo4g==}
-    engines: {node: '>=12'}
-    dependencies:
-      cliui: 8.0.1
-      escalade: 3.1.1
-      get-caller-file: 2.0.5
-      require-directory: 2.1.1
-      string-width: 4.2.3
-      y18n: 5.0.8
-      yargs-parser: 21.1.1
     dev: true
 
   /yargs/17.6.2:
