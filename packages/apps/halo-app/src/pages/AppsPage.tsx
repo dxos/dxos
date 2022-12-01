@@ -6,10 +6,10 @@ import React, { useMemo } from 'react';
 
 import { Heading, Loading, useTranslation } from '@dxos/react-uikit';
 
-import { AppList, AppProps } from '../../components';
-import { useModules } from '../../experimental';
+import { AppList, AppProps } from '../components';
+import { useModules } from '../experimental';
 
-export const AppsPage = () => {
+const AppsPage = () => {
   const { t } = useTranslation('halo');
   const { modules, isLoading } = useModules(['showcase'], 1_000);
   const apps = useMemo<AppProps[]>(
@@ -29,3 +29,5 @@ export const AppsPage = () => {
     </>
   );
 };
+
+export default AppsPage;
