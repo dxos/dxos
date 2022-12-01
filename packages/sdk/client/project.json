@@ -16,27 +16,6 @@
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
-      "options": {
-        "bundlePackages": [
-          "@dxos/client-services",
-          "@dxos/credentials",
-          "@dxos/crypto",
-          "@dxos/echo-db",
-          "@dxos/feed-store",
-          "@dxos/network-manager",
-          "@dxos/object-model"
-        ],
-        "entryPoints": [
-          "packages/sdk/client/src/index.ts"
-        ],
-        "outdir": "packages/sdk/client/dist/browser"
-      },
-      "outputs": [
-        "{options.outdir}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -73,7 +52,6 @@
     }
   },
   "implicitDependencies": [
-    "esbuild",
     "test"
   ]
 }
