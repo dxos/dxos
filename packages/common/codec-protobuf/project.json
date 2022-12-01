@@ -16,21 +16,6 @@
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
-      "options": {
-        "bundlePackages": [
-          "protobufjs"
-        ],
-        "entryPoints": [
-          "packages/common/codec-protobuf/src/index.ts"
-        ],
-        "outfile": "packages/common/codec-protobuf/dist/browser.js"
-      },
-      "outputs": [
-        "{options.outfile}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -64,7 +49,6 @@
     }
   },
   "implicitDependencies": [
-    "esbuild",
     "test"
   ]
 }

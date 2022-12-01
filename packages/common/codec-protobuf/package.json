@@ -8,8 +8,7 @@
   "main": "dist/src/index.js",
   "browser": {
     "node:assert": "assert",
-    "node:path": "path-browserify",
-    "./dist/src/index.js": "./dist/browser.js"
+    "node:path": "path-browserify"
   },
   "types": "dist/src/index.d.ts",
   "files": [

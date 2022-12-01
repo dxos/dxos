@@ -16,21 +16,6 @@
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
-      "options": {
-        "bundlePackages": [
-          "@dxos/network-manager"
-        ],
-        "entryPoints": [
-          "packages/bots/bot-factory-client/src/index.ts"
-        ],
-        "outfile": "packages/bots/bot-factory-client/dist/browser.js"
-      },
-      "outputs": [
-        "{options.outfile}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -45,7 +30,6 @@
     }
   },
   "implicitDependencies": [
-    "esbuild",
     "test"
   ]
 }

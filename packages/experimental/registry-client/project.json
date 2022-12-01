@@ -16,27 +16,6 @@
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
-      "options": {
-        "bundlePackages": [
-          "@polkadot/api",
-          "@polkadot/keyring",
-          "@polkadot/metadata",
-          "@polkadot/rpc-core",
-          "@polkadot/types",
-          "@polkadot/util",
-          "@polkadot/util-crypto"
-        ],
-        "entryPoints": [
-          "packages/experimental/registry-client/src/index.ts"
-        ],
-        "outfile": "packages/experimental/registry-client/dist/browser.js"
-      },
-      "outputs": [
-        "{options.outfile}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -70,7 +49,6 @@
     }
   },
   "implicitDependencies": [
-    "esbuild",
     "test"
   ]
 }
