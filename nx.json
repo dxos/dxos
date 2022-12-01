@@ -11,7 +11,6 @@
       "options": {
         "cacheableOperations": [
           "build",
-          "build-internal",
           "bundle",
           "compile",
           "e2e",
@@ -54,14 +53,6 @@
         "compile"
       ]
     },
-    // TODO(wittjosiah): This target needs a better name.
-    "build-internal": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^build-internal",
-        "^compile"
-      ]
-    },
     "bundle": {
       "inputs": [
         "production",
@@ -77,7 +68,6 @@
     "compile": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build-internal",
         "^compile",
         "prebuild"
       ]
@@ -124,7 +114,6 @@
         }
       ],
       "dependsOn": [
-        "^build-internal",
         "^compile"
       ]
     }

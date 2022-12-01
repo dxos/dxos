@@ -2,11 +2,28 @@
   "sourceRoot": "tools/log-hook/src",
   "projectType": "library",
   "targets": {
-    "build-internal": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile log-hook"
+        ]
+      },
+      "outputs": [
+        "tools/log-hook/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/log-hook/src/index.ts",
         "outputPath": "tools/log-hook/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "tools/log-hook/tsconfig.json"
       },
       "outputs": [

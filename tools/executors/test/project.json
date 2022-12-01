@@ -2,11 +2,28 @@
   "sourceRoot": "tools/executors/test/src",
   "projectType": "library",
   "targets": {
-    "build-internal": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile test"
+        ]
+      },
+      "outputs": [
+        "tools/executors/test/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/test/src/main.ts",
         "outputPath": "tools/executors/test/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "tools/executors/test/tsconfig.json"
       },
       "outputs": [

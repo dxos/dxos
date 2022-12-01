@@ -2,11 +2,28 @@
   "sourceRoot": "packages/common/esbuild-plugins/src",
   "projectType": "library",
   "targets": {
-    "build-internal": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile esbuild-plugins"
+        ]
+      },
+      "outputs": [
+        "packages/common/esbuild-plugins/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/esbuild-plugins/src/index.ts",
         "outputPath": "packages/common/esbuild-plugins/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "packages/common/esbuild-plugins/tsconfig.json"
       },
       "outputs": [

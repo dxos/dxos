@@ -1,11 +1,28 @@
 {
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
-    "build-internal": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile esbuild"
+        ]
+      },
+      "outputs": [
+        "tools/executors/esbuild/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/esbuild/src/index.ts",
         "outputPath": "tools/executors/esbuild/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "tools/executors/esbuild/tsconfig.json"
       },
       "outputs": [

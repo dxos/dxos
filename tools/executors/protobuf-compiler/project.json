@@ -2,13 +2,21 @@
   "sourceRoot": "tools/executors/protobuf-compiler/src",
   "projectType": "library",
   "targets": {
-    "build-internal": {
+    "build": {
       "dependsOn": [
-        "^build",
-        "^build-internal",
-        "^compile",
-        "prebuild"
+        "^build"
       ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile protobuf-compiler"
+        ]
+      },
+      "outputs": [
+        "tools/executors/protobuf-compiler/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/protobuf-compiler/src/index.ts",

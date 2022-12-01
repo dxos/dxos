@@ -2,16 +2,28 @@
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
-    "build-internal": {
+    "build": {
       "dependsOn": [
-        "^build-internal",
-        "^compile",
-        "prebuild"
+        "^build"
       ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile protocols"
+        ]
+      },
+      "outputs": [
+        "packages/core/protocols/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/protocols/src/index.ts",
         "outputPath": "packages/core/protocols/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "packages/core/protocols/tsconfig.json"
       },
       "outputs": [
@@ -31,9 +43,6 @@
       ]
     },
     "prebuild": {
-      "dependsOn": [
-        "^build-internal"
-      ],
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
@@ -46,8 +55,7 @@
     },
     "test": {
       "dependsOn": [
-        "^build",
-        "^bundle",
+        "^compile",
         "prebuild"
       ],
       "executor": "@dxos/test:run",
