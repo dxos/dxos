@@ -3,11 +3,8 @@
 //
 
 import faker from 'faker';
-import util from 'node:util';
 
 export const noop = () => {};
-
-export const py = (obj: any, fn: Function) => util.promisify(fn.bind(obj));
 
 // TODO(burdon): Replace with proto def.
 export type TestDataItem = { id: number; text: string };
