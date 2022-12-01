@@ -8,7 +8,7 @@
   ],
   "references": [
     {
-      "path": "../../tools/esbuild-plugins"
+      "path": "../../common/esbuild-plugins"
     },
     {
       "path": "../config"

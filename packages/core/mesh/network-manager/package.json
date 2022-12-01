@@ -7,7 +7,6 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node/index.js",
-  "types": "src/index.ts",
   "browser": {
     "node:assert": "assert",
     "node:events": "events",
@@ -15,6 +14,7 @@
     "./dist/lib/node/index.js": "./dist/lib/browser/index.js",
     "./dist/lib/node/testing/index.js": "./dist/lib/browser/testing/index.js"
   },
+  "types": "src/index.ts",
   "files": [
     "testing.d.ts",
     "testing.js",

@@ -7,12 +7,12 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node.js",
-  "types": "src/index.ts",
   "browser": {
     "./src/node.ts": "./src/browser.ts",
     "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src"

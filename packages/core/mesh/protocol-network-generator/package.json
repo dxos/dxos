@@ -8,13 +8,13 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node.js",
-  "types": "src/index.ts",
   "browser": {
     "node:assert": "assert",
     "node:events": "events",
     "node:stream": "readable-stream",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src"

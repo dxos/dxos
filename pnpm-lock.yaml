@@ -122,7 +122,7 @@ importers:
       '@babel/core': 7.19.3
       '@dxos/async': link:packages/common/async
       '@dxos/esbuild': link:tools/executors/esbuild
-      '@dxos/esbuild-plugins': link:packages/tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:packages/common/esbuild-plugins
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
       '@dxos/log-hook': link:tools/log-hook
@@ -952,6 +952,30 @@ importers:
       events: 3.3.0
       util: 0.12.5
 
+  packages/common/esbuild-plugins:
+    specifiers:
+      assert: ^2.0.0
+      crypto-browserify: ^3.12.0
+      debug: ^4.3.3
+      domain-browser: ^4.22.0
+      esbuild: ~0.14.1
+      events: ^3.3.0
+      path-browserify: ^1.0.1
+      readable-stream: ^3.6.0
+      tty-browserify: ~0.0.1
+      util: ^0.12.4
+    dependencies:
+      assert: 2.0.0
+      crypto-browserify: 3.12.0
+      debug: 4.3.4
+      domain-browser: 4.22.0
+      esbuild: 0.14.54
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.0
+      tty-browserify: 0.0.1
+      util: 0.12.5
+
   packages/common/feed-store:
     specifiers:
       '@dxos/async': workspace:*
@@ -1141,7 +1165,7 @@ importers:
     dependencies:
       immutability-helper: 3.1.1
     devDependencies:
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -2103,7 +2127,7 @@ importers:
       '@babel/core': 7.19.3
       '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.19.3
       '@dxos/client': link:../../sdk/client
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@dxos/protocols': link:../../core/protocols
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -2191,7 +2215,7 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../core/halo/credentials
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@dxos/keys': link:../../common/keys
       '@dxos/react-client': link:../../sdk/react-client
@@ -2269,7 +2293,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       webextension-polyfill: 0.8.0
     devDependencies:
-      '@dxos/esbuild-plugins': link:../../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../../common/esbuild-plugins
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
@@ -2309,7 +2333,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
-      '@dxos/esbuild-plugins': link:../../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -2581,7 +2605,7 @@ importers:
       webextension-polyfill: 0.8.0
     devDependencies:
       '@babel/core': 7.19.3
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@types/chrome': 0.0.125
       '@types/debug': 4.1.7
       '@types/download': 8.0.1
@@ -2646,7 +2670,7 @@ importers:
       react-resize-aware: 3.1.1_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@dxos/protocols': link:../../core/protocols
       '@types/react': 18.0.21
@@ -2824,7 +2848,7 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
@@ -2873,7 +2897,7 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
@@ -3018,7 +3042,7 @@ importers:
       '@babel/core': 7.19.3
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@types/d3': 7.4.0
       '@types/debug': 4.1.7
@@ -3181,7 +3205,7 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-testing': link:../client-testing
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
@@ -3237,7 +3261,7 @@ importers:
       '@babel/core': 7.19.3
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
@@ -3275,7 +3299,7 @@ importers:
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
       url-join: 5.0.0
     devDependencies:
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@types/node': 18.11.9
       '@types/react': 18.0.21
@@ -3308,7 +3332,7 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@types/debug': 4.1.7
       '@types/react': 18.0.21
@@ -3469,7 +3493,7 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
@@ -3825,34 +3849,10 @@ importers:
       vite: 3.0.9
     dependencies:
       '@dxos/config': link:../config
-      '@dxos/esbuild-plugins': link:../../tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       rollup: 2.77.3
       rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-
-  packages/tools/esbuild-plugins:
-    specifiers:
-      assert: ^2.0.0
-      crypto-browserify: ^3.12.0
-      debug: ^4.3.3
-      domain-browser: ^4.22.0
-      esbuild: ~0.14.1
-      events: ^3.3.0
-      path-browserify: ^1.0.1
-      readable-stream: ^3.6.0
-      tty-browserify: ~0.0.1
-      util: ^0.12.4
-    dependencies:
-      assert: 2.0.0
-      crypto-browserify: 3.12.0
-      debug: 4.3.4
-      domain-browser: 4.22.0
-      esbuild: 0.14.54
-      events: 3.3.0
-      path-browserify: 1.0.1
-      readable-stream: 3.6.0
-      tty-browserify: 0.0.1
-      util: 0.12.5
 
   tools/apidoc:
     specifiers:
@@ -4184,7 +4184,7 @@ importers:
       yargs: 16.2.0
     devDependencies:
       '@babel/core': 7.19.3
-      '@dxos/esbuild-plugins': link:../../packages/tools/esbuild-plugins
+      '@dxos/esbuild-plugins': link:../../packages/common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0
       '@dxos/protobuf-compiler': link:../executors/protobuf-compiler
       '@types/debug': 4.1.7

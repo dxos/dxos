@@ -7,10 +7,10 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/browser.js",
-  "types": "src/index.ts",
   "browser": {
     "node:assert": "assert"
   },
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src"

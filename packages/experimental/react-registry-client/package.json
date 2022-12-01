@@ -8,11 +8,11 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node.js",
-  "types": "src/index.ts",
   "browser": {
     "node:assert": "assert",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
+  "types": "src/index.ts",
   "scripts": {
     "book": "esbuild-server book"
   },
