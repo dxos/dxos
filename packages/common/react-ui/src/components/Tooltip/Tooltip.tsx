@@ -10,7 +10,12 @@ import { useId } from '../../hooks';
 import { defaultTooltip } from '../../styles';
 import { mx } from '../../util';
 
-export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
+export interface TooltipSlots {
+  content?: ComponentProps<typeof TooltipPrimitive.Content>;
+  arrow?: ComponentProps<typeof TooltipPrimitive.Arrow>;
+}
+
+export interface TooltipProps {
   content: ReactNode;
   children: ReactNode;
   compact?: boolean;
@@ -18,6 +23,7 @@ export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitiv
   mountAsSibling?: boolean;
   triggerIsInToolbar?: boolean;
   zIndex?: string;
+  slots?: TooltipSlots;
 }
 
 export const Tooltip = ({
@@ -28,7 +34,7 @@ export const Tooltip = ({
   mountAsSibling,
   triggerIsInToolbar,
   zIndex = 'z-[2]',
-  ...contentProps
+  slots = {}
 }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const labelId = useId('tooltipLabel');
@@ -36,7 +42,7 @@ export const Tooltip = ({
   const tooltipContent = (
     <TooltipPrimitive.Content
       forceMount
-      {...contentProps}
+      {...slots.content}
       className={mx(
         'radix-side-top:animate-slide-down-fade',
         'radix-side-right:animate-slide-left-fade',
@@ -48,10 +54,10 @@ export const Tooltip = ({
         'shadow-lg bg-white dark:bg-neutral-800',
         !isOpen && 'sr-only',
         defaultTooltip,
-        contentProps.className
+        slots.content?.className
       )}
     >
-      <TooltipPrimitive.Arrow className='fill-current text-white dark:text-neutral-800' />
+      <TooltipPrimitive.Arrow className={mx('fill-current text-white dark:text-neutral-800', slots.arrow?.className)} />
       {content}
     </TooltipPrimitive.Content>
   );
