@@ -15,5 +15,9 @@
     "src",
     "stories"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/esbuild-plugins"
+    }
+  ]
 }

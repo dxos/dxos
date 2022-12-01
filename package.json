@@ -32,7 +32,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/async": "workspace:*",
     "@dxos/esbuild": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/log-hook": "workspace:*",

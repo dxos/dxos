@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-plugins": "workspace:*",
     "@types/chrome": "^0.0.125",
     "@types/debug": "^4.1.7",
     "@types/download": "^8.0.1",
