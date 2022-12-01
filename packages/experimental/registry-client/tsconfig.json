@@ -7,7 +7,7 @@
       "ESNext"
     ],
     "noImplicitAny": false,
-    "outDir": "dist",
+    "outDir": "dist/types",
     "paths": {
       "@polkadot/api/augment": [
         "./packages/experimental/registry-client/src/polkadot/interfaces/augment-api.ts"
