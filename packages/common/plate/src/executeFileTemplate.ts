@@ -3,7 +3,7 @@
 //
 import path from 'path';
 // import { promises as fs } from "fs";
-import * as tsnode from 'ts-node';
+import { loadModule, LoadModuleOptions } from './loadModule';
 
 import { File, getFileType, MaybePromise, promise } from './file';
 
@@ -12,7 +12,7 @@ export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
 /** Do not process files that are compilation noise like .map and .t.d.ts */
 export const TEMPLATE_FILE_IGNORE = [/\.t\.d\./, /\.map$/];
 
-export const isTemplateFile = (file: string): boolean =>
+export const isTemplateFile = (file: string) =>
   TEMPLATE_FILE_INCLUDE.test(file) && !TEMPLATE_FILE_IGNORE.some((pattern) => pattern.test(file));
 
 export const getOutputNameFromTemplateName = (s: string): string => {
@@ -21,39 +21,15 @@ export const getOutputNameFromTemplateName = (s: string): string => {
   return out ?? s;
 };
 
-export type LoadTemplateOptions = {
-  compilerOptions?: object;
-  moduleLoaderFunction?: (m: string) => any;
-};
+export type LoadTemplateOptions = LoadModuleOptions;
 
-const loadTemplate = async <I = any>(p: string, options?: LoadTemplateOptions): Promise<TemplateFunction<I>> => {
+const loadTemplate = async <I = any>(p: string, options?: LoadTemplateOptions): Promise<TemplateFunction<I> | null> => {
   if (!isTemplateFile(p)) {
-    throw new Error(`only *.t.ts or *.t.js template files are supported. attempted file: ${p}`);
+    throw new Error(`only *.t.ts or *.t.js template files are supported. attempted: ${p}`);
   }
-  if (/\.tsx?$/.test(p)) {
-    tsnode.register({
-      transpileOnly: true,
-      swc: true,
-      skipIgnore: true,
-      compilerOptions: {
-        strict: false,
-        target: 'es5',
-        module: 'commonjs',
-        ...options?.compilerOptions
-      }
-    });
-  }
-  let mod;
-  const loader = options?.moduleLoaderFunction ?? ((m: string) => import(m));
-  try {
-    mod = await loader(p);
-    const fn = mod?.default ?? mod;
-    return typeof fn === 'function' ? fn : typeof fn === 'string' ? () => fn : null;
-  } catch (err) {
-    console.error(`problem while loading template ${p}`);
-    console.error(err);
-    throw err;
-  }
+  const module = await loadModule(p, options);
+  const fn = module?.default ?? module;
+  return typeof fn === 'function' ? fn : typeof fn === 'string' ? () => fn : null;
 };
 
 export type ExecuteFileTemplateOptions<TInput = {}> = LoadTemplateOptions & {
@@ -93,15 +69,16 @@ export const executeFileTemplate = async <TInput>(
     getOutputNameFromTemplateName(templateFullPath).slice(absoluteTemplateRelativeTo.length)
   );
   try {
+    const templateContext = {
+      input: {},
+      ...options,
+      defaultOutputFile: nominalOutputPath,
+      ...(templateRelativeTo
+        ? { templateRelativeTo: absoluteTemplateRelativeTo }
+        : { templateRelativeTo: path.dirname(templateFullPath) })
+    };
     const result = await promise(
-      templateFunction({
-        input: {},
-        ...options,
-        defaultOutputFile: nominalOutputPath,
-        ...(templateRelativeTo
-          ? { templateRelativeTo: absoluteTemplateRelativeTo }
-          : { templateRelativeTo: path.dirname(templateFullPath) })
-      })
+      templateFunction(templateContext)
     );
     return typeof result === 'string'
       ? [
