@@ -7,7 +7,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/neutrals.js",
+  "main": "dist/lib/neutral.js",
   "types": "src/index.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",

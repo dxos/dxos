@@ -4,7 +4,8 @@
   "targets": {
     "build": {
       "dependsOn": [
-        "^build"
+        "^build",
+        "prebuild"
       ],
       "executor": "nx:run-commands",
       "options": {

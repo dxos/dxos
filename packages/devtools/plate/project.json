@@ -16,7 +16,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/devtools/plate/src/index.ts"
+          "packages/devtools/plate/src/index.ts",
+          "packages/devtools/plate/src/main.ts"
         ],
         "outputPath": "packages/devtools/plate/dist/lib",
         "platforms": [

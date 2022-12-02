@@ -62,7 +62,9 @@
         }
       ],
       "dependsOn": [
-        "^compile"
+        // TODO(wittjosiah): This might be able to be ^compile to speed up deploys.
+        //   Some experimental/deprecated projects still depend on build for transpiling.
+        "^build"
       ]
     },
     "compile": {
