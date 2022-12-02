@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
+import { Event, Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -20,21 +23,40 @@ export type PresenceOptions = {
  * Sending presence pings between a set peers for a single teleport session.
  */
 export class PresenceExtension implements TeleportExtension {
-  private readonly _peerStates = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);
-  private readonly _sentMessages = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak, never cleaned up?
+  public updatePeerStates = new Event<PeerState[]>();
+  private readonly _receivedAnnounces = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);
+  private readonly _sentAnnounces = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak, never cleaned up?
   private _sendInterval?: NodeJS.Timeout;
 
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
   private _extensionContext?: ExtensionContext;
+  private readonly _opened = new Trigger();
 
   private _options: PresenceOptions;
 
   constructor({ connections = [], resendAnnounce = 1000, offlineTimeout = 30_000 }: PresenceOptions = {}) {
+    assert(offlineTimeout, 'offlineTimeout must be set');
     this._options = { connections, resendAnnounce, offlineTimeout };
   }
 
   setConnections(connections: PublicKey[]) {
     this._options.connections = connections;
+  }
+
+  sendAnnounces(peerStates: PeerState[]) {
+    peerStates.forEach(async (peerState) => {
+      assert(this._opened, 'Extension not opened');
+      assert(this._rpc, 'RPC not initialized');
+      if (this._sentAnnounces.has(peerState.peerId) || this._extensionContext?.remotePeerId === peerState.peerId) {
+        return;
+      }
+      this._sentAnnounces.add(peerState.peerId);
+      await this._rpc.rpc.PresenceService.announce(peerState);
+    });
+  }
+
+  getPeerStates() {
+    return [...this._receivedAnnounces.values()];
   }
 
   async onOpen(context: ExtensionContext): Promise<void> {
@@ -50,11 +72,12 @@ export class PresenceExtension implements TeleportExtension {
       handlers: {
         PresenceService: {
           announce: async (peerState: PeerState) => {
-            this._peerStates.set(peerState.peerId, peerState);
-            if (!this._sentMessages.has(peerState.peerId)) {
-              await this._rpc?.rpc.PresenceService.announce(peerState);
-              this._sentMessages.add(peerState.peerId);
+            const oldPeerState = this._receivedAnnounces.get(peerState.peerId);
+            if (oldPeerState && oldPeerState.timestamp.getTime() > peerState.timestamp.getTime()) {
+              return;
             }
+            this._receivedAnnounces.set(peerState.peerId, peerState);
+            this.updatePeerStates.emit([...this._receivedAnnounces.values()]);
           }
         }
       },
@@ -63,6 +86,7 @@ export class PresenceExtension implements TeleportExtension {
     await this._rpc.open();
     await this._sendAnnounce();
     this._sendInterval = setInterval(() => this._sendAnnounce(), this._options.resendAnnounce);
+    this._opened.wake();
   }
 
   async onClose(err?: Error): Promise<void> {

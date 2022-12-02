@@ -2,20 +2,54 @@
 // Copyright 2022 DXOS.org
 //
 
-export class TestBuilder {
-  private readonly _agents: TestAgent[];
+import { pipeline } from 'stream';
 
-  constructor () {
-    this._agents = [];
-  }
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { Teleport } from '@dxos/teleport';
+import { afterTest } from '@dxos/test';
 
-  createAgent () {
-    const agent = new TestAgent();
-    this._agents.push(agent);
-    return agent;
-  }
+import { PresenceExtension } from './presence-extension';
 
-  async destroy () {
-    await Promise.all(this._agents.map(agent => agent.destroy()));
-  }
-}
+/**
+ * Simulates two peers connected via P2P network.
+ */
+export const createStreamPair = async () => {
+  const peerId1 = PublicKey.random();
+  const peerId2 = PublicKey.random();
+
+  const peer1 = new Teleport({ initiator: true, localPeerId: peerId1, remotePeerId: peerId2 });
+  const peer2 = new Teleport({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1 });
+
+  pipeline(peer1.stream, peer2.stream, (err) => {
+    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      log.catch(err);
+    }
+  });
+  pipeline(peer2.stream, peer1.stream, (err) => {
+    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      log.catch(err);
+    }
+  });
+  afterTest(() => peer1.close());
+  afterTest(() => peer2.close());
+
+  await Promise.all([peer1.open(), peer2.open()]);
+
+  return { peer1, peer2 };
+};
+
+/**
+ * Two peers with presence extensions pre-registered.
+ */
+export const createPresencePair = async () => {
+  const { peer1, peer2 } = await createStreamPair();
+
+  const presence1 = new PresenceExtension();
+  peer1.addExtension('dxos.mesh.teleport.replicator', presence1);
+
+  const presence2 = new PresenceExtension();
+  peer2.addExtension('dxos.mesh.teleport.replicator', presence2);
+
+  return { presence1, presence2 };
+};
