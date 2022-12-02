@@ -13,7 +13,7 @@ message PeerState {
   dxos.keys.PublicKey peerId = 1;
   /// Will be used to build network graph
   repeated dxos.keys.PublicKey connections = 2; 
-  /// To not resend the message you had already sent
+  /// Peer tracks what had been sent by message id
   dxos.keys.PublicKey messageId = 3;
   google.protobuf.Timestamp timestamp = 4;
 }
