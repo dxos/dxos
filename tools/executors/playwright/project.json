@@ -2,20 +2,6 @@
   "sourceRoot": "tools/executors/playwright/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx compile playwright"
-        ]
-      },
-      "outputs": [
-        "tools/executors/playwright/dist"
-      ]
-    },
     "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {

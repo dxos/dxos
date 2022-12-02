@@ -2,20 +2,6 @@
   "sourceRoot": "tools/executors/test/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx compile test"
-        ]
-      },
-      "outputs": [
-        "tools/executors/test/dist"
-      ]
-    },
     "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
