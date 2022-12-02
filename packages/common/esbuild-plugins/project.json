@@ -3,6 +3,20 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile esbuild-plugins"
+        ]
+      },
+      "outputs": [
+        "packages/common/esbuild-plugins/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/esbuild-plugins/src/index.ts",

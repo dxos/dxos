@@ -29,7 +29,7 @@ export const init = ({ apiKey, batchSize, enable }: InitOptions) => {
  */
 export const page = ({ installationId: anonymousId, identityId: userId, ...options }: PageOptions = {}) => {
   if (!analytics) {
-    log.debug('Analytics not initialized', { action: 'page' });
+    log('Analytics not initialized', { action: 'page' });
   }
 
   analytics?.page({
@@ -44,7 +44,7 @@ export const page = ({ installationId: anonymousId, identityId: userId, ...optio
  */
 export const event = ({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) => {
   if (!analytics) {
-    log.debug('Analytics not initialized', { action: 'event' });
+    log('Analytics not initialized', { action: 'event' });
   }
 
   analytics?.track({
@@ -60,7 +60,7 @@ export const event = ({ installationId: anonymousId, identityId: userId, name: e
  */
 export const flush = async () => {
   if (!analytics) {
-    log.debug('Analytics not initialized', { action: 'flush' });
+    log('Analytics not initialized', { action: 'flush' });
   }
 
   await analytics?.flush((err) => {

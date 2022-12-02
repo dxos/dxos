@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/gem-spore/src/index.ts",
-        "outputPath": "packages/experimental/gem-spore/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/experimental/gem-spore/dist/types",
         "tsConfig": "packages/experimental/gem-spore/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/gem-spore/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/gem-spore/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -38,5 +47,8 @@
         "packages/experimental/gem-spore/coverage"
       ]
     }
-  }
+  },
+  "implictDependencies": [
+    "esbuild"
+  ]
 }

@@ -2,6 +2,20 @@
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile esbuild"
+        ]
+      },
+      "outputs": [
+        "tools/executors/esbuild/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/esbuild/src/index.ts",

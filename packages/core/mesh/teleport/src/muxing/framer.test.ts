@@ -3,8 +3,8 @@
 //
 
 import { expect } from 'chai';
-import { randomBytes } from 'crypto';
-import { pipeline } from 'stream';
+import { pipeline } from 'node:stream';
+import randomBytes from 'randombytes';
 import * as varint from 'varint';
 import waitForExpect from 'wait-for-expect';
 

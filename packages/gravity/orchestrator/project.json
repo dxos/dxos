@@ -5,16 +5,24 @@
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "assets": [
-          "packages/gravity/orchestrator/*.md"
-        ],
         "main": "packages/gravity/orchestrator/src/index.ts",
-        "outputPath": "packages/gravity/orchestrator/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
+        "outputPath": "packages/gravity/orchestrator/dist/types",
+        "tsConfig": "packages/gravity/orchestrator/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/gravity/orchestrator/src/index.ts"
         ],
-        "tsConfig": "packages/gravity/orchestrator/tsconfig.json",
-        "updateBuildableProjectDepsInPackageJson": false
+        "outputPath": "packages/gravity/orchestrator/dist/lib",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -34,6 +42,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

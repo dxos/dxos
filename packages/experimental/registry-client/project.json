@@ -6,11 +6,24 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/registry-client/src/index.ts",
-        "outputPath": "packages/experimental/registry-client/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/experimental/registry-client/dist/types",
         "tsConfig": "packages/experimental/registry-client/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/registry-client/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/registry-client/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -49,6 +62,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

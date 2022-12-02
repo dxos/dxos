@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/react-client-testing/src/index.ts",
-        "outputPath": "packages/experimental/react-client-testing/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/experimental/react-client-testing/dist/types",
         "tsConfig": "packages/experimental/react-client-testing/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/react-client-testing/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/react-client-testing/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,6 +39,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

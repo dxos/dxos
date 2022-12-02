@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-import { Duplex } from 'stream';
+import assert from 'node:assert';
+import { Duplex } from 'node:stream';
 
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';

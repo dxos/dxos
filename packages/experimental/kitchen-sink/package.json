@@ -17,9 +17,6 @@
     "start": "esbuild-server server",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",

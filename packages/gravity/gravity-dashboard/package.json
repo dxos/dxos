@@ -8,8 +8,6 @@
   "repository": "dxos/dxos.git",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -17,9 +15,6 @@
   "scripts": {
     "book": "esbuild-server book"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/gem-core": "workspace:*",
     "d3": "^7.4.4",

@@ -3,6 +3,20 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile toolbox"
+        ]
+      },
+      "outputs": [
+        "tools/executors/toolbox/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/toolbox/src/main.ts",

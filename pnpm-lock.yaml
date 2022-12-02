@@ -4,6 +4,9 @@ patchedDependencies:
   '@nrwl/js@15.2.1':
     hash: bxoxcpizsxtnps3phoopaywp7q
     path: patches/@nrwl__js@15.2.1.patch
+  '@nrwl/workspace@15.2.1':
+    hash: nhhgiw2u2ngnmolqtuqpqiwvze
+    path: patches/@nrwl__workspace@15.2.1.patch
   '@nxext/vite@15.0.0':
     hash: yhihq6rejpjgfdxtvvnsfkkkhu
     path: patches/@nxext__vite@15.0.0.patch
@@ -138,7 +141,7 @@ importers:
       '@nrwl/linter': 15.2.1_3c6gealjpi6amj6l35f27gyw6a
       '@nrwl/nx-cloud': 15.0.2
       '@nrwl/storybook': 15.2.1_l2p6m2iqt73greviseo6cppfo4
-      '@nrwl/workspace': 15.2.1_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@nxext/vite': 15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_vgzbd6eyqh3774sotrndik62hu
       '@playwright/test': 1.27.1
       '@rushstack/eslint-patch': 1.2.0
@@ -943,9 +946,11 @@ importers:
     specifiers:
       debug: ^4.3.3
       events: ^3.3.0
+      util: ^0.12.4
     dependencies:
       debug: 4.3.4
       events: 3.3.0
+      util: 0.12.5
 
   packages/common/esbuild-plugins:
     specifiers:
@@ -1687,21 +1692,27 @@ importers:
   packages/core/mesh/network-generator:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@types/assert': ^1.5.4
       '@types/end-of-stream': ^1.4.0
       '@types/pump': ^1.1.0
       assert: ^2.0.0
       end-of-stream: ^1.4.1
+      events: ^3.3.0
       ngraph.generators: ^19.0.1
       ngraph.graph: ^19.0.1
+      readable-stream: ^3.6.0
     dependencies:
       '@dxos/async': link:../../../common/async
+      '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       assert: 2.0.0
       end-of-stream: 1.4.4
+      events: 3.3.0
       ngraph.generators: 19.3.1
       ngraph.graph: 19.1.0
+      readable-stream: 3.6.0
     devDependencies:
       '@types/assert': 1.5.6
       '@types/end-of-stream': 1.4.1
@@ -1731,9 +1742,11 @@ importers:
       '@types/ws': ^7.4.0
       assert: ^2.0.0
       earljs: ~0.1.10
+      events: ^3.3.0
       fast-check: ~3.3.0
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
+      readable-stream: ^3.6.0
       simple-peer: 9.11.0
       typescript: ^4.8.4
       ws: ^7.4.4
@@ -1754,8 +1767,10 @@ importers:
       '@dxos/util': link:../../../common/util
       '@koush/wrtc': 0.5.3
       assert: 2.0.0
+      events: 3.3.0
       isomorphic-ws: 4.0.1_ws@7.5.9
       nanomessage-rpc: 3.2.0
+      readable-stream: 3.6.0
       simple-peer: 9.11.0
       ws: 7.5.9
       xor-distance: 2.0.0
@@ -1777,12 +1792,16 @@ importers:
       '@dxos/network-generator': workspace:*
       '@types/pump': ^1.1.0
       assert: ^2.0.0
+      events: ^3.3.0
       pump: ^3.0.0
+      readable-stream: ^3.6.0
     dependencies:
       '@dxos/log': link:../../../common/log
       '@dxos/network-generator': link:../network-generator
       assert: 2.0.0
+      events: 3.3.0
       pump: 3.0.0
+      readable-stream: 3.6.0
     devDependencies:
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@types/pump': 1.1.1
@@ -1966,9 +1985,12 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
+      '@types/randombytes': ^2.0.0
       '@types/varint': ^6.0.0
       assert: ^2.0.0
       debug: ^4.3.3
+      randombytes: ^2.1.0
+      readable-stream: ^3.6.0
       typescript: ^4.8.4
       varint: ^6.0.0
       wait-for-expect: ^3.0.2
@@ -1982,9 +2004,12 @@ importers:
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       debug: 4.3.4
+      randombytes: 2.1.0
+      readable-stream: 3.6.0
       varint: 6.0.0
     devDependencies:
       '@dxos/async': link:../../../common/async
+      '@types/randombytes': 2.0.0
       '@types/varint': 6.0.0
       typescript: 4.8.4
       wait-for-expect: 3.0.2
@@ -2033,17 +2058,13 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/timeframe': workspace:*
       '@types/debug': ^4.1.7
-      assert: ^2.0.0
       debug: ^4.3.3
       glob: ~7.1.6
-      util: ^0.12.4
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/hypercore': link:../../common/hypercore
       '@dxos/keys': link:../../common/keys
       '@dxos/timeframe': link:../../common/timeframe
-      assert: 2.0.0
-      util: 0.12.5
     devDependencies:
       '@types/debug': 4.1.7
       debug: 4.3.4
@@ -2771,7 +2792,6 @@ importers:
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/js-yaml': ^4.0.5
-      assert: ^2.0.0
       chalk: ^4.1.0
       columnify: ^1.6.0
       debug: ^4.3.3
@@ -2785,7 +2805,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
       debug: 4.3.4
       faker: 5.5.3
       js-yaml: 4.1.0
@@ -3273,10 +3292,12 @@ importers:
       ipfs-http-client: ~56.0.1
       node-fetch: ^2.6.0
       react: ^18.2.0
+      url-join: ^5.0.0
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/react-client': link:../../sdk/react-client
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
+      url-join: 5.0.0
     devDependencies:
       '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
@@ -3324,6 +3345,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
@@ -3352,6 +3374,7 @@ importers:
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
       '@dxos/protocols': link:../../core/protocols
@@ -3727,8 +3750,6 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@types/use-subscription': ^1.0.0
-      assert: ^2.0.0
-      debug: ^4.3.3
       level-js: ^5.0.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -3748,8 +3769,6 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      debug: 4.3.4
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
       '@dxos/react-ui': link:../../common/react-ui
@@ -7484,7 +7503,7 @@ packages:
       '@cypress/webpack-preprocessor': 5.14.0_vdmc5sirvjcb6dwolyid2oesfa
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
       '@nrwl/linter': 15.2.1_3c6gealjpi6amj6l35f27gyw6a
-      '@nrwl/workspace': 15.2.1_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
       babel-loader: 8.2.5_wfdvla2jorjoj23kkavho2upde
       chalk: 4.1.0
@@ -7554,7 +7573,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
-      '@nrwl/workspace': 15.2.1_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@typescript-eslint/utils': 5.40.0_z4bbprzjrhnsfa24uvmcbu7f5q
       chalk: 4.1.0
@@ -7604,7 +7623,7 @@ packages:
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
       '@nrwl/jest': 15.2.1_2kh5534ppdzwbydfkvy3brqz4q
       '@nrwl/linter': 15.2.1_3c6gealjpi6amj6l35f27gyw6a
-      '@nrwl/workspace': 15.2.1_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@parcel/watcher': 2.0.4
       chalk: 4.1.0
       fast-glob: 3.2.7
@@ -7677,7 +7696,7 @@ packages:
       '@nrwl/cypress': 15.2.1_l2p6m2iqt73greviseo6cppfo4
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
       '@nrwl/linter': 15.2.1_3c6gealjpi6amj6l35f27gyw6a
-      '@nrwl/workspace': 15.2.1_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       dotenv: 10.0.0
       semver: 7.3.4
     transitivePeerDependencies:
@@ -7710,7 +7729,7 @@ packages:
       - debug
     dev: true
 
-  /@nrwl/workspace/15.2.1_gxnbstpby6xsj4e72rxxqo5gly:
+  /@nrwl/workspace/15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly:
     resolution: {integrity: sha512-nqF1gP2KuVmQCjgyrX6TECAGFldJ55KEQs6WJIBsjYvmrWvAv341VVb565IEWpPGglb2/8NhJLBMdQ0ZpLG+tg==}
     peerDependencies:
       prettier: ^2.6.2
@@ -7755,6 +7774,7 @@ packages:
       - ts-node
       - typescript
     dev: true
+    patched: true
 
   /@nxext/vite/15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_vgzbd6eyqh3774sotrndik62hu:
     resolution: {integrity: sha512-ydlLXQ12cs4x4O61+eEFMffuQwSiYzH/RtAEvKPYiFSNWnwXqCXjqxHHfATDOvXeETL6n+hvsR7zPPfTPIU2/Q==}
@@ -7764,7 +7784,7 @@ packages:
       vite: ^3.0.5
     dependencies:
       '@nrwl/devkit': 15.0.10_nx@15.2.1+typescript@4.8.4
-      '@nrwl/workspace': 15.2.1_gxnbstpby6xsj4e72rxxqo5gly
+      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_gxnbstpby6xsj4e72rxxqo5gly
       '@nxext/vitest': 15.0.0_@nrwl+devkit@15.0.10
       globrex: 0.1.2
       rxjs: 7.5.7
@@ -8183,7 +8203,7 @@ packages:
       react-refresh: 0.11.0
       schema-utils: 3.1.1
       source-map: 0.7.4
-      webpack: 5.74.0
+      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
     dev: true
 
   /@polkadot/api-derive/4.17.1:
@@ -10297,7 +10317,7 @@ packages:
       typescript: 4.8.4
       unfetch: 4.2.0
       util-deprecate: 1.0.2
-      webpack: 5.74.0
+      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
     dev: true
 
   /@storybook/core-client/6.5.12_vknrbelhugdkckamahrfl2bl2m:
@@ -11000,7 +11020,7 @@ packages:
       react-docgen-typescript: 2.2.2_typescript@4.8.4
       tslib: 2.4.0
       typescript: 4.8.4
-      webpack: 5.74.0
+      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -15146,7 +15166,7 @@ packages:
       loader-utils: 2.0.2
       make-dir: 3.1.0
       schema-utils: 2.7.1
-      webpack: 5.74.0
+      webpack: 5.74.0_gixnd3uzzsdq6ibkxmps4yp44y
     dev: true
 
   /babel-plugin-add-module-exports/1.0.4:
@@ -26522,6 +26542,7 @@ packages:
 
   /nan/2.17.0:
     resolution: {integrity: sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==}
+    requiresBuild: true
 
   /nanoassert/1.1.0:
     resolution: {integrity: sha512-C40jQ3NzfkP53NsO8kEOFd79p4b9kDXQMwgiY1z8ZwrDZgUyom0AHwGegF4Dm99L+YoYhuaB0ceerUcXmqr1rQ==}

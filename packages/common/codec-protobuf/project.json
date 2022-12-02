@@ -6,11 +6,24 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/codec-protobuf/src/index.ts",
-        "outputPath": "packages/common/codec-protobuf/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/common/codec-protobuf/dist/types",
         "tsConfig": "packages/common/codec-protobuf/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/codec-protobuf/src/index.ts"
+        ],
+        "outputPath": "packages/common/codec-protobuf/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -49,6 +62,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

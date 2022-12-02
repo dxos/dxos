@@ -3,7 +3,7 @@
 //
 
 import assert from 'node:assert';
-import { Transform } from 'stream';
+import { Transform } from 'node:stream';
 
 import { Event, Trigger } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';

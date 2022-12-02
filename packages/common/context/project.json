@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/context/src/index.ts",
-        "outputPath": "packages/common/context/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/common/context/dist/types",
         "tsConfig": "packages/common/context/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/context/src/index.ts"
+        ],
+        "outputPath": "packages/common/context/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -49,6 +58,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }
