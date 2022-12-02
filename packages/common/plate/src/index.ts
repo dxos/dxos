@@ -5,4 +5,4 @@ export * from './file/index';
 export * from './executeFileTemplate';
 export * from './executeDirectoryTemplate';
 export * from './templateLiterals';
-export * from './loadInputs';
+export * from './catFiles';

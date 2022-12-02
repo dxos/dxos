@@ -7,9 +7,9 @@
 import process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { catFiles } from './catFiles';
 
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
-import { loadInputs } from './loadInputs';
 import { logger } from './logger';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
@@ -113,10 +113,7 @@ const main = async () => {
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: await loadInputs(input.split(',')),
-          filterGlob: glob,
-          filterRegEx: filter ? new RegExp(filter) : undefined,
-          filterExclude: exclude ? new RegExp(exclude) : undefined,
+          input: input ? await catFiles(input?.split(',')) : {},
           parallel: !sequential,
           verbose,
           overwrite

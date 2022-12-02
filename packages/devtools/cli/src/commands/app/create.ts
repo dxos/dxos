@@ -12,6 +12,12 @@ import { executeDirectoryTemplate } from '@dxos/plate';
 
 import { BaseCommand } from '../../base-command';
 
+export const APP_TEMPLATES = [
+  'hello',
+  'bare',
+  'tasks'
+];
+
 export default class Create extends BaseCommand {
   static override description = 'Create a DXOS project.';
 
@@ -32,7 +38,7 @@ export default class Create extends BaseCommand {
       char: 't',
       description: 'Template to use when creating the project.',
       default: 'hello',
-      options: ['hello', 'bare']
+      options: APP_TEMPLATES
     })
   };
 
@@ -62,8 +68,8 @@ export default class Create extends BaseCommand {
       await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
 
       // Remove unneccessary files.
-      await rm(`${templateDirectory}/project.json`);
-      await rm(`${templateDirectory}/tsconfig.plate.json`);
+      // await rm(`${templateDirectory}/project.json`);
+      // await rm(`${templateDirectory}/tsconfig.plate.json`);
 
       this.log('Creating app...');
 
@@ -71,6 +77,7 @@ export default class Create extends BaseCommand {
       const result = await executeDirectoryTemplate({
         templateDirectory,
         outputDirectory,
+        verbose: false,
         input: {
           monorepo: false,
           name
