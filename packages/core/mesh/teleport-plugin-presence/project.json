@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/core/mesh/teleport-plugin-extension/src",
+  "sourceRoot": "packages/core/mesh/teleport-plugin-presence/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/core/mesh/teleport-plugin-extension/src/index.ts",
-        "outputPath": "packages/core/mesh/teleport-plugin-extension/dist/types",
-        "tsConfig": "packages/core/mesh/teleport-plugin-extension/tsconfig.json"
+        "main": "packages/core/mesh/teleport-plugin-presence/src/index.ts",
+        "outputPath": "packages/core/mesh/teleport-plugin-presence/dist/types",
+        "tsConfig": "packages/core/mesh/teleport-plugin-presence/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/core/mesh/teleport-plugin-extension/src/index.ts"
+          "packages/core/mesh/teleport-plugin-presence/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/teleport-plugin-extension/dist/lib",
+        "outputPath": "packages/core/mesh/teleport-plugin-presence/dist/lib",
         "platforms": [
           "browser",
           "node"
@@ -34,7 +34,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/mesh/teleport-plugin-extension/**/*.{ts,js}"
+          "packages/core/mesh/teleport-plugin-presence/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -47,14 +47,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/core/mesh/teleport-plugin-extension",
-        "outputPath": "tmp/mocha/packages/core/mesh/teleport-plugin-extension",
-        "resultsPath": "test-results/packages/core/mesh/teleport-plugin-extension",
+        "coveragePath": "coverage/packages/core/mesh/teleport-plugin-presence",
+        "outputPath": "tmp/mocha/packages/core/mesh/teleport-plugin-presence",
+        "resultsPath": "test-results/packages/core/mesh/teleport-plugin-presence",
         "testPatterns": [
-          "packages/core/mesh/teleport-plugin-extension/src/**/*.test.{ts,js}"
+          "packages/core/mesh/teleport-plugin-presence/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/core/mesh/teleport-plugin-extension/src/**/*"
+          "packages/core/mesh/teleport-plugin-presence/src/**/*"
         ]
       },
       "outputs": [
