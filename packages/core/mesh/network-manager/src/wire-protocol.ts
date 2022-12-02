@@ -7,6 +7,7 @@ import { Duplex } from 'node:stream';
 import { discoveryKey } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
+import { Teleport } from '@dxos/teleport';
 
 import { MeshProtocolProvider } from './protocol-factory';
 
@@ -49,3 +50,24 @@ export const adaptProtocolProvider =
       protocol
     };
   };
+
+/**
+ * Create a wire-protocol provider backed by a teleport instance.
+ * @param onConnection Called after teleport is initialized for the session. Protocol extensions could be attached here.
+ * @returns 
+ */
+export const createTeleportProtocolFactory = (onConnection: (teleport: Teleport) => Promise<void>): WireProtocolProvider => {
+  return params => {
+    const teleport = new Teleport(params);
+    return {
+      stream: teleport.stream,
+      initialize: async () => {
+        await teleport.open();
+        await onConnection(teleport);
+      },
+      destroy: async () => {
+        await teleport.close();
+      },
+    }
+  }
+}

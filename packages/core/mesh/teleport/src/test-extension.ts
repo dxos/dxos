@@ -21,7 +21,9 @@ export class TestExtension implements TeleportExtension {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this.extensionContext = context;
     this._rpc = createProtoRpcPeer<{ TestService: TestService }, { TestService: TestService }>({
-      port: context.createPort('rpc'),
+      port: context.createPort('rpc', {
+        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+      }),
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },

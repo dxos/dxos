@@ -4,33 +4,36 @@
 
 import assert from 'assert';
 
-import { sleep, Trigger } from '@dxos/async';
+import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { generatePasscode } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  adaptProtocolProvider,
-  createProtocolFactory,
+  createTeleportProtocolFactory,
   NetworkManager,
   StarTopology,
   SwarmConnection
 } from '@dxos/network-manager';
-import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { createProtoRpcPeer } from '@dxos/rpc';
 
+import { Context } from '@dxos/context';
+import {
+  AuthenticationRequest,
+  HaloAdmissionCredentials,
+  HaloAdmissionOffer,
+  HaloHostService
+} from '@dxos/protocols/proto/dxos/halo/invitations';
+import { ExtensionContext } from '@dxos/teleport';
 import { IdentityManager } from '../identity';
 import {
-  AuthenticatingInvitationProvider,
-  CancellableInvitationObservable,
-  InvitationObservableProvider,
-  AUTHENTICATION_CODE_LENGTH,
-  INVITATION_TIMEOUT,
+  AuthenticatingInvitationProvider, AUTHENTICATION_CODE_LENGTH, CancellableInvitationObservable,
+  InvitationObservableProvider, INVITATION_TIMEOUT,
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
+import { RpcExtension } from './rpc-extension';
 
 /**
  * Handles the life-cycle of Halo invitations between peers.
@@ -61,95 +64,103 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
     };
 
+    const ctx = new Context({
+      onError: (err) => {
+        observable.callback.onError(err);
+      }
+    });
+
     // TODO(burdon): Stop anything pending.
     const observable = new InvitationObservableProvider(async () => {
+      await ctx.dispose();
       await swarmConnection?.close();
     });
 
     let authenticationCode: string;
     const complete = new Trigger<PublicKey>();
-    const plugin = new RpcPlugin(async (port) => {
-      const peer = createProtoRpcPeer({
-        exposed: {
-          HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
+
+    // Called for every connecting peer.
+    const createExtension = (): HostHaloInvitationExtension => {
+      const hostInvitationExtension = new HostHaloInvitationExtension({
+        requestAdmission: async () => {
+          log('responding with admission offer', {
+            host: identity.deviceKey
+          });
+
+          // TODO(burdon): Is this the right place to set this state?
+          observable.callback.onAuthenticating?.(invitation);
+          return {
+            identityKey: identity.identityKey,
+            haloSpaceKey: identity.haloSpaceKey,
+            genesisFeedKey: identity.haloGenesisFeedKey
+          };
         },
-        handlers: {
-          HaloHostService: {
-            requestAdmission: async () => {
-              log('responding with admission offer', {
-                host: identity.deviceKey
-              });
 
-              // TODO(burdon): Is this the right place to set this state?
-              observable.callback.onAuthenticating?.(invitation);
-              return {
-                identityKey: identity.identityKey,
-                haloSpaceKey: identity.haloSpaceKey,
-                genesisFeedKey: identity.haloGenesisFeedKey
-              };
-            },
+        authenticate: async ({ authenticationCode: code }) => {
+          log('received authentication request', { authenticationCode: code });
+          authenticationCode = code;
+        },
 
-            authenticate: async ({ authenticationCode: code }) => {
-              log('received authentication request', { authenticationCode: code });
-              authenticationCode = code;
-            },
-
-            // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
-            presentAdmissionCredentials: async (credentials) => {
-              try {
-                // Check authenticated.
-                if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-                  if (
-                    invitation.authenticationCode === undefined ||
-                    authenticationCode !== invitation.authenticationCode
-                  ) {
-                    throw new Error('authentication code not set');
-                  }
-                }
-
-                log('writing guest credentials', { host: identity.deviceKey, guest: credentials.deviceKey });
-                // TODO(burdon): Check if already admitted.
-                await identity.admitDevice(credentials);
-
-                // Updating credentials complete.
-                complete.wake(credentials.deviceKey);
-              } catch (err) {
-                // TODO(burdon): Generic RPC callback to report error to client.
-                observable.callback.onError(err);
-                throw err; // Propagate error to guest.
+        // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
+        presentAdmissionCredentials: async (credentials) => {
+          try {
+            // Check authenticated.
+            if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+              if (
+                invitation.authenticationCode === undefined ||
+                authenticationCode !== invitation.authenticationCode
+              ) {
+                throw new Error('authentication code not set');
               }
             }
+
+            log('writing guest credentials', { host: identity.deviceKey, guest: credentials.deviceKey });
+            // TODO(burdon): Check if already admitted.
+            await identity.admitDevice(credentials);
+
+            // Updating credentials complete.
+            complete.wake(credentials.deviceKey);
+          } catch (err) {
+            // TODO(burdon): Generic RPC callback to report error to client.
+            observable.callback.onError(err);
+            throw err; // Propagate error to guest.
           }
         },
-        port
-      });
-
-      try {
-        await peer.open();
-        log('connected', { host: identity.deviceKey });
-        observable.callback.onConnected?.(invitation);
-        const deviceKey = await complete.wait({ timeout });
-        log('admitted guest', { host: identity.deviceKey, guest: deviceKey });
-        observable.callback.onSuccess(invitation);
-      } catch (err) {
-        if (!observable.cancelled) {
-          log.error('failed', err);
-          observable.callback.onError(err);
+        onOpen: () => {
+          scheduleTask(ctx, async () => {
+            try {
+              log('connected', { host: identity.deviceKey });
+              observable.callback.onConnected?.(invitation);
+              const deviceKey = await complete.wait({ timeout });
+              log('admitted guest', { host: identity.deviceKey, guest: deviceKey });
+              observable.callback.onSuccess(invitation);
+            } catch (err) {
+              if (!observable.cancelled) {
+                log.error('failed', err);
+                observable.callback.onError(err);
+              }
+            } finally {
+              // NOTE: If we close immediately after `complete` trigger finishes, Guest won't receive the reply to the last RPC.
+              // TODO(dmaretskyi): Implement a soft-close which waits for the last connection to terminate before closing. 
+              await sleep(ON_CLOSE_DELAY);
+              await ctx.dispose();
+              hostInvitationExtension.close();
+              await swarmConnection!.close();
+            }
+          })
         }
-      } finally {
-        await sleep(ON_CLOSE_DELAY);
-        await peer.close();
-        await swarmConnection!.close();
-      }
-    });
+      });
+      return hostInvitationExtension;
+    }
 
-    setTimeout(async () => {
+    scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
-      const peerId = PublicKey.random(); // Use anonymous key.
       swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
-        protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
+        protocolProvider: createTeleportProtocolFactory(async teleport => {
+          teleport.addExtension('dxos.halo.invitations', createExtension());
+        }),
         topology: new StarTopology(topic)
       });
 
@@ -168,9 +179,16 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     const { timeout = INVITATION_TIMEOUT } = options ?? {};
     let swarmConnection: SwarmConnection | undefined;
 
+    const ctx = new Context({
+      onError: (err) => {
+        observable.callback.onError(err);
+      }
+    });
+
     const authenticated = new Trigger<string>();
     const observable = new AuthenticatingInvitationProvider({
       onCancel: async () => {
+        await ctx.dispose();
         await swarmConnection?.close();
       },
 
@@ -182,71 +200,72 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
     let connectionCount = 0;
     const complete = new Trigger<PublicKey>();
-    const plugin = createRpcPlugin(async (port) => {
-      const peer = createProtoRpcPeer({
-        requested: {
-          HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
-        },
-        port
-      });
+    const createExtension = (): GuestHaloInvitationExtension => {
+      const extension = new GuestHaloInvitationExtension({
+        onOpen: () => {
+          scheduleTask(ctx, async () => {
+            try {
+              // TODO(burdon): Bug where guest may create multiple connections.
+              if (++connectionCount > 1) {
+                throw new Error(`multiple connections detected: ${connectionCount}`);
+              }
 
-      try {
-        await peer.open();
-        // TODO(burdon): Bug where guest may create multiple connections.
-        if (++connectionCount > 1) {
-          throw new Error(`multiple connections detected: ${connectionCount}`);
+              log('connected');
+              observable.callback.onConnected?.(invitation);
+
+              // 1. Send request.
+              log('sending admission request');
+              const { identityKey, haloSpaceKey, genesisFeedKey } = await extension.rpc.HaloHostService.requestAdmission();
+
+              // 2. Get authentication code.
+              // TODO(burdon): Test timeout (options for timeouts at different steps).
+              if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+                log('guest waiting for authentication code...');
+                observable.callback.onAuthenticating?.(invitation);
+                const authenticationCode = await authenticated.wait({ timeout });
+                log('sending authentication request');
+                await extension.rpc.HaloHostService.authenticate({ authenticationCode });
+              }
+
+              // 3. Create local identity.
+              // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
+              const identity = await this._identityManager.acceptIdentity({
+                identityKey,
+                haloSpaceKey,
+                haloGenesisFeedKey: genesisFeedKey
+              });
+
+              // 4. Send admission credentials to host (with local identity keys).
+              log('presenting admission credentials', { guest: identity.deviceKey, identityKey });
+              await extension.rpc.HaloHostService.presentAdmissionCredentials(identity.getAdmissionCredentials());
+
+              // 5. Success.
+              log('admitted by host', { guest: identity.deviceKey, identityKey });
+              complete.wake(identityKey);
+            } catch (err) {
+              if (!observable.cancelled) {
+                log.warn('failed', err);
+                observable.callback.onError(err);
+              }
+            } finally {
+              await ctx.dispose();
+              await extension.close();
+            }
+          })
         }
+      })
+      return extension;
+    }
 
-        log('connected');
-        observable.callback.onConnected?.(invitation);
-
-        // 1. Send request.
-        log('sending admission request');
-        const { identityKey, haloSpaceKey, genesisFeedKey } = await peer.rpc.HaloHostService.requestAdmission();
-
-        // 2. Get authentication code.
-        // TODO(burdon): Test timeout (options for timeouts at different steps).
-        if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-          log('guest waiting for authentication code...');
-          observable.callback.onAuthenticating?.(invitation);
-          const authenticationCode = await authenticated.wait({ timeout });
-          log('sending authentication request');
-          await peer.rpc.HaloHostService.authenticate({ authenticationCode });
-        }
-
-        // 3. Create local identity.
-        // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
-        const identity = await this._identityManager.acceptIdentity({
-          identityKey,
-          haloSpaceKey,
-          haloGenesisFeedKey: genesisFeedKey
-        });
-
-        // 4. Send admission credentials to host (with local identity keys).
-        log('presenting admission credentials', { guest: identity.deviceKey, identityKey });
-        await peer.rpc.HaloHostService.presentAdmissionCredentials(identity.getAdmissionCredentials());
-
-        // 5. Success.
-        log('admitted by host', { guest: identity.deviceKey, identityKey });
-        complete.wake(identityKey);
-      } catch (err) {
-        if (!observable.cancelled) {
-          log.warn('failed', err);
-          observable.callback.onError(err);
-        }
-      } finally {
-        await peer.close();
-      }
-    });
-
-    setTimeout(async () => {
+    scheduleTask(ctx, async () => {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
-      const peerId = PublicKey.random(); // Use anonymous key.
       swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
-        protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
+        protocolProvider: createTeleportProtocolFactory(async teleport => {
+          teleport.addExtension('dxos.halo.invitations', createExtension());
+        }),
         topology: new StarTopology(topic)
       });
 
@@ -257,5 +276,79 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     });
 
     return observable;
+  }
+}
+
+type HostHaloInvitationExtensionCallbacks = {
+  requestAdmission: () => Promise<HaloAdmissionOffer>;
+  authenticate: (request: AuthenticationRequest) => Promise<void>;
+  presentAdmissionCredentials: (request: HaloAdmissionCredentials) => Promise<void>;
+  // Deliberately not async to not block the extensions opening.
+  onOpen: () => void;
+};
+
+/**
+ * Host's side for a connection to a concrete peer in p2p network during invitation.
+ */
+class HostHaloInvitationExtension extends RpcExtension<{}, { HaloHostService: HaloHostService }> {
+  constructor(private readonly _callbacks: HostHaloInvitationExtensionCallbacks) {
+    super({
+      exposed: {
+        HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
+      }
+    });
+  }
+
+  protected override async getHandlers(): Promise<{ HaloHostService: HaloHostService }> {
+    return {
+      // TODO(dmaretskyi): For now this is just forwarding the data to callbacks since we don't have session-specific logic.
+      // Perhaps in the future we will have more complex logic here.
+      HaloHostService: {
+        requestAdmission: async () => {
+          return this._callbacks.requestAdmission();
+        },
+
+        authenticate: async (credentials) => {
+          await this._callbacks.authenticate(credentials);
+        },
+
+        // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
+        presentAdmissionCredentials: async (credentials) => {
+          return this._callbacks.presentAdmissionCredentials(credentials);
+        }
+      }
+    };
+  }
+
+  override async onOpen(context: ExtensionContext) {
+    await super.onOpen(context);
+    this._callbacks.onOpen();
+  }
+}
+
+type GuestHaloInvitationExtensionCallbacks = {
+  // Deliberately not async to not block the extensions opening.
+  onOpen: () => void;
+}
+
+/**
+ * Guest's side for a connection to a concrete peer in p2p network during invitation.
+ */
+class GuestHaloInvitationExtension extends RpcExtension<{ HaloHostService: HaloHostService }, {}> {
+  constructor(private readonly _callbacks: GuestHaloInvitationExtensionCallbacks) {
+    super({
+      requested: {
+        HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
+      }
+    });
+  }
+
+  protected override async getHandlers() {
+    return {}
+  }
+
+  override async onOpen(context: ExtensionContext) {
+    await super.onOpen(context);
+    this._callbacks.onOpen();
   }
 }
