@@ -58,7 +58,7 @@
     "network-generator": "packages/core/mesh/network-generator",
     "network-manager": "packages/core/mesh/network-manager",
     "object-model": "packages/core/echo/object-model",
-    "plate": "packages/devtools/plate",
+    "plate": "packages/common/plate",
     "playwright": "tools/executors/playwright",
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-test": "tools/protobuf-test",
