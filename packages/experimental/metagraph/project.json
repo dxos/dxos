@@ -14,20 +14,21 @@
       ]
     },
     "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx compile-lib metagraph",
-          "nx compile-testing metagraph"
-        ],
-        "parallel": true
-      },
-      "outputs": [
-        "packages/experimental/metagraph/dist/lib",
-        "packages/experimental/metagraph/dist/testing"
-      ]
+          "true"
+        ]
+      }
     },
     "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -39,7 +40,10 @@
         "{options.outputPath}"
       ]
     },
-    "compile-testing": {
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
