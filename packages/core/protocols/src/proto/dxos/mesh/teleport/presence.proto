@@ -19,5 +19,5 @@ message PeerState {
 }
 
 service PresenceService {
-  rpc Announce(PeerState) returns (google.protobuf.Emopty);
+  rpc Announce(PeerState) returns (google.protobuf.Empty);
 }
