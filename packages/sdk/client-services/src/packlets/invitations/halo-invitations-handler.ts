@@ -50,7 +50,6 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
   createInvitation(context: void, options?: InvitationsOptions): CancellableInvitationObservable {
-    let swarmConnection: SwarmConnection | undefined;
     const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
     const identity = this._identityManager.identity ?? failUndefined();
@@ -64,6 +63,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
     const ctx = new Context({
       onError: (err) => {
+        ctx.dispose();
         observable.callback.onError(err);
       }
     });
@@ -71,7 +71,6 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     // TODO(burdon): Stop anything pending.
     const observable = new InvitationObservableProvider(async () => {
       await ctx.dispose();
-      await swarmConnection?.close();
     });
 
     let authenticationCode: string;
@@ -139,8 +138,6 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               // TODO(dmaretskyi): Implement a soft-close which waits for the last connection to terminate before closing.
               await sleep(ON_CLOSE_DELAY);
               await ctx.dispose();
-              hostInvitationExtension.close();
-              await swarmConnection!.close();
             }
           });
         }
@@ -150,7 +147,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
-      swarmConnection = await this._networkManager.joinSwarm({
+      const swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
@@ -158,6 +155,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
         }),
         topology: new StarTopology(topic)
       });
+      ctx.onDispose(() => swarmConnection.close())
 
       observable.callback.onConnecting?.(invitation);
     });
@@ -172,10 +170,10 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
    */
   acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationProvider {
     const { timeout = INVITATION_TIMEOUT } = options ?? {};
-    let swarmConnection: SwarmConnection | undefined;
 
     const ctx = new Context({
       onError: (err) => {
+        ctx.dispose();
         observable.callback.onError(err);
       }
     });
@@ -184,7 +182,6 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     const observable = new AuthenticatingInvitationProvider({
       onCancel: async () => {
         await ctx.dispose();
-        await swarmConnection?.close();
       },
 
       // TODO(burdon): Consider retry.
@@ -245,7 +242,6 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               }
             } finally {
               await ctx.dispose();
-              await extension.close();
             }
           });
         }
@@ -256,7 +252,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     scheduleTask(ctx, async () => {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
-      swarmConnection = await this._networkManager.joinSwarm({
+      const swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
@@ -264,11 +260,12 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
         }),
         topology: new StarTopology(topic)
       });
+      ctx.onDispose(() => swarmConnection.close());
 
       observable.callback.onConnecting?.(invitation);
       invitation.identityKey = await complete.wait();
       observable.callback.onSuccess(invitation);
-      await swarmConnection.close();
+      await ctx.dispose();
     });
 
     return observable;
