@@ -14,20 +14,21 @@
       ]
     },
     "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx compile-lib react-ui",
-          "nx compile-plugin react-ui"
-        ],
-        "parallel": true
-      },
-      "outputs": [
-        "packages/common/react-ui/dist/lib",
-        "packages/common/react-ui/dist/plugin"
-      ]
+          "true"
+        ]
+      }
     },
     "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -42,7 +43,10 @@
         "{options.outputPath}"
       ]
     },
-    "compile-plugin": {
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [

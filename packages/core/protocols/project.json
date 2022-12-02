@@ -2,21 +2,6 @@
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "dependsOn": [
-        "^build",
-        "prebuild"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx compile protocols"
-        ]
-      },
-      "outputs": [
-        "packages/core/protocols/dist"
-      ]
-    },
     "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
