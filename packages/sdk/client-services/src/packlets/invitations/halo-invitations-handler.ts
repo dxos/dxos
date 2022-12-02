@@ -10,7 +10,7 @@ import { generatePasscode } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
+import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
@@ -63,7 +63,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
     const ctx = new Context({
       onError: (err) => {
-        ctx.dispose();
+        void ctx.dispose();
         observable.callback.onError(err);
       }
     });
@@ -155,7 +155,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
         }),
         topology: new StarTopology(topic)
       });
-      ctx.onDispose(() => swarmConnection.close())
+      ctx.onDispose(() => swarmConnection.close());
 
       observable.callback.onConnecting?.(invitation);
     });
@@ -173,7 +173,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
     const ctx = new Context({
       onError: (err) => {
-        ctx.dispose();
+        void ctx.dispose();
         observable.callback.onError(err);
       }
     });
