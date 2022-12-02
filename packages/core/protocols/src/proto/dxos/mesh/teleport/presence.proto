@@ -1,0 +1,23 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "dxos/keys.proto";
+
+package dxos.mesh.teleport.presence;
+
+message PeerState {
+  dxos.keys.PublicKey peerId = 1;
+  /// Will be used to build network graph
+  repeated dxos.keys.PublicKey connections = 2; 
+  /// To not resend the message you had already sent
+  dxos.keys.PublicKey messageId = 3;
+  google.protobuf.Timestamp timestamp = 4;
+}
+
+service PresenceService {
+  rpc Announce(PeerState) returns (google.protobuf.Emopty);
+}
