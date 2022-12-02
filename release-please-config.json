@@ -127,6 +127,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/plate/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/random-access-storage/package.json",
           "jsonpath": "$.version"
         },
@@ -298,11 +303,6 @@
         {
           "type": "json",
           "path": "packages/devtools/devtools/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/plate/package.json",
           "jsonpath": "$.version"
         },
         {
