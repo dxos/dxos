@@ -2,20 +2,6 @@
   "sourceRoot": "tools/executors/toolbox/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx compile toolbox"
-        ]
-      },
-      "outputs": [
-        "tools/executors/toolbox/dist"
-      ]
-    },
     "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
