@@ -1,12 +1,12 @@
 {
-  "sourceRoot": "packages/devtools/plate/src",
+  "sourceRoot": "packages/common/plate/src",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/devtools/plate/src/index.ts",
-        "outputPath": "packages/devtools/plate/dist/types",
-        "tsConfig": "packages/devtools/plate/tsconfig.json"
+        "main": "packages/common/plate/src/index.ts",
+        "outputPath": "packages/common/plate/dist/types",
+        "tsConfig": "packages/common/plate/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -16,10 +16,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/devtools/plate/src/index.ts",
-          "packages/devtools/plate/src/main.ts"
+          "packages/common/plate/src/index.ts",
+          "packages/common/plate/src/main.ts"
         ],
-        "outputPath": "packages/devtools/plate/dist/lib",
+        "outputPath": "packages/common/plate/dist/lib",
         "platforms": [
           "node"
         ]
@@ -42,7 +42,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/devtools/plate/**/*.{ts,js}"
+          "packages/common/plate/**/*.{ts,js}"
         ]
       },
       "outputs": [
