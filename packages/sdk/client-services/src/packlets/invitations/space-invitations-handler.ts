@@ -62,6 +62,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
       spaceKey: space.key,
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
     };
+    log('createInvitation', { invitation });
 
     // TODO(burdon): Stop anything pending.
     const observable = new InvitationObservableProvider(async () => {

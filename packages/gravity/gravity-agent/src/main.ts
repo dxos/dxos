@@ -9,20 +9,24 @@ import process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { ConfigProto } from '@dxos/config';
+import { TestBuilder } from '@dxos/client/testing';
+import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
+import { ProtoCodec } from '@dxos/codec-protobuf';
 
 import { Agent } from './agent';
-
-
+import { TestStateMachineFactory } from './statemachine';
+import { schema } from '@dxos/protocols';
 // TODO(burdon): Logging meta doesn't work when running from pnpm agent.
 log.config({
-  filter: 0
+  filter: 'info'
 });
 
+const parseYamlWithSchema = <T>(codec: ProtoCodec<T>, yamlSource: string): T => codec.fromObject(yaml.load(yamlSource));
+
 const main = () => {
-  const r = yargs(hideBin(process.argv))
+  const parser = yargs(hideBin(process.argv))
     .scriptName('agent')
     .option('json', {
       type: 'boolean'
@@ -34,10 +38,12 @@ const main = () => {
       type: 'string',
       default: join(process.cwd(), './config/config.yml')
     })
-    .option('spec', { // TODO(burdon): Define protobuf type.
+    // TODO(burdon): Define protobuf type.
+    .option('spec', {
       type: 'string',
       default: join(process.cwd(), './config/spec.yml')
     })
+
     .command({
       command: 'start',
       handler: async ({
@@ -49,26 +55,35 @@ const main = () => {
         config: string;
         spec: string;
       }) => {
-        
-        const config: ConfigProto = yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
-        if (verbose) {
-          log('config', { config });
-        }
+        try {
+          const config: ConfigProto = yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
+          if (verbose) {
+            log.info('config', { config });
+          }
 
-        const spec: AgentSpec = yaml.load(fs.readFileSync(specFilepath).toString()) as ConfigProto;
-        if (verbose) {
-          log('spec', { spec });
+          const spec: AgentSpec = parseYamlWithSchema(
+            schema.getCodecForType('dxos.gravity.AgentSpec'),
+            fs.readFileSync(specFilepath).toString()
+          );
+          if (verbose) {
+            log.info('spec', { spec });
+          }
+          const testBuilder = new TestBuilder(new Config(config));
+          const services = testBuilder.createClientServicesHost();
+          const stateMachine = TestStateMachineFactory(spec.stateMachine!);
+          const agent = await new Agent({ config, services, spec, stateMachine });
+          await agent.initialize();
+          await agent.start();
+          log.info('Done');
+        } catch (err: any) {
+          log.error(err);
+          process.exit(1);
         }
-
-        // TODO(burdon): Start with config; e.g., create party and invitation from pre-configured swarm.
-        const agent = await new Agent({ config, spec });
-        await agent.initialize();
-        await agent.start();
-        
       }
-    })
-    .help().argv;
-    
+    });
+
+  parser.parse();
+  log('Tests are running...');
 };
 
 void main();

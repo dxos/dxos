@@ -47,9 +47,9 @@ message CreateSpaceCommand {
 
 message CreateSpaceInvitationCommand {
   string id = 1;
-  dxos.keys.PublicKey swarm_key = 2;
+  string swarm_key = 2;
 }
 
 message AcceptSpaceInvitationCommand {
-  dxos.keys.PublicKey swarm_key = 1;
+  string swarm_key = 1;
 }

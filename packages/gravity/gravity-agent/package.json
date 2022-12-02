@@ -18,12 +18,12 @@
   ],
   "scripts": {
     "agent": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.ts",
-    "build": "tsc",
     "check": "true"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
