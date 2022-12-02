@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as protobuf from 'protobufjs';
+import pb from 'protobufjs';
 
-export const encodeProtobuf = (root: protobuf.Root): string => JSON.stringify(root.toJSON());
+export const encodeProtobuf = (root: pb.Root): string => JSON.stringify(root.toJSON());
 
-export const decodeProtobuf = (json: string): protobuf.Root => protobuf.Root.fromJSON(JSON.parse(json));
+export const decodeProtobuf = (json: string): pb.Root => pb.Root.fromJSON(JSON.parse(json));

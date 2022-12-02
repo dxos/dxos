@@ -6,13 +6,22 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "type": "module",
   "main": "dist/lib/browser.js",
   "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/lib/browser.js",
+      "types": "./src/index.ts"
+    },
+    "./plugin": {
+      "import": "./dist/plugin/node/plugin.js",
+      "types": "./src/plugin.ts"
+    }
+  },
   "files": [
     "dist",
-    "src",
-    "plugin.js",
-    "plugin.d.ts"
+    "src"
   ],
   "dependencies": {
     "@fontsource/fira-code": "^4.5.12",
@@ -56,6 +65,16 @@
   },
   "publishConfig": {
     "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "types": "dist/types/src/index.d.ts",
+    "exports": {
+      ".": {
+        "import": "./dist/lib/browser.js",
+        "types": "./dist/types/src/index.d.ts"
+      },
+      "./plugin": {
+        "import": "./dist/plugin/node/plugin.js",
+        "types": "./dist/types/src/plugin.d.ts"
+      }
+    }
   }
 }

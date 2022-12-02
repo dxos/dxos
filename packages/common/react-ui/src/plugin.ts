@@ -8,7 +8,7 @@ import { resolve } from 'path';
 import tailwindcss from 'tailwindcss';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
-import tailwindColors from 'tailwindcss/colors';
+import tailwindColors from 'tailwindcss/colors.js';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Plugin } from 'vite';
 

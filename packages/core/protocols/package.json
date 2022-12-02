@@ -1,6 +1,7 @@
 {
   "name": "@dxos/protocols",
   "version": "0.1.13",
+  "type": "module",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

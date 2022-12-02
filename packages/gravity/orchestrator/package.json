@@ -6,6 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "type": "module",
   "scripts": {
     "multi-item-stress": "NODE_ENV=production node -r @swc-node/register src/multi-item-stress.ts",
     "multi-item-stress-profile": "NODE_ENV=production node --inspect-brk -r @swc-node/register src/multi-item-stress.ts",

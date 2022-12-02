@@ -6,6 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "type": "module",
   "main": "dist/lib/node.js",
   "browser": {
     "node:assert": "assert",
@@ -13,10 +14,14 @@
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
   "types": "src/index.ts",
+  "exports": {
+    ".": "./dist/lib/node.js",
+    "./esbuild-plugin": "./dist/plugin/node/esbuild-plugin.js",
+    "./rollup-plugin": "./dist/plugin/node/rollup-plugin.js"
+  },
   "files": [
     "dist",
-    "esbuild-plugin.js",
-    "rollup-plugin.js"
+    "src"
   ],
   "scripts": {
     "test-build": "node ./src/testing/build.js"

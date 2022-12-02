@@ -8,6 +8,7 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "deploy": "dx app publish",

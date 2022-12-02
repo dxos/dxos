@@ -8,6 +8,7 @@
   "repository": "dxos/dxos.git",
   "license": "MIT",
   "author": "DXOS.org",
+  "type": "module",
   "files": [
     "dist",
     "src"

@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import protobufjs, { IConversionOptions } from 'protobufjs';
+import pb from 'protobufjs';
 
 import { EncodingOptions } from './common';
 import { BidirectionalMapingDescriptors } from './mapping';
 import { createMessageMapper, Mapper } from './precompiled-mapping/create-message-mapper';
 import type { Schema } from './schema';
 
-export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
+export const OBJECT_CONVERSION_OPTIONS: pb.IConversionOptions = {
   // Represent long integers as strings.
   longs: String,
 
@@ -33,7 +33,7 @@ export class ProtoCodec<T = any> implements Codec<T> {
   private readonly _decodeMapper: Mapper;
 
   constructor(
-    private readonly _type: protobufjs.Type,
+    private readonly _type: pb.Type,
     private readonly _mapping: BidirectionalMapingDescriptors,
     private readonly _schema: Schema<any>
   ) {
@@ -44,7 +44,7 @@ export class ProtoCodec<T = any> implements Codec<T> {
   /**
    * Underlying protobuf.js type descriptor.
    */
-  get protoType(): protobufjs.Type {
+  get protoType(): pb.Type {
     return this._type;
   }
 

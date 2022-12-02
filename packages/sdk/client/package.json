@@ -7,6 +7,7 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "type": "module",
   "main": "dist/lib/node/index.js",
   "browser": {
     "node:assert": "assert",

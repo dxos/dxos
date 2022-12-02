@@ -40,7 +40,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         entryPoints: options.entryPoints,
         outdir,
         outfile,
-        format: 'cjs',
+        format: 'esm',
         write: true,
         sourcemap: options.sourcemap,
         metafile: options.metafile,
