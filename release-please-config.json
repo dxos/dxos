@@ -288,6 +288,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mesh/teleport-plugin-presence/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/teleport-plugin-replicator/package.json",
           "jsonpath": "$.version"
         },

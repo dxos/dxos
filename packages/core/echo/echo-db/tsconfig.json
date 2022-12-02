@@ -78,7 +78,7 @@
       "path": "../../mesh/teleport"
     },
     {
-      "path": "../../mesh/teleport-plugin-replicator"
+      "path": "../../mesh/teleport-plugin-presence"
     },
     {
       "path": "../../protocols"
