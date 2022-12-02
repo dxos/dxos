@@ -54,10 +54,12 @@ export const adaptProtocolProvider =
 /**
  * Create a wire-protocol provider backed by a teleport instance.
  * @param onConnection Called after teleport is initialized for the session. Protocol extensions could be attached here.
- * @returns 
+ * @returns
  */
-export const createTeleportProtocolFactory = (onConnection: (teleport: Teleport) => Promise<void>): WireProtocolProvider => {
-  return params => {
+export const createTeleportProtocolFactory = (
+  onConnection: (teleport: Teleport) => Promise<void>
+): WireProtocolProvider => {
+  return (params) => {
     const teleport = new Teleport(params);
     return {
       stream: teleport.stream,
@@ -67,7 +69,7 @@ export const createTeleportProtocolFactory = (onConnection: (teleport: Teleport)
       },
       destroy: async () => {
         await teleport.close();
-      },
-    }
-  }
-}
+      }
+    };
+  };
+};

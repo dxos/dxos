@@ -1,9 +1,13 @@
-import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from "@dxos/rpc";
-import { ExtensionContext, TeleportExtension } from "@dxos/teleport";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
+import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
 
 export abstract class RpcExtension<Client, Server> implements TeleportExtension {
   private _extensionContext!: ExtensionContext;
-  private _rpc!: ProtoRpcPeer<Client>
+  private _rpc!: ProtoRpcPeer<Client>;
 
   constructor(private readonly _params: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
 
@@ -36,7 +40,7 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
     this._rpc = createProtoRpcPeer({
       ...this._params,
       handlers,
-      port,
+      port
     });
 
     await this._rpc.open();

@@ -5,20 +5,14 @@
 import assert from 'assert';
 
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  createTeleportProtocolFactory,
-  NetworkManager,
-  StarTopology,
-  SwarmConnection
-} from '@dxos/network-manager';
+import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-
-import { Context } from '@dxos/context';
 import {
   AuthenticationRequest,
   HaloAdmissionCredentials,
@@ -26,10 +20,14 @@ import {
   HaloHostService
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext } from '@dxos/teleport';
+
 import { IdentityManager } from '../identity';
 import {
-  AuthenticatingInvitationProvider, AUTHENTICATION_CODE_LENGTH, CancellableInvitationObservable,
-  InvitationObservableProvider, INVITATION_TIMEOUT,
+  AuthenticatingInvitationProvider,
+  AUTHENTICATION_CODE_LENGTH,
+  CancellableInvitationObservable,
+  InvitationObservableProvider,
+  INVITATION_TIMEOUT,
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
@@ -106,10 +104,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
           try {
             // Check authenticated.
             if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-              if (
-                invitation.authenticationCode === undefined ||
-                authenticationCode !== invitation.authenticationCode
-              ) {
+              if (invitation.authenticationCode === undefined || authenticationCode !== invitation.authenticationCode) {
                 throw new Error('authentication code not set');
               }
             }
@@ -141,24 +136,24 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               }
             } finally {
               // NOTE: If we close immediately after `complete` trigger finishes, Guest won't receive the reply to the last RPC.
-              // TODO(dmaretskyi): Implement a soft-close which waits for the last connection to terminate before closing. 
+              // TODO(dmaretskyi): Implement a soft-close which waits for the last connection to terminate before closing.
               await sleep(ON_CLOSE_DELAY);
               await ctx.dispose();
               hostInvitationExtension.close();
               await swarmConnection!.close();
             }
-          })
+          });
         }
       });
       return hostInvitationExtension;
-    }
+    };
 
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
       swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
-        protocolProvider: createTeleportProtocolFactory(async teleport => {
+        protocolProvider: createTeleportProtocolFactory(async (teleport) => {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic)
@@ -215,7 +210,8 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
               // 1. Send request.
               log('sending admission request');
-              const { identityKey, haloSpaceKey, genesisFeedKey } = await extension.rpc.HaloHostService.requestAdmission();
+              const { identityKey, haloSpaceKey, genesisFeedKey } =
+                await extension.rpc.HaloHostService.requestAdmission();
 
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
@@ -251,11 +247,11 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               await ctx.dispose();
               await extension.close();
             }
-          })
+          });
         }
-      })
+      });
       return extension;
-    }
+    };
 
     scheduleTask(ctx, async () => {
       assert(invitation.swarmKey);
@@ -263,7 +259,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
       swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
-        protocolProvider: createTeleportProtocolFactory(async teleport => {
+        protocolProvider: createTeleportProtocolFactory(async (teleport) => {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic)
@@ -329,7 +325,7 @@ class HostHaloInvitationExtension extends RpcExtension<{}, { HaloHostService: Ha
 type GuestHaloInvitationExtensionCallbacks = {
   // Deliberately not async to not block the extensions opening.
   onOpen: () => void;
-}
+};
 
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.
@@ -344,7 +340,7 @@ class GuestHaloInvitationExtension extends RpcExtension<{ HaloHostService: HaloH
   }
 
   protected override async getHandlers() {
-    return {}
+    return {};
   }
 
   override async onOpen(context: ExtensionContext) {
