@@ -16,47 +16,53 @@ import {
 import { File } from './file';
 import { logger } from './logger';
 import { runPromises } from './runPromises';
+import { Config, loadConfig } from './config';
+import { inquire } from './zodInquire';
+import { includeExclude } from './includeExclude';
 
-export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /^index(\.d)?\.[tj]s/];
+export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions &
+  Config & {
+    templateDirectory: string;
 
-export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions & {
-  templateDirectory: string;
-  outputDirectory: string;
-  input?: Partial<TInput>;
-  parallel?: boolean;
-  filterGlob?: string;
-  filterRegEx?: RegExp;
-  filterExclude?: RegExp;
-  verbose?: boolean;
-  overwrite?: boolean;
-};
+    outputDirectory: string;
+    input?: Partial<TInput>;
+
+    parallel?: boolean;
+    verbose?: boolean;
+    overwrite?: boolean;
+    interactive?: boolean;
+  };
 
 export const executeDirectoryTemplate = async <TInput>(
   options: ExecuteDirectoryTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const {
-    templateDirectory,
-    filterRegEx,
-    filterExclude,
-    outputDirectory,
-    input,
-    filterGlob,
-    parallel = true,
-    verbose = false,
-    overwrite,
-    ...restOptions
-  } = options;
+  const { templateDirectory, outputDirectory } = options;
+  const mergedOptions = {
+    parallel: true,
+    verbose: false,
+    interactive: true,
+    ...(await loadConfig(templateDirectory)),
+    ...options
+  };
+  const { parallel, verbose, interactive, overwrite, inputShape, include, exclude, ...restOptions } = mergedOptions;
   const debug = logger(verbose);
-  debug(options);
-  const allFiles = (await readDir(templateDirectory)).filter(
-    (file) =>
-      !TEMPLATE_DIRECTORY_IGNORE.some((pattern) => pattern.test(file)) &&
-      (filterGlob ? minimatch(file, filterGlob) : filterRegEx ? filterRegEx.test(file) : true) &&
-      (filterExclude ? !filterExclude.test(file) : true)
-  );
-  debug('all files:\n', allFiles.join('\n'));
-  const templateFiles = allFiles.filter(isTemplateFile);
-  const regularFiles = allFiles.filter((file) => !isTemplateFile(file));
+  debug(mergedOptions);
+  let input = mergedOptions.input;
+  if (inputShape) {
+    const parse = inputShape.safeParse(input);
+    if (!parse.success && !interactive) throw new Error(parse.error.toString());
+    const inquired = await inquire(inputShape, {
+      defaults: input
+    });
+    const inquiredParsed = inputShape.safeParse(inquired);
+    if (!inquiredParsed.success) throw new Error(inquiredParsed.error.toString());
+    input = inquiredParsed.data as TInput;
+  }
+  debug({input});
+  const allFiles = await readDir(templateDirectory);
+  const filteredFiles = includeExclude(allFiles, { include, exclude });
+  const templateFiles = filteredFiles.filter(isTemplateFile);
+  const regularFiles = filteredFiles.filter((file) => !isTemplateFile(file));
   debug(`${templateFiles.length} template files:`);
   debug(templateFiles.join('\n'));
   debug(`${regularFiles.length} regular files:`);
@@ -64,12 +70,11 @@ export const executeDirectoryTemplate = async <TInput>(
   debug('executing templates...');
   const templatingPromises = templateFiles?.map((t) =>
     executeFileTemplate({
+      ...restOptions,
       templateFile: path.relative(templateDirectory, t),
       templateRelativeTo: templateDirectory,
-      outputDirectory,
       input,
       overwrite,
-      ...restOptions
     })
   );
   const runner = runPromises({

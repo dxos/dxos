@@ -8,7 +8,7 @@ import readDir from 'recursive-readdir';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { executeDirectoryTemplate, loadInputs } from '@dxos/plate';
+import { executeDirectoryTemplate, catFiles } from '@dxos/plate';
 
 const main = async () => {
   yargs(hideBin(process.argv))
@@ -25,7 +25,7 @@ const main = async () => {
             outputDirectory: pkg,
             overwrite: false,
             templateDirectory: path.resolve(__dirname, './template'),
-            input: await loadInputs(['package.json', 'README.yml'], {
+            input: await catFiles(['package.json', 'README.yml'], {
               relativeTo: pkg
             })
           })
