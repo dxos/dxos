@@ -45,7 +45,7 @@ export interface NavMenuSlots {
   viewport?: ComponentProps<typeof NavigationMenuPrimitive.Viewport>;
   list?: Omit<ComponentProps<typeof NavigationMenuPrimitive.List>, 'children'>;
   indicator?: Omit<ComponentProps<typeof NavigationMenuPrimitive.Indicator>, 'children'>;
-  indicatorIcon?: ComponentProps<'div'>;
+  indicatorIcon?: Pick<ComponentProps<'div'>, 'className'>;
 }
 
 export interface NavMenuProps {
@@ -171,7 +171,6 @@ export const NavMenu = ({ items, slots = {} }: NavMenuProps) => {
           )}
         >
           <div
-            {...slots?.indicatorIcon}
             className={mx(
               'top-1 relative bg-white dark:bg-neutral-750 w-2 h-2 rotate-45',
               slots.indicatorIcon?.className
