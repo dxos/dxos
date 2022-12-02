@@ -21,11 +21,13 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
+    "@dxos/util": "workspace:*",
     "assert": "^2.0.0"
   },
   "devDependencies": {
