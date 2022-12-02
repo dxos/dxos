@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/echo/messenger-model/src/index.ts",
-        "outputPath": "packages/core/echo/messenger-model/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/echo/messenger-model/dist/types",
         "tsConfig": "packages/core/echo/messenger-model/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/messenger-model/src/index.ts"
+        ],
+        "outputPath": "packages/core/echo/messenger-model/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -49,6 +58,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

@@ -2,16 +2,10 @@
   "sourceRoot": "packages/devtools/devtools-extension/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "dependsOn": [
-        "^build"
-      ],
+    "bundle": {
       "executor": "nx:run-script",
       "options": {
-        "script": "build",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ]
+        "script": "bundle"
       },
       "outputs": [
         "packages/devtools/devtools-extension/dist"

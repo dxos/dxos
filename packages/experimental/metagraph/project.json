@@ -6,11 +6,49 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/metagraph/src/index.ts",
-        "outputPath": "packages/experimental/metagraph/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/experimental/metagraph/dist/types",
         "tsConfig": "packages/experimental/metagraph/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile-lib metagraph",
+          "nx compile-testing metagraph"
+        ],
+        "parallel": true
+      },
+      "outputs": [
+        "packages/experimental/metagraph/dist/lib",
+        "packages/experimental/metagraph/dist/testing"
+      ]
+    },
+    "compile-lib": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/metagraph/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/metagraph/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-testing": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/metagraph/src/testing/index.ts"
+        ],
+        "outputPath": "packages/experimental/metagraph/dist/testing",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -49,6 +87,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

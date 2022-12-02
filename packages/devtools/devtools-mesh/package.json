@@ -6,8 +6,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/neutral.js",
+  "types": "src/index.ts",
   "scripts": {
     "book": "esbuild-server book"
   },
@@ -43,5 +43,8 @@
   },
   "peerDependencies": {
     "react": "*"
+  },
+  "publishConfig": {
+    "types": "dist/types/src/index.d.ts"
   }
 }

@@ -7,8 +7,8 @@
   "repository": "dxos/gem.git",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/neutral.js",
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src"
@@ -16,9 +16,6 @@
   "scripts": {
     "book": "esbuild-server book"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "assert": "^2.0.0",
     "csstype": "^3.0.10",
@@ -49,6 +46,7 @@
     "react-dom": "*"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

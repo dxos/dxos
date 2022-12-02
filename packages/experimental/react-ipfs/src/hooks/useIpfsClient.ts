@@ -3,8 +3,8 @@
 //
 
 import { CID, create } from 'ipfs-http-client';
-import path from 'path';
 import { useMemo } from 'react';
+import urlJoin from 'url-join';
 
 /**
  * Return URL to IPFS resource on local gateway.
@@ -14,7 +14,7 @@ import { useMemo } from 'react';
  */
 export const getIpfsUrl = (gateway: string, cid: CID, filename?: string) => {
   const args = filename ? [`filename=${encodeURI(filename)}`] : [];
-  return path.join(gateway, String(cid), '?', args.join('&'));
+  return urlJoin(gateway, String(cid), '?', args.join('&'));
 };
 
 /**

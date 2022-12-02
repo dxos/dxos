@@ -5,15 +5,54 @@
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "assets": [
+        "main": "packages/common/react-ui/src/index.ts",
+        "outputPath": "packages/common/react-ui/dist/types",
+        "tsConfig": "packages/common/react-ui/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile-lib react-ui",
+          "nx compile-plugin react-ui"
+        ],
+        "parallel": true
+      },
+      "outputs": [
+        "packages/common/react-ui/dist/lib",
+        "packages/common/react-ui/dist/plugin"
+      ]
+    },
+    "compile-lib": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/react-ui/src/index.ts"
+        ],
+        "outputPath": "packages/common/react-ui/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-plugin": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/react-ui/src/plugin.ts",
           "packages/common/react-ui/src/theme.css"
         ],
-        "main": "packages/common/react-ui/src/index.ts",
-        "outputPath": "packages/common/react-ui/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/common/react-ui/tsconfig.json"
+        "outputPath": "packages/common/react-ui/dist/plugin",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -45,5 +84,8 @@
         "uiFramework": "@storybook/react"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }

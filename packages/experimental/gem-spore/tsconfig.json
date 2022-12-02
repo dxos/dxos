@@ -5,7 +5,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "strict": false
   },
   "exclude": [

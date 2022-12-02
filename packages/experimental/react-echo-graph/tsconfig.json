@@ -6,7 +6,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "exclude": [
     "/node_modules/"

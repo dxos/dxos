@@ -6,11 +6,25 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/mesh/network-manager/src/index.ts",
-        "outputPath": "packages/core/mesh/network-manager/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/mesh/network-manager/dist/types",
         "tsConfig": "packages/core/mesh/network-manager/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/mesh/network-manager/src/index.ts",
+          "packages/core/mesh/network-manager/src/testing/index.ts"
+        ],
+        "outputPath": "packages/core/mesh/network-manager/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -56,6 +70,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

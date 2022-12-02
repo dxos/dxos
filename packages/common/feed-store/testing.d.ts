@@ -8,4 +8,4 @@
  * import { ... } from '@dxos/feed-store/testing';
  * ```
  */
-export * from './dist/src/testing';
+export * from './dist/types/src/testing';
