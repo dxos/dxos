@@ -14,10 +14,13 @@ import { PresenceExtension } from './presence-extension';
 /**
  * Simulates two peers connected via P2P network.
  */
-export const createStreamPair = async () => {
-  const peerId1 = PublicKey.random();
-  const peerId2 = PublicKey.random();
-
+export const createStreamPair = async ({
+  peerId1 = PublicKey.random(),
+  peerId2 = PublicKey.random()
+}: {
+  peerId1?: PublicKey;
+  peerId2?: PublicKey;
+} = {}) => {
   const peer1 = new Teleport({ initiator: true, localPeerId: peerId1, remotePeerId: peerId2 });
   const peer2 = new Teleport({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1 });
 
@@ -42,8 +45,8 @@ export const createStreamPair = async () => {
 /**
  * Two peers with presence extensions pre-registered.
  */
-export const createPresencePair = async () => {
-  const { peer1, peer2 } = await createStreamPair();
+export const createPresencePair = async (params: { peerId1?: PublicKey; peerId2?: PublicKey }) => {
+  const { peer1, peer2 } = await createStreamPair(params);
 
   const presence1 = new PresenceExtension();
   peer1.addExtension('dxos.mesh.teleport.replicator', presence1);
