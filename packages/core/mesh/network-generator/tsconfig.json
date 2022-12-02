@@ -1,7 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -16,6 +16,9 @@
   "references": [
     {
       "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/keys"
     },
     {
       "path": "../../../common/log"

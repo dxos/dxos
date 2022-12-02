@@ -3,6 +3,21 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build",
+        "prebuild"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile protocols"
+        ]
+      },
+      "outputs": [
+        "packages/core/protocols/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/protocols/src/index.ts",
@@ -41,8 +56,7 @@
     },
     "test": {
       "dependsOn": [
-        "^build",
-        "^bundle",
+        "^compile",
         "prebuild"
       ],
       "executor": "@dxos/test:run",

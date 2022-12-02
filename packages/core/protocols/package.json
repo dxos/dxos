@@ -7,10 +7,6 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/src/index.js",
-  "browser": {
-    "node:assert": "assert",
-    "node:util": "util"
-  },
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
@@ -21,9 +17,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/timeframe": "workspace:*",
-    "assert": "^2.0.0",
-    "util": "^0.12.4"
+    "@dxos/timeframe": "workspace:*"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

@@ -7,14 +7,15 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node.js",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "src/index.ts",
   "files": [
-    "dist",
-    "index.js"
+    "src",
+    "dist"
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -39,6 +40,7 @@
     "pump": "^3.0.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

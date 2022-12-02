@@ -6,10 +6,7 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/devtools/devtools/src/index.ts",
-        "outputPath": "packages/devtools/devtools/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/devtools/devtools/dist/types",
         "tsConfig": "packages/devtools/devtools/tsconfig.json"
       },
       "outputs": [
@@ -66,6 +63,18 @@
         "{options.outputPath}"
       ]
     },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/devtools/devtools/src/index.ts"
+        ],
+        "outputPath": "packages/devtools/devtools/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -99,5 +108,8 @@
         "uiFramework": "@storybook/react"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }

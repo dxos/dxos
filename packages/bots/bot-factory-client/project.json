@@ -6,11 +6,24 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/bots/bot-factory-client/src/index.ts",
-        "outputPath": "packages/bots/bot-factory-client/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/bots/bot-factory-client/dist/types",
         "tsConfig": "packages/bots/bot-factory-client/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/bots/bot-factory-client/src/index.ts"
+        ],
+        "outputPath": "packages/bots/bot-factory-client/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,6 +43,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

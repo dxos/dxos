@@ -6,20 +6,24 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node.js",
   "browser": {
-    "node:events": "events"
+    "node:events": "events",
+    "node:util": "util",
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
     "debug": "^4.3.3",
-    "events": "^3.3.0"
+    "events": "^3.3.0",
+    "util": "^0.12.4"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

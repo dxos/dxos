@@ -3,6 +3,20 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx compile test"
+        ]
+      },
+      "outputs": [
+        "tools/executors/test/dist"
+      ]
+    },
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/test/src/main.ts",
@@ -31,6 +45,7 @@
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
+    "esbuild-plugins",
     "log-hook"
   ]
 }

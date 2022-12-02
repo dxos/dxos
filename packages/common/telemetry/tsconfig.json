@@ -5,7 +5,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "@dxos/test",
       "node"

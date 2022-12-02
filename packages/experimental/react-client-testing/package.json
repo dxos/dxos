@@ -7,8 +7,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/node.js",
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src"
@@ -57,5 +57,8 @@
     "@mui/material": ">=5.0.0",
     "react": "*",
     "react-dom": "*"
+  },
+  "publishConfig": {
+    "types": "dist/types/src/index.d.ts"
   }
 }

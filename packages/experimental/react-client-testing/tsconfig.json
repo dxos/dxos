@@ -6,7 +6,7 @@
       "DOM",
       "es2019"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "exclude": [
     "/node_modules/"

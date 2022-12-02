@@ -67,7 +67,8 @@
     },
     "test": {
       "dependsOn": [
-        "build"
+        "build",
+        "prebuild"
       ],
       "executor": "@dxos/test:run",
       "options": {
@@ -91,5 +92,9 @@
         "{options.resultsPath}"
       ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }
