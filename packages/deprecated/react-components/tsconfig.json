@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "jsx": "react",
     "lib": [
       "DOM",
@@ -21,6 +22,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/esbuild-plugins"
     },
     {
       "path": "../../common/keys"

@@ -6,11 +6,58 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/sdk/config/src/index.ts",
-        "outputPath": "packages/sdk/config/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/sdk/config/dist/types",
         "tsConfig": "packages/sdk/config/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/config/src/index.ts"
+        ],
+        "outputPath": "packages/sdk/config/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/config/src/plugin/esbuild-plugin.ts",
+          "packages/sdk/config/src/plugin/rollup-plugin.js"
+        ],
+        "outputPath": "packages/sdk/config/dist/plugin",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -49,6 +96,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

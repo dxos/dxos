@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { createStorage } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
+import { TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.

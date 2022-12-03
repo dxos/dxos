@@ -6,7 +6,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "exclude": [
     "/node_modules/"
@@ -18,6 +18,9 @@
   "references": [
     {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/esbuild-plugins"
     },
     {
       "path": "../../common/react-async"

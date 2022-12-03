@@ -2,7 +2,7 @@
   "sourceRoot": "tools/executors/playwright/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/playwright/src/main.ts",

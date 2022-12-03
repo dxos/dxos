@@ -7,12 +7,12 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node.js",
   "browser": {
     "node:assert": "assert",
-    "./dist/src/index.js": "./dist/browser.js"
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "src/index.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -30,5 +30,8 @@
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "jsonify": "^0.0.0"
+  },
+  "publishConfig": {
+    "types": "dist/types/src/index.d.ts"
   }
 }

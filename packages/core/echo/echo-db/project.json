@@ -6,11 +6,25 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/echo/echo-db/src/index.ts",
-        "outputPath": "packages/core/echo/echo-db/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/echo/echo-db/dist/types",
         "tsConfig": "packages/core/echo/echo-db/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-db/src/index.ts",
+          "packages/core/echo/echo-db/src/packlets/testing/index.ts"
+        ],
+        "outputPath": "packages/core/echo/echo-db/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,7 +33,6 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
-        "eslintConfig": "packages/core/echo/echo-db/eslint-config.json",
         "format": "unix",
         "lintFilePatterns": [
           "packages/core/echo/echo-db/src/packlets/**/*.{ts,js}"
@@ -52,6 +65,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

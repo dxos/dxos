@@ -7,9 +7,6 @@
       "options": {
         "main": "packages/experimental/kodama/src/index.ts",
         "outputPath": "packages/experimental/kodama/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
         "tsConfig": "packages/experimental/kodama/tsconfig.json"
       },
       "outputs": [

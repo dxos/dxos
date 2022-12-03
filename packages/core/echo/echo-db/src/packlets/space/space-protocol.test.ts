@@ -10,8 +10,8 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { SpaceProtocol } from './space-protocol';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, TestAgentBuilder } from './testing';
+import { TestAgentBuilder } from '../testing';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 
 describe('space/space-protocol', () => {
   test.skip('two peers discover each other', async () => {

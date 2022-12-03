@@ -12,6 +12,10 @@
       }
     },
     "build": {
+      "dependsOn": [
+        "^build",
+        "prebuild"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/devtools/cli/src/index.ts",
@@ -67,7 +71,8 @@
     },
     "test": {
       "dependsOn": [
-        "build"
+        "build",
+        "prebuild"
       ],
       "executor": "@dxos/test:run",
       "options": {
@@ -91,5 +96,9 @@
         "{options.resultsPath}"
       ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }

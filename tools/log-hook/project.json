@@ -2,14 +2,11 @@
   "sourceRoot": "tools/log-hook/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/log-hook/src/index.ts",
         "outputPath": "tools/log-hook/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
         "tsConfig": "tools/log-hook/tsconfig.json"
       },
       "outputs": [

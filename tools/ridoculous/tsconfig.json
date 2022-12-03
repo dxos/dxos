@@ -3,6 +3,7 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "composite": true,
+    "emitDeclarationOnly": false,
     "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "dist",
@@ -18,6 +19,9 @@
     "testing/**/*"
   ],
   "references": [
+    {
+      "path": "../../packages/common/esbuild-plugins"
+    },
     {
       "path": "../executors/protobuf-compiler"
     }

@@ -2,7 +2,7 @@
   "sourceRoot": "tools/executors/protobuf-compiler/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/protobuf-compiler/src/index.ts",

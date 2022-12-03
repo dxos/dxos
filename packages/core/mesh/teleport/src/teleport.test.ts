@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import { pipeline } from 'stream';
+import { pipeline } from 'node:stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

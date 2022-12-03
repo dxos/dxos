@@ -2,7 +2,7 @@
   "sourceRoot": "tools/executors/toolbox/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/toolbox/src/main.ts",

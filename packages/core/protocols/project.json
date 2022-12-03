@@ -2,7 +2,7 @@
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/protocols/src/index.ts",
@@ -41,8 +41,7 @@
     },
     "test": {
       "dependsOn": [
-        "^build",
-        "^bundle",
+        "^compile",
         "prebuild"
       ],
       "executor": "@dxos/test:run",

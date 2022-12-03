@@ -7,11 +7,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "browser": {
-    "node:assert": "assert"
-  },
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/node.js",
+  "types": "src/index.ts",
   "bin": {
     "bot-factory": "bin/main.js"
   },
@@ -53,5 +50,8 @@
     "@types/download": "^8.0.1",
     "@types/node-fetch": "^2.5.10",
     "@types/tail": "~2.2.1"
+  },
+  "publishConfig": {
+    "types": "dist/types/src/index.d.ts"
   }
 }

@@ -3,9 +3,9 @@
 //
 
 import { compactAddLength } from '@polkadot/util';
-import { webcrypto as crypto } from 'crypto';
 import assert from 'node:assert';
 
+import { subtleCrypto } from '@dxos/crypto';
 import { schema } from '@dxos/protocols';
 import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
 import { ComplexMap } from '@dxos/util';
@@ -106,9 +106,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   async registerRecord(record: RawRecord): Promise<CID> {
     const data = compactAddLength(schema.getCodecForType('dxos.registry.Record').encode(record));
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+    const digest = new Uint8Array(await subtleCrypto.digest('SHA-256', data));
     const cid = CID.from(Uint8Array.from([18, 32, ...digest]));
     this.records.set(cid, record);
 

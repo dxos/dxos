@@ -2,7 +2,7 @@
   "sourceRoot": "tools/executors/test/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/test/src/main.ts",
@@ -31,6 +31,7 @@
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
+    "esbuild-plugins",
     "log-hook"
   ]
 }

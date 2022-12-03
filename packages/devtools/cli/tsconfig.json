@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
@@ -25,6 +26,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/plate"
+    },
+    {
       "path": "../../common/sentry"
     },
     {
@@ -44,9 +48,6 @@
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../plate"
     }
   ]
 }

@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import { pipeline, Transform } from 'stream';
+import { pipeline, Transform } from 'node:stream';
 import waitForExpect from 'wait-for-expect';
 
 import { latch, asyncTimeout } from '@dxos/async';

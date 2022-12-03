@@ -6,18 +6,16 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node.js",
   "browser": {
     "node:assert": "assert",
-    "./dist/src/subtle.js": "./dist/src/browser/subtle.js"
+    "./src/subtle.ts": "./src/browser/subtle.ts",
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src"
-  ],
-  "browserslist": [
-    "> 5%"
   ],
   "dependencies": {
     "@dxos/keys": "workspace:*",
@@ -30,6 +28,7 @@
     "@types/node": "^18.11.9"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

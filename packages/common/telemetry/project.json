@@ -6,29 +6,27 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/telemetry/src/index.ts",
-        "outputPath": "packages/common/telemetry/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/common/telemetry/dist/types",
         "tsConfig": "packages/common/telemetry/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "bundlePackages": [
-          "@segment/snippet"
-        ],
         "entryPoints": [
           "packages/common/telemetry/src/index.ts"
         ],
-        "outfile": "packages/common/telemetry/dist/browser.js"
+        "outputPath": "packages/common/telemetry/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
-        "{options.outfile}"
+        "{options.outputPath}"
       ]
     },
     "lint": {
@@ -43,5 +41,8 @@
         "{options.outputFile}"
       ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }
