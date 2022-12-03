@@ -13,9 +13,8 @@ export const ghostButtonColors = '';
 export const buttonStyles = (props: ButtonProps) => {
   const resolvedVariant = props.variant || 'default';
   return mx(
-    'inline-flex select-none items-center justify-center text-sm font-medium',
+    'inline-flex select-none items-center justify-center text-sm font-medium rounded-md transition-color duration-100',
     props.compact ? 'p-1.5' : 'pli-4 plb-2',
-    'transition-color duration-100',
     defaultHover(props),
     resolvedVariant === 'default' && 'border border-neutral-100 dark:border-neutral-650',
     resolvedVariant !== 'ghost' && !props.disabled && 'hover:focus:border-neutral-100 hover:border-transparent',

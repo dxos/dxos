@@ -406,7 +406,7 @@ export const ListPrimitive = ({
 
   const inputSlots = useMemo(
     () => ({
-      root: { className: 'mli-2 mbe-2' },
+      root: { className: 'mli-2 mbs-0 mbe-2' },
       input: {
         className: 'border-0 rounded text-xl font-display font-semibold',
         'data-itemid': listId
