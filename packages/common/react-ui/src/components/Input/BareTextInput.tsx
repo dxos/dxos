@@ -23,10 +23,12 @@ export const BareTextInput = ({
   validationMessage,
   size,
   disabled,
+  placeholder,
   inputSlot
 }: BareTextInputProps) => {
   return (
     <input
+      placeholder={placeholder}
       {...inputSlot}
       className={mx(
         defaultInput({

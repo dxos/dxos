@@ -16,10 +16,12 @@ export const BareTextareaInput = ({
   validationMessage,
   size,
   disabled,
+  placeholder,
   inputSlot
 }: BareTextareaInputProps) => {
   return (
     <textarea
+      placeholder={placeholder}
       {...inputSlot}
       className={mx(
         defaultInput({

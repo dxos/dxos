@@ -10,6 +10,7 @@ export type InputSize = 'md' | 'lg' | 'pin' | 'textarea';
 
 interface SharedTextInputProps {
   label: ReactNode;
+  placeholder?: string;
   labelVisuallyHidden?: boolean;
   description?: ReactNode;
   descriptionVisuallyHidden?: boolean;
@@ -30,11 +31,11 @@ interface SharedSlots {
 }
 
 export interface InputSlots extends SharedSlots {
-  input?: Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled'>;
+  input?: Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled' | 'placeholder'>;
 }
 
 export interface TextareaSlots extends SharedSlots {
-  input?: Omit<ComponentProps<'textarea'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled'>;
+  input?: Omit<ComponentProps<'textarea'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled' | 'placeholder'>;
 }
 
 export interface InputProps extends SharedTextInputProps {

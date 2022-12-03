@@ -22,6 +22,7 @@ export const Input = ({
   initialValue,
   onChange,
   disabled,
+  placeholder,
   size,
   length = 6,
   validationMessage,
@@ -60,7 +61,7 @@ export const Input = ({
       'aria-invalid': 'true' as const,
       'aria-errormessage': validationId
     }),
-    ...(slots.input?.placeholder && { placeholder: slots.input!.placeholder }),
+    placeholder,
     value: internalValue,
     onChange: onInternalChange,
     inputSlot: slots.input,
