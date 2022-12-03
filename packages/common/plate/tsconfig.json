@@ -9,8 +9,7 @@
     "node_modules"
   ],
   "include": [
-    "./src/**/*.ts",
-    "./src/**/.plate.ts"
+    "./src/**/*.ts"
   ],
   "references": []
 }
