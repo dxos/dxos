@@ -312,7 +312,7 @@ export class Swarm {
       log('initiation delay', { remoteId });
       await sleep(INITIATION_DELAY);
     }
-    if(this._ctx.disposed) {
+    if (this._ctx.disposed) {
       return;
     }
 
