@@ -221,7 +221,10 @@ export class ReplicatorExtension implements TeleportExtension {
       encrypted: false
     });
     replicationStream.on('error', (err) => {
-      if (err?.message === 'Writable stream closed prematurely' || err?.message === 'Cannot call write after a stream was destroyed') {
+      if (
+        err?.message === 'Writable stream closed prematurely' ||
+        err?.message === 'Cannot call write after a stream was destroyed'
+      ) {
         return;
       }
 
