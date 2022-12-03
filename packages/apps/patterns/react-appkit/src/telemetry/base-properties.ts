@@ -19,11 +19,13 @@ export const BASE_TELEMETRY_PROPERTIES: any = {
   group: DX_GROUP
 };
 
-setInterval(async () => {
-  const storageEstimate = await navigator.storage.estimate();
-  BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
-  BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
-}, 10e3);
+if (navigator.storage?.estimate) {
+  setInterval(async () => {
+    const storageEstimate = await navigator.storage.estimate();
+    BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
+    BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
+  }, 10e3);
+}
 
 void fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
   .then((res) => res.json())

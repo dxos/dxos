@@ -3,9 +3,10 @@
 //
 
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import cx from 'classnames';
 import throttle from 'lodash.throttle';
 import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+
+import { mx } from '@dxos/react-ui';
 
 import { ProfileMenu, ProfileMenuProps } from './ProfileMenu';
 import { SpaceLink, SpaceLinkProps } from './SpaceLink';
@@ -43,7 +44,7 @@ export const Menubar = ({
   return (
     <>
       <ToolbarPrimitive.Root
-        className={cx(
+        className={mx(
           'fixed inset-inline-0 block-start-0 z-[2] transition-[backdrop-filter,background-color]',
           'flex items-center gap-x-2 gap-y-4 pli-4 bs-16',
           atTop ? 'pointer-events-none' : 'backdrop-blur-md bg-white/20 dark:bg-neutral-700/20'

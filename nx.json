@@ -12,6 +12,9 @@
         "cacheableOperations": [
           "build",
           "bundle",
+          "compile",
+          "compile-lib",
+          "compile-node",
           "e2e",
           "lint",
           "prebuild",
@@ -49,8 +52,7 @@
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^build",
-        "^bundle",
-        "prebuild"
+        "compile"
       ]
     },
     "bundle": {
@@ -62,15 +64,22 @@
         }
       ],
       "dependsOn": [
-        "^bundle",
-        "build"
+        // TODO(wittjosiah): This might be able to be ^compile to speed up deploys.
+        //   Some experimental/deprecated projects still depend on build for transpiling.
+        "^build"
+      ]
+    },
+    "compile": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
       ]
     },
     "e2e": {
       "inputs": ["default", "^production"],
       "dependsOn": [
-        "build",
-        "bundle"
+        "build"
       ]
     },
     "lint": {
@@ -79,21 +88,19 @@
     "prebuild": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build"
+        "^compile"
       ]
     },
     "prerelease": {
       "inputs": ["default", "^production"],
       "dependsOn": [
-        "^build",
-        "^bundle"
+        "^build"
       ]
     },
     "serve": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build",
-        "^bundle"
+        "^compile"
       ]
     },
     "test": {
@@ -111,8 +118,7 @@
         }
       ],
       "dependsOn": [
-        "^build",
-        "^bundle"
+        "^compile"
       ]
     }
   },

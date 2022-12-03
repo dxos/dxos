@@ -4,6 +4,7 @@
     "baseUrl": ".",
     "composite": true,
     "declarationMap": true,
+    "emitDeclarationOnly": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "jsx": "react",

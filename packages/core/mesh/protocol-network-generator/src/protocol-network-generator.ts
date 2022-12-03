@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventEmitter } from 'events';
 import assert from 'node:assert';
+import { EventEmitter } from 'node:events';
+import { Stream } from 'node:stream';
 import pump from 'pump';
-import { Stream } from 'stream';
 
 import { getProtocolFromStream, ExtendedProtocolStreamOptions } from '@dxos/mesh-protocol';
 import type { Peer } from '@dxos/network-generator';

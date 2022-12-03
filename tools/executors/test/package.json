@@ -1,0 +1,18 @@
+{
+  "name": "@dxos/test",
+  "version": "0.1.13",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "mocha -r @swc-node/register ./src/**/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/mocha": "^8.2.2"
+  },
+  "executors": "./executor.json"
+}

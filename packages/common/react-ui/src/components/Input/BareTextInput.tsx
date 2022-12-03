@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ComponentProps } from 'react';
 
 import { defaultInput } from '../../styles/input';
+import { mx } from '../../util';
 import { InputProps, InputSize } from './InputProps';
 
 const sizeMap: Record<InputSize, string> = {
@@ -30,7 +30,7 @@ export const BareTextInput = ({
   return (
     <input
       {...inputProps}
-      className={cx(
+      className={mx(
         defaultInput({
           borders,
           rounding,

@@ -6,14 +6,15 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    "types": [
-      "mocha"
-    ]
+    "outDir": "dist/types"
   },
   "include": [
     "src",
     "stories"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../esbuild-plugins"
+    }
+  ]
 }

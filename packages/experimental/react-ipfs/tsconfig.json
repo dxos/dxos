@@ -6,12 +6,15 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/esbuild-plugins"
+    },
     {
       "path": "../../sdk/client"
     },

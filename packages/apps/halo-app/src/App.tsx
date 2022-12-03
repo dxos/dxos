@@ -26,20 +26,19 @@ import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 
 import { NavMenu } from './components';
-import {
-  AppsPage,
-  ContactsPage,
-  CreateIdentityPage,
-  DevicesPage,
-  IdentityPage,
-  JoinIdentityPage,
-  LockPage,
-  RecoverIdentityPage,
-  RequireIdentity,
-  SpacePage,
-  SpacesPage
-} from './pages';
 import haloTranslations from './translations';
+
+const LockPage = React.lazy(() => import('./pages/LockPage'));
+const AppsPage = React.lazy(() => import('./pages/AppsPage'));
+const ContactsPage = React.lazy(() => import('./pages/ContactsPage'));
+const CreateIdentityPage = React.lazy(() => import('./pages/CreateIdentityPage'));
+const DevicesPage = React.lazy(() => import('./pages/DevicesPage'));
+const IdentityPage = React.lazy(() => import('./pages/IdentityPage'));
+const JoinIdentityPage = React.lazy(() => import('./pages/JoinIdentityPage'));
+const RecoverIdentityPage = React.lazy(() => import('./pages/RecoverIdentityPage'));
+const RequireIdentity = React.lazy(() => import('./pages/RequireIdentity'));
+const SpacePage = React.lazy(() => import('./pages/SpacePage'));
+const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
 // prettier-ignore
 log.config({
@@ -108,7 +107,11 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider resourceExtensions={[translations, haloTranslations]} fallback={<Fallback message='Loading...' />}>
+    <UiKitProvider
+      resourceExtensions={[translations, haloTranslations]}
+      fallback={<Fallback message='Loading...' />}
+      appNs='halo'
+    >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>

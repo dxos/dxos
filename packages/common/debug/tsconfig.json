@@ -5,9 +5,8 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "mocha",
       "node"
     ]
   },

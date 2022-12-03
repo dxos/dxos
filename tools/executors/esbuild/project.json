@@ -1,7 +1,7 @@
 {
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
-    "build": {
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/esbuild/src/index.ts",
@@ -27,5 +27,8 @@
         "{options.outputFile}"
       ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "log-hook"
+  ]
 }

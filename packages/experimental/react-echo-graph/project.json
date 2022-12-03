@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/react-echo-graph/src/index.ts",
-        "outputPath": "packages/experimental/react-echo-graph/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/experimental/react-echo-graph/dist/types",
         "tsConfig": "packages/experimental/react-echo-graph/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/react-echo-graph/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/react-echo-graph/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -28,5 +37,8 @@
         "{options.outputFile}"
       ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }

@@ -5,10 +5,10 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/neutral.js",
+  "types": "src/index.ts",
   "files": [
     "src",
-    "src/proto/gen",
     "dist"
   ],
   "dependencies": {
@@ -17,6 +17,7 @@
     "@dxos/protocols": "workspace:*"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

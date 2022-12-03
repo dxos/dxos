@@ -6,8 +6,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/browser.js",
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src",
@@ -30,7 +30,6 @@
     "@tailwindcss/forms": "^0.5.3",
     "alea": "^1.0.1",
     "autoprefixer": "^10.4.12",
-    "classnames": "^2.3.2",
     "jdenticon": "^3.2.0",
     "postcss": "^8.4.17",
     "qrcode.react": "^3.1.0",
@@ -56,6 +55,7 @@
     "react-dom": "^18.2.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

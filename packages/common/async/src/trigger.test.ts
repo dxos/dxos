@@ -4,10 +4,12 @@
 
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/test';
+
 import { trigger } from './trigger';
 
-describe('trigger', function () {
-  it('trigger', async function () {
+describe('trigger', () => {
+  test('trigger', async () => {
     const [value, setValue] = trigger<any>();
 
     const t = setTimeout(() => setValue('test'), 10);

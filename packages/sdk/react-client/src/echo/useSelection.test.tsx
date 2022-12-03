@@ -8,6 +8,7 @@ import expect from 'expect';
 import React from 'react';
 
 import { Space, Client, fromHost } from '@dxos/client';
+import { describe, test } from '@dxos/test';
 
 import { useSelection } from './useSelection';
 
@@ -44,8 +45,8 @@ const UseSelectionTestComponent = ({ space }: { space: Space }) => {
   );
 };
 
-describe('useSelection', function () {
-  it('gets updated items selection', async function () {
+describe('useSelection', () => {
+  test('gets updated items selection', async () => {
     const { space } = await createTestComponents();
     render(<UseSelectionTestComponent space={space} />);
 

@@ -1,3 +1,4 @@
+// TODO(wittjosiah): This is not currently being used because testing packlet breaks the packlet lint.
 {
   // This eslint config intentionally uses a non-standard name so that IDEs ignore it.
   // The parserOptions config specified here only works with the Nx linter and

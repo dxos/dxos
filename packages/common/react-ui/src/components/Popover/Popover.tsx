@@ -4,11 +4,11 @@
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
-import cx from 'classnames';
 import { X } from 'phosphor-react';
 import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
 
 import { defaultFocus, defaultHover } from '../../styles';
+import { mx } from '../../util';
 
 export interface PopoverProps extends Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'> {
   openTrigger: ReactNode;
@@ -42,7 +42,7 @@ export const Popover = ({
     <PopoverPrimitive.Content
       align='center'
       {...contentProps}
-      className={cx(
+      className={mx(
         'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
         'rounded-lg p-4 shadow-xl elevated-buttons',
         'bg-white dark:bg-neutral-800',
@@ -54,7 +54,7 @@ export const Popover = ({
       {children}
       {closeLabel && (
         <PopoverPrimitive.Close
-          className={cx(
+          className={mx(
             'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
             defaultFocus,
             defaultHover({})

@@ -9,8 +9,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "build": "tsc",
-    "bundle": "NODE_OPTIONS=\"--max-old-space-size=4096\" vite build",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit && vite build",
     "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
     "preview": "vite preview",
     "serve": "vite",
@@ -27,7 +26,6 @@
     "@dxos/react-uikit": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
-    "classnames": "^2.3.2",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

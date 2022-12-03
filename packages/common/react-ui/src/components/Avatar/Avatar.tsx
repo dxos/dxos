@@ -3,7 +3,6 @@
 //
 
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
-import cx from 'classnames';
 import { toSvg } from 'jdenticon';
 import React, {
   cloneElement,
@@ -19,6 +18,7 @@ import React, {
 import { useId } from '../../hooks';
 import { Size } from '../../props';
 import { getSize } from '../../styles';
+import { mx } from '../../util';
 
 export interface AvatarProps extends ComponentProps<typeof AvatarPrimitive.Root> {
   fallbackValue: string;
@@ -48,7 +48,7 @@ export const Avatar = forwardRef(
       <>
         <AvatarPrimitive.Root
           {...rootProps}
-          className={cx('relative inline-flex', getSize(size), rootProps.className)}
+          className={mx('relative inline-flex', getSize(size), rootProps.className)}
           aria-labelledby={labelId}
           ref={ref}
         >
@@ -56,11 +56,11 @@ export const Avatar = forwardRef(
             <AvatarPrimitive.Image
               src={mediaSrc}
               alt='Avatar'
-              className={cx('h-full w-full object-cover overflow-hidden', shapeStyles[variant])}
+              className={mx('h-full w-full object-cover overflow-hidden', shapeStyles[variant])}
             />
           )}
           <AvatarPrimitive.Fallback
-            className={cx(
+            className={mx(
               'shrink-0 flex h-full w-full items-center justify-center bg-white dark:bg-neutral-800 overflow-hidden',
               shapeStyles[variant]
             )}

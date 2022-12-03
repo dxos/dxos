@@ -6,11 +6,13 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node.js",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "./dist/lib/node/index.js": "./dist/lib/browser/index.js",
+    "./dist/lib/node/packlets/testing/index.js": "./dist/lib/browser/packlets/testing/index.js"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "src/index.ts",
   "files": [
     "testing.d.ts",
     "testing.js",
@@ -50,13 +52,13 @@
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@types/level-js": "~4.0.1",
     "@types/memdown": "^3.0.0",
     "@types/readable-stream": "^2.3.9"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   },
   "beast": {
     "classDiagrams": [

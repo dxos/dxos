@@ -5,6 +5,7 @@
 import expect from 'expect';
 
 import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { describe, test } from '@dxos/test';
 
 import { Matcher } from './matcher';
 
@@ -13,8 +14,8 @@ import { Matcher } from './matcher';
 // TODO(burdon): Indexed properties? (schema?)
 const getter = (item: any, key: string) => item[key];
 
-describe('Matcher', function () {
-  it('Basic queries', function () {
+describe('Matcher', () => {
+  test('Basic queries', () => {
     const queries: Query[] = [
       {
         root: {
