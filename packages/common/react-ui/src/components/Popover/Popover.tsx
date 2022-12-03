@@ -12,8 +12,8 @@ import { mx } from '../../util';
 
 export interface PopoverSlots {
   content?: Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'>;
-  arrow?: ComponentProps<typeof PopoverPrimitive.Arrow>;
-  close?: ComponentProps<typeof PopoverPrimitive.Close>;
+  arrow?: Pick<ComponentProps<typeof PopoverPrimitive.Arrow>, 'className'>;
+  close?: Omit<ComponentProps<typeof PopoverPrimitive.Close>, 'children'>;
   closeIcon?: ComponentProps<typeof X>;
 }
 
@@ -58,10 +58,7 @@ export const Popover = ({
         slots.content?.className
       )}
     >
-      <PopoverPrimitive.Arrow
-        {...slots.arrow}
-        className={mx('fill-current text-white dark:text-neutral-800', slots.arrow?.className)}
-      />
+      <PopoverPrimitive.Arrow className={mx('fill-current text-white dark:text-neutral-800', slots.arrow?.className)} />
       {children}
       {closeLabel && (
         <PopoverPrimitive.Close

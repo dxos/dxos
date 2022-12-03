@@ -10,12 +10,12 @@ import { mx } from '../../util';
 import { Button } from '../Button';
 
 export interface ToastSlots {
-  root?: ComponentProps<typeof ToastPrimitive.Root>;
-  heading?: ComponentProps<'div'>;
-  headingInner?: ComponentProps<'div'>;
-  title?: ComponentProps<typeof ToastPrimitive.Title>;
-  description?: ComponentProps<typeof ToastPrimitive.Description>;
-  actions?: ComponentProps<'div'>;
+  root?: Omit<ComponentProps<typeof ToastPrimitive.Root>, 'children'>;
+  heading?: Omit<ComponentProps<'div'>, 'children'>;
+  headingInner?: Omit<ComponentProps<'div'>, 'children'>;
+  title?: Omit<ComponentProps<typeof ToastPrimitive.Title>, 'children'>;
+  description?: Omit<ComponentProps<typeof ToastPrimitive.Description>, 'children'>;
+  actions?: Omit<ComponentProps<'div'>, 'children'>;
 }
 
 export interface ToastProps extends Omit<ComponentProps<typeof ToastPrimitive.Root>, 'title'> {

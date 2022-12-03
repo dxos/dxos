@@ -21,7 +21,7 @@ interface SharedQrCodeProps {
 interface FullQrCodeSlots {
   tooltipContent?: TooltipSlots['content'];
   tooltipArrow?: TooltipSlots['arrow'];
-  button?: Omit<ComponentProps<'button'>, 'ref'>;
+  button?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
   qrSvg?: ComponentProps<typeof QRCodeSVG>;
 }
 
@@ -36,10 +36,10 @@ export type QrCodeProps = FullQrCodeProps;
 interface CompactQrCodeSlots {
   qrTooltipContent?: TooltipSlots['content'];
   qrTooltipArrow?: TooltipSlots['arrow'];
-  qrButton?: Omit<ComponentProps<'button'>, 'ref'>;
+  qrButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
   copyTooltipContent?: TooltipSlots['content'];
   copyTooltipArrow?: TooltipSlots['arrow'];
-  copyButton?: Omit<ComponentProps<'button'>, 'ref'>;
+  copyButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
   qrSvg?: ComponentProps<typeof QRCodeSVG>;
 }
 

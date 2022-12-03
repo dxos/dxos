@@ -42,7 +42,7 @@ export type NavMenuItem =
 
 export interface NavMenuSlots {
   root?: Omit<ComponentProps<typeof NavigationMenuPrimitive.Root>, 'children'>;
-  viewport?: ComponentProps<typeof NavigationMenuPrimitive.Viewport>;
+  viewport?: Omit<ComponentProps<typeof NavigationMenuPrimitive.Viewport>, 'children'>;
   list?: Omit<ComponentProps<typeof NavigationMenuPrimitive.List>, 'children'>;
   indicator?: Omit<ComponentProps<typeof NavigationMenuPrimitive.Indicator>, 'children'>;
   indicatorIcon?: Pick<ComponentProps<'div'>, 'className'>;
