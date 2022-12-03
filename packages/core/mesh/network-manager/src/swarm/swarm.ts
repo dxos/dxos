@@ -8,7 +8,7 @@ import { Event, scheduleTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { Messenger } from '@dxos/messaging';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -42,7 +42,8 @@ export class Swarm {
   /**
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
    */
-  readonly id = PublicKey.random();
+  @logInfo
+  readonly instanceId = PublicKey.random();
 
   /**
    * New connection to a peer is started.
@@ -76,7 +77,7 @@ export class Swarm {
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
-    log('creating swarm', { id: this.id, topic: this._topic, peerId: _ownPeerId });
+    log('creating swarm', { peerId: _ownPeerId });
     _topology.init(this._getSwarmController());
 
     this._swarmMessenger = new MessageRouter({
@@ -101,6 +102,7 @@ export class Swarm {
       .filter(isNotNullOrUndefined);
   }
 
+  @logInfo
   get ownPeerId() {
     return this._ownPeerId;
   }
@@ -112,16 +114,18 @@ export class Swarm {
     return this._label;
   }
 
+  @logInfo
   get topic(): Topic {
     return this._topic;
   }
 
   // TODO(burdon): async open?
   async destroy() {
-    log('destroying', { id: this.id, topic: this._topic });
-    await this._topology.destroy();
+    log('destroying...');
     await this._ctx.dispose();
-    await Promise.all(Array.from(this._peers.keys()).map((key) => this._closeConnection(key)));
+    await this._topology.destroy();
+    await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key)));
+    log('destroyed');
   }
 
   async setTopology(topology: Topology) {
@@ -129,8 +133,6 @@ export class Swarm {
       return;
     }
     log('setting topology', {
-      id: this.id,
-      topic: this._topic,
       previous: getClassName(this._topology),
       topology: getClassName(topology)
     });
@@ -194,15 +196,15 @@ export class Swarm {
   }
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
-    log('swarm event', { id: this.id, topic: this._topic, swarmEvent }); // TODO(burdon): Stringify.
+    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
     if (this._ctx.disposed) {
-      log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+      log.warn('ignored for destroyed swarm');
       return;
     }
 
     if (swarmEvent.peerAvailable) {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
-      log('new peer', { id: this.id, topic: this._topic, peerId });
+      log('new peer', { peerId });
       if (!peerId.equals(this._ownPeerId)) {
         const peer = this._getOrCreatePeer(peerId);
         peer.advertizing = true;
@@ -221,20 +223,20 @@ export class Swarm {
   }
 
   async onOffer(message: OfferMessage): Promise<Answer> {
-    log('offer', { id: this.id, topic: this._topic, message });
+    log('offer', { message });
     if (this._ctx.disposed) {
-      log.info('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+      log.info('ignored for destroyed swarm');
       return { accept: false };
     }
 
     // Id of the peer offering us the connection.
     assert(message.author);
     if (!message.recipient?.equals(this._ownPeerId)) {
-      log('rejecting offer with incorrect peerId', { id: this.id, topic: this._topic, message });
+      log('rejecting offer with incorrect peerId', { message });
       return { accept: false };
     }
     if (!message.topic?.equals(this._topic)) {
-      log('rejecting offer with incorrect topic', { id: this.id, topic: this._topic, message });
+      log('rejecting offer with incorrect topic', { message });
       return { accept: false };
     }
 
@@ -245,9 +247,9 @@ export class Swarm {
   }
 
   async onSignal(message: SignalMessage): Promise<void> {
-    log('signal', { id: this.id, topic: this._topic, message });
+    log('signal', { message });
     if (this._ctx.disposed) {
-      log.info('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+      log.info('ignored for destroyed swarm');
       return;
     }
     assert(
@@ -307,7 +309,11 @@ export class Swarm {
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     if (remoteId.toHex() < this._ownPeerId.toHex()) {
+      log('initiation delay', { remoteId });
       await sleep(INITIATION_DELAY);
+    }
+    if(this._ctx.disposed) {
+      return;
     }
 
     const peer = this._getOrCreatePeer(remoteId);
@@ -317,9 +323,10 @@ export class Swarm {
       return;
     }
 
+    log('initiating connection...', { remoteId });
     await peer.initiateConnection();
     this._topology.update();
-    log('initiated', { id: this.id, topic: this._topic });
+    log('initiated', { remoteId });
   }
 
   private async _closeConnection(peerId: PublicKey) {
