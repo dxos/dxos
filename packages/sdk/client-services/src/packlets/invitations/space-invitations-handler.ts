@@ -249,13 +249,13 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                 return;
               }
 
-              if (response.error !== Invitation.Error.INVALID_OTP: {
+              if (response.error !== Invitation.Error.INVALID_OTP) {
                 throw new Error(`Authentication failed: ${response.error}`);
               }
             }
 
             throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
-          }
+          };
 
           await tryAuthentication();
         }
