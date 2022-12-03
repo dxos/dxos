@@ -10,6 +10,7 @@ import { hideBin } from 'yargs/helpers';
 import { catFiles } from './catFiles';
 
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
+import { includeExclude } from './includeExclude';
 import { logger } from './logger';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
@@ -23,26 +24,21 @@ const main = async () => {
       default: false
     })
     .option('input', {
-      description: 'Provide an json file to the template as input',
+      description: 'Comma separated filenames of json or yaml files to merge as input',
       type: 'string'
     })
     .option('output', {
-      description: 'Provide a destination folder',
+      description: 'Destination folder',
       requiresArg: true,
       type: 'string'
     })
-    .option('filter', {
-      description: 'Filter the template files by regular expression string',
+    .option('include', {
+      description: 'filter the template files by a set of glob strings (comma separated)',
       requiresArg: false,
       type: 'string'
     })
     .option('exclude', {
-      description: 'A regex to exclude entries from the template',
-      requiresArg: false,
-      type: 'string'
-    })
-    .option('glob', {
-      description: 'Filter the template files by glob expression string',
+      description: 'globs to exclude entries from the template (comma separated)',
       requiresArg: false,
       type: 'string'
     })
@@ -77,8 +73,7 @@ const main = async () => {
         dry,
         input,
         output = process.cwd(),
-        filter,
-        glob,
+        include,
         exclude,
         sequential = false,
         verbose = false,
@@ -89,8 +84,7 @@ const main = async () => {
         dry: boolean;
         input: string;
         output: string;
-        filter: string;
-        glob: string;
+        include: string;
         exclude: string;
         sequential: boolean;
         verbose: boolean;
@@ -107,7 +101,7 @@ const main = async () => {
         debug('working directory', process.cwd());
         debug(
           `executing template '${template}'...`,
-          filter ? `filter: '${filter}'` : '',
+          include ? `include: '${include}'` : '',
           exclude ? ` exclude: '${exclude}'` : ''
         );
         const files = await executeDirectoryTemplate({
@@ -116,7 +110,9 @@ const main = async () => {
           input: input ? await catFiles(input?.split(',')) : {},
           parallel: !sequential,
           verbose,
-          overwrite
+          overwrite,
+          include: include?.split(','),
+          exclude: exclude?.split(',')
         });
         let written = 0;
         if (!dry) {
