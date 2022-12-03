@@ -11,13 +11,14 @@ import { defaultTooltip } from '../../styles';
 import { mx } from '../../util';
 
 export interface TooltipSlots {
-  content?: ComponentProps<typeof TooltipPrimitive.Content>;
-  arrow?: ComponentProps<typeof TooltipPrimitive.Arrow>;
+  content?: Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children' | 'side'>;
+  arrow?: Pick<ComponentProps<typeof TooltipPrimitive.Arrow>, 'className'>;
 }
 
 export interface TooltipProps {
   content: ReactNode;
   children: ReactNode;
+  side?: TooltipPrimitive.TooltipContentProps['side'];
   compact?: boolean;
   tooltipLabelsTrigger?: boolean;
   mountAsSibling?: boolean;
@@ -29,6 +30,7 @@ export interface TooltipProps {
 export const Tooltip = ({
   content,
   children,
+  side = 'top',
   compact,
   tooltipLabelsTrigger,
   mountAsSibling,
@@ -43,6 +45,7 @@ export const Tooltip = ({
     <TooltipPrimitive.Content
       forceMount
       {...slots.content}
+      side={side}
       className={mx(
         'radix-side-top:animate-slide-down-fade',
         'radix-side-right:animate-slide-left-fade',
