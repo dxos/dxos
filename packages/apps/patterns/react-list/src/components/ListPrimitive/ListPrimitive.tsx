@@ -227,8 +227,6 @@ const ListItemPrimitive = ({
           labelVisuallyHidden
           initialValue={title}
           onChange={onChangeTitle}
-          data-itemid={id}
-          data-orderindex={orderIndex}
           slots={inputSlots}
         />
         {/* TODO(thure): Re-enable this when descriptions become relevant */}
