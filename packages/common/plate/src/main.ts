@@ -138,8 +138,7 @@ const main = async () => {
         const now = Date.now();
         info(`wrote ${written} files [${fmtDuration(now - tstart)}]`);
       }
-    })
-    .help().argv;
+    }).argv;
 };
 
 void main();

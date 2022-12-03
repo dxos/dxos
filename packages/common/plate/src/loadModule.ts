@@ -24,7 +24,7 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
       }
     });
   }
-  const loader = options?.moduleLoaderFunction ?? ((m: string) => import(m));
+  const loader = options?.moduleLoaderFunction ?? ((m: string) => require(m));
   return loader(p);
 };
 
