@@ -3,6 +3,7 @@
 //
 
 export const uikit = {
+  'current app name': 'This app',
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',

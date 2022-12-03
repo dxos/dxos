@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { Gear, UserPlus, UsersThree } from 'phosphor-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Space } from '@dxos/client';
 import { useMembers } from '@dxos/react-client';
-import { Button, defaultInlineSeparator, getSize, Popover } from '@dxos/react-ui';
+import { Button, defaultInlineSeparator, getSize, Popover, mx } from '@dxos/react-ui';
 
 export interface SpaceMenuProps {
   space: Space;
@@ -26,7 +25,7 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
         <Button compact className='pointer-events-auto flex items-center gap-1'>
           <UsersThree className={getSize(4)} />
           <span className='leading-none'>{members.length}</span>
-          <span role='none' className={cx(defaultInlineSeparator, 'bs-3')} />
+          <span role='none' className={mx(defaultInlineSeparator, 'bs-3')} />
           <UserPlus className={getSize(4)} />
         </Button>
       }

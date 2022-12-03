@@ -8,8 +8,9 @@ import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui
 
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { HashIcon } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
+
+import { Avatar } from '../Avatar';
 
 interface KeySelectProps {
   id?: string;
@@ -39,9 +40,21 @@ export const KeySelect = ({
     >
       {keys.map((key) => (
         <MenuItem key={key.toHex()} value={key.toHex()}>
-          <Box sx={{ display: 'flex' }}>
-            <HashIcon value={key.toHex()} />
-            <Typography variant='h6' sx={{ marginLeft: 2, fontFamily: 'monospace' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              position: 'relative',
+              'align-items': 'center'
+            }}
+          >
+            <Avatar size={12} fallbackValue={key.toHex()} />
+            <Typography
+              sx={{
+                marginLeft: 2,
+                fontFamily: 'monospace'
+              }}
+              variant='h6'
+            >
               {humanizeFlag ? humanize(key.toHex()) : truncateKey(key.toHex(), 8)}
             </Typography>
           </Box>

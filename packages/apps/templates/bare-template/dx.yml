@@ -10,9 +10,9 @@ package:
 
 runtime:
   client:
-    mode: local
     storage:
       persistent: true
+
   services:
     signal:
       server: ws://localhost:8888/.well-known/dx/signal

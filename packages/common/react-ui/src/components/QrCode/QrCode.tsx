@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { QrCode as QrCodeIcon, CopySimple } from 'phosphor-react';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback, ReactHTMLElement } from 'react';
@@ -10,6 +9,7 @@ import React, { useCallback, ReactHTMLElement } from 'react';
 import { useId } from '../../hooks';
 import { Size } from '../../props';
 import { getSize } from '../../styles';
+import { mx } from '../../util';
 import { Button, ButtonGroup, ButtonProps } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
 
@@ -51,7 +51,7 @@ export const FullQrCode = ({
       <Button
         compact={buttonCompact}
         {...buttonProps}
-        className={cx('overflow-hidden p-0', getSize(size ?? 32), buttonProps.className)}
+        className={mx('overflow-hidden p-0', getSize(size ?? 32), buttonProps.className)}
         onClick={copyValue}
       >
         <QRCodeSVG value={value} includeMargin role='none' className='w-full h-auto' />
@@ -97,7 +97,7 @@ export const CompactQrCode = ({
             rounding='rounded-is-md'
             compact={buttonCompact}
             {...buttonProps}
-            className={cx('border-ie-0 grow', buttonProps.className)}
+            className={mx('border-ie-0 grow', buttonProps.className)}
             aria-labelledby={labelId}
           >
             <QrCodeIcon className={getSize(5)} />
@@ -129,7 +129,7 @@ export const CompactQrCode = ({
             rounding='rounded-is-md'
             compact={buttonCompact}
             {...buttonProps}
-            className={cx('border-ie-0 flex gap-1', buttonProps.className)}
+            className={mx('border-ie-0 flex gap-1', buttonProps.className)}
           >
             <QrCodeIcon className={getSize(5)} />
             {displayQrLabel}
@@ -139,7 +139,7 @@ export const CompactQrCode = ({
           rounding='rounded-ie-md'
           compact={buttonCompact}
           {...buttonProps}
-          className={cx('flex gap-1', buttonProps.className)}
+          className={mx('flex gap-1', buttonProps.className)}
           onClick={copyValue}
         >
           <CopySimple className={getSize(5)} />

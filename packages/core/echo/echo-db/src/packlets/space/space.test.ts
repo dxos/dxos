@@ -8,15 +8,15 @@ import expect from 'expect';
 import { CredentialGenerator } from '@dxos/credentials';
 import { ObjectModel } from '@dxos/object-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
-import { TestAgentBuilder } from './testing';
+import { TestAgentBuilder } from '../testing';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
 
-describe('space/space', function () {
-  it('crates a database with object model', async function () {
+describe('space/space', () => {
+  test('crates a database with object model', async () => {
     const builder = new TestAgentBuilder();
     const agent = await builder.createPeer();
     const space = await agent.createSpace();
@@ -66,7 +66,7 @@ describe('space/space', function () {
     expect(space.isOpen).toBeFalsy();
   });
 
-  it('two spaces replicating', async function () {
+  test('two spaces replicating', async () => {
     const builder = new TestAgentBuilder();
 
     //

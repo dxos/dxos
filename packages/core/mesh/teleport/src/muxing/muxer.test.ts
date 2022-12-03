@@ -3,14 +3,14 @@
 //
 
 import { expect } from 'chai';
-import { pipeline, Transform } from 'stream';
+import { pipeline, Transform } from 'node:stream';
 import waitForExpect from 'wait-for-expect';
 
 import { latch, asyncTimeout } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { afterTest } from '@dxos/testutils';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { Muxer } from './muxer';
 import { RpcPort } from './rpc-port';
@@ -51,8 +51,8 @@ const createRpc = (port: RpcPort, handler: TestService['testCall']) =>
     port
   });
 
-describe('Muxer', function () {
-  it('rpc calls on 1 port', async function () {
+describe('Muxer', () => {
+  test('rpc calls on 1 port', async () => {
     const { peer1, peer2 } = setupPeers();
 
     const [wait, inc] = latch({ count: 2, timeout: 500 });
@@ -75,7 +75,7 @@ describe('Muxer', function () {
     await wait();
   });
 
-  it('destroy releases other stream', async function () {
+  test('destroy releases other stream', async () => {
     const { peer1, peer2 } = setupPeers();
 
     const promise = asyncTimeout(peer1.close.waitForCount(1), 100);
@@ -85,7 +85,7 @@ describe('Muxer', function () {
     await promise;
   });
 
-  it('two concurrent rpc ports', async function () {
+  test('two concurrent rpc ports', async () => {
     const { peer1, peer2 } = setupPeers();
 
     const [wait, inc] = latch({ count: 4, timeout: 500 });
@@ -124,7 +124,7 @@ describe('Muxer', function () {
     await wait();
   });
 
-  it('node.js streams', async function () {
+  test('node.js streams', async () => {
     const { peer1, peer2 } = setupPeers();
 
     const stream2 = peer2.createStream('example.extension/stream1', {
@@ -141,7 +141,7 @@ describe('Muxer', function () {
     pipeline(
       stream1,
       new Transform({
-        transform(chunk, encoding, callback) {
+        transform: (chunk, encoding, callback) => {
           callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
         }
       }),
@@ -161,7 +161,7 @@ describe('Muxer', function () {
     });
   });
 
-  it('destroying muxers destroys open streams', async function () {
+  test('destroying muxers destroys open streams', async () => {
     const { peer1, peer2 } = setupPeers();
 
     const stream1 = peer1.createStream('example.extension/stream1', {

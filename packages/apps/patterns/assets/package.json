@@ -9,8 +9,5 @@
   "author": "DXOS.org",
   "files": [
     "assets"
-  ],
-  "scripts": {
-    "check": "true"
-  }
+  ]
 }

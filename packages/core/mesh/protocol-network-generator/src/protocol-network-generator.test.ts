@@ -7,10 +7,11 @@ import crypto from 'crypto';
 
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
+import { test } from '@dxos/test';
 
 import { ProtocolNetworkGenerator } from './protocol-network-generator';
 
-it('basic generator', async function () {
+test('basic generator', async () => {
   const generator = new ProtocolNetworkGenerator(async (topic, id) => ({
     id,
     createStream: ({ initiator }) =>

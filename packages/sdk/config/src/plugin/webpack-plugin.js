@@ -10,7 +10,8 @@ import { DefinePlugin, NormalModuleReplacementPlugin } from 'webpack';
 import { mapFromKeyValues } from '../config';
 import { FILE_DEFAULTS, FILE_DYNAMICS, FILE_ENVS } from '../types';
 
-// TODO(wittjosiah): Update config file path to align with esbuild-plugin.
+// TODO(wittjosiah): This plugin is out of date and is not currently exposed from this package.
+
 const DEFAULT_PATH = resolve(process.cwd(), 'config');
 
 const KEYS_TO_FILE = {

@@ -41,6 +41,7 @@
     "remark-frontmatter": "^4.0.1",
     "remark-parse-frontmatter": "^1.0.3",
     "remark-unwrap-texts": "^1.0.3",
+    "rollup": "~2.77.3",
     "tailwindcss": "^3.1.8",
     "tailwindcss-logical": "^3.0.0",
     "tailwindcss-radix": "^2.6.0",

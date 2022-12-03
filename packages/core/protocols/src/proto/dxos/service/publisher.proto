@@ -18,7 +18,11 @@ message PublishRequest {
 }
 
 message PublishResponse {
-  dxos.config.Package package = 1;
+  message PublishedModule {
+    dxos.config.Module module = 1;
+    repeated string urls = 2;
+  }
+  repeated PublishedModule modules = 1;
 }
 
 message ListResponse {

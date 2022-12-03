@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
-
 import { Elevation } from '../props';
+import { mx } from '../util';
 
 const elevationClassNameMap = new Map<number, string>([
   [0, 'shadow-none'],
@@ -25,7 +24,7 @@ export const defaultGroup = ({
   rounding?: string;
   spacing?: string;
 }) => {
-  return cx(
+  return mx(
     rounding ?? 'rounded-lg',
     spacing ?? 'p-4',
     elevation === 0

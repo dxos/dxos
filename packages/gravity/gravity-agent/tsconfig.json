@@ -5,10 +5,9 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "@dxos/mocha",
-      "mocha",
+      "@dxos/test",
       "node"
     ]
   },

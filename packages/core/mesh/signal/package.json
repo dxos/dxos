@@ -7,13 +7,8 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "browser": {
-    "node:assert": "assert"
-  },
-  "scripts": {
-    "start": "./bin/signal.js"
-  },
+  "main": "dist/lib/node.js",
+  "types": "src/index.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "debug": "^4.3.3",
@@ -29,6 +24,7 @@
     "debug": "^4.3.3"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "dist/types/src/index.d.ts"
   }
 }

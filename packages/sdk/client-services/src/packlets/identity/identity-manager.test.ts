@@ -11,12 +11,12 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { createDefaultModelFactory } from '../services';
 import { IdentityManager } from './identity-manager';
 
-describe('identity/identity-manager', function () {
+describe('identity/identity-manager', () => {
   const setupPeer = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
@@ -58,7 +58,7 @@ describe('identity/identity-manager', function () {
     };
   };
 
-  it('creates identity', async function () {
+  test('creates identity', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open();
     afterTest(() => identityManager.close());
@@ -67,7 +67,7 @@ describe('identity/identity-manager', function () {
     expect(identity).to.exist;
   });
 
-  it('reload from storage', async function () {
+  test('reload from storage', async () => {
     const storage = createStorage({ type: StorageType.RAM });
 
     const peer1 = await setupPeer({ storage });
@@ -86,7 +86,7 @@ describe('identity/identity-manager', function () {
     // TODO(dmaretskyi): Check that identity is "alive" (space is working and can write mutations).
   });
 
-  it('admit another device', async function () {
+  test('admit another device', async () => {
     const signalContext = new MemorySignalManagerContext();
 
     const peer1 = await setupPeer({ signalContext });

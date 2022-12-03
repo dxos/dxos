@@ -8,4 +8,4 @@
  * import { ... } from '@dxos/client-services/testing';
  * ```
  */
-export * from './dist/src/packlets/testing';
+export * from './dist/types/src/packlets/testing';

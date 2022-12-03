@@ -7,8 +7,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/neutral.js",
+  "types": "src/index.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -39,7 +39,10 @@
     "@mui/icons-material": "^5.8.0",
     "@mui/lab": "^5.0.0-alpha.83",
     "@mui/material": "^5.8.1",
+    "@radix-ui/react-avatar": "^1.0.1",
+    "classnames": "^2.3.2",
     "color-hash": "^1.0.3",
+    "jdenticon": "^3.2.0",
     "moment": "^2.24.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -57,5 +60,8 @@
     "vite": "3.0.9",
     "vite-plugin-pwa": "^0.12.4",
     "workbox-window": "^6.5.4"
+  },
+  "publishConfig": {
+    "types": "dist/types/src/index.d.ts"
   }
 }

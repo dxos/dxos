@@ -61,10 +61,15 @@ export default class Publish extends BaseCommand {
       this.log('Publishing to KUBE...');
 
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
-        await publisher.rpc.publish({
+        const result = await publisher.rpc.publish({
           package: moduleConfig.values.package!,
           skipExisting
         });
+
+        result?.modules?.forEach(({ module, urls }) => {
+          urls?.length && this.log(`Module ${module.name} published to ${urls.join(', ')}`);
+        });
+
         this.log('Published to KUBE.');
       });
     } catch (err: any) {

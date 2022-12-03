@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/react-async/src/index.ts",
-        "outputPath": "packages/common/react-async/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/common/react-async/dist/types",
         "tsConfig": "packages/common/react-async/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/react-async/src/index.ts"
+        ],
+        "outputPath": "packages/common/react-async/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,7 +38,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/common/react-async",
         "domRequired": true,
@@ -51,6 +60,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }
