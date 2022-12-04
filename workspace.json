@@ -90,6 +90,7 @@
     "sentry": "packages/common/sentry",
     "signal": "packages/core/mesh/signal",
     "spyglass": "packages/experimental/spyglass",
+    "swc-log-plugin": "tools/swc-log-plugin",
     "tasks-app": "packages/apps/tasks-app",
     "telemetry": "packages/common/telemetry",
     "teleport": "packages/core/mesh/teleport",

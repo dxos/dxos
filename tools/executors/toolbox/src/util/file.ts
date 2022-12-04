@@ -11,6 +11,7 @@ export const loadJson = async <T>(filename: string): Promise<T> => {
     const json = await readFile(filename, 'utf-8');
     return parse(json, undefined, true) as T;
   } catch (err) {
+    console.error(err)
     throw new Error(`Invalid file: ${filename}`);
   }
 };
