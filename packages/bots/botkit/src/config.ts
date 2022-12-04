@@ -7,8 +7,8 @@ import { join } from 'path';
 
 import { Config, mapFromKeyValues } from '@dxos/config';
 
-import defaults from './defaults.json';
-import envmap from './env-map.json';
+const defaults = require('./defaults.json');
+const envmap = require('./env-map.json');
 
 export const BOT_CONFIG_FILENAME = 'bot.yml';
 
