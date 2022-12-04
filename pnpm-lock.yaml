@@ -877,6 +877,7 @@ importers:
 
   packages/common/debug:
     specifiers:
+      '@types/debug': ^4.1.7
       debug: ^4.3.3
       events: ^3.3.0
       util: ^0.12.4
@@ -884,6 +885,8 @@ importers:
       debug: 4.3.4
       events: 3.3.0
       util: 0.12.5
+    devDependencies:
+      '@types/debug': 4.1.7
 
   packages/common/esbuild-plugins:
     specifiers:
@@ -1968,13 +1971,13 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
       '@types/randombytes': ^2.0.0
-      '@types/varint': ^6.0.0
+      '@types/varint': 6.0.0
       assert: ^2.0.0
       debug: ^4.3.3
       randombytes: ^2.1.0
       readable-stream: ^3.6.0
       typescript: ^4.8.4
-      varint: ^6.0.0
+      varint: 6.0.0
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/context': link:../../../common/context
@@ -1992,7 +1995,7 @@ importers:
     devDependencies:
       '@dxos/async': link:../../../common/async
       '@types/randombytes': 2.0.0
-      '@types/varint': 6.0.1
+      '@types/varint': 6.0.0
       typescript: 4.9.3
       wait-for-expect: 3.0.2
 
@@ -13175,8 +13178,8 @@ packages:
     resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
     dev: true
 
-  /@types/varint/6.0.1:
-    resolution: {integrity: sha512-fQdOiZpDMBvaEdl12P1x7xlTPRAtd7qUUtVaWgkCy8DC//wCv19nqFFtrnR3y/ac6VFY0UUvYuQqfKzZTSE26w==}
+  /@types/varint/6.0.0:
+    resolution: {integrity: sha512-2jBazyxGl4644tvu3VAez8UA/AtrcEetT9HOeAbqZ/vAcRVL/ZDFQjSS7rkWusU5cyONQVUz+nwwrNZdMva4ow==}
     dependencies:
       '@types/node': 18.11.9
     dev: true

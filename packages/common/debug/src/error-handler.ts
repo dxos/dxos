@@ -8,10 +8,12 @@ import { EventEmitter } from 'node:events';
  * Listens for global errors.
  */
 export class ErrorHandler extends EventEmitter {
+  _listener: any;
+  
   constructor() {
     super();
 
-    this._listener = (event) => {
+    this._listener = (event: any) => {
       const cause = event.error || event.reason || event;
       const message = cause.stack || cause.message || cause.toString();
       this.emit('error', message);
