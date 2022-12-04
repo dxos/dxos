@@ -88,7 +88,8 @@
     "prebuild": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^compile"
+        "^compile",
+        "^build" // Needed from protobuf-compiler -> codec-protobuf dependency.
       ]
     },
     "prerelease": {
