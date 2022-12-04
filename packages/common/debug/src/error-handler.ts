@@ -9,7 +9,7 @@ import { EventEmitter } from 'node:events';
  */
 export class ErrorHandler extends EventEmitter {
   _listener: any;
-  
+
   constructor() {
     super();
 
