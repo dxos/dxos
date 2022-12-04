@@ -7,7 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/neutral.js",
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -34,7 +34,5 @@
     "chalk": "^4.1.0",
     "columnify": "^1.6.0"
   },
-  "publishConfig": {
-    "types": "dist/types/src/index.d.ts"
-  }
+  "publishConfig": {}
 }

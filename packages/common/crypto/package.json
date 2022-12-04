@@ -12,7 +12,7 @@
     "./src/subtle.ts": "./src/browser/subtle.ts",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -28,7 +28,6 @@
     "@types/node": "^18.11.9"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

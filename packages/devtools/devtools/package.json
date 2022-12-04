@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/neutral.js",
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -61,7 +61,5 @@
     "vite-plugin-pwa": "^0.12.4",
     "workbox-window": "^6.5.4"
   },
-  "publishConfig": {
-    "types": "dist/types/src/index.d.ts"
-  }
+  "publishConfig": {}
 }

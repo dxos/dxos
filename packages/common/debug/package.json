@@ -12,7 +12,7 @@
     "node:util": "util",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -22,8 +22,10 @@
     "events": "^3.3.0",
     "util": "^0.12.4"
   },
+  "devDependencies": {
+    "@types/debug": "^4.1.7"
+  },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }
