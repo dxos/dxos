@@ -9,14 +9,15 @@ import { latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { FeedWrapper } from './feed-wrapper';
 import { defaultValueEncoding, TestBuilder, TestItem, TestItemBuilder } from './testing';
 
-describe('FeedWrapper', function () {
+describe('FeedWrapper', () => {
   const factory = new TestBuilder().createFeedFactory();
 
-  it('creates a readable feed', async function () {
+  test('creates a readable feed', async () => {
     const key = PublicKey.random();
     const feed = new FeedWrapper(factory.createFeed(key), key);
     await feed.open();
@@ -25,7 +26,7 @@ describe('FeedWrapper', function () {
     await feed.close();
   });
 
-  it('creates a writable feed', async function () {
+  test('creates a writable feed', async () => {
     const key = PublicKey.random();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
@@ -34,7 +35,7 @@ describe('FeedWrapper', function () {
     await feed.close();
   });
 
-  it('creates, opens, and closes a feed multiple times', async function () {
+  test('creates, opens, and closes a feed multiple times', async () => {
     const key = PublicKey.random();
     const feed = new FeedWrapper(factory.createFeed(key), key);
 
@@ -49,7 +50,7 @@ describe('FeedWrapper', function () {
     await feed.close();
   });
 
-  it('appends blocks', async function () {
+  test('appends blocks', async () => {
     const numBlocks = 10;
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
@@ -63,7 +64,7 @@ describe('FeedWrapper', function () {
     expect(feed.properties.length).to.eq(numBlocks);
   });
 
-  it('append emits event', async function () {
+  test('append emits event', async () => {
     const numBlocks = 10;
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
@@ -81,7 +82,7 @@ describe('FeedWrapper', function () {
     expect(emittedAppend).to.eq(numBlocks);
   });
 
-  it('appends blocks with encoding', async function () {
+  test('appends blocks with encoding', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
     const feedFactory = builder.createFeedFactory();
@@ -106,7 +107,7 @@ describe('FeedWrapper', function () {
     expect(id).to.eq('1');
   });
 
-  it('reads blocks from a feed stream', async function () {
+  test('reads blocks from a feed stream', async () => {
     const numBlocks = 10;
     const builder = new TestBuilder();
     const factory = builder.createFeedFactory();
@@ -140,7 +141,7 @@ describe('FeedWrapper', function () {
     await done();
   });
 
-  it('replicates with streams', async function () {
+  test('replicates with streams', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
     const feedFactory = builder.createFeedFactory();

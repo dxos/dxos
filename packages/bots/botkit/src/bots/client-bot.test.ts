@@ -3,12 +3,13 @@
 //
 
 import { PublicKey } from '@dxos/keys';
+import { describe, test } from '@dxos/test';
 
 import { setupBroker, setupClient } from '../testutils';
 import { Bot } from './client-bot';
 
-describe('Client Bot', function () {
-  it('Starts a bot', async function () {
+describe('Client Bot', () => {
+  test('Starts a bot', async () => {
     const { client, invitation } = await setupClient();
     const bot = new Bot();
 
@@ -22,7 +23,7 @@ describe('Client Bot', function () {
     await client.destroy();
   });
 
-  it('Starts a bot with a remote signal server', async function () {
+  test('Starts a bot with a remote signal server', async () => {
     const { broker, config } = await setupBroker();
     const { client, invitation } = await setupClient(config);
     const bot = new Bot();

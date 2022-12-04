@@ -4,11 +4,11 @@
 
 import { Transition } from '@headlessui/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import cx from 'classnames';
 import { X } from 'phosphor-react';
 import React, { Fragment, ReactNode, useState } from 'react';
 
 import { defaultDescription, defaultFocus, defaultHover } from '../../styles';
+import { mx } from '../../util';
 import { Tooltip } from '../Tooltip';
 
 export interface DialogProps {
@@ -60,7 +60,7 @@ export const Dialog = ({
       >
         <DialogPrimitive.Content
           forceMount
-          className={cx(
+          className={mx(
             'fixed z-50',
             'w-[95vw] max-w-md rounded-xl p-4 md:w-full',
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
@@ -69,7 +69,7 @@ export const Dialog = ({
           )}
         >
           <DialogPrimitive.Title
-            className={cx(
+            className={mx(
               'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
               titleVisuallyHidden && 'sr-only',
               defaultFocus
@@ -79,7 +79,7 @@ export const Dialog = ({
             {title}
           </DialogPrimitive.Title>
           {description && (
-            <DialogPrimitive.Description className={cx('mt-2', defaultDescription)}>
+            <DialogPrimitive.Description className={mx('mt-2', defaultDescription)}>
               {description}
             </DialogPrimitive.Description>
           )}
@@ -89,7 +89,7 @@ export const Dialog = ({
           {closeLabel && (
             <Tooltip zIndex='z-[51]' content={closeLabel}>
               <DialogPrimitive.Close
-                className={cx(
+                className={mx(
                   'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
                   defaultFocus,
                   defaultHover({})

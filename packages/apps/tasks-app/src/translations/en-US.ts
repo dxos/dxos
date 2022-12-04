@@ -2,4 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export const tasks = {};
+export const tasks = {
+  'current app name': 'Tasks'
+};

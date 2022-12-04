@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { Teleport } from '@dxos/teleport';
-import { afterTest } from '@dxos/testutils';
+import { afterTest } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { ReplicatorExtension } from './replicator-extension';

@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { ScreenBounds, Point, Screen } from './screen';
 
-test('createBounds', function () {
+test('createBounds', () => {
   const tests: { p1: Point; p2: Point; bounds: ScreenBounds }[] = [
     {
       p1: [0, 0],
@@ -30,7 +30,7 @@ test('createBounds', function () {
   });
 });
 
-test('contains', function () {
+test('contains', () => {
   const bounds = Screen.createBounds([0, 0], [5, 5]);
 
   expect(Screen.contains(bounds, [0, 0])).to.be.true;

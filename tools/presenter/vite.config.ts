@@ -4,7 +4,6 @@
 
 import mdx, { Options } from '@mdx-js/rollup';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
 import remarkDirective from 'remark-directive';
 import { codeImport } from 'remark-code-import';
 import remarkFrontmatter from 'remark-frontmatter';

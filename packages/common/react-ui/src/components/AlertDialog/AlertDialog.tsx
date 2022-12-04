@@ -4,10 +4,10 @@
 
 import { Transition } from '@headlessui/react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
-import cx from 'classnames';
 import React, { cloneElement, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
 
 import { defaultDescription, defaultFocus } from '../../styles';
+import { mx } from '../../util';
 import { Input, InputProps } from '../Input';
 
 export interface AlertDialogProps {
@@ -71,7 +71,7 @@ export const AlertDialog = ({
       >
         <AlertDialogPrimitive.Content
           forceMount
-          className={cx(
+          className={mx(
             'fixed z-50',
             'w-[95vw] max-w-md rounded-xl p-4 md:w-full',
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
@@ -80,7 +80,7 @@ export const AlertDialog = ({
           )}
         >
           <AlertDialogPrimitive.Title
-            className={cx(
+            className={mx(
               'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
               titleVisuallyHidden && 'sr-only',
               defaultFocus
@@ -90,7 +90,7 @@ export const AlertDialog = ({
             {title}
           </AlertDialogPrimitive.Title>
           {description && (
-            <AlertDialogPrimitive.Description className={cx('my-2', defaultDescription)}>
+            <AlertDialogPrimitive.Description className={mx('my-2', defaultDescription)}>
               {description}
             </AlertDialogPrimitive.Description>
           )}

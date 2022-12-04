@@ -6,11 +6,24 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/mesh/protocol-plugin-presence/src/index.ts",
-        "outputPath": "packages/core/mesh/protocol-plugin-presence/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/mesh/protocol-plugin-presence/dist/types",
         "tsConfig": "packages/core/mesh/protocol-plugin-presence/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/mesh/protocol-plugin-presence/src/index.ts"
+        ],
+        "outputPath": "packages/core/mesh/protocol-plugin-presence/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,7 +42,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
@@ -52,6 +65,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }

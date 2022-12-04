@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { DataMirror } from './data-mirror';
@@ -19,8 +20,8 @@ import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
-describe('DataMirror', function () {
-  it('basic', async function () {
+describe('DataMirror', () => {
+  test('basic', async () => {
     // Setup
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<EchoEnvelope>();

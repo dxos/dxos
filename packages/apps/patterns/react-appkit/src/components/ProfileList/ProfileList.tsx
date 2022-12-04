@@ -1,13 +1,11 @@
 //
 // Copyright 2022 DXOS.org
 //
-import cx from 'classnames';
 import React from 'react';
 
 import type { Profile } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
-import { Avatar, defaultDisabled, defaultGroup, Group } from '@dxos/react-ui';
-import { useTranslation, Tag } from '@dxos/react-uikit';
+import { useTranslation, Tag, Avatar, defaultDisabled, defaultGroup, Group, mx } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface ProfileListProps {
@@ -25,7 +23,7 @@ export const ProfileList = ({ profiles }: ProfileListProps) => {
         return (
           <li
             key={profileHex}
-            className={cx(
+            className={mx(
               defaultGroup({ elevation: 1, spacing: 'p-1', rounding: 'rounded' }),
               'flex gap-2 items-center'
             )}
@@ -54,7 +52,7 @@ export const ProfileList = ({ profiles }: ProfileListProps) => {
       label={{
         level: 2,
         children: t('empty members message'),
-        className: cx('text-xl', defaultDisabled)
+        className: mx('text-xl', defaultDisabled)
       }}
       elevation={0}
     />

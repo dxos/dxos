@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { Heading, HeadingProps } from '@dxos/react-uikit';
+import { Heading, HeadingProps, mx } from '@dxos/react-uikit';
 
 export interface HeadingWithActionsProps extends ComponentProps<'div'> {
   heading: HeadingProps;
@@ -19,7 +18,7 @@ export const HeadingWithActions = ({ heading, actions, compact, spacer, ...divPr
     <div
       role='none'
       {...divProps}
-      className={cx('flex flex-wrap items-center', compact ? 'gap-2' : 'gap-x-2 gap-y-4', divProps.className)}
+      className={mx('flex flex-wrap items-center', compact ? 'gap-2' : 'gap-x-2 gap-y-4', divProps.className)}
     >
       <Heading {...heading} />
       {typeof spacer === 'undefined' ? <div role='none' className='grow-[99] min-w-[2rem]' /> : spacer}

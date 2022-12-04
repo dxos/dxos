@@ -153,7 +153,7 @@ Add TS config to support browser globals.
       "DOM"
     ]
   },
-  "types": ["mocha", "node"],
+  "types": ["node"],
 ```
 
 ## Upgrading packages across the monorepo

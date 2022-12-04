@@ -1,7 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "exclude": [
     "dist",
@@ -22,9 +22,6 @@
     },
     {
       "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/testutils"
     },
     {
       "path": "../../../common/util"

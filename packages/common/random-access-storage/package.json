@@ -6,14 +6,15 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "./dist/src/index.js",
+  "main": "./dist/lib/node.js",
   "browser": {
     "node:assert": "assert",
     "node:path": "path-browserify",
     "node:util": "util",
-    "./dist/src/index.js": "./dist/src/browser/index.js"
+    "./src/index.ts": "./src/browser/index.ts",
+    "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "./dist/src/index.d.ts",
+  "types": "src/index.ts",
   "files": [
     "dist",
     "src"
@@ -37,6 +38,7 @@
     "source-map-support": "^0.5.12"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "types": "./dist/types/src/index.d.ts"
   }
 }

@@ -6,22 +6,24 @@ import React from 'react';
 
 // https://mui.com/components/material-icons
 import {
-  AccountCircle as ProfileIcon,
+  AccountCircle as IdentityIcon,
   Grain as ItemsIcon,
   FilterTiltShift as SwarmIcon,
   Group as SpacesIcon,
   List as FeedsIcon,
   // AppRegistration as RegistryIcon,
   Router as SignalIcon,
-  Settings as ConfigIcon
+  Settings as ConfigIcon,
+  VpnKey as KeyIcon
 } from '@mui/icons-material';
 
 import {
   ConfigPanel,
   FeedsPanel,
+  IdentityPanel,
   ItemsPanel,
   // NetworkPanel,
-  ProfilePanel,
+  KeyringPanel,
   SpacesPanel,
   Section,
   SignalPanel,
@@ -50,17 +52,17 @@ export const sections: Section[] = [
     title: 'HALO',
     items: [
       {
-        id: 'halo.profile',
-        title: 'Profile',
-        icon: <ProfileIcon />,
-        panel: <ProfilePanel />
+        id: 'halo.identity',
+        title: 'Identity',
+        icon: <IdentityIcon />,
+        panel: <IdentityPanel />
+      },
+      {
+        id: 'halo.keyring',
+        title: 'Keyring',
+        icon: <KeyIcon />,
+        panel: <KeyringPanel />
       }
-      //     {
-      //       id: 'halo.keyring',
-      //       title: 'Keyring',
-      //       icon: <KeyIcon />,
-      //       panel: <KeyringPanel />
-      //     },
       //     {
       //       id: 'halo.messagess',
       //       title: 'Messages',

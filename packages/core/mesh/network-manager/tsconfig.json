@@ -5,10 +5,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    "types": [
-      "mocha"
-    ]
+    "outDir": "dist/types"
   },
   "include": [
     "src",
@@ -22,6 +19,9 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/crypto"
     },
     {
@@ -32,9 +32,6 @@
     },
     {
       "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/testutils"
     },
     {
       "path": "../../../common/util"

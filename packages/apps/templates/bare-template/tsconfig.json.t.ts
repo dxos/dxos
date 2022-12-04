@@ -13,6 +13,7 @@ export type Input = {
 // TODO(wittjosiah): Nx executor to execute in place.
 const template: TemplateFunction<Input> = ({ input }) => {
   const compilerOptions = {
+    emitDeclarationOnly: false,
     lib: [
       'DOM',
       'ESNext'

@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "outDir": "dist",
     "rootDir": "src"
   },
@@ -13,7 +14,7 @@
   ],
   "references": [
     {
-      "path": "../../packages/devtools/plate"
+      "path": "../../packages/common/plate"
     }
   ]
 }

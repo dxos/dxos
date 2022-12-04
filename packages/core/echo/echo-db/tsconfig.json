@@ -1,9 +1,9 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "@dxos/mocha",
+      "@dxos/test",
       "@dxos/typings"
     ]
   },
@@ -40,9 +40,6 @@
     },
     {
       "path": "../../../common/random-access-storage"
-    },
-    {
-      "path": "../../../common/testutils"
     },
     {
       "path": "../../../common/timeframe"

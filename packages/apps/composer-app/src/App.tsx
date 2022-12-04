@@ -94,6 +94,7 @@ export const App = () => {
     <UiKitProvider
       resourceExtensions={[translations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
+      appNs='composer'
     >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}

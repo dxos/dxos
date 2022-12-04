@@ -7,7 +7,7 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist",
+    "outDir": "dist/types",
     "strict": false
   },
   "exclude": [
@@ -17,5 +17,9 @@
     "src",
     "stories"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/esbuild-plugins"
+    }
+  ]
 }

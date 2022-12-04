@@ -5,11 +5,12 @@
 import expect from 'expect';
 
 import { ModelFactory, TestBuilder } from '@dxos/model-factory';
+import { describe, test } from '@dxos/test';
 
 import { MessengerModel } from './model';
 
-describe('MessengerModel', function () {
-  it('send message', async function () {
+describe('MessengerModel', () => {
+  test('send message', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(MessengerModel), MessengerModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();

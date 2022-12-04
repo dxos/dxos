@@ -4,12 +4,14 @@
 
 import expect from 'expect';
 
+import { describe, test } from '@dxos/test';
+
 import { ModelFactory } from '../model-factory';
 import { TestBuilder } from './test-builder';
 import { TestModel } from './test-model';
 
-describe('test model', function () {
-  it('basic mutations', async function () {
+describe('test model', () => {
+  test('basic mutations', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TestModel), TestModel);
     const peer = rig.createPeer();
 
@@ -18,7 +20,7 @@ describe('test model', function () {
     expect(peer.model.keys).toHaveLength(1);
   });
 
-  it('multiple peers', async function () {
+  test('multiple peers', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TestModel), TestModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
@@ -31,7 +33,7 @@ describe('test model', function () {
     expect(peer2.model.get('title')).toBe('Braneframe');
   });
 
-  it('concurrency - states converge', async function () {
+  test('concurrency - states converge', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TestModel), TestModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
