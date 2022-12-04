@@ -1,16 +1,80 @@
-use swc_core::ecma::{
-    ast::Program,
-    transforms::testing::test,
-    visit::{as_folder, FoldWith, VisitMut},
-};
-use swc_core::plugin::{plugin_transform, proxies::TransformPluginProgramMetadata};
+use std::{borrow::Borrow, sync::Arc};
 
-pub struct TransformVisitor;
+use swc_core::{ecma::{
+    ast::{Program, Ident, CallExpr, Expr, Callee, ObjectLit, ExprOrSpread, PropOrSpread, Prop, KeyValueProp, PropName, Lit, Str},
+    transforms::testing::test,
+    visit::{as_folder, FoldWith, VisitMut, VisitMutWith}, atoms::Atom,
+}, common::{DUMMY_SP, SourceMapper, SourceMap, FilePathMapping}, plugin::proxies::PluginSourceMapProxy};
+use swc_core::plugin::{plugin_transform, proxies::TransformPluginProgramMetadata};
+use swc_atoms::{JsWord, js_word};
+use swc_common::{
+    sync::Lrc,
+};
+
+pub struct TransformVisitor {
+    pub source_map: Lrc<dyn SourceMapper>,
+}
+
+impl TransformVisitor {
+    fn is_log_callee(&self, callee: &Callee) -> bool {
+        let id_log: JsWord = "log".into();
+
+        match callee {
+            Callee::Expr(expr) => match &**expr {
+                Expr::Ident(ident) => ident.sym == id_log,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+}
 
 impl VisitMut for TransformVisitor {
     // Implement necessary visit_mut_* methods for actual custom transform.
     // A comprehensive list of possible visitor methods can be found here:
     // https://rustdoc.swc.rs/swc_ecma_visit/trait.VisitMut.html
+
+
+    fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
+        n.visit_mut_children_with(self);
+
+        if !self.is_log_callee(&n.callee) {
+            return;
+        }
+
+        if n.args.len() <= 1 {
+            // Push `context` argument.
+            n.args.push(ExprOrSpread {
+                spread: None,
+                expr: Box::new(Expr::Object(ObjectLit {
+                    span: DUMMY_SP,
+                    props: vec![],
+                })),
+            });
+        }
+
+        if n.args.len() == 2 {
+          let filename = self.source_map.span_to_filename(n.span);
+
+          // Push `meta` argument.
+          n.args.push(ExprOrSpread {
+            spread: None,
+            expr: Box::new(Expr::Object(ObjectLit {
+                span: DUMMY_SP,
+                props: vec![
+                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                        key: PropName::Ident(Ident::new("file".into(), DUMMY_SP)),
+                        value: Box::new(Expr::Lit(Lit::Str(Str {
+                            span: DUMMY_SP,
+                            value: format!("{filename}").into(),
+                            raw: None,
+                        }))),
+                    }))),
+                ],
+            })),
+        });  
+        }
+    }
 }
 
 /// An example plugin function with macro support.
@@ -30,7 +94,9 @@ impl VisitMut for TransformVisitor {
 /// Refer swc_plugin_macro to see how does it work internally.
 #[plugin_transform]
 pub fn process_transform(program: Program, _metadata: TransformPluginProgramMetadata) -> Program {
-    program.fold_with(&mut as_folder(TransformVisitor))
+    program.fold_with(&mut as_folder(TransformVisitor {
+        source_map: Lrc::new(_metadata.source_map),
+    }))
 }
 
 // An example to test plugin transform.
@@ -39,10 +105,18 @@ pub fn process_transform(program: Program, _metadata: TransformPluginProgramMeta
 // unless explicitly required to do so.
 test!(
     Default::default(),
-    |_| as_folder(TransformVisitor),
+    |t| as_folder(TransformVisitor {
+        source_map: t.cm.clone(),
+    }),
     boo,
     // Input codes
-    r#"console.log("transform");"#,
+    r#"
+        import { log } from '@dxos/log';
+        log('test');
+    "#,
     // Output codes after transformed with plugin
-    r#"console.log("transform");"#
+    r#"
+        import { log } from '@dxos/log';
+        log('test', {}, { file: "input.js" });
+    "#
 );

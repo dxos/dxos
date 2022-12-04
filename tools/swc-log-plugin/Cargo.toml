@@ -12,6 +12,8 @@ lto = true
 [dependencies]
 serde = "1"
 swc_core = { version = "0.44.*", features = ["plugin_transform"] }
+swc_atoms = { version = "0.4.*" }
+swc_common = { version = "0.29.*" }
 
 # .cargo/config defines few alias to build plugin.
 # cargo build-wasi generates wasm-wasi32 binary
