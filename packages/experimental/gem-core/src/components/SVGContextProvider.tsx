@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import React, { ReactNode, useEffect, useMemo } from 'react';
+import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
 import { SVGContext } from '../context';
@@ -24,19 +24,28 @@ export interface SVGCOntextProviderProps {
 export const SVGContextProvider = ({ context: provided, children }: SVGCOntextProviderProps) => {
   const { ref: resizeRef, width, height } = useResizeObserver<HTMLDivElement>();
   const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
+  const [visibility, setVisibility] = useState<string>();
+
+  console.log(visibility);
 
   useEffect(() => {
     if (width && height) {
       context.setSize({ width, height });
       d3.select(context.svg)
-        .attr('visibility', 'visible')
+        .attr('visibility', visibility)
         .attr('viewBox', context.viewBox)
         .attr('width', width)
         .attr('height', height);
     } else {
-      d3.select(context.svg).attr('visibility', 'hidden'); // Hide until first resized.
+      // Check if initially visible.
+      if (visibility === undefined) {
+        const visibility = d3.select(context.svg).attr('visibility');
+        console.log(visibility);
+        setVisibility(visibility);
+        // d3.select(context.svg).attr('visibility', 'hidden'); // Hide until first resized.
+      }
     }
-  }, [width, height]);
+  }, [visibility, width, height]);
 
   return (
     <SVGContextDef.Provider value={context}>

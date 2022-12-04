@@ -4,21 +4,35 @@
 
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
+import { HashRouter, Navigate, useRoutes } from 'react-router-dom';
 
-import { usePageHandler } from '../hooks';
+import { Index, SlideContainer } from './SlideContainer';
 
-export const Pager: FC<{ page: number; length: number }> = ({ page, length }) => {
-  return (
-    <div className='absolute bottom-1 right-1 font-mono text-3xl'>
-      {page + 1}/{length}
-    </div>
-  );
+/**
+ * Router
+ */
+const Routes = ({ title, slides }: { title: string; slides: ReactNode[] }) => {
+  return useRoutes([
+    {
+      path: '/',
+      element: <Navigate to={'/index'} />
+    },
+    {
+      path: '/index',
+      element: <Index title={title} slides={slides} />
+    },
+    {
+      path: '/slide/:slide',
+      element: <SlideContainer slides={slides} />
+    }
+  ]);
 };
 
 /**
  * Main slide deck container.
  */
-export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
+// TODO(burdon): Create context for content.
+export const SlideDeck: FC<{ title: string; slides: ReactNode[] }> = ({ title, slides }) => {
   useEffect(() => {
     // TODO(burdon): This isn't working.
     // TODO(burdon): Key hook to trigger fullscreen model.
@@ -28,9 +42,7 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
     });
   }, []);
 
-  // Current page.
-  const page = usePageHandler(slides.length);
-  const Page = () => slides[page];
+  // Current slide.
 
   // Scaled props.
   const contentRef = useRef<HTMLDivElement>(null);
@@ -57,8 +69,8 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
       const nominalHeight = nominalWidth / aspectRatio;
 
       // Compute scaling factor required.
-      // TODO(burdon): If not fullscreen then make scale slightly smaller.
-      const scale = Math.min(width / nominalWidth, height / nominalHeight);
+      // TODO(burdon): If not fullscreen then make scale slightly smaller so there's a natural border.
+      const scale = Math.min(width / nominalWidth, height / nominalHeight) * 0.95;
 
       setProps({
         left: (width - nominalWidth) / 2,
@@ -83,23 +95,22 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
         overflow: 'hidden'
       }}
     >
-      <div
-        ref={contentRef}
-        className='bg-slide'
-        style={{
-          position: 'absolute',
-          display: 'flex',
-          flexDirection: 'column',
-          ...props
-        }}
-      >
-        {/* TODO(burdon): Show/hide based on front-matter. */}
-        <Pager page={page} length={slides.length} />
-
-        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-        {/* @ts-ignore */}
-        <Page />
-      </div>
+      {Object.keys(props).length !== 0 &&
+        <div
+          ref={contentRef}
+          className='bg-slide'
+          style={{
+            position: 'absolute',
+            display: 'flex',
+            flexDirection: 'column',
+            ...props
+          }}
+        >
+          <HashRouter>
+            <Routes title={title} slides={slides} />
+          </HashRouter>
+        </div>
+      }
     </div>
   );
 };

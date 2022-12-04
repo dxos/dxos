@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { HTMLProps, ReactNode } from 'react';
 
 export type CoverProps = {
   backgroundImage?: string;
   children: ReactNode[];
-} & React.HTMLProps<HTMLDivElement>;
+} & HTMLProps<HTMLDivElement>;
 
 /**
  * Cover page.

@@ -4,7 +4,6 @@
   "description": "Gem core components and utils.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": "https://github.com/dxos/gem/issues",
-  "repository": "dxos/gem.git",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",

@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import React, { HTMLProps } from 'react';
 
 export type ImageContainerProps = {
   backgroundImage?: string;
   backgroundSize?: 'cover' | 'contain';
   backgroundPosition?: string;
   fullBleed?: boolean;
-} & React.HTMLProps<HTMLDivElement>;
+} & HTMLProps<HTMLDivElement>;
 
 /**
  * Background image container.

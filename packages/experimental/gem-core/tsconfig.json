@@ -1,10 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "esModuleInterop": true,
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist",
     "strict": false
   },

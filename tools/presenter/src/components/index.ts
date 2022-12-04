@@ -3,6 +3,6 @@
 //
 
 export * from './Cover';
-export * from './Deck';
 export * from './ImageContainer';
-export * from './Test';
+export * from './SlideContainer';
+export * from './SlideDeck';

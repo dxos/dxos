@@ -17,7 +17,7 @@ const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/halo-app@${pac
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
+  base: '', // Ensure relative path to assets.
   server: {
     host: true,
     port: 3967
