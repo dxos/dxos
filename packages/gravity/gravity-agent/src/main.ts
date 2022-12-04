@@ -1,7 +1,6 @@
 //
 // Copyright 2022 DXOS.org
 //
-
 import fs from 'fs';
 import yaml from 'js-yaml';
 import { join } from 'path';
@@ -10,14 +9,15 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { TestBuilder } from '@dxos/client/testing';
+import { ProtoCodec } from '@dxos/codec-protobuf';
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
+import { schema } from '@dxos/protocols';
 import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
-import { ProtoCodec } from '@dxos/codec-protobuf';
 
 import { Agent } from './agent';
 import { TestStateMachineFactory } from './statemachine';
-import { schema } from '@dxos/protocols';
+
 // TODO(burdon): Logging meta doesn't work when running from pnpm agent.
 log.config({
   filter: 'info'
@@ -26,7 +26,7 @@ log.config({
 const parseYamlWithSchema = <T>(codec: ProtoCodec<T>, yamlSource: string): T => codec.fromObject(yaml.load(yamlSource));
 
 const main = () => {
-  const parser = yargs(hideBin(process.argv))
+  yargs(hideBin(process.argv))
     .scriptName('agent')
     .option('json', {
       type: 'boolean'
@@ -74,15 +74,16 @@ const main = () => {
           const agent = await new Agent({ config, services, spec, stateMachine });
           await agent.initialize();
           await agent.start();
+          await agent.stop();
           log.info('Done');
+          process.exit(0);
         } catch (err: any) {
           log.error(err);
           process.exit(1);
         }
       }
-    });
-
-  parser.parse();
+    }).argv;
+  // parser.parse();
   log('Tests are running...');
 };
 

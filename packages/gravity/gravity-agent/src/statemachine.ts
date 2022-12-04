@@ -3,10 +3,12 @@
 //
 import assert from 'assert';
 
-import { Trigger } from '@dxos/async';
+// import { Trigger } from '@dxos/async';
 import { Invitation, Space, Client, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Command } from '@dxos/protocols/proto/dxos/gravity';
+
+import { processSyncClient, processSyncServer } from './process';
 
 export type StateMachineFactory = (id: string) => AgentStateMachine;
 
@@ -65,42 +67,59 @@ export class GenericStateMachine extends AgentStateMachine {
     else if (command.createSpaceInvitation) {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
-      const observable = await space.createInvitation({
+      await space.createInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
 
-      const trigger = new Trigger();
-      observable.subscribe({
-        onSuccess(invitation: Invitation) {
-          trigger.wake();
-        },
-        onError(err: Error) {
-          throw err;
-        }
-      });
+      // const trigger = new Trigger();
+      // observable.subscribe({
+      //   onSuccess(invitation: Invitation) {
+      //     trigger.wake();
+      //   },
+      //   onError(err: Error) {
+      //     throw err;
+      //   }
+      // });
 
-      await trigger.wait();
+      // await trigger.wait();
     }
     //
     else if (command.acceptSpaceInvitation) {
-      const observable = await this.agent.client.echo.acceptInvitation({
+      await this.agent.client.echo.acceptInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
 
-      const trigger = new Trigger();
-      observable.subscribe({
-        onSuccess(invitation: Invitation) {
-          trigger.wake();
-        },
-        onError(err: Error) {
-          throw err;
-        }
-      });
+      // const trigger = new Trigger();
+      // observable.subscribe({
+      //   onSuccess(invitation: Invitation) {
+      //     trigger.wake();
+      //   },
+      //   onError(err: Error) {
+      //     throw err;
+      //   }
+      // });
 
-      await trigger.wait();
-    } else {
+      // await trigger.wait();
+    }
+    //
+    else if (command.syncServer) {
+      log('syncServer', { command });
+      await processSyncServer(command);
+    }
+    //
+    else if (command.syncClient) {
+      log('syncClient', { command });
+      const p = await processSyncClient(command);
+      log('syncClient ', { p });
+    }
+    //
+    else if (command.tearDown) {
+      await this.agent.client.echo.close();
+    }
+    //
+    else {
       log('Error: invalid command ', { command });
       throw new Error('Invalid command');
     }

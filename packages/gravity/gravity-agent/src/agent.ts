@@ -83,13 +83,13 @@ export class Agent implements AgentContext {
     }
 
     // setTimeout(async () => {
-      log.info('Starting test sequences...');
-      for (const sequence of this._spec.testSequences ?? []) {
-        await this.runSequence(sequence);
-        this.sequenceComplete.emit(sequence);
-      }
-      log.info('Test sequences complete.');
-      
+    log.info('Starting test sequences...');
+    for (const sequence of this._spec.testSequences ?? []) {
+      await this.runSequence(sequence);
+      this.sequenceComplete.emit(sequence);
+    }
+    log.info('Test sequences complete.');
+
     // }, 1000);
 
     // log('started', { id: this.id });
