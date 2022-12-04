@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import React, { ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
 import { SVGContext } from '../context';
@@ -24,28 +24,26 @@ export interface SVGCOntextProviderProps {
 export const SVGContextProvider = ({ context: provided, children }: SVGCOntextProviderProps) => {
   const { ref: resizeRef, width, height } = useResizeObserver<HTMLDivElement>();
   const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
-  const [visibility, setVisibility] = useState<string>();
-
-  console.log(visibility);
+  // const [visibility, setVisibility] = useState<string>();
 
   useEffect(() => {
     if (width && height) {
       context.setSize({ width, height });
       d3.select(context.svg)
-        .attr('visibility', visibility)
+        .attr('visibility', 'visible')
         .attr('viewBox', context.viewBox)
         .attr('width', width)
         .attr('height', height);
     } else {
-      // Check if initially visible.
-      if (visibility === undefined) {
-        const visibility = d3.select(context.svg).attr('visibility');
-        console.log(visibility);
-        setVisibility(visibility);
-        // d3.select(context.svg).attr('visibility', 'hidden'); // Hide until first resized.
-      }
+      // TODO(burdon): Option to hide until size is set?
+      //  Note: if ancestors are hidden (e.g., slides) then setting visible will override that.
+      // if (visibility === undefined) {
+      // const visibility = d3.select(context.svg).attr('visibility');
+      // setVisibility(visibility);
+      d3.select(context.svg).attr('visibility', 'hidden'); // Hide until first resized.
+      // }
     }
-  }, [visibility, width, height]);
+  }, [width, height]);
 
   return (
     <SVGContextDef.Provider value={context}>

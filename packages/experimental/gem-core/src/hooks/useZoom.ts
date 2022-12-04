@@ -39,6 +39,8 @@ export class ZoomHandler {
     this._options = Object.assign({}, options, defaultOptions);
     this._enabled = this._options.enabled ?? true;
 
+    console.log('>>>>>>>>>>', this._options, defaultOptions);
+
     // https://github.com/d3/d3-zoom#zoom
     this._zoom = d3.zoom().scaleExtent(this._options.extent ?? defaultOptions.extent);
   }

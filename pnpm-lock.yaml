@@ -4070,7 +4070,7 @@ importers:
       remark-mdx-frontmatter: ^2.1.1
       remark-parse-frontmatter: ^1.0.3
       remark-unwrap-texts: ^1.0.3
-      rollup: ^3.5.1
+      rollup: ~2.77.3
       tailwindcss: ^3.1.8
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.6.0
@@ -4096,7 +4096,7 @@ importers:
       react-router-dom: 6.4.3_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@dxos/vite-plugin': link:../../packages/sdk/vite-plugin
-      '@mdx-js/rollup': 2.1.5_rollup@3.5.1
+      '@mdx-js/rollup': 2.1.5_rollup@2.77.3
       '@react-pdf/renderer': 3.0.1_react@18.2.0
       '@tailwindcss/aspect-ratio': 0.4.2_tailwindcss@3.2.4
       '@tailwindcss/typography': 0.5.8_tailwindcss@3.2.4
@@ -4114,7 +4114,7 @@ importers:
       remark-mdx-frontmatter: 2.1.1
       remark-parse-frontmatter: 1.0.3
       remark-unwrap-texts: 1.0.3
-      rollup: 3.5.1
+      rollup: 2.77.3
       tailwindcss: 3.2.4
       tailwindcss-logical: 3.0.0_2lwn2upnx27dqeg6hqdu7sq75m
       tailwindcss-radix: 2.6.1
@@ -6910,14 +6910,14 @@ packages:
       '@types/react': 18.0.25
       react: 18.2.0
 
-  /@mdx-js/rollup/2.1.5_rollup@3.5.1:
+  /@mdx-js/rollup/2.1.5_rollup@2.77.3:
     resolution: {integrity: sha512-l90rSiwnEf6PnjH8uRXjZ1W0rR8p1fp1YIiDuA3uF7SOfxMQ98uymaIwI6BsX+8BC2dcWij7Racwp++JkvdOLQ==}
     peerDependencies:
       rollup: '>=2'
     dependencies:
       '@mdx-js/mdx': 2.1.5
       '@rollup/pluginutils': 4.2.1
-      rollup: 3.5.1
+      rollup: 2.77.3
       source-map: 0.7.4
       vfile: 5.3.6
     transitivePeerDependencies:
@@ -29065,14 +29065,6 @@ packages:
   /rollup/2.79.1:
     resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}
     engines: {node: '>=10.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
-  /rollup/3.5.1:
-    resolution: {integrity: sha512-hdQWTvPeiAbM6SUkxV70HdGUVxsgsc+CLy5fuh4KdgUBJ0SowXiix8gANgXoG3wEuLwfoJhCT2V+WwxfWq9Ikw==}
-    engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
