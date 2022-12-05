@@ -19,6 +19,7 @@ import {
 import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { IdentityManager } from '../identity';
@@ -89,10 +90,10 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               };
             },
 
+            // TODO(burdon): Reconcile with space invitation handler.
             async authenticate({ authenticationCode: code }) {
               log('received authentication request', { authenticationCode: code });
-              authenticationCode = code;
-              return invitation;
+              return { status: AuthenticationResponse.Status.OK };
             },
 
             // TODO(burdon): Not used: controlFeedKey, dataFeedKey.

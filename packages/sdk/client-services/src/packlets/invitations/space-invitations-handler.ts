@@ -21,6 +21,7 @@ import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import {
@@ -79,6 +80,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
       const peer = createProtoRpcPeer({
         exposed: {
+          // TODO(burdon): Reconcile with client/services.
           SpaceHostService: schema.getService('dxos.halo.invitations.SpaceHostService')
         },
         handlers: {
@@ -103,18 +105,18 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
             authenticate: async ({ authenticationCode: code }) => {
               log('received authentication request', { authenticationCode: code });
-              const invitationResponse: Invitation = {};
+              let status = AuthenticationResponse.Status.OK;
               if (invitation.authenticationCode) {
                 if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
-                  invitationResponse.error = Invitation.Error.INVALID_OPT_ATTEMPTS;
+                  status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
                 } else if (code !== invitation.authenticationCode) {
-                  invitationResponse.error = Invitation.Error.INVALID_OTP;
+                  status = AuthenticationResponse.Status.INVALID_OTP;
                 } else {
                   authenticationCode = code;
                 }
               }
 
-              return invitationResponse;
+              return { status };
             },
 
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
@@ -202,8 +204,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         await swarmConnection?.close();
       },
 
-      // TODO(burdon): Consider retry.
       onAuthenticate: async (code: string) => {
+        // TODO(burdon): Reset creates a race condition? Event?
         authenticated.wake(code);
       }
     });
@@ -237,27 +239,26 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         // 2. Get authentication code.
         // TODO(burdon): Test timeout (options for timeouts at different steps).
         if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-          const tryAuthentication = async () => {
-            for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
-              log('guest waiting for authentication code...');
-              observable.callback.onAuthenticating?.(invitation);
-              const authenticationCode = await authenticated.wait({ timeout });
+          for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
+            log('guest waiting for authentication code...');
+            observable.callback.onAuthenticating?.(invitation);
+            const authenticationCode = await authenticated.wait({ timeout });
 
-              log('sending authentication request');
-              const response = await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
-              if (response.error === undefined || response.error === Invitation.Error.OK) {
-                return;
-              }
-
-              if (response.error !== Invitation.Error.INVALID_OTP) {
-                throw new Error(`Authentication failed: ${response.error}`);
-              }
+            log('sending authentication request');
+            const response = await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
+            if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+              break;
             }
 
-            throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
-          };
-
-          await tryAuthentication();
+            if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
+              if (attempt === MAX_OTP_ATTEMPTS) {
+                throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
+              } else {
+                log('retrying invalid code', { attempt });
+                authenticated.reset();
+              }
+            }
+          }
         }
 
         // 3. Create local space.
@@ -278,7 +279,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         complete.wake();
       } catch (err) {
         if (!observable.cancelled) {
-          log.warn('failed', err);
+          log.warn('auth failed', err);
           observable.callback.onError(err);
         }
       } finally {

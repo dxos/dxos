@@ -47,13 +47,16 @@ describe('services/space-invitations-handler', () => {
     await space.close();
   });
 
-  test('creates and accepts invitation', async () => {
+  test.only('creates and accepts invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<PublicKey>();
     const complete2 = new Trigger<PublicKey>();
 
+    let attempt = 0;
     const authenticationCode = new Trigger<string>();
+
+    // TODO(burdon): NX build without network cache?
 
     const space1 = await host.spaceManager!.createSpace();
     const observable1 = host.spaceInvitations!.createInvitation(space1);
@@ -66,7 +69,12 @@ describe('services/space-invitations-handler', () => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
           onAuthenticating: async () => {
-            await observable2.authenticate(await authenticationCode.wait());
+            if (attempt++ === 0) {
+              // Force retry.
+              await observable2.authenticate('000000');
+            } else {
+              await observable2.authenticate(await authenticationCode.wait());
+            }
           },
           onSuccess: (invitation: Invitation) => {
             complete2.wake(invitation.spaceKey!);

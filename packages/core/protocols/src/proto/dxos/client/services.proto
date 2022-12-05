@@ -180,11 +180,14 @@ message Invitation {
   /// Guest's identity (only present if OFFLINE).
   optional dxos.keys.PublicKey identity_key = 6;
 
+  /// Space to join.
+  optional dxos.keys.PublicKey space_key = 7;
+
   /// Authentication code created by host.
-  optional string authentication_code = 7;
+  optional string authentication_code = 8;
 
   /// Timeout (ms).
-  optional int32 timeout = 8;
+  optional int32 timeout = 9;
 }
 
 message AuthenticationRequest {
@@ -197,17 +200,18 @@ message CancelInvitationRequest {
 }
 
 // Common TS interface.
+// TODO(burdon): Reconcile with halo/invitations.proto (e.g., common defs like error vs superset of services?)
 
 service HaloInvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc Authenticate(AuthenticationRequest) returns (Invitation);
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
 }
 
 service SpaceInvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc Authenticate(AuthenticationRequest) returns (Invitation);
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
 }
