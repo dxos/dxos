@@ -10,7 +10,7 @@ use swc_atoms::{JsWord, js_word};
 use swc_common::{
     sync::Lrc,
 };
-use swc_ecma_visit::Fold;
+use swc_ecma_visit::{Fold, swc_ecma_ast::MemberProp};
 
 pub struct TransformVisitor {
     pub source_map: Lrc<dyn SourceMapper>,
@@ -23,6 +23,10 @@ impl TransformVisitor {
         match callee {
             Callee::Expr(expr) => match &**expr {
                 Expr::Ident(ident) => ident.sym == id_log,
+                Expr::Member(member) => match (&*member.obj, &member.prop) {
+                    (Expr::Ident(obj), MemberProp::Ident(_prop)) => obj.sym == id_log,
+                    _ => false,
+                }
                 _ => false,
             },
             _ => false,
@@ -237,5 +241,31 @@ test!(
     r#"
         import { log } from '@dxos/log';
         log('foo', { key: 'value' }, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
+    "#
+);
+
+test!(
+    Default::default(),
+    test_factory,
+    log_levels,
+    // Input codes
+    r#"
+        import { log } from '@dxos/log';
+        log('default');
+        log.debug('debug');
+        log.info('info');
+        log.warn('warn');
+        log.error('error');
+        log.catch(err);
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        import { log } from '@dxos/log';
+        log('default', {}, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
+        log.debug('debug', {}, { file: "input.js", line: 4, scope: this, callSite: (f, a) => f(...a) });
+        log.info('info', {}, { file: "input.js", line: 5, scope: this, callSite: (f, a) => f(...a) });
+        log.warn('warn', {}, { file: "input.js", line: 6, scope: this, callSite: (f, a) => f(...a) });
+        log.error('error', {}, { file: "input.js", line: 7, scope: this, callSite: (f, a) => f(...a) });
+        log.catch(err, {}, { file: "input.js", line: 8, scope: this, callSite: (f, a) => f(...a) });
     "#
 );
