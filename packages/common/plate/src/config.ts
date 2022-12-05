@@ -11,17 +11,22 @@ export type Config = {
   inputShape?: z.AnyZodObject;
 };
 
-const exclude = [/\.plate\.[tj]s$/, /\/.t\//, ...TEMPLATE_FILE_IGNORE];
+const exclude = [/\/.t\//, ...TEMPLATE_FILE_IGNORE];
 
 export const defaultConfig: Config = {
   exclude
 };
 
+export type LoadConfigOptions = LoadModuleOptions & {
+  verbose?: boolean;
+};
+
 export const CONFIG_FILE_BASENAME = 'config.t';
 
-export const loadConfig = async (templateDirectory: string, options?: LoadModuleOptions): Promise<Config> => {
+export const loadConfig = async (templateDirectory: string, options?: LoadConfigOptions): Promise<Config> => {
   const tsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.ts');
   const jsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.js');
+  const { verbose } = { ...options };
   try {
     const module = (await safeLoadModule(tsName, options))?.module ?? (await safeLoadModule(jsName, options))?.module;
     const config = { ...defaultConfig, ...module?.default };
@@ -29,7 +34,8 @@ export const loadConfig = async (templateDirectory: string, options?: LoadModule
       ...config,
       exclude: module?.default?.exclude ? [...exclude, ...(config.exclude ?? [])] : config.exclude
     } as Config;
-  } catch (err) {
+  } catch (err: any) {
+    if (verbose) console.warn('exception while loading template config:\n' + err.toString());
     return defaultConfig;
   }
 };

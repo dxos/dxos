@@ -41,7 +41,7 @@ export const executeDirectoryTemplate = async <TInput>(
     parallel: true,
     verbose: false,
     interactive: true,
-    ...(await loadConfig(templateDirectory)),
+    ...(await loadConfig(templateDirectory, { verbose: options?.verbose })),
     ...options
   };
   const { parallel, verbose, interactive, overwrite, inputShape, include, exclude, ...restOptions } = mergedOptions;
