@@ -12,7 +12,7 @@ import { clear, copyToClipboard } from '../../util';
 import { ActionStatus, StatusState } from '../util';
 
 export const Share: FC<{
-  onCreate: () => Promise<CancellableInvitationObservable>;
+  onCreate: () => CancellableInvitationObservable;
 }> = ({ onCreate }) => {
   const isMounted = useMounted();
   const [invitation, setInvitation] = useState<Invitation>();
@@ -23,7 +23,7 @@ export const Share: FC<{
   useAsyncEffect(
     async () => {
       // TODO(burdon): Set timeout to process invitation? Separate method to start?
-      const observable = await onCreate();
+      const observable = onCreate();
       observable.subscribe({
         onConnected: async (invitation: Invitation) => {
           setInvitation(invitation);
