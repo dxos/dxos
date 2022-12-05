@@ -47,7 +47,7 @@ describe('services/space-invitations-handler', () => {
     await space.close();
   });
 
-  test.only('creates and accepts invitation', async () => {
+  test('creates and accepts invitation with retry', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<PublicKey>();
@@ -55,8 +55,6 @@ describe('services/space-invitations-handler', () => {
 
     let attempt = 0;
     const authenticationCode = new Trigger<string>();
-
-    // TODO(burdon): NX build without network cache?
 
     const space1 = await host.spaceManager!.createSpace();
     const observable1 = host.spaceInvitations!.createInvitation(space1);

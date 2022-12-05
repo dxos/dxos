@@ -90,9 +90,10 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               };
             },
 
-            // TODO(burdon): Reconcile with space invitation handler.
+            // TODO(burdon): Reconcile with space invitation handler (retries).
             async authenticate({ authenticationCode: code }) {
               log('received authentication request', { authenticationCode: code });
+              authenticationCode = code;
               return { status: AuthenticationResponse.Status.OK };
             },
 
@@ -100,12 +101,12 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
             presentAdmissionCredentials: async (credentials) => {
               try {
                 // Check authenticated.
-                if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+                if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
                   if (
                     invitation.authenticationCode === undefined ||
-                    authenticationCode !== invitation.authenticationCode
+                    invitation.authenticationCode !== authenticationCode
                   ) {
-                    throw new Error('authentication code not set');
+                    throw new Error(`invalid authentication code: ${authenticationCode}`);
                   }
                 }
 
@@ -233,7 +234,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
         complete.wake(identityKey);
       } catch (err) {
         if (!observable.cancelled) {
-          log.warn('failed', err);
+          log.warn('auth failed', err);
           observable.callback.onError(err);
         }
       } finally {

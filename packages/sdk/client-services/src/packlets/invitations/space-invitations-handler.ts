@@ -121,9 +121,14 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
-                if (invitation.authenticationCode && invitation.authenticationCode !== authenticationCode) {
-                  log.error('bad auth code', { code: authenticationCode, expected: invitation.authenticationCode });
-                  throw new Error('authentication code not set');
+                // Check authenticated.
+                if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
+                  if (
+                    invitation.authenticationCode === undefined ||
+                    invitation.authenticationCode !== authenticationCode
+                  ) {
+                    throw new Error(`invalid authentication code: ${authenticationCode}`);
+                  }
                 }
 
                 log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
