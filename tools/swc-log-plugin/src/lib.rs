@@ -1,16 +1,14 @@
-use std::{borrow::Borrow, sync::Arc};
-
 use swc_core::{ecma::{
     ast::{Program, Ident, CallExpr, Expr, Callee, ObjectLit, ExprOrSpread, PropOrSpread, Prop, KeyValueProp, PropName, Lit, Str, Number, ThisExpr, ArrowExpr, Param, Pat, BindingIdent},
     transforms::testing::{test, Tester},
-    visit::{as_folder, FoldWith, VisitMut, VisitMutWith, Folder}, atoms::Atom,
-}, common::{DUMMY_SP, SourceMapper, SourceMap, FilePathMapping}, plugin::proxies::PluginSourceMapProxy};
+    visit::{as_folder, FoldWith, VisitMut, VisitMutWith},
+}, common::{DUMMY_SP, SourceMapper}};
 use swc_core::plugin::{plugin_transform, proxies::TransformPluginProgramMetadata};
-use swc_atoms::{JsWord, js_word};
+use swc_atoms::JsWord;
 use swc_common::{
     sync::Lrc,
 };
-use swc_ecma_visit::{Fold, swc_ecma_ast::{MemberProp, ImportDecl, ImportSpecifier, Id}};
+use swc_ecma_visit::{Fold, swc_ecma_ast::{MemberProp, ImportDecl, ImportSpecifier, Id, ModuleExportName}};
 
 pub struct TransformVisitor {
     pub source_map: Lrc<dyn SourceMapper>,
@@ -87,7 +85,7 @@ impl VisitMut for TransformVisitor {
     // A comprehensive list of possible visitor methods can be found here:
     // https://rustdoc.swc.rs/swc_ecma_visit/trait.VisitMut.html
 
-    // Visit every import to mark the `log` identifier.
+    // Visit every import to mark proper `log` identifiers.
     fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
         let log_package_name: JsWord = LOG_PACKAGE_NAME.into();
         let log_function_name: JsWord = LOG_FUNCTION_NAME.into();
@@ -96,7 +94,16 @@ impl VisitMut for TransformVisitor {
             for specifier in &mut n.specifiers {
                 match specifier {
                     ImportSpecifier::Named(named) => {
-                        if named.local.sym == log_function_name {
+                        let imported_name = if let Some(imported_name) = &named.imported {
+                            match imported_name {
+                                ModuleExportName::Ident(id) => id,
+                                _ => continue,
+                            }
+                        } else {
+                            &named.local
+                        };
+
+                        if imported_name.sym == log_function_name {
                             dbg!(&named.local);
                             self.log_ids.push(named.local.to_id());
                         }
@@ -314,5 +321,81 @@ test!(
     r#"
         import { log } from 'debug';
         log('test');
+    "#
+);
+
+test!(
+    Default::default(),
+    test_factory,
+    ignores_other_log_functions,
+    // Input codes
+    r#"
+        const log = () => {};
+        log('test');
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        const log = () => {};
+        log('test');
+    "#
+);
+
+
+test!(
+    Default::default(),
+    test_factory,
+    import_renames,
+    // Input codes
+    r#"
+        import { log as dxosLog } from '@dxos/log';
+        dxosLog('test');
+        dxosLog.debug('debug');
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        import { log as dxosLog } from '@dxos/log';
+        dxosLog('test', {}, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
+        dxosLog.debug('debug', {}, { file: "input.js", line: 4, scope: this, callSite: (f, a) => f(...a) });
+    "#
+);
+
+test!(
+    Default::default(),
+    test_factory,
+    two_log_imports,
+    // Input codes
+    r#"
+        import { log as dxosLog } from '@dxos/log';
+        import { log } from 'debug';
+        dxosLog('test 1');
+        log('test 2');
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        import { log as dxosLog } from '@dxos/log';
+        import { log } from 'debug';
+        dxosLog('test 1', {}, { file: "input.js", line: 4, scope: this, callSite: (f, a) => f(...a) });
+        log('test 2');
+    "#
+);
+
+
+test!(
+    Default::default(),
+    test_factory,
+    two_log_imports_2,
+    // Input codes
+    r#"
+        import { log } from '@dxos/log';
+        import { log as debugLog } from 'debug';
+        log('test 1');
+        debugLog('test 2');
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        import { log } from '@dxos/log';
+        import { log as debugLog } from 'debug';
+        log('test 1', {}, { file: "input.js", line: 4, scope: this, callSite: (f, a) => f(...a) });
+        debugLog('test 2');
     "#
 );
