@@ -9,6 +9,8 @@ import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 
+const logSwcPlugin = require.resolve('@dxos/swc-log-plugin')
+
 export interface EsbuildExecutorOptions {
   bundle: boolean;
   bundlePackages: string[];
@@ -34,6 +36,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       const metafile =
         options.entryPoints.length > 1 ? `${outdir}/meta.json` : `${options.outputPath}/${platform}.meta.json`;
 
+      const start = Date.now();
       const result = await build({
         entryPoints: options.entryPoints,
         outdir,
@@ -68,6 +71,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                 const output = await transform(source, {
                   filename: args.path,
                   sourceMaps: 'inline',
+                  minify: false,
                   jsc: {
                     parser: {
                       syntax: 'typescript',
@@ -75,7 +79,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                     },
                     experimental: {
                       plugins: [
-                        [require.resolve('@dxos/swc-log-plugin'), {}]
+                        [logSwcPlugin, {}]
                       ],
                     }
                   },
@@ -93,7 +97,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
               if (context.isVerbose) {
                 onEnd(() => {
                   console.log(
-                    `Log preprocessing took ${time}ms for ${files} files (${(time / files).toFixed(0)} ms/file).`
+                    `Log preprocessing took (in parallel) ${time}ms for ${files} files (${(time / files).toFixed(0)} ms/file).`
                   );
                 });
               }
@@ -103,6 +107,9 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       });
 
       await writeFile(metafile, JSON.stringify(result.metafile), 'utf-8');
+      if(context.isVerbose) {
+        console.log(`Build took ${Date.now() - start}ms.`);
+      }
 
       return result.errors;
     })
