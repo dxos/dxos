@@ -77,7 +77,7 @@ export default class Create extends BaseCommand {
       const result = await executeDirectoryTemplate({
         templateDirectory,
         outputDirectory,
-        verbose: false,
+        verbose: true,
         input: {
           monorepo: false,
           name
