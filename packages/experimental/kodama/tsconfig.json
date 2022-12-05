@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
