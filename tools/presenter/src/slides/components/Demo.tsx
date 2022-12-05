@@ -12,7 +12,6 @@ import { SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { convertTreeToGraph, createTree, Graph, Markers, TestGraphModel } from '@dxos/gem-spore';
 
 // console.log(Client);
-
 export const Spinner = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
@@ -20,7 +19,7 @@ export const Spinner = () => {
     <SVGContextProvider>
       <SVG>
         <Markers />
-        <Zoom extent={[4, 8]}>
+        <Zoom extent={[2, 4]}>
           <Graph model={model} drag arrows />
         </Zoom>
       </SVG>

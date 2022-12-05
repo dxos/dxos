@@ -4,6 +4,7 @@
 
 import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
+import defaultsDeep from 'lodash.defaultsdeep';
 import { RefObject, useEffect, useMemo, useRef } from 'react';
 
 import { SVGContext } from '../context';
@@ -36,10 +37,8 @@ export class ZoomHandler {
     private readonly _context: SVGContext,
     options: ZoomOptions
   ) {
-    this._options = Object.assign({}, options, defaultOptions);
+    this._options = defaultsDeep({}, options, defaultOptions);
     this._enabled = this._options.enabled ?? true;
-
-    console.log('>>>>>>>>>>', this._options, defaultOptions);
 
     // https://github.com/d3/d3-zoom#zoom
     this._zoom = d3.zoom().scaleExtent(this._options.extent ?? defaultOptions.extent);
@@ -58,13 +57,22 @@ export class ZoomHandler {
 
   init() {
     this.setEnabled(this._enabled);
+    this.reset(0);
+    return this;
   }
 
   setEnabled(enable: boolean) {
     if (enable) {
       d3.select(this._context.svg)
         .call(this._zoom)
-        .on('dblclick.zoom', this._options?.onDblClick ? () => this._options.onDblClick(this) : null);
+        .on(
+          'dblclick.zoom',
+          this._options?.onDblClick
+            ? () => {
+                this._options.onDblClick(this);
+              }
+            : null
+        );
     } else {
       d3.select(this._context.svg).on('.zoom', null); // Unbind the internal event handler.
     }
@@ -74,7 +82,10 @@ export class ZoomHandler {
   }
 
   reset(duration = 500) {
-    d3.select(this._context.svg).transition().duration(duration).call(this._zoom.transform, d3.zoomIdentity);
+    // TODO(burdon): Scale to midpoint in extent.
+    const scale = this._options.extent[0] ?? 1;
+    const transform = d3.zoomIdentity.scale(scale);
+    d3.select(this._context.svg).transition().duration(duration).call(this._zoom.transform, transform);
 
     return this;
   }
@@ -85,20 +96,20 @@ export class ZoomHandler {
  * @param options
  */
 export const useZoom = (options: ZoomOptions = defaultOptions): ZoomHandler => {
-  const ref = useRef<SVGGElement>();
   const context = useSvgContext();
-  const zoom = useMemo(() => new ZoomHandler(ref, context, options), []);
+  const ref = useRef<SVGGElement>();
+  const handler = useMemo(() => new ZoomHandler(ref, context, options), []);
 
   useEffect(() => {
     // Transform container.
     // TODO(burdon): Implement momentum.
-    zoom.zoom.on('zoom', ({ transform }: { transform: ZoomTransform }) => {
+    handler.zoom.on('zoom', ({ transform }: { transform: ZoomTransform }) => {
       context.setTransform(transform); // Fires the resize event (e.g., to update grid).
       d3.select(ref.current).attr('transform', transform as any);
     });
 
-    zoom.init();
-  }, [zoom]);
+    handler.init();
+  }, [handler]);
 
-  return zoom;
+  return handler;
 };
