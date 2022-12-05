@@ -1,7 +1,7 @@
 use std::{borrow::Borrow, sync::Arc};
 
 use swc_core::{ecma::{
-    ast::{Program, Ident, CallExpr, Expr, Callee, ObjectLit, ExprOrSpread, PropOrSpread, Prop, KeyValueProp, PropName, Lit, Str, Number},
+    ast::{Program, Ident, CallExpr, Expr, Callee, ObjectLit, ExprOrSpread, PropOrSpread, Prop, KeyValueProp, PropName, Lit, Str, Number, ThisExpr, ArrowExpr, Param, Pat, BindingIdent},
     transforms::testing::test,
     visit::{as_folder, FoldWith, VisitMut, VisitMutWith}, atoms::Atom,
 }, common::{DUMMY_SP, SourceMapper, SourceMap, FilePathMapping}, plugin::proxies::PluginSourceMapProxy};
@@ -79,6 +79,43 @@ impl VisitMut for TransformVisitor {
                             raw: None,
                         }))),
                     }))),
+                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                        key: PropName::Ident(Ident::new("scope".into(), DUMMY_SP)),
+                        value: Box::new(Expr::This(ThisExpr {
+                            span: DUMMY_SP,
+                        })),
+                    }))),
+                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                        key: PropName::Ident(Ident::new("callSite".into(), DUMMY_SP)),
+                        value: Box::new(Expr::Arrow(ArrowExpr {
+                            span: DUMMY_SP,
+                            params: vec![
+                                Pat::Ident(BindingIdent {
+                                    id: Ident::new("f".into(), DUMMY_SP),
+                                    type_ann: None,
+                                }),
+                                Pat::Ident(BindingIdent {
+                                    id: Ident::new("a".into(), DUMMY_SP),
+                                    type_ann: None,
+                                }),
+                            ],
+                            body: swc_core::ecma::ast::BlockStmtOrExpr::Expr(Box::new(Expr::Call(CallExpr {
+                                span: DUMMY_SP,
+                                callee: Callee::Expr(Box::new(Expr::Ident(Ident::new("f".into(), DUMMY_SP)))),
+                                args: vec![
+                                    swc_core::ecma::ast::ExprOrSpread {
+                                        spread: Some(DUMMY_SP),
+                                        expr: Box::new(Expr::Ident(Ident::new("a".into(), DUMMY_SP))),
+                                    },
+                                ],
+                                type_args: None,
+                            }))),
+                            is_async: false,
+                            is_generator: false,
+                            type_params: None,
+                            return_type: None
+                        })),
+                    }))),
                 ],
             })),
         });  
@@ -126,6 +163,6 @@ test!(
     // Output codes after transformed with plugin
     r#"
         import { log } from '@dxos/log';
-        log('test', {}, { file: "input.js", line: 3 });
+        log('test', {}, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
     "#
 );
