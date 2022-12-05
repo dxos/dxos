@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node.js",
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -52,8 +52,5 @@
     "@mui/material": ">=5.0.0",
     "react": "*",
     "react-dom": "*"
-  },
-  "publishConfig": {
-    "types": "dist/types/src/index.d.ts"
   }
 }
