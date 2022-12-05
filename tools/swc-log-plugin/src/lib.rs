@@ -104,7 +104,6 @@ impl VisitMut for TransformVisitor {
                         };
 
                         if imported_name.sym == log_function_name {
-                            dbg!(&named.local);
                             self.log_ids.push(named.local.to_id());
                         }
                     }

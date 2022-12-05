@@ -3,13 +3,11 @@
 //
 
 import type { ExecutorContext } from '@nrwl/devkit';
+import { transform } from '@swc/core';
 import { build, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
-import * as ts from 'typescript';
-
-import { transformSourceFile } from '@dxos/log-hook';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
@@ -67,20 +65,27 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
                 const startTime = Date.now();
 
-                const sourceFile = ts.createSourceFile(
-                  args.path,
-                  source,
-                  ts.ScriptTarget.ESNext,
-                  false,
-                  args.path.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
-                );
-                const transformed = transformSourceFile(sourceFile, (ts as any).nullTransformationContext);
+                const output = await transform(source, {
+                  filename: args.path,
+                  sourceMaps: 'inline',
+                  jsc: {
+                    parser: {
+                      syntax: 'typescript',
+                      decorators: true,
+                    },
+                    experimental: {
+                      plugins: [
+                        [require.resolve('@dxos/swc-log-plugin'), {}]
+                      ],
+                    }
+                  },
+                })
 
                 time += Date.now() - startTime;
                 files++;
 
                 return {
-                  contents: ts.createPrinter().printFile(transformed),
+                  contents: output.code,
                   loader: args.path.endsWith('x') ? 'tsx' : 'ts'
                 };
               });
