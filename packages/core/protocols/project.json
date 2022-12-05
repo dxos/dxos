@@ -29,6 +29,10 @@
       ]
     },
     "prebuild": {
+      "dependsOn": [
+        "^build",
+        "^compile"
+      ],
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
