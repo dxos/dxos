@@ -7,3 +7,4 @@ export * from './executeFileTemplate';
 export * from './executeDirectoryTemplate';
 export * from './templateLiterals';
 export * from './catFiles';
+export * from './executeDirectoryTemplate';
