@@ -81,7 +81,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                       plugins: [
                         [logSwcPlugin, {}]
                       ],
-                    }
+                    },
+                    target: 'es2022',
                   },
                 })
 
