@@ -1,7 +1,7 @@
 use std::{borrow::Borrow, sync::Arc};
 
 use swc_core::{ecma::{
-    ast::{Program, Ident, CallExpr, Expr, Callee, ObjectLit, ExprOrSpread, PropOrSpread, Prop, KeyValueProp, PropName, Lit, Str},
+    ast::{Program, Ident, CallExpr, Expr, Callee, ObjectLit, ExprOrSpread, PropOrSpread, Prop, KeyValueProp, PropName, Lit, Str, Number},
     transforms::testing::test,
     visit::{as_folder, FoldWith, VisitMut, VisitMutWith}, atoms::Atom,
 }, common::{DUMMY_SP, SourceMapper, SourceMap, FilePathMapping}, plugin::proxies::PluginSourceMapProxy};
@@ -55,6 +55,7 @@ impl VisitMut for TransformVisitor {
 
         if n.args.len() == 2 {
           let filename = self.source_map.span_to_filename(n.span);
+          let line = self.source_map.span_to_lines(n.span).unwrap().lines[0].line_index + 1;
 
           // Push `meta` argument.
           n.args.push(ExprOrSpread {
@@ -67,6 +68,14 @@ impl VisitMut for TransformVisitor {
                         value: Box::new(Expr::Lit(Lit::Str(Str {
                             span: DUMMY_SP,
                             value: format!("{filename}").into(),
+                            raw: None,
+                        }))),
+                    }))),
+                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                        key: PropName::Ident(Ident::new("line".into(), DUMMY_SP)),
+                        value: Box::new(Expr::Lit(Lit::Num(Number {
+                            span: DUMMY_SP,
+                            value: line as f64,
                             raw: None,
                         }))),
                     }))),
@@ -117,6 +126,6 @@ test!(
     // Output codes after transformed with plugin
     r#"
         import { log } from '@dxos/log';
-        log('test', {}, { file: "input.js" });
+        log('test', {}, { file: "input.js", line: 3 });
     "#
 );
