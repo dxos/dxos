@@ -23,7 +23,6 @@ export const loadConfig = async (templateDirectory: string, options?: LoadModule
   const tsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.ts');
   const jsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.js');
   try {
-    console.log('loading config');
     const module = (await safeLoadModule(tsName, options))?.module ?? (await safeLoadModule(jsName, options))?.module;
     const config = { ...defaultConfig, ...module?.default };
     return {
@@ -34,3 +33,5 @@ export const loadConfig = async (templateDirectory: string, options?: LoadModule
     return defaultConfig;
   }
 };
+
+export const defineConfig = (config: Config) => config;
