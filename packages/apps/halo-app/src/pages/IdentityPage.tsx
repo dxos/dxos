@@ -36,16 +36,16 @@ const IdentityPage = () => {
       <Avatar
         size={32}
         variant='circle'
-        className={defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' })}
         fallbackValue={profileHex}
         label={profile?.displayName ?? humanize(profileHex)}
+        slots={{ root: { className: defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' }) } }}
       />
       <Input
         label={t('displayName label', { ns: 'uikit' })}
         placeholder={humanize(profileHex)}
         initialValue={profile?.displayName}
         onChange={onChangeDisplayName}
-        className='w-full'
+        slots={{ root: { className: 'w-full' } }}
       />
       {/* TODO(wittjosiah): Allow updating displayName. */}
       {/* {displayName !== profile?.displayName && (
