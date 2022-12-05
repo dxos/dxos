@@ -60,14 +60,18 @@ message AcceptSpaceInvitationCommand {
 }
 
 message SyncServer {
-  string id = 1;
-  string msg = 2;
+  string id = 1; // server id
+  string host = 2; // host name the sync server is running on
+  uint32 port = 3; // port number to bind to
+  bool verbose = 4;
 }
 
 message SyncClient {
   string id = 1;
-  string msg = 2;
-  string to = 3;
+  string srv_id = 2;
+  string host = 3;
+  uint32 port = 4;
+  bool verbose = 5;
 }
 
 message TearDown {

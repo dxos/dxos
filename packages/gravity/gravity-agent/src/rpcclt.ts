@@ -14,16 +14,19 @@ enum On {
 
 export class Client {
   constructor(config: Config) {
-    ipc.config.id = config.serverName;
+    ipc.config.id = config.id;
+    ipc.config.networkHost = config.host;
+    ipc.config.networkPort = config.port;
     ipc.config.stopRetrying = true;
     ipc.config.silent = config.verbose ? !config.verbose : true;
+    ipc.config.logInColor = true;
   }
 
-  async command(method: string, input: any): Promise<any> {
+  async call(method: string, input: any): Promise<any> {
     return new Promise((resolve, reject) => {
       const serverName = ipc.config.id;
 
-      ipc.connectTo(serverName, () => {
+      ipc.connectToNet(ipc.config.id, ipc.config.networkHost, ipc.config.networkPort, () => {
         const server = ipc.of[serverName];
         server.on(On.CONNECT, () => {
           server.emit(method, input);

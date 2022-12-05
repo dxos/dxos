@@ -20,7 +20,7 @@
         "start",
         "--verbose",
         "--config", "./config/config.yml",
-        "--spec", "./config/spec-test-host.yml"
+        "--spec", "./config/spec-test-guest.yml"
       ]
     }
   ]

@@ -73,7 +73,6 @@ export class Agent implements AgentContext {
   }
 
   async start() {
-    // log('starting...', { id: this.id });
     if (this._running) {
       return;
     }
@@ -82,7 +81,6 @@ export class Agent implements AgentContext {
       await this.runSequence(this._spec.startSequence);
     }
 
-    // setTimeout(async () => {
     log.info('Starting test sequences...');
     for (const sequence of this._spec.testSequences ?? []) {
       await this.runSequence(sequence);
@@ -90,9 +88,6 @@ export class Agent implements AgentContext {
     }
     log.info('Test sequences complete.');
 
-    // }, 1000);
-
-    // log('started', { id: this.id });
     this._running = true;
   }
 

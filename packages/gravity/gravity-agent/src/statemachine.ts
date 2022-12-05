@@ -51,11 +51,11 @@ export class GenericStateMachine extends AgentStateMachine {
   public readonly spaces = new Map<string, Space>();
 
   async processCommand(command: Command) {
-    //
+    // --- CREATE PROFILE
     if (command.createProfile) {
       await this.agent.client.halo.createProfile();
     }
-    //
+    // --- CREATE SPACE ---
     else if (command.createSpace) {
       const id = command.createSpace.id;
       const space = await this.agent.client.echo.createSpace();
@@ -63,7 +63,7 @@ export class GenericStateMachine extends AgentStateMachine {
         this.spaces.set(id, space);
       }
     }
-    //
+    // --- CREATE SPACE INVITATION ---
     else if (command.createSpaceInvitation) {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
@@ -71,50 +71,23 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
-
-      // const trigger = new Trigger();
-      // observable.subscribe({
-      //   onSuccess(invitation: Invitation) {
-      //     trigger.wake();
-      //   },
-      //   onError(err: Error) {
-      //     throw err;
-      //   }
-      // });
-
-      // await trigger.wait();
     }
-    //
+    // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
       await this.agent.client.echo.acceptInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
-
-      // const trigger = new Trigger();
-      // observable.subscribe({
-      //   onSuccess(invitation: Invitation) {
-      //     trigger.wake();
-      //   },
-      //   onError(err: Error) {
-      //     throw err;
-      //   }
-      // });
-
-      // await trigger.wait();
     }
-    //
+    // --- SYNC CHANNEL: SRV ---
     else if (command.syncServer) {
-      log('syncServer', { command });
-      await processSyncServer(command);
+      await processSyncServer(command); // <- process.ts
     }
-    //
+    // --- SYNC CHANNEL: CLT ---
     else if (command.syncClient) {
-      log('syncClient', { command });
-      const p = await processSyncClient(command);
-      log('syncClient ', { p });
+      await processSyncClient(command); // <- process.ts
     }
-    //
+    // --- TEAR DOWN ---
     else if (command.tearDown) {
       await this.agent.client.echo.close();
     }

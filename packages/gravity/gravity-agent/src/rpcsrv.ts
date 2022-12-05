@@ -13,8 +13,9 @@ export type MethodCall = (input: any, cb?: MethodCallback) => void;
 export type MethodMap = Map<string, MethodCall>;
 
 export type Config = {
-  serverName: string;
-  sync?: boolean;
+  id: string;
+  host: string;
+  port: number;
   verbose?: boolean;
 };
 
@@ -36,15 +37,16 @@ export enum On {
 export class Server {
   trigger: Trigger;
   constructor(config: Config, methods: MethodMap) {
-    // setup config
-    ipc.config.id = config.serverName;
+    ipc.config.id = config.id;
+    ipc.config.networkHost = config.host;
+    ipc.config.networkPort = config.port;
     ipc.config.silent = !config.verbose;
     ipc.config.logInColor = true;
-    ipc.config.sync = config.sync ? config.sync : true;
+    ipc.config.sync = true;
     this.trigger = new Trigger();
-    ipc.serve(() => {
-      ipc.log(Stage.STARTING);
-      ipc.log(`Synchronization ${Stage.STARTED}`);
+
+    ipc.serveNet(() => {
+      ipc.log(`[rpc sync] sync srv ${Stage.STARTED}`);
     });
 
     ipc.server.on(On.SYNC, (input, socket) => {
