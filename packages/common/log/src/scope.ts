@@ -16,7 +16,7 @@ const logInfoProperties = Symbol('logInfoProperties');
  * }
  * ```
  */
-export const logInfo = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+export const logInfo = (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
   // console.log(target, propertyKey, descriptor);
   (target[logInfoProperties] ??= []).push(propertyKey);
 };
