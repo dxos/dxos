@@ -28,38 +28,12 @@ impl TransformVisitor {
             _ => false,
         }
     }
-}
 
-impl VisitMut for TransformVisitor {
-    // Implement necessary visit_mut_* methods for actual custom transform.
-    // A comprehensive list of possible visitor methods can be found here:
-    // https://rustdoc.swc.rs/swc_ecma_visit/trait.VisitMut.html
+    fn create_log_meta(&self,  n: &CallExpr) -> ExprOrSpread {
+        let filename = self.source_map.span_to_filename(n.span);
+        let line = self.source_map.span_to_lines(n.span).unwrap().lines[0].line_index + 1;
 
-
-    fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
-        n.visit_mut_children_with(self);
-
-        if !self.is_log_callee(&n.callee) {
-            return;
-        }
-
-        if n.args.len() <= 1 {
-            // Push `context` argument.
-            n.args.push(ExprOrSpread {
-                spread: None,
-                expr: Box::new(Expr::Object(ObjectLit {
-                    span: DUMMY_SP,
-                    props: vec![],
-                })),
-            });
-        }
-
-        if n.args.len() <= 2 {
-          let filename = self.source_map.span_to_filename(n.span);
-          let line = self.source_map.span_to_lines(n.span).unwrap().lines[0].line_index + 1;
-
-          // Push `meta` argument.
-          n.args.push(ExprOrSpread {
+        ExprOrSpread {
             spread: None,
             expr: Box::new(Expr::Object(ObjectLit {
                 span: DUMMY_SP,
@@ -92,7 +66,37 @@ impl VisitMut for TransformVisitor {
                     }))),
                 ],
             })),
-        });  
+        }
+    }
+}
+
+impl VisitMut for TransformVisitor {
+    // Implement necessary visit_mut_* methods for actual custom transform.
+    // A comprehensive list of possible visitor methods can be found here:
+    // https://rustdoc.swc.rs/swc_ecma_visit/trait.VisitMut.html
+
+
+    fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
+        n.visit_mut_children_with(self);
+
+        if !self.is_log_callee(&n.callee) {
+            return;
+        }
+
+        if n.args.len() <= 1 {
+            // Push `context` argument.
+            n.args.push(ExprOrSpread {
+                spread: None,
+                expr: Box::new(Expr::Object(ObjectLit {
+                    span: DUMMY_SP,
+                    props: vec![],
+                })),
+            });
+        }
+
+        if n.args.len() <= 2 {
+          // Push `meta` argument.
+          n.args.push(self.create_log_meta(n));  
         }
     }
 }
