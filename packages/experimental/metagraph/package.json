@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/neutral.js",
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "testing.d.ts",
     "testing.js",
@@ -25,8 +25,5 @@
   },
   "devDependencies": {
     "@types/node-fetch": "^2.5.10"
-  },
-  "publishConfig": {
-    "types": "dist/types/src/index.d.ts"
   }
 }

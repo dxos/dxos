@@ -9,7 +9,8 @@ import crypto from 'hypercore-crypto';
 // https://github.com/skjorrface/animals.txt/blob/master/animals.txt (500 animals)
 // https://gist.github.com/Xeoncross/5381806b18de1f395187 (900 positive adjectives)
 
-import words from '../data/words.json';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const words = require('../data/words.json');
 
 // TODO(burdon): Make exensible without breaking existing words (e.g., add byte and word).
 // TODO(burdon): Store hash of words and check consistent in code.
