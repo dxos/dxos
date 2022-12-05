@@ -14,7 +14,7 @@
     "./src/index.ts": "./src/browser/index.ts",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "src/index.ts",
+  "types": "./dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -38,7 +38,6 @@
     "source-map-support": "^0.5.12"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "./dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

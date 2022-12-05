@@ -29,6 +29,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // @dxos/presenter
+    case '@react-pdf/renderer': {
+      packageJson.peerDependencies['react'] = '^18.0.0'
+    }
+
     // @storybook/react transitive dep
     case 'react-element-to-jsx-string': {
       packageJson.peerDependencies['react'] = '^18.0.0'

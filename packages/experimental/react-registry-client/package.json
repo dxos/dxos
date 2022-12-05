@@ -12,7 +12,7 @@
     "node:assert": "assert",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "scripts": {
     "book": "esbuild-server book"
   },
@@ -37,8 +37,5 @@
   "peerDependencies": {
     "react": "*",
     "react-dom": "*"
-  },
-  "publishConfig": {
-    "types": "dist/types/src/index.d.ts"
   }
 }
