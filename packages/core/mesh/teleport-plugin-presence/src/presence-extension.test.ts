@@ -6,42 +6,60 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { latch } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { describe, test } from '@dxos/test';
 
-import { createPresencePair } from './testing';
+import { TestBuilder } from './testing';
 
 describe('PresenceExtension', () => {
   test('Two peers announce each other', async () => {
-    const peerId1 = PublicKey.random();
-    const peerId2 = PublicKey.random();
-    const { presence1, presence2 } = await createPresencePair({
-      peerId1,
-      peerId2
+    const builder = new TestBuilder();
+    const { agent1, agent2 } = await builder.createPipedAgents();
+
+    const received1: PeerState[] = [];
+    agent1.initializePresence({
+      connections: [agent2.peerId],
+      resendAnnounce: 100,
+      onAnnounce: async (peerState: PeerState) => {
+        received1.push(peerState);
+      }
     });
-    await waitForExpect(() => expect(presence1.getPeerStates()[0].peerId).toEqual(peerId2));
-    await waitForExpect(() => expect(presence2.getPeerStates()[0].peerId).toEqual(peerId1));
+
+    const received2: PeerState[] = [];
+    agent2.initializePresence({
+      connections: [agent1.peerId],
+      resendAnnounce: 100,
+      onAnnounce: async (peerState: PeerState) => {
+        received2.push(peerState);
+      }
+    });
+    await waitForExpect(() => expect(received1[0].peerId).toEqual(agent2.peerId));
+    await waitForExpect(() => expect(received2[0].peerId).toEqual(agent1.peerId));
   });
 
   test('Peer reannounces itself by interval', async () => {
-    const peerId1 = PublicKey.random();
-    const peerId2 = PublicKey.random();
-    const { presence1 } = await createPresencePair({
-      peerId1,
-      peerId2
+    const builder = new TestBuilder();
+    const { agent1, agent2 } = await builder.createPipedAgents();
+
+    agent1.initializePresence({
+      connections: [agent2.peerId],
+      resendAnnounce: 100,
+      onAnnounce: async () => {}
     });
-    let oldState: PeerState;
+
+    const received: PeerState[] = [];
     const [announcedTwice, inc] = latch({ count: 2 });
-    presence1.updatePeerStates.on((peerStates) => {
-      expect(peerStates[0].peerId).toEqual(peerId2);
-      if (!oldState) {
-        oldState = peerStates[0];
-      } else {
-        expect(peerStates[0].timestamp.getTime()).toBeGreaterThan(oldState.timestamp.getTime());
+    agent2.initializePresence({
+      connections: [agent1.peerId],
+      resendAnnounce: 100,
+      onAnnounce: async (peerState: PeerState) => {
+        expect(peerState.peerId).toEqual(agent1.peerId);
+        expect(peerState.connections).toEqual([agent2.peerId]);
+        received.push(peerState);
+        inc();
       }
-      inc();
     });
+
     await announcedTwice();
   });
 });
