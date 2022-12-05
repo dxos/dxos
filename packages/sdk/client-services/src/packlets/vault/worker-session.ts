@@ -38,6 +38,7 @@ export class WorkerSession {
 
   @logInfo
   public origin?: string;
+
   public bridgeService?: BridgeService;
 
   constructor({
@@ -99,7 +100,7 @@ export class WorkerSession {
   }
 
   async open() {
-    log.info('opening..')
+    log.info('opening..');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open()]);
 
     await this._startTrigger.wait({ timeout: 3_000 });
@@ -111,7 +112,7 @@ export class WorkerSession {
       try {
         await this._iframeRpc.rpc.IframeService.heartbeat();
       } catch (err) {
-        log.warn(`Heartbeat failed`, { err });
+        log.warn('Heartbeat failed', { err });
         try {
           await this.close();
         } catch (err: any) {
@@ -122,7 +123,7 @@ export class WorkerSession {
   }
 
   async close() {
-    log.info('closing..')
+    log.info('closing..');
     try {
       await this.onClose.callIfSet();
     } catch (err: any) {
