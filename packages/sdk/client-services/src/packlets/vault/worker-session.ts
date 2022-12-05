@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { Trigger } from '@dxos/async';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
@@ -36,7 +36,9 @@ export class WorkerSession {
 
   public readonly onClose = new Callback<() => Promise<void>>();
 
+  @logInfo
   public origin?: string;
+
   public bridgeService?: BridgeService;
 
   constructor({
@@ -91,13 +93,14 @@ export class WorkerSession {
         }
       },
       port: systemPort,
-      timeout: 200
+      timeout: 1000 // With low timeout heartbeat may fail if the tab's thread is saturated.
     });
 
     this.bridgeService = this._iframeRpc.rpc.BridgeService;
   }
 
   async open() {
+    log.info('opening..');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open()]);
 
     await this._startTrigger.wait({ timeout: 3_000 });
@@ -109,6 +112,7 @@ export class WorkerSession {
       try {
         await this._iframeRpc.rpc.IframeService.heartbeat();
       } catch (err) {
+        log.warn('Heartbeat failed', { err });
         try {
           await this.close();
         } catch (err: any) {
@@ -119,6 +123,7 @@ export class WorkerSession {
   }
 
   async close() {
+    log.info('closing..');
     try {
       await this.onClose.callIfSet();
     } catch (err: any) {

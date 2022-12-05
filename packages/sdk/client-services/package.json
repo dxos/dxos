@@ -12,7 +12,7 @@
     "./dist/lib/node/index.js": "./dist/lib/browser/index.js",
     "./dist/lib/node/packlets/testing/index.js": "./dist/lib/browser/packlets/testing/index.js"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "testing.d.ts",
     "testing.js",
@@ -59,8 +59,7 @@
     "@types/readable-stream": "^2.3.9"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   },
   "beast": {
     "classDiagrams": [

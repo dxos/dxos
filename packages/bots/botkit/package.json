@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node.js",
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "bin": {
     "bot-factory": "bin/main.js"
   },
@@ -50,8 +50,5 @@
     "@types/download": "^8.0.1",
     "@types/node-fetch": "^2.5.10",
     "@types/tail": "~2.2.1"
-  },
-  "publishConfig": {
-    "types": "dist/types/src/index.d.ts"
   }
 }

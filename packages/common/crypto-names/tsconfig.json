@@ -9,7 +9,6 @@
     ]
   },
   "include": [
-    "data/**/*.json",
     "scripts",
     "src"
   ],
