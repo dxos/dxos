@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/lib/neutral.js",
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "src",
     "dist"
@@ -17,7 +17,6 @@
     "@dxos/protocols": "workspace:*"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

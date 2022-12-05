@@ -11,7 +11,7 @@
     "node:assert": "assert",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -30,7 +30,6 @@
     "@types/debug": "^4.1.7"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }
