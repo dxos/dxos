@@ -58,9 +58,13 @@ export const executeDirectoryTemplate = async <TInput>(
     if (!inquiredParsed.success) throw new Error(inquiredParsed.error.toString());
     input = inquiredParsed.data as TInput;
   }
-  debug({input});
+  debug({ input });
   const allFiles = await readDir(templateDirectory);
-  const filteredFiles = includeExclude(allFiles, { include, exclude });
+  const filteredFiles = includeExclude(allFiles, {
+    include,
+    exclude,
+    transform: (s) => s.replace(outputDirectory, '').replace(/^\//, '')
+  });
   const templateFiles = filteredFiles.filter(isTemplateFile);
   const regularFiles = filteredFiles.filter((file) => !isTemplateFile(file));
   debug(`${templateFiles.length} template files:`);
@@ -74,7 +78,7 @@ export const executeDirectoryTemplate = async <TInput>(
       templateFile: path.relative(templateDirectory, t),
       templateRelativeTo: templateDirectory,
       input,
-      overwrite,
+      overwrite
     })
   );
   const runner = runPromises({
