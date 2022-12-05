@@ -2,14 +2,15 @@ use std::{borrow::Borrow, sync::Arc};
 
 use swc_core::{ecma::{
     ast::{Program, Ident, CallExpr, Expr, Callee, ObjectLit, ExprOrSpread, PropOrSpread, Prop, KeyValueProp, PropName, Lit, Str, Number, ThisExpr, ArrowExpr, Param, Pat, BindingIdent},
-    transforms::testing::test,
-    visit::{as_folder, FoldWith, VisitMut, VisitMutWith}, atoms::Atom,
+    transforms::testing::{test, Tester},
+    visit::{as_folder, FoldWith, VisitMut, VisitMutWith, Folder}, atoms::Atom,
 }, common::{DUMMY_SP, SourceMapper, SourceMap, FilePathMapping}, plugin::proxies::PluginSourceMapProxy};
 use swc_core::plugin::{plugin_transform, proxies::TransformPluginProgramMetadata};
 use swc_atoms::{JsWord, js_word};
 use swc_common::{
     sync::Lrc,
 };
+use swc_ecma_visit::Fold;
 
 pub struct TransformVisitor {
     pub source_map: Lrc<dyn SourceMapper>,
@@ -53,7 +54,7 @@ impl VisitMut for TransformVisitor {
             });
         }
 
-        if n.args.len() == 2 {
+        if n.args.len() <= 2 {
           let filename = self.source_map.span_to_filename(n.span);
           let line = self.source_map.span_to_lines(n.span).unwrap().lines[0].line_index + 1;
 
@@ -151,16 +152,20 @@ pub fn process_transform(program: Program, _metadata: TransformPluginProgramMeta
     }))
 }
 
+fn test_factory(t: &mut Tester) -> impl Fold {
+    as_folder(TransformVisitor {
+        source_map: t.cm.clone(),
+    })
+}
+
 // An example to test plugin transform.
 // Recommended strategy to test plugin's transform is verify
 // the Visitor's behavior, instead of trying to run `process_transform` with mocks
 // unless explicitly required to do so.
 test!(
     Default::default(),
-    |t| as_folder(TransformVisitor {
-        source_map: t.cm.clone(),
-    }),
-    boo,
+    test_factory,
+    single_log,
     // Input codes
     r#"
         import { log } from '@dxos/log';
@@ -170,5 +175,47 @@ test!(
     r#"
         import { log } from '@dxos/log';
         log('test', {}, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
+    "#
+);
+
+test!(
+    Default::default(),
+    test_factory,
+    multiple_log_statements,
+    // Input codes
+    r#"
+        import { log } from '@dxos/log';
+        log('test1');
+
+        some.other.code();
+        //comment
+
+        log('test2');
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        import { log } from '@dxos/log';
+        log('test1', {}, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
+
+        some.other.code();
+        //comment
+
+        log('test2', {}, { file: "input.js", line: 8, scope: this, callSite: (f, a) => f(...a) });
+    "#
+);
+
+test!(
+    Default::default(),
+    test_factory,
+    log_with_no_args,
+    // Input codes
+    r#"
+        import { log } from '@dxos/log';
+        log();
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        import { log } from '@dxos/log';
+        log({}, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
     "#
 );
