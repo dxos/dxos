@@ -35,11 +35,10 @@ export type InvitationsOptions = {
  * TODO(burdon): Show proxy/service relationship and reference design doc/diagram.
  *
  *  ```
- *  [Guest]                                                  [Host]
- *   |-------------------------------------RequestAdmission-->|
- *   |<--AdmissionOffer---------------------------------------|
- *   |
- *   |--------------------------PresentAdmissionCredentials-->|
+ *  [Guest]                                          [Host]
+ *   |-----------------------------RequestAdmission-->|
+ *   |-------------------------------[Authenticate]-->|
+ *   |------------------PresentAdmissionCredentials-->|
  *  ```
  */
 export interface InvitationsHandler<T = void> {

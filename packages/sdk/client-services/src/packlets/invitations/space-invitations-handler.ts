@@ -227,7 +227,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
       try {
         await peer.open();
-        // TODO(burdon): Bug where guest may create multiple connections.
+        // TODO(burdon): Bug where guest may create multiple connections (does teleport fix this?)
         if (++connectionCount > 1) {
           throw new Error(`multiple connections detected: ${connectionCount}`);
         }
