@@ -47,8 +47,8 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
               <Avatar
                 size={12}
                 fallbackValue={keyHex}
-                className='flex gap-1 items-center pr-2 rounded'
                 label={<p className='text-lg grow'>{title}</p>}
+                slots={{ root: { className: 'flex gap-1 items-center pr-2 rounded' } }}
               />
             </Heading>
           </Link>

@@ -175,6 +175,20 @@ const ListItemPrimitive = ({
     [orderIndex, isLast]
   );
 
+  const inputSlots = useMemo(
+    () => ({
+      root: { className: 'm-0' },
+      input: {
+        className: 'border-0 rounded',
+        autoFocus: true,
+        'data-orderindex': orderIndex,
+        'data-itemid': id,
+        onKeyUp
+      }
+    }),
+    [orderIndex, id, onKeyUp]
+  );
+
   return (
     <li
       key={id}
@@ -208,18 +222,12 @@ const ListItemPrimitive = ({
       </span>
       <div role='none' className='grow'>
         <Input
-          spacing=''
           label={t('list item title label')}
           placeholder={t('list item title placeholder')}
           labelVisuallyHidden
           initialValue={title}
           onChange={onChangeTitle}
-          data-itemid={id}
-          borders='border-0'
-          rounding='rounded'
-          autoFocus={autoFocus}
-          onKeyUp={onKeyUp}
-          data-orderindex={orderIndex}
+          slots={inputSlots}
         />
         {/* TODO(thure): Re-enable this when descriptions become relevant */}
         {/* <Input */}
@@ -243,7 +251,7 @@ const ListItemPrimitive = ({
       {/*    <span className='sr-only'>{t('move list item down label')}</span> */}
       {/*  </Button> */}
       {/* </ButtonGroup> */}
-      <Button onClick={onClickDelete} variant='ghost' spacing='p-1' className='self-stretch'>
+      <Button onClick={onClickDelete} variant='ghost' className='p-1 self-stretch'>
         <Minus className={getSize(4)} />
         <span className='sr-only'>{t('delete list item label')}</span>
       </Button>
@@ -394,6 +402,17 @@ export const ListPrimitive = ({
 
   // Render
 
+  const inputSlots = useMemo(
+    () => ({
+      root: { className: 'mli-2 mbs-0 mbe-2' },
+      input: {
+        className: 'border-0 rounded text-xl font-display font-semibold',
+        'data-itemid': listId
+      }
+    }),
+    [listId]
+  );
+
   return (
     <div
       role='group'
@@ -417,11 +436,7 @@ export const ListPrimitive = ({
         labelVisuallyHidden
         initialValue={title}
         onChange={onChangeTitle}
-        data-itemid={listId}
-        spacing='mli-2 mbe-2'
-        borders='border-0'
-        rounding='rounded'
-        typography='text-xl font-display font-semibold'
+        slots={inputSlots}
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}

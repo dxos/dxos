@@ -51,7 +51,7 @@ const LockPage = () => {
             variant='circle'
             fallbackValue={profile.identityKey.toHex()}
             label={profile.displayName ?? humanize(profile.identityKey)}
-            className={defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' })}
+            slots={{ root: { className: defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' }) } }}
           />
           <Heading>{t('current app name')}</Heading>
           <p className='text-center'>

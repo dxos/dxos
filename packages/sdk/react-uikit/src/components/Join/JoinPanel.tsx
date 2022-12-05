@@ -72,8 +72,7 @@ const JoinStep1 = ({
         inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
         inputProps: {
           initialValue: invitationCode,
-          autoFocus: true,
-          className: 'text-center',
+          slots: { input: { autoFocus: true, className: 'text-center' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const
@@ -114,8 +113,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
           size: 'pin',
           length: pinLength,
           initialValue: '',
-          autoFocus: true,
-          className: 'text-center',
+          slots: { input: { autoFocus: true, className: 'text-center' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const
