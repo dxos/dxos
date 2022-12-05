@@ -219,3 +219,19 @@ test!(
         log({}, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
     "#
 );
+
+test!(
+    Default::default(),
+    test_factory,
+    log_with_context,
+    // Input codes
+    r#"
+        import { log } from '@dxos/log';
+        log('foo', { key: 'value' });
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        import { log } from '@dxos/log';
+        log('foo', { key: 'value' }, { file: "input.js", line: 3, scope: this, callSite: (f, a) => f(...a) });
+    "#
+);
