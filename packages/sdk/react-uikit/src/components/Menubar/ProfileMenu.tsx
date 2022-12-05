@@ -22,23 +22,25 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
     <Popover
       openTrigger={
         <Avatar
-          tabIndex={0}
           size={10}
           variant='circle'
           fallbackValue={profile.identityKey.toHex()}
           label={<span className='sr-only'>{profile.displayName ?? humanize(profile.identityKey.toHex())}</span>}
-          className={mx(
-            'justify-self-end pointer-events-auto bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full cursor-pointer',
-            defaultHover({}),
-            defaultFocus,
-            defaultActive
-          )}
+          slots={{
+            root: {
+              tabIndex: 0,
+              className: mx(
+                'justify-self-end pointer-events-auto bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full cursor-pointer',
+                defaultHover({}),
+                defaultFocus,
+                defaultActive
+              )
+            }
+          }}
         />
       }
       triggerIsInToolbar
-      collisionPadding={8}
-      sideOffset={4}
-      className='flex flex-col gap-4 items-center z-[2]'
+      slots={{ content: { collisionPadding: 8, sideOffset: 4, className: 'flex flex-col gap-4 items-center z-[2]' } }}
     >
       <p>{profile.displayName ?? humanize(profile.identityKey.toHex())}</p>
       {onClickManageProfile && (

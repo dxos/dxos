@@ -50,7 +50,7 @@ CreateProfile.args = {
   rootLabel: 'create profile label',
   inputLabel: 'displayName label',
   inputPlaceholder: 'displayName placeholder',
-  inputProps: { autoComplete: 'displayName' }
+  inputProps: { slots: { input: { autoComplete: 'displayName' } } }
 };
 
 export const JoinSpace = () => (
