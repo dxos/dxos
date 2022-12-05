@@ -2,16 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { HashRouter, Navigate, useRoutes } from 'react-router-dom';
 
+import { DeckProps } from './Deck';
 import { Index, SlideContainer } from './SlideContainer';
 
 /**
  * Router
  */
-const Routes = ({ title, slides }: { title: string; slides: ReactNode[] }) => {
+const Routes: FC<DeckProps> = ({ title, slides }) => {
   return useRoutes([
     {
       path: '/',
@@ -32,7 +33,7 @@ const Routes = ({ title, slides }: { title: string; slides: ReactNode[] }) => {
  * Main slide deck container.
  */
 // TODO(burdon): Create context for content.
-export const SlideDeck: FC<{ title: string; slides: ReactNode[] }> = ({ title, slides }) => {
+export const SlideDeck: FC<DeckProps> = ({ title, slides }) => {
   useEffect(() => {
     // TODO(burdon): This isn't working.
     // TODO(burdon): Key hook to trigger fullscreen model.

@@ -5,6 +5,8 @@
 import React, { FC, ReactNode, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import { DeckProps } from './Deck';
+
 export const Pager: FC<{ slide: number; length: number }> = ({ slide, length }) => {
   return (
     <div className='absolute bottom-1 right-1 font-mono text-3xl'>
@@ -16,14 +18,14 @@ export const Pager: FC<{ slide: number; length: number }> = ({ slide, length }) 
 // TODO(burdon): Key handler to enter/exit presentation; up/down to access index.
 // TODO(burdon): Scrolling.
 // TODO(burdon): Get frontmatter from each slide via plugin?
-export const Index: FC<{ title: string; slides: ReactNode[] }> = ({ title, slides }) => {
+export const Index: FC<DeckProps> = ({ title, slides }) => {
   // const s = Symbol.for('react.module.reference');
   // const t = slides[1] as any;
   // console.log(t);
 
   return (
     <div className='p-3'>
-      <h1>{title}</h1>
+      {title && <h1>{title}</h1>}
       <ul className='p-1'>
         {slides.map((slide, i) => (
           <li key={i}>
