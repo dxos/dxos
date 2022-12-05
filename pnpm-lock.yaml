@@ -4,9 +4,6 @@ patchedDependencies:
   '@nrwl/js@15.2.1':
     hash: bxoxcpizsxtnps3phoopaywp7q
     path: patches/@nrwl__js@15.2.1.patch
-  '@nrwl/workspace@15.2.1':
-    hash: nhhgiw2u2ngnmolqtuqpqiwvze
-    path: patches/@nrwl__workspace@15.2.1.patch
   '@nxext/vite@15.0.0':
     hash: yhihq6rejpjgfdxtvvnsfkkkhu
     path: patches/@nxext__vite@15.0.0.patch
@@ -141,7 +138,7 @@ importers:
       '@nrwl/linter': 15.2.1_4o2mosamvmhu67b6vohlhbsxc4
       '@nrwl/nx-cloud': 15.0.2
       '@nrwl/storybook': 15.2.1_wkz4lmxoklc4xdv3ipchjdbbzu
-      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_2obh6yiz534psn2w2p4j5234ee
+      '@nrwl/workspace': 15.2.1_2obh6yiz534psn2w2p4j5234ee
       '@nxext/vite': 15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_72jgbdbplwgrg7p3c45cr4imya
       '@playwright/test': 1.28.0
       '@rushstack/eslint-patch': 1.2.0
@@ -880,6 +877,7 @@ importers:
 
   packages/common/debug:
     specifiers:
+      '@types/debug': ^4.1.7
       debug: ^4.3.3
       events: ^3.3.0
       util: ^0.12.4
@@ -887,6 +885,8 @@ importers:
       debug: 4.3.4
       events: 3.3.0
       util: 0.12.5
+    devDependencies:
+      '@types/debug': 4.1.7
 
   packages/common/esbuild-plugins:
     specifiers:
@@ -1971,13 +1971,13 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
       '@types/randombytes': ^2.0.0
-      '@types/varint': ^6.0.0
+      '@types/varint': 6.0.0
       assert: ^2.0.0
       debug: ^4.3.3
       randombytes: ^2.1.0
       readable-stream: ^3.6.0
       typescript: ^4.8.4
-      varint: ^6.0.0
+      varint: 6.0.0
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/context': link:../../../common/context
@@ -1995,7 +1995,7 @@ importers:
     devDependencies:
       '@dxos/async': link:../../../common/async
       '@types/randombytes': 2.0.0
-      '@types/varint': 6.0.1
+      '@types/varint': 6.0.0
       typescript: 4.9.3
       wait-for-expect: 3.0.2
 
@@ -7447,7 +7447,7 @@ packages:
       '@cypress/webpack-preprocessor': 5.15.5_fqe6jstvjpqwvhj7xtepyrnyca
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.9.3
       '@nrwl/linter': 15.2.1_4o2mosamvmhu67b6vohlhbsxc4
-      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_2obh6yiz534psn2w2p4j5234ee
+      '@nrwl/workspace': 15.2.1_2obh6yiz534psn2w2p4j5234ee
       '@phenomnomnominal/tsquery': 4.1.1_typescript@4.9.3
       babel-loader: 8.3.0_npabyccmuonwo2rku4k53xo3hi
       chalk: 4.1.0
@@ -7517,7 +7517,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.9.3
-      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_2obh6yiz534psn2w2p4j5234ee
+      '@nrwl/workspace': 15.2.1_2obh6yiz534psn2w2p4j5234ee
       '@typescript-eslint/parser': 5.45.0_hsf322ms6xhhd4b5ne6lb74y4a
       '@typescript-eslint/utils': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       chalk: 4.1.0
@@ -7567,7 +7567,7 @@ packages:
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.9.3
       '@nrwl/jest': 15.2.1_irg6soo3kujnu7aqix7woi6tda
       '@nrwl/linter': 15.2.1_4o2mosamvmhu67b6vohlhbsxc4
-      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_2obh6yiz534psn2w2p4j5234ee
+      '@nrwl/workspace': 15.2.1_2obh6yiz534psn2w2p4j5234ee
       '@parcel/watcher': 2.0.4
       chalk: 4.1.0
       fast-glob: 3.2.7
@@ -7640,7 +7640,7 @@ packages:
       '@nrwl/cypress': 15.2.1_wkz4lmxoklc4xdv3ipchjdbbzu
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.9.3
       '@nrwl/linter': 15.2.1_4o2mosamvmhu67b6vohlhbsxc4
-      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_2obh6yiz534psn2w2p4j5234ee
+      '@nrwl/workspace': 15.2.1_2obh6yiz534psn2w2p4j5234ee
       dotenv: 10.0.0
       semver: 7.3.4
     transitivePeerDependencies:
@@ -7673,7 +7673,7 @@ packages:
       - debug
     dev: true
 
-  /@nrwl/workspace/15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_2obh6yiz534psn2w2p4j5234ee:
+  /@nrwl/workspace/15.2.1_2obh6yiz534psn2w2p4j5234ee:
     resolution: {integrity: sha512-nqF1gP2KuVmQCjgyrX6TECAGFldJ55KEQs6WJIBsjYvmrWvAv341VVb565IEWpPGglb2/8NhJLBMdQ0ZpLG+tg==}
     peerDependencies:
       prettier: ^2.6.2
@@ -7718,7 +7718,6 @@ packages:
       - ts-node
       - typescript
     dev: true
-    patched: true
 
   /@nxext/vite/15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_72jgbdbplwgrg7p3c45cr4imya:
     resolution: {integrity: sha512-ydlLXQ12cs4x4O61+eEFMffuQwSiYzH/RtAEvKPYiFSNWnwXqCXjqxHHfATDOvXeETL6n+hvsR7zPPfTPIU2/Q==}
@@ -7728,7 +7727,7 @@ packages:
       vite: ^3.0.5
     dependencies:
       '@nrwl/devkit': 15.0.10_nx@15.2.1+typescript@4.9.3
-      '@nrwl/workspace': 15.2.1_nhhgiw2u2ngnmolqtuqpqiwvze_2obh6yiz534psn2w2p4j5234ee
+      '@nrwl/workspace': 15.2.1_2obh6yiz534psn2w2p4j5234ee
       '@nxext/vitest': 15.0.0_@nrwl+devkit@15.0.10
       globrex: 0.1.2
       rxjs: 7.5.7
@@ -13179,8 +13178,8 @@ packages:
     resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
     dev: true
 
-  /@types/varint/6.0.1:
-    resolution: {integrity: sha512-fQdOiZpDMBvaEdl12P1x7xlTPRAtd7qUUtVaWgkCy8DC//wCv19nqFFtrnR3y/ac6VFY0UUvYuQqfKzZTSE26w==}
+  /@types/varint/6.0.0:
+    resolution: {integrity: sha512-2jBazyxGl4644tvu3VAez8UA/AtrcEetT9HOeAbqZ/vAcRVL/ZDFQjSS7rkWusU5cyONQVUz+nwwrNZdMva4ow==}
     dependencies:
       '@types/node': 18.11.9
     dev: true

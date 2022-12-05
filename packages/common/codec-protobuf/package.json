@@ -11,7 +11,7 @@
     "node:path": "path-browserify",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -31,7 +31,6 @@
     "protobufjs": "^6.9.0"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

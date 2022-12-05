@@ -9,8 +9,7 @@
     "outDir": "dist/types"
   },
   "include": [
-    "src",
-    "src/**/*.json"
+    "src"
   ],
   "references": [
     {
