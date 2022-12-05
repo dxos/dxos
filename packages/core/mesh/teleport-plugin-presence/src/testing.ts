@@ -13,13 +13,13 @@ import { afterTest } from '@dxos/test';
 import { PresenceExtension } from './presence-extension';
 
 export class TestBuilder {
-  createAgent(): TestAgent {
-    return new TestAgent();
+  createAgent(peerId?: PublicKey): TestAgent {
+    return new TestAgent(peerId);
   }
 
-  async createPipedAgents() {
-    const agent1 = this.createAgent();
-    const agent2 = this.createAgent();
+  async createPipedAgents({ peerId1, peerId2 }: { peerId1?: PublicKey; peerId2?: PublicKey } = {}) {
+    const agent1 = this.createAgent(peerId1);
+    const agent2 = this.createAgent(peerId2);
 
     agent1.initializeTeleport({ initiator: true, remotePeerId: agent2.peerId });
     agent2.initializeTeleport({ initiator: false, remotePeerId: agent1.peerId });
@@ -34,10 +34,10 @@ export class TestBuilder {
 }
 
 export class TestAgent {
-  public readonly peerId = PublicKey.random();
-
   public teleport?: Teleport;
   public presence?: PresenceExtension;
+
+  constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
 
   initializeTeleport({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
     if (this.teleport) {
@@ -85,7 +85,7 @@ export class TestAgent {
     if (!this.teleport) {
       throw new Error('Teleport not initiated.');
     }
-    this.teleport.addExtension('dxos.mesh.teleport.replicator', this.presence);
+    this.teleport.addExtension('dxos.mesh.teleport.presence', this.presence);
     return this;
   }
 }
