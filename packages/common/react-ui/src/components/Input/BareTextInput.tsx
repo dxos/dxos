@@ -24,12 +24,14 @@ export const BareTextInput = ({
   size,
   disabled,
   placeholder,
+  onChange,
   inputSlot
 }: BareTextInputProps) => {
   return (
     <input
-      placeholder={placeholder}
       {...inputSlot}
+      placeholder={placeholder}
+      onChange={onChange}
       className={mx(
         defaultInput({
           disabled,
