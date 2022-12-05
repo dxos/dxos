@@ -7,7 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/browser.js",
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -45,7 +45,6 @@
     "react-router-dom": "^6.3.0"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

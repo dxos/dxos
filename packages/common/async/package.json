@@ -12,7 +12,7 @@
     "node:events": "events",
     "./dist/lib/node.js": "./dist/lib/browser.js"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -27,7 +27,6 @@
     "events": "^3.3.0"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }
