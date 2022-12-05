@@ -10,21 +10,29 @@ use swc_atoms::{JsWord, js_word};
 use swc_common::{
     sync::Lrc,
 };
-use swc_ecma_visit::{Fold, swc_ecma_ast::MemberProp};
+use swc_ecma_visit::{Fold, swc_ecma_ast::{MemberProp, ImportDecl, ImportSpecifier, Id}};
 
 pub struct TransformVisitor {
     pub source_map: Lrc<dyn SourceMapper>,
+    pub log_ids: Vec<Id>,
 }
 
-impl TransformVisitor {
+const LOG_FUNCTION_NAME: &str = "log";
+const LOG_PACKAGE_NAME: &str = "@dxos/log";
+
+impl TransformVisitor {    
+    fn is_log_ident(&self, ident: &Ident) -> bool {
+        self.log_ids.contains(&ident.to_id())
+    }
+
     fn is_log_callee(&self, callee: &Callee) -> bool {
-        let id_log: JsWord = "log".into();
+        let id_log: JsWord = LOG_FUNCTION_NAME.into();
 
         match callee {
             Callee::Expr(expr) => match &**expr {
-                Expr::Ident(ident) => ident.sym == id_log,
+                Expr::Ident(ident) => self.is_log_ident(ident),
                 Expr::Member(member) => match (&*member.obj, &member.prop) {
-                    (Expr::Ident(obj), MemberProp::Ident(_prop)) => obj.sym == id_log,
+                    (Expr::Ident(obj), MemberProp::Ident(_prop)) => self.is_log_ident(obj),
                     _ => false,
                 }
                 _ => false,
@@ -78,6 +86,27 @@ impl VisitMut for TransformVisitor {
     // Implement necessary visit_mut_* methods for actual custom transform.
     // A comprehensive list of possible visitor methods can be found here:
     // https://rustdoc.swc.rs/swc_ecma_visit/trait.VisitMut.html
+
+    // Visit every import to mark the `log` identifier.
+    fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
+        let log_package_name: JsWord = LOG_PACKAGE_NAME.into();
+        let log_function_name: JsWord = LOG_FUNCTION_NAME.into();
+
+        if n.src.value == log_package_name {
+            for specifier in &mut n.specifiers {
+                match specifier {
+                    ImportSpecifier::Named(named) => {
+                        if named.local.sym == log_function_name {
+                            dbg!(&named.local);
+                            self.log_ids.push(named.local.to_id());
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        
+    }
 
 
     fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
@@ -157,12 +186,14 @@ fn create_call_site_arrow() -> ArrowExpr {
 pub fn process_transform(program: Program, _metadata: TransformPluginProgramMetadata) -> Program {
     program.fold_with(&mut as_folder(TransformVisitor {
         source_map: Lrc::new(_metadata.source_map),
+        log_ids: vec![],
     }))
 }
 
 fn test_factory(t: &mut Tester) -> impl Fold {
     as_folder(TransformVisitor {
         source_map: t.cm.clone(),
+        log_ids: vec![],
     })
 }
 
@@ -267,5 +298,21 @@ test!(
         log.warn('warn', {}, { file: "input.js", line: 6, scope: this, callSite: (f, a) => f(...a) });
         log.error('error', {}, { file: "input.js", line: 7, scope: this, callSite: (f, a) => f(...a) });
         log.catch(err, {}, { file: "input.js", line: 8, scope: this, callSite: (f, a) => f(...a) });
+    "#
+);
+
+test!(
+    Default::default(),
+    test_factory,
+    ignores_imports_from_other_modules,
+    // Input codes
+    r#"
+        import { log } from 'debug';
+        log('test');
+    "#,
+    // Output codes after transformed with plugin
+    r#"
+        import { log } from 'debug';
+        log('test');
     "#
 );
