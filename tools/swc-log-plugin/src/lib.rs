@@ -87,39 +87,45 @@ impl VisitMut for TransformVisitor {
                     }))),
                     PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
                         key: PropName::Ident(Ident::new("callSite".into(), DUMMY_SP)),
-                        value: Box::new(Expr::Arrow(ArrowExpr {
-                            span: DUMMY_SP,
-                            params: vec![
-                                Pat::Ident(BindingIdent {
-                                    id: Ident::new("f".into(), DUMMY_SP),
-                                    type_ann: None,
-                                }),
-                                Pat::Ident(BindingIdent {
-                                    id: Ident::new("a".into(), DUMMY_SP),
-                                    type_ann: None,
-                                }),
-                            ],
-                            body: swc_core::ecma::ast::BlockStmtOrExpr::Expr(Box::new(Expr::Call(CallExpr {
-                                span: DUMMY_SP,
-                                callee: Callee::Expr(Box::new(Expr::Ident(Ident::new("f".into(), DUMMY_SP)))),
-                                args: vec![
-                                    swc_core::ecma::ast::ExprOrSpread {
-                                        spread: Some(DUMMY_SP),
-                                        expr: Box::new(Expr::Ident(Ident::new("a".into(), DUMMY_SP))),
-                                    },
-                                ],
-                                type_args: None,
-                            }))),
-                            is_async: false,
-                            is_generator: false,
-                            type_params: None,
-                            return_type: None
-                        })),
+                        value: Box::new(Expr::Arrow(create_call_site_arrow())),
                     }))),
                 ],
             })),
         });  
         }
+    }
+}
+
+fn create_call_site_arrow() -> ArrowExpr {
+    let id_fn = Ident::new("f".into(), DUMMY_SP);
+    let id_args = Ident::new("a".into(), DUMMY_SP);
+    ArrowExpr {
+        span: DUMMY_SP,
+        params: vec![
+            Pat::Ident(BindingIdent {
+                id: id_fn.clone(),
+                type_ann: None,
+            }),
+            Pat::Ident(BindingIdent {
+                id: id_args.clone(),
+                type_ann: None,
+            }),
+        ],
+        body: swc_core::ecma::ast::BlockStmtOrExpr::Expr(Box::new(Expr::Call(CallExpr {
+            span: DUMMY_SP,
+            callee: Callee::Expr(Box::new(Expr::Ident(id_fn))),
+            args: vec![
+                swc_core::ecma::ast::ExprOrSpread {
+                    spread: Some(DUMMY_SP),
+                    expr: Box::new(Expr::Ident(id_args)),
+                },
+            ],
+            type_args: None,
+        }))),
+        is_async: false,
+        is_generator: false,
+        type_params: None,
+        return_type: None
     }
 }
 
