@@ -14,15 +14,16 @@ export type BareTextareaInputProps = Omit<TextareaProps, 'label' | 'initialValue
 export const BareTextareaInput = ({
   validationValence,
   validationMessage,
-  size,
+  onChange,
   disabled,
   placeholder,
   inputSlot
 }: BareTextareaInputProps) => {
   return (
     <textarea
-      placeholder={placeholder}
       {...inputSlot}
+      placeholder={placeholder}
+      onChange={onChange}
       className={mx(
         defaultInput({
           disabled,
