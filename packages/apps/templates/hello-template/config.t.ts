@@ -1,8 +1,6 @@
-import { defineConfig } from "@dxos/plate";
-
-export default defineConfig({
+export default {
   exclude: [
     'project.json',
     'tsconfig.plate.json'
   ]
-})
+}
