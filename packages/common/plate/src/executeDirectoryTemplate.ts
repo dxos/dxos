@@ -63,7 +63,7 @@ export const executeDirectoryTemplate = async <TInput>(
   const filteredFiles = includeExclude(allFiles, {
     include,
     exclude,
-    transform: (s) => s.replace(outputDirectory, '').replace(/^\//, '')
+    transform: (s) => s.replace(templateDirectory, '').replace(/^\//, '')
   });
   const ignoredFiles = allFiles.filter((f) => filteredFiles.indexOf(f) < 0);
   const templateFiles = filteredFiles.filter(isTemplateFile);
