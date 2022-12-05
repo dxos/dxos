@@ -37,6 +37,5 @@
   "peerDependencies": {
     "react": "*",
     "react-dom": "*"
-  },
-  "publishConfig": {}
+  }
 }

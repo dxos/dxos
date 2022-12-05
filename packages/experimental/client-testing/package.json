@@ -33,6 +33,5 @@
     "@types/js-yaml": "^4.0.5",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0"
-  },
-  "publishConfig": {}
+  }
 }

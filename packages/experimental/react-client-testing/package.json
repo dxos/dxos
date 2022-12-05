@@ -57,6 +57,5 @@
     "@mui/material": ">=5.0.0",
     "react": "*",
     "react-dom": "*"
-  },
-  "publishConfig": {}
+  }
 }

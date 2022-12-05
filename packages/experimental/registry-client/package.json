@@ -54,6 +54,5 @@
     "@types/fs-extra": "^9.0.4",
     "@types/randombytes": "^2.0.0",
     "protobufjs": "^6.9.0"
-  },
-  "publishConfig": {}
+  }
 }

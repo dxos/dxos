@@ -43,6 +43,5 @@
   },
   "peerDependencies": {
     "react": "*"
-  },
-  "publishConfig": {}
+  }
 }

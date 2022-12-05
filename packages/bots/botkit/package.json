@@ -50,6 +50,5 @@
     "@types/download": "^8.0.1",
     "@types/node-fetch": "^2.5.10",
     "@types/tail": "~2.2.1"
-  },
-  "publishConfig": {}
+  }
 }
