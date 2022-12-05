@@ -8,8 +8,8 @@ import { mkdir, copyFile, rm } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cwd } from 'process';
 import { promises as fs } from 'fs';
-
 import { executeDirectoryTemplate, exists } from '@dxos/plate';
+import tempy from "tempy";
 
 import { BaseCommand } from '../../base-command';
 
@@ -50,15 +50,14 @@ export default class Create extends BaseCommand {
     const { args, flags } = await this.parse(Create);
     const { name } = args;
     const { tag = `v${this.config.version}`, template } = flags;
-
-    // TODO(wittjosiah): Cross-platform.
-    const tmpDirectory = `/tmp/dxos-app-create-${Date.now()}`;
+    
+    const tmpDirectory = tempy.directory({ prefix: `dxos-app-create-${name}` });
     const templateDirectory = `${tmpDirectory}/packages/apps/templates/${template}-template`;
     const outputDirectory = `${cwd()}/${name}`;
 
     const outputDirExists = await exists(outputDirectory);
 
-    const isOutputEmpty = outputDirExists && await isDirEmpty(outputDirectory);
+    const isOutputEmpty = outputDirExists && (await isDirEmpty(outputDirectory));
     if (outputDirExists && !isOutputEmpty) {
       this.error(`Output directory ${outputDirectory} is not empty`, { exit: 1 });
     }
