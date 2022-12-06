@@ -1,27 +1,27 @@
 [//]: # (Demo Presentation)
 
-import { SlideDeck } from '../components';
+import { Presentation } from '../components';
 
-import Slide0 from './slide-0.mdx';
+import SlideCover from './slide-cover.mdx';
 import Slide1 from './slide-1.mdx';
 import Slide2 from './slide-2.mdx';
 import Slide3 from './slide-3.mdx';
 import Slide4 from './slide-4.mdx';
 import Slide5 from './slide-5.mdx';
 import Slide6 from './slide-6.mdx';
-import Slide7 from './slide-7.mdx';
+import SlideEnd from './slide-end.mdx';
 
-<SlideDeck
+<Presentation
   title='DXOS'
   slides={[
-    <Slide0 />,
+    <SlideCover />,
     <Slide1 />,
     <Slide2 />,
     <Slide3 />,
     <Slide4 />,
     <Slide5 />,
     <Slide6 />,
-    <Slide7 />,
+    <SlideEnd />,
   ]}
 />
 

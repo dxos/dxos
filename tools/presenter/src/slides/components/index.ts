@@ -3,4 +3,4 @@
 //
 
 export * from './Counter';
-export * from './Demo';
+export * from './Graph';

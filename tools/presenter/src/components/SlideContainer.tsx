@@ -95,7 +95,7 @@ export const SlideContainer: FC<{ slides: ReactNode[] }> = ({ slides }) => {
   return (
     <>
       {slides.map((_, num) => (
-        <div key={num} style={{ ...style, visibility: slideNum === num ? 'visible' : 'hidden' }}>
+        <div key={num} style={{ ...style, display: slideNum === num ? 'flex' : 'none' }}>
           <Slide num={num} />
         </div>
       ))}

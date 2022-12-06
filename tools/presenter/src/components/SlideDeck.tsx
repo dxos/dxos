@@ -59,6 +59,7 @@ export const SlideDeck: FC<DeckProps> = ({ title, slides }) => {
       }
 
       // Display resolutions:
+      // window.screen.{availWidth, availHeight}
       //          5K Studio       16.2-inch Macbook Pro
       // Max      5120 x 2880     3456 x 2234
       // Default  2560 x 1440     1728 x 1117 (Actual height 1080 - 37 pixel notch)
@@ -69,9 +70,16 @@ export const SlideDeck: FC<DeckProps> = ({ title, slides }) => {
       const nominalWidth = 2560;
       const nominalHeight = nominalWidth / aspectRatio;
 
-      // Compute scaling factor required.
       // TODO(burdon): If not fullscreen then make scale slightly smaller so there's a natural border.
-      const scale = Math.min(width / nominalWidth, height / nominalHeight) * 0.95;
+      //  Cannot detect full height on Mac due to notch.
+      //  https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API/Guide (fullscreenElement is null).
+      //  https://github.com/john-doherty/notch-detected-event/tree/master/src
+      //  May conflict with useResizeDetector?
+      const fullscreen = false;
+      const scaleFactor = fullscreen ? 1 : 0.95;
+
+      // Compute scaling factor required.
+      const scale = Math.min(width / nominalWidth, height / nominalHeight) * scaleFactor;
 
       setProps({
         left: (width - nominalWidth) / 2,
