@@ -13,7 +13,7 @@ import { PresenceManager } from './presence-manager';
 import { TestBuilder } from './testing';
 
 describe('PresenceManager', () => {
-  test('announce', async () => {
+  test('Announce', async () => {
     const builder = new TestBuilder();
     const { agent1, agent2 } = await builder.createPipedAgents();
 
@@ -31,7 +31,7 @@ describe('PresenceManager', () => {
     });
   });
 
-  test('reannounce', async () => {
+  test('Reannounce', async () => {
     const builder = new TestBuilder();
     const { agent1, agent2 } = await builder.createPipedAgents();
     const presenceManager = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
@@ -53,36 +53,32 @@ describe('PresenceManager', () => {
   });
 
   test('Presence gets indirect announces', async () => {
+    // first peer        |  second peer       |  third  peer
+    // presenceManager1  |  presenceManager2  |  presenceManager3
+    // agent1            |  agent2, agent3    |  agent4
+
     const builder = new TestBuilder();
     const peerId = PublicKey.random();
 
-    const presenceManager = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
+    // Initialize 3 peers.
+    const presenceManager1 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 200 });
+    const presenceManager2 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 200 });
+    const presenceManager3 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 200 });
 
+    // Connect first and second peer.
     const { agent1, agent2 } = await builder.createPipedAgents({ peerId2: peerId });
-    const received1: PeerState[] = [];
-    agent1.initializePresence({
-      connections: [agent2.peerId],
-      resendAnnounce: 100,
-      onAnnounce: async (peerState) => {
-        received1.push(peerState);
-      }
-    });
-    presenceManager.createExtension({ teleport: agent2.teleport! });
+    presenceManager1.createExtension({ teleport: agent1.teleport! });
+    presenceManager2.createExtension({ teleport: agent2.teleport! });
 
+    // Connect second and third peer.
     const { agent1: agent3, agent2: agent4 } = await builder.createPipedAgents({ peerId1: peerId });
-    presenceManager.createExtension({ teleport: agent3.teleport! });
-    const received4: PeerState[] = [];
-    agent4.initializePresence({
-      connections: [agent3.peerId],
-      resendAnnounce: 100,
-      onAnnounce: async (peerState) => {
-        received4.push(peerState);
-      }
-    });
+    presenceManager2.createExtension({ teleport: agent3.teleport! });
+    presenceManager3.createExtension({ teleport: agent4.teleport! });
 
+    // Check if first and third peers "see" each other.
     await waitForExpect(() => {
-      expect(received1.some((state) => state.peerId.equals(agent4.peerId))).toBeTruthy();
-      expect(received4.some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
-    }, 2_000);
+      expect(presenceManager1.getPeerStatesOnline().some((state) => state.peerId.equals(agent4.peerId))).toBeTruthy();
+      expect(presenceManager3.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
+    }, 500);
   });
 });
