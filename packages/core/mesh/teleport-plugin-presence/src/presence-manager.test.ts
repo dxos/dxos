@@ -31,7 +31,7 @@ describe('PresenceManager', () => {
     });
   });
 
-  test.only('reannounce', async () => {
+  test('reannounce', async () => {
     const builder = new TestBuilder();
     const { agent1, agent2 } = await builder.createPipedAgents();
     const presenceManager = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
@@ -52,41 +52,34 @@ describe('PresenceManager', () => {
     });
   });
 
-  test.only('Presence gets indirect announces', async () => {
+  test('Presence gets indirect announces', async () => {
     const builder = new TestBuilder();
     const peerId = PublicKey.random();
+
+    const presenceManager = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
+
     const { agent1, agent2 } = await builder.createPipedAgents({ peerId2: peerId });
     const received1: PeerState[] = [];
     agent1.initializePresence({
       connections: [agent2.peerId],
       resendAnnounce: 100,
       onAnnounce: async (peerState) => {
-        expect(peerState.peerId).toEqual(peerId);
-        console.log('received1', peerState);
         received1.push(peerState);
       }
     });
+    presenceManager.createExtension({ teleport: agent2.teleport! });
 
     const { agent1: agent3, agent2: agent4 } = await builder.createPipedAgents({ peerId1: peerId });
-
+    presenceManager.createExtension({ teleport: agent3.teleport! });
     const received4: PeerState[] = [];
     agent4.initializePresence({
       connections: [agent3.peerId],
       resendAnnounce: 100,
       onAnnounce: async (peerState) => {
-        expect(peerState.peerId).toEqual(peerId);
-        console.log('received4', peerState);
         received4.push(peerState);
       }
     });
 
-    const presenceManager = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
-    presenceManager.createExtension({ teleport: agent2.teleport! });
-    presenceManager.createExtension({ teleport: agent3.teleport! });
-    console.log('agent1', agent1.peerId);
-    console.log('agent2', agent2.peerId);
-    console.log('agent3', agent3.peerId);
-    console.log('agent4', agent4.peerId);
     await waitForExpect(() => {
       expect(received1.some((state) => state.peerId.equals(agent4.peerId))).toBeTruthy();
       expect(received4.some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
