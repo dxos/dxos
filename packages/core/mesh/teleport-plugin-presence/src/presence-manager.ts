@@ -66,14 +66,10 @@ export class PresenceManager {
 
   private _propagateAnnounce(peerState: PeerState) {
     this._presenceExtensions.forEach(async (presenceExtension, { localPeerId, remotePeerId }) => {
-      if (localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId)) {
+      if (localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId) || !presenceExtension.opened) {
         return;
       }
-      try {
-        await presenceExtension.sendAnnounce(peerState);
-      } catch (err) {
-        log.catch(err);
-      }
+      await presenceExtension.sendAnnounce(peerState);
     });
   }
 

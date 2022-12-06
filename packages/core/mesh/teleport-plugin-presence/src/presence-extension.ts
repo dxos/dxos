@@ -23,6 +23,8 @@ export type PresenceParams = {
  * Sending presence pings between a set peers for a single teleport session.
  */
 export class PresenceExtension implements TeleportExtension {
+  public opened = false;
+
   private readonly _sentAnnounces = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak, never cleaned up?
   private _sendInterval?: NodeJS.Timeout;
 
@@ -37,7 +39,6 @@ export class PresenceExtension implements TeleportExtension {
   }
 
   async sendAnnounce(peerState: PeerState) {
-    assert(this._opened, 'Extension not opened');
     assert(this._rpc, 'RPC not initialized');
     if (this._sentAnnounces.has(peerState.peerId)) {
       return;
@@ -66,7 +67,7 @@ export class PresenceExtension implements TeleportExtension {
     await this._rpc.open();
     await this._sendAnnounce();
     this._sendInterval = setInterval(() => this._sendAnnounce(), this._params.resendAnnounce);
-    this._opened.wake();
+    this.opened = true;
   }
 
   async onClose(err?: Error): Promise<void> {
