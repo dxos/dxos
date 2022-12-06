@@ -31,7 +31,6 @@ export class PresenceManager {
       connections: [...this._getConnections()], // TODO(mykola): include remote peer id?
       resendAnnounce: this._params.resendAnnounce,
       onAnnounce: async (peerState) => {
-        console.log('onAnnounce', peerState);
         this._saveNewState(peerState);
         this._propagateAnnounce(peerState);
       }

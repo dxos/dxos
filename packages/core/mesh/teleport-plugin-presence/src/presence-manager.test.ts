@@ -31,6 +31,27 @@ describe('PresenceManager', () => {
     });
   });
 
+  test.only('reannounce', async () => {
+    const builder = new TestBuilder();
+    const { agent1, agent2 } = await builder.createPipedAgents();
+    const presenceManager = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
+    presenceManager.createExtension({ teleport: agent1.teleport! });
+
+    const received: PeerState[] = [];
+    agent2.initializePresence({
+      connections: [agent1.peerId],
+      resendAnnounce: 100,
+      onAnnounce: async (peerState: PeerState) => {
+        expect(peerState.peerId.equals(agent1.peerId)).toBeTruthy();
+        expect(peerState.connections![0].equals(agent2.peerId)).toBeTruthy();
+        received.push(peerState);
+      }
+    });
+    await waitForExpect(() => {
+      expect(received.length).toEqual(10);
+    });
+  });
+
   test.only('Presence gets indirect announces', async () => {
     const builder = new TestBuilder();
     const peerId = PublicKey.random();
