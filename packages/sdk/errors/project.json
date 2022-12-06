@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/sdk/errors/src/index.ts",
-        "outputPath": "packages/sdk/errors/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/sdk/errors/dist/types",
         "tsConfig": "packages/sdk/errors/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/errors/src/index.ts"
+        ],
+        "outputPath": "packages/sdk/errors/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,7 +38,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/sdk/errors",
         "outputPath": "tmp/mocha/packages/sdk/errors",
@@ -49,6 +58,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }

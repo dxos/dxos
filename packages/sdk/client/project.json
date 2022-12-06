@@ -6,35 +6,24 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/sdk/client/src/index.ts",
-        "outputPath": "packages/sdk/client/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/sdk/client/dist/types",
         "tsConfig": "packages/sdk/client/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "bundlePackages": [
-          "@dxos/client-services",
-          "@dxos/credentials",
-          "@dxos/crypto",
-          "@dxos/echo-db",
-          "@dxos/feed-store",
-          "@dxos/network-manager",
-          "@dxos/object-model"
-        ],
         "entryPoints": [
-          "packages/sdk/client/src/index.ts"
+          "packages/sdk/client/src/index.ts",
+          "packages/sdk/client/src/packlets/testing/index.ts"
         ],
-        "outdir": "packages/sdk/client/dist/browser"
+        "outputPath": "packages/sdk/client/dist/lib"
       },
       "outputs": [
-        "{options.outdir}"
+        "{options.outputPath}"
       ]
     },
     "lint": {
@@ -50,7 +39,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "coveragePath": "coverage/packages/sdk/client",
@@ -74,6 +63,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha"
+    "test"
   ]
 }

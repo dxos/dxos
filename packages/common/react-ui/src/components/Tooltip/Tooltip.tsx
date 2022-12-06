@@ -2,33 +2,42 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as PortalPrimitive from '@radix-ui/react-portal';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
-import cx from 'classnames';
 import React, { ComponentProps, ReactNode, useState } from 'react';
 
 import { useId } from '../../hooks';
 import { defaultTooltip } from '../../styles';
+import { mx } from '../../util';
 
-export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
+export interface TooltipSlots {
+  content?: Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'>;
+  arrow?: Pick<ComponentProps<typeof TooltipPrimitive.Arrow>, 'className'>;
+}
+
+export interface TooltipProps {
   content: ReactNode;
   children: ReactNode;
+  side?: TooltipPrimitive.TooltipContentProps['side'];
   compact?: boolean;
   tooltipLabelsTrigger?: boolean;
   mountAsSibling?: boolean;
   triggerIsInToolbar?: boolean;
   zIndex?: string;
+  slots?: TooltipSlots;
 }
 
 export const Tooltip = ({
   content,
   children,
+  side,
   compact,
   tooltipLabelsTrigger,
   mountAsSibling,
   triggerIsInToolbar,
   zIndex = 'z-[2]',
-  ...contentProps
+  slots = {}
 }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const labelId = useId('tooltipLabel');
@@ -36,8 +45,9 @@ export const Tooltip = ({
   const tooltipContent = (
     <TooltipPrimitive.Content
       forceMount
-      {...contentProps}
-      className={cx(
+      {...slots.content}
+      side={side ?? slots.content?.side ?? 'top'}
+      className={mx(
         'radix-side-top:animate-slide-down-fade',
         'radix-side-right:animate-slide-left-fade',
         'radix-side-bottom:animate-slide-up-fade',
@@ -48,10 +58,10 @@ export const Tooltip = ({
         'shadow-lg bg-white dark:bg-neutral-800',
         !isOpen && 'sr-only',
         defaultTooltip,
-        contentProps.className
+        slots.content?.className
       )}
     >
-      <TooltipPrimitive.Arrow className='fill-current text-white dark:text-neutral-800' />
+      <TooltipPrimitive.Arrow className={mx('fill-current text-white dark:text-neutral-800', slots.arrow?.className)} />
       {content}
     </TooltipPrimitive.Content>
   );
@@ -66,9 +76,11 @@ export const Tooltip = ({
     <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
       {triggerIsInToolbar ? <ToolbarButtonItem asChild>{triggerContent}</ToolbarButtonItem> : triggerContent}
       {tooltipLabelsTrigger && (
-        <span id={labelId} className='sr-only'>
-          {content}
-        </span>
+        <PortalPrimitive.Root asChild>
+          <span id={labelId} className='sr-only'>
+            {content}
+          </span>
+        </PortalPrimitive.Root>
       )}
       {mountAsSibling ? tooltipContent : <TooltipPrimitive.Portal forceMount>{tooltipContent}</TooltipPrimitive.Portal>}
     </TooltipPrimitive.Root>

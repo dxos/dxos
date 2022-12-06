@@ -8,8 +8,9 @@ import { MessageValence } from '../../props';
 
 export type InputSize = 'md' | 'lg' | 'pin' | 'textarea';
 
-interface InputPropsExtension {
+interface SharedTextInputProps {
   label: ReactNode;
+  placeholder?: string;
   labelVisuallyHidden?: boolean;
   description?: ReactNode;
   descriptionVisuallyHidden?: boolean;
@@ -20,16 +21,27 @@ interface InputPropsExtension {
   validationMessage?: ReactNode;
   validationValence?: MessageValence;
   length?: number;
-  spacing?: string;
-  borders?: string;
-  typography?: string;
-  rounding?: string;
 }
 
-export interface InputProps
-  extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size' | 'ref'>,
-    InputPropsExtension {}
+interface SharedSlots {
+  root?: Omit<ComponentProps<'div'>, 'children'>;
+  label?: Omit<ComponentProps<'label'>, 'children'>;
+  description?: Pick<ComponentProps<'span'>, 'className'>;
+  validation?: Pick<ComponentProps<'span'>, 'className'>;
+}
 
-export interface TextareaProps
-  extends Omit<ComponentProps<'textarea'>, 'value' | 'onChange' | 'size' | 'ref'>,
-    InputPropsExtension {}
+export interface InputSlots extends SharedSlots {
+  input?: Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled' | 'placeholder'>;
+}
+
+export interface TextareaSlots extends SharedSlots {
+  input?: Omit<ComponentProps<'textarea'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled' | 'placeholder'>;
+}
+
+export interface InputProps extends SharedTextInputProps {
+  slots?: InputSlots;
+}
+
+export interface TextareaProps extends SharedTextInputProps {
+  slots?: TextareaSlots;
+}

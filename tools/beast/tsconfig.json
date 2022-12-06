@@ -3,12 +3,12 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "composite": true,
+    "emitDeclarationOnly": false,
     "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "dist",
     "target": "ESNext",
     "types": [
-      "mocha",
       "node"
     ]
   },

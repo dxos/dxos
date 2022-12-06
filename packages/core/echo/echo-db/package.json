@@ -6,12 +6,16 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
+    "testing.d.ts",
+    "testing.js",
     "dist",
     "src"
   ],
@@ -45,7 +49,6 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
     "hypercore-protocol": "^8.0.7",
     "source-map-support": "^0.5.12",

@@ -19,6 +19,7 @@ import {
 import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { IdentityManager } from '../identity';
@@ -89,21 +90,23 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               };
             },
 
-            authenticate: async ({ authenticationCode: code }) => {
+            // TODO(burdon): Reconcile with space invitation handler (retries).
+            async authenticate({ authenticationCode: code }) {
               log('received authentication request', { authenticationCode: code });
               authenticationCode = code;
+              return { status: AuthenticationResponse.Status.OK };
             },
 
             // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
             presentAdmissionCredentials: async (credentials) => {
               try {
                 // Check authenticated.
-                if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+                if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
                   if (
                     invitation.authenticationCode === undefined ||
-                    authenticationCode !== invitation.authenticationCode
+                    invitation.authenticationCode !== authenticationCode
                   ) {
-                    throw new Error('authentication code not set');
+                    throw new Error(`invalid authentication code: ${authenticationCode}`);
                   }
                 }
 
@@ -231,7 +234,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
         complete.wake(identityKey);
       } catch (err) {
         if (!observable.cancelled) {
-          log.warn('failed', err);
+          log.warn('auth failed', err);
           observable.callback.onError(err);
         }
       } finally {

@@ -6,9 +6,10 @@ import expect from 'expect';
 
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
-import { createInMemoryDatabase, Database } from '../database';
+import { Database } from '../database';
+import { createInMemoryDatabase } from '../testing';
 import { Schema, TYPE_SCHEMA } from './schema';
 
 const SCHEMA = 'example:type/schema/organization';
@@ -23,7 +24,7 @@ const createTestSchema = async (database: Database) => {
   return new Schema(schemaItem.model);
 };
 
-describe('Schema', function () {
+describe('Schema', () => {
   const setupDatabase = async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const backend = await createInMemoryDatabase(modelFactory);
@@ -31,14 +32,14 @@ describe('Schema', function () {
     return backend;
   };
 
-  it('class creation', async function () {
+  test('class creation', async () => {
     const database = await setupDatabase();
     const schema = await createTestSchema(database);
     expect(schema).toBeTruthy();
     expect(schema.name).toBeTruthy();
   });
 
-  it('add and delete field', async function () {
+  test('add and delete field', async () => {
     const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);
@@ -53,7 +54,7 @@ describe('Schema', function () {
     expect(schema.fields.length).toBe(0);
   });
 
-  it('edit field', async function () {
+  test('edit field', async () => {
     const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);
@@ -67,7 +68,7 @@ describe('Schema', function () {
     expect(schema.getField(key)?.required).toBeFalsy();
   });
 
-  it('validate data item', async function () {
+  test('validate data item', async () => {
     const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);

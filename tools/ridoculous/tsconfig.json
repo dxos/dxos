@@ -3,13 +3,11 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "composite": true,
+    "emitDeclarationOnly": false,
     "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "dist",
-    "target": "ESNext",
-    "types": [
-      "mocha"
-    ]
+    "target": "ESNext"
   },
   "exclude": [
     "dist",
@@ -21,6 +19,9 @@
     "testing/**/*"
   ],
   "references": [
+    {
+      "path": "../../packages/common/esbuild-plugins"
+    },
     {
       "path": "../executors/protobuf-compiler"
     }

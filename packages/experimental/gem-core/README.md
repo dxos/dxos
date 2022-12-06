@@ -1,4 +1,6 @@
-# GEM X
+# GEM
+
+- TODO(burdon): Why do we use `tsconfig.spec.json`.
 
 ```tsx
 export const Primary = () => {

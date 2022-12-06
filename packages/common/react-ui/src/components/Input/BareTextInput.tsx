@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ComponentProps } from 'react';
 
 import { defaultInput } from '../../styles/input';
-import { InputProps, InputSize } from './InputProps';
+import { mx } from '../../util';
+import { InputProps, InputSize, InputSlots } from './InputProps';
 
 const sizeMap: Record<InputSize, string> = {
   md: 'text-base',
@@ -15,30 +15,33 @@ const sizeMap: Record<InputSize, string> = {
   textarea: ''
 };
 
-export type BareTextInputProps = Omit<InputProps, 'label' | 'initialValue' | 'onChange'> &
-  Pick<ComponentProps<'input'>, 'onChange'>;
+export type BareTextInputProps = Omit<InputProps, 'label' | 'initialValue' | 'onChange' | 'slots'> &
+  Pick<ComponentProps<'input'>, 'onChange' | 'value'> & { inputSlot: InputSlots['input'] };
 
 export const BareTextInput = ({
   validationValence,
   validationMessage,
   size,
-  borders,
-  typography,
-  rounding,
-  ...inputProps
+  disabled,
+  placeholder,
+  onChange,
+  value,
+  inputSlot
 }: BareTextInputProps) => {
   return (
     <input
-      {...inputProps}
-      className={cx(
+      {...inputSlot}
+      placeholder={placeholder}
+      onChange={onChange}
+      value={value}
+      className={mx(
         defaultInput({
-          borders,
-          rounding,
-          typography: typography ?? sizeMap[size ?? 'md'],
-          disabled: inputProps.disabled,
+          disabled,
           ...(validationMessage && { validationValence })
         }),
-        'block w-full px-2.5 py-2'
+        sizeMap[size ?? 'md'],
+        'block w-full px-2.5 py-2',
+        inputSlot?.className
       )}
     />
   );

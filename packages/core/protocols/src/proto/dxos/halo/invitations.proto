@@ -6,12 +6,25 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
+import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 
 package dxos.halo.invitations;
 
+// TODO(burdon): Reconcile with client.services.Invitation. Merge files.
+
 message AuthenticationRequest {
   string authentication_code = 1;
+}
+
+message AuthenticationResponse {
+  enum Status {
+    OK = 0;
+    INVALID_OTP = 1;
+    INVALID_OPT_ATTEMPTS = 2;
+  }
+
+  optional Status status = 1;
 }
 
 //
@@ -35,7 +48,7 @@ service HaloHostService {
   rpc RequestAdmission(google.protobuf.Empty) returns (HaloAdmissionOffer);
 
   /// Authenticate request.
-  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
+  rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
 
   /// Process admission request from guest.
   rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
@@ -59,7 +72,7 @@ message SpaceAdmissionCredentials {
 
 message AdmissionParameters {
   /// Guest's profile.
-  optional ProfileDocument profile = 1;
+  optional halo.credentials.ProfileDocument profile = 1;
 }
 
 service SpaceHostService {
@@ -67,7 +80,7 @@ service SpaceHostService {
   rpc RequestAdmission(AdmissionParameters) returns (SpaceAdmissionOffer);
 
   /// Authenticate request.
-  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
+  rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
 
   /// Process admission credentials.
   rpc PresentAdmissionCredentials(SpaceAdmissionCredentials) returns (google.protobuf.Empty);

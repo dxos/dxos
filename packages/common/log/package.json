@@ -6,13 +6,13 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
     "node:util": "util",
-    "./dist/src/platform/node/index.js": "./dist/src/platform/browser/index.js",
-    "./src/platform/node/index.ts": "./src/platform/browser/index.ts"
+    "./src/platform/node/index.ts": "./src/platform/browser/index.ts",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -30,7 +30,6 @@
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pickby": "^4.6.7",
-    "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.9",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0",

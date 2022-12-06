@@ -3,7 +3,8 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import { existsSync, mkdir, mkdirSync, rm, rmSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -15,9 +16,30 @@ import packageJson from './package.json';
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/halo-app@${packageJson.version}` : undefined;
 
+const manualChunks = {
+  vendor: ['react', 'react-router-dom', 'react-dom'],
+  phosphor: ['phosphor-react']
+};
+
+// TODO(wittjosiah): Try again after ESM switch.
+// From https://sambitsahoo.com/blog/vite-code-splitting-that-works.html
+const _renderChunks = (deps: Record<string, string>) => {
+  const chunks = {};
+  const manual = Object.keys(manualChunks)
+    .map((key) => manualChunks[key])
+    .flat();
+
+  Object.keys(deps).forEach((key) => {
+    if (manual.includes(key)) return;
+    chunks[key] = [key];
+  });
+
+  return chunks;
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
+  base: '', // Ensure relative path to assets.
   server: {
     host: true,
     port: 3967
@@ -62,7 +84,12 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        headless: resolve(__dirname, 'vault.html')
+        vault: resolve(__dirname, 'vault.html')
+      },
+      output: {
+        manualChunks: {
+          ...manualChunks
+        }
       }
     }
   },
@@ -72,8 +99,9 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js')
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
       ]
     }),
     react(),
@@ -101,7 +129,28 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // https://www.bundle-buddy.com/rollup
+    {
+      name: 'bundle-buddy',
+      buildEnd() {
+        const deps: { source: string; target: string }[] = [];
+        for (const id of this.getModuleIds()) {
+          const m = this.getModuleInfo(id);
+          if (m != null && !m.isExternal) {
+            for (const target of m.importedIds) {
+              deps.push({ source: m.id, target });
+            }
+          }
+        }
+
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+      }
+    }
   ],
   worker: {
     format: 'es',

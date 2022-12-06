@@ -6,11 +6,12 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -34,7 +35,6 @@
   "devDependencies": {
     "@dxos/keyring": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "add": "^2.0.6",
     "fast-check": "~3.3.0",
     "typescript": "^4.8.4"

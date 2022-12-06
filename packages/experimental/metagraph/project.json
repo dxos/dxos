@@ -6,11 +6,53 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/metagraph/src/index.ts",
-        "outputPath": "packages/experimental/metagraph/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/experimental/metagraph/dist/types",
         "tsConfig": "packages/experimental/metagraph/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/metagraph/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/metagraph/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/metagraph/src/testing/index.ts"
+        ],
+        "outputPath": "packages/experimental/metagraph/dist/testing",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,7 +71,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/experimental/metagraph",
         "outputPath": "tmp/mocha/packages/experimental/metagraph",
@@ -49,6 +91,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }

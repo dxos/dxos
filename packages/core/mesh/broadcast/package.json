@@ -7,13 +7,14 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
-    "srd",
+    "src",
     "dist"
   ],
   "dependencies": {

@@ -2,59 +2,73 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { QrCode as QrCodeIcon, CopySimple } from 'phosphor-react';
 import { QRCodeSVG } from 'qrcode.react';
-import React, { useCallback, ReactHTMLElement } from 'react';
+import React, { useCallback, ReactHTMLElement, ComponentProps } from 'react';
 
 import { useId } from '../../hooks';
 import { Size } from '../../props';
 import { getSize } from '../../styles';
-import { Button, ButtonGroup, ButtonProps } from '../Button';
-import { Tooltip, TooltipProps } from '../Tooltip';
+import { mx } from '../../util';
+import { Button, ButtonGroup } from '../Button';
+import { Tooltip, TooltipSlots } from '../Tooltip';
 
-interface SharedQrCodeProps
-  extends Omit<ButtonProps, 'onClick' | 'ref' | 'variant'>,
-    Pick<TooltipProps, 'side' | 'sideOffset' | 'collisionPadding'> {
+interface SharedQrCodeProps {
   value: string;
   buttonCompact?: boolean;
+}
+
+interface FullQrCodeSlots {
+  tooltipContent?: TooltipSlots['content'];
+  tooltipArrow?: TooltipSlots['arrow'];
+  button?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
+  qrSvg?: ComponentProps<typeof QRCodeSVG>;
 }
 
 export interface FullQrCodeProps extends SharedQrCodeProps {
   label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   size?: Size;
+  slots?: FullQrCodeSlots;
 }
 
 export type QrCodeProps = FullQrCodeProps;
 
+interface CompactQrCodeSlots {
+  qrTooltipContent?: TooltipSlots['content'];
+  qrTooltipArrow?: TooltipSlots['arrow'];
+  qrButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
+  copyTooltipContent?: TooltipSlots['content'];
+  copyTooltipArrow?: TooltipSlots['arrow'];
+  copyButton?: Omit<ComponentProps<'button'>, 'ref' | 'children'>;
+  qrSvg?: ComponentProps<typeof QRCodeSVG>;
+}
+
 export interface CompactQrCodeProps extends SharedQrCodeProps {
   displayQrLabel: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   copyLabel: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  slots?: CompactQrCodeSlots;
 }
 
-export const FullQrCode = ({
-  value,
-  label,
-  size,
-  side,
-  sideOffset,
-  collisionPadding,
-  buttonCompact = true,
-  ...buttonProps
-}: FullQrCodeProps) => {
+export const FullQrCode = ({ value, label, size, buttonCompact = true, slots = {} }: FullQrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
   }, [value]);
   return (
-    <Tooltip content={label} {...{ side, sideOffset, collisionPadding }}>
+    <Tooltip content={label} {...slots.tooltipContent}>
       <Button
         compact={buttonCompact}
-        {...buttonProps}
-        className={cx('overflow-hidden p-0', getSize(size ?? 32), buttonProps.className)}
+        {...slots.button}
+        className={mx('overflow-hidden p-0', getSize(size ?? 32), slots.button?.className)}
         onClick={copyValue}
       >
-        <QRCodeSVG value={value} includeMargin role='none' className='w-full h-auto' />
+        <QRCodeSVG
+          includeMargin
+          role='none'
+          {...slots.qrSvg}
+          value={value}
+          className={mx('w-full h-auto', slots.qrSvg?.className)}
+        />
         <div id={labelId} className='sr-only'>
           {label}
         </div>
@@ -63,17 +77,7 @@ export const FullQrCode = ({
   );
 };
 
-export const CompactQrCode = ({
-  value,
-  displayQrLabel,
-  copyLabel,
-  side,
-  sideOffset,
-  collisionPadding,
-  compact,
-  buttonCompact,
-  ...buttonProps
-}: CompactQrCodeProps) => {
+export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact, slots = {} }: CompactQrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
@@ -86,29 +90,33 @@ export const CompactQrCode = ({
         </span>
         <Tooltip
           compact
+          slots={{ content: { ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'left' } }}
           content={
             <div role='none' className='overflow-hidden rounded-md'>
-              <QRCodeSVG value={value} includeMargin role='none' className={getSize(32)} />
+              <QRCodeSVG
+                includeMargin
+                role='none'
+                {...slots.qrSvg}
+                value={value}
+                className={mx(getSize(32), slots.qrSvg?.className)}
+              />
             </div>
           }
-          {...{ side: side ?? 'left', sideOffset, collisionPadding }}
         >
           <Button
-            rounding='rounded-is-md'
             compact={buttonCompact}
-            {...buttonProps}
-            className={cx('border-ie-0 grow', buttonProps.className)}
+            {...slots.qrButton}
+            className={mx('border-ie-0 grow rounded-is-md', slots.qrButton?.className)}
             aria-labelledby={labelId}
           >
             <QrCodeIcon className={getSize(5)} />
           </Button>
         </Tooltip>
-        <Tooltip content={copyLabel} tooltipLabelsTrigger {...{ side, sideOffset, collisionPadding }}>
+        <Tooltip content={copyLabel} tooltipLabelsTrigger slots={{ content: slots.qrTooltipContent }}>
           <Button
-            rounding='rounded-ie-md grow'
             compact={buttonCompact}
-            {...buttonProps}
-            className={buttonProps.className}
+            {...slots.copyButton}
+            className={mx('rounded-ie-md grow', slots.copyButton?.className)}
             onClick={copyValue}
           >
             <CopySimple className={getSize(5)} />
@@ -118,28 +126,32 @@ export const CompactQrCode = ({
       <ButtonGroup className='hidden md:inline-flex'>
         <Tooltip
           compact
+          slots={{ content: { ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'left' } }}
           content={
             <div role='none' className='overflow-hidden rounded-md'>
-              <QRCodeSVG value={value} includeMargin role='none' className={getSize(32)} />
+              <QRCodeSVG
+                includeMargin
+                role='none'
+                {...slots.qrSvg}
+                value={value}
+                className={mx(getSize(32), slots.qrSvg?.className)}
+              />
             </div>
           }
-          {...{ side: side ?? 'left', sideOffset, collisionPadding }}
         >
           <Button
-            rounding='rounded-is-md'
             compact={buttonCompact}
-            {...buttonProps}
-            className={cx('border-ie-0 flex gap-1', buttonProps.className)}
+            {...slots.qrButton}
+            className={mx('border-ie-0 flex gap-1 rounded-is-md', slots.qrButton?.className)}
           >
             <QrCodeIcon className={getSize(5)} />
             {displayQrLabel}
           </Button>
         </Tooltip>
         <Button
-          rounding='rounded-ie-md'
           compact={buttonCompact}
-          {...buttonProps}
-          className={cx('flex gap-1', buttonProps.className)}
+          {...slots.copyButton}
+          className={mx('flex gap-1 rounded-ie-md', slots.copyButton?.className)}
           onClick={copyValue}
         >
           <CopySimple className={getSize(5)} />

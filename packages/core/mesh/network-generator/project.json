@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/mesh/network-generator/src/index.ts",
-        "outputPath": "packages/core/mesh/network-generator/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/mesh/network-generator/dist/types",
         "tsConfig": "packages/core/mesh/network-generator/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/mesh/network-generator/src/index.ts"
+        ],
+        "outputPath": "packages/core/mesh/network-generator/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,7 +38,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
@@ -52,6 +61,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }

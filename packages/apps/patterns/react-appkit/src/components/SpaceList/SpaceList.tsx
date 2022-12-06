@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import cx from 'classnames';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -15,7 +14,8 @@ import {
   useTranslation,
   defaultDisabled,
   Group,
-  Heading
+  Heading,
+  mx
 } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
@@ -36,7 +36,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             to={`/spaces/${keyHex}`}
             role='group'
             key={keyHex}
-            className={cx(
+            className={mx(
               defaultGroup({ elevation: 1, rounding: 'rounded', spacing: 'p-2' }),
               'flex items-stretch gap-2 mbe-2',
               defaultHover({}),
@@ -47,8 +47,8 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
               <Avatar
                 size={12}
                 fallbackValue={keyHex}
-                className='flex gap-1 items-center pr-2 rounded'
                 label={<p className='text-lg grow'>{title}</p>}
+                slots={{ root: { className: 'flex gap-1 items-center pr-2 rounded' } }}
               />
             </Heading>
           </Link>
@@ -61,7 +61,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
       label={{
         level: 2,
         children: t('empty spaces label'),
-        className: cx('text-xl', defaultDisabled)
+        className: mx('text-xl', defaultDisabled)
       }}
       elevation={0}
     >

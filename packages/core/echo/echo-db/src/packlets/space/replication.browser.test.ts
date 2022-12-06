@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/mocha platform=browser
+// @dxos/test platform=browser
 
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
@@ -11,12 +11,13 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
+import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 
-describe('replication', function () {
-  it('replicates a feed through a direct stream', async function () {
+describe('replication', () => {
+  test('replicates a feed through a direct stream', async () => {
     // Some storage drivers may break when there are multiple storage instances.
     const storage = createStorage();
 

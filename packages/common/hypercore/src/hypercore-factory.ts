@@ -8,7 +8,7 @@ import type { Hypercore, HypercoreOptions } from 'hypercore';
 
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 
-import { py } from './testing';
+import { py } from './util';
 
 /**
  * Creates feeds with default properties.

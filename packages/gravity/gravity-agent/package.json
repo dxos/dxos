@@ -7,8 +7,8 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
   "bin": {
     "agent": "./bin/agent.js"
   },
@@ -36,7 +36,6 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/testutils": "workspace:*",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^18.11.9",
     "@types/yargs": "~16.0.1",

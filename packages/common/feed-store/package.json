@@ -6,12 +6,14 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
     "node:assert": "assert",
-    "node:util": "util"
+    "node:util": "util",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing/index.cjs": "./dist/lib/browser/testing/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "testing.d.ts",
     "testing.js",

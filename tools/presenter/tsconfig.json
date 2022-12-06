@@ -1,0 +1,54 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": false,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext",
+    "useDefineForClassFields": true
+  },
+  "include": [
+    "src",
+    "types"
+  ],
+  "references": [
+    {
+      "path": "../../packages/apps/patterns/assets"
+    },
+    {
+      "path": "../../packages/common/log"
+    },
+    {
+      "path": "../../packages/experimental/gem-core"
+    },
+    {
+      "path": "../../packages/experimental/gem-spore"
+    },
+    {
+      "path": "../../packages/sdk/client"
+    },
+    {
+      "path": "../../packages/sdk/client-services"
+    },
+    {
+      "path": "../../packages/sdk/react-client"
+    },
+    {
+      "path": "../../packages/sdk/vite-plugin"
+    }
+  ]
+}

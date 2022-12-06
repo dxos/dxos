@@ -1,0 +1,122 @@
+/**
+ * Copyright 2022 DXOS.org
+ */
+
+/**
+ * Code highlight.
+ * https://unifiedjs.com/explore/package/rehype-highlight
+ * https://tailwindcomponents.com/cheatsheet
+ */
+@import 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Base Style.
+ * https://tailwindcss.com/docs/adding-base-styles
+ */
+@layer base {
+  html {
+    font-family: Montserrat, DM Sans, ui-sans-serif;
+    font-weight: 400;
+    @apply text-gray-800;
+  }
+
+  body {
+    /* Prevent bounce. */
+    overflow: hidden;
+    background-color: #222;
+  }
+
+  /**
+   * Lists
+   * https://tailwindcss.com/docs/preflight#lists-are-unstyled
+   * https://stackoverflow.com/questions/37793048/how-to-gain-hanging-indent-list-with-css-counters
+   */
+
+  ul {
+    margin-left: 1.0em;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+  }
+  ul > li {
+    position: relative;
+    line-height: 1.2;
+    margin-bottom: 0.3em;
+  }
+  ul > li::before {
+    left: -1.0em;
+    position: absolute;
+    content: "\203A";
+    @apply text-orange-600; /** TODO(burdon): Style. */
+  }
+  ul > li > ul > li {
+    font-size: 80%;
+  }
+  ul > li > ul > li::before {
+    content: "\203A";
+  }
+
+  ol {
+    counter-reset: paragraph;
+    margin-left: 1.2em;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+  }
+  ol > li {
+    counter-increment: paragraph;
+    position: relative;
+    line-height: 1.2;
+    margin-bottom: 0.3em;
+  }
+  ol > li::before {
+    left: -1.2em;
+    position: absolute;
+    /*content: "§";*/
+    content: counter(paragraph) ". ";
+    @apply text-orange-600; /** TODO(burdon): Style. */
+  }
+
+  /**
+   * Source code.
+   * TODO(burdon): How to properly override hljs theme?
+   */
+  code {
+    @apply mt-1 !important;
+    @apply mb-1 !important;
+    @apply bg-gray-100 !important;
+  }
+}
+
+/**
+ * Custom styles.
+ */
+
+.bg-slide {
+  @apply bg-white;
+}
+
+.bg-slide-header {
+  @apply bg-gray-200;
+  font-weight: 100;
+  font-family: Sharp Sans, ui-sans-serif;
+}
+
+.text-title {
+  font-size: 10rem;
+}
+
+.text-subtitle {
+  font-size: 8rem;
+}
+
+.font-caps {
+  font-variant: all-petite-caps;
+}
+
+.font-dxos {
+  /*noinspection CssNoGenericFontName*/
+  font-family: 'Sharp Sans';
+}

@@ -6,11 +6,15 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "node:events": "events",
+    "node:stream": "readable-stream",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing/index.cjs": "./dist/lib/browser/testing/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "testing.d.ts",
     "testing.js",
@@ -20,6 +24,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -32,8 +37,10 @@
     "@dxos/util": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "assert": "^2.0.0",
+    "events": "^3.3.0",
     "isomorphic-ws": "^4.0.1",
     "nanomessage-rpc": "^3.0.0",
+    "readable-stream": "^3.6.0",
     "simple-peer": "9.11.0",
     "ws": "^7.4.4",
     "xor-distance": "^2.0.0"
@@ -41,7 +48,6 @@
   "devDependencies": {
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@swc-node/register": "^1.5.4",
     "@swc/core": "^1.3.9",
     "@types/simple-peer": "9.11.3",

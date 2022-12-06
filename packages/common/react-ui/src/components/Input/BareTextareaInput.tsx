@@ -2,36 +2,37 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ComponentProps } from 'react';
 
 import { defaultInput } from '../../styles/input';
-import { TextareaProps } from './InputProps';
+import { mx } from '../../util';
+import { TextareaProps, TextareaSlots } from './InputProps';
 
-export type BareTextareaInputProps = Omit<TextareaProps, 'label' | 'initialValue' | 'onChange'> &
-  Pick<ComponentProps<'textarea'>, 'onChange'>;
+export type BareTextareaInputProps = Omit<TextareaProps, 'label' | 'initialValue' | 'onChange' | 'slots'> &
+  Pick<ComponentProps<'textarea'>, 'onChange' | 'value'> & { inputSlot: TextareaSlots['input'] };
 
 export const BareTextareaInput = ({
   validationValence,
   validationMessage,
-  size,
-  borders,
-  typography,
-  rounding,
-  ...inputProps
+  onChange,
+  value,
+  disabled,
+  placeholder,
+  inputSlot
 }: BareTextareaInputProps) => {
   return (
     <textarea
-      {...inputProps}
-      className={cx(
+      {...inputSlot}
+      placeholder={placeholder}
+      onChange={onChange}
+      value={value}
+      className={mx(
         defaultInput({
-          borders,
-          typography,
-          rounding,
-          disabled: inputProps.disabled,
+          disabled,
           ...(validationMessage && { validationValence })
         }),
-        'block w-full px-2.5 py-2'
+        'block w-full px-2.5 py-2',
+        inputSlot?.className
       )}
     />
   );

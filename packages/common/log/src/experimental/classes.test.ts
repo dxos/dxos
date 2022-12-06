@@ -2,11 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { describe, test } from '@dxos/test';
+
 import { log } from '../log';
 import { debugInfo, ownershipClass } from './ownership';
 
 describe('classes', function () {
-  it('field instance', function () {
+  test('field instance', function () {
     @ownershipClass
     class Inner {
       run() {
@@ -37,7 +39,7 @@ describe('classes', function () {
     bar.run();
   });
 
-  it('return values', async function () {
+  test('return values', async function () {
     @ownershipClass
     class Instance {
       run() {

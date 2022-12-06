@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
-import React, { useCallback, KeyboardEvent } from 'react';
+import React, { useCallback, KeyboardEvent, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button, GroupProps, Input, InputProps, Loading } from '@dxos/react-ui';
+import { Button, GroupProps, Input, InputProps, Loading, mx } from '@dxos/react-ui';
 
 export interface SingleInputStepProps extends Omit<GroupProps, 'label' | 'onChange'> {
   inputLabel: string;
@@ -39,17 +38,17 @@ export const SingleInputStep = ({
 }: SingleInputStepProps) => {
   const { t } = useTranslation();
   const onKeyUp = useCallback((e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onNext(), [onNext]);
+  const inputSlots = useMemo(() => ({ input: { onKeyUp, autoFocus: true } }), [onKeyUp]);
   return (
     <>
       <Input
         size='lg'
-        autoFocus
         label={t(inputLabel)}
         {...inputProps}
         {...(inputPlaceholder && { placeholder: t(inputPlaceholder) })}
         {...(pending && { disabled: true })}
         onChange={onChange}
-        onKeyUp={onKeyUp}
+        slots={inputSlots}
       />
       <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
         <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })} className='order-last'>
@@ -61,8 +60,8 @@ export const SingleInputStep = ({
           </Button>
         )}
         <div role='none' className='grow' />
-        <div role='none' className={cx(!pending && 'hidden')}>
-          <Loading label={loadingLabel || t('generic loading label')} className='p-0 ml-0' />
+        <div role='none' className={mx(!pending && 'hidden')}>
+          <Loading label={loadingLabel || t('generic loading label')} slots={{ root: { className: 'p-0 mis-0' } }} />
         </div>
         {onCancelPending && (
           <Button onClick={onCancelPending} {...(!pending && { disabled: true })}>

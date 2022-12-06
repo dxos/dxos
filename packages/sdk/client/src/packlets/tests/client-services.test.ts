@@ -10,7 +10,7 @@ import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { ISpace } from '@dxos/echo-db';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
 import { TestBuilder } from '../testing';
@@ -35,8 +35,8 @@ const syncItems = async (space1: ISpace, space2: ISpace) => {
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
 
-describe('Client services', function () {
-  it('creates client with remote server', async function () {
+describe('Client services', () => {
+  test('creates client with remote server', async () => {
     const testBuilder = new TestBuilder();
 
     const peer = testBuilder.createClientServicesHost();
@@ -52,7 +52,7 @@ describe('Client services', function () {
     expect(client.initialized).to.be.true;
   });
 
-  it('creates clients with multiple peers connected via memory transport', async function () {
+  test('creates clients with multiple peers connected via memory transport', async () => {
     const testBuilder = new TestBuilder();
 
     {
@@ -97,7 +97,7 @@ describe('Client services', function () {
     }
   });
 
-  it('creates identity and invites peer', async function () {
+  test('creates identity and invites peer', async () => {
     const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
@@ -126,8 +126,22 @@ describe('Client services', function () {
     const authenticationCode = new Trigger<string>();
 
     {
-      const observable1 = await client1.halo.createInvitation();
+      const observable1 = client1.halo.createInvitation();
       observable1.subscribe({
+        onConnecting: (invitation) => {
+          const observable2 = client2.halo.acceptInvitation(invitation);
+          observable2.subscribe({
+            onAuthenticating: async () => {
+              await observable2.authenticate(await authenticationCode.wait());
+            },
+            onSuccess: (invitation: Invitation) => {
+              // TODO(burdon): No device.
+              // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
+              success2.wake(invitation);
+            },
+            onError: (err: Error) => raise(new Error(err.message))
+          });
+        },
         onConnected: (invitation: Invitation) => {
           assert(invitation.authenticationCode);
           authenticationCode.wake(invitation.authenticationCode);
@@ -137,19 +151,6 @@ describe('Client services', function () {
         },
         onCancelled: () => raise(new Error()),
         onTimeout: (err: Error) => raise(new Error(err.message)),
-        onError: (err: Error) => raise(new Error(err.message))
-      });
-
-      const observable2 = await client2.halo.acceptInvitation(observable1.invitation!);
-      observable2.subscribe({
-        onAuthenticating: async () => {
-          await observable2.authenticate(await authenticationCode.wait());
-        },
-        onSuccess: (invitation: Invitation) => {
-          // TODO(burdon): No device.
-          // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
-          success2.wake(invitation);
-        },
         onError: (err: Error) => raise(new Error(err.message))
       });
     }
@@ -170,7 +171,7 @@ describe('Client services', function () {
     });
   });
 
-  it('synchronizes data between two spaces after competing invitation', async function () {
+  test('synchronizes data between two spaces after competing invitation', async () => {
     const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
@@ -200,21 +201,22 @@ describe('Client services', function () {
     const success2 = new Trigger<Invitation>();
 
     const space1 = await client1.echo.createSpace();
-    const observable1 = await space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-    const observable2 = await client2.echo.acceptInvitation(observable1.invitation!);
+    const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
 
     observable1.subscribe({
+      onConnecting: (invitation) => {
+        const observable2 = client2.echo.acceptInvitation(invitation);
+        observable2.subscribe({
+          onSuccess: (invitation: Invitation) => {
+            success2.wake(invitation);
+          },
+          onError: (err: Error) => raise(err)
+        });
+      },
       onSuccess: (invitation) => {
         success1.wake(invitation);
       },
       onError: (err) => raise(err)
-    });
-
-    observable2.subscribe({
-      onSuccess: (invitation: Invitation) => {
-        success2.wake(invitation);
-      },
-      onError: (err: Error) => raise(err)
     });
 
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);

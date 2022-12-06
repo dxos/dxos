@@ -7,9 +7,6 @@
       "options": {
         "main": "packages/experimental/spyglass/src/index.ts",
         "outputPath": "packages/experimental/spyglass/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
         "tsConfig": "packages/experimental/spyglass/tsconfig.json"
       },
       "outputs": [

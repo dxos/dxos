@@ -2,15 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ComponentProps, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Invitation } from '@dxos/client';
-import { strongShimmer, getSize } from '@dxos/react-ui';
+import { strongShimmer, getSize, mx } from '@dxos/react-ui';
 
-const pip = cx('rounded-full flex-none', getSize(3));
-const stripe = cx('rounded-full grow', getSize(2));
+const pip = mx('rounded-full flex-none', getSize(2));
+const stripe = mx('rounded-full grow', getSize(2));
 const inactiveColor = 'bg-neutral-100 dark:bg-neutral-600';
 const activeColor = 'bg-primary-500 dark:bg-primary-400';
 const successColor = 'bg-success-500 dark:bg-success-400';
@@ -70,16 +69,16 @@ export const InvitationStatus = ({
       role='status'
       aria-label={statusLabelMap.get(status)}
       {...rootProps}
-      className={cx('flex gap-2 items-center', rootProps.className)}
+      className={mx('flex gap-2 items-center', rootProps.className)}
     >
-      <div role='none' className={cx(pip, 'relative')}>
+      <div role='none' className={mx(pip, 'relative')}>
         <div
           role='none'
-          className={cx(pip, 'absolute', !halted && cursor === 0 ? 'animate-ping block' : 'hidden', activeColor)}
+          className={mx(pip, 'absolute', !halted && cursor === 0 ? 'animate-ping block' : 'hidden', activeColor)}
         />
         <div
           role='none'
-          className={cx(
+          className={mx(
             pip,
             'relative',
             cursor === 0 ? (halted ? resolvedColor : activeColor) : cursor > 0 ? resolvedColor : inactiveColor
@@ -88,20 +87,20 @@ export const InvitationStatus = ({
       </div>
       <div
         role='none'
-        className={cx(
+        className={mx(
           stripe,
           !halted && cursor === 1 && strongShimmer,
           cursor === 1 ? (halted ? resolvedColor : activeColor) : cursor > 1 ? resolvedColor : inactiveColor
         )}
       />
-      <div role='none' className={cx(pip, 'relative')}>
+      <div role='none' className={mx(pip, 'relative')}>
         <div
           role='none'
-          className={cx(pip, 'absolute', !halted && cursor === 2 ? 'animate-ping block' : 'hidden', activeColor)}
+          className={mx(pip, 'absolute', !halted && cursor === 2 ? 'animate-ping block' : 'hidden', activeColor)}
         />
         <div
           role='none'
-          className={cx(
+          className={mx(
             pip,
             'relative',
             cursor === 2 ? (halted ? resolvedColor : activeColor) : cursor > 2 ? resolvedColor : inactiveColor
@@ -110,13 +109,13 @@ export const InvitationStatus = ({
       </div>
       <div
         role='none'
-        className={cx(
+        className={mx(
           stripe,
           !halted && cursor === 3 && strongShimmer,
           cursor === 3 ? activeColor : cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor
         )}
       />
-      <div role='none' className={cx(pip, cursor >= 4 ? resolvedColor : inactiveColor)} />
+      <div role='none' className={mx(pip, cursor >= 4 ? resolvedColor : inactiveColor)} />
     </div>
   );
 };

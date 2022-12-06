@@ -4,18 +4,23 @@
 
 import expect from 'expect';
 
-import { Config, mapFromKeyValues, mapToKeyValues } from './config';
-import defaults from './testing/defaults.json';
-import envmap from './testing/envs-map.json';
+import { test } from '@dxos/test';
 
-it('Empty config', function () {
-  const config = new Config({});
+import { Config, mapFromKeyValues, mapToKeyValues } from './config';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const defaults = require('./testing/defaults.json');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const envmap = require('./testing/envs-map.json');
+
+test('Empty config', () => {
+  const config = new Config();
 
   expect(config.values).toBeTruthy();
   expect(config.get('runtime.props.title')).toBeUndefined();
 });
 
-it('Basic config', function () {
+test('Basic config', () => {
   const config = new Config(
     {
       runtime: {
@@ -46,7 +51,7 @@ it('Basic config', function () {
   });
 });
 
-it('Runtime and module config', function () {
+test('Runtime and module config', () => {
   const config = new Config(
     {
       package: {
@@ -97,7 +102,7 @@ it('Runtime and module config', function () {
   });
 });
 
-it.skip('Mapping', function () {
+test.skip('Mapping', () => {
   process.env.TEST_CLIENT_ID = '900';
   process.env.TEST_SERVER_ENDPOINT = 'http://localhost';
 
@@ -133,7 +138,7 @@ it.skip('Mapping', function () {
   });
 });
 
-it.skip('mapToKeyValuesping', function () {
+test.skip('mapToKeyValuesping', () => {
   const config = new Config(
     {
       client: {

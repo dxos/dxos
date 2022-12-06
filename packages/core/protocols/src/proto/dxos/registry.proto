@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 
 // TODO(burdon): Rename `dxos.registry.record`.
 package dxos.registry;
@@ -16,8 +17,8 @@ message Record {
   message Type {
     /// FQ protobuf message name.
     string message_name = 1;
-    /// Set of protobuf messages encoded in JSON.
-    string protobuf_defs = 2;
+    /// Set of protobuf messages encoded.
+    google.protobuf.Struct protobuf_defs = 2;
     /// CID of protobuf source file.
     optional string protobuf_ipfs_cid = 3;
   }

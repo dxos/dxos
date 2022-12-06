@@ -20,7 +20,7 @@ export const JoinSpaceDialog = ({ onJoin, ...props }: JoinSpaceDialogProps) => {
   const client = useClient();
 
   const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
-    await client.echo.acceptInvitation(invitation);
+    client.echo.acceptInvitation(invitation);
     // await wrapObservable(observable);
     // acceptedInvitation.authenticate(await secretProvider());
     // const space = await acceptedInvitation.getSpace();

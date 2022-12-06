@@ -11,13 +11,13 @@ import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AgentSpec, Command } from '@dxos/protocols/proto/dxos/gravity';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { Agent, AgentStateMachine, StateMachineFactory } from './agent';
 
 // TODO(burdon): Run local signal server for tests.
-describe('Agent', function () {
-  it('creates and starts a basic agent', async function () {
+describe('Agent', () => {
+  test('creates and starts a basic agent', async () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent({ config });
     await agent.initialize();
@@ -30,7 +30,7 @@ describe('Agent', function () {
     await agent.destroy();
   });
 
-  it('creates a space', async function () {
+  test.skip('creates a space', async () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent({ config });
     await agent.initialize();
@@ -40,7 +40,7 @@ describe('Agent', function () {
     await agent.destroy();
   });
 
-  it.only('tests two agents', async function () {
+  test.skip('tests two agents', async () => {
     const config: ConfigProto = { version: 1 };
 
     const swarmKey = PublicKey.random();
@@ -116,7 +116,11 @@ describe('Agent', function () {
 
     // Initialize.
     await Promise.all([agent1.initialize(), agent2.initialize()]);
-    afterTest(() => Promise.all([agent1.destroy(), agent2.destroy()]));
+    afterTest(async () => {
+      console.log(111);
+      await Promise.all([agent1.destroy(), agent2.destroy()]);
+      console.log(222);
+    });
 
     // Run sequences.
     const space1 = new Trigger<Space>();

@@ -6,8 +6,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/browser/index.mjs",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -21,7 +21,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
-    "classnames": "^2.3.2",
     "lodash.debounce": "^4.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

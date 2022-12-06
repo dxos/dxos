@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/devtools/devtools-mesh/src/index.ts",
-        "outputPath": "packages/devtools/devtools-mesh/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/devtools/devtools-mesh/dist/types",
         "tsConfig": "packages/devtools/devtools-mesh/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/devtools/devtools-mesh/src/index.ts"
+        ],
+        "outputPath": "packages/devtools/devtools-mesh/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

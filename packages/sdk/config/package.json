@@ -6,18 +6,21 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
     "node:assert": "assert",
-    "./dist/src/loaders/index.js": "./dist/src/loaders/browser.js"
+    "./src/loaders/index.ts": "./src/loaders/browser.js",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "esbuild-plugin.js",
-    "rollup-plugin.js",
-    "webpack-plugin.js"
+    "rollup-plugin.js"
   ],
+  "scripts": {
+    "test-build": "node ./src/testing/build.js"
+  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",

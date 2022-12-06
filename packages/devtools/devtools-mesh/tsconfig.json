@@ -4,7 +4,7 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
     "src",
@@ -13,6 +13,9 @@
   "references": [
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/esbuild-plugins"
     },
     {
       "path": "../../common/keys"

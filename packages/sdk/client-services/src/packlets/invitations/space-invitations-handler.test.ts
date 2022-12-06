@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItems } from '../testing';
@@ -20,8 +20,8 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/space-invitations-handler', function () {
-  it('genesis', async function () {
+describe('services/space-invitations-handler', () => {
+  test('genesis', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
     const space = await peer.spaceManager!.createSpace();
@@ -30,7 +30,7 @@ describe('services/space-invitations-handler', function () {
     await space.close();
   });
 
-  it('genesis with database mutations', async function () {
+  test('genesis with database mutations', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
     const space = await peer.spaceManager!.createSpace();
 
@@ -47,12 +47,13 @@ describe('services/space-invitations-handler', function () {
     await space.close();
   });
 
-  it('creates and accepts invitation', async function () {
+  test('creates and accepts invitation with retry', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<PublicKey>();
     const complete2 = new Trigger<PublicKey>();
 
+    let attempt = 0;
     const authenticationCode = new Trigger<string>();
 
     const space1 = await host.spaceManager!.createSpace();
@@ -66,7 +67,12 @@ describe('services/space-invitations-handler', function () {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
           onAuthenticating: async () => {
-            await observable2.authenticate(await authenticationCode.wait());
+            if (attempt++ === 0) {
+              // Force retry.
+              await observable2.authenticate('000000');
+            } else {
+              await observable2.authenticate(await authenticationCode.wait());
+            }
           },
           onSuccess: (invitation: Invitation) => {
             complete2.wake(invitation.spaceKey!);
@@ -104,7 +110,7 @@ describe('services/space-invitations-handler', function () {
     }
   });
 
-  it('cancels invitation', async function () {
+  test('cancels invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const cancelled = new Trigger();

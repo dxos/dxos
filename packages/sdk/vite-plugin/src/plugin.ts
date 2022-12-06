@@ -8,7 +8,10 @@ import { Plugin } from 'vite';
 
 import { ConfigPlugin as EsbuildConfigPlugin } from '@dxos/config/esbuild-plugin';
 import { ConfigPlugin as RollupConfigPlugin } from '@dxos/config/rollup-plugin';
-import { NodeGlobalsPolyfillPlugin as EsbuildNodeGlobalsPlugin } from '@dxos/esbuild-plugins';
+import {
+  NodeModulesPlugin as EsbuildNodeModulesPlugin,
+  NodeGlobalsPolyfillPlugin as EsbuildNodeGlobalsPlugin
+} from '@dxos/esbuild-plugins';
 
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 
@@ -21,10 +24,14 @@ export const dxosPlugin = (): Plugin => ({
 
     return {
       // TODO(wittjosiah): This shouldn't be required.
+      //   Inspecting the bundle without this, import { inspect } from 'node:util'; in PublicKey seemed to be mapped to
+      //   @dxos/util instead of the node polyfill. This needs further investigation.
       resolve: {
         alias: {
           'node:assert': 'assert/',
+          'node:events': 'events/',
           'node:path': 'path-browserify/',
+          'node:stream': 'readable-stream/',
           'node:util': 'util/'
         }
       },
@@ -35,17 +42,9 @@ export const dxosPlugin = (): Plugin => ({
       optimizeDeps: {
         esbuildOptions: {
           plugins: [
+            EsbuildNodeModulesPlugin(),
             EsbuildNodeGlobalsPlugin(),
-            EsbuildConfigPlugin({ configPath, envPath, devPath }),
-            // TODO(wittjosiah): This shouldn't be required.
-            {
-              name: 'sodium-universal-patch',
-              setup: (build) => {
-                build.onResolve({ filter: /sodium-native/ }, (args) => {
-                  return { path: require.resolve('sodium-javascript') };
-                });
-              }
-            }
+            EsbuildConfigPlugin({ configPath, envPath, devPath })
           ]
         }
       },

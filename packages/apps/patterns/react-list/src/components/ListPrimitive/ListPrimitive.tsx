@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import debounce from 'lodash.debounce';
 import { Minus, Plus } from 'phosphor-react';
 import React, { ComponentProps, useCallback, useMemo, useState, KeyboardEvent } from 'react';
@@ -15,7 +14,8 @@ import {
   Button,
   randomString,
   defaultGroup,
-  defaultHover
+  defaultHover,
+  mx
 } from '@dxos/react-uikit';
 
 import { usePropStatefully } from '../../hooks';
@@ -175,6 +175,20 @@ const ListItemPrimitive = ({
     [orderIndex, isLast]
   );
 
+  const inputSlots = useMemo(
+    () => ({
+      root: { className: 'm-0' },
+      input: {
+        className: 'border-0 rounded',
+        autoFocus: true,
+        'data-orderindex': orderIndex,
+        'data-itemid': id,
+        onKeyUp
+      }
+    }),
+    [orderIndex, id, onKeyUp]
+  );
+
   return (
     <li
       key={id}
@@ -183,14 +197,13 @@ const ListItemPrimitive = ({
       {...(description && { 'aria-describedby': descriptionId })}
     >
       <input
-        key={titleSession}
         {...{
           type: 'checkbox',
           id: checkId,
           ...(description && {
             'aria-describedby': descriptionId
           }),
-          className: cx(
+          className: mx(
             getSize(5),
             'text-primary-600 bg-neutral-50 rounded-full border-neutral-300 dark:bg-neutral-800 dark:border-neutral-600 cursor-pointer',
             defaultFocus,
@@ -208,18 +221,13 @@ const ListItemPrimitive = ({
       </span>
       <div role='none' className='grow'>
         <Input
-          spacing=''
+          key={titleSession}
           label={t('list item title label')}
           placeholder={t('list item title placeholder')}
           labelVisuallyHidden
           initialValue={title}
           onChange={onChangeTitle}
-          data-itemid={id}
-          borders='border-0'
-          rounding='rounded'
-          autoFocus={autoFocus}
-          onKeyUp={onKeyUp}
-          data-orderindex={orderIndex}
+          slots={inputSlots}
         />
         {/* TODO(thure): Re-enable this when descriptions become relevant */}
         {/* <Input */}
@@ -243,7 +251,7 @@ const ListItemPrimitive = ({
       {/*    <span className='sr-only'>{t('move list item down label')}</span> */}
       {/*  </Button> */}
       {/* </ButtonGroup> */}
-      <Button onClick={onClickDelete} variant='ghost' spacing='p-1' className='self-stretch'>
+      <Button onClick={onClickDelete} variant='ghost' className='p-1 self-stretch'>
         <Minus className={getSize(4)} />
         <span className='sr-only'>{t('delete list item label')}</span>
       </Button>
@@ -394,11 +402,22 @@ export const ListPrimitive = ({
 
   // Render
 
+  const inputSlots = useMemo(
+    () => ({
+      root: { className: 'mli-2 mbs-0 mbe-2' },
+      input: {
+        className: 'border-0 rounded text-xl font-display font-semibold',
+        'data-itemid': listId
+      }
+    }),
+    [listId]
+  );
+
   return (
     <div
       role='group'
       {...divProps}
-      className={cx(defaultGroup({ elevation: 3, spacing: 'pbs-2 pbe-1' }), divProps.className)}
+      className={mx(defaultGroup({ elevation: 3, spacing: 'pbs-2 pbe-1' }), divProps.className)}
       aria-labelledby={titleId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
@@ -417,11 +436,7 @@ export const ListPrimitive = ({
         labelVisuallyHidden
         initialValue={title}
         onChange={onChangeTitle}
-        data-itemid={listId}
-        spacing='mli-2 mbe-2'
-        borders='border-0'
-        rounding='rounded'
-        typography='text-xl font-display font-semibold'
+        slots={inputSlots}
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}

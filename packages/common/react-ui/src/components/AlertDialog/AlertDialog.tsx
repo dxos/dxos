@@ -4,11 +4,19 @@
 
 import { Transition } from '@headlessui/react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
-import cx from 'classnames';
-import React, { cloneElement, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
+import React, { cloneElement, ComponentProps, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
 
 import { defaultDescription, defaultFocus } from '../../styles';
+import { mx } from '../../util';
 import { Input, InputProps } from '../Input';
+
+export interface AlertDialogSlots {
+  overlay?: Pick<ComponentProps<typeof AlertDialogPrimitive.Overlay>, 'className'>;
+  content?: Omit<ComponentProps<typeof AlertDialogPrimitive.Content>, 'children'>;
+  title?: Omit<ComponentProps<typeof AlertDialogPrimitive.Content>, 'children'>;
+  description?: Omit<ComponentProps<typeof AlertDialogPrimitive.Description>, 'children'>;
+  actions?: Omit<ComponentProps<'div'>, 'children'>;
+}
 
 export interface AlertDialogProps {
   title: ReactNode;
@@ -22,6 +30,7 @@ export interface AlertDialogProps {
   children?: ReactNode;
   initiallyOpen?: boolean;
   mountAsSibling?: boolean;
+  slots?: AlertDialogSlots;
 }
 
 export const AlertDialog = ({
@@ -35,7 +44,8 @@ export const AlertDialog = ({
   destructiveConfirmInputProps,
   children,
   initiallyOpen,
-  mountAsSibling
+  mountAsSibling,
+  slots = {}
 }: AlertDialogProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
   const [confirmDisabled, setConfirmDisabled] = useState(!!destructiveConfirmString);
@@ -58,7 +68,10 @@ export const AlertDialog = ({
         leaveFrom='opacity-100'
         leaveTo='opacity-0'
       >
-        <AlertDialogPrimitive.Overlay forceMount className='fixed inset-0 z-20 bg-black/50' />
+        <AlertDialogPrimitive.Overlay
+          forceMount
+          className={mx('fixed inset-0 z-20 bg-black/50', slots.overlay?.className)}
+        />
       </Transition.Child>
       <Transition.Child
         as={Fragment}
@@ -71,26 +84,33 @@ export const AlertDialog = ({
       >
         <AlertDialogPrimitive.Content
           forceMount
-          className={cx(
+          {...slots.content}
+          className={mx(
             'fixed z-50',
             'w-[95vw] max-w-md rounded-xl p-4 md:w-full',
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
             'shadow-2xl bg-white dark:bg-neutral-800 elevated-buttons',
-            defaultFocus
+            defaultFocus,
+            slots.content?.className
           )}
         >
           <AlertDialogPrimitive.Title
-            className={cx(
+            tabIndex={0}
+            {...slots.title}
+            className={mx(
               'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
               titleVisuallyHidden && 'sr-only',
-              defaultFocus
+              defaultFocus,
+              slots.title?.className
             )}
-            tabIndex={0}
           >
             {title}
           </AlertDialogPrimitive.Title>
           {description && (
-            <AlertDialogPrimitive.Description className={cx('my-2', defaultDescription)}>
+            <AlertDialogPrimitive.Description
+              {...slots.description}
+              className={mx('my-2', defaultDescription, slots.description?.className)}
+            >
               {description}
             </AlertDialogPrimitive.Description>
           )}
@@ -99,7 +119,7 @@ export const AlertDialog = ({
 
           {destructiveConfirmInputProps && <Input {...destructiveConfirmInputProps} onChange={setConfirmStringValue} />}
 
-          <div className='flex flex-wrap justify-end gap-4'>
+          <div {...slots.actions} className={mx('flex flex-wrap justify-end gap-4', slots.actions?.className)}>
             {cancelTrigger && (
               <AlertDialogPrimitive.Cancel asChild={typeof cancelTrigger !== 'string'}>
                 {cancelTrigger}

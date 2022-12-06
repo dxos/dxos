@@ -34,7 +34,7 @@ export const FatalError = ({ error }: FatalErrorProps) => {
   return (
     <Dialog title={t('fatal error label')} initiallyOpen>
       {isDev ? (
-        <Alert title={message} valence={'error'} className='my-4'>
+        <Alert title={message} valence={'error'} slots={{ root: { className: 'mlb-4' } }}>
           <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
         </Alert>
       ) : (

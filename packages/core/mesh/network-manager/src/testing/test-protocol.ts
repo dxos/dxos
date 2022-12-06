@@ -4,8 +4,8 @@
 
 // Test/mock Protocol implementation used in network-manager tests.
 
-import { EventEmitter } from 'events';
 import assert from 'node:assert';
+import { EventEmitter } from 'node:events';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
