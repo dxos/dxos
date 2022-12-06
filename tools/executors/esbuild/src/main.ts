@@ -57,7 +57,11 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             setup: ({ onResolve }) => {
               onResolve({ filter: /^node:.*/ }, (args) => {
                 const browserMapped = packageJson.browser?.[args.path];
-                return { external: true, path: browserMapped ?? args.path };
+                if (!browserMapped) {
+                  return null;
+                }
+
+                return { external: true, path: browserMapped };
               });
             }
           },

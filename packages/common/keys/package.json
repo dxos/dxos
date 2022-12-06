@@ -8,6 +8,8 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
+    "node:assert": "assert",
+    "node:util": "util",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
