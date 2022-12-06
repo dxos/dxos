@@ -4082,6 +4082,7 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       autoprefixer: ^10.4.12
+      clsx: ^1.1.1
       d3: ^7.4.4
       gray-matter: ^4.0.3
       hastscript: ^7.1.0
@@ -4117,6 +4118,7 @@ importers:
       '@dxos/react-client': link:../../packages/sdk/react-client
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@types/react-dom': 18.0.9
+      clsx: 1.2.1
       d3: 7.6.1
       js-yaml: 4.1.0
       react: 18.2.0

@@ -7,14 +7,17 @@ import React, { FC, useEffect, useState } from 'react';
 import * as ClientModule from '@dxos/client';
 import * as ReactClientModule from '@dxos/react-client';
 
-import { DeckProps } from './Deck';
 import { SlideDeck } from './SlideDeck';
+import { PresentationProps } from './types';
 
 // NOTE: Due to ESM.
 const { ClientProvider } = ReactClientModule as any;
 const { Client, fromHost } = ClientModule as any;
 
-export const Presentation: FC<DeckProps> = ({ title, slides }) => {
+/**
+ * Main container with Client provider.
+ */
+export const Presentation: FC<PresentationProps> = ({ title, slides }) => {
   const [client, setClient] = useState<typeof Client>(null);
   useEffect(() => {
     setTimeout(async () => {

@@ -5,13 +5,13 @@
 import React, { FC, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { usePresentation } from '../hooks';
-import { DeckProps } from './Deck';
+import { usePresentation } from '../../hooks';
+import { PresentationProps } from './types';
 
 /**
  * Index page.
  */
-export const SlideIndex: FC<DeckProps> = ({ title, slides }) => {
+export const SlideIndex: FC<PresentationProps> = ({ title, slides }) => {
   const navigate = useNavigate();
   const presentation = usePresentation();
 
@@ -25,13 +25,9 @@ export const SlideIndex: FC<DeckProps> = ({ title, slides }) => {
   useEffect(() => {
     const handler = (ev: KeyboardEvent) => {
       switch (ev.key) {
-        // TODO(burdon): Get last slide from context.
         case 'ArrowDown': {
-          navigate(presentation.path());
+          navigate(presentation.slidePath());
           break;
-        }
-        default: {
-          // console.log(ev.key);
         }
       }
     };

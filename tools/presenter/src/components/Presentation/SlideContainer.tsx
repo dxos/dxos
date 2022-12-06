@@ -5,7 +5,7 @@
 import React, { FC, ReactNode, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { usePresentation } from '../hooks';
+import { usePresentation } from '../../hooks';
 
 // TODO(burdon): Factor out.
 export const Pager: FC<{ slide: number; length: number }> = ({ slide, length }) => {
@@ -30,7 +30,7 @@ export const SlideContainer: FC<{ slides: ReactNode[] }> = ({ slides }) => {
   }, [slide]);
 
   const handleNav = (slide: number) => {
-    slide >= 0 && slide < slides.length && navigate(`/slide/${slide}`);
+    slide >= 0 && slide < slides.length && navigate(presentation.slidePath(slide));
   };
 
   useEffect(() => {
@@ -45,11 +45,8 @@ export const SlideContainer: FC<{ slides: ReactNode[] }> = ({ slides }) => {
           break;
         }
         case 'ArrowUp': {
-          navigate('/index');
+          navigate(presentation.indexPath());
           break;
-        }
-        default: {
-          // console.log(ev.key);
         }
       }
     };

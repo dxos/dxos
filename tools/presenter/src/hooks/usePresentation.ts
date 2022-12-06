@@ -7,8 +7,12 @@ import { createContext, useContext } from 'react';
 class Presentation {
   private _currentSlide = 0;
 
-  path() {
-    return `/slide/${this._currentSlide}`;
+  indexPath() {
+    return '/index';
+  }
+
+  slidePath(num = this._currentSlide) {
+    return `/slide/${num}`;
   }
 
   setSlide(slide: number) {

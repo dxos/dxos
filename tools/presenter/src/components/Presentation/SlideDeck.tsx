@@ -6,14 +6,14 @@ import React, { FC, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { HashRouter, Navigate, useRoutes } from 'react-router-dom';
 
-import { DeckProps } from './Deck';
 import { SlideContainer } from './SlideContainer';
 import { SlideIndex } from './SlideIndex';
+import { PresentationProps } from './types';
 
 /**
  * Router
  */
-const Routes: FC<DeckProps> = ({ title, slides }) => {
+const Routes: FC<PresentationProps> = ({ title, slides }) => {
   return useRoutes([
     {
       path: '/',
@@ -34,17 +34,24 @@ const Routes: FC<DeckProps> = ({ title, slides }) => {
  * Main slide deck container.
  */
 // TODO(burdon): Create context for content.
-export const SlideDeck: FC<DeckProps> = ({ title, slides }) => {
+export const SlideDeck: FC<PresentationProps> = ({ title, slides }) => {
   useEffect(() => {
-    // TODO(burdon): This isn't working.
+    // TODO(burdon): This isn't working (not triggered if via key?)
     // TODO(burdon): Key hook to trigger fullscreen model.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API/Guide (fullscreenElement is null).
     // https://developer.mozilla.org/en-US/docs/Web/API/Document/fullscreenchange_event
     document.addEventListener('fullscreenchange', (event) => {
       console.log('fullscreenchange');
     });
-  }, []);
 
-  // Current slide.
+    // TODO(burdon): Can't use iOS safe-area-inset to detect notch.
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/env
+    //  https://github.com/john-doherty/notch-detected-event/tree/master/src
+    // const root = document.documentElement;
+    // root.style.setProperty('--notch-top', 'env(safe-area-inset-top)');
+    // const computedStyle = window.getComputedStyle(root);
+    // console.log(computedStyle.getPropertyValue('--notch-top'));
+  }, []);
 
   // Scaled props.
   const contentRef = useRef<HTMLDivElement>(null);
@@ -71,13 +78,14 @@ export const SlideDeck: FC<DeckProps> = ({ title, slides }) => {
       const nominalWidth = 2560;
       const nominalHeight = nominalWidth / aspectRatio;
 
-      // TODO(burdon): If not fullscreen then make scale slightly smaller so there's a natural border.
-      //  Cannot detect full height on Mac due to notch.
-      //  https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API/Guide (fullscreenElement is null).
-      //  https://github.com/john-doherty/notch-detected-event/tree/master/src
-      //  May conflict with useResizeDetector?
-      const fullscreen = false;
-      const scaleFactor = fullscreen ? 1 : 0.95;
+      // NOTE: Hack to detect full height on Macbook Pro due to notch.
+      const macIntelNotch = 1117 - 1080;
+      const fullscreen =
+        height === screen.availHeight ||
+        (window.navigator.platform === 'MacIntel' && height === screen.availHeight - macIntelNotch);
+
+      // If not fullscreen then make scale slightly smaller so there's a natural border.
+      const scaleFactor = fullscreen ? 1 : 0.9;
 
       // Compute scaling factor required.
       const scale = Math.min(width / nominalWidth, height / nominalHeight) * scaleFactor;

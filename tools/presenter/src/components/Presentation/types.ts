@@ -4,7 +4,7 @@
 
 import { ReactNode } from 'react';
 
-export type DeckProps = {
+export type PresentationProps = {
   title?: string;
   slides: ReactNode[];
 };

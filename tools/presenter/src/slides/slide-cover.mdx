@@ -3,10 +3,13 @@ title: DXOS
 layout: full
 ---
 
-import { ImageContainer } from '../components';
+import { Image } from '../components';
 import BG from './images/bg-surface-tall.png';
 
-<ImageContainer backgroundImage={`url(${BG})`} bottom={100} />
+<Image
+  backgroundImage={`url(${BG})`}
+  bottom={100}
+/>
 
 <div className='flex flex-col' style={{ position: 'absolute', alignItems: 'center', left: 0, right: 0, bottom: '2em' }}>
   <div className='text-title font-dxos'>DXOS</div>
