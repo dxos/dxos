@@ -42,10 +42,10 @@ describe('Halo', () => {
     await client2.initialize();
 
     const done = new Trigger();
-    const invitation = await client1.halo.createInvitation();
+    const invitation = client1.halo.createInvitation();
     invitation.subscribe({
       onSuccess: async (invitation) => {
-        await client2.halo.acceptInvitation(invitation);
+        client2.halo.acceptInvitation(invitation);
         done.wake();
       },
       onError: (error) => {

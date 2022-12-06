@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createArrayDispatch } from '@dxos/util';
+import { createSetDispatch } from '@dxos/util';
 
 import { UnsubscribeCallback } from './events';
 
@@ -22,8 +22,8 @@ export interface Observable<Events> {
 //  https://github.com/apollographql/apollo-client/tree/main/src/utilities/observables
 //  https://github.com/mostjs/core
 export class ObservableProvider<Events extends {}> implements Observable<Events> {
-  protected readonly _handlers: Events[] = [];
-  private readonly _proxy = createArrayDispatch<Events>({
+  protected readonly _handlers = new Set<Events>();
+  private readonly _proxy = createSetDispatch<Events>({
     handlers: this._handlers
   });
 
@@ -35,10 +35,9 @@ export class ObservableProvider<Events extends {}> implements Observable<Events>
   }
 
   subscribe(handler: Events): UnsubscribeCallback {
-    this._handlers.push(handler);
+    this._handlers.add(handler);
     return () => {
-      const idx = this._handlers.findIndex((h) => h === handler);
-      this._handlers.splice(idx, 1);
+      this._handlers.delete(handler);
     };
   }
 }

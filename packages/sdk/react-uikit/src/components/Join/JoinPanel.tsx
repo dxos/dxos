@@ -23,7 +23,7 @@ export interface JoinPanelProps {
   parseInvitation?: (invitationCode: string) => string;
   initialInvitationCode?: string;
   onJoin?: (result: InvitationResult) => void;
-  acceptInvitation: (invitation: Invitation) => Promise<AuthenticatingInvitationObservable>;
+  acceptInvitation: (invitation: Invitation) => AuthenticatingInvitationObservable;
 }
 
 interface JoinStep1Props extends JoinPanelProps {
@@ -54,7 +54,7 @@ const JoinStep1 = ({
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
 
   const onConnectNext = useCallback(async () => {
-    const invitation = await acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
+    const invitation = acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
     connect(invitation);
   }, [invitationCode]);
 
