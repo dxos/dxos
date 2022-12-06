@@ -3,7 +3,7 @@
 //
 
 import { UserCircleGear } from 'phosphor-react';
-import React from 'react';
+import React, { ForwardedRef, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Profile as ProfileType } from '@dxos/client';
@@ -15,7 +15,7 @@ export interface ProfileMenuProps {
   onClickManageProfile?: () => void;
 }
 
-export const ProfileMenu = (props: ProfileMenuProps) => {
+export const ProfileMenu = forwardRef((props: ProfileMenuProps, ref: ForwardedRef<HTMLButtonElement>) => {
   const { profile, onClickManageProfile } = props;
   const { t } = useTranslation('uikit');
   return (
@@ -25,7 +25,7 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
           size={10}
           variant='circle'
           fallbackValue={profile.identityKey.toHex()}
-          label={<span className='sr-only'>{profile.displayName ?? humanize(profile.identityKey.toHex())}</span>}
+          label={profile.displayName ?? humanize(profile.identityKey.toHex())}
           slots={{
             root: {
               tabIndex: 0,
@@ -40,6 +40,7 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
         />
       }
       triggerIsInToolbar
+      ref={ref}
       slots={{ content: { collisionPadding: 8, sideOffset: 4, className: 'flex flex-col gap-4 items-center z-[2]' } }}
     >
       <p>{profile.displayName ?? humanize(profile.identityKey.toHex())}</p>
@@ -51,4 +52,4 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
       )}
     </Popover>
   );
-};
+});
