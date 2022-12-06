@@ -85,7 +85,7 @@ export const registerMockTypeRecord = (
 ): Promise<CID> =>
   registry.registerTypeRecord(
     params.messageName ?? faker.random.arrayElement(mockTypeMessageNames),
-    params.protobufDefs ?? decodeProtobuf(JSON.stringify(schemaJson)),
+    params.protobufDefs ?? decodeProtobuf(schemaJson),
     {
       displayName: params.meta?.displayName ?? faker.lorem.words(3),
       description: params.meta?.description ?? faker.lorem.sentence(),
@@ -105,7 +105,7 @@ export const createMockTypes = (): RegistryType[] =>
     cid: createCID(),
     type: {
       messageName,
-      protobufDefs: decodeProtobuf(JSON.stringify(schemaJson)),
+      protobufDefs: decodeProtobuf(schemaJson),
       protobufIpfsCid: createCID()
     }
   }));
