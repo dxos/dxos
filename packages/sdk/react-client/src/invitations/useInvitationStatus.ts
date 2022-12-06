@@ -112,7 +112,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
 
   const onError = useCallback(
     (invitation: Invitation) => {
-      dispatch({ status: Invitation.State.ERROR, error: invitation.errorCode, haltedAt: state.status });
+      dispatch({ status: Invitation.State.ERROR, error: invitation.error, haltedAt: state.status });
     },
     [state.status]
   );

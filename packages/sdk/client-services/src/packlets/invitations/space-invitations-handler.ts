@@ -21,6 +21,7 @@ import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import {
@@ -32,6 +33,8 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
+
+const MAX_OTP_ATTEMPTS = 3;
 
 /**
  * Handles the life-cycle of Space invitations between peers.
@@ -69,12 +72,15 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     });
 
     let authenticationCode: string;
+    let authenticationRetry = 0;
+
     const complete = new Trigger<PublicKey>();
     const plugin = new RpcPlugin(async (port) => {
       let guestProfile: ProfileDocument | undefined;
 
       const peer = createProtoRpcPeer({
         exposed: {
+          // TODO(burdon): Reconcile with client/services.
           SpaceHostService: schema.getService('dxos.halo.invitations.SpaceHostService')
         },
         handlers: {
@@ -99,20 +105,29 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
             authenticate: async ({ authenticationCode: code }) => {
               log('received authentication request', { authenticationCode: code });
-              authenticationCode = code;
+              let status = AuthenticationResponse.Status.OK;
+              if (invitation.authenticationCode) {
+                if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
+                  status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
+                } else if (code !== invitation.authenticationCode) {
+                  status = AuthenticationResponse.Status.INVALID_OTP;
+                } else {
+                  authenticationCode = code;
+                }
+              }
+
+              return { status };
             },
 
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
                 // Check authenticated.
-                if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+                if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
                   if (
                     invitation.authenticationCode === undefined ||
-                    authenticationCode !== invitation.authenticationCode
+                    invitation.authenticationCode !== authenticationCode
                   ) {
-                    invitation.authenticationCode &&
-                      log.error('bad auth code', { code: authenticationCode, expected: invitation.authenticationCode });
-                    throw new Error('authentication code not set');
+                    throw new Error(`invalid authentication code: ${authenticationCode}`);
                   }
                 }
 
@@ -194,8 +209,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         await swarmConnection?.close();
       },
 
-      // TODO(burdon): Consider retry.
       onAuthenticate: async (code: string) => {
+        // TODO(burdon): Reset creates a race condition? Event?
         authenticated.wake(code);
       }
     });
@@ -212,7 +227,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
       try {
         await peer.open();
-        // TODO(burdon): Bug where guest may create multiple connections.
+        // TODO(burdon): Bug where guest may create multiple connections (does teleport fix this?)
         if (++connectionCount > 1) {
           throw new Error(`multiple connections detected: ${connectionCount}`);
         }
@@ -229,11 +244,26 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         // 2. Get authentication code.
         // TODO(burdon): Test timeout (options for timeouts at different steps).
         if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-          log('guest waiting for authentication code...');
-          observable.callback.onAuthenticating?.(invitation);
-          const authenticationCode = await authenticated.wait({ timeout });
-          log('sending authentication request');
-          await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
+          for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
+            log('guest waiting for authentication code...');
+            observable.callback.onAuthenticating?.(invitation);
+            const authenticationCode = await authenticated.wait({ timeout });
+
+            log('sending authentication request');
+            const response = await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
+            if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+              break;
+            }
+
+            if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
+              if (attempt === MAX_OTP_ATTEMPTS) {
+                throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
+              } else {
+                log('retrying invalid code', { attempt });
+                authenticated.reset();
+              }
+            }
+          }
         }
 
         // 3. Create local space.
@@ -254,7 +284,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         complete.wake();
       } catch (err) {
         if (!observable.cancelled) {
-          log.warn('failed', err);
+          log.warn('auth failed', err);
           observable.callback.onError(err);
         }
       } finally {

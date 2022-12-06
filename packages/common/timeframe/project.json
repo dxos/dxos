@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/common/timeframe/src/index.ts"
         ],
-        "outputPath": "packages/common/timeframe/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/common/timeframe/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

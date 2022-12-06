@@ -6,12 +6,12 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
     "./src/node.ts": "./src/browser.ts",
-    "./dist/lib/node.js": "./dist/lib/browser.js"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -26,7 +26,6 @@
     "@types/analytics-node": "^3.1.9"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

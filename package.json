@@ -123,7 +123,6 @@
   "pnpm": {
     "patchedDependencies": {
       "@nrwl/js@15.2.1": "patches/@nrwl__js@15.2.1.patch",
-      "@nrwl/workspace@15.2.1": "patches/@nrwl__workspace@15.2.1.patch",
       "@nxext/vite@15.0.0": "patches/@nxext__vite@15.0.0.patch",
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",

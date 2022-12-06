@@ -7,8 +7,11 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/neutral.js",
-  "types": "src/index.ts",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -60,8 +63,5 @@
     "vite": "3.0.9",
     "vite-plugin-pwa": "^0.12.4",
     "workbox-window": "^6.5.4"
-  },
-  "publishConfig": {
-    "types": "dist/types/src/index.d.ts"
   }
 }

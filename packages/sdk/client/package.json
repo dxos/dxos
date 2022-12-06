@@ -7,14 +7,14 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
     "node:assert": "assert",
     "node:util": "util",
-    "./dist/lib/node/index.js": "./dist/lib/browser/index.js",
-    "./dist/lib/node/packlets/testing/index.js": "./dist/lib/browser/packlets/testing/index.js"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "testing.d.ts",
     "testing.js",
@@ -54,8 +54,7 @@
     "node": ">=12.0.0"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   },
   "beast": {
     "classDiagrams": [

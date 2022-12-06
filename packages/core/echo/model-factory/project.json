@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/echo/model-factory/src/index.ts"
         ],
-        "outputPath": "packages/core/echo/model-factory/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/echo/model-factory/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

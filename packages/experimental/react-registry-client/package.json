@@ -7,12 +7,12 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
     "node:assert": "assert",
-    "./dist/lib/node.js": "./dist/lib/browser.js"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "scripts": {
     "book": "esbuild-server book"
   },
@@ -37,8 +37,5 @@
   "peerDependencies": {
     "react": "*",
     "react-dom": "*"
-  },
-  "publishConfig": {
-    "types": "dist/types/src/index.d.ts"
   }
 }

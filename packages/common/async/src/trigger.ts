@@ -65,7 +65,7 @@ export class Trigger<T = void> {
   wake(value: T) {
     this._wake(value);
     if (this._options.autoReset) {
-      this.reset();
+      return this.reset();
     }
 
     return this;
@@ -78,5 +78,7 @@ export class Trigger<T = void> {
     this._promise = new Promise<T>((resolve) => {
       this._wake = resolve;
     });
+
+    return this;
   }
 }

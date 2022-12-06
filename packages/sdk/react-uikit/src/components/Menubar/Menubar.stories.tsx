@@ -74,7 +74,7 @@ const JoinPanel = () => {
   const handleInvite = async () => {
     setShowPin(true);
     // TODO(burdon): Authenticate.
-    await client.halo.acceptInvitation(InvitationEncoder.decode(invitationCode));
+    client.halo.acceptInvitation(InvitationEncoder.decode(invitationCode));
     // const secret = await secretProvider();
     // await acceptedInvitation.authenticate(secret);
   };

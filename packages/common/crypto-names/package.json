@@ -6,8 +6,11 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/neutral.js",
-  "types": "src/names.ts",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/names.d.ts",
   "files": [
     "data",
     "dist",
@@ -27,7 +30,6 @@
     "uniq": "^1.0.1"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/names.d.ts"
+    "access": "public"
   }
 }
