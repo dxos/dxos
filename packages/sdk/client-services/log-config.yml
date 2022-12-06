@@ -3,8 +3,10 @@ formatter:
 
 # depth: 0
 
+# TODO(burdon): Logging stopped working?
+
 filter:
   - warn
-  - identity-manager:debug
-  - invitations:debug
-  - credentials:debug
+  - client-services:debug
+# - credentials:debug
+# - identity-manager:debug
