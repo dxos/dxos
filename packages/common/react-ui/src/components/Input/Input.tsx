@@ -17,25 +17,19 @@ export type InputProps = NaturalInputProps;
 export const Input = ({
   label,
   labelVisuallyHidden,
-  placeholder,
   description,
   descriptionVisuallyHidden,
-  required,
   initialValue,
   onChange,
   disabled,
-  className,
+  placeholder,
   size,
   length = 6,
-  spacing,
-  borders,
-  typography,
-  rounding,
   validationMessage,
   validationValence,
-  ...inputProps
+  slots = {}
 }: InputProps) => {
-  const inputId = inputProps.id ?? useId('input');
+  const inputId = slots.input?.id ?? useId('input');
   const descriptionId = useId('input-description');
   const validationId = useId('input-validation');
 
@@ -58,23 +52,21 @@ export const Input = ({
   );
 
   const bareInputBaseProps = {
-    ...inputProps,
+    ...slots.input,
     id: inputId,
-    ...(required && { required: true }),
+    ...(slots.input?.required && { required: true }),
     ...(disabled && { disabled: true }),
     ...(description && { 'aria-describedby': descriptionId }),
     ...(isInvalid && {
       'aria-invalid': 'true' as const,
       'aria-errormessage': validationId
     }),
-    ...(placeholder && { placeholder }),
+    placeholder,
     value: internalValue,
     onChange: onInternalChange,
+    inputSlot: slots.input,
     validationMessage,
-    validationValence,
-    borders,
-    typography,
-    rounding
+    validationValence
   };
 
   const bareInput =
@@ -87,12 +79,14 @@ export const Input = ({
     );
 
   return (
-    <div role='none' className={mx(spacing ?? 'mlb-4', className)}>
+    <div role='none' className={mx('mlb-4', slots.root?.className)}>
       <label
+        {...slots.label}
         htmlFor={inputId}
         className={mx(
           'block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
-          labelVisuallyHidden && 'sr-only'
+          labelVisuallyHidden && 'sr-only',
+          slots.label?.className
         )}
       >
         {label}
@@ -104,13 +98,13 @@ export const Input = ({
           className={mx(descriptionVisuallyHidden && !isInvalid && 'sr-only')}
         >
           {validationMessage && (
-            <span id={validationId} className={valenceColorText(validationValence)}>
+            <span id={validationId} className={mx(valenceColorText(validationValence), slots.validation?.className)}>
               {validationMessage}{' '}
             </span>
           )}
           <span
             {...(isInvalid && { id: descriptionId })}
-            className={mx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
+            className={mx(defaultDescription, descriptionVisuallyHidden && 'sr-only', slots.description?.className)}
           >
             {description}
           </span>

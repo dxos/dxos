@@ -6,32 +6,31 @@ import React, { ComponentProps } from 'react';
 
 import { defaultInput } from '../../styles/input';
 import { mx } from '../../util';
-import { TextareaProps } from './InputProps';
+import { TextareaProps, TextareaSlots } from './InputProps';
 
-export type BareTextareaInputProps = Omit<TextareaProps, 'label' | 'initialValue' | 'onChange'> &
-  Pick<ComponentProps<'textarea'>, 'onChange'>;
+export type BareTextareaInputProps = Omit<TextareaProps, 'label' | 'initialValue' | 'onChange' | 'slots'> &
+  Pick<ComponentProps<'textarea'>, 'onChange'> & { inputSlot: TextareaSlots['input'] };
 
 export const BareTextareaInput = ({
   validationValence,
   validationMessage,
-  size,
-  borders,
-  typography,
-  rounding,
-  ...inputProps
+  onChange,
+  disabled,
+  placeholder,
+  inputSlot
 }: BareTextareaInputProps) => {
   return (
     <textarea
-      {...inputProps}
+      {...inputSlot}
+      placeholder={placeholder}
+      onChange={onChange}
       className={mx(
         defaultInput({
-          borders,
-          typography,
-          rounding,
-          disabled: inputProps.disabled,
+          disabled,
           ...(validationMessage && { validationValence })
         }),
-        'block w-full px-2.5 py-2'
+        'block w-full px-2.5 py-2',
+        inputSlot?.className
       )}
     />
   );

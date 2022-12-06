@@ -63,7 +63,7 @@ export const NavMenu = () => {
                   })
               }
         )}
-        className='hidden md:flex grow-0 shrink pointer-events-auto'
+        slots={{ root: { className: 'hidden md:flex grow-0 shrink pointer-events-auto' } }}
       />
       {/* Compact menu (max-width: md) */}
       <NaturalNavMenu
@@ -85,7 +85,7 @@ export const NavMenu = () => {
                   })
               }
         )}
-        className='flex md:hidden grow-0 shrink pointer-events-auto'
+        slots={{ root: { className: 'flex md:hidden grow-0 shrink pointer-events-auto' } }}
       />
     </>
   );
