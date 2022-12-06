@@ -1,5 +1,5 @@
 packages:
-  - docs/**/*
+  - docs
   - packages/**/*
   - tools/**/*
   # TODO(wittjosiah): Stop builds from copying package.json into dist (e.g., kodama).
