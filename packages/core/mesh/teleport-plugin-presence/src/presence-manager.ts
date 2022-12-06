@@ -3,6 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
@@ -65,10 +66,14 @@ export class PresenceManager {
 
   private _propagateAnnounce(peerState: PeerState) {
     this._presenceExtensions.forEach(async (presenceExtension, { localPeerId, remotePeerId }) => {
-      if (localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId) || !presenceExtension.opened) {
+      if (localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId)) {
         return;
       }
-      await presenceExtension.sendAnnounce(peerState);
+      try {
+        await presenceExtension.sendAnnounce(peerState);
+      } catch (err) {
+        log.catch(err);
+      }
     });
   }
 
