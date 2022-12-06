@@ -82,10 +82,10 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js'),
-        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.js'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.js'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js')
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs')
       ]
     }),
     react(),
