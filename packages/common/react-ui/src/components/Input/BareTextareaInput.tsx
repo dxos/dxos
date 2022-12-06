@@ -9,20 +9,23 @@ import { mx } from '../../util';
 import { TextareaProps, TextareaSlots } from './InputProps';
 
 export type BareTextareaInputProps = Omit<TextareaProps, 'label' | 'initialValue' | 'onChange' | 'slots'> &
-  Pick<ComponentProps<'textarea'>, 'onChange'> & { inputSlot: TextareaSlots['input'] };
+  Pick<ComponentProps<'textarea'>, 'onChange' | 'value'> & { inputSlot: TextareaSlots['input'] };
 
 export const BareTextareaInput = ({
   validationValence,
   validationMessage,
-  size,
+  onChange,
+  value,
   disabled,
   placeholder,
   inputSlot
 }: BareTextareaInputProps) => {
   return (
     <textarea
-      placeholder={placeholder}
       {...inputSlot}
+      placeholder={placeholder}
+      onChange={onChange}
+      value={value}
       className={mx(
         defaultInput({
           disabled,

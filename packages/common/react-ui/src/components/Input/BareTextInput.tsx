@@ -16,7 +16,7 @@ const sizeMap: Record<InputSize, string> = {
 };
 
 export type BareTextInputProps = Omit<InputProps, 'label' | 'initialValue' | 'onChange' | 'slots'> &
-  Pick<ComponentProps<'input'>, 'onChange'> & { inputSlot: InputSlots['input'] };
+  Pick<ComponentProps<'input'>, 'onChange' | 'value'> & { inputSlot: InputSlots['input'] };
 
 export const BareTextInput = ({
   validationValence,
@@ -24,12 +24,16 @@ export const BareTextInput = ({
   size,
   disabled,
   placeholder,
+  onChange,
+  value,
   inputSlot
 }: BareTextInputProps) => {
   return (
     <input
-      placeholder={placeholder}
       {...inputSlot}
+      placeholder={placeholder}
+      onChange={onChange}
+      value={value}
       className={mx(
         defaultInput({
           disabled,
