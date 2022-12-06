@@ -40,10 +40,10 @@ export class PresenceExtension implements TeleportExtension {
   async sendAnnounce(peerState: PeerState) {
     await this._open.wait();
     assert(this._rpc, 'RPC not initialized');
-    if (this._sentAnnounces.has(peerState.peerId)) {
+    if (this._sentAnnounces.has(peerState.messageId)) {
       return;
     }
-    this._sentAnnounces.add(peerState.peerId);
+    this._sentAnnounces.add(peerState.messageId);
     await this._rpc.rpc.PresenceService.announce(peerState);
   }
 

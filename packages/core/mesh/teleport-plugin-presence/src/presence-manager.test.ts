@@ -120,4 +120,6 @@ describe('PresenceManager', () => {
       expect(presenceManager2.getPeerStatesOnline().every((state) => !state.peerId.equals(agent4.peerId))).toBeTruthy();
     }, 500);
   });
+
+  test('cycle', async () => {});
 });
