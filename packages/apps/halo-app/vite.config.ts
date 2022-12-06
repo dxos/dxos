@@ -39,7 +39,7 @@ const _renderChunks = (deps: Record<string, string>) => {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
+  base: '', // Ensure relative path to assets.
   server: {
     host: true,
     port: 3967

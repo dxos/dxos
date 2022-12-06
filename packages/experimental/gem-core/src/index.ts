@@ -8,3 +8,7 @@ export * from './hooks';
 export * from './styles';
 export * from './types';
 export * from './util';
+
+const gem = 100;
+export default gem;
+// modeule.default = gem;
