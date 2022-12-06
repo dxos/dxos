@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as PortalPrimitive from '@radix-ui/react-portal';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import React, { ComponentProps, ReactNode, useState } from 'react';
@@ -75,9 +76,11 @@ export const Tooltip = ({
     <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
       {triggerIsInToolbar ? <ToolbarButtonItem asChild>{triggerContent}</ToolbarButtonItem> : triggerContent}
       {tooltipLabelsTrigger && (
-        <span id={labelId} className='sr-only'>
-          {content}
-        </span>
+        <PortalPrimitive.Root asChild>
+          <span id={labelId} className='sr-only'>
+            {content}
+          </span>
+        </PortalPrimitive.Root>
       )}
       {mountAsSibling ? tooltipContent : <TooltipPrimitive.Portal forceMount>{tooltipContent}</TooltipPrimitive.Portal>}
     </TooltipPrimitive.Root>

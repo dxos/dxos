@@ -3,6 +3,7 @@
 //
 
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
+import * as PortalPrimitive from '@radix-ui/react-portal';
 import { toSvg } from 'jdenticon';
 import React, {
   cloneElement,
@@ -89,9 +90,11 @@ export const Avatar = forwardRef(
           </AvatarPrimitive.Fallback>
         </AvatarPrimitive.Root>
         {typeof label === 'string' ? (
-          <span id={labelId} className='sr-only'>
-            {label}
-          </span>
+          <PortalPrimitive.Root asChild>
+            <span id={labelId} className='sr-only'>
+              {label}
+            </span>
+          </PortalPrimitive.Root>
         ) : (
           cloneElement(label, { id: labelId })
         )}
