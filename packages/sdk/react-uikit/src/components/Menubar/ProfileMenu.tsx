@@ -3,7 +3,7 @@
 //
 
 import { UserCircleGear } from 'phosphor-react';
-import React from 'react';
+import React, { ForwardedRef, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Profile as ProfileType } from '@dxos/client';
@@ -15,7 +15,7 @@ export interface ProfileMenuProps {
   onClickManageProfile?: () => void;
 }
 
-export const ProfileMenu = (props: ProfileMenuProps) => {
+export const ProfileMenu = forwardRef((props: ProfileMenuProps, ref: ForwardedRef<HTMLSpanElement>) => {
   const { profile, onClickManageProfile } = props;
   const { t } = useTranslation('uikit');
   return (
@@ -37,6 +37,7 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
               )
             }
           }}
+          ref={ref}
         />
       }
       triggerIsInToolbar
@@ -51,4 +52,4 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
       )}
     </Popover>
   );
-};
+});
