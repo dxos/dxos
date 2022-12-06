@@ -3,7 +3,8 @@
 //
 
 import * as protobuf from 'protobufjs';
+import { Struct } from './substitutions';
 
-export const encodeProtobuf = (root: protobuf.Root): string => JSON.stringify(root.toJSON());
+export const encodeProtobuf = (root: protobuf.Root): Struct => root.toJSON();
 
-export const decodeProtobuf = (json: string): protobuf.Root => protobuf.Root.fromJSON(JSON.parse(json));
+export const decodeProtobuf = (struct: Struct): protobuf.Root => protobuf.Root.fromJSON(struct);
