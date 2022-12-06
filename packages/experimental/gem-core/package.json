@@ -4,7 +4,6 @@
   "description": "Gem core components and utils.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": "https://github.com/dxos/gem/issues",
-  "repository": "dxos/gem.git",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
@@ -24,6 +23,7 @@
     "csstype": "^3.0.10",
     "d3": "^7.4.4",
     "debug": "^4.3.3",
+    "lodash.defaultsdeep": "^4.6.1",
     "use-resize-observer": "^9.0.0"
   },
   "devDependencies": {
@@ -37,7 +37,7 @@
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
     "@types/jest": "^28.0.0",
-    "@types/lodash": "^4.14.182",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "faker": "^5.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

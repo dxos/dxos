@@ -31,6 +31,24 @@
     },
     {
       "path": "../../packages/common/log"
+    },
+    {
+      "path": "../../packages/experimental/gem-core"
+    },
+    {
+      "path": "../../packages/experimental/gem-spore"
+    },
+    {
+      "path": "../../packages/sdk/client"
+    },
+    {
+      "path": "../../packages/sdk/client-services"
+    },
+    {
+      "path": "../../packages/sdk/react-client"
+    },
+    {
+      "path": "../../packages/sdk/vite-plugin"
     }
   ]
 }

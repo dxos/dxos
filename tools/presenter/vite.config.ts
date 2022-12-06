@@ -7,11 +7,13 @@ import react from '@vitejs/plugin-react';
 import remarkDirective from 'remark-directive';
 import { codeImport } from 'remark-code-import';
 import remarkFrontmatter from 'remark-frontmatter';
+import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import remarkParseFrontmatter from 'remark-parse-frontmatter';
-import remarkUnwrapTexts from 'remark-unwrap-texts';
 import rehypeHighlight from 'rehype-highlight';
 import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
+
+import { dxosPlugin } from '@dxos/vite-plugin';
 
 // @ts-ignore
 import { remarkDirectiveTest, remarkPluginLayout } from './src';
@@ -27,7 +29,7 @@ const mdxOptions: Options = {
 
     // TODO(burdon): Parsing works, but cannot access parsed frontmatter in plugin.
     // https://www.npmjs.com/package/remark-parse-frontmatter
-    [remarkUnwrapTexts],
+    // [remarkUnwrapTexts],
     [
       remarkParseFrontmatter,
       {
@@ -39,6 +41,9 @@ const mdxOptions: Options = {
         }
       }
     ],
+
+    // https://github.com/remcohaszing/remark-mdx-frontmatter
+    [remarkMdxFrontmatter, { name: 'meta' }],
 
     // Custom page container using frontmatter.
     [remarkPluginLayout, {}],
@@ -66,9 +71,53 @@ const mdxOptions: Options = {
   ]
 };
 
+const env = (value?: string) => (value ? `"${value}"` : undefined);
+
 // https://vitejs.dev/config
 export default defineConfig({
+  base: '', // Ensure relative path to assets.
+
+  build: {
+    // minify: false,
+    commonjsOptions: {
+      include: [/packages/, /node_modules/]
+    }
+  },
+
+  // TODO(burdon): Factor out with dxosPlugin?
+  optimizeDeps: {
+    force: true,
+    include: [
+      // '@dxos/async',
+      '@dxos/client',
+      '@dxos/client-services',
+      '@dxos/keys',
+      '@dxos/log',
+      '@dxos/config',
+      '@dxos/gem-core',
+      '@dxos/gem-spore',
+      // '@dxos/metagraph',
+      // '@dxos/protocols',
+      // '@dxos/react-appkit',
+      // '@dxos/react-async',
+      '@dxos/react-client'
+      // '@dxos/react-ui',
+      // '@dxos/react-uikit',
+      // '@dxos/rpc',
+      // '@dxos/network-manager',
+      // '@dxos/rpc-tunnel',
+      // '@dxos/sentry',
+      // '@dxos/telemetry',
+      // '@dxos/util'
+    ]
+  },
+
+  // TODO(burdon): dxosPlugin, themePlugin (see halo-app).
   plugins: [
+    dxosPlugin(),
+
+    react(),
+
     // https://mdxjs.com/packages/remark-mdx
     mdx(mdxOptions),
 
@@ -97,8 +146,6 @@ export default defineConfig({
           }
         ]
       }
-    }),
-
-    react()
+    })
   ]
 });

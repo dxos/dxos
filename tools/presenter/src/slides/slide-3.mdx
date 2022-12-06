@@ -3,11 +3,19 @@ title: Components
 layout: col-2
 ---
 
-import { Test } from '../components';
+import { Counter, Graph } from './components';
 
 export const now = new Date();
 
 - This slide was created on {now.toDateString()} at {now.toTimeString()}.
 - This is a React component:
 
-<Test />
+<Counter interval={250} />
+
+<br />
+
+[//]: # (TODO: Margin/border.)
+
+<div className='flex flex-1 -m-2' style={{ borderLeft: '1px solid #ccc' }}>
+  <Graph />
+</div>
