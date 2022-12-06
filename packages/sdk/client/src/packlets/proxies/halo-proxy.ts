@@ -43,9 +43,9 @@ export interface Halo {
   queryDevices(): Promise<DeviceInfo[]>;
   queryContacts(): ResultSet<Contact>;
 
-  createInvitation(): Promise<CancellableInvitationObservable>;
+  createInvitation(): CancellableInvitationObservable;
   removeInvitation(id: string): void;
-  acceptInvitation(invitation: Invitation): Promise<CancellableInvitationObservable>;
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 }
 
 export class HaloProxy implements Halo {
@@ -210,35 +210,32 @@ export class HaloProxy implements Halo {
   /**
    * Initiates device invitation.
    */
-  async createInvitation(options?: InvitationsOptions): Promise<CancellableInvitationObservable> {
+  createInvitation(options?: InvitationsOptions) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('create invitation', options);
+    const invitation = this._invitationProxy!.createInvitation(undefined, options);
+    this._invitations.push(invitation);
 
-    return new Promise<CancellableInvitationObservable>((resolve, reject) => {
-      const invitation = this._invitationProxy!.createInvitation(undefined, options);
-
-      this._invitations.push(invitation);
-      const unsubscribe = invitation.subscribe({
-        onConnecting: () => {
-          this.invitationsUpdate.emit(invitation);
-          resolve(invitation);
-          unsubscribe();
-        },
-        onCancelled: () => {
-          unsubscribe();
-        },
-        onSuccess: () => {
-          unsubscribe();
-        },
-        onError: function (err: any): void {
-          unsubscribe();
-          reject(err);
-        }
-      });
+    const unsubscribe = invitation.subscribe({
+      onConnecting: () => {
+        this.invitationsUpdate.emit(invitation);
+        unsubscribe();
+      },
+      onCancelled: () => {
+        unsubscribe();
+      },
+      onSuccess: () => {
+        unsubscribe();
+      },
+      onError: function (err: any): void {
+        unsubscribe();
+      }
     });
+
+    return invitation;
   }
 
   /**
@@ -255,31 +252,12 @@ export class HaloProxy implements Halo {
   /**
    * Initiates accepting invitation.
    */
-  async acceptInvitation(
-    invitation: Invitation,
-    options?: InvitationsOptions
-  ): Promise<AuthenticatingInvitationObservable> {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('accept invitation', options);
-
-    return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
-      const acceptedInvitation = this._invitationProxy!.acceptInvitation(invitation, options);
-      const unsubscribe = acceptedInvitation.subscribe({
-        onConnecting: () => {
-          resolve(acceptedInvitation);
-          unsubscribe();
-        },
-        onSuccess: () => {
-          unsubscribe();
-        },
-        onError: function (err: any): void {
-          unsubscribe();
-          reject(err);
-        }
-      });
-    });
+    return this._invitationProxy!.acceptInvitation(invitation, options);
   }
 }

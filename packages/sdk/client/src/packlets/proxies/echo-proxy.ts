@@ -7,7 +7,6 @@ import { inspect } from 'node:util';
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
   ClientServicesProvider,
   ClientServicesProxy,
   InvitationsOptions,
@@ -34,7 +33,7 @@ export interface Echo {
   // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
   getSpace(spaceKey: PublicKey): Space | undefined;
   querySpaces(): ResultSet<Space>;
-  acceptInvitation(invitation: Invitation): Promise<CancellableInvitationObservable>;
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 }
 
 export class EchoProxy implements Echo {
@@ -214,27 +213,12 @@ export class EchoProxy implements Echo {
   /**
    * Initiates an interactive accept invitation flow.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<AuthenticatingInvitationObservable> {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
     log('accept invitation', options);
-    return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
-      const acceptedInvitation = this._invitationProxy!.acceptInvitation(invitation, options);
-      const unsubscribe = acceptedInvitation.subscribe({
-        onConnecting: () => {
-          resolve(acceptedInvitation);
-          unsubscribe();
-        },
-        onSuccess: () => {
-          unsubscribe();
-        },
-        onError: function (err: any): void {
-          unsubscribe();
-          reject(err);
-        }
-      });
-    });
+    return this._invitationProxy!.acceptInvitation(invitation, options);
   }
 }
