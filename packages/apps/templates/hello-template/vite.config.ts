@@ -37,8 +37,8 @@ export default defineConfig({
           name: 'yjs',
           setup: ({ onResolve }) => {
             onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
-            })
+              return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
+            });
           }
         }
       ]
@@ -56,10 +56,11 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')
       ]
     }),
     react(),
