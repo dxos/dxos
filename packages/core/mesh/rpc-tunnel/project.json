@@ -19,10 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/rpc-tunnel/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/rpc-tunnel/dist/lib",
-        "platforms": [
-          "browser"
-        ]
+        "outputPath": "packages/core/mesh/rpc-tunnel/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/common/async/src/index.ts"
         ],
-        "outputPath": "packages/common/async/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/common/async/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

@@ -34,11 +34,7 @@
         "entryPoints": [
           "packages/sdk/config/src/index.ts"
         ],
-        "outputPath": "packages/sdk/config/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/sdk/config/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

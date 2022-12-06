@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/messaging/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/messaging/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/mesh/messaging/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
