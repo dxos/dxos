@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
 import "dxos/registry.proto";
 
 // TODO(burdon): Rename `dxos.registry.type`.
@@ -80,11 +81,11 @@ message Bot {
 // Registered as `type.state-machine`.
 //
 message StateMachine {
-  /// Set of protobuf messages encoded in JSON.
-  string mutation_protobuf_defs = 1;
+  /// Set of protobuf messages.
+  google.protobuf.Struct mutation_protobuf_defs = 1;
 
-  /// Set of protobuf messages encoded in JSON.
-  string snapshot_protobuf_defs = 2;
+  /// Set of protobuf messages.
+  google.protobuf.Struct snapshot_protobuf_defs = 2;
 
   bytes code_ipfs_cid = 3;
 }
