@@ -54,4 +54,22 @@ describe('Teleport', () => {
     expect(extension1.extensionContext?.initiator).to.equal(true);
     expect(extension2.extensionContext?.initiator).to.equal(false);
   });
+
+  test('disconnect', async () => {
+    const { peer1, peer2 } = setup();
+
+    await Promise.all([peer1.open(), peer2.open()]);
+
+    const extension1 = new TestExtension();
+    peer1.addExtension('example.testing.rpc', extension1);
+    const extension2 = new TestExtension();
+    peer2.addExtension('example.testing.rpc', extension2);
+    await extension1.test();
+    log('test1 done');
+    await extension2.test();
+    log('test2 done');
+
+    await peer2.destroy();
+    await extension1.test();
+  });
 });
