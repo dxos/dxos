@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/common/codec-protobuf/src/index.ts"
         ],
-        "outputPath": "packages/common/codec-protobuf/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/common/codec-protobuf/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
