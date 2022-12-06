@@ -30,6 +30,7 @@ describe('Agent', () => {
     await agent.destroy();
   });
 
+  // TODO(burdon): Skipped since hangs on closing.
   test.skip('creates a space', async () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent({ config });
@@ -40,9 +41,9 @@ describe('Agent', () => {
     await agent.destroy();
   });
 
+  // TODO(burdon): Skipped since hangs on closing.
   test.skip('tests two agents', async () => {
     const config: ConfigProto = { version: 1 };
-
     const swarmKey = PublicKey.random();
 
     const spec1: AgentSpec = {
@@ -116,11 +117,7 @@ describe('Agent', () => {
 
     // Initialize.
     await Promise.all([agent1.initialize(), agent2.initialize()]);
-    afterTest(async () => {
-      console.log(111);
-      await Promise.all([agent1.destroy(), agent2.destroy()]);
-      console.log(222);
-    });
+    afterTest(() => Promise.all([agent1.destroy(), agent2.destroy()]));
 
     // Run sequences.
     const space1 = new Trigger<Space>();
