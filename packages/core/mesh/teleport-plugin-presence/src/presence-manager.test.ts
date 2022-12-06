@@ -52,7 +52,7 @@ describe('PresenceManager', () => {
     });
   });
 
-  test('Presence gets indirect announces', async () => {
+  test('Gets indirect announces', async () => {
     // first peer        |  second peer       |  third  peer
     // presenceManager1  |  presenceManager2  |  presenceManager3
     // agent1            |  agent2, agent3    |  agent4
