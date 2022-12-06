@@ -3,7 +3,6 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
