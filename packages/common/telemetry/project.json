@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/common/telemetry/src/index.ts"
         ],
-        "outputPath": "packages/common/telemetry/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/common/telemetry/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/halo/keyring/src/index.ts"
         ],
-        "outputPath": "packages/core/halo/keyring/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/halo/keyring/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

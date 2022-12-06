@@ -5,7 +5,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.js",
+  "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "bin": {
     "plate": "bin/plate.js"

@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/protocol-plugin-replicator/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/protocol-plugin-replicator/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/mesh/protocol-plugin-replicator/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

@@ -6,7 +6,7 @@ import { init as sentryInit } from '@sentry/browser';
 
 import { InitOptions } from './types';
 
-export * from '@sentry/browser';
+export { captureException } from '@sentry/browser';
 
 export const init = (options: InitOptions) => {
   sentryInit({

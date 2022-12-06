@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/common/sentry/src/index.ts"
         ],
-        "outputPath": "packages/common/sentry/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/common/sentry/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
