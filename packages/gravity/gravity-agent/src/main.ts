@@ -15,14 +15,13 @@ import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Agent } from './agent';
 
-
 // TODO(burdon): Logging meta doesn't work when running from pnpm agent.
 log.config({
   filter: 0
 });
 
 const main = () => {
-  const r = yargs(hideBin(process.argv))
+  yargs(hideBin(process.argv))
     .scriptName('agent')
     .option('json', {
       type: 'boolean'
@@ -34,7 +33,8 @@ const main = () => {
       type: 'string',
       default: join(process.cwd(), './config/config.yml')
     })
-    .option('spec', { // TODO(burdon): Define protobuf type.
+    .option('spec', {
+      // TODO(burdon): Define protobuf type.
       type: 'string',
       default: join(process.cwd(), './config/spec.yml')
     })
@@ -49,7 +49,6 @@ const main = () => {
         config: string;
         spec: string;
       }) => {
-        
         const config: ConfigProto = yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
         if (verbose) {
           log('config', { config });
@@ -64,11 +63,9 @@ const main = () => {
         const agent = await new Agent({ config, spec });
         await agent.initialize();
         await agent.start();
-        
       }
     })
     .help().argv;
-    
 };
 
 void main();
