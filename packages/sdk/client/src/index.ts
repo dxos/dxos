@@ -18,9 +18,9 @@ export {
   ItemFilterDeleted,
   ResultSet,
   Schema,
-  SchemaDef,
-  SchemaField,
-  SchemaRef
+  type SchemaDef,
+  type SchemaField,
+  type SchemaRef
 } from '@dxos/echo-db';
 
 export { PublicKey } from '@dxos/keys';
@@ -29,13 +29,13 @@ export { PublicKey } from '@dxos/keys';
 export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 
 export {
-  InvitationEvents,
+  type InvitationEvents,
   InvitationEncoder,
-  CancellableInvitationObservable,
-  AuthenticatingInvitationObservable,
+  type CancellableInvitationObservable,
+  type AuthenticatingInvitationObservable,
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
-  ClientServicesProvider,
+  type ClientServicesProvider,
   IFrameRuntime,
   WorkerRuntime,
   WorkerSession

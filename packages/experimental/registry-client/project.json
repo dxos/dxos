@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/experimental/registry-client/src/index.ts"
         ],
-        "outputPath": "packages/experimental/registry-client/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/experimental/registry-client/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

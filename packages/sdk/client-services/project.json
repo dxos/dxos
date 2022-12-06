@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/sdk/client-services/src/index.ts"
         ],
-        "outputPath": "packages/sdk/client-services/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/sdk/client-services/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

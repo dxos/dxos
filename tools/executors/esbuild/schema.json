@@ -17,6 +17,10 @@
       "type": "array",
       "description": "List of entrypoints for esbuild to build from"
     },
+    "formats": {
+      "type": "string",
+      "description": "Format to output the build files in"
+    },
     "metafile": {
       "type": "boolean",
       "description": "Whether or not to output a build meta file",
@@ -29,7 +33,7 @@
     "platforms": {
       "type": "array",
       "description": "List of platforms to create individual bundles for",
-      "default": ["neutral"]
+      "default": ["browser", "node"]
     },
     "sourcemap": {
       "type": "boolean",

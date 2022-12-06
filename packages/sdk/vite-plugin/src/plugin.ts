@@ -29,7 +29,9 @@ export const dxosPlugin = (): Plugin => ({
       resolve: {
         alias: {
           'node:assert': 'assert/',
+          'node:events': 'events/',
           'node:path': 'path-browserify/',
+          'node:stream': 'readable-stream/',
           'node:util': 'util/'
         }
       },
