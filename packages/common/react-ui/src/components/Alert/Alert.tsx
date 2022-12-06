@@ -14,7 +14,7 @@ export interface AlertSlots {
   title?: Omit<ComponentProps<'p'>, 'children'>;
 }
 
-export interface AlertProps extends Omit<ComponentProps<'div'>, 'title'> {
+export interface AlertProps {
   title: ReactNode;
   assertive?: boolean;
   valence?: MessageValence;
