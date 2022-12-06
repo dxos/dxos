@@ -29,6 +29,7 @@ export class PresenceExtension implements TeleportExtension {
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
   private _extensionContext?: ExtensionContext;
   private readonly _open = new Trigger();
+  public closed = false;
 
   constructor(private readonly _params: PresenceParams) {}
 
@@ -74,6 +75,7 @@ export class PresenceExtension implements TeleportExtension {
     log('close', { err });
     await this._rpc?.close();
     this._sendInterval && clearInterval(this._sendInterval);
+    this.closed = true;
   }
 
   private async _sendAnnounce() {

@@ -29,10 +29,11 @@ export class PresenceManager {
 
   createExtension({ teleport }: { teleport: Teleport }): PresenceExtension {
     const extension = new PresenceExtension({
-      connections: [...this._getConnections()], // TODO(mykola): include remote peer id?
+      connections: [...this._getConnections()],
       resendAnnounce: this._params.resendAnnounce,
       onAnnounce: async (peerState) => {
         this._saveNewState(peerState);
+        this._reconcileConnections();
         this._propagateAnnounce(peerState);
       }
     });
@@ -78,6 +79,11 @@ export class PresenceManager {
   }
 
   private _reconcileConnections() {
+    for (const [key, extension] of this._presenceExtensions.entries()) {
+      if (extension.closed) {
+        this._presenceExtensions.delete(key);
+      }
+    }
     this._presenceExtensions.forEach((presenceExtension) => {
       presenceExtension.setConnections(this._getConnections());
     });
