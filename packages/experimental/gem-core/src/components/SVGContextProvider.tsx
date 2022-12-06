@@ -29,18 +29,18 @@ export const SVGContextProvider = ({ context: provided, children }: SVGCOntextPr
     if (width && height) {
       context.setSize({ width, height });
       d3.select(context.svg)
-        .attr('visibility', 'visible')
+        .attr('display', 'block')
         .attr('viewBox', context.viewBox)
         .attr('width', width)
         .attr('height', height);
     } else {
-      d3.select(context.svg).attr('visibility', 'hidden'); // Hide until first resized.
+      d3.select(context.svg).attr('display', 'none'); // Hide until mounted.
     }
   }, [width, height]);
 
   return (
     <SVGContextDef.Provider value={context}>
-      {/* Flex is imporant otherwise div has extra padding.  */}
+      {/* Flex is important otherwise div has extra padding.  */}
       <div ref={resizeRef} style={{ display: 'flex', width: '100%', height: '100%' }}>
         {children}
       </div>

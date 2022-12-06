@@ -38,6 +38,7 @@ export const remarkPluginLayout = (options: Options) => (tree: any) => {
     // TODO(burdon): Show pager based on front matter (ESM nodes?)
     // TODO(burdon): Access parsed front matter from plugin?
     const { data: meta } = matter(`---\n${node.value}\n---`) as Matter;
+    console.log('Frontmatter:', JSON.stringify(meta));
 
     // NOTE: Assumes all content follows frontmatter node.
     const children = tree.children.splice(1, tree.children.length - 1);
