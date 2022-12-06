@@ -7,7 +7,8 @@ import { useResizeDetector } from 'react-resize-detector';
 import { HashRouter, Navigate, useRoutes } from 'react-router-dom';
 
 import { DeckProps } from './Deck';
-import { Index, SlideContainer } from './SlideContainer';
+import { SlideContainer } from './SlideContainer';
+import { SlideIndex } from './SlideIndex';
 
 /**
  * Router
@@ -20,7 +21,7 @@ const Routes: FC<DeckProps> = ({ title, slides }) => {
     },
     {
       path: '/index',
-      element: <Index title={title} slides={slides} />
+      element: <SlideIndex title={title} slides={slides} />
     },
     {
       path: '/slide/:slide',

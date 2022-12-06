@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import * as ClientModule from '@dxos/client';
 import * as ReactClientModule from '@dxos/react-client';
@@ -15,8 +15,16 @@ const { ClientProvider } = ReactClientModule as any;
 const { Client, fromHost } = ClientModule as any;
 
 export const Presentation: FC<DeckProps> = ({ title, slides }) => {
-  const client = useMemo(() => {
-    return new Client({ services: fromHost() });
+  const [client, setClient] = useState<typeof Client>(null);
+  useEffect(() => {
+    setTimeout(async () => {
+      const client = new Client({ services: fromHost() });
+      await client.initialize();
+      await client.halo.createProfile();
+      const space = await client.echo.createSpace();
+      await space.properties.set('title', 'Demo');
+      setClient(client);
+    });
   }, []);
 
   if (!client) {

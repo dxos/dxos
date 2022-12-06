@@ -6,3 +6,4 @@ export * from './ImageContainer';
 export * from './Presentation';
 export * from './SlideContainer';
 export * from './SlideDeck';
+export * from './SlideIndex';
