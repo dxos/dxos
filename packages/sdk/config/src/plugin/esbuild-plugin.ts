@@ -20,7 +20,7 @@ export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
   return {
     name: 'dxos-config',
     setup: ({ onResolve, onLoad }) => {
-      onLoad({ filter: /config\/dist\/lib\/browser\/index.mjs/ }, async (args) => {
+      onLoad({ filter: /dxos\/.*config\/dist\/lib\/browser\/index.mjs/ }, async (args) => {
         const code = await readFile(args.path, 'utf-8');
         return {
           resolveDir: process.cwd(),
