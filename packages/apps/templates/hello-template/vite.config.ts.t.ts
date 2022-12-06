@@ -5,8 +5,8 @@
 import { TemplateFunction } from '@dxos/plate';
 
 export type Input = {
-  monorepo?: boolean
-}
+  monorepo?: boolean;
+};
 
 const yjsPlugin = /* javascript */ `{
   name: 'yjs',
@@ -85,7 +85,8 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
       ]
     }),
     react(),
