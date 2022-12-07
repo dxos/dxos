@@ -77,7 +77,7 @@ describe('Teleport', () => {
     await extension1.closed.wait({ timeout: 100 });
   });
 
-  test.only('destroy is idempotent', async () => {
+  test('destroy is idempotent', async () => {
     // eslint-disable-next-line mocha/no-sibling-hooks
     const { peer1, peer2 } = setup();
 
