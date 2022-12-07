@@ -5,12 +5,14 @@
 import { expect } from 'chai';
 import { pipeline } from 'node:stream';
 
+import { latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Teleport } from './teleport';
 import { TestExtension } from './test-extension';
+import waitForExpect from 'wait-for-expect';
 
 const setup = () => {
   const peerId1 = PublicKey.random();
@@ -76,7 +78,7 @@ describe('Teleport', () => {
     await extension1.closed.wait({ timeout: 100 });
   });
 
-  test('destroy is idempotent', async () => {
+  test.only('destroy is idempotent', async () => {
     // eslint-disable-next-line mocha/no-sibling-hooks
     const { peer1, peer2 } = setup();
 
@@ -91,15 +93,15 @@ describe('Teleport', () => {
     await extension2.test();
     log('test2 done');
 
-    peer1.destroy().catch(() => {
-      throw Error('destroy1 failed');
-    });
-    peer2.destroy().catch(() => {
-      throw Error('destroy2 failed');
-    });
-    peer2.destroy().catch(() => {
-      throw Error('destroy3 failed');
-    });
+    {
+      // latch to ensure all 4 destroy calls are made.
+      const [done, inc, errorHandler] = latch({ count: 4 });
+      peer1.destroy().then(inc, errorHandler);
+      peer1.destroy().then(inc, errorHandler);
+      peer2.destroy().then(inc, errorHandler);
+      peer2.destroy().then(inc, errorHandler);
+      await done();
+    }
 
     await extension2.closed.wait({ timeout: 100 });
     await extension1.closed.wait({ timeout: 100 });
