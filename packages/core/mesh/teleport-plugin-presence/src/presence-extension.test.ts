@@ -7,7 +7,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { latch } from '@dxos/async';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
-import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
+import { TestBuilder } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { PresenceExtension } from './presence-extension';

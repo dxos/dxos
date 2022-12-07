@@ -6,7 +6,6 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { latch } from '@dxos/async';
-import { PeerState } from '@dxos/protocols/proto/dxos/mesh/telßeport/presence';
 import { TestBuilder as ConnectionFactory } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
