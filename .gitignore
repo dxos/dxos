@@ -108,3 +108,6 @@ packages/devtools/cli/src/util/telemetryrc.json
 # Generated Vuepress Files
 .temp
 .cache
+
+# SWC temp files
+.swc
