@@ -47,10 +47,10 @@ describe('PresenceExtension', () => {
     afterTest(() => builder.destroy());
     const { peer1, peer2 } = await builder.createPipedPeers();
 
-    const [announced10Times, inc] = latch({ count: 10 });
+    const [announced3Times, inc] = latch({ count: 3 });
     const extension1 = new PresenceExtension({
       connections: [peer2.peerId],
-      resendAnnounce: 50,
+      resendAnnounce: 25,
       onAnnounce: async (peerState: PeerState) => {
         inc();
       }
@@ -59,11 +59,11 @@ describe('PresenceExtension', () => {
 
     const extension2 = new PresenceExtension({
       connections: [peer1.peerId],
-      resendAnnounce: 50,
+      resendAnnounce: 25,
       onAnnounce: async (peerState: PeerState) => {}
     });
     peer2.teleport!.addExtension('dxos.mesh.teleport.presence', extension2);
 
-    await announced10Times();
+    await announced3Times();
   });
 });

@@ -43,7 +43,7 @@ export class TestBuilder {
 export class TestAgent {
   private readonly _connections = new ComplexMap<PublicKey, Connection>(PublicKey.hash);
 
-  public readonly presence = new Presence({ resendAnnounce: 50, offlineTimeout: 200 });
+  public readonly presence = new Presence({ resendAnnounce: 25, offlineTimeout: 50 });
 
   constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
 

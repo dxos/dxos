@@ -17,7 +17,7 @@ export type PresenceManagerParams = {
 };
 
 export class Presence {
-  public readonly newPeerState = new Event<PeerState>();
+  public readonly updated = new Event<void>();
   private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _peerStates = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);
   private readonly _presenceExtensions = new ComplexMap<
@@ -85,7 +85,7 @@ export class Presence {
   private _saveNewState(peerState: PeerState) {
     const oldPeerState = this._peerStates.get(peerState.peerId);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < peerState.timestamp.getTime()) {
-      this.newPeerState.emit(peerState);
+      this.updated.emit();
       this._peerStates.set(peerState.peerId, peerState);
     }
   }

@@ -36,12 +36,12 @@ describe('Presence', () => {
 
     await builder.connectAgents(agent1, agent2);
 
-    const [announced10Times, inc] = latch({ count: 10 });
-    agent1.presence.newPeerState.on((peerState) => {
+    const [announced3Times, inc] = latch({ count: 3 });
+    agent1.presence.updated.on(() => {
       inc();
     });
 
-    await announced10Times();
+    await announced3Times();
   });
 
   test('Gets indirect announces', async () => {
