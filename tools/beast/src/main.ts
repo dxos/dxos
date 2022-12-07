@@ -16,16 +16,6 @@ export type Config = {
   exclude?: string[];
 };
 
-const defaultExclude = [
-  '@dxos/async',
-  '@dxos/debug',
-  '@dxos/feeds',
-  '@dxos/keys',
-  '@dxos/log',
-  '@dxos/testutils',
-  '@dxos/util'
-];
-
 const loadConfig = async () => {
   const explorer = cosmiconfig('beast');
   return explorer.search();
@@ -134,7 +124,7 @@ const main = async () => {
             description: 'Excluded files',
             type: 'string',
             // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
-            default: (config?.config?.exclude ?? defaultExclude).join(',')
+            default: (config?.config?.exclude ?? []).join(',')
           }),
       handler: ({
         verbose,
