@@ -91,8 +91,15 @@ describe('Teleport', () => {
     await extension2.test();
     log('test2 done');
 
-    void peer2.destroy();
-    void peer2.destroy();
+    peer1.destroy().catch(() => {
+      throw Error('destroy1 failed');
+    });
+    peer2.destroy().catch(() => {
+      throw Error('destroy2 failed');
+    });
+    peer2.destroy().catch(() => {
+      throw Error('destroy3 failed');
+    });
 
     await extension2.closed.wait({ timeout: 100 });
     await extension1.closed.wait({ timeout: 100 });
