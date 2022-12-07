@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { AuthenticationResponse, HaloHostService } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { AuthenticationRequest, AuthenticationResponse, HaloAdmissionCredentials, HaloAdmissionOffer, HaloHostService } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext } from '@dxos/teleport';
 
 import { IdentityManager } from '../identity';
@@ -240,7 +240,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
                 observable.callback.onError(err);
               }
             } finally {
-              await extension.close();
+              await ctx.dispose();
             }
           });
         }
@@ -273,7 +273,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
 type HostHaloInvitationExtensionCallbacks = {
   requestAdmission: () => Promise<HaloAdmissionOffer>;
-  authenticate: (request: AuthenticationRequest) => Promise<void>;
+  authenticate: (request: AuthenticationRequest) => Promise<AuthenticationResponse>;
   presentAdmissionCredentials: (request: HaloAdmissionCredentials) => Promise<void>;
   // Deliberately not async to not block the extensions opening.
   onOpen: () => void;
@@ -301,7 +301,7 @@ class HostHaloInvitationExtension extends RpcExtension<{}, { HaloHostService: Ha
         },
 
         authenticate: async (credentials) => {
-          await this._callbacks.authenticate(credentials);
+          return this._callbacks.authenticate(credentials);
         },
 
         // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
