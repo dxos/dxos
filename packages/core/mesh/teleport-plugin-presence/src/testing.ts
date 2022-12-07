@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as ConnectionFactory, TestPeer as Connection } from '@dxos/teleport/testing';
 import { ComplexMap } from '@dxos/util';
 
-import { Presence } from './presence-manager';
+import { Presence } from './presence';
 
 export class TestBuilder {
   private readonly _agents = new Array<TestAgent>();
