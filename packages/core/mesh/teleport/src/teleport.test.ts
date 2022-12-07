@@ -56,6 +56,7 @@ describe('Teleport', () => {
   });
 
   test('disconnect', async () => {
+    // eslint-disable-next-line mocha/no-sibling-hooks
     const { peer1, peer2 } = setup();
 
     await Promise.all([peer1.open(), peer2.open()]);
