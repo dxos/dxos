@@ -1,3 +1,8 @@
-/target
-^target/
-target
+# Ignore target apart from the wasm32-wasi release build
+# TODO: If someone knows how to do this better, please go ahead and change it.
+/target/*
+!/target/wasm32-wasi
+/target/wasm32-wasi/*
+!/target/wasm32-wasi/release
+/target/wasm32-wasi/release/*
+!/target/wasm32-wasi/release/swc_log_plugin.wasm
