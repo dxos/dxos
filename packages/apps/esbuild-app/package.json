@@ -2,7 +2,7 @@
   "name": "@dxos/esbuild-app",
   "version": "0.1.13",
   "private": true,
-  "description": "HALO ESBuild",
+  "description": "ESBuild Sample App",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
