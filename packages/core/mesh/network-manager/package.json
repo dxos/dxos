@@ -34,6 +34,7 @@
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "assert": "^2.0.0",

@@ -44,7 +44,8 @@ export type SpaceProtocolOptions = {
   plugins?: Plugin[];
 };
 
-export const USE_TELEPORT = false;
+// Feature-flag to use the new teleport muxer.
+export const USE_TELEPORT = true;
 
 /**
  * Manages hypercore protocol stream creation and joining swarms.
