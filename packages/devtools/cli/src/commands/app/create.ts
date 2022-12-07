@@ -15,6 +15,7 @@ import { BaseCommand } from '../../base-command';
 
 export const APP_TEMPLATES = ['hello', 'bare', 'tasks'];
 
+//TODO: factor this out into @dxos/fs or something (along with 'exists' from plate?)
 const isDirEmpty = async (dirpath: string) => {
   const dirIter = await fs.opendir(dirpath);
   const { done } = await dirIter[Symbol.asyncIterator]().next();
