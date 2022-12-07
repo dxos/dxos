@@ -16,8 +16,6 @@ import { RpcPort } from './rpc-port';
 
 const codec = schema.getCodecForType('dxos.mesh.muxer.Command');
 
-export type CleanupCb = void | (() => void);
-
 export type CreateChannelOpts = {
   /**
    * MIME type of the wire content.
@@ -27,6 +25,10 @@ export type CreateChannelOpts = {
    *  - application/x-protobuf; messageType="dxos.rpc.Message"
    */
   contentType?: string;
+};
+
+export type MuxerCallbacks = {
+  onFramerDestroy?: (error: Error | null) => Promise<void>;
 };
 
 /**
@@ -40,8 +42,8 @@ export type CreateChannelOpts = {
  * A higher level API (could be build on top of this muxer) for channel discovery is required.
  */
 export class Muxer {
-  private readonly _framer = new Framer();
-  public readonly stream = this._framer.stream;
+  private readonly _framer: Framer;
+  public readonly stream: Duplex;
 
   private readonly _channelsByLocalId = new Map<number, Channel>();
   private readonly _channelsByTag = new Map<string, Channel>();
@@ -52,7 +54,10 @@ export class Muxer {
 
   public close = new Event<Error | undefined>();
 
-  constructor() {
+  constructor(private readonly _callbacks: MuxerCallbacks = {}) {
+    this._framer = new Framer({ onDestroy: this._callbacks.onFramerDestroy });
+    this.stream = this._framer.stream;
+
     this._framer.port.subscribe((msg) => {
       this._handleCommand(codec.decode(msg));
     });
