@@ -13,7 +13,7 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from './teleport';
 
 export class TestExtension implements TeleportExtension {
-  public readonly close = new Trigger();
+  public readonly closed = new Trigger();
   public extensionContext: ExtensionContext | undefined;
   private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
   private _opened = new Trigger();
@@ -50,7 +50,8 @@ export class TestExtension implements TeleportExtension {
   }
 
   async onClose(err?: Error) {
-    this.close.wake();
+    log('onClose', { err });
+    this.closed.wake();
     await this._rpc.close();
   }
 
