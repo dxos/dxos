@@ -23,6 +23,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
@@ -78,6 +81,9 @@
     },
     {
       "path": "../../core/mesh/signal"
+    },
+    {
+      "path": "../../core/mesh/teleport"
     },
     {
       "path": "../../core/protocols"
