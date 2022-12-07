@@ -36,7 +36,10 @@ export class Teleport {
     }
   });
 
-  private readonly _muxer = new Muxer();
+  private readonly _muxer = new Muxer({
+    onFramerDestroy: (err) => (err ? this.destroy(err) : this.destroy())
+  });
+
   private readonly _control = new ControlExtension({
     heartbeatInterval: 3000,
     heartbeatTimeout: 3000

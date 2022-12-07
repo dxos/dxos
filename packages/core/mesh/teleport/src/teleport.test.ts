@@ -70,6 +70,8 @@ describe('Teleport', () => {
     log('test2 done');
 
     await peer2.destroy();
-    await extension1.test();
+
+    await extension2.close.wait({ timeout: 100 });
+    await extension1.close.wait({ timeout: 100 });
   });
 });
