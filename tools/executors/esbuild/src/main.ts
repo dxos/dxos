@@ -7,9 +7,8 @@ import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
-import * as ts from 'typescript';
 
-import { transformSourceFile } from '@dxos/log-hook';
+import { LogTransformer } from './log-transform-plugin';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
@@ -31,11 +30,14 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
+  const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
+
   const errors = await Promise.all(
     options.platforms.map(async (platform) => {
       const extension = options.format === 'esm' || platform !== 'node' ? '.mjs' : '.cjs';
       const outdir = `${options.outputPath}/${platform}`;
 
+      const start = Date.now();
       const result = await build({
         entryPoints: options.entryPoints,
         outdir,
@@ -69,49 +71,15 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             packagePath,
             allowList: options.bundlePackages
           }),
-          {
-            name: 'log-transform',
-            setup: ({ onLoad, onEnd }) => {
-              let files = 0;
-              let time = 0;
-
-              onLoad({ namespace: 'file', filter: /\.ts(x?)$/ }, async (args) => {
-                const source = await readFile(args.path, 'utf8');
-
-                const startTime = Date.now();
-
-                const sourceFile = ts.createSourceFile(
-                  args.path,
-                  source,
-                  ts.ScriptTarget.ESNext,
-                  false,
-                  args.path.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
-                );
-                const transformed = transformSourceFile(sourceFile, (ts as any).nullTransformationContext);
-
-                time += Date.now() - startTime;
-                files++;
-
-                return {
-                  contents: ts.createPrinter().printFile(transformed),
-                  loader: args.path.endsWith('x') ? 'tsx' : 'ts'
-                };
-              });
-
-              if (context.isVerbose) {
-                onEnd(() => {
-                  console.log(
-                    `Log preprocessing took ${time}ms for ${files} files (${(time / files).toFixed(0)} ms/file).`
-                  );
-                });
-              }
-            }
-          }
+          logTransformer.createPlugin()
         ]
       });
 
       await writeFile(`${outdir}/meta.json`, JSON.stringify(result.metafile), 'utf-8');
 
+      if (context.isVerbose) {
+        console.log(`Build took ${Date.now() - start}ms.`);
+      }
       return result.errors;
     })
   );
