@@ -6,11 +6,11 @@ import debug from 'debug';
 
 debug.log = console.log.bind(console);
 
-export const log = (...args) => {
-  console.log(args.map((arg) => arg.toString()).join(' '));
+export const log = (...args: any) => {
+  console.log(args.map((arg: any) => arg.toString()).join(' '));
 };
 
-export const logError = (str) => {
+export const logError = (str: any) => {
   if (typeof str.message === 'string') {
     str = `Error: ${str.message.replace('\n', '')}`;
   } else if (str instanceof Error) {
@@ -31,7 +31,7 @@ export const logError = (str) => {
  * @return {{ log: debug, error: debug }}
  */
 // TODO(burdon): Rename.
-export const logs = (name) => {
+export const logs = (name: any) => {
   const log = debug(name);
   log.log = console.log.bind(console);
 
@@ -41,7 +41,7 @@ export const logs = (name) => {
   return {
     log,
 
-    error: (err, ...rest) => {
+    error: (err: any, ...rest: any) => {
       if (err instanceof Error) {
         const { name, message } = err;
         error(`${name}: ${message}`);
@@ -68,7 +68,7 @@ export const logs = (name) => {
  *
  * @param {String} namespaces
  */
-export const enable = (namespaces) => {
+export const enable = (namespaces: any) => {
   debug.enable(namespaces);
 };
 

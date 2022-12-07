@@ -7,8 +7,8 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node.js",
-  "types": "src/index.ts",
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "debug": "^4.3.3",
@@ -24,7 +24,6 @@
     "debug": "^4.3.3"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

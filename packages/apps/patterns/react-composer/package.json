@@ -6,8 +6,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser.js",
-  "types": "src/index.ts",
+  "main": "dist/lib/browser/index.mjs",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -39,7 +39,6 @@
     "@types/react-dom": "^18.0.6"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

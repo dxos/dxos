@@ -6,12 +6,12 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
     "node:assert": "assert",
-    "./dist/lib/node.js": "./dist/lib/browser.js"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "src/index.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -33,7 +33,6 @@
     "@types/node": "^18.11.9"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "dist/types/src/index.d.ts"
+    "access": "public"
   }
 }

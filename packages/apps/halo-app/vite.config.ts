@@ -39,7 +39,7 @@ const _renderChunks = (deps: Record<string, string>) => {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
+  base: '', // Ensure relative path to assets.
   server: {
     host: true,
     port: 3967
@@ -99,8 +99,9 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js')
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
       ]
     }),
     react(),
@@ -145,7 +146,7 @@ export default defineConfig({
 
         const outDir = join(__dirname, 'out');
         if (!existsSync(outDir)) {
-          mkdirSync(outDir)
+          mkdirSync(outDir);
         }
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       }

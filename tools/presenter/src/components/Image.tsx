@@ -2,33 +2,30 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import clsx from 'clsx';
+import React, { HTMLProps } from 'react';
 
 export type ImageContainerProps = {
   backgroundImage?: string;
   backgroundSize?: 'cover' | 'contain';
   backgroundPosition?: string;
   fullBleed?: boolean;
-} & React.HTMLProps<HTMLDivElement>;
+} & HTMLProps<HTMLDivElement>;
 
 /**
  * Background image container.
  */
-export const ImageContainer = ({
+export const Image = ({
   backgroundImage,
   backgroundSize = 'cover',
   backgroundPosition = 'center center',
   fullBleed = true,
   ...props
 }: ImageContainerProps) => {
-  // TODO(burdon): From theme.
-  const margin = fullBleed ? -64 : 0;
-
   return (
     <div
-      className='flex flex-1'
+      className={clsx('flex', 'flex-1', fullBleed && '-m-2')}
       style={{
-        margin,
         backgroundImage,
         backgroundRepeat: 'no-repeat',
         backgroundPosition,

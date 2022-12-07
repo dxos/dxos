@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/common/keys/src/index.ts"
         ],
-        "outputPath": "packages/common/keys/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/common/keys/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

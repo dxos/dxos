@@ -23,7 +23,7 @@ export interface JoinPanelProps {
   parseInvitation?: (invitationCode: string) => string;
   initialInvitationCode?: string;
   onJoin?: (result: InvitationResult) => void;
-  acceptInvitation: (invitation: Invitation) => Promise<AuthenticatingInvitationObservable>;
+  acceptInvitation: (invitation: Invitation) => AuthenticatingInvitationObservable;
 }
 
 interface JoinStep1Props extends JoinPanelProps {
@@ -54,7 +54,7 @@ const JoinStep1 = ({
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
 
   const onConnectNext = useCallback(async () => {
-    const invitation = await acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
+    const invitation = acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
     connect(invitation);
   }, [invitationCode]);
 
@@ -72,8 +72,7 @@ const JoinStep1 = ({
         inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
         inputProps: {
           initialValue: invitationCode,
-          autoFocus: true,
-          className: 'text-center',
+          slots: { input: { autoFocus: true, className: 'text-center' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const
@@ -114,8 +113,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
           size: 'pin',
           length: pinLength,
           initialValue: '',
-          autoFocus: true,
-          className: 'text-center',
+          slots: { input: { autoFocus: true, className: 'text-center' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const

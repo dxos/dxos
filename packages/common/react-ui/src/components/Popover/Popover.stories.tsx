@@ -34,10 +34,14 @@ Default.args = {
 export const AvatarTrigger = templateForComponent(Template)({
   openTrigger: (
     <Avatar
-      tabIndex={0}
+      slots={{
+        root: {
+          tabIndex: 0,
+          className: mx('button-elevation cursor-pointer rounded-md', defaultHover({}), defaultFocus, defaultActive)
+        }
+      }}
       label={<span className='sr-only'>Open popover</span>}
       fallbackValue='open popover'
-      className={mx('button-elevation cursor-pointer rounded-md', defaultHover({}), defaultFocus, defaultActive)}
     />
   ),
   closeLabel: 'Close',

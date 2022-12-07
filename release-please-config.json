@@ -18,6 +18,11 @@
         },
         {
           "type": "json",
+          "path": "docs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/composer-app/package.json",
           "jsonpath": "$.version"
         },
