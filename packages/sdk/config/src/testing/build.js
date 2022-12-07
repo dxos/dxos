@@ -10,7 +10,7 @@ const { join } = require('node:path');
 
 // eslint-disable-next-line
 // @ts-ignore
-const { ConfigPlugin } = require('../../dist/plugin/node/esbuild-plugin');
+const { ConfigPlugin } = require('../../dist/plugin/node/esbuild-plugin.cjs');
 
 void build({
   entryPoints: [join(__dirname, './entry.js')],
