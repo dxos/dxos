@@ -25,6 +25,12 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

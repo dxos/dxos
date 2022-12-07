@@ -72,8 +72,7 @@
     },
     "serve-with-halo": {
       "dependsOn": [
-        "^build",
-        "^bundle"
+        "^compile"
       ],
       "executor": "nx:run-commands",
       "options": {
