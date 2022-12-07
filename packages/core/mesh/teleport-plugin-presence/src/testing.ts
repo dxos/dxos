@@ -41,14 +41,14 @@ export class TestBuilder {
 export class TestAgent {
   private readonly _connections = new ComplexMap<PublicKey, Connection>(PublicKey.hash);
 
-  public readonly presenceManager = new Presence({ resendAnnounce: 50, offlineTimeout: 200 });
+  public readonly presence = new Presence({ resendAnnounce: 50, offlineTimeout: 200 });
 
   constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
 
   addConnection(connection: Connection) {
     assert(connection.teleport);
     this._connections.set(connection.teleport!.remotePeerId, connection);
-    this.presenceManager.createExtension({ teleport: connection.teleport! });
+    this.presence.createExtension({ teleport: connection.teleport! });
   }
 
   async deleteConnection(remotePeerId: PublicKey) {

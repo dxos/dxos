@@ -11,7 +11,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { TestBuilder } from './testing';
 
-describe('PresenceManager', () => {
+describe('Presence', () => {
   test('Announce', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
@@ -22,10 +22,10 @@ describe('PresenceManager', () => {
     await builder.connectAgents(agent1, agent2, connectionFactory);
 
     await waitForExpect(() => {
-      expect(agent1.presenceManager.getPeerStates().length).toEqual(1);
-      expect(agent2.presenceManager.getPeerStates().length).toEqual(1);
-      expect(agent1.presenceManager.getPeerStates()[0].peerId).toEqual(agent2.peerId);
-      expect(agent2.presenceManager.getPeerStates()[0].peerId).toEqual(agent1.peerId);
+      expect(agent1.presence.getPeerStates().length).toEqual(1);
+      expect(agent2.presence.getPeerStates().length).toEqual(1);
+      expect(agent1.presence.getPeerStates()[0].peerId).toEqual(agent2.peerId);
+      expect(agent2.presence.getPeerStates()[0].peerId).toEqual(agent1.peerId);
     });
   });
 
@@ -40,7 +40,7 @@ describe('PresenceManager', () => {
     await builder.connectAgents(agent1, agent2, connectionFactory);
 
     const [announced10Times, inc] = latch({ count: 10 });
-    agent1.presenceManager.newPeerState.on((peerState) => {
+    agent1.presence.newPeerState.on((peerState) => {
       inc();
     });
 
@@ -67,12 +67,8 @@ describe('PresenceManager', () => {
 
     // Check if first and third peers "see" each other.
     await waitForExpect(() => {
-      expect(
-        agent1.presenceManager.getPeerStatesOnline().some((state) => state.peerId.equals(agent3.peerId))
-      ).toBeTruthy();
-      expect(
-        agent3.presenceManager.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))
-      ).toBeTruthy();
+      expect(agent1.presence.getPeerStatesOnline().some((state) => state.peerId.equals(agent3.peerId))).toBeTruthy();
+      expect(agent3.presence.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
     }, 500);
   });
 
@@ -96,12 +92,8 @@ describe('PresenceManager', () => {
 
     // Check if first and third peers "see" each other.
     await waitForExpect(() => {
-      expect(
-        agent1.presenceManager.getPeerStatesOnline().some((state) => state.peerId.equals(agent3.peerId))
-      ).toBeTruthy();
-      expect(
-        agent3.presenceManager.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))
-      ).toBeTruthy();
+      expect(agent1.presence.getPeerStatesOnline().some((state) => state.peerId.equals(agent3.peerId))).toBeTruthy();
+      expect(agent3.presence.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
     }, 500);
 
     // Third peer got disconnected.
@@ -109,12 +101,8 @@ describe('PresenceManager', () => {
 
     // Check if third peer is offline for first and second peer.
     await waitForExpect(() => {
-      expect(
-        agent1.presenceManager.getPeerStatesOnline().every((state) => !state.peerId.equals(agent3.peerId))
-      ).toBeTruthy();
-      expect(
-        agent2.presenceManager.getPeerStatesOnline().every((state) => !state.peerId.equals(agent3.peerId))
-      ).toBeTruthy();
+      expect(agent1.presence.getPeerStatesOnline().every((state) => !state.peerId.equals(agent3.peerId))).toBeTruthy();
+      expect(agent2.presence.getPeerStatesOnline().every((state) => !state.peerId.equals(agent3.peerId))).toBeTruthy();
     }, 500);
   });
 
@@ -141,7 +129,7 @@ describe('PresenceManager', () => {
 
     const received1: string[] = [];
 
-    agent1.presenceManager.newPeerState.on((peerState) => {
+    agent1.presence.newPeerState.on((peerState) => {
       received1.push(peerState.messageId.toHex());
     });
 
