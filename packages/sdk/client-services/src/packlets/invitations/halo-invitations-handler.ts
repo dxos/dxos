@@ -244,9 +244,6 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
     setTimeout(async () => {
       assert(invitation.swarmKey);
-      assert(!invitation.invitationId);
-      invitation.invitationId = PublicKey.random().toHex();
-
       const topic = invitation.swarmKey;
       const peerId = PublicKey.random(); // Use anonymous key.
       swarmConnection = await this._networkManager.joinSwarm({
