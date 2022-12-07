@@ -11,7 +11,7 @@
     "plate": "bin/plate.js"
   },
   "scripts": {
-    "dev": "plate ./src/testing/template",
+    "dev": "plate ./src/testing/inherited --output ./tmp",
     "plate": "plate"
   },
   "dependencies": {

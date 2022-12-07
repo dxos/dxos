@@ -11,12 +11,13 @@ import {
   TemplatingResult,
   isTemplateFile,
   TEMPLATE_FILE_IGNORE,
-  LoadTemplateOptions
+  LoadTemplateOptions,
+  TemplateResultMetadata
 } from './executeFileTemplate';
 import { File } from './file';
 import { logger } from './logger';
 import { runPromises } from './runPromises';
-import { Config, loadConfig } from './config';
+import { Config, loadConfig, unDefault } from './config';
 import { inquire } from './zodInquire';
 import { includeExclude } from './includeExclude';
 
@@ -44,21 +45,34 @@ export const executeDirectoryTemplate = async <TInput>(
     ...(await loadConfig(templateDirectory, { verbose: options?.verbose })),
     ...options
   };
-  const { parallel, verbose, interactive, overwrite, inputShape, include, exclude, ...restOptions } = mergedOptions;
+  const { parallel, verbose, inherits, interactive, overwrite, inputShape, include, exclude, ...restOptions } =
+    mergedOptions;
   const debug = logger(verbose);
   debug(mergedOptions);
   let input = mergedOptions.input;
   if (inputShape) {
-    const parse = inputShape.safeParse(input);
+    const parse = unDefault(inputShape).safeParse(input);
     if (!parse.success && !interactive) throw new Error(parse.error.toString());
-    const inquired = await inquire(inputShape, {
-      defaults: input
-    });
-    const inquiredParsed = inputShape.safeParse(inquired);
-    if (!inquiredParsed.success) throw new Error(inquiredParsed.error.toString());
-    input = inquiredParsed.data as TInput;
+    if (!parse.success) {
+      const inquired = await inquire(inputShape, {
+        defaults: input
+      });
+      const inquiredParsed = inputShape.safeParse(inquired);
+      if (!inquiredParsed.success) throw new Error(inquiredParsed.error.toString());
+      input = inquiredParsed.data as TInput;
+    }
   }
   debug({ input });
+  inherits && debug(`executing inherited template ${inherits}`);
+  const inherited = inherits
+    ? await executeDirectoryTemplate({
+        ...options,
+        templateDirectory: path.resolve(templateDirectory, inherits),
+        interactive: false,
+        input
+      })
+    : undefined;
+  debug(`executing directory template ${templateDirectory}`);
   const allFiles = await readDir(templateDirectory);
   const filteredFiles = includeExclude(allFiles, {
     include,
@@ -74,19 +88,21 @@ export const executeDirectoryTemplate = async <TInput>(
   debug(templateFiles.join('\n'));
   debug(`${regularFiles.length} regular files:`);
   debug(regularFiles.join('\n'));
-  debug('executing templates...');
-  const templatingPromises = templateFiles?.map((t) =>
-    executeFileTemplate({
+  debug('executing template files ...');
+  const templatingPromises = templateFiles?.map((t) => {
+    const templateFile = path.relative(templateDirectory, t);
+    return executeFileTemplate({
       ...restOptions,
-      templateFile: path.relative(templateDirectory, t),
+      templateFile,
       templateRelativeTo: templateDirectory,
       input,
+      inherited: inherits ? inherited?.filter((result) => result.metadata.templateFile === templateFile) : undefined,
       overwrite
-    })
-  );
+    });
+  });
   const runner = runPromises({
     before: (_p, i) => {
-      debug(`${templateFiles[Number(i)]} ... `);
+      debug(`${templateFiles[Number(i)]} ....`);
     },
     after: (_p, i) => {
       debug(`${templateFiles[Number(i)]} done`);
@@ -95,17 +111,17 @@ export const executeDirectoryTemplate = async <TInput>(
   const templateOutputs = await (parallel
     ? runner.inParallel(templatingPromises)
     : runner.inSequence(templatingPromises));
-  debug('templates executed.');
   const stringPath = (p: string | string[]) => (typeof p === 'string' ? p : path.join(...p));
   const isOverwrittenByTemplateOutput = (f: string): boolean => {
     return templateOutputs.some((files) => files.some((file) => !!file && stringPath(file.path) === f));
   };
+  debug(`template ${templateDirectory} done`);
   return [
     ...regularFiles
       ?.filter((f) => !isOverwrittenByTemplateOutput(f))
       .map(
         (r) =>
-          new File({
+          new File<string, TemplateResultMetadata>({
             path: path.join(outputDirectory, r.slice(templateDirectory.length).replace(/\/$/, '')),
             copyFrom: r,
             overwrite

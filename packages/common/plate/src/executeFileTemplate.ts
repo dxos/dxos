@@ -38,6 +38,7 @@ export type ExecuteFileTemplateOptions<TInput = {}> = LoadTemplateOptions & {
   outputDirectory: string;
   input?: TInput;
   overwrite?: boolean;
+  inherited?: TemplatingResult;
 };
 
 export type TemplateContext<TInput = {}> = ExecuteFileTemplateOptions<TInput> & {
@@ -45,9 +46,15 @@ export type TemplateContext<TInput = {}> = ExecuteFileTemplateOptions<TInput> & 
   defaultOutputFile: string;
 };
 
-export type TemplatingResult<R = any> = File<R>[];
+export type TemplateResultMetadata = {
+  templateFile?: string;
+};
 
-export type TemplateFunctionResult<R = any> = string | File<R>[];
+export type TemplatingResult<R = any> = File<R, TemplateResultMetadata>[];
+
+export type TemplateFunctionResult<R = any> = string | File<R, TemplateResultMetadata>[];
+
+export const defineTemplate = <R = any>(fun: TemplateFunction<R>) => fun;
 
 export type Functor<TInput = void, TOutput = void> = (input: TInput) => MaybePromise<TOutput>;
 
@@ -64,34 +71,35 @@ export const executeFileTemplate = async <TInput>(
   if (!templateFunction) {
     return [];
   }
-  const nominalOutputPath = path.join(
-    outputDirectory,
-    getOutputNameFromTemplateName(templateFullPath).slice(absoluteTemplateRelativeTo.length)
-  );
+  const relativeOutputPath = getOutputNameFromTemplateName(templateFullPath).slice(absoluteTemplateRelativeTo.length);
+  const nominalOutputPath = path.join(outputDirectory, relativeOutputPath);
   try {
     const templateContext = {
       input: {},
       ...options,
       defaultOutputFile: nominalOutputPath,
+      inherited: options.inherited,
       ...(templateRelativeTo
         ? { templateRelativeTo: absoluteTemplateRelativeTo }
         : { templateRelativeTo: path.dirname(templateFullPath) })
     };
-    const result = await promise(
-      templateFunction(templateContext)
-    );
+    const result = await promise(templateFunction(templateContext));
     return typeof result === 'string'
       ? [
           new (getFileType(nominalOutputPath))({
             content: result,
             path: nominalOutputPath,
-            ...(typeof overwrite !== 'undefined' ? { overwrite: !!overwrite } : {})
+            ...(typeof overwrite !== 'undefined' ? { overwrite: !!overwrite } : {}),
+            metadata: {
+              templateFile
+            }
           })
         ]
       : result.map((outfile) => {
           if (overwrite === false) {
             outfile.allowOverwrite = false;
           }
+          outfile.metadata.templateFile = templateFile;
           return outfile;
         });
   } catch (err) {
