@@ -3,13 +3,12 @@
 //
 
 import type { ExecutorContext } from '@nrwl/devkit';
-import { transform } from '@swc/core';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 
-const logSwcPlugin = require.resolve('@dxos/swc-log-plugin')
+import { LogTransformer } from './log-transform-plugin';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
@@ -30,6 +29,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
   const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
+
+  const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
 
   const errors = await Promise.all(
     options.platforms.map(async (platform) => {
@@ -70,59 +71,13 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             packagePath,
             allowList: options.bundlePackages
           }),
-          {
-            name: 'log-transform',
-            setup: ({ onLoad, onEnd }) => {
-              let files = 0;
-              let time = 0;
-
-              onLoad({ namespace: 'file', filter: /\.ts(x?)$/ }, async (args) => {
-                const source = await readFile(args.path, 'utf8');
-
-                const startTime = Date.now();
-
-                const output = await transform(source, {
-                  filename: args.path,
-                  sourceMaps: 'inline',
-                  minify: false,
-                  jsc: {
-                    parser: {
-                      syntax: 'typescript',
-                      decorators: true,
-                    },
-                    experimental: {
-                      plugins: [
-                        [logSwcPlugin, {}]
-                      ],
-                    },
-                    target: 'es2022',
-                  },
-                })
-
-                time += Date.now() - startTime;
-                files++;
-
-                return {
-                  contents: output.code,
-                  loader: args.path.endsWith('x') ? 'tsx' : 'ts'
-                };
-              });
-
-              if (context.isVerbose) {
-                onEnd(() => {
-                  console.log(
-                    `Log preprocessing took (in parallel) ${time}ms for ${files} files (${(time / files).toFixed(0)} ms/file).`
-                  );
-                });
-              }
-            }
-          }
+          logTransformer.createPlugin()
         ]
       });
 
       await writeFile(`${outdir}/meta.json`, JSON.stringify(result.metafile), 'utf-8');
-      
-      if(context.isVerbose) {
+
+      if (context.isVerbose) {
         console.log(`Build took ${Date.now() - start}ms.`);
       }
       return result.errors;
