@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser.js",
+  "main": "dist/lib/browser/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
@@ -24,6 +24,7 @@
     "@radix-ui/react-dialog": "^1.0.0",
     "@radix-ui/react-navigation-menu": "^1.1.1",
     "@radix-ui/react-popover": "^1.0.2",
+    "@radix-ui/react-portal": "^1.0.1",
     "@radix-ui/react-toast": "^1.1.1",
     "@radix-ui/react-toolbar": "^1.0.1",
     "@radix-ui/react-tooltip": "^1.0.2",

@@ -4,7 +4,7 @@
 
 import tailwindcssForms from '@tailwindcss/forms';
 import autoprefixer from 'autoprefixer';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';

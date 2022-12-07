@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Space } from '@dxos/client';
 import { useMembers } from '@dxos/react-client';
-import { Button, defaultInlineSeparator, getSize, Popover, mx } from '@dxos/react-ui';
+import { Button, defaultInlineSeparator, getSize, Popover, mx, buttonStyles } from '@dxos/react-ui';
 
 export interface SpaceMenuProps {
   space: Space;
@@ -22,16 +22,18 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
   return (
     <Popover
       openTrigger={
-        <Button compact className='pointer-events-auto flex items-center gap-1'>
+        <>
           <UsersThree className={getSize(4)} />
           <span className='leading-none'>{members.length}</span>
           <span role='none' className={mx(defaultInlineSeparator, 'bs-3')} />
           <UserPlus className={getSize(4)} />
-        </Button>
+        </>
       }
-      collisionPadding={8}
-      sideOffset={4}
-      className='flex flex-col gap-4 items-center z-[2]'
+      slots={{
+        content: { collisionPadding: 8, sideOffset: 4, className: 'flex flex-col gap-4 items-center z-[2]' },
+        trigger: { className: mx(buttonStyles({ compact: true }), 'pointer-events-auto flex items-center gap-1') }
+      }}
+      triggerIsInToolbar
     >
       {onClickManageSpace && (
         <Button className='flex w-full gap-2' onClick={onClickManageSpace}>

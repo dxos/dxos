@@ -20,11 +20,7 @@
           "packages/common/feed-store/src/index.ts",
           "packages/common/feed-store/src/testing/index.ts"
         ],
-        "outputPath": "packages/common/feed-store/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/common/feed-store/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

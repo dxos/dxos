@@ -3,7 +3,7 @@
 //
 
 import type { ExecutorContext } from '@nrwl/devkit';
-import { build, Platform } from 'esbuild';
+import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
@@ -15,6 +15,7 @@ export interface EsbuildExecutorOptions {
   bundle: boolean;
   bundlePackages: string[];
   entryPoints: string[];
+  format?: Format;
   metafile: boolean;
   outputPath: string;
   platforms: Platform[];
@@ -28,19 +29,18 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   }
 
   const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
+  const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
   const errors = await Promise.all(
     options.platforms.map(async (platform) => {
-      const outdir = options.entryPoints.length > 1 ? `${options.outputPath}/${platform}` : undefined;
-      const outfile = options.entryPoints.length <= 1 ? `${options.outputPath}/${platform}.js` : undefined;
-      const metafile =
-        options.entryPoints.length > 1 ? `${outdir}/meta.json` : `${options.outputPath}/${platform}.meta.json`;
+      const extension = options.format === 'esm' || platform !== 'node' ? '.mjs' : '.cjs';
+      const outdir = `${options.outputPath}/${platform}`;
 
       const result = await build({
         entryPoints: options.entryPoints,
         outdir,
-        outfile,
-        format: 'cjs',
+        outExtension: { '.js': extension },
+        format: options.format ?? platform !== 'node' ? 'esm' : 'cjs',
         write: true,
         sourcemap: options.sourcemap,
         metafile: options.metafile,
@@ -52,6 +52,19 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           'this-is-undefined-in-esm': 'info'
         },
         plugins: [
+          {
+            name: 'node-external',
+            setup: ({ onResolve }) => {
+              onResolve({ filter: /^node:.*/ }, (args) => {
+                const browserMapped = packageJson.browser?.[args.path];
+                if (!browserMapped) {
+                  return null;
+                }
+
+                return { external: true, path: browserMapped };
+              });
+            }
+          },
           nodeExternalsPlugin({
             packagePath,
             allowList: options.bundlePackages
@@ -97,7 +110,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         ]
       });
 
-      await writeFile(metafile, JSON.stringify(result.metafile), 'utf-8');
+      await writeFile(`${outdir}/meta.json`, JSON.stringify(result.metafile), 'utf-8');
 
       return result.errors;
     })

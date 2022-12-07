@@ -3,7 +3,7 @@
 //
 
 import { Plus } from 'phosphor-react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { CancellableInvitationObservable } from '@dxos/client';
 import { HeadingWithActions, InvitationList } from '@dxos/react-appkit';
@@ -20,11 +20,9 @@ const DevicesPage = () => {
   const identity = useIdentity();
   const devices = useDevices();
   const invitations = useHaloInvitations();
-  const [creatingInvitation, setCreatingInvitation] = useState(false);
 
   const handleCreateInvitation = useCallback(() => {
-    setCreatingInvitation(true);
-    void client.halo.createInvitation().finally(() => setCreatingInvitation(false));
+    client.halo.createInvitation();
   }, []);
 
   const handleRemove = useCallback((id: string) => {
@@ -37,12 +35,7 @@ const DevicesPage = () => {
         className='mlb-4'
         heading={{ children: t('devices label') }}
         actions={
-          <Button
-            variant='primary'
-            className='grow flex gap-1'
-            onClick={handleCreateInvitation}
-            disabled={creatingInvitation}
-          >
+          <Button variant='primary' className='grow flex gap-1' onClick={handleCreateInvitation}>
             <Plus className={getSize(5)} />
             {t('add device label')}
           </Button>

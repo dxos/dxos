@@ -154,6 +154,14 @@ message Invitation {
     ERROR = 7;
   }
 
+  enum Error {
+    OK = 0;
+    TIMEOUT = 1;
+    INVALID_OTP = 2;
+    INVALID_OPT_ATTEMPTS = 3;
+    INVALID_CREDENTIALS = 4;
+  }
+
   /// Local identifier.
   optional string invitation_id = 1;
 
@@ -163,8 +171,8 @@ message Invitation {
   /// Local state.
   optional State state = 3;
 
-  /// Local error code.
-  optional int32 error_code = 4;
+  /// Error.
+  optional Error error = 4;
 
   /// Swarm rendezvous (random).
   optional dxos.keys.PublicKey swarm_key = 5;
@@ -172,14 +180,14 @@ message Invitation {
   /// Guest's identity (only present if OFFLINE).
   optional dxos.keys.PublicKey identity_key = 6;
 
+  /// Space to join.
+  optional dxos.keys.PublicKey space_key = 7;
+
   /// Authentication code created by host.
-  optional string authentication_code = 7;
+  optional string authentication_code = 8;
 
   /// Timeout (ms).
-  optional int32 timeout = 8;
-
-  /// Space key (if data invitation).
-  optional dxos.keys.PublicKey space_key = 9;
+  optional int32 timeout = 9;
 }
 
 message AuthenticationRequest {
@@ -192,6 +200,7 @@ message CancelInvitationRequest {
 }
 
 // Common TS interface.
+// TODO(burdon): Reconcile with halo/invitations.proto (e.g., common defs like error vs superset of services?)
 
 service HaloInvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);

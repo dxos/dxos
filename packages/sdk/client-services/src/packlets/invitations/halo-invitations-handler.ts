@@ -13,12 +13,7 @@ import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import {
-  AuthenticationRequest,
-  HaloAdmissionCredentials,
-  HaloAdmissionOffer,
-  HaloHostService
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+import { AuthenticationResponse, HaloHostService } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext } from '@dxos/teleport';
 
 import { IdentityManager } from '../identity';
@@ -96,15 +91,19 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
         authenticate: async ({ authenticationCode: code }) => {
           log('received authentication request', { authenticationCode: code });
           authenticationCode = code;
+          return { status: AuthenticationResponse.Status.OK };
         },
 
         // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
         presentAdmissionCredentials: async (credentials) => {
           try {
             // Check authenticated.
-            if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-              if (invitation.authenticationCode === undefined || authenticationCode !== invitation.authenticationCode) {
-                throw new Error('authentication code not set');
+            if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
+              if (
+                invitation.authenticationCode === undefined ||
+                invitation.authenticationCode !== authenticationCode
+              ) {
+                throw new Error(`invalid authentication code: ${authenticationCode}`);
               }
             }
 
@@ -120,6 +119,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
             throw err; // Propagate error to guest.
           }
         },
+
         onOpen: () => {
           scheduleTask(ctx, async () => {
             try {
@@ -207,8 +207,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
               // 1. Send request.
               log('sending admission request');
-              const { identityKey, haloSpaceKey, genesisFeedKey } =
-                await extension.rpc.HaloHostService.requestAdmission();
+              const { identityKey, haloSpaceKey, genesisFeedKey } = await extension.rpc.HaloHostService.requestAdmission();
 
               // 2. Get authentication code.
               // TODO(burdon): Test timeout (options for timeouts at different steps).
@@ -237,11 +236,11 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               complete.wake(identityKey);
             } catch (err) {
               if (!observable.cancelled) {
-                log.warn('failed', err);
+                log.warn('auth failed', err);
                 observable.callback.onError(err);
               }
             } finally {
-              await ctx.dispose();
+              await extension.close();
             }
           });
         }

@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/protocol-network-generator/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/protocol-network-generator/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/mesh/protocol-network-generator/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

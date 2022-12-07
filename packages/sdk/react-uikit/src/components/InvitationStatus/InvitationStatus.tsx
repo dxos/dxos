@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Invitation } from '@dxos/client';
 import { strongShimmer, getSize, mx } from '@dxos/react-ui';
 
-const pip = mx('rounded-full flex-none', getSize(3));
+const pip = mx('rounded-full flex-none', getSize(2));
 const stripe = mx('rounded-full grow', getSize(2));
 const inactiveColor = 'bg-neutral-100 dark:bg-neutral-600';
 const activeColor = 'bg-primary-500 dark:bg-primary-400';

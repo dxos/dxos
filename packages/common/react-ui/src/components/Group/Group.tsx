@@ -16,10 +16,15 @@ export interface GroupProps extends React.ComponentProps<'div'> {
   children?: ReactNode;
 }
 
-export const Group = ({ elevation = 3, children, label, labelVisuallyHidden, className, ...props }: GroupProps) => {
+export const Group = ({ elevation = 3, children, label, labelVisuallyHidden, ...rootSlot }: GroupProps) => {
   const labelId = useId('groupLabel');
   return (
-    <div role='group' aria-labelledby={labelId} className={mx(defaultGroup({ elevation }), className)} {...props}>
+    <div
+      role='group'
+      aria-labelledby={labelId}
+      {...rootSlot}
+      className={mx(defaultGroup({ elevation }), rootSlot?.className)}
+    >
       <Heading {...label} id={labelId} className={mx(labelVisuallyHidden && 'sr-only', 'mb-2', label?.className)} />
       {children}
     </div>

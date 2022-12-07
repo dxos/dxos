@@ -27,7 +27,7 @@ export const useSpaceBootstrap = (peerCount = 2) => {
         await joiner.initialize();
         await joiner.halo.createProfile({ displayName: `peer-${i}` });
         // TODO(burdon): Observer.
-        await inviterSpace.createInvitation();
+        inviterSpace.createInvitation();
         // await joiner.echo.acceptInvitation(invitation);
         // peers.push({ client: joiner, space: joinerSpace });
       }

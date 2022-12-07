@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/rpc/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/rpc/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/mesh/rpc/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
