@@ -5,36 +5,35 @@
 import autoprefixer from 'autoprefixer';
 import type { Plugin } from 'esbuild';
 import stylePlugin from 'esbuild-style-plugin';
-// import { resolve } from 'node:path';
-import { resolve } from 'node:path';
+import { mkdir, cp } from 'node:fs/promises';
+import { resolve, relative, join, basename } from 'node:path';
 import tailwindcss from 'tailwindcss';
 
 import { tailwindConfig } from './config';
 
-export const themePlugins = (options: { content: string[] }): Plugin[] => {
-  // const cssPath = resolve(__dirname, './theme.css');
-  const configuredStylePlugin = stylePlugin({
-    postcss: {
-      plugins: [tailwindcss(tailwindConfig({ env: process.env.NODE_ENV, content: options.content })), autoprefixer]
-    }
-  });
-
-  const cssPath = resolve(__dirname, './theme.css');
-
+export const themePlugins = (options: { content: string[]; outdir: string }): Plugin[] => {
   return [
     {
       name: 'esbuild-plugin-dxos-ui-theme-resolvers',
-      setup: (build) => {
+      setup: async (build) => {
+        const fontsDir = join(options.outdir, 'node_modules/@dxos/react-ui/fonts');
+        try {
+          await mkdir(fontsDir);
+        } catch (_e) {}
         build.onResolve({ filter: /\.woff2$/ }, async (args) => {
-          return { path: args.path, external: true };
+          const depPath = resolve(args.resolveDir, args.path);
+          const destPath = join(fontsDir, basename(args.path));
+          try {
+            await cp(depPath, destPath);
+          } catch (_e) {}
+          return { path: `./${relative(options.outdir, join('fonts', basename(args.path)))}`, external: true };
         });
-        build.onResolve({ filter: /^@dxosTheme$/ }, async (args) => {
-          return { path: cssPath };
-        });
-        // build.onResolve({ filter: /^stylePlugin:(.+)\.css$/ }, async (args) => {
-        // });
       }
     },
-    configuredStylePlugin
+    stylePlugin({
+      postcss: {
+        plugins: [tailwindcss(tailwindConfig({ env: process.env.NODE_ENV, content: options.content })), autoprefixer]
+      }
+    })
   ];
 };

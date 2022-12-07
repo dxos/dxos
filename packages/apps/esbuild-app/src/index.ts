@@ -3,7 +3,6 @@
 //
 
 // eslint-disable-next-line
-import '@dxosTheme';
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
