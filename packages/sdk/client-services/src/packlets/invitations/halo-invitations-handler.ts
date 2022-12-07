@@ -196,7 +196,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
     let connectionCount = 0;
     const complete = new Trigger<PublicKey>();
-    
+
     const createExtension = (): GuestHaloInvitationExtension => {
       const extension = new GuestHaloInvitationExtension({
         onOpen: () => {

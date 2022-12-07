@@ -5,29 +5,32 @@
 import assert from 'assert';
 
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { createAdmissionCredentials, generatePasscode } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  createTeleportProtocolFactory,
-  NetworkManager,
-  StarTopology,
-  SwarmConnection
-} from '@dxos/network-manager';
+import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
-  AdmissionParameters, AuthenticationRequest, AuthenticationResponse, SpaceAdmissionCredentials, SpaceAdmissionOffer, SpaceHostService
+  AdmissionParameters,
+  AuthenticationRequest,
+  AuthenticationResponse,
+  SpaceAdmissionCredentials,
+  SpaceAdmissionOffer,
+  SpaceHostService
 } from '@dxos/protocols/proto/dxos/halo/invitations';
-
-import { Context } from '@dxos/context';
 import { ExtensionContext } from '@dxos/teleport';
+
 import {
-  AuthenticatingInvitationProvider, AUTHENTICATION_CODE_LENGTH, CancellableInvitationObservable,
-  InvitationObservableProvider, INVITATION_TIMEOUT,
+  AuthenticatingInvitationProvider,
+  AUTHENTICATION_CODE_LENGTH,
+  CancellableInvitationObservable,
+  InvitationObservableProvider,
+  INVITATION_TIMEOUT,
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
@@ -126,10 +129,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
           try {
             // Check authenticated.
             if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
-              if (
-                invitation.authenticationCode === undefined ||
-                invitation.authenticationCode !== authenticationCode
-              ) {
+              if (invitation.authenticationCode === undefined || invitation.authenticationCode !== authenticationCode) {
                 throw new Error(`invalid authentication code: ${authenticationCode}`);
               }
             }
@@ -180,7 +180,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
       });
       return hostInvitationExtension;
     };
-
 
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
