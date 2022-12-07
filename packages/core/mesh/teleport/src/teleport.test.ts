@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { TestExtension } from './test-extension';
 import { TestBuilder } from './testing';
@@ -15,6 +15,7 @@ import waitForExpect from 'wait-for-expect';
 describe('Teleport', () => {
   test('sends rpc via TestExtension', async () => {
     const builder = new TestBuilder();
+    afterTest(() => builder.destroy());
     const { agent1, agent2 } = await builder.createPipedAgents();
 
     const extension1 = new TestExtension();
