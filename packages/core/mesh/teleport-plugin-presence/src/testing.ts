@@ -2,90 +2,55 @@
 // Copyright 2022 DXOS.org
 //
 
-import { pipeline } from 'stream';
-
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
-import { Teleport } from '@dxos/teleport';
-import { afterTest } from '@dxos/test';
+import { TestBuilder as ConnectionFactory, TestPeer as Connection } from '@dxos/teleport/testing';
 
-import { PresenceExtension } from './presence-extension';
+import { PresenceManager } from './presence-manager';
 
 export class TestBuilder {
+  private readonly _agents = new Array<TestAgent>();
+
   createAgent(peerId?: PublicKey): TestAgent {
-    return new TestAgent(peerId);
+    const agent = new TestAgent(peerId);
+    this._agents.push(agent);
+    return agent;
   }
 
-  async createPipedAgents({ peerId1, peerId2 }: { peerId1?: PublicKey; peerId2?: PublicKey } = {}) {
-    const agent1 = this.createAgent(peerId1);
-    const agent2 = this.createAgent(peerId2);
+  async connectAgents({
+    agent1,
+    agent2,
+    connectionFactory
+  }: {
+    agent1: TestAgent;
+    agent2: TestAgent;
+    connectionFactory: ConnectionFactory;
+  }) {
+    const { peer1: connection12, peer2: connection21 } = await connectionFactory.createPipedPeers({
+      peerId1: agent1.peerId,
+      peerId2: agent2.peerId
+    });
+    agent1.addConnection(connection12);
+    agent2.addConnection(connection21);
+  }
 
-    agent1.initializeTeleport({ initiator: true, remotePeerId: agent2.peerId });
-    agent2.initializeTeleport({ initiator: false, remotePeerId: agent1.peerId });
-
-    agent1.pipeline(agent2);
-    agent2.pipeline(agent1);
-
-    await Promise.all([agent1.open(), agent2.open()]);
-
-    return { agent1, agent2 };
+  async destroy() {
+    await Promise.all(this._agents.map((agent) => agent.destroy()));
   }
 }
 
 export class TestAgent {
-  public teleport?: Teleport;
-  public presence?: PresenceExtension;
+  private readonly _connections = new Array<Connection>();
+
+  public readonly presenceManager = new PresenceManager({ resendAnnounce: 50, offlineTimeout: 200 });
 
   constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
 
-  initializeTeleport({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
-    if (this.teleport) {
-      return this;
-    }
-    this.teleport = new Teleport({
-      initiator,
-      localPeerId: this.peerId,
-      remotePeerId
-    });
-    return this;
+  addConnection(connection: Connection) {
+    this._connections.push(connection);
+    this.presenceManager.createExtension({ teleport: connection.teleport! });
   }
 
-  pipeline(agent: TestAgent) {
-    if (!this.teleport || !agent.teleport) {
-      throw new Error('Teleport not initialized');
-    }
-    pipeline(this.teleport.stream, agent.teleport.stream, (err) => {
-      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-        log.catch(err);
-      }
-    });
-  }
-
-  async open() {
-    if (!this.teleport) {
-      throw new Error('Teleport not initiated.');
-    }
-    await this.teleport.open();
-    afterTest(() => this.teleport?.close());
-
-    return this;
-  }
-
-  initializePresence({
-    connections,
-    onAnnounce,
-    resendAnnounce
-  }: {
-    connections: PublicKey[];
-    onAnnounce: (peerState: PeerState) => Promise<void>;
-    resendAnnounce: number;
-  }) {
-    this.presence = new PresenceExtension({ connections, onAnnounce, resendAnnounce });
-    if (!this.teleport) {
-      throw new Error('Teleport not initiated.');
-    }
-    this.teleport.addExtension('dxos.mesh.teleport.presence', this.presence);
-    return this;
+  async destroy() {
+    await Promise.all(this._connections.map((connection) => connection.destroy()));
   }
 }

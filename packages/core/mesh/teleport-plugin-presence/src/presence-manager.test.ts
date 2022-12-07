@@ -5,48 +5,56 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
+import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
+import { TestBuilder as ConnectionFactory, TestPeer as Connection } from '@dxos/teleport/testing';
 import { describe, test } from '@dxos/test';
 
+import { PresenceExtension } from './presence-extension';
 import { PresenceManager } from './presence-manager';
 import { TestBuilder } from './testing';
 
 describe('PresenceManager', () => {
-  test('Announce', async () => {
+  test.only('Announce', async () => {
     const builder = new TestBuilder();
-    const { agent1, agent2 } = await builder.createPipedAgents();
+    const connectionFactory = new ConnectionFactory();
 
-    const presenceManager1 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
-    presenceManager1.createExtension({ teleport: agent1.teleport! });
-
-    const presenceManager2 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
-    presenceManager2.createExtension({ teleport: agent2.teleport! });
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
+    await builder.connectAgents({ agent1, agent2, connectionFactory });
 
     await waitForExpect(() => {
-      expect(presenceManager1.getPeerStates().length).toEqual(1);
-      expect(presenceManager2.getPeerStates().length).toEqual(1);
-      expect(presenceManager1.getPeerStates()[0].peerId).toEqual(agent2.peerId);
-      expect(presenceManager2.getPeerStates()[0].peerId).toEqual(agent1.peerId);
+      expect(agent1.presenceManager.getPeerStates().length).toEqual(1);
+      expect(agent2.presenceManager.getPeerStates().length).toEqual(1);
+      expect(agent1.presenceManager.getPeerStates()[0].peerId).toEqual(agent2.peerId);
+      expect(agent2.presenceManager.getPeerStates()[0].peerId).toEqual(agent1.peerId);
     });
   });
 
-  test('Reannounce', async () => {
+  test.only('Reannounce', async () => {
     const builder = new TestBuilder();
-    const { agent1, agent2 } = await builder.createPipedAgents();
-    const presenceManager = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
-    presenceManager.createExtension({ teleport: agent1.teleport! });
+    const connectionFactory = new ConnectionFactory();
+
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
+
+    const { peer1: connection12, peer2: connection21 } = await connectionFactory.createPipedPeers();
+    agent1.addConnection(connection12);
 
     const received: PeerState[] = [];
-    agent2.initializePresence({
+    const presenceExtension = new PresenceExtension({
       connections: [agent1.peerId],
       resendAnnounce: 100,
       onAnnounce: async (peerState: PeerState) => {
+        console.log('onAnnounce', peerState);
         expect(peerState.peerId.equals(agent1.peerId)).toBeTruthy();
         expect(peerState.connections![0].equals(agent2.peerId)).toBeTruthy();
         received.push(peerState);
       }
     });
+    connection21.teleport?.addExtension('dxos.mesh.teleport.presence', presenceExtension);
+
     await waitForExpect(() => {
       expect(received.length).toEqual(10);
     });
@@ -121,5 +129,24 @@ describe('PresenceManager', () => {
     }, 500);
   });
 
-  test('cycle', async () => {});
+  test('cycle', async () => {
+    // first peer        |  second peer       |  third  peer
+    // presenceManager1  |  presenceManager2  |  presenceManager3
+    // agent6  agent1    |  agent2, agent3    |  agent4, agent5
+    const builder = new TestBuilder();
+    const peerId = PublicKey.random();
+
+    const presenceManager1 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
+    presenceManager1.createExtension({ teleport: agent1.teleport! });
+
+    const presenceManager2 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
+    presenceManager2.createExtension({ teleport: agent2.teleport! });
+
+    await agent1.teleport?.close();
+
+    await waitForExpect(() => {
+      expect(presenceManager1.getPeerStates().length).toEqual(0);
+      expect(presenceManager2.getPeerStates().length).toEqual(0);
+    });
+  });
 });
