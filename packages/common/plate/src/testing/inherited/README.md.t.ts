@@ -1,10 +1,19 @@
 import { defineTemplate, text } from '@dxos/plate';
 
-export default defineTemplate(({ input }) => {
+export default defineTemplate(({ input, inherited }) => {
   return text`
-    # readme
+    # Overridden package
     \`\`\`
     ${JSON.stringify(input, null, 2)}
     \`\`\`
+
+    inherited output follows
+    ---
+    ${inherited?.map((f) => {
+      return text`
+      ## ${f.shortDescription()}
+      ${f.content}
+      `
+    })}
   `;
 });
