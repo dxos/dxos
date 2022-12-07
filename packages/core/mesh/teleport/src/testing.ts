@@ -2,37 +2,68 @@
 // Copyright 2022 DXOS.org
 //
 
-import { pipeline } from 'node:stream';
+import { pipeline } from 'stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Teleport } from './teleport';
 
-/**
- * Simulates two peers connected via P2P network.
- */
-export const createStreamPair = async () => {
-  const peerId1 = PublicKey.random();
-  const peerId2 = PublicKey.random();
+export class TestBuilder {
+  private readonly _agents = new ComplexMap<PublicKey, TestAgent>();
 
-  const peer1 = new Teleport({ initiator: true, localPeerId: peerId1, remotePeerId: peerId2 });
-  const peer2 = new Teleport({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1 });
+  createAgent(peerId?: PublicKey): TestAgent {
+    return new TestAgent(peerId);
+  }
 
-  pipeline(peer1.stream, peer2.stream, (err) => {
-    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      log.catch(err);
+  /**
+   * Simulates two peers connected via P2P network.
+   */
+  async createPipedAgents({ peerId1, peerId2 }: { peerId1?: PublicKey; peerId2?: PublicKey } = {}) {
+    const agent1 = this.createAgent(peerId1);
+    const agent2 = this.createAgent(peerId2);
+
+    agent1.initializeTeleport({ initiator: true, remotePeerId: agent2.peerId });
+    agent2.initializeTeleport({ initiator: false, remotePeerId: agent1.peerId });
+
+    agent1.pipeline(agent2);
+    agent2.pipeline(agent1);
+
+    await Promise.all([agent1.teleport.open(), agent2.teleport.open()]);
+
+    return { agent1, agent2 };
+  }
+}
+
+export class TestAgent {
+  public teleport?: Teleport;
+
+  constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
+
+  initializeTeleport({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
+    if (this.teleport) {
+      return this;
     }
-  });
-  pipeline(peer2.stream, peer1.stream, (err) => {
-    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      log.catch(err);
+    this.teleport = new Teleport({
+      initiator,
+      localPeerId: this.peerId,
+      remotePeerId
+    });
+    return this;
+  }
+
+  pipeline(agent: TestAgent) {
+    if (!this.teleport || !agent.teleport) {
+      throw new Error('Teleport not initialized');
     }
-  });
-  // afterTest(() => peer1.close());
-  // afterTest(() => peer2.close());
+    pipeline(this.teleport.stream, agent.teleport.stream, (err) => {
+      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+        log.catch(err);
+      }
+    });
+  }
 
-  await Promise.all([peer1.open(), peer2.open()]);
-
-  return { peer1, peer2 };
-};
+  async destroy() {
+    await this.teleport?.destroy();
+  }
+}
