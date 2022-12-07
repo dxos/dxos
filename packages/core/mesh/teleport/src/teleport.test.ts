@@ -75,4 +75,26 @@ describe('Teleport', () => {
     await extension2.closed.wait({ timeout: 100 });
     await extension1.closed.wait({ timeout: 100 });
   });
+
+  test('destroy is idempotent', async () => {
+    // eslint-disable-next-line mocha/no-sibling-hooks
+    const { peer1, peer2 } = setup();
+
+    await Promise.all([peer1.open(), peer2.open()]);
+
+    const extension1 = new TestExtension();
+    peer1.addExtension('example.testing.rpc', extension1);
+    const extension2 = new TestExtension();
+    peer2.addExtension('example.testing.rpc', extension2);
+    await extension1.test();
+    log('test1 done');
+    await extension2.test();
+    log('test2 done');
+
+    void peer2.destroy();
+    void peer2.destroy();
+
+    await extension2.closed.wait({ timeout: 100 });
+    await extension1.closed.wait({ timeout: 100 });
+  });
 });
