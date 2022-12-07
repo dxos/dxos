@@ -31,6 +31,7 @@ export const transformSourceFile = (sourceFile: ts.SourceFile, context: ts.Trans
         // Pass empty context.
         args.push(f.createObjectLiteralExpression());
       }
+      // TODO(dmaretskyi): <= 2.
       if (args.length === 2) {
         args.push(getLogMetadata(sourceFile, node, process.cwd()));
       }
