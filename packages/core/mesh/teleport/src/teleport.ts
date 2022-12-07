@@ -69,6 +69,10 @@ export class Teleport {
         }
       }
     });
+
+    this.stream.on('error', (err) => {
+      log.warn('Stream error', err);
+    })
   }
 
   get stream(): Duplex {
