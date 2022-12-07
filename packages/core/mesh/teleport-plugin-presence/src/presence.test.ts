@@ -5,11 +5,10 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { latch, sleep } from '@dxos/async';
+import { latch } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgent, TestBuilder } from './testing';
-import { ComplexSet } from '@dxos/util';
 
 describe('Presence', () => {
   test('Announce', async () => {
