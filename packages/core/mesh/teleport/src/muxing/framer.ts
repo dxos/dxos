@@ -8,6 +8,10 @@ import * as varint from 'varint';
 
 import { RpcPort } from './rpc-port';
 
+export type FramerCallbacks = {
+  onDestroy?: (error: Error | null) => Promise<void>;
+};
+
 /**
  * Framer that turns a stream of binary messages into a framed RpcPort.
  *
@@ -42,6 +46,10 @@ export class Framer {
           callback();
         };
       }
+    },
+    destroy: async (error: Error | null, callback: (error: Error | null) => void) => {
+      await this._callbacks.onDestroy?.(error);
+      callback(error);
     }
   });
 
@@ -59,6 +67,8 @@ export class Framer {
       };
     }
   };
+
+  constructor(private readonly _callbacks: FramerCallbacks = {}) {}
 
   get stream(): Duplex {
     return this._stream;
