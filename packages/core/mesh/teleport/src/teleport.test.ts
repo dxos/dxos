@@ -33,36 +33,34 @@ describe('Teleport', () => {
   });
 
   test('disconnect', async () => {
-    // eslint-disable-next-line mocha/no-sibling-hooks
-    const { peer1, peer2 } = setup();
-
-    await Promise.all([peer1.open(), peer2.open()]);
+    const builder = new TestBuilder();
+    afterTest(() => builder.destroy());
+    const { agent1, agent2 } = await builder.createPipedAgents();
 
     const extension1 = new TestExtension();
-    peer1.addExtension('example.testing.rpc', extension1);
+    agent1.teleport!.addExtension('example.testing.rpc', extension1);
     const extension2 = new TestExtension();
-    peer2.addExtension('example.testing.rpc', extension2);
+    agent2.teleport!.addExtension('example.testing.rpc', extension2);
     await extension1.test();
     log('test1 done');
     await extension2.test();
     log('test2 done');
 
-    await peer2.destroy();
+    await agent2.destroy();
 
     await extension2.closed.wait({ timeout: 100 });
     await extension1.closed.wait({ timeout: 100 });
   });
 
   test.only('destroy is idempotent', async () => {
-    // eslint-disable-next-line mocha/no-sibling-hooks
-    const { peer1, peer2 } = setup();
-
-    await Promise.all([peer1.open(), peer2.open()]);
+    const builder = new TestBuilder();
+    afterTest(() => builder.destroy());
+    const { agent1, agent2 } = await builder.createPipedAgents();
 
     const extension1 = new TestExtension();
-    peer1.addExtension('example.testing.rpc', extension1);
+    agent1.teleport!.addExtension('example.testing.rpc', extension1);
     const extension2 = new TestExtension();
-    peer2.addExtension('example.testing.rpc', extension2);
+    agent2.teleport!.addExtension('example.testing.rpc', extension2);
     await extension1.test();
     log('test1 done');
     await extension2.test();
@@ -71,10 +69,10 @@ describe('Teleport', () => {
     {
       // latch to ensure all 4 destroy calls are made.
       const [done, inc, errorHandler] = latch({ count: 4 });
-      peer1.destroy().then(inc, errorHandler);
-      peer1.destroy().then(inc, errorHandler);
-      peer2.destroy().then(inc, errorHandler);
-      peer2.destroy().then(inc, errorHandler);
+      agent1.destroy().then(inc, errorHandler);
+      agent1.destroy().then(inc, errorHandler);
+      agent2.destroy().then(inc, errorHandler);
+      agent2.destroy().then(inc, errorHandler);
       await done();
     }
 
