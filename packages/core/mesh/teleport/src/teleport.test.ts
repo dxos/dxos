@@ -12,7 +12,6 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { Teleport } from './teleport';
 import { TestExtension } from './test-extension';
-import waitForExpect from 'wait-for-expect';
 
 const setup = () => {
   const peerId1 = PublicKey.random();
