@@ -1,0 +1,55 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+import "dxos/keys.proto";
+
+package dxos.gravity;
+
+/// Root specification for Agent.
+message AgentSpec {
+  optional int32 version = 1;
+  optional string state_machine = 2;
+  optional CommandSequence start_sequence = 3;
+  optional CommandSequence stop_sequence = 4;
+  repeated CommandSequence test_sequences = 5;
+}
+
+/// Commands that must be run sequentially.
+message CommandSequence {
+  repeated Command commands = 1;
+}
+
+/// Atomic async command.
+message Command {
+  // TODO(burdon): oneof vs. any?
+  oneof Cmd {
+    CreateProfileCommand create_profile = 1;
+    CreateSpaceCommand create_space = 2;
+    CreateSpaceInvitationCommand create_space_invitation = 3;
+    AcceptSpaceInvitationCommand accept_space_invitation = 4;
+  }
+}
+
+//
+// Commands.
+//
+
+message CreateProfileCommand {}
+
+message CreateSpaceCommand {
+  optional string id = 1;
+}
+
+message CreateSpaceInvitationCommand {
+  string id = 1;
+  dxos.keys.PublicKey swarm_key = 2;
+}
+
+message AcceptSpaceInvitationCommand {
+  dxos.keys.PublicKey swarm_key = 1;
+}

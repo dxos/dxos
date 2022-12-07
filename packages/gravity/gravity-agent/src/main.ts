@@ -11,10 +11,14 @@ import { hideBin } from 'yargs/helpers';
 
 import { ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
+import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Agent } from './agent';
 
 // TODO(burdon): Logging meta doesn't work when running from pnpm agent.
+log.config({
+  filter: 0
+});
 
 const main = () => {
   yargs(hideBin(process.argv))
@@ -29,22 +33,34 @@ const main = () => {
       type: 'string',
       default: join(process.cwd(), './config/config.yml')
     })
-    // TODO(burdon): Define protobuf type.
     .option('spec', {
+      // TODO(burdon): Define protobuf type.
       type: 'string',
       default: join(process.cwd(), './config/spec.yml')
     })
-
     .command({
       command: 'start',
-      handler: async ({ verbose, config: configFilepath }: { verbose?: boolean; config: string }) => {
+      handler: async ({
+        verbose,
+        config: configFilepath,
+        spec: specFilepath
+      }: {
+        verbose?: boolean;
+        config: string;
+        spec: string;
+      }) => {
         const config: ConfigProto = yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
         if (verbose) {
           log('config', { config });
         }
 
+        const spec: AgentSpec = yaml.load(fs.readFileSync(specFilepath).toString()) as ConfigProto;
+        if (verbose) {
+          log('spec', { spec });
+        }
+
         // TODO(burdon): Start with config; e.g., create party and invitation from pre-configured swarm.
-        const agent = await new Agent(config);
+        const agent = await new Agent({ config, spec });
         await agent.initialize();
         await agent.start();
       }

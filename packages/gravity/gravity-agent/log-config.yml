@@ -1,9 +1,8 @@
 formatter:
   column: 100
 
-depth: 0
+depth: 2
 
 filter:
   - gravity:debug
-  - service:debug
-  - feed-store:debug
+#  - client-services:debug
