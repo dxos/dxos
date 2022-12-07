@@ -3444,6 +3444,8 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
       '@types/js-yaml': ^4.0.5
       '@types/node': ^18.11.9
       '@types/yargs': ~16.0.1
@@ -3451,6 +3453,7 @@ importers:
       debug: ^4.3.3
       js-yaml: ^4.1.0
       source-map-support: ^0.5.12
+      typescript: ^4.8.4
       util: ^0.12.4
       yargs: ~16.2.0
     dependencies:
@@ -3459,6 +3462,8 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
       js-yaml: 4.1.0
@@ -3469,6 +3474,7 @@ importers:
       '@types/node': 18.11.9
       '@types/yargs': 16.0.4
       source-map-support: 0.5.21
+      typescript: 4.9.3
 
   packages/gravity/gravity-dashboard:
     specifiers:
