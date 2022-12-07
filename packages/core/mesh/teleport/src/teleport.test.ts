@@ -3,16 +3,13 @@
 //
 
 import { expect } from 'chai';
-import { pipeline } from 'node:stream';
 
 import { latch } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
-import { Teleport } from './teleport';
-import { TestBuilder } from './testing';
 import { TestExtension } from './test-extension';
+import { TestBuilder } from './testing';
 import waitForExpect from 'wait-for-expect';
 
 describe('Teleport', () => {

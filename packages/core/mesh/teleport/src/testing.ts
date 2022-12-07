@@ -20,8 +20,8 @@ export class TestBuilder {
   }
 
   async destroy() {
-    await Promise.all([...this._agents.values()].map(agent => agent.destroy()));
-  } 
+    await Promise.all([...this._agents.values()].map((agent) => agent.destroy()));
+  }
 
   /**
    * Simulates two peers connected via P2P network.
