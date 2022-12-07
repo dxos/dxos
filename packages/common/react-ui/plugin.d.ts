@@ -3,3 +3,4 @@
 //
 
 export * from './dist/types/src/plugin';
+export * from './dist/types/src/esbuild-plugin';

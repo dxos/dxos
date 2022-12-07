@@ -18,61 +18,10 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/react-async"
+      "path": "../../../tools/executors/esbuild"
     },
     {
       "path": "../../common/react-ui"
-    },
-    {
-      "path": "../../common/sentry"
-    },
-    {
-      "path": "../../common/telemetry"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/mesh/network-manager"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../experimental/metagraph"
-    },
-    {
-      "path": "../../experimental/react-client-testing"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-uikit"
-    },
-    {
-      "path": "../patterns/react-appkit"
     }
   ]
 }

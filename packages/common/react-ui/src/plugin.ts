@@ -16,7 +16,7 @@ export interface VitePluginTailwindOptions {
   content: string[];
 }
 
-export const themePlugin = (options: VitePluginTailwindOptions) => {
+export const themePlugin = (options: Pick<VitePluginTailwindOptions, 'content'>) => {
   const config: VitePluginTailwindOptions = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),

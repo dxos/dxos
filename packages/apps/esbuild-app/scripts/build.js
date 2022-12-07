@@ -6,7 +6,9 @@
 // TODO(wittjosiah): Automate this test.
 
 const { build } = require('esbuild');
-const { join } = require('node:path');
+const { join, resolve } = require('node:path');
+
+const { themePlugins } = require('@dxos/react-ui/esbuild-plugin');
 
 // eslint-disable-next-line
 // @ts-ignore
@@ -16,5 +18,12 @@ void build({
   entryPoints: [join(__dirname, '../src/index.ts')],
   outdir: join(__dirname, '../dist'),
   write: true,
-  bundle: true
+  bundle: true,
+  plugins: themePlugins({
+    content: [
+      resolve(__dirname, '../index.html'),
+      resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
+      resolve(__dirname, '../node_modules/@dxos/react-ui/dist/**/*.mjs')
+    ]
+  })
 });
