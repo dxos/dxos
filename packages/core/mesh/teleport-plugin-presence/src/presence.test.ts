@@ -6,7 +6,6 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { latch } from '@dxos/async';
-import { TestBuilder as ConnectionFactory } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestBuilder } from './testing';
@@ -18,8 +17,7 @@ describe('Presence', () => {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const connectionFactory = new ConnectionFactory();
-    await builder.connectAgents(agent1, agent2, connectionFactory);
+    await builder.connectAgents(agent1, agent2);
 
     await waitForExpect(() => {
       expect(agent1.presence.getPeerStates().length).toEqual(1);
@@ -35,9 +33,8 @@ describe('Presence', () => {
 
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
-    const connectionFactory = new ConnectionFactory();
 
-    await builder.connectAgents(agent1, agent2, connectionFactory);
+    await builder.connectAgents(agent1, agent2);
 
     const [announced10Times, inc] = latch({ count: 10 });
     agent1.presence.newPeerState.on((peerState) => {
@@ -57,13 +54,12 @@ describe('Presence', () => {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
     const agent3 = builder.createAgent();
-    const connectionFactory = new ConnectionFactory();
 
     // Connect first and second peer.
-    await builder.connectAgents(agent1, agent2, connectionFactory);
+    await builder.connectAgents(agent1, agent2);
 
     // Connect second and third peer.
-    await builder.connectAgents(agent2, agent3, connectionFactory);
+    await builder.connectAgents(agent2, agent3);
 
     // Check if first and third peers "see" each other.
     await waitForExpect(() => {
@@ -82,13 +78,12 @@ describe('Presence', () => {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
     const agent3 = builder.createAgent();
-    const connectionFactory = new ConnectionFactory();
 
     // Connect first and second peer.
-    await builder.connectAgents(agent1, agent2, connectionFactory);
+    await builder.connectAgents(agent1, agent2);
 
     // Connect second and third peer.
-    await builder.connectAgents(agent2, agent3, connectionFactory);
+    await builder.connectAgents(agent2, agent3);
 
     // Check if first and third peers "see" each other.
     await waitForExpect(() => {
@@ -116,16 +111,15 @@ describe('Presence', () => {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
     const agent3 = builder.createAgent();
-    const connectionFactory = new ConnectionFactory();
 
     // Connect first and second peer.
-    await builder.connectAgents(agent1, agent2, connectionFactory);
+    await builder.connectAgents(agent1, agent2);
 
     // Connect second and third peer.
-    await builder.connectAgents(agent2, agent3, connectionFactory);
+    await builder.connectAgents(agent2, agent3);
 
     // Connect third and first peer.
-    await builder.connectAgents(agent3, agent1, connectionFactory);
+    await builder.connectAgents(agent3, agent1);
 
     const received1: string[] = [];
 

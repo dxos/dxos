@@ -13,14 +13,16 @@ import { Presence } from './presence';
 export class TestBuilder {
   private readonly _agents = new Array<TestAgent>();
 
+  constructor(private readonly _connectionFactory: ConnectionFactory = new ConnectionFactory()) {}
+
   createAgent(peerId?: PublicKey): TestAgent {
     const agent = new TestAgent(peerId);
     this._agents.push(agent);
     return agent;
   }
 
-  async connectAgents(agent1: TestAgent, agent2: TestAgent, connectionFactory: ConnectionFactory) {
-    const { peer1: connection12, peer2: connection21 } = await connectionFactory.createPipedPeers({
+  async connectAgents(agent1: TestAgent, agent2: TestAgent) {
+    const { peer1: connection12, peer2: connection21 } = await this._connectionFactory.createPipedPeers({
       peerId1: agent1.peerId,
       peerId2: agent2.peerId
     });
