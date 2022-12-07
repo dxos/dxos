@@ -37,6 +37,7 @@ export class Teleport {
   });
 
   private readonly _muxer = new Muxer();
+
   private readonly _control = new ControlExtension({
     heartbeatInterval: 3000,
     heartbeatTimeout: 3000
@@ -70,9 +71,16 @@ export class Teleport {
       }
     });
 
-    this.stream.on('error', (err) => {
-      log.warn('Stream error', err);
-    });
+    {
+      // Destroy Teleport when the stream is closed.
+      this._muxer.stream.on('close', async () => {
+        await this.destroy();
+      });
+
+      this._muxer.stream.on('error', async (err) => {
+        await this.destroy(err);
+      });
+    }
   }
 
   get stream(): Duplex {
