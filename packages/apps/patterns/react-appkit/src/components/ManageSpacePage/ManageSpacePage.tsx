@@ -3,7 +3,7 @@
 //
 
 import { UserPlus } from 'phosphor-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import urlJoin from 'url-join';
 
@@ -41,12 +41,10 @@ export const ManageSpacePage = ({
     [members]
   );
   const invitations = useSpaceInvitations(space?.key);
-  const [creatingInvitation, setCreatingInvitation] = useState(false);
 
   const handleCreateInvitation = useCallback(() => {
     if (space) {
-      setCreatingInvitation(true);
-      void space.createInvitation().finally(() => setCreatingInvitation(false));
+      space.createInvitation();
     }
   }, [space]);
 
@@ -65,7 +63,7 @@ export const ManageSpacePage = ({
               variant='primary'
               onClick={handleCreateInvitation}
               className='flex gap-1 items-center'
-              disabled={!space || creatingInvitation}
+              disabled={!space}
             >
               <span>{t('create invitation label')}</span>
               <UserPlus className={getSize(5)} />

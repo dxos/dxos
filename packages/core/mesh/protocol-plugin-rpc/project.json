@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/protocol-plugin-rpc/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/protocol-plugin-rpc/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/mesh/protocol-plugin-rpc/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

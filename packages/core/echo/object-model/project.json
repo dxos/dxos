@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/echo/object-model/src/index.ts"
         ],
-        "outputPath": "packages/core/echo/object-model/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/echo/object-model/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

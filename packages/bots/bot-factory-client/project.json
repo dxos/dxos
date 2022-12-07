@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/bots/bot-factory-client/src/index.ts"
         ],
-        "outputPath": "packages/bots/bot-factory-client/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/bots/bot-factory-client/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
