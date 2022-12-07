@@ -36,7 +36,7 @@ describe('services/space-invitations-handler', () => {
 
     {
       const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
-      void item.model.set('name', 'test');
+      await item.model.set('name', 'test');
     }
 
     {
