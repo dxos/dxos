@@ -20,11 +20,7 @@
           "packages/core/mesh/network-manager/src/index.ts",
           "packages/core/mesh/network-manager/src/testing/index.ts"
         ],
-        "outputPath": "packages/core/mesh/network-manager/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/mesh/network-manager/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

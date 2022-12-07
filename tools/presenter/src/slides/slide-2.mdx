@@ -2,13 +2,13 @@
 layout: col-2
 ---
 
-import Image from './images/sphere.svg';
-import { ImageContainer  } from '../components';
+import Sphere from './images/sphere.svg';
+import { Image  } from '../components';
 
-<ImageContainer
-  backgroundImage={`url(${Image})`}
-  backgroundSize='contain'
+<Image
   fullBleed={false}
+  backgroundImage={`url(${Sphere})`}
+  backgroundSize='contain'
   opacity={0.9}
 />
 
@@ -16,6 +16,5 @@ import { ImageContainer  } from '../components';
 
 ## Demo
 
-```ts file=./code/example.tsx
-const x = 100;
+```ts file=./snippets/example.tsx
 ```

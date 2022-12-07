@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/common/crypto/src/index.ts"
         ],
-        "outputPath": "packages/common/crypto/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/common/crypto/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

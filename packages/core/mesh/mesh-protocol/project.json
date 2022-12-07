@@ -19,11 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/mesh-protocol/src/index.ts"
         ],
-        "outputPath": "packages/core/mesh/mesh-protocol/dist/lib",
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "outputPath": "packages/core/mesh/mesh-protocol/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

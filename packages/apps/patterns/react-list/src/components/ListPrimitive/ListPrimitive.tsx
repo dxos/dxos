@@ -197,7 +197,6 @@ const ListItemPrimitive = ({
       {...(description && { 'aria-describedby': descriptionId })}
     >
       <input
-        key={titleSession}
         {...{
           type: 'checkbox',
           id: checkId,
@@ -222,6 +221,7 @@ const ListItemPrimitive = ({
       </span>
       <div role='none' className='grow'>
         <Input
+          key={titleSession}
           label={t('list item title label')}
           placeholder={t('list item title placeholder')}
           labelVisuallyHidden
