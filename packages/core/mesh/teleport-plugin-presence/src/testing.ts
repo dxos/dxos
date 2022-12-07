@@ -16,15 +16,7 @@ export class TestBuilder {
     return agent;
   }
 
-  async connectAgents({
-    agent1,
-    agent2,
-    connectionFactory
-  }: {
-    agent1: TestAgent;
-    agent2: TestAgent;
-    connectionFactory: ConnectionFactory;
-  }) {
+  async connectAgents(agent1: TestAgent, agent2: TestAgent, connectionFactory: ConnectionFactory) {
     const { peer1: connection12, peer2: connection21 } = await connectionFactory.createPipedPeers({
       peerId1: agent1.peerId,
       peerId2: agent2.peerId

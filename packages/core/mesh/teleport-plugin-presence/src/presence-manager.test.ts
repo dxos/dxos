@@ -9,20 +9,21 @@ import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { TestBuilder as ConnectionFactory, TestPeer as Connection } from '@dxos/teleport/testing';
-import { describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { PresenceExtension } from './presence-extension';
 import { PresenceManager } from './presence-manager';
 import { TestBuilder } from './testing';
 
 describe('PresenceManager', () => {
-  test.only('Announce', async () => {
+  test('Announce', async () => {
     const builder = new TestBuilder();
-    const connectionFactory = new ConnectionFactory();
-
+    afterTest(() => builder.destroy());
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
-    await builder.connectAgents({ agent1, agent2, connectionFactory });
+
+    const connectionFactory = new ConnectionFactory();
+    await builder.connectAgents(agent1, agent2, connectionFactory);
 
     await waitForExpect(() => {
       expect(agent1.presenceManager.getPeerStates().length).toEqual(1);
@@ -32,24 +33,28 @@ describe('PresenceManager', () => {
     });
   });
 
-  test.only('Reannounce', async () => {
+  test('Reannounce', async () => {
+    afterTest(() => builder.destroy());
     const builder = new TestBuilder();
-    const connectionFactory = new ConnectionFactory();
 
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
-
-    const { peer1: connection12, peer2: connection21 } = await connectionFactory.createPipedPeers();
+    const connectionFactory = new ConnectionFactory();
+    const { peer1: connection12, peer2: connection21 } = await connectionFactory.createPipedPeers({
+      peerId1: agent1.peerId,
+      peerId2: agent2.peerId
+    });
     agent1.addConnection(connection12);
 
     const received: PeerState[] = [];
     const presenceExtension = new PresenceExtension({
       connections: [agent1.peerId],
-      resendAnnounce: 100,
+      resendAnnounce: 50,
       onAnnounce: async (peerState: PeerState) => {
-        console.log('onAnnounce', peerState);
         expect(peerState.peerId.equals(agent1.peerId)).toBeTruthy();
-        expect(peerState.connections![0].equals(agent2.peerId)).toBeTruthy();
+        if (peerState.connections?.length === 1) {
+          expect(peerState.connections[0].equals(agent2.peerId)).toBeTruthy();
+        }
         received.push(peerState);
       }
     });
@@ -61,78 +66,78 @@ describe('PresenceManager', () => {
   });
 
   test('Gets indirect announces', async () => {
-    // first peer        |  second peer       |  third  peer
-    // presenceManager1  |  presenceManager2  |  presenceManager3
-    // agent1            |  agent2, agent3    |  agent4
+    // first peer  <->  second peer  <->  third  peer
 
     const builder = new TestBuilder();
-    const peerId = PublicKey.random();
+    afterTest(() => builder.destroy());
 
     // Initialize 3 peers.
-    const presenceManager1 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 200 });
-    const presenceManager2 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 200 });
-    const presenceManager3 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 200 });
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
+    const agent3 = builder.createAgent();
+    const connectionFactory = new ConnectionFactory();
 
     // Connect first and second peer.
-    const { agent1, agent2 } = await builder.createPipedAgents({ peerId2: peerId });
-    presenceManager1.createExtension({ teleport: agent1.teleport! });
-    presenceManager2.createExtension({ teleport: agent2.teleport! });
+    await builder.connectAgents(agent1, agent2, connectionFactory);
 
     // Connect second and third peer.
-    const { agent1: agent3, agent2: agent4 } = await builder.createPipedAgents({ peerId1: peerId });
-    presenceManager2.createExtension({ teleport: agent3.teleport! });
-    presenceManager3.createExtension({ teleport: agent4.teleport! });
+    await builder.connectAgents(agent2, agent3, connectionFactory);
 
     // Check if first and third peers "see" each other.
     await waitForExpect(() => {
-      expect(presenceManager1.getPeerStatesOnline().some((state) => state.peerId.equals(agent4.peerId))).toBeTruthy();
-      expect(presenceManager3.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
+      expect(
+        agent1.presenceManager.getPeerStatesOnline().some((state) => state.peerId.equals(agent3.peerId))
+      ).toBeTruthy();
+      expect(
+        agent3.presenceManager.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))
+      ).toBeTruthy();
     }, 500);
   });
 
   test('One connection drops after some time', async () => {
-    // first peer        |  second peer       |  third  peer
-    // presenceManager1  |  presenceManager2  |  presenceManager3
-    // agent1            |  agent2, agent3    |  agent4
+    // first peer  <->  second peer  <->  third  peer
 
     const builder = new TestBuilder();
-    const peerId = PublicKey.random();
+    afterTest(() => builder.destroy());
 
     // Initialize 3 peers.
-    const presenceManager1 = new PresenceManager({ resendAnnounce: 50, offlineTimeout: 200 });
-    const presenceManager2 = new PresenceManager({ resendAnnounce: 50, offlineTimeout: 200 });
-    const presenceManager3 = new PresenceManager({ resendAnnounce: 50, offlineTimeout: 200 });
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
+    const agent3 = builder.createAgent();
+    const connectionFactory = new ConnectionFactory();
 
     // Connect first and second peer.
-    const { agent1, agent2 } = await builder.createPipedAgents({ peerId2: peerId });
-    presenceManager1.createExtension({ teleport: agent1.teleport! });
-    presenceManager2.createExtension({ teleport: agent2.teleport! });
+    await builder.connectAgents(agent1, agent2, connectionFactory);
 
     // Connect second and third peer.
-    const { agent1: agent3, agent2: agent4 } = await builder.createPipedAgents({ peerId1: peerId });
-    presenceManager2.createExtension({ teleport: agent3.teleport! });
-    presenceManager3.createExtension({ teleport: agent4.teleport! });
+    await builder.connectAgents(agent2, agent3, connectionFactory);
 
     // Check if first and third peers "see" each other.
     await waitForExpect(() => {
-      expect(presenceManager1.getPeerStatesOnline().some((state) => state.peerId.equals(agent4.peerId))).toBeTruthy();
-      expect(presenceManager3.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
+      expect(
+        agent1.presenceManager.getPeerStatesOnline().some((state) => state.peerId.equals(agent3.peerId))
+      ).toBeTruthy();
+      expect(
+        agent3.presenceManager.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))
+      ).toBeTruthy();
     }, 500);
 
     // Third peer got disconnected.
-    await agent4.teleport?.close();
+    await agent3.destroy();
 
     // Check if third peer is offline for first and second peer.
     await waitForExpect(() => {
-      expect(presenceManager1.getPeerStatesOnline().every((state) => !state.peerId.equals(agent4.peerId))).toBeTruthy();
-      expect(presenceManager2.getPeerStatesOnline().every((state) => !state.peerId.equals(agent4.peerId))).toBeTruthy();
+      expect(
+        agent1.presenceManager.getPeerStatesOnline().every((state) => !state.peerId.equals(agent3.peerId))
+      ).toBeTruthy();
+      expect(
+        agent2.presenceManager.getPeerStatesOnline().every((state) => !state.peerId.equals(agent3.peerId))
+      ).toBeTruthy();
     }, 500);
   });
 
   test('cycle', async () => {
-    // first peer        |  second peer       |  third  peer
-    // presenceManager1  |  presenceManager2  |  presenceManager3
-    // agent6  agent1    |  agent2, agent3    |  agent4, agent5
+    // first peer  <->  second peer  <->  third  peer  <-> first peer
     const builder = new TestBuilder();
     const peerId = PublicKey.random();
 

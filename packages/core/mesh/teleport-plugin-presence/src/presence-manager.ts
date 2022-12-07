@@ -33,12 +33,29 @@ export class PresenceManager {
       resendAnnounce: this._params.resendAnnounce,
       onAnnounce: async (peerState) => {
         this._saveNewState(peerState);
-        this._reconcileConnections();
         this._propagateAnnounce(peerState);
       }
     });
-    this._presenceExtensions.set({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId }, extension);
-    this._reconcileConnections();
+    {
+      // Connection management.
+      this._presenceExtensions.set(
+        { localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId },
+        extension
+      );
+      this._reconcileConnections();
+      extension.closed.wait().then(
+        () => {
+          if (
+            this._presenceExtensions.has({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId })
+          ) {
+            this._presenceExtensions.delete({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId });
+          }
+        },
+        (err) => {
+          log.catch(err);
+        }
+      );
+    }
     teleport.addExtension('dxos.mesh.teleport.presence', extension);
 
     return extension;
@@ -79,11 +96,6 @@ export class PresenceManager {
   }
 
   private _reconcileConnections() {
-    for (const [key, extension] of this._presenceExtensions.entries()) {
-      if (extension.closed) {
-        this._presenceExtensions.delete(key);
-      }
-    }
     this._presenceExtensions.forEach((presenceExtension) => {
       presenceExtension.setConnections(this._getConnections());
     });
