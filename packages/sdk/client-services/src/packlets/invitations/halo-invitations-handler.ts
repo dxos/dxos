@@ -55,6 +55,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     assert(type !== Invitation.Type.OFFLINE);
     const identity = this._identityManager.identity ?? failUndefined();
 
+    // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
       type,
       invitationId: PublicKey.random().toHex(),
@@ -195,6 +196,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
     let connectionCount = 0;
     const complete = new Trigger<PublicKey>();
+    
     const createExtension = (): GuestHaloInvitationExtension => {
       const extension = new GuestHaloInvitationExtension({
         onOpen: () => {
