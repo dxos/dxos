@@ -105,7 +105,7 @@ describe('Presence', () => {
   test('Four peers connected', async () => {
     // first peer  --  second peer
     //      |                |
-    // third peer  --  fourth peer
+    // fourth peer  --  third peer
 
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
@@ -142,6 +142,10 @@ describe('Presence', () => {
     // Disconnect first and fourth peer.
     await builder.disconnectAgents(agent1, agent4);
 
+    // first peer  --  second peer
+    //                       |
+    // fourth peer  --  third peer
+
     await waitForExpect(() => {
       expect(agent1.presence.getPeerStatesOnline().length).toEqual(3);
       checkFirstAgentConnections([agent2, agent3, agent4]);
@@ -149,6 +153,10 @@ describe('Presence', () => {
 
     // Disconnect third and fourth peer.
     await builder.disconnectAgents(agent3, agent4);
+
+    // first peer  --  second peer
+    //                       |
+    // fourth peer      third peer
 
     await waitForExpect(() => {
       expect(agent1.presence.getPeerStatesOnline().length).toEqual(2);
@@ -158,6 +166,10 @@ describe('Presence', () => {
 
     // Connect again first and fourth peer.
     await builder.connectAgents(agent3, agent4);
+
+    // first peer  --  second peer
+    //                       |
+    // fourth peer  --  third peer
 
     await waitForExpect(() => {
       expect(agent1.presence.getPeerStatesOnline().length).toEqual(3);
