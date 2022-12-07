@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { pipeline } from 'stream';
+import { pipeline } from 'node:stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { afterTest } from '@dxos/test';
 
 import { Teleport } from './teleport';
 
@@ -30,8 +29,8 @@ export const createStreamPair = async () => {
       log.catch(err);
     }
   });
-  afterTest(() => peer1.close());
-  afterTest(() => peer2.close());
+  // afterTest(() => peer1.close());
+  // afterTest(() => peer2.close());
 
   await Promise.all([peer1.open(), peer2.open()]);
 

@@ -10,7 +10,8 @@
   "browser": {
     "node:assert": "assert",
     "node:stream": "readable-stream",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
