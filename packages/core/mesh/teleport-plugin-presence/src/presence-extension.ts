@@ -11,7 +11,6 @@ import { schema } from '@dxos/protocols';
 import { PeerState, PresenceService } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
-import { ComplexSet } from '@dxos/util';
 
 export type PresenceParams = {
   connections: PublicKey[];
@@ -26,7 +25,6 @@ export class PresenceExtension implements TeleportExtension {
   public readonly opened = new Trigger();
   public readonly closed = new Trigger();
 
-  private readonly _sentAnnounces = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak, never cleaned up?
   private _sendInterval?: NodeJS.Timeout;
 
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
@@ -41,10 +39,6 @@ export class PresenceExtension implements TeleportExtension {
   async sendAnnounce(peerState: PeerState) {
     await this.opened.wait();
     assert(this._rpc, 'RPC not initialized');
-    if (this._sentAnnounces.has(peerState.messageId)) {
-      return;
-    }
-    this._sentAnnounces.add(peerState.messageId);
     await this._rpc.rpc.PresenceService.announce(peerState);
   }
 

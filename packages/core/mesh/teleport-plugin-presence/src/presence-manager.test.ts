@@ -5,14 +5,11 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
-import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
-import { TestBuilder as ConnectionFactory, TestPeer as Connection } from '@dxos/teleport/testing';
+import { latch } from '@dxos/async';
+import { PeerState } from '@dxos/protocols/proto/dxos/mesh/telßeport/presence';
+import { TestBuilder as ConnectionFactory } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { PresenceExtension } from './presence-extension';
-import { PresenceManager } from './presence-manager';
 import { TestBuilder } from './testing';
 
 describe('PresenceManager', () => {
@@ -40,29 +37,15 @@ describe('PresenceManager', () => {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
     const connectionFactory = new ConnectionFactory();
-    const { peer1: connection12, peer2: connection21 } = await connectionFactory.createPipedPeers({
-      peerId1: agent1.peerId,
-      peerId2: agent2.peerId
-    });
-    agent1.addConnection(connection12);
 
-    const received: PeerState[] = [];
-    const presenceExtension = new PresenceExtension({
-      connections: [agent1.peerId],
-      resendAnnounce: 50,
-      onAnnounce: async (peerState: PeerState) => {
-        expect(peerState.peerId.equals(agent1.peerId)).toBeTruthy();
-        if (peerState.connections?.length === 1) {
-          expect(peerState.connections[0].equals(agent2.peerId)).toBeTruthy();
-        }
-        received.push(peerState);
-      }
-    });
-    connection21.teleport?.addExtension('dxos.mesh.teleport.presence', presenceExtension);
+    await builder.connectAgents(agent1, agent2, connectionFactory);
 
-    await waitForExpect(() => {
-      expect(received.length).toEqual(10);
+    const [announced10Times, inc] = latch({ count: 10 });
+    agent1.presenceManager.newPeerState.on((peerState) => {
+      inc();
     });
+
+    await announced10Times();
   });
 
   test('Gets indirect announces', async () => {
@@ -136,22 +119,38 @@ describe('PresenceManager', () => {
     }, 500);
   });
 
-  test('cycle', async () => {
+  test('Announces not get sent endlessly in a loop', async () => {
     // first peer  <->  second peer  <->  third  peer  <-> first peer
+
     const builder = new TestBuilder();
-    const peerId = PublicKey.random();
+    afterTest(() => builder.destroy());
 
-    const presenceManager1 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
-    presenceManager1.createExtension({ teleport: agent1.teleport! });
+    // Initialize 3 peers.
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
+    const agent3 = builder.createAgent();
+    const connectionFactory = new ConnectionFactory();
 
-    const presenceManager2 = new PresenceManager({ resendAnnounce: 100, offlineTimeout: 1000 });
-    presenceManager2.createExtension({ teleport: agent2.teleport! });
+    // Connect first and second peer.
+    await builder.connectAgents(agent1, agent2, connectionFactory);
 
-    await agent1.teleport?.close();
+    // Connect second and third peer.
+    await builder.connectAgents(agent2, agent3, connectionFactory);
+
+    // Connect third and first peer.
+    await builder.connectAgents(agent3, agent1, connectionFactory);
+
+    const received1: string[] = [];
+
+    agent1.presenceManager.newPeerState.on((peerState) => {
+      received1.push(peerState.messageId.toHex());
+    });
 
     await waitForExpect(() => {
-      expect(presenceManager1.getPeerStates().length).toEqual(0);
-      expect(presenceManager2.getPeerStates().length).toEqual(0);
+      expect(received1.length).toEqual(20);
+      expect(
+        received1.every((peerId, _, array) => array.filter((value) => value === peerId).length === 1)
+      ).toBeTruthy();
     });
   });
 });

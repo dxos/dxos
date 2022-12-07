@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { Teleport } from '@dxos/teleport';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { PresenceExtension } from './presence-extension';
 
@@ -16,6 +17,8 @@ export type PresenceManagerParams = {
 };
 
 export class PresenceManager {
+  public readonly newPeerState = new Event<PeerState>();
+  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _peerStates = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);
   private readonly _presenceExtensions = new ComplexMap<
     {
@@ -32,6 +35,10 @@ export class PresenceManager {
       connections: [...this._getConnections()],
       resendAnnounce: this._params.resendAnnounce,
       onAnnounce: async (peerState) => {
+        if (this._receivedMessages.has(peerState.messageId)) {
+          return;
+        }
+        this._receivedMessages.add(peerState.messageId);
         this._saveNewState(peerState);
         this._propagateAnnounce(peerState);
       }
@@ -78,6 +85,7 @@ export class PresenceManager {
   private _saveNewState(peerState: PeerState) {
     const oldPeerState = this._peerStates.get(peerState.peerId);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < peerState.timestamp.getTime()) {
+      this.newPeerState.emit(peerState);
       this._peerStates.set(peerState.peerId, peerState);
     }
   }
