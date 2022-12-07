@@ -13,6 +13,7 @@ import { tailwindConfig } from './config';
 
 export const themePlugins = (options: { content: string[]; outdir: string }): Plugin[] => {
   return [
+    // TODO (thure): This really shouldn’t be this way, but after hours of searching for a reasonable way to do this I came up empty. The prior art I found was mainly this thread, though it’s only tangentially related: https://github.com/evanw/esbuild/issues/800#issuecomment-786151076
     {
       name: 'esbuild-plugin-dxos-ui-theme-resolvers',
       setup: async (build) => {
@@ -30,6 +31,8 @@ export const themePlugins = (options: { content: string[]; outdir: string }): Pl
         });
       }
     },
+    // TODO (thure): theme.css must be part of entryPoints in order to be processed with `stylePlugin`, but this should not be necessary. ESBuild would not load theme.css using stylePlugin if referenced within index.ts(x) as with the Vite plugin.
+    // TODO (thure): Note also that because it is an entryPoint, the developer has to reference the built theme.css from `index.html`, which is inflexible and possibly inconvenient.
     stylePlugin({
       postcss: {
         plugins: [tailwindcss(tailwindConfig({ env: process.env.NODE_ENV, content: options.content })), autoprefixer]
