@@ -1785,6 +1785,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/teleport': workspace:*
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
       '@swc-node/register': ^1.5.4
@@ -1815,6 +1816,7 @@ importers:
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
+      '@dxos/teleport': link:../teleport
       '@dxos/util': link:../../../common/util
       '@koush/wrtc': 0.5.3
       assert: 2.0.0
@@ -3649,6 +3651,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -3667,6 +3670,7 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/teleport': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -3683,6 +3687,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
@@ -3700,6 +3705,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/teleport': link:../../core/mesh/teleport
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
