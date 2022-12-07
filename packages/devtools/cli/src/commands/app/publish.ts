@@ -17,6 +17,9 @@ export default class Publish extends BaseCommand {
     configPath: Flags.string({
       description: 'Path to dx.yml'
     }),
+    accessToken: Flags.string({
+      description: 'Access token for publishing.'
+    }),
     skipExisting: Flags.boolean({
       description: 'Do not update content on KUBE if version already exists',
       default: false
@@ -32,7 +35,7 @@ export default class Publish extends BaseCommand {
 
   async run(): Promise<any> {
     const { flags } = await this.parse(Publish);
-    const { configPath, skipExisting, verbose, version } = flags;
+    const { accessToken, configPath, skipExisting, verbose, version } = flags;
 
     try {
       const moduleConfig = await loadConfig(configPath);
@@ -63,7 +66,8 @@ export default class Publish extends BaseCommand {
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
         const result = await publisher.rpc.publish({
           package: moduleConfig.values.package!,
-          skipExisting
+          skipExisting,
+          accessToken
         });
 
         result?.modules?.forEach(({ module, urls }) => {
