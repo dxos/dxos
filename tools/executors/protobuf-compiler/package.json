@@ -31,7 +31,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-test": "workspace:*",
     "@swc-node/register": "^1.5.4",
-    "@swc/core": "^1.3.9",
+    "@swc/core": "^1.3.21",
     "@types/argparse": "^2.0.0",
     "@types/glob": "~7.1.3",
     "@types/mocha": "^8.2.2",
