@@ -4,12 +4,12 @@ formatter:
 # processor: debug
 
 filter:
-  # - warn
+  - warn
+  - info
+  - swarm.ts:debug
   # - feed-wrapper:debug
   # - service-host:debug
   # - client:debug
-  - warn
-  - info
   # - replicator:debug
   # - teleport:debug
   # - member:debug

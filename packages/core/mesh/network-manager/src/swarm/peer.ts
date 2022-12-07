@@ -220,12 +220,9 @@ export class Peer {
     const connection = this.connection;
     log('closing...', { peerId: this.id, sessionId: connection.sessionId });
 
-    try {
-      // Triggers `onStateChange` callback which will clean up the connection.
-      await connection.close();
-    } catch (err) {
-      log.catch(err);
-    }
+    // Triggers `onStateChange` callback which will clean up the connection.
+    // Won't throw.
+    await connection.close();
 
     log('closed', { peerId: this.id, sessionId: connection.sessionId });
   }
