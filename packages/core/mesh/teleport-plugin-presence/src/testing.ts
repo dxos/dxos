@@ -2,8 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as ConnectionFactory, TestPeer as Connection } from '@dxos/teleport/testing';
+import { ComplexMap } from '@dxos/util';
 
 import { PresenceManager } from './presence-manager';
 
@@ -25,24 +28,38 @@ export class TestBuilder {
     agent2.addConnection(connection21);
   }
 
+  async disconnectAgents(agent1: TestAgent, agent2: TestAgent) {
+    await agent1.deleteConnection(agent2.peerId);
+    await agent2.deleteConnection(agent1.peerId);
+  }
+
   async destroy() {
     await Promise.all(this._agents.map((agent) => agent.destroy()));
   }
 }
 
 export class TestAgent {
-  private readonly _connections = new Array<Connection>();
+  private readonly _connections = new ComplexMap<PublicKey, Connection>(PublicKey.hash);
 
   public readonly presenceManager = new PresenceManager({ resendAnnounce: 50, offlineTimeout: 200 });
 
   constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
 
   addConnection(connection: Connection) {
-    this._connections.push(connection);
+    assert(connection.teleport);
+    this._connections.set(connection.teleport!.remotePeerId, connection);
     this.presenceManager.createExtension({ teleport: connection.teleport! });
   }
 
+  async deleteConnection(remotePeerId: PublicKey) {
+    const connection = this._connections.get(remotePeerId);
+    if (connection) {
+      await connection.destroy();
+      this._connections.delete(remotePeerId);
+    }
+  }
+
   async destroy() {
-    await Promise.all(this._connections.map((connection) => connection.destroy()));
+    await Promise.all([...this._connections.values()].map((connection) => connection.destroy()));
   }
 }
