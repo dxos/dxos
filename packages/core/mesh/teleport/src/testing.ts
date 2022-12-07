@@ -2,19 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { pipeline } from 'stream';
+import { pipeline } from 'node:stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { ComplexMap } from '@dxos/util';
 
 import { Teleport } from './teleport';
 
 export class TestBuilder {
-  private readonly _agents = new ComplexMap<PublicKey, TestAgent>();
+  private readonly _agents = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
 
   createAgent(peerId?: PublicKey): TestAgent {
-    return new TestAgent(peerId);
+    const agent = new TestAgent(peerId);
+    this._agents.set(agent.peerId, agent);
+    return agent;
   }
+
+  async destroy() {
+    await Promise.all([...this._agents.values()].map(agent => agent.destroy()));
+  } 
 
   /**
    * Simulates two peers connected via P2P network.
@@ -29,7 +36,7 @@ export class TestBuilder {
     agent1.pipeline(agent2);
     agent2.pipeline(agent1);
 
-    await Promise.all([agent1.teleport.open(), agent2.teleport.open()]);
+    await Promise.all([agent1.teleport!.open(), agent2.teleport!.open()]);
 
     return { agent1, agent2 };
   }
