@@ -51,7 +51,7 @@ describe('Teleport', () => {
     await extension1.closed.wait({ timeout: 100 });
   });
 
-  test.only('destroy is idempotent', async () => {
+  test('destroy is idempotent', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
     const { agent1, agent2 } = await builder.createPipedAgents();
