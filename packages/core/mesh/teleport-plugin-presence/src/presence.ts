@@ -16,7 +16,7 @@ export type PresenceManagerParams = {
   offlineTimeout: number;
 };
 
-export class PresenceManager {
+export class Presence {
   public readonly newPeerState = new Event<PeerState>();
   private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _peerStates = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);

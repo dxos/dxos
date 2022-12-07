@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as ConnectionFactory, TestPeer as Connection } from '@dxos/teleport/testing';
 import { ComplexMap } from '@dxos/util';
 
-import { PresenceManager } from './presence-manager';
+import { Presence } from './presence-manager';
 
 export class TestBuilder {
   private readonly _agents = new Array<TestAgent>();
@@ -41,7 +41,7 @@ export class TestBuilder {
 export class TestAgent {
   private readonly _connections = new ComplexMap<PublicKey, Connection>(PublicKey.hash);
 
-  public readonly presenceManager = new PresenceManager({ resendAnnounce: 50, offlineTimeout: 200 });
+  public readonly presenceManager = new Presence({ resendAnnounce: 50, offlineTimeout: 200 });
 
   constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
 
