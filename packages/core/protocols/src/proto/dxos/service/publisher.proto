@@ -15,6 +15,8 @@ option go_package = "github.com/dxos/kube/publisher/pb";
 message PublishRequest {
   dxos.config.Package package = 1;
   bool skip_existing = 2;
+  // TODO(egorgripasov): Move to a dxrpc layer.
+  string access_token = 3;
 }
 
 message PublishResponse {
