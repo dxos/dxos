@@ -5,10 +5,11 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { latch } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { TestBuilder } from './testing';
+import { TestAgent, TestBuilder } from './testing';
+import { ComplexSet } from '@dxos/util';
 
 describe('Presence', () => {
   test('Announce', async () => {
@@ -101,8 +102,10 @@ describe('Presence', () => {
     }, 500);
   });
 
-  test('Announces not get sent endlessly in a loop', async () => {
-    // first peer  <->  second peer  <->  third  peer  <-> first peer
+  test('Four peers connected', async () => {
+    // first peer  --  second peer
+    //      |                |
+    // third peer  --  fourth peer
 
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
@@ -111,6 +114,7 @@ describe('Presence', () => {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
     const agent3 = builder.createAgent();
+    const agent4 = builder.createAgent();
 
     // Connect first and second peer.
     await builder.connectAgents(agent1, agent2);
@@ -119,19 +123,45 @@ describe('Presence', () => {
     await builder.connectAgents(agent2, agent3);
 
     // Connect third and first peer.
-    await builder.connectAgents(agent3, agent1);
+    await builder.connectAgents(agent3, agent4);
 
-    const received1: string[] = [];
+    // Connect fourth and first peer.
+    await builder.connectAgents(agent4, agent1);
 
-    agent1.presence.newPeerState.on((peerState) => {
-      received1.push(peerState.messageId.toHex());
-    });
+    const checkFirstAgentConnections = (agents: TestAgent[]) => {
+      const connections = new Set(agent1.presence.getPeerStatesOnline().map((state) => state.peerId.toHex()));
+      const expectedConnections = new Set(agents.map((agent) => agent.peerId.toHex()));
+      expect(connections).toEqual(expectedConnections);
+    };
 
     await waitForExpect(() => {
-      expect(received1.length).toEqual(20);
-      expect(
-        received1.every((peerId, _, array) => array.filter((value) => value === peerId).length === 1)
-      ).toBeTruthy();
+      expect(agent1.presence.getPeerStatesOnline().length).toEqual(3);
+      checkFirstAgentConnections([agent2, agent3, agent4]);
+    });
+
+    // Disconnect first and fourth peer.
+    await builder.disconnectAgents(agent1, agent4);
+
+    await waitForExpect(() => {
+      expect(agent1.presence.getPeerStatesOnline().length).toEqual(3);
+      checkFirstAgentConnections([agent2, agent3, agent4]);
+    });
+
+    // Disconnect third and fourth peer.
+    await builder.disconnectAgents(agent3, agent4);
+
+    await waitForExpect(() => {
+      expect(agent1.presence.getPeerStatesOnline().length).toEqual(2);
+      checkFirstAgentConnections([agent2, agent3]);
+      expect(agent4.presence.getPeerStatesOnline().length).toEqual(0);
+    });
+
+    // Connect again first and fourth peer.
+    await builder.connectAgents(agent3, agent4);
+
+    await waitForExpect(() => {
+      expect(agent1.presence.getPeerStatesOnline().length).toEqual(3);
+      checkFirstAgentConnections([agent2, agent3, agent4]);
     });
   });
 });
