@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 import path from 'path';
-// import { promises as fs } from "fs";
+
 import { loadModule, LoadModuleOptions } from './loadModule';
 
 import { File, getFileType, MaybePromise, promise } from './file';
