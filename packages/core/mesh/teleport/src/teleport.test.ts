@@ -15,12 +15,12 @@ describe('Teleport', () => {
   test('sends rpc via TestExtension', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
-    const { agent1, agent2 } = await builder.createPipedAgents();
+    const { peer1, peer2 } = await builder.createPipedPeers();
 
     const extension1 = new TestExtension();
-    agent1.teleport!.addExtension('example.testing.rpc', extension1);
+    peer1.teleport!.addExtension('example.testing.rpc', extension1);
     const extension2 = new TestExtension();
-    agent2.teleport!.addExtension('example.testing.rpc', extension2);
+    peer2.teleport!.addExtension('example.testing.rpc', extension2);
 
     await extension1.test();
     log('test1 done');
@@ -34,18 +34,18 @@ describe('Teleport', () => {
   test('disconnect', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
-    const { agent1, agent2 } = await builder.createPipedAgents();
+    const { peer1, peer2 } = await builder.createPipedPeers();
 
     const extension1 = new TestExtension();
-    agent1.teleport!.addExtension('example.testing.rpc', extension1);
+    peer1.teleport!.addExtension('example.testing.rpc', extension1);
     const extension2 = new TestExtension();
-    agent2.teleport!.addExtension('example.testing.rpc', extension2);
+    peer2.teleport!.addExtension('example.testing.rpc', extension2);
     await extension1.test();
     log('test1 done');
     await extension2.test();
     log('test2 done');
 
-    await agent2.destroy();
+    await peer2.destroy();
 
     await extension2.closed.wait({ timeout: 100 });
     await extension1.closed.wait({ timeout: 100 });
@@ -54,12 +54,12 @@ describe('Teleport', () => {
   test('destroy is idempotent', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
-    const { agent1, agent2 } = await builder.createPipedAgents();
+    const { peer1, peer2 } = await builder.createPipedPeers();
 
     const extension1 = new TestExtension();
-    agent1.teleport!.addExtension('example.testing.rpc', extension1);
+    peer1.teleport!.addExtension('example.testing.rpc', extension1);
     const extension2 = new TestExtension();
-    agent2.teleport!.addExtension('example.testing.rpc', extension2);
+    peer2.teleport!.addExtension('example.testing.rpc', extension2);
     await extension1.test();
     log('test1 done');
     await extension2.test();
@@ -68,10 +68,10 @@ describe('Teleport', () => {
     {
       // latch to ensure all 4 destroy calls are made.
       const [done, inc, errorHandler] = latch({ count: 4 });
-      agent1.destroy().then(inc, errorHandler);
-      agent1.destroy().then(inc, errorHandler);
-      agent2.destroy().then(inc, errorHandler);
-      agent2.destroy().then(inc, errorHandler);
+      peer1.destroy().then(inc, errorHandler);
+      peer1.destroy().then(inc, errorHandler);
+      peer2.destroy().then(inc, errorHandler);
+      peer2.destroy().then(inc, errorHandler);
       await done();
     }
 

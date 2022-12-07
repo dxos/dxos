@@ -11,38 +11,38 @@ import { ComplexMap } from '@dxos/util';
 import { Teleport } from './teleport';
 
 export class TestBuilder {
-  private readonly _agents = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
 
-  createAgent(peerId?: PublicKey): TestAgent {
-    const agent = new TestAgent(peerId);
-    this._agents.set(agent.peerId, agent);
+  createPeer(peerId?: PublicKey): TestPeer {
+    const agent = new TestPeer(peerId);
+    this._peers.set(agent.peerId, agent);
     return agent;
   }
 
   async destroy() {
-    await Promise.all([...this._agents.values()].map((agent) => agent.destroy()));
+    await Promise.all([...this._peers.values()].map((agent) => agent.destroy()));
   }
 
   /**
    * Simulates two peers connected via P2P network.
    */
-  async createPipedAgents({ peerId1, peerId2 }: { peerId1?: PublicKey; peerId2?: PublicKey } = {}) {
-    const agent1 = this.createAgent(peerId1);
-    const agent2 = this.createAgent(peerId2);
+  async createPipedPeers({ peerId1, peerId2 }: { peerId1?: PublicKey; peerId2?: PublicKey } = {}) {
+    const peer1 = this.createPeer(peerId1);
+    const peer2 = this.createPeer(peerId2);
 
-    agent1.initializeTeleport({ initiator: true, remotePeerId: agent2.peerId });
-    agent2.initializeTeleport({ initiator: false, remotePeerId: agent1.peerId });
+    peer1.initializeTeleport({ initiator: true, remotePeerId: peer2.peerId });
+    peer2.initializeTeleport({ initiator: false, remotePeerId: peer1.peerId });
 
-    agent1.pipeline(agent2);
-    agent2.pipeline(agent1);
+    peer1.pipeline(peer2);
+    peer2.pipeline(peer1);
 
-    await Promise.all([agent1.teleport!.open(), agent2.teleport!.open()]);
+    await Promise.all([peer1.teleport!.open(), peer2.teleport!.open()]);
 
-    return { agent1, agent2 };
+    return { peer1, peer2 };
   }
 }
 
-export class TestAgent {
+export class TestPeer {
   public teleport?: Teleport;
 
   constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
@@ -59,11 +59,11 @@ export class TestAgent {
     return this;
   }
 
-  pipeline(agent: TestAgent) {
-    if (!this.teleport || !agent.teleport) {
+  pipeline(peer: TestPeer) {
+    if (!this.teleport || !peer.teleport) {
       throw new Error('Teleport not initialized');
     }
-    pipeline(this.teleport.stream, agent.teleport.stream, (err) => {
+    pipeline(this.teleport.stream, peer.teleport.stream, (err) => {
       if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
         log.catch(err);
       }
