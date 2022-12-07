@@ -10,7 +10,6 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { TestExtension } from './test-extension';
 import { TestBuilder } from './testing';
-import waitForExpect from 'wait-for-expect';
 
 describe('Teleport', () => {
   test('sends rpc via TestExtension', async () => {
