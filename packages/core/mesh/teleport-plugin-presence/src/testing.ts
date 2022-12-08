@@ -15,8 +15,8 @@ export class TestBuilder {
 
   constructor(private readonly _connectionFactory: ConnectionFactory = new ConnectionFactory()) {}
 
-  createAgent(peerId?: PublicKey): TestAgent {
-    const agent = new TestAgent({ peerId });
+  createAgent(opts: TestAgentOptions = {}): TestAgent {
+    const agent = new TestAgent(opts);
     this._agents.push(agent);
     return agent;
   }
@@ -40,6 +40,12 @@ export class TestBuilder {
   }
 }
 
+export type TestAgentOptions = {
+  peerId?: PublicKey;
+  announceInterval?: number;
+  offlineTimeout?: number;
+};
+
 export class TestAgent {
   private readonly _connections = new ComplexMap<PublicKey, Connection>(PublicKey.hash);
 
@@ -47,15 +53,7 @@ export class TestAgent {
 
   public readonly peerId: PublicKey;
 
-  constructor({
-    peerId = PublicKey.random(),
-    announceInterval = 25,
-    offlineTimeout = 50
-  }: {
-    peerId?: PublicKey;
-    announceInterval?: number;
-    offlineTimeout?: number;
-  }) {
+  constructor({ peerId = PublicKey.random(), announceInterval = 25, offlineTimeout = 50 }: TestAgentOptions) {
     this.peerId = peerId;
     this.presence = new Presence({ localPeerId: peerId, announceInterval, offlineTimeout });
   }
