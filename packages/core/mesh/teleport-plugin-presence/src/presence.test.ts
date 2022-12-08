@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { asyncTimeout, latch, sleep } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestBuilder } from './testing';
 
 describe('Presence', () => {
-  test('Announce', async () => {
+  test('Two peers see each other', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
     const agent1 = builder.createAgent();
@@ -16,18 +16,8 @@ describe('Presence', () => {
 
     await builder.connectAgents(agent1, agent2);
 
-    await asyncTimeout(
-      agent1.presence.updated.waitFor(
-        () => agent1.presence.getPeers().length === 1 && agent1.presence.getPeers()[0].peerId.equals(agent2.peerId)
-      ),
-      200
-    );
-    await asyncTimeout(
-      agent2.presence.updated.waitFor(
-        () => agent2.presence.getPeers().length === 1 && agent2.presence.getPeers()[0].peerId.equals(agent1.peerId)
-      ),
-      200
-    );
+    await agent1.waitForAgentsToBeOnline([agent2], 200);
+    await agent2.waitForAgentsToBeOnline([agent1], 200);
   });
 
   test('Reannounce', async () => {
