@@ -3161,8 +3161,7 @@ importers:
       '@dxos/errors': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
-      '@types/node-fetch': ^2.5.10
-      node-fetch: ^2.6.0
+      cross-fetch: ^3.1.5
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/config': link:../../sdk/config
@@ -3170,9 +3169,7 @@ importers:
       '@dxos/errors': link:../../sdk/errors
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
-      node-fetch: 2.6.7
-    devDependencies:
-      '@types/node-fetch': 2.6.2
+      cross-fetch: 3.1.5
 
   packages/experimental/react-client-testing:
     specifiers:
@@ -3721,7 +3718,6 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
-      node-fetch: ^2.6.0
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
@@ -3735,7 +3731,6 @@ importers:
       lodash.defaultsdeep: 4.6.1
       lodash.get: 4.4.2
       lodash.set: 4.3.2
-      node-fetch: 2.6.7
     devDependencies:
       '@types/debug': 4.1.7
       '@types/js-yaml': 4.0.5
@@ -17469,7 +17464,6 @@ packages:
       node-fetch: 2.6.7
     transitivePeerDependencies:
       - encoding
-    dev: true
 
   /cross-spawn/6.0.5:
     resolution: {integrity: sha512-eTVLrBSt7fjbDygz805pMnstIs2VTBNkRm0qxZd+M7A5XDdxVRWO5MxGBXZhjY4cqLYLdtrGqRf8mBPmzwSpWQ==}
