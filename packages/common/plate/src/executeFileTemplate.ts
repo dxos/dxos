@@ -6,6 +6,8 @@ import path from 'path';
 import { loadModule, LoadModuleOptions } from './loadModule';
 
 import { File, getFileType, MaybePromise, promise } from './file';
+import { Config } from './config';
+import { z } from 'zod';
 
 /** Include all template files that end with .t.ts or .t.js */
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
@@ -52,9 +54,11 @@ export type TemplateResultMetadata = {
 
 export type TemplatingResult<R = any> = File<R, TemplateResultMetadata>[];
 
-export type TemplateFunctionResult<R = any> = string | File<R, TemplateResultMetadata>[];
+export type TemplateFunctionResult<R = any> = null | string | File<R, TemplateResultMetadata>[];
 
-export const defineTemplate = <R = any>(fun: TemplateFunction<R>) => fun;
+export const defineTemplate = <TInput = any>(
+  fun: TemplateFunction<TInput extends Config<infer U> ? z.infer<U> : TInput>
+) => fun;
 
 export type Functor<TInput = void, TOutput = void> = (input: TInput) => MaybePromise<TOutput>;
 
@@ -84,7 +88,9 @@ export const executeFileTemplate = async <TInput>(
         : { templateRelativeTo: path.dirname(templateFullPath) })
     };
     const result = await promise(templateFunction(templateContext));
-    return typeof result === 'string'
+    return result === null
+      ? []
+      : typeof result === 'string'
       ? [
           new (getFileType(nominalOutputPath))({
             content: result,

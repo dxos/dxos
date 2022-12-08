@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/apps/templates/bare-template/src",
+  "sourceRoot": "packages/apps/samples/bare/src",
   "projectType": "application",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/templates/bare-template/**/*.{ts,js}"
+          "packages/apps/samples/bare/**/*.{ts,js}"
         ]
       },
       "outputs": [

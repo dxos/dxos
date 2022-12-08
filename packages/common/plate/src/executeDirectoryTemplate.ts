@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 import flatten from 'lodash.flatten';
-import minimatch from 'minimatch';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 
@@ -10,7 +9,6 @@ import {
   executeFileTemplate,
   TemplatingResult,
   isTemplateFile,
-  TEMPLATE_FILE_IGNORE,
   LoadTemplateOptions,
   TemplateResultMetadata
 } from './executeFileTemplate';
@@ -24,10 +22,8 @@ import { includeExclude } from './includeExclude';
 export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions &
   Config & {
     templateDirectory: string;
-
     outputDirectory: string;
     input?: Partial<TInput>;
-
     parallel?: boolean;
     verbose?: boolean;
     overwrite?: boolean;
@@ -42,12 +38,13 @@ export const executeDirectoryTemplate = async <TInput>(
     parallel: true,
     verbose: false,
     interactive: true,
-    ...(await loadConfig(templateDirectory, { verbose: options?.verbose })),
-    ...options
+    ...options,
+    ...(await loadConfig(templateDirectory, { verbose: options?.verbose, overrides: options }))
   };
   const { parallel, verbose, inherits, interactive, overwrite, inputShape, include, exclude, ...restOptions } =
     mergedOptions;
   const debug = logger(verbose);
+  debug(`executing template ${templateDirectory}`);
   debug(mergedOptions);
   let input = mergedOptions.input;
   if (inputShape) {
@@ -72,8 +69,10 @@ export const executeDirectoryTemplate = async <TInput>(
         input
       })
     : undefined;
-  debug(`executing directory template ${templateDirectory}`);
-  const allFiles = await readDir(templateDirectory);
+  const allFiles = await readDir(
+    templateDirectory,
+    (exclude ?? []).map((x) => (x instanceof RegExp ? (entry) => x.test(entry) : x))
+  );
   const filteredFiles = includeExclude(allFiles, {
     include,
     exclude,
