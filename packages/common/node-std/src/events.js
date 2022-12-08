@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-module.exports = require('events/');
+export { EventEmitter } from 'events';

@@ -19,7 +19,6 @@
           "packages/common/node-std/src/stream.js",
           "packages/common/node-std/src/util.js"
         ],
-        "format": "cjs",
         "outputPath": "packages/common/node-std/dist/lib",
         "platforms": [
           "browser"
