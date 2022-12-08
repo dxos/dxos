@@ -38,8 +38,8 @@ describe('PresenceExtension', () => {
     });
     peer2.teleport!.addExtension('dxos.mesh.teleport.presence', extension2);
 
-    expect((await trigger1.wait()).peerId).toEqual(peer2.peerId);
-    expect((await trigger2.wait()).peerId).toEqual(peer1.peerId);
+    expect((await trigger1.wait({ timeout: 100 })).peerId).toEqual(peer2.peerId);
+    expect((await trigger2.wait({ timeout: 100 })).peerId).toEqual(peer1.peerId);
   });
 
   test('Peer reannounces itself by interval', async () => {
