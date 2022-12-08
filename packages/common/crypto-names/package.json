@@ -17,6 +17,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/node-std": "workspace:*",
     "binary-parser": "^2.0.2",
     "hypercore-crypto": "^2.3.0"
   },

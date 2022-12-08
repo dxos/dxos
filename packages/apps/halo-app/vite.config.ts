@@ -2,40 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react';
-import { existsSync, mkdir, mkdirSync, rm, rmSync, writeFileSync } from 'node:fs';
+import React from '@vitejs/plugin-react';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { themePlugin } from '@dxos/react-ui/plugin';
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
 
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/halo-app@${packageJson.version}` : undefined;
-
-const manualChunks = {
-  vendor: ['react', 'react-router-dom', 'react-dom'],
-  phosphor: ['phosphor-react']
-};
-
-// TODO(wittjosiah): Try again after ESM switch.
-// From https://sambitsahoo.com/blog/vite-code-splitting-that-works.html
-const _renderChunks = (deps: Record<string, string>) => {
-  const chunks = {};
-  const manual = Object.keys(manualChunks)
-    .map((key) => manualChunks[key])
-    .flat();
-
-  Object.keys(deps).forEach((key) => {
-    if (manual.includes(key)) return;
-    chunks[key] = [key];
-  });
-
-  return chunks;
-};
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -45,6 +24,8 @@ export default defineConfig({
     port: 3967
   },
   define: {
+    'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
+    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
     'process.env.DX_VAULT': env(process.env.DX_VAULT),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
@@ -76,8 +57,6 @@ export default defineConfig({
     ]
   },
   build: {
-    // TODO(wittjosiah): Remove.
-    minify: false,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     },
@@ -88,13 +67,13 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
-          ...manualChunks
+          vendor: ['react', 'react-router-dom', 'react-dom']
         }
       }
     }
   },
   plugins: [
-    dxosPlugin(),
+    ConfigPlugin(),
     themePlugin({
       content: [
         resolve(__dirname, './index.html'),
@@ -104,7 +83,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
       ]
     }),
-    react(),
+    React(),
     VitePWA({
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
@@ -154,6 +133,6 @@ export default defineConfig({
   ],
   worker: {
     format: 'es',
-    plugins: [dxosPlugin()]
+    plugins: [ConfigPlugin()]
   }
 });

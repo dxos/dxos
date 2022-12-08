@@ -46,9 +46,6 @@
     },
     {
       "path": "../../packages/sdk/react-client"
-    },
-    {
-      "path": "../../packages/sdk/vite-plugin"
     }
   ]
 }

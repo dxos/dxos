@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
 
@@ -62,7 +62,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(__dirname),
+    ConfigPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -90,8 +90,5 @@ export default defineConfig({
         ]
       }
     })
-  ],
-  worker: {
-    plugins: [dxosPlugin()]
-  }
+  ]
 });

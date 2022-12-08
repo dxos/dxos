@@ -67,7 +67,7 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { themePlugin } from '@dxos/react-ui/plugin';
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -77,7 +77,7 @@ export default defineConfig({
   },
   ${input.monorepo ? monorepoConfig : basicBuildConfig}
   plugins: [
-    dxosPlugin(${input.monorepo ? '__dirname' : ''}),
+    ConfigPlugin(),
     themePlugin({
       content: [
         resolve(__dirname, './index.html'),

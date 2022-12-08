@@ -1,7 +1,7 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { dxosPlugin } = require('@dxos/vite-plugin');
+const { ConfigPlugin } = require('@dxos/config/vite-plugin');
 const { themePlugin } = require('@dxos/react-ui/plugin');
 
 module.exports = {
@@ -56,7 +56,7 @@ module.exports = {
         }
       },
       plugins: [
-        dxosPlugin(),
+        ConfigPlugin(),
         themePlugin({
           content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
         })

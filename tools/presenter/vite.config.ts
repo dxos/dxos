@@ -13,7 +13,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // @ts-ignore
 import { remarkDirectiveTest, remarkPluginLayout } from './src';
@@ -114,7 +114,7 @@ export default defineConfig({
 
   // TODO(burdon): dxosPlugin, themePlugin (see halo-app).
   plugins: [
-    dxosPlugin(),
+    ConfigPlugin(),
 
     react(),
 
