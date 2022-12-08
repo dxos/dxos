@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import clsx from 'clsx';
 import matter from 'gray-matter';
 import { u } from 'unist-builder';
 import { visit, Node } from 'unist-util-visit';
@@ -82,13 +83,23 @@ const createLayout = (meta: Meta, children: Node[]) => {
       return div({ ...props, className: 'flex flex-col flex-1' }, children);
     }
 
-    // TODO(burdon): Generalize to n columns.
-    case 'col-2': {
+    case 'col-2':
+    case 'col-3':
+    case 'col-4': {
+      // NOTE: Can't generate classname due to CSS stripping.
+      const gridCols = {
+        'col-2': 'grid-cols-2',
+        'col-3': 'grid-cols-3',
+        'col-4': 'grid-cols-4'
+      }[layout];
+
       const sections = getSections(children);
       const columns = sections.map((section) => div({ className: 'flex flex-col m-2' }, section));
+
       // prettier-ignore
+      // https://tailwindcss.com/docs/grid-column
       return withHeader(div({ className: 'flex flex-1' }, [
-        div({ className: 'flex flex-1 grid grid-cols-2' }, columns)
+        div({ className: clsx('flex', 'flex-1', 'grid', gridCols) }, columns)
       ]));
     }
 
