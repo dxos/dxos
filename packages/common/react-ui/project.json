@@ -50,6 +50,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
+          "packages/common/react-ui/src/esbuild-plugin.ts",
           "packages/common/react-ui/src/plugin.ts",
           "packages/common/react-ui/src/theme.css"
         ],
