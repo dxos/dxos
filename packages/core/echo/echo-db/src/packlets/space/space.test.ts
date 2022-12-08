@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import expect from 'expect';
+import assert from 'node:assert';
 
 import { CredentialGenerator } from '@dxos/credentials';
 import { ObjectModel } from '@dxos/object-model';

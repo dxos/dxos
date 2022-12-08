@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import fs from 'fs';
 import { CID, create, globSource } from 'ipfs-http-client';
+import assert from 'node:assert';
 
 import { Config } from '@dxos/client';
 

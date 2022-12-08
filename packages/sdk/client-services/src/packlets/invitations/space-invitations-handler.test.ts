@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { expect } from 'chai';
+import assert from 'node:assert';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';

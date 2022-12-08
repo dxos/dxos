@@ -3,10 +3,10 @@
 //
 
 import { Command, Config as OclifConfig, Flags } from '@oclif/core';
-import assert from 'node:assert';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
+import assert from 'node:assert';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
