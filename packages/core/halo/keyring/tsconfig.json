@@ -26,6 +26,9 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/node-std"
+    },
+    {
       "path": "../../../common/random-access-storage"
     },
     {

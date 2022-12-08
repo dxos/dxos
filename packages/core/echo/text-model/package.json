@@ -10,7 +10,6 @@
   "author": "info@dxos.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -23,8 +22,8 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/model-factory": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@types/node": "^18.11.9",
-    "assert": "^2.0.0",
     "yjs": "^13.5.41"
   },
   "devDependencies": {

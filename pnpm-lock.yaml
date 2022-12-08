@@ -13,9 +13,9 @@ patchedDependencies:
   uuid@8.3.2:
     hash: rxfbstxgb7ip2ka7npjixuqpye
     path: patches/uuid@8.3.2.patch
-  vite@3.0.9:
-    hash: sn4pdpxxcdbczqmgzem6dbvc7e
-    path: patches/vite@3.0.9.patch
+  vite@3.2.5:
+    hash: magqryo643lwpdprn2fbusqud4
+    path: patches/vite@3.2.5.patch
 
 importers:
 
@@ -109,7 +109,7 @@ importers:
       tslib: ^2.3.0
       typescript: ^4.8.4
       uuid: ^8.3.2
-      vite: 3.0.9
+      vite: 3.2.5
       wait-for-expect: ^3.0.2
       webpack: ^5.74.0
     dependencies:
@@ -141,14 +141,14 @@ importers:
       '@nrwl/nx-cloud': 15.0.2
       '@nrwl/storybook': 15.2.1_z7penkgcdxhofiddhvjuyrgvpy
       '@nrwl/workspace': 15.2.1_gbzpqqzqv3chexrn47adbf5hni
-      '@nxext/vite': 15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_72jgbdbplwgrg7p3c45cr4imya
+      '@nxext/vite': 15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_loodpz6s56js3gzuzfj2bnbkqa
       '@playwright/test': 1.28.0
       '@rushstack/eslint-patch': 1.2.0
       '@storybook/addon-actions': 6.5.13_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-essentials': 6.5.13_cocc753t67wfhmtqtkqpb743um
       '@storybook/addon-interactions': 6.5.13_ivdudmvvzzsf6tsttamhsg5viq
       '@storybook/addon-links': 6.5.13_biqbaboplfbrettd7655fr4n2y
-      '@storybook/builder-vite': 0.2.5_odxaoju6nsyufcqnyafyfkkyaq
+      '@storybook/builder-vite': 0.2.5_bjvhg32tlhty6xl43dmlej7nf4
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/react': 6.5.13_66ud2nt65vp6jzrzpy7t726de4
       '@storybook/testing-library': 0.0.13_biqbaboplfbrettd7655fr4n2y
@@ -202,7 +202,7 @@ importers:
       ts-node: 10.9.1_e3r7vnoqk42es7fqzfg6adq5ou
       typescript: 4.9.3
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       wait-for-expect: 3.0.2
       webpack: 5.75.0_2gnwflwk3ww7mu6qujr272jfj4
 
@@ -234,6 +234,7 @@ importers:
       ts-node: 10.9.1
       typedoc: ^0.23.21
       typescript: ^4.8.4
+      vite: 3.2.5
       vue: ^3.2.45
       vue-router: ^4.1.6
       vuepress: ^2.0.0-beta.53
@@ -265,6 +266,7 @@ importers:
       ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
       typedoc: 0.23.21_typescript@4.9.3
       typescript: 4.9.3
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       vue: 3.2.45
       vue-router: 4.1.6_vue@3.2.45
       vuepress: 2.0.0-beta.53_lhhsf6pmijd7r5cwjxqbh7fo24
@@ -290,7 +292,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
-      vite: 3.0.9
+      vite: 3.2.5
       vite-plugin-pwa: ^0.12.4
       workbox-window: ^6.5.4
     dependencies:
@@ -312,9 +314,9 @@ importers:
       '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/apps/halo-app:
@@ -353,7 +355,7 @@ importers:
       react-router-dom: ^6.3.0
       typescript: ^4.8.4
       url-join: ^5.0.0
-      vite: 3.0.9
+      vite: 3.2.5
       vite-plugin-pwa: ^0.12.4
       workbox-window: ^6.5.4
     dependencies:
@@ -390,10 +392,10 @@ importers:
       '@types/node': 18.11.9
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       typescript: 4.9.3
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/apps/patterns/assets:
@@ -422,7 +424,7 @@ importers:
       react-router-dom: ^6.3.0
       storybook-dark-mode: ^1.1.2
       url-join: ^5.0.0
-      vite: 3.0.9
+      vite: 3.2.5
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
@@ -440,13 +442,13 @@ importers:
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.3_biqbaboplfbrettd7655fr4n2y
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
 
   packages/apps/patterns/react-composer:
     specifiers:
@@ -557,7 +559,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
-      vite: 3.0.9
+      vite: 3.2.5
       vite-plugin-pwa: ^0.12.4
       workbox-window: ^6.5.4
     dependencies:
@@ -578,9 +580,9 @@ importers:
       '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/apps/templates/bare-template:
@@ -590,7 +592,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/vite-plugin': workspace:*
       typescript: ^4.8.4
-      vite: 3.0.9
+      vite: 3.2.5
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
@@ -598,7 +600,7 @@ importers:
       '@dxos/cli': link:../../../devtools/cli
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       typescript: 4.9.3
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
 
   packages/apps/templates/hello-template:
     specifiers:
@@ -635,7 +637,7 @@ importers:
       storybook-dark-mode: ^1.1.2
       typescript: ^4.8.4
       url-join: ^5.0.0
-      vite: 3.0.9
+      vite: 3.2.5
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
       workbox-window: ^6.5.4
@@ -663,19 +665,19 @@ importers:
       '@storybook/addon-essentials': 6.5.13_evnubblqvbtqcewbo7apdbwf3a
       '@storybook/addon-interactions': 6.5.13_uaynfpijkwfvob6bagkw2ikc3m
       '@storybook/addon-links': 6.5.13_biqbaboplfbrettd7655fr4n2y
-      '@storybook/builder-vite': 0.2.5_6efuvyuqezgf2bm6ziiofvjsya
+      '@storybook/builder-vite': 0.2.5_3cs5jofx2badj5pcet46rc3pxq
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/react': 6.5.13_6unhx5xchpk5fw6lolmrhxqnwu
       '@storybook/testing-library': 0.0.13_biqbaboplfbrettd7655fr4n2y
       '@types/node': 18.11.9
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       require-from-string: 2.0.2
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.9.3
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       webpack: 5.75.0
       workbox-window: 6.5.4
 
@@ -696,7 +698,7 @@ importers:
       react-router-dom: ^6.3.0
       todomvc-app-css: ^2.4.2
       todomvc-common: ^1.0.5
-      vite: 3.0.9
+      vite: 3.2.5
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
@@ -713,8 +715,8 @@ importers:
       '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
 
   packages/bots/bender-bot:
     specifiers:
@@ -763,6 +765,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -775,6 +778,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/keys': link:../../common/keys
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -857,40 +861,35 @@ importers:
     specifiers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
-      assert: ^2.0.0
-      events: ^3.3.0
     dependencies:
       '@dxos/context': link:../context
       '@dxos/debug': link:../debug
+      '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
-      assert: 2.0.0
-    devDependencies:
-      events: 3.3.0
 
   packages/common/codec-protobuf:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/lodash.merge': ^4.6.6
-      assert: ^2.0.0
       debug: ^4.3.3
       lodash.merge: ^4.6.2
-      path-browserify: ^1.0.1
       protobufjs: ^6.9.0
     dependencies:
       '@dxos/async': link:../async
       '@dxos/context': link:../context
+      '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
-      assert: 2.0.0
       debug: 4.3.4
       lodash.merge: 4.6.2
     devDependencies:
       '@types/debug': 4.1.7
       '@types/lodash.merge': 4.6.7
-      path-browserify: 1.0.1
       protobufjs: 6.11.3
 
   packages/common/context:
@@ -904,14 +903,14 @@ importers:
   packages/common/crypto:
     specifiers:
       '@dxos/keys': workspace:*
+      '@dxos/node-std': workspace:*
       '@types/crypto-js': ~4.0.2
       '@types/node': ^18.11.9
-      assert: ^2.0.0
       crypto-js: ^3.1.9-1
       hypercore-crypto: ^2.3.0
     dependencies:
       '@dxos/keys': link:../keys
-      assert: 2.0.0
+      '@dxos/node-std': link:../node-std
       crypto-js: 3.3.0
       hypercore-crypto: 2.3.2
     devDependencies:
@@ -943,14 +942,12 @@ importers:
 
   packages/common/debug:
     specifiers:
+      '@dxos/node-std': workspace:*
       '@types/debug': ^4.1.7
       debug: ^4.3.3
-      events: ^3.3.0
-      util: ^0.12.4
     dependencies:
+      '@dxos/node-std': link:../node-std
       debug: 4.3.4
-      events: 3.3.0
-      util: 0.12.5
     devDependencies:
       '@types/debug': 4.1.7
 
@@ -991,17 +988,16 @@ importers:
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
-      assert: ^2.0.0
       debug: ^4.3.3
       faker: ^5.5.3
       hypercore: ^9.12.0
       random-access-storage: ^3.0.0
       streamx: ^2.12.5
-      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
@@ -1011,14 +1007,13 @@ importers:
       '@dxos/hypercore': link:../hypercore
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
+      '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
-      assert: 2.0.0
       debug: 4.3.4
       hypercore: 9.12.0
       random-access-storage: 3.0.0
       streamx: 2.12.5
-      util: 0.12.5
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
@@ -1035,13 +1030,13 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/randombytes': ^2.0.0
       '@types/readable-stream': ^2.3.9
-      assert: ^2.0.0
       debug: ^4.3.3
       faker: ^5.5.3
       hypercore: ^9.12.0
@@ -1049,20 +1044,18 @@ importers:
       random-access-memory: ^4.1.0
       readable-stream: ^3.6.0
       streamx: ^2.12.5
-      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/crypto': link:../crypto
       '@dxos/debug': link:../debug
       '@dxos/keys': link:../keys
+      '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
-      assert: 2.0.0
       hypercore: 9.12.0
       hypercore-protocol: 8.0.7
       readable-stream: 3.6.0
       streamx: 2.12.5
-      util: 0.12.5
     devDependencies:
       '@dxos/log': link:../log
       '@dxos/util': link:../util
@@ -1077,20 +1070,19 @@ importers:
   packages/common/keys:
     specifiers:
       '@dxos/debug': workspace:*
+      '@dxos/node-std': workspace:*
       '@types/randombytes': ^2.0.0
-      assert: ^2.0.0
       randombytes: ^2.1.0
-      util: ^0.12.4
     dependencies:
       '@dxos/debug': link:../debug
-      assert: 2.0.0
+      '@dxos/node-std': link:../node-std
       randombytes: 2.1.0
-      util: 0.12.5
     devDependencies:
       '@types/randombytes': 2.0.0
 
   packages/common/log:
     specifiers:
+      '@dxos/node-std': workspace:*
       '@swc-node/sourcemap-support': ^0.2.0
       '@swc/core': ^1.3.21
       '@types/js-yaml': ^4.0.5
@@ -1104,13 +1096,12 @@ importers:
       pirates: ~4.0.5
       sorcery: ^0.10.0
       typescript: ^4.8.4
-      util: ^0.12.4
     dependencies:
+      '@dxos/node-std': link:../node-std
       chalk: 4.1.2
       js-yaml: 4.1.0
       lodash.defaultsdeep: 4.6.1
       lodash.pickby: 4.6.0
-      util: 0.12.5
     devDependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.3.21
@@ -1121,6 +1112,20 @@ importers:
       pirates: 4.0.5
       sorcery: 0.10.0
       typescript: 4.9.3
+
+  packages/common/node-std:
+    specifiers:
+      assert: ^2.0.0
+      events: ^3.3.0
+      path-browserify: ^1.0.1
+      readable-stream: ^3.6.0
+      util: ^0.12.4
+    dependencies:
+      assert: 2.0.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.0
+      util: 0.12.5
 
   packages/common/plate:
     specifiers:
@@ -1175,10 +1180,9 @@ importers:
     specifiers:
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@types/pify': ^3.0.2
-      assert: ^2.0.0
       del: ^5.1.0
-      path-browserify: ^1.0.1
       pify: ~5.0.0
       random-access-file: ^2.2.1
       random-access-idb: ^1.2.2
@@ -1186,20 +1190,17 @@ importers:
       random-access-storage: ^3.0.0
       random-access-web: ^2.0.3
       source-map-support: ^0.5.12
-      util: ^0.12.4
     dependencies:
       '@dxos/debug': link:../debug
       '@dxos/log': link:../log
-      assert: 2.0.0
+      '@dxos/node-std': link:../node-std
       del: 5.1.0
-      path-browserify: 1.0.1
       pify: 5.0.0
       random-access-file: 2.2.1
       random-access-idb: 1.2.2
       random-access-memory: 4.1.0
       random-access-storage: 3.0.0
       random-access-web: 2.0.3
-      util: 0.12.5
     devDependencies:
       '@types/pify': 3.0.2
       source-map-support: 0.5.21
@@ -1258,7 +1259,7 @@ importers:
       tailwindcss: ^3.1.8
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.6.0
-      vite: 3.0.9
+      vite: 3.2.5
     dependencies:
       '@fontsource/fira-code': 4.5.12
       '@fontsource/roboto-flex': 4.5.2
@@ -1287,14 +1288,14 @@ importers:
     devDependencies:
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       esbuild: 0.14.54
       esbuild-style-plugin: 1.6.0
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
 
   packages/common/sentry:
     specifiers:
@@ -1328,16 +1329,16 @@ importers:
     specifiers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       debug: ^4.3.3
-      util: ^0.12.4
     dependencies:
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
+      '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
       debug: 4.3.4
-      util: 0.12.5
     devDependencies:
       '@types/debug': 4.1.7
 
@@ -1349,13 +1350,11 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
-      assert: ^2.0.0
-      util: ^0.12.4
+      '@dxos/node-std': workspace:*
     dependencies:
       '@dxos/debug': link:../debug
       '@dxos/keys': link:../keys
-      assert: 2.0.0
-      util: 0.12.5
+      '@dxos/node-std': link:../node-std
     devDependencies:
       '@dxos/crypto': link:../crypto
 
@@ -1375,6 +1374,7 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
@@ -1387,7 +1387,6 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
-      assert: ^2.0.0
       debug: ^4.3.3
       hypercore-protocol: ^8.0.7
       source-map-support: ^0.5.12
@@ -1407,6 +1406,7 @@ importers:
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/model-factory': link:../model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/object-model': link:../object-model
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
@@ -1418,7 +1418,6 @@ importers:
       '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       debug: 4.3.4
     devDependencies:
       '@types/debug': 4.1.7
@@ -1445,11 +1444,11 @@ importers:
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
-      assert: ^2.0.0
       debug: ^4.3.3
     dependencies:
       '@dxos/async': link:../../../common/async
@@ -1459,10 +1458,10 @@ importers:
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       debug: 4.3.4
     devDependencies:
       '@types/debug': 4.1.7
@@ -1472,6 +1471,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -1479,7 +1479,6 @@ importers:
       '@types/lodash.clonedeep': ^4.5.6
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
-      assert: ^2.0.0
       debug: ^4.3.3
       faker: ^5.5.3
       lodash.clonedeep: ^4.5.0
@@ -1490,9 +1489,9 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/model-factory': link:../model-factory
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       debug: 4.3.4
       lodash.clonedeep: 4.5.0
       lodash.get: 4.4.2
@@ -1513,11 +1512,11 @@ importers:
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
       '@types/faker': ^5.5.9
       '@types/node': ^18.11.9
-      assert: ^2.0.0
       faker: ^5.5.3
       yjs: ^13.5.41
     dependencies:
@@ -1525,8 +1524,8 @@ importers:
       '@dxos/echo-db': link:../echo-db
       '@dxos/keys': link:../../../common/keys
       '@dxos/model-factory': link:../model-factory
+      '@dxos/node-std': link:../../../common/node-std
       '@types/node': 18.11.9
-      assert: 2.0.0
       yjs: 13.5.42
     devDependencies:
       '@dxos/feed-store': link:../../../common/feed-store
@@ -1546,6 +1545,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
@@ -1560,7 +1560,6 @@ importers:
       '@types/pify': ^3.0.2
       '@types/pump': ^1.1.0
       '@types/stream-to-array': ^2.3.0
-      assert: ^2.0.0
       bip39: ^3.0.4
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
@@ -1571,7 +1570,6 @@ importers:
       levelup: ^4.3.2
       lodash.matches: ^4.6.0
       memdown: ^5.1.0
-      moment: ^2.24.0
       performance-now: ^2.1.0
       pump: ^3.0.0
       stream-to-array: ^2.3.0
@@ -1585,9 +1583,9 @@ importers:
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       bip39: 3.0.4
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
@@ -1598,7 +1596,6 @@ importers:
       levelup: 4.4.0
       lodash.matches: 4.6.0
       memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
-      moment: 2.29.4
       performance-now: 2.1.0
       pump: 3.0.0
       stream-to-array: 2.3.0
@@ -1624,12 +1621,12 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/node': ^18.11.9
-      assert: ^2.0.0
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -1637,10 +1634,10 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
     devDependencies:
       '@types/debug': 4.1.7
       '@types/node': 18.11.9
@@ -1652,9 +1649,9 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/network-generator': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@types/debug': ^4.1.7
-      assert: ^2.0.0
       debug: ^4.3.3
       tiny-lru: ^7.0.6
     dependencies:
@@ -1662,8 +1659,8 @@ importers:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/keys': link:../../../common/keys
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
-      assert: 2.0.0
       debug: 4.3.4
       tiny-lru: 7.0.6
     devDependencies:
@@ -1676,12 +1673,12 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
       '@types/pump': ^1.1.0
-      assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
@@ -1695,8 +1692,8 @@ importers:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
       end-of-stream: 1.4.4
@@ -1717,12 +1714,12 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/util': workspace:*
       '@types/node': ^18.11.9
-      assert: ^2.0.0
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
       typescript: ^4.8.4
@@ -1733,10 +1730,10 @@ importers:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       isomorphic-ws: 4.0.1_ws@7.5.9
       ws: 7.5.9
     devDependencies:
@@ -1751,27 +1748,21 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@types/assert': ^1.5.4
+      '@dxos/node-std': workspace:*
       '@types/end-of-stream': ^1.4.0
       '@types/pump': ^1.1.0
-      assert: ^2.0.0
       end-of-stream: ^1.4.1
-      events: ^3.3.0
       ngraph.generators: ^19.0.1
       ngraph.graph: ^19.0.1
-      readable-stream: ^3.6.0
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
-      assert: 2.0.0
+      '@dxos/node-std': link:../../../common/node-std
       end-of-stream: 1.4.4
-      events: 3.3.0
       ngraph.generators: 19.3.1
       ngraph.graph: 19.1.0
-      readable-stream: 3.6.0
     devDependencies:
-      '@types/assert': 1.5.6
       '@types/end-of-stream': 1.4.1
       '@types/pump': 1.1.1
 
@@ -1787,6 +1778,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -1798,13 +1790,10 @@ importers:
       '@swc/core': ^1.3.21
       '@types/simple-peer': 9.11.3
       '@types/ws': ^7.4.0
-      assert: ^2.0.0
       earljs: ~0.1.10
-      events: ^3.3.0
       fast-check: ~3.3.0
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
-      readable-stream: ^3.6.0
       simple-peer: 9.11.0
       typescript: ^4.8.4
       ws: ^7.4.4
@@ -1819,17 +1808,15 @@ importers:
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/messaging': link:../messaging
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
       '@dxos/util': link:../../../common/util
       '@koush/wrtc': 0.5.3
-      assert: 2.0.0
-      events: 3.3.0
       isomorphic-ws: 4.0.1_ws@7.5.9
       nanomessage-rpc: 3.2.0
-      readable-stream: 3.6.0
       simple-peer: 9.11.0
       ws: 7.5.9
       xor-distance: 2.0.0
@@ -1849,18 +1836,14 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/network-generator': workspace:*
+      '@dxos/node-std': workspace:*
       '@types/pump': ^1.1.0
-      assert: ^2.0.0
-      events: ^3.3.0
       pump: ^3.0.0
-      readable-stream: ^3.6.0
     dependencies:
       '@dxos/log': link:../../../common/log
       '@dxos/network-generator': link:../network-generator
-      assert: 2.0.0
-      events: 3.3.0
+      '@dxos/node-std': link:../../../common/node-std
       pump: 3.0.0
-      readable-stream: 3.6.0
     devDependencies:
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@types/pump': 1.1.1
@@ -1872,10 +1855,10 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/mesh-protocol': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
       '@types/debug': ^4.1.7
-      assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       ngraph.graph: ^19.0.1
@@ -1887,8 +1870,8 @@ importers:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/keys': link:../../../common/keys
       '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
-      assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
       ngraph.graph: 19.1.0
@@ -1910,6 +1893,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/network-generator': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
@@ -1917,7 +1901,6 @@ importers:
       '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
       '@types/pify': ^3.0.2
-      assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
@@ -1931,8 +1914,8 @@ importers:
       '@dxos/keys': link:../../../common/keys
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/network-generator': link:../network-generator
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
       hypercore: 9.12.0
@@ -1958,19 +1941,19 @@ importers:
       '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
-      assert: ^2.0.0
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/messaging': link:../messaging
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/rpc': link:../rpc
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
     devDependencies:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/network-manager': link:../network-manager
@@ -1982,10 +1965,10 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
-      assert: ^2.0.0
       debug: ^4.3.3
       earljs: ~0.1.10
       typescript: ^4.8.4
@@ -1994,9 +1977,9 @@ importers:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/debug': link:../../../common/debug
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       debug: 4.3.4
     devDependencies:
       '@types/debug': 4.1.7
@@ -2041,15 +2024,14 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
       '@types/randombytes': ^2.0.0
       '@types/varint': 6.0.0
-      assert: ^2.0.0
       debug: ^4.3.3
       randombytes: ^2.1.0
-      readable-stream: ^3.6.0
       typescript: ^4.8.4
       varint: 6.0.0
       wait-for-expect: ^3.0.2
@@ -2058,13 +2040,12 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
       debug: 4.3.4
       randombytes: 2.1.0
-      readable-stream: 3.6.0
       varint: 6.0.0
     devDependencies:
       '@dxos/async': link:../../../common/async
@@ -2082,13 +2063,13 @@ importers:
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/teleport': workspace:*
       '@dxos/util': workspace:*
       add: ^2.0.6
-      assert: ^2.0.0
       fast-check: ~3.3.0
       typescript: ^4.8.4
     dependencies:
@@ -2098,11 +2079,11 @@ importers:
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
       '@dxos/util': link:../../../common/util
-      assert: 2.0.0
     devDependencies:
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/random-access-storage': link:../../../common/random-access-storage
@@ -2538,7 +2519,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^4.8.4
-      vite: 3.0.9
+      vite: 3.2.5
       vite-plugin-pwa: ^0.12.4
       workbox-window: ^6.5.4
     dependencies:
@@ -2585,11 +2566,11 @@ importers:
       '@types/faker': 5.5.9
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       faker: 5.5.3
       typescript: 4.9.3
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
@@ -2761,7 +2742,7 @@ importers:
       debug: ^4.3.3
       react: ^18.2.0
       react-dom: ^18.2.0
-      vite: 3.0.9
+      vite: 3.2.5
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -2785,7 +2766,7 @@ importers:
       '@types/debug': 4.1.7
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
 
   packages/experimental/client-testing:
     specifiers:
@@ -3323,20 +3304,20 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
+      '@dxos/node-std': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/react': ^18.0.21
-      assert: ^2.0.0
       debug: ^4.3.3
       react: ^18.2.0
       react-dom: ^18.2.0
     dependencies:
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/registry-client': link:../registry-client
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
       debug: 4.3.4
     devDependencies:
       '@babel/core': 7.20.2
@@ -3357,6 +3338,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@polkadot/api': 4.17.1
@@ -3370,14 +3352,12 @@ importers:
       '@types/faker': ^5.5.9
       '@types/fs-extra': ^9.0.4
       '@types/randombytes': ^2.0.0
-      assert: ^2.0.0
       bn.js: 4.12.0
       faker: ^5.5.3
       fs-extra: ^8.1.0
       multihashes: ^4.0.2
       protobufjs: ^6.9.0
       randombytes: ^2.1.0
-      util: ^0.12.4
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
@@ -3386,15 +3366,14 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
       bn.js: 4.12.0
       faker: 5.5.3
       fs-extra: 8.1.0
       multihashes: 4.0.3
       randombytes: 2.1.0
-      util: 0.12.5
     devDependencies:
       '@polkadot/api': 4.17.1
       '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
@@ -3584,6 +3563,7 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
@@ -3592,10 +3572,8 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@types/node': ^18.11.9
-      assert: ^2.0.0
       debug: ^4.3.3
       source-map-support: ^0.5.12
-      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-services': link:../client-services
@@ -3610,15 +3588,14 @@ importers:
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/model-factory': link:../../core/echo/model-factory
       '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
       debug: 4.3.4
-      util: 0.12.5
     devDependencies:
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/node': 18.11.9
@@ -3642,6 +3619,7 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
@@ -3656,7 +3634,6 @@ importers:
       '@types/memdown': ^3.0.0
       '@types/readable-stream': ^2.3.9
       abstract-leveldown: ~7.0.0
-      assert: ^2.0.0
       base-x: ~3.0.9
       jsondown: dxos/jsondown#main
       level-js: ^5.0.2
@@ -3678,6 +3655,7 @@ importers:
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/model-factory': link:../../core/echo/model-factory
       '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../core/protocols
@@ -3688,7 +3666,6 @@ importers:
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
-      assert: 2.0.0
       base-x: 3.0.9
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       level-js: 5.0.2
@@ -3705,6 +3682,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/errors': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -3712,7 +3690,6 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
-      assert: ^2.0.0
       boolean: ^3.0.1
       debug: ^4.3.3
       js-yaml: ^4.1.0
@@ -3724,9 +3701,9 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/errors': link:../errors
       '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
       boolean: 3.2.0
       debug: 4.3.4
       js-yaml: 4.1.0
@@ -3830,7 +3807,7 @@ importers:
       react-i18next: ^11.18.6
       storybook-dark-mode: ^1.1.2
       url-join: ^5.0.0
-      vite: 3.0.9
+      vite: 3.2.5
     dependencies:
       '@dxos/client': link:../client
       '@dxos/config': link:../config
@@ -3852,12 +3829,12 @@ importers:
       '@types/lodash.throttle': 4.1.7
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
 
   packages/sdk/vite-plugin:
     specifiers:
@@ -3865,13 +3842,13 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       rollup: ~2.77.3
       rollup-plugin-polyfill-node: ^0.10.2
-      vite: 3.0.9
+      vite: 3.2.5
     dependencies:
       '@dxos/config': link:../config
       '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       rollup: 2.77.3
       rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
 
   tools/apidoc:
     specifiers:
@@ -4187,7 +4164,7 @@ importers:
       typescript: ^4.8.4
       unist-builder: ^3.0.0
       unist-util-visit: ^4.1.0
-      vite: 3.0.9
+      vite: 3.2.5
       vite-plugin-fonts: ^0.6.0
     dependencies:
       '@dxos/assets': link:../../packages/apps/patterns/assets
@@ -4214,7 +4191,7 @@ importers:
       '@tailwindcss/typography': 0.5.8_tailwindcss@3.2.4
       '@types/d3': 7.4.0
       '@types/react': 18.0.25
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       autoprefixer: 10.4.13_postcss@8.4.19
       gray-matter: 4.0.3
       hastscript: 7.1.0
@@ -4233,8 +4210,8 @@ importers:
       typescript: 4.9.3
       unist-builder: 3.0.0
       unist-util-visit: 4.1.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-fonts: 0.6.0_vite@3.0.9
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite-plugin-fonts: 0.6.0_vite@3.2.5
 
   tools/protobuf-test:
     specifiers: {}
@@ -6351,7 +6328,6 @@ packages:
     cpu: [arm]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-loong64/0.14.54:
@@ -6368,7 +6344,6 @@ packages:
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@eslint/eslintrc/1.3.3:
@@ -6842,7 +6817,7 @@ packages:
       chalk: 4.1.2
     dev: true
 
-  /@joshwooding/vite-plugin-react-docgen-typescript/0.0.5_dj4nwrikenvddzukkcrk6s4yye:
+  /@joshwooding/vite-plugin-react-docgen-typescript/0.0.5_sqshdgy4e5w27wzvykvnubcgki:
     resolution: {integrity: sha512-HwAEj/vAP1+hzBfIv9DTCyg+1O0/LG48Up7j1RmJ+pFwjb/wRxzUBco4LqKFKe7SZ0M6IyASNh1oKP3yHnJElA==}
     peerDependencies:
       typescript: '>= 4.3.x'
@@ -6854,7 +6829,7 @@ packages:
       magic-string: 0.26.7
       react-docgen-typescript: 2.2.2_typescript@4.9.3
       typescript: 4.9.3
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
     dev: true
 
   /@jridgewell/gen-mapping/0.1.1:
@@ -7927,7 +7902,7 @@ packages:
       - typescript
     dev: true
 
-  /@nxext/vite/15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_72jgbdbplwgrg7p3c45cr4imya:
+  /@nxext/vite/15.0.0_yhihq6rejpjgfdxtvvnsfkkkhu_loodpz6s56js3gzuzfj2bnbkqa:
     resolution: {integrity: sha512-ydlLXQ12cs4x4O61+eEFMffuQwSiYzH/RtAEvKPYiFSNWnwXqCXjqxHHfATDOvXeETL6n+hvsR7zPPfTPIU2/Q==}
     peerDependencies:
       '@nrwl/workspace': ^15.0.10
@@ -7941,7 +7916,7 @@ packages:
       rxjs: 7.5.7
       rxjs-for-await: 1.0.0_rxjs@7.5.7
       tsconfig-paths: 4.1.0
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
     transitivePeerDependencies:
       - nx
       - typescript
@@ -10245,7 +10220,7 @@ packages:
       util-deprecate: 1.0.2
     dev: true
 
-  /@storybook/builder-vite/0.2.5_6efuvyuqezgf2bm6ziiofvjsya:
+  /@storybook/builder-vite/0.2.5_3cs5jofx2badj5pcet46rc3pxq:
     resolution: {integrity: sha512-0PktEaYsbR6gGE/YDkW/tI1VxVnaPNZpHGpiWfDU7c5hjCajWYzdFTgHOwcXT8tiTs+WN/rvoCPT2iAhSCcHIw==}
     peerDependencies:
       '@storybook/mdx2-csf': ^0.0.3
@@ -10263,14 +10238,14 @@ packages:
       vue-docgen-api:
         optional: true
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.0.5_dj4nwrikenvddzukkcrk6s4yye
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.0.5_sqshdgy4e5w27wzvykvnubcgki
       '@storybook/core-common': 6.5.13_lb6du3saekb5anf2gjv3wxj3oq
       '@storybook/mdx1-csf': 0.0.4_3lzqd2prgnu7gkxqqdmtvzna5u
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/node-logger': 6.5.13
       '@storybook/semver': 7.3.2
       '@storybook/source-loader': 6.5.13_biqbaboplfbrettd7655fr4n2y
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       ast-types: 0.14.2
       es-module-lexer: 0.9.3
       glob: 7.2.3
@@ -10279,7 +10254,7 @@ packages:
       react-docgen: 6.0.0-alpha.3
       slash: 3.0.0
       sveltedoc-parser: 4.2.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
     transitivePeerDependencies:
       - '@babel/core'
       - eslint
@@ -10292,7 +10267,7 @@ packages:
       - webpack-command
     dev: true
 
-  /@storybook/builder-vite/0.2.5_odxaoju6nsyufcqnyafyfkkyaq:
+  /@storybook/builder-vite/0.2.5_bjvhg32tlhty6xl43dmlej7nf4:
     resolution: {integrity: sha512-0PktEaYsbR6gGE/YDkW/tI1VxVnaPNZpHGpiWfDU7c5hjCajWYzdFTgHOwcXT8tiTs+WN/rvoCPT2iAhSCcHIw==}
     peerDependencies:
       '@storybook/mdx2-csf': ^0.0.3
@@ -10310,14 +10285,14 @@ packages:
       vue-docgen-api:
         optional: true
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.0.5_dj4nwrikenvddzukkcrk6s4yye
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.0.5_sqshdgy4e5w27wzvykvnubcgki
       '@storybook/core-common': 6.5.13_gpshdmfc4w665ax2rx6w5ydgtu
       '@storybook/mdx1-csf': 0.0.4_3lzqd2prgnu7gkxqqdmtvzna5u
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/node-logger': 6.5.13
       '@storybook/semver': 7.3.2
       '@storybook/source-loader': 6.5.13_biqbaboplfbrettd7655fr4n2y
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.5
       ast-types: 0.14.2
       es-module-lexer: 0.9.3
       glob: 7.2.3
@@ -10326,7 +10301,7 @@ packages:
       react-docgen: 6.0.0-alpha.3
       slash: 3.0.0
       sveltedoc-parser: 4.2.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
     transitivePeerDependencies:
       - '@babel/core'
       - eslint
@@ -12541,10 +12516,6 @@ packages:
     resolution: {integrity: sha512-HnYpAE1Y6kRyKM/XkEuiRQhTHvkzMBurTHnpFLYLBGPIylZNPs9jJcuOOYWxPLJCSEtmZT0Y8rHDokKN7rRTig==}
     dev: true
 
-  /@types/assert/1.5.6:
-    resolution: {integrity: sha512-Y7gDJiIqb9qKUHfBQYOWGngUpLORtirAVPuj/CWJrU2C6ZM4/y3XLwuwfGMF8s7QzW746LQZx23m0+1FSgjfug==}
-    dev: true
-
   /@types/babel__core/7.1.20:
     resolution: {integrity: sha512-PVb6Bg2QuscZ30FvOU7z4guG6c926D9YRvOxEaelzndpMsvP+YM74Q/dAFASpg2l6+XLalxSGxcq/lrgYWZtyQ==}
     dependencies:
@@ -13796,7 +13767,7 @@ packages:
     resolution: {integrity: sha512-sL/cEvJWAnClXw0wHk85/2L0G6Sj8UB0Ctc1TEMbKSsmpRosqhwj9gWgFRZSrBr2f9tiXISwNhCPmlfqUqyb9Q==}
     dev: true
 
-  /@vitejs/plugin-react/2.2.0_vite@3.0.9:
+  /@vitejs/plugin-react/2.2.0_vite@3.2.5:
     resolution: {integrity: sha512-FFpefhvExd1toVRlokZgxgy2JtnBOdp4ZDsq7ldCWaqGSGn9UhWMAVm/1lxPL14JfNS5yGz+s9yFrQY6shoStA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -13809,7 +13780,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.2
       magic-string: 0.26.7
       react-refresh: 0.14.0
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -16065,7 +16036,7 @@ packages:
     resolution: {integrity: sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==}
     dependencies:
       base64-js: 1.5.1
-      ieee754: 1.1.13
+      ieee754: 1.2.1
       isarray: 1.0.0
 
   /buffer/5.1.0:
@@ -19210,7 +19181,6 @@ packages:
     cpu: [x64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-android-arm64/0.14.54:
@@ -19227,7 +19197,6 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-darwin-64/0.14.54:
@@ -19244,7 +19213,6 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-darwin-arm64/0.14.54:
@@ -19261,7 +19229,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-freebsd-64/0.14.54:
@@ -19278,7 +19245,6 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-freebsd-arm64/0.14.54:
@@ -19295,7 +19261,6 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-32/0.14.54:
@@ -19312,7 +19277,6 @@ packages:
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-64/0.14.54:
@@ -19329,7 +19293,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-arm/0.14.54:
@@ -19346,7 +19309,6 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-arm64/0.14.54:
@@ -19363,7 +19325,6 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-mips64le/0.14.54:
@@ -19380,7 +19341,6 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-ppc64le/0.14.54:
@@ -19397,7 +19357,6 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-riscv64/0.14.54:
@@ -19414,7 +19373,6 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-s390x/0.14.54:
@@ -19431,7 +19389,6 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-netbsd-64/0.14.54:
@@ -19448,7 +19405,6 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-node-externals/1.5.0_esbuild@0.14.54:
@@ -19475,7 +19431,6 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-plugin-yaml/0.0.1:
@@ -19510,7 +19465,6 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-32/0.14.54:
@@ -19527,7 +19481,6 @@ packages:
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-64/0.14.54:
@@ -19544,7 +19497,6 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-arm64/0.14.54:
@@ -19561,7 +19513,6 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild/0.14.54:
@@ -19620,7 +19571,6 @@ packages:
       esbuild-windows-32: 0.15.18
       esbuild-windows-64: 0.15.18
       esbuild-windows-arm64: 0.15.18
-    dev: true
 
   /escalade/3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -22790,6 +22740,7 @@ packages:
 
   /ieee754/1.1.13:
     resolution: {integrity: sha512-4vf7I2LYV/HaWerSo3XmlMkp5eZ83i+/CDluXi/IGTs/O1sejBNhTtnxzmRZfvOUqj7lZjqHkeTvpgSFDlWZTg==}
+    dev: false
 
   /ieee754/1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
@@ -28431,6 +28382,7 @@ packages:
 
   /path-browserify/1.0.1:
     resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
+    dev: false
 
   /path-case/3.0.4:
     resolution: {integrity: sha512-qO4qCFjXqVTrcbPt/hQfhTQ+VhFsqNKOPtytgNKkKxSoEp3XPUQ8ObFuePylOIok5gjn69ry8XiULxCwot3Wfg==}
@@ -30772,7 +30724,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
-    dev: true
 
   /rope-sequence/1.3.3:
     resolution: {integrity: sha512-85aZYCxweiD5J8yTEbw+E6A27zSnLPNDL0WfPdw3YYodq7WjnTKo0q4dtyQ2gz23iPT8Q9CUyJtAaUNcTxRf5Q==}
@@ -31689,6 +31640,7 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
+    deprecated: Please use @jridgewell/sourcemap-codec instead
 
   /space-separated-tokens/1.1.5:
     resolution: {integrity: sha512-q/JSVd1Lptzhf5bkYm4ob4iWPjx0KiRe3sRFBNrVqbJkFaBm5vbbowy1mymoPNLRa52+oadOhJ+K49wsSeSjTA==}
@@ -34186,16 +34138,16 @@ packages:
       util-deprecate: 1.0.2
     dev: true
 
-  /vite-plugin-fonts/0.6.0_vite@3.0.9:
+  /vite-plugin-fonts/0.6.0_vite@3.2.5:
     resolution: {integrity: sha512-dV6nnLEju8k5EmvlBH6egxkVZ+rgc5zWsJr9+cNRXBMEDnpRGHcZPI260UEDNg2yB99wSTNER2eduEvZFbMIGw==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0
     dependencies:
       fast-glob: 3.2.12
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
     dev: true
 
-  /vite-plugin-pwa/0.12.8_f7se6o6eqkwcix4u3svh6mkvda:
+  /vite-plugin-pwa/0.12.8_v7patrztka3wxwjwwj7rxgk7ey:
     resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
@@ -34205,40 +34157,13 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
       - '@types/babel__core'
       - supports-color
     dev: true
-
-  /vite/3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e:
-    resolution: {integrity: sha512-waYABTM+G6DBTCpYAxvevpG50UOlZuynR0ckTK5PawNVt7ebX6X7wNXHaGIO6wYYFXSM7/WcuFuO2QzhBB6aMw==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    hasBin: true
-    peerDependencies:
-      less: '*'
-      sass: '*'
-      stylus: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      less:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      terser:
-        optional: true
-    dependencies:
-      esbuild: 0.14.54
-      postcss: 8.4.19
-      resolve: 1.22.1
-      rollup: 2.77.3
-    optionalDependencies:
-      fsevents: 2.3.2
-    patched: true
 
   /vite/3.1.8:
     resolution: {integrity: sha512-m7jJe3nufUbuOfotkntGFupinL/fmuTNuQmiVE7cH2IZMuf4UbfbGYMUT3jVWgGYuRVLY9j8NnrRqgw5rr5QTg==}
@@ -34266,6 +34191,74 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
+
+  /vite/3.2.5_magqryo643lwpdprn2fbusqud4:
+    resolution: {integrity: sha512-4mVEpXpSOgrssFZAOmGIr85wPHKvaDAcXqxVxVRZhljkJOMZi1ibLibzjLHzJvcok8BMguLc7g1W6W/GqZbLdQ==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': '>= 14'
+      less: '*'
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      esbuild: 0.15.18
+      postcss: 8.4.19
+      resolve: 1.22.1
+      rollup: 2.79.1
+    optionalDependencies:
+      fsevents: 2.3.2
+    patched: true
+
+  /vite/3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9:
+    resolution: {integrity: sha512-4mVEpXpSOgrssFZAOmGIr85wPHKvaDAcXqxVxVRZhljkJOMZi1ibLibzjLHzJvcok8BMguLc7g1W6W/GqZbLdQ==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': '>= 14'
+      less: '*'
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      '@types/node': 18.11.9
+      esbuild: 0.15.18
+      postcss: 8.4.19
+      resolve: 1.22.1
+      rollup: 2.79.1
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+    patched: true
 
   /vm-browserify/1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}

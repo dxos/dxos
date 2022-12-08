@@ -18,6 +18,9 @@
       "path": "../context"
     },
     {
+      "path": "../node-std"
+    },
+    {
       "path": "../util"
     }
   ]

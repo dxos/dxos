@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import { Hypercore } from 'hypercore';
 import { ProtocolStream } from 'hypercore-protocol';
+import assert from 'node:assert';
 import { PassThrough, Transform, Writable } from 'streamx';
 
 import { latch, Trigger } from '@dxos/async';
