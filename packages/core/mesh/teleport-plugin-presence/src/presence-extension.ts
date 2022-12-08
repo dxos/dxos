@@ -22,11 +22,18 @@ export type PresenceParams = {
    * Interval between announces.
    */
   announceInterval: number;
+};
 
+export type PresenceCallbacks = {
   /**
    * Callback to be called when a new announce is received.
    */
-  onAnnounce: (peerState: PeerState) => Promise<void>;
+  onAnnounce?: (peerState: PeerState) => Promise<void>;
+
+  /**
+   * Callback to be called when the extension is closed.
+   */
+  onClose?: (err?: Error) => Promise<void>;
 };
 
 /**
@@ -41,7 +48,7 @@ export class PresenceExtension implements TeleportExtension {
   private _rpc?: ProtoRpcPeer<ServiceBundle>;
   private _extensionContext?: ExtensionContext;
 
-  constructor(private readonly _params: PresenceParams) {}
+  constructor(private readonly _params: PresenceParams, private readonly _callbacks: PresenceCallbacks = {}) {}
 
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
@@ -56,7 +63,7 @@ export class PresenceExtension implements TeleportExtension {
       },
       handlers: {
         PresenceService: {
-          announce: async (peerState: PeerState) => await this._params.onAnnounce(peerState)
+          announce: async (peerState: PeerState) => await this._callbacks.onAnnounce?.(peerState)
         }
       },
       port: context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' })
@@ -71,11 +78,13 @@ export class PresenceExtension implements TeleportExtension {
     log('close', { err });
     await this._rpc?.close();
     this._sendInterval && clearInterval(this._sendInterval);
+    await this._callbacks.onClose?.(err);
     this.closed.wake();
   }
 
-  setConnections(connections: PublicKey[]) {
+  async setConnections(connections: PublicKey[]) {
     this._params.connections = connections;
+    await this._sendAnnounce();
   }
 
   async sendAnnounce(peerState: PeerState) {
