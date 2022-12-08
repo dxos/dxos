@@ -34,7 +34,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
   const errors = await Promise.all(
     options.platforms.map(async (platform) => {
-      const extension = options.format === 'esm' || platform !== 'node' ? '.mjs' : '.cjs';
+      const format = options.format ?? (platform !== 'node' ? 'esm' : 'cjs');
+      const extension = format === 'esm' ? '.mjs' : '.cjs';
       const outdir = `${options.outputPath}/${platform}`;
 
       const start = Date.now();
@@ -42,7 +43,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         entryPoints: options.entryPoints,
         outdir,
         outExtension: { '.js': extension },
-        format: options.format ?? platform !== 'node' ? 'esm' : 'cjs',
+        format,
         write: true,
         sourcemap: options.sourcemap,
         metafile: options.metafile,
@@ -54,16 +55,21 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           'this-is-undefined-in-esm': 'info'
         },
         plugins: [
+          // TODO(wittjosiah): Factor out plugin and use for running browser tests as well.
           {
             name: 'node-external',
             setup: ({ onResolve }) => {
               onResolve({ filter: /^node:.*/ }, (args) => {
-                const browserMapped = packageJson.browser?.[args.path];
-                if (!browserMapped) {
+                if (platform !== 'browser') {
                   return null;
                 }
 
-                return { external: true, path: browserMapped };
+                if (!packageJson.dependencies['@dxos/node-std']) {
+                  return { errors: [{ text: 'Missing @dxos/node-std dependency.' }] };
+                }
+
+                const module = args.path.replace(/^node:/, '');
+                return { external: true, path: `@dxos/node-std/${module}` };
               });
             }
           },

@@ -8,8 +8,6 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
-    "node:util": "util",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -20,8 +18,7 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "assert": "^2.0.0",
-    "util": "^0.12.4"
+    "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*"

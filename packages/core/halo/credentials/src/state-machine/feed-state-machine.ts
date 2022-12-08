@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/keys';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';

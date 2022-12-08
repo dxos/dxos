@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event, sleep } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
