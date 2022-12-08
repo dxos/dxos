@@ -48,7 +48,7 @@ export class PresenceExtension implements TeleportExtension {
           announce: async (peerState: PeerState) => await this._params.onAnnounce(peerState)
         }
       },
-      port: context.createPort('rpc', { contentType: 'application/presence, messageType="dxos.rpc.Message"' }) // TODO(mykola): Different contentType?
+      port: context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' })
     });
     await this._rpc.open();
     await this._sendAnnounce();
