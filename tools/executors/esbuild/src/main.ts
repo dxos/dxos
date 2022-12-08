@@ -5,7 +5,7 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 
 import { LogTransformer } from './log-transform-plugin';
@@ -28,6 +28,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   }
 
   const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
+  const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
   const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
 
@@ -55,13 +56,16 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         },
         plugins: [
           // TODO(wittjosiah): Factor out plugin and use for running browser tests as well.
-          //   Ideally the package should have some way of knowing if it's misconfigured (missing @dxos/node-std dep).
           {
             name: 'node-external',
             setup: ({ onResolve }) => {
               onResolve({ filter: /^node:.*/ }, (args) => {
                 if (platform !== 'browser') {
                   return null;
+                }
+
+                if (!packageJson.dependencies['@dxos/node-std']) {
+                  return { errors: [{ text: 'Missing @dxos/node-std dependency.' }] };
                 }
 
                 const module = args.path.replace(/^node:/, '');
