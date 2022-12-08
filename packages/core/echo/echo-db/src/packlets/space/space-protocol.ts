@@ -21,7 +21,7 @@ import {
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
-import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-plugin-replicator';
+import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
 import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
