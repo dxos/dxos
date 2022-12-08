@@ -119,6 +119,21 @@ export class Presence {
     return [...this._connections.keys()].map(({ remotePeerId }) => remotePeerId);
   }
 
+  private _sendAnnounces() {
+    return Promise.all(
+      [...this._connections.entries()].map(([{ localPeerId }, presenceExtension]) =>
+        presenceExtension
+          .sendAnnounce({
+            peerId: localPeerId,
+            connections: this._getConnections(),
+            messageId: PublicKey.random(),
+            timestamp: new Date()
+          })
+          .catch((err) => log.catch(err))
+      )
+    );
+  }
+
   private _saveNewState(peerState: PeerState) {
     const oldPeerState = this._peerStates.get(peerState.peerId);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < peerState.timestamp.getTime()) {
@@ -138,20 +153,5 @@ export class Presence {
         log.catch(err);
       }
     });
-  }
-
-  private _sendAnnounces() {
-    return Promise.all(
-      [...this._connections.entries()].map(([{ localPeerId }, presenceExtension]) =>
-        presenceExtension
-          .sendAnnounce({
-            peerId: localPeerId,
-            connections: this._getConnections(),
-            messageId: PublicKey.random(),
-            timestamp: new Date()
-          })
-          .catch((err) => log.catch(err))
-      )
-    );
   }
 }
