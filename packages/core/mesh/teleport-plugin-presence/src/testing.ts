@@ -26,8 +26,8 @@ export class TestBuilder {
       peerId1: agent1.peerId,
       peerId2: agent2.peerId
     });
-    await agent1.addConnection(connection12);
-    await agent2.addConnection(connection21);
+    agent1.addConnection(connection12);
+    agent2.addConnection(connection21);
   }
 
   async disconnectAgents(agent1: TestAgent, agent2: TestAgent) {
@@ -58,10 +58,10 @@ export class TestAgent {
     this.presence = new Presence({ localPeerId: peerId, announceInterval, offlineTimeout });
   }
 
-  async addConnection(connection: Connection) {
+  addConnection(connection: Connection) {
     assert(connection.teleport);
     this._connections.set(connection.teleport!.remotePeerId, connection);
-    await this.presence.createExtension({ teleport: connection.teleport! });
+    this.presence.createExtension({ teleport: connection.teleport! });
   }
 
   async deleteConnection(remotePeerId: PublicKey) {

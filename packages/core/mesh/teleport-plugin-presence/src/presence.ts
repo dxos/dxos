@@ -62,7 +62,7 @@ export class Presence {
     );
   }
 
-  async createExtension({ teleport }: { teleport: Teleport }): Promise<PresenceExtension> {
+  createExtension({ teleport }: { teleport: Teleport }): PresenceExtension {
     assert(
       teleport.localPeerId.equals(this._params.localPeerId),
       'Teleport local peer id does not match presence local peer id.'
