@@ -33,7 +33,7 @@ export class Presence {
   public readonly updated = new Event<void>();
   private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _peerStates = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);
-  private readonly _presenceExtensions = new ComplexMap<
+  private readonly _connections = new ComplexMap<
     {
       localPeerId: PublicKey;
       remotePeerId: PublicKey;
@@ -58,17 +58,12 @@ export class Presence {
     });
     {
       // Connection management.
-      this._presenceExtensions.set(
-        { localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId },
-        extension
-      );
+      this._connections.set({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId }, extension);
       this._reconcileConnections();
       extension.closed.wait().then(
         () => {
-          if (
-            this._presenceExtensions.has({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId })
-          ) {
-            this._presenceExtensions.delete({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId });
+          if (this._connections.has({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId })) {
+            this._connections.delete({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId });
           }
         },
         (err) => {
@@ -92,7 +87,7 @@ export class Presence {
   }
 
   private _getConnections(): PublicKey[] {
-    return [...this._presenceExtensions.keys()].map(({ remotePeerId }) => remotePeerId);
+    return [...this._connections.keys()].map(({ remotePeerId }) => remotePeerId);
   }
 
   private _saveNewState(peerState: PeerState) {
@@ -104,7 +99,7 @@ export class Presence {
   }
 
   private _propagateAnnounce(peerState: PeerState) {
-    this._presenceExtensions.forEach(async (presenceExtension, { localPeerId, remotePeerId }) => {
+    this._connections.forEach(async (presenceExtension, { localPeerId, remotePeerId }) => {
       if (localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId)) {
         return;
       }
@@ -117,7 +112,7 @@ export class Presence {
   }
 
   private _reconcileConnections() {
-    this._presenceExtensions.forEach((presenceExtension) => {
+    this._connections.forEach((presenceExtension) => {
       presenceExtension.setConnections(this._getConnections());
     });
   }
