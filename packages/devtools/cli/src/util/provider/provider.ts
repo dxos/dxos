@@ -13,6 +13,7 @@ export interface KubeDeployOptions {
   region?: string;
   memory?: number;
   dev: boolean;
+  accessToken?: string
 }
 
 export type KUBE = {

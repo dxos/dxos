@@ -37,7 +37,7 @@ export class DigitalOceanProvider implements Provider {
   }
 
   async deploy(options: KubeDeployOptions) {
-    const { hostname: name, region = DEFAULT_REGION, memory = DEFAULT_MEMORY, dev } = options;
+    const { hostname: name, region = DEFAULT_REGION, memory = DEFAULT_MEMORY, dev, accessToken } = options;
 
     const dropletId = await this.getDropletIdFromName(name);
     if (dropletId) {
@@ -64,7 +64,18 @@ export class DigitalOceanProvider implements Provider {
              docker.list:
                source: deb [arch=amd64] https://download.docker.com/linux/ubuntu $RELEASE stable
                keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-
+        ` + (accessToken ?
+        `
+         write_files:
+           - path: /root/.kube/acl/seed.yaml
+             content: |
+               - entity: "${accessToken}"
+                 capabilities:
+                   - 100
+                 subject: "*"
+        ` : '')
+        +
+        `
          runcmd:
            - curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
            - chmod +x /usr/local/bin/docker-compose

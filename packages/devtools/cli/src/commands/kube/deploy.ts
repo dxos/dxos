@@ -21,6 +21,9 @@ export default class Deploy extends BaseCommand {
       description: 'Cloud Provider',
       default: DEFAULT_PROVIDER
     }),
+    accessToken: Flags.string({
+      description: 'Access token for seeding admin identity'
+    }),
     dev: Flags.boolean({
       description: 'Deploy latest version from dev channel',
       default: false
@@ -29,12 +32,12 @@ export default class Deploy extends BaseCommand {
 
   async run(): Promise<any> {
     const { flags } = await this.parse(Deploy);
-    const { hostname, provider: providerName, dev } = flags;
+    const { hostname, provider: providerName, dev, accessToken } = flags;
 
     try {
       return await this.execWithClient(async (client: Client) => {
         if (!client.halo.profile) {
-          this.log('Halo profile should be initialized first.');
+          throw new Error('Halo profile should be initialized first.');
         }
         // TODO(egorgripasov): HALO <-> KUBE integration.
         let provider: Provider;
@@ -50,7 +53,8 @@ export default class Deploy extends BaseCommand {
 
         const kube = await provider.deploy({
           hostname,
-          dev
+          dev,
+          accessToken
         });
 
         printKubes([kube]);

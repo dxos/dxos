@@ -18,7 +18,7 @@ export default class Publish extends BaseCommand {
       description: 'Path to dx.yml'
     }),
     accessToken: Flags.string({
-      description: 'Access token for publishing.'
+      description: 'Access token for publishing'
     }),
     skipExisting: Flags.boolean({
       description: 'Do not update content on KUBE if version already exists',
