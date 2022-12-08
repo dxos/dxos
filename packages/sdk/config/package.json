@@ -27,7 +27,6 @@
     "@dxos/errors": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@rollup/plugin-alias": "^4.0.2",
     "assert": "^2.0.0",
     "boolean": "^3.0.1",
     "debug": "^4.3.3",
