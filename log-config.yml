@@ -6,7 +6,8 @@ formatter:
 filter:
   - warn
   - info
-  - swarm.ts:debug
+  # - swarm.ts:debug
+  - client:debug
   # - feed-wrapper:debug
   # - service-host:debug
   # - client:debug
@@ -15,4 +16,4 @@ filter:
   # - member:debug
   # - deprecated/space:debug
   # - space-proxy:debug
-  - stress:debug
+  # - stress:debug
