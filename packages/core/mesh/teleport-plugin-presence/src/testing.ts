@@ -72,7 +72,7 @@ export class TestAgent {
     }
   }
 
-  waitForAgentsToBeOnline(agents: TestAgent[], timeout = 1000) {
+  waitForExactAgentsOnline(agents: TestAgent[], timeout = 1000) {
     assert(agents.length > 0, 'At least one agent is required.'); // We will wait for .updated event from the agent itself. And with zero connections it will never happen.
     return asyncTimeout(
       this.presence.updated.waitFor(() => {
