@@ -12,18 +12,19 @@ import {
   InvitationsOptions,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
-import { inspectObject } from '@dxos/debug';
+import { failUndefined, inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
 import { HaloProxy } from './halo-proxy';
-import { Space, SpaceProxy } from './space-proxy';
+import { Space, SpaceProxy, SPACE_ITEM_TYPE } from './space-proxy';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -118,18 +119,6 @@ export class EchoProxy implements Echo {
           //     this._spacesChanged.emit(); // Trigger for `querySpaces()` when a space is updated.
           //   }
           // });
-
-          // const spaceStream = this._serviceProvider.services.SpaceService.subscribeToSpace({ space_key: space.public_key });
-          // spaceStream.subscribe(async ({ space }) => {
-          //   if (!space) {
-          //     return;
-          //   }
-
-          //   spaceProxy._processSpaceUpdate(space);
-          //   this._spacesChanged.emit();
-          // });
-
-          // this._subscriptions.add(() => spaceStream.close());
         } else {
           this._spaces.get(space.publicKey)!._processSpaceUpdate(space);
         }
@@ -162,17 +151,15 @@ export class EchoProxy implements Echo {
   async createSpace(): Promise<Space> {
     const space = await this._serviceProvider.services.SpaceService.createSpace();
 
-    // TODO(burdon): Extract pattern (similar to waitForCondition).
-    const proxy = new Trigger<SpaceProxy>();
-    const unsubscribe = this._spacesInitialized.on((spaceKey) => {
-      if (spaceKey.equals(space.publicKey)) {
-        const spaceProxy = this._spaces.get(space.publicKey)!;
-        proxy.wake(spaceProxy);
-      }
+    await this._spacesInitialized.waitForCondition(() => {
+      return this._spaces.has(space.publicKey);
     });
+    const spaceProxy = this._spaces.get(space.publicKey) ?? failUndefined();
 
-    const spaceProxy = await proxy.wait();
-    unsubscribe();
+    await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
+    await spaceProxy.database.createItem<ObjectModel>({ type: SPACE_ITEM_TYPE });
+    await spaceProxy.initialize(); // Idempotent.
+
     return spaceProxy;
   }
 

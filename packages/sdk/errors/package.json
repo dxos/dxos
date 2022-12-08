@@ -14,8 +14,6 @@
   "files": [
     "dist"
   ],
-  "dependencies": {},
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

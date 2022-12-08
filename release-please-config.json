@@ -288,7 +288,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/teleport-plugin-replicator/package.json",
+          "path": "packages/core/mesh/teleport-extension-replicator/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -529,6 +529,11 @@
         {
           "type": "json",
           "path": "tools/ridoculous/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/swc-log-plugin/package.json",
           "jsonpath": "$.version"
         },
         {

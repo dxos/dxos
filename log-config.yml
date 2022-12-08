@@ -4,15 +4,16 @@ formatter:
 # processor: debug
 
 filter:
-  # - warn
+  - warn
+  - info
+  # - swarm.ts:debug
+  - client:debug
   # - feed-wrapper:debug
   # - service-host:debug
   # - client:debug
-  - warn
-  - info
   # - replicator:debug
   # - teleport:debug
   # - member:debug
   # - deprecated/space:debug
   # - space-proxy:debug
-  - stress:debug
+  # - stress:debug

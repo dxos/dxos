@@ -3,10 +3,12 @@
 //
 
 import assert from 'node:assert';
+import { Plugin } from 'rollup';
 
 import { definitions } from './definitions';
+import { ConfigPluginOpts } from './types';
 
-export function ConfigPlugin(options = {}) {
+export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
   const dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : options.dynamic ?? false;
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
@@ -18,9 +20,9 @@ export function ConfigPlugin(options = {}) {
     name: 'dxos-config',
     transform(code, module) {
       // Based on https://github.com/mmirca/rollup-plugin-entry-code-injector/blob/6ce979fcea31a75537c00748fbe25ed14f340624/commonjs/index.js.
-      if (this.getModuleInfo(module).isEntry) {
+      if (this.getModuleInfo(module)?.isEntry) {
         return contents + code;
       }
     }
   };
-}
+};

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, synchronized, Trigger } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
@@ -91,6 +91,12 @@ export class SpaceProxy implements Space {
   private _isActive: boolean;
   private _item?: Item<ObjectModel>; // TODO(burdon): Rename.
 
+  /**
+   * @internal
+   * To unlock internal operations that should happen after the database is initialized but before initialize() completes.
+   */
+  public _databaseInitialized = new Trigger();
+
   // prettier-ignore
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -172,14 +178,10 @@ export class SpaceProxy implements Space {
     this._initialized = true;
 
     await this.database.initialize();
+    log('database ready');
+    this._databaseInitialized.wake();
 
-    // Get or create properties item.
-    const result = this.database.select({ type: SPACE_ITEM_TYPE }).exec();
-    if (result.entities.length) {
-      this._item = result.entities[0] as Item<ObjectModel>;
-    } else {
-      this._item = await this.database.createItem<ObjectModel>({ type: SPACE_ITEM_TYPE });
-    }
+    this._item = await this.database.waitForItem<ObjectModel>({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
     log('initialized');

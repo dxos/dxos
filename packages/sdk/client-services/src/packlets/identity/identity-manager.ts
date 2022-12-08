@@ -144,13 +144,13 @@ export class IdentityManager {
   }
 
   /**
-   * Accept an existing identity. Expects it's device key to be authorized.
+   * Accept an existing identity. Expects it's device key to be authorized (now or later).
    */
   async acceptIdentity(params: JoinIdentityParams) {
     log('accepting identity', { params });
     assert(!this._identity, 'Identity already exists.');
 
-    const identity = await this._constructIdentity({
+    const identityRecord: IdentityRecord = {
       identityKey: params.identityKey,
       deviceKey: await this._keyring.createKey(),
       haloSpace: {
@@ -159,10 +159,12 @@ export class IdentityManager {
         writeControlFeedKey: await this._keyring.createKey(),
         writeDataFeedKey: await this._keyring.createKey()
       }
-    });
+    };
+    const identity = await this._constructIdentity(identityRecord);
 
     await identity.open();
     this._identity = identity;
+    await this._metadataStore.setIdentityRecord(identityRecord);
     this.stateUpdate.emit();
     return identity;
   }
