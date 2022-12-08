@@ -9,9 +9,6 @@
   "author": "info@dxos.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
-    "node:events": "events",
-    "node:stream": "readable-stream",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -23,15 +20,12 @@
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "assert": "^2.0.0",
+    "@dxos/node-std": "workspace:*",
     "end-of-stream": "^1.4.1",
-    "events": "^3.3.0",
     "ngraph.generators": "^19.0.1",
-    "ngraph.graph": "^19.0.1",
-    "readable-stream": "^3.6.0"
+    "ngraph.graph": "^19.0.1"
   },
   "devDependencies": {
-    "@types/assert": "^1.5.4",
     "@types/end-of-stream": "^1.4.0",
     "@types/pump": "^1.1.0"
   },

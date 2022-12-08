@@ -14,7 +14,8 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "rollup": "~2.77.3",
     "rollup-plugin-polyfill-node": "^0.10.2",
-    "vite": "3.0.9"
+    "vite": "3.2.5",
+    "vite-plugin-node-polyfills": "^0.5.0"
   },
   "publishConfig": {
     "access": "public"

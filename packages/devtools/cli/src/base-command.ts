@@ -3,7 +3,7 @@
 //
 
 import { Command, Config as OclifConfig, Flags } from '@oclif/core';
-import assert from 'assert';
+import assert from 'node:assert';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';

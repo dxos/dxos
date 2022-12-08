@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event, EventSubscriptions, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';

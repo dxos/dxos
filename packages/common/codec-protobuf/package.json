@@ -7,8 +7,6 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
-    "node:path": "path-browserify",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -19,15 +17,14 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "debug": "^4.3.3",
     "lodash.merge": "^4.6.2"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "@types/lodash.merge": "^4.6.6",
-    "path-browserify": "^1.0.1",
     "protobufjs": "^6.9.0"
   },
   "publishConfig": {

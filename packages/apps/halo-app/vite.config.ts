@@ -7,6 +7,7 @@ import { existsSync, mkdir, mkdirSync, rm, rmSync, writeFileSync } from 'node:fs
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import Inspect from 'vite-plugin-inspect';
 
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
@@ -94,6 +95,7 @@ export default defineConfig({
     }
   },
   plugins: [
+    Inspect({ build: true, outputDir: '.vite-inspect' }),
     dxosPlugin(),
     themePlugin({
       content: [

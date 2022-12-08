@@ -1,0 +1,48 @@
+{
+  "sourceRoot": "packages/common/node-std/src",
+  "projectType": "library",
+  "targets": {
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "bundlePackages": [
+          "assert",
+          "events",
+          "path-browserify",
+          "readable-stream",
+          "util"
+        ],
+        "entryPoints": [
+          "packages/common/node-std/src/assert.js",
+          "packages/common/node-std/src/events.js",
+          "packages/common/node-std/src/path.js",
+          "packages/common/node-std/src/stream.js",
+          "packages/common/node-std/src/util.js"
+        ],
+        "format": "cjs",
+        "outputPath": "packages/common/node-std/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/node-std/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';

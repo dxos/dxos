@@ -10,6 +10,10 @@ import { join } from 'path';
 
 import { LogTransformer } from './log-transform-plugin';
 
+const processOutput = (output: string) => {
+  return output.replace(/__require\(/g, 'require(');
+};
+
 export interface EsbuildExecutorOptions {
   bundle: boolean;
   bundlePackages: string[];
@@ -34,15 +38,18 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
   const errors = await Promise.all(
     options.platforms.map(async (platform) => {
-      const extension = options.format === 'esm' || platform !== 'node' ? '.mjs' : '.cjs';
+      const format = options.format ?? (platform !== 'node' ? 'esm' : 'cjs');
+      const extension = format === 'esm' ? '.mjs' : '.cjs';
       const outdir = `${options.outputPath}/${platform}`;
+
+      console.log({ options, format, extension });
 
       const start = Date.now();
       const result = await build({
         entryPoints: options.entryPoints,
         outdir,
         outExtension: { '.js': extension },
-        format: options.format ?? platform !== 'node' ? 'esm' : 'cjs',
+        format,
         write: true,
         sourcemap: options.sourcemap,
         metafile: options.metafile,
@@ -54,19 +61,47 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           'this-is-undefined-in-esm': 'info'
         },
         plugins: [
+          // TODO(wittjosiah): Factor out plugin and use for running browser tests as well.
+          //   Ideally the package should have some way of knowing if it's misconfigured (missing @dxos/node-std dep).
           {
             name: 'node-external',
             setup: ({ onResolve }) => {
               onResolve({ filter: /^node:.*/ }, (args) => {
-                const browserMapped = packageJson.browser?.[args.path];
-                if (!browserMapped) {
+                if (platform !== 'browser') {
                   return null;
                 }
 
-                return { external: true, path: browserMapped };
+                const module = args.path.replace(/^node:/, '');
+                return { external: true, path: `@dxos/node-std/${module}` };
+                // const browserMapped = packageJson.browser?.[args.path];
+                // if (!browserMapped) {
+                //   return null;
+                // }
+
+                // return { external: true, path: browserMapped };
               });
             }
           },
+          // ...(platform === 'browser'
+          //   ? [
+          //       {
+          //         name: 'fix-require',
+          //         setup: ({ onEnd }) => {
+          //           onEnd(async (args) => {
+          //             if (!args.metafile) {
+          //               throw new Error('Metafile is required for fixRequirePlugin');
+          //             }
+
+          //             for (const file of Object.keys(args.metafile.outputs)) {
+          //               const content = await readFile(file, 'utf-8');
+          //               const fixedContent = processOutput(content);
+          //               await writeFile(file, fixedContent, 'utf-8');
+          //             }
+          //           });
+          //         }
+          //       } as Plugin
+          //     ]
+          //   : []),
           nodeExternalsPlugin({
             packagePath,
             allowList: options.bundlePackages

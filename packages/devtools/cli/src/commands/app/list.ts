@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { BaseCommand } from '../../base-command';
 import { PublisherRpcPeer, printModules } from '../../util';
