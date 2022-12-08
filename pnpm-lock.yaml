@@ -765,6 +765,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -777,6 +778,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/keys': link:../../common/keys
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
