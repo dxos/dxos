@@ -14,7 +14,7 @@ import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
 
 export type PresenceParams = {
   connections: PublicKey[];
-  resendAnnounce: number;
+  announceInterval: number;
   onAnnounce: (peerState: PeerState) => Promise<void>;
 };
 
@@ -52,7 +52,7 @@ export class PresenceExtension implements TeleportExtension {
     });
     await this._rpc.open();
     await this._sendAnnounce();
-    this._sendInterval = setInterval(() => this._sendAnnounce(), this._params.resendAnnounce);
+    this._sendInterval = setInterval(() => this._sendAnnounce(), this._params.announceInterval);
     this.opened.wake();
   }
 

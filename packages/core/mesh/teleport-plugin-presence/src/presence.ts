@@ -12,7 +12,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import { PresenceExtension } from './presence-extension';
 
 export type PresenceManagerParams = {
-  resendAnnounce: number;
+  announceInterval: number;
   offlineTimeout: number;
 };
 
@@ -33,7 +33,7 @@ export class Presence {
   createExtension({ teleport }: { teleport: Teleport }): PresenceExtension {
     const extension = new PresenceExtension({
       connections: [...this._getConnections()],
-      resendAnnounce: this._params.resendAnnounce,
+      announceInterval: this._params.announceInterval,
       onAnnounce: async (peerState) => {
         if (this._receivedMessages.has(peerState.messageId)) {
           return;

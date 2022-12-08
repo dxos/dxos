@@ -21,7 +21,7 @@ describe('PresenceExtension', () => {
     const received1: PeerState[] = [];
     const extension1 = new PresenceExtension({
       connections: [peer2.peerId],
-      resendAnnounce: 50,
+      announceInterval: 50,
       onAnnounce: async (peerState: PeerState) => {
         received1.push(peerState);
       }
@@ -31,7 +31,7 @@ describe('PresenceExtension', () => {
     const received2: PeerState[] = [];
     const extension2 = new PresenceExtension({
       connections: [peer1.peerId],
-      resendAnnounce: 50,
+      announceInterval: 50,
       onAnnounce: async (peerState: PeerState) => {
         received2.push(peerState);
       }
@@ -50,7 +50,7 @@ describe('PresenceExtension', () => {
     const [announced3Times, inc] = latch({ count: 3 });
     const extension1 = new PresenceExtension({
       connections: [peer2.peerId],
-      resendAnnounce: 25,
+      announceInterval: 25,
       onAnnounce: async (peerState: PeerState) => {
         inc();
       }
@@ -59,7 +59,7 @@ describe('PresenceExtension', () => {
 
     const extension2 = new PresenceExtension({
       connections: [peer1.peerId],
-      resendAnnounce: 25,
+      announceInterval: 25,
       onAnnounce: async (peerState: PeerState) => {}
     });
     peer2.teleport!.addExtension('dxos.mesh.teleport.presence', extension2);
