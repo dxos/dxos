@@ -38,7 +38,7 @@ export const remarkPluginLayout = (options: Options) => (tree: any) => {
     // TODO(burdon): Show pager based on front matter (ESM nodes?)
     // TODO(burdon): Access parsed front matter from plugin?
     const { data: meta } = matter(`---\n${node.value}\n---`) as Matter;
-    console.log('Frontmatter:', JSON.stringify(meta));
+    // console.log('Frontmatter:', JSON.stringify(meta));
 
     // NOTE: Assumes all content follows frontmatter node.
     const children = tree.children.splice(1, tree.children.length - 1);
@@ -48,42 +48,52 @@ export const remarkPluginLayout = (options: Options) => (tree: any) => {
 };
 
 /**
- * Create DOM layout.
+ * Create DOM layout based on frontmatter.
  */
 const createLayout = (meta: Meta, children: Node[]) => {
   const { layout, title, subheading } = meta;
-  const page = (body: Node) => {
-    const parts = [body];
-    if (title) {
-      parts.unshift(
+  const props = {
+    // Frontmatter for parsing by container.
+    'data-frontmatter': JSON.stringify(meta)
+  };
+
+  const withHeader = (body: Node) => {
+    if (!title) {
+      return body;
+    }
+
+    return div(
+      {
+        ...props,
+        className: 'flex flex-col flex-1 overflow-hidden'
+      },
+      [
         div({ className: 'flex flex-col pl-2 pr-2 pt-1 pb-1 bg-slide-header' }, [
           u('heading', { depth: 1 }, [u('text', title ?? '')]),
           u('heading', { depth: 3 }, [u('text', subheading ?? '')])
-        ])
-      );
-    }
-
-    return div({ className: 'flex flex-col flex-1 overflow-hidden' }, parts);
+        ]),
+        body
+      ]
+    );
   };
 
   switch (layout) {
     case 'full': {
-      return div({ className: 'flex flex-1 flex-col' }, children);
+      return div({ ...props, className: 'flex flex-col flex-1' }, children);
     }
 
-    // TODO(burdon): n columns.
+    // TODO(burdon): Generalize to n columns.
     case 'col-2': {
       const sections = getSections(children);
       const columns = sections.map((section) => div({ className: 'flex flex-col m-2' }, section));
       // prettier-ignore
-      return page(div({ className: 'flex flex-1' }, [
-        // TODO(burdon): No margin if full bleed image.
+      return withHeader(div({ className: 'flex flex-1' }, [
         div({ className: 'flex flex-1 grid grid-cols-2' }, columns)
       ]));
     }
 
     default: {
-      return page(div({ className: 'flex flex-1 flex-col m-2' }, children));
+      return withHeader(div({ className: 'flex flex-col flex-1 m-2' }, children));
     }
   }
 };
