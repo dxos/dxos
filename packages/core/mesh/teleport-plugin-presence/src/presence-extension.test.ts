@@ -13,7 +13,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { PresenceExtension } from './presence-extension';
 
 describe('PresenceExtension', () => {
-  test('Two peers announce each other', async () => {
+  test('Two peers discover each other', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
     const { peer1, peer2 } = await builder.createPipedPeers();
