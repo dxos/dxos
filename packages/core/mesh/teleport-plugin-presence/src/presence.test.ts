@@ -5,7 +5,7 @@
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { TestAgent, TestBuilder } from './testing';
+import { TestBuilder } from './testing';
 
 describe('Presence', () => {
   test('Announce', async () => {
@@ -100,13 +100,6 @@ describe('Presence', () => {
   test('Four peers connected', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
-
-    const checkFirstAgentConnections = (agents: TestAgent[]) => {
-      const connections = new Set(agent1.presence.getPeersOnline().map((state) => state.peerId.toHex()));
-      const expectedConnections = new Set(agents.map((agent) => agent.peerId.toHex()));
-      const eqSets = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((value) => b.has(value));
-      return connections.size === agents.length && eqSets(connections, expectedConnections);
-    };
 
     // Initialize 3 peers.
     const agent1 = builder.createAgent({ announceInterval: 10 });
