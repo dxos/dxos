@@ -22,7 +22,7 @@ export type PresenceParams = {
  * Sending presence pings between a set peers for a single teleport session.
  */
 export class PresenceExtension implements TeleportExtension {
-  public readonly opened = new Trigger();
+  private readonly opened = new Trigger();
   public readonly closed = new Trigger();
 
   private _sendInterval?: NodeJS.Timeout;
