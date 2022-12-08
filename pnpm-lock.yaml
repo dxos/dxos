@@ -3729,6 +3729,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/errors': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -3747,6 +3748,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
       '@dxos/errors': link:../errors
+      '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
