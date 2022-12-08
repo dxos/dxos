@@ -1383,7 +1383,7 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/teleport': workspace:*
-      '@dxos/teleport-plugin-replicator': workspace:*
+      '@dxos/teleport-extension-replicator': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -1415,7 +1415,7 @@ importers:
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/rpc': link:../../mesh/rpc
       '@dxos/teleport': link:../../mesh/teleport
-      '@dxos/teleport-plugin-replicator': link:../../mesh/teleport-plugin-replicator
+      '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
@@ -2073,7 +2073,7 @@ importers:
       typescript: 4.9.3
       wait-for-expect: 3.0.2
 
-  packages/core/mesh/teleport-plugin-replicator:
+  packages/core/mesh/teleport-extension-replicator:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/context': workspace:*
