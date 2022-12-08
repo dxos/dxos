@@ -6,21 +6,20 @@ import { pipeline } from 'node:stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
 
 import { Teleport } from './teleport';
 
 export class TestBuilder {
-  private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
+  private readonly _peers = new Array<TestPeer>();
 
   createPeer(peerId?: PublicKey): TestPeer {
-    const agent = new TestPeer(peerId);
-    this._peers.set(agent.peerId, agent);
-    return agent;
+    const peer = new TestPeer(peerId);
+    this._peers.push(peer);
+    return peer;
   }
 
   async destroy() {
-    await Promise.all([...this._peers.values()].map((agent) => agent.destroy()));
+    await Promise.all(this._peers.map((agent) => agent.destroy()));
   }
 
   /**
