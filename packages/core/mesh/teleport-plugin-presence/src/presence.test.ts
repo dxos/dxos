@@ -20,10 +20,10 @@ describe('Presence', () => {
     await builder.connectAgents(agent1, agent2);
 
     await waitForExpect(() => {
-      expect(agent1.presence.getPeerStates().length).toEqual(1);
-      expect(agent2.presence.getPeerStates().length).toEqual(1);
-      expect(agent1.presence.getPeerStates()[0].peerId).toEqual(agent2.peerId);
-      expect(agent2.presence.getPeerStates()[0].peerId).toEqual(agent1.peerId);
+      expect(agent1.presence.getPeers().length).toEqual(1);
+      expect(agent2.presence.getPeers().length).toEqual(1);
+      expect(agent1.presence.getPeers()[0].peerId).toEqual(agent2.peerId);
+      expect(agent2.presence.getPeers()[0].peerId).toEqual(agent1.peerId);
     });
   });
 
@@ -63,8 +63,8 @@ describe('Presence', () => {
 
     // Check if first and third peers "see" each other.
     await waitForExpect(() => {
-      expect(agent1.presence.getPeerStatesOnline().some((state) => state.peerId.equals(agent3.peerId))).toBeTruthy();
-      expect(agent3.presence.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
+      expect(agent1.presence.getPeersOnline().some((state) => state.peerId.equals(agent3.peerId))).toBeTruthy();
+      expect(agent3.presence.getPeersOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
     }, 500);
   });
 
@@ -87,8 +87,8 @@ describe('Presence', () => {
 
     // Check if first and third peers "see" each other.
     await waitForExpect(() => {
-      expect(agent1.presence.getPeerStatesOnline().some((state) => state.peerId.equals(agent3.peerId))).toBeTruthy();
-      expect(agent3.presence.getPeerStatesOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
+      expect(agent1.presence.getPeersOnline().some((state) => state.peerId.equals(agent3.peerId))).toBeTruthy();
+      expect(agent3.presence.getPeersOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
     }, 500);
 
     // Third peer got disconnected.
@@ -96,8 +96,8 @@ describe('Presence', () => {
 
     // Check if third peer is offline for first and second peer.
     await waitForExpect(() => {
-      expect(agent1.presence.getPeerStatesOnline().every((state) => !state.peerId.equals(agent3.peerId))).toBeTruthy();
-      expect(agent2.presence.getPeerStatesOnline().every((state) => !state.peerId.equals(agent3.peerId))).toBeTruthy();
+      expect(agent1.presence.getPeersOnline().every((state) => !state.peerId.equals(agent3.peerId))).toBeTruthy();
+      expect(agent2.presence.getPeersOnline().every((state) => !state.peerId.equals(agent3.peerId))).toBeTruthy();
     }, 500);
   });
 
@@ -128,13 +128,13 @@ describe('Presence', () => {
     await builder.connectAgents(agent4, agent1);
 
     const checkFirstAgentConnections = (agents: TestAgent[]) => {
-      const connections = new Set(agent1.presence.getPeerStatesOnline().map((state) => state.peerId.toHex()));
+      const connections = new Set(agent1.presence.getPeersOnline().map((state) => state.peerId.toHex()));
       const expectedConnections = new Set(agents.map((agent) => agent.peerId.toHex()));
       expect(connections).toEqual(expectedConnections);
     };
 
     await waitForExpect(() => {
-      expect(agent1.presence.getPeerStatesOnline().length).toEqual(3);
+      expect(agent1.presence.getPeersOnline().length).toEqual(3);
       checkFirstAgentConnections([agent2, agent3, agent4]);
     });
 
@@ -146,7 +146,7 @@ describe('Presence', () => {
     // fourth peer  --  third peer
 
     await waitForExpect(() => {
-      expect(agent1.presence.getPeerStatesOnline().length).toEqual(3);
+      expect(agent1.presence.getPeersOnline().length).toEqual(3);
       checkFirstAgentConnections([agent2, agent3, agent4]);
     });
 
@@ -158,9 +158,9 @@ describe('Presence', () => {
     // fourth peer      third peer
 
     await waitForExpect(() => {
-      expect(agent1.presence.getPeerStatesOnline().length).toEqual(2);
+      expect(agent1.presence.getPeersOnline().length).toEqual(2);
       checkFirstAgentConnections([agent2, agent3]);
-      expect(agent4.presence.getPeerStatesOnline().length).toEqual(0);
+      expect(agent4.presence.getPeersOnline().length).toEqual(0);
     });
 
     // Connect again first and fourth peer.
@@ -171,7 +171,7 @@ describe('Presence', () => {
     // fourth peer  --  third peer
 
     await waitForExpect(() => {
-      expect(agent1.presence.getPeerStatesOnline().length).toEqual(3);
+      expect(agent1.presence.getPeersOnline().length).toEqual(3);
       checkFirstAgentConnections([agent2, agent3, agent4]);
     });
   });

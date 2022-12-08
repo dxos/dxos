@@ -97,12 +97,12 @@ export class Presence {
     return extension;
   }
 
-  getPeerStates(): PeerState[] {
+  getPeers(): PeerState[] {
     return [...this._peerStates.values()];
   }
 
-  getPeerStatesOnline(): PeerState[] {
-    return this.getPeerStates().filter(
+  getPeersOnline(): PeerState[] {
+    return this.getPeers().filter(
       (peerState) => peerState.timestamp.getTime() > Date.now() - this._params.offlineTimeout
     );
   }
