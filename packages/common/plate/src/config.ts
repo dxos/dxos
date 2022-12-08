@@ -1,8 +1,9 @@
 import path from 'path';
-import { LoadModuleOptions, safeLoadModule } from './loadModule';
-import { TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
-import { InquirableZodType, InquirableZodObject, InquirablePrimitive } from './zodInquire';
 import { z } from 'zod';
+import { logger } from './logger';
+import { TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
+import { LoadModuleOptions, safeLoadModule } from './loadModule';
+import { InquirableZodType, InquirableZodObject, InquirablePrimitive } from './zodInquire';
 
 export type Config<TInput extends InquirableZodType = InquirableZodType> = {
   include?: (string | RegExp)[];
@@ -11,7 +12,7 @@ export type Config<TInput extends InquirableZodType = InquirableZodType> = {
   inherits?: string;
 };
 
-const exclude = [/\/.t\//, ...TEMPLATE_FILE_IGNORE];
+const exclude = [/\.t\//, /node_modules/, ...TEMPLATE_FILE_IGNORE];
 
 export const defaultConfig: Config = {
   exclude
@@ -19,6 +20,7 @@ export const defaultConfig: Config = {
 
 export type LoadConfigOptions = LoadModuleOptions & {
   verbose?: boolean;
+  overrides?: Partial<Config>;
 };
 
 export const CONFIG_FILE_BASENAME = 'config.t';
@@ -48,8 +50,8 @@ export const mergeConfigs = (a: Config, b: Config) => {
     ...a,
     ...b
   };
-  if (include?.length) merged.include = [...(a.include ?? []), ...include];
-  if (exclude?.length) merged.exclude = [...(a.exclude ?? []), ...exclude];
+  if (include?.length || a.include?.length) merged.include = [...(a.include ?? []), ...(include ?? [])];
+  if (exclude?.length || a.exclude?.length) merged.exclude = [...(a.exclude ?? []), ...(exclude ?? [])];
   return merged as Config;
 };
 
@@ -57,15 +59,25 @@ export const loadConfig = async (templateDirectory: string, options?: LoadConfig
   const tsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.ts');
   const jsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.js');
   const { verbose } = { ...options };
+  const debug = logger(!!verbose);
   try {
     const module = (await safeLoadModule(tsName, options))?.module ?? (await safeLoadModule(jsName, options))?.module;
     const config = { ...module?.default };
+    debug('loaded config', config);
     const inherited = config.inherits
       ? await loadConfig(path.resolve(templateDirectory, config.inherits), options)
       : undefined;
-    return mergeConfigs(defaultConfig, inherited ? mergeConfigs(inherited, config) : config);
+    debug('inherited config', inherited);
+    debug('default config', defaultConfig);
+    const merged = [defaultConfig, inherited, config, options?.overrides].reduce(
+      (memo, next) => (next ? mergeConfigs(memo, next) : memo),
+      {}
+    );
+    debug('merged config', merged);
+    return merged;
   } catch (err: any) {
     if (verbose) console.warn('exception while loading template config:\n' + err.toString());
+    debug('default config', defaultConfig);
     return defaultConfig;
   }
 };

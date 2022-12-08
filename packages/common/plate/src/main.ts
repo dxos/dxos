@@ -10,7 +10,6 @@ import { hideBin } from 'yargs/helpers';
 import { catFiles } from './catFiles';
 
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
-import { includeExclude } from './includeExclude';
 import { logger } from './logger';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
@@ -50,14 +49,12 @@ const main = async () => {
     .option('verbose', {
       description: 'Print debugging information',
       requiresArg: false,
-      type: 'boolean',
-      alias: ['-v']
+      type: 'boolean'
     })
     .option('quiet', {
       description: 'Print nothing to standard out',
       requiresArg: false,
       type: 'boolean',
-      alias: ['-v'],
       default: false
     })
     .option('overwrite', {
@@ -68,30 +65,34 @@ const main = async () => {
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
-      handler: async ({
-        _,
-        dry,
-        input,
-        output = process.cwd(),
-        include,
-        exclude,
-        sequential = false,
-        verbose = false,
-        quiet = false,
-        overwrite
-      }: {
-        _: string[];
-        dry: boolean;
-        input: string;
-        output: string;
-        include: string;
-        exclude: string;
-        sequential: boolean;
-        verbose: boolean;
-        overwrite: boolean;
-        quiet: boolean;
-      }) => {
+      handler: async (
+        args: {
+          _: string[];
+          dry: boolean;
+          input: string;
+          output: string;
+          include: string;
+          exclude: string;
+          sequential: boolean;
+          verbose: boolean;
+          overwrite: boolean;
+          quiet: boolean;
+        } & any
+      ) => {
         const tstart = Date.now();
+        const {
+          _,
+          dry,
+          input,
+          output = process.cwd(),
+          include,
+          exclude,
+          sequential = false,
+          verbose = false,
+          quiet = false,
+          overwrite,
+          ...restArgs
+        } = args;
         const debug = logger(verbose);
         const info = logger(!quiet);
         const [template] = _;
@@ -99,15 +100,10 @@ const main = async () => {
           throw new Error('no template specified');
         }
         debug('working directory', process.cwd());
-        debug(
-          `executing template '${template}'...`,
-          include ? `include: '${include}'` : '',
-          exclude ? ` exclude: '${exclude}'` : ''
-        );
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: input ? await catFiles(input?.split(',')) : {},
+          input: input ? await catFiles(input?.split(',')) : { ...restArgs },
           parallel: !sequential,
           verbose,
           overwrite,
@@ -115,22 +111,22 @@ const main = async () => {
           exclude: exclude?.split(',')
         });
         let written = 0;
-        if (!dry) {
-          debug(`output folder: ${output}`);
-          info(`template generated ${files.length} files ...`);
-          await Promise.all(
-            files.map(async (f) => {
-              try {
-                const saved = await f.save();
-                info(saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
-                written += saved ? 1 : 0;
-              } catch (err: any) {
-                info('failed', f?.shortDescription(process.cwd()) ?? f);
-                info(err);
-              }
-            })
-          );
-        }
+        
+        debug(`output folder: ${output}`);
+        info(`template generated ${files.length} files ...`);
+        await Promise.all(
+          files.map(async (f) => {
+            try {
+              const saved = !dry && await f.save();
+              info(saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
+              written += saved ? 1 : 0;
+            } catch (err: any) {
+              info('failed', f?.shortDescription(process.cwd()) ?? f);
+              info(err);
+            }
+          })
+        );
+        
         const now = Date.now();
         info(`wrote ${written} files [${fmtDuration(now - tstart)}]`);
       }

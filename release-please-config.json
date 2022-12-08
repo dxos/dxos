@@ -58,21 +58,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/bare-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/hello-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/tasks-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/todomvc/package.json",
           "jsonpath": "$.version"
         },
