@@ -1,7 +1,7 @@
 const { mergeConfig } = require('vite');
-const { resolve } = require('path');
+const { resolve } = require('node:path');
 
-const { themePlugin } = require('../dist/src/plugin.js');
+const { themePlugin } = require('../dist/plugin/node/plugin.cjs');
 
 module.exports = {
   stories: [
