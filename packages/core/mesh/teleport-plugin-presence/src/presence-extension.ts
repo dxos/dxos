@@ -28,6 +28,7 @@ export type PresenceCallbacks = {
  */
 export class PresenceExtension implements TeleportExtension {
   private readonly _opened = new Trigger();
+  private _closed = false;
 
   private _sendInterval?: NodeJS.Timeout;
 
@@ -61,9 +62,13 @@ export class PresenceExtension implements TeleportExtension {
     await this._rpc?.close();
     this._sendInterval && clearInterval(this._sendInterval);
     await this._callbacks.onClose?.(err);
+    this._closed = true;
   }
 
   async sendAnnounce(peerState: PeerState) {
+    if (this._closed) {
+      return;
+    }
     await this._opened.wait();
     assert(this._rpc, 'RPC not initialized');
     await this._rpc.rpc.PresenceService.announce(peerState);
