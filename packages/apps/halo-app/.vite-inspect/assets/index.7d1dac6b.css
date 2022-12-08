@@ -1,0 +1,979 @@
+/* BASICS */
+
+.CodeMirror {
+  /* Set height, width, borders, and global font properties here */
+  font-family: monospace;
+  height: 300px;
+  color: black;
+  direction: ltr;
+}
+
+/* PADDING */
+
+.CodeMirror-lines {
+  padding: 4px 0; /* Vertical padding around content */
+}
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like {
+  padding: 0 4px; /* Horizontal padding of content */
+}
+
+.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  background-color: white; /* The little square between H and V scrollbars */
+}
+
+/* GUTTER */
+
+.CodeMirror-gutters {
+  border-right: 1px solid #ddd;
+  background-color: #f7f7f7;
+  white-space: nowrap;
+}
+.CodeMirror-linenumbers {}
+.CodeMirror-linenumber {
+  padding: 0 3px 0 5px;
+  min-width: 20px;
+  text-align: right;
+  color: #999;
+  white-space: nowrap;
+}
+
+.CodeMirror-guttermarker { color: black; }
+.CodeMirror-guttermarker-subtle { color: #999; }
+
+/* CURSOR */
+
+.CodeMirror-cursor {
+  border-left: 1px solid black;
+  border-right: none;
+  width: 0;
+}
+/* Shown when moving in bi-directional text */
+.CodeMirror div.CodeMirror-secondarycursor {
+  border-left: 1px solid silver;
+}
+.cm-fat-cursor .CodeMirror-cursor {
+  width: auto;
+  border: 0 !important;
+  background: #7e7;
+}
+.cm-fat-cursor div.CodeMirror-cursors {
+  z-index: 1;
+}
+.cm-fat-cursor .CodeMirror-line::selection,
+.cm-fat-cursor .CodeMirror-line > span::selection, 
+.cm-fat-cursor .CodeMirror-line > span > span::selection { background: transparent; }
+.cm-fat-cursor .CodeMirror-line::-moz-selection,
+.cm-fat-cursor .CodeMirror-line > span::-moz-selection,
+.cm-fat-cursor .CodeMirror-line > span > span::-moz-selection { background: transparent; }
+.cm-fat-cursor { caret-color: transparent; }
+@-moz-keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+@-webkit-keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+@keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+
+/* Can style cursor different in overwrite (non-insert) mode */
+.CodeMirror-overwrite .CodeMirror-cursor {}
+
+.cm-tab { display: inline-block; text-decoration: inherit; }
+
+.CodeMirror-rulers {
+  position: absolute;
+  left: 0; right: 0; top: -50px; bottom: 0;
+  overflow: hidden;
+}
+.CodeMirror-ruler {
+  border-left: 1px solid #ccc;
+  top: 0; bottom: 0;
+  position: absolute;
+}
+
+/* DEFAULT THEME */
+
+.cm-s-default .cm-header {color: blue;}
+.cm-s-default .cm-quote {color: #090;}
+.cm-negative {color: #d44;}
+.cm-positive {color: #292;}
+.cm-header, .cm-strong {font-weight: bold;}
+.cm-em {font-style: italic;}
+.cm-link {text-decoration: underline;}
+.cm-strikethrough {text-decoration: line-through;}
+
+.cm-s-default .cm-keyword {color: #708;}
+.cm-s-default .cm-atom {color: #219;}
+.cm-s-default .cm-number {color: #164;}
+.cm-s-default .cm-def {color: #00f;}
+.cm-s-default .cm-variable,
+.cm-s-default .cm-punctuation,
+.cm-s-default .cm-property,
+.cm-s-default .cm-operator {}
+.cm-s-default .cm-variable-2 {color: #05a;}
+.cm-s-default .cm-variable-3, .cm-s-default .cm-type {color: #085;}
+.cm-s-default .cm-comment {color: #a50;}
+.cm-s-default .cm-string {color: #a11;}
+.cm-s-default .cm-string-2 {color: #f50;}
+.cm-s-default .cm-meta {color: #555;}
+.cm-s-default .cm-qualifier {color: #555;}
+.cm-s-default .cm-builtin {color: #30a;}
+.cm-s-default .cm-bracket {color: #997;}
+.cm-s-default .cm-tag {color: #170;}
+.cm-s-default .cm-attribute {color: #00c;}
+.cm-s-default .cm-hr {color: #999;}
+.cm-s-default .cm-link {color: #00c;}
+
+.cm-s-default .cm-error {color: #f00;}
+.cm-invalidchar {color: #f00;}
+
+.CodeMirror-composing { border-bottom: 2px solid; }
+
+/* Default styles for common addons */
+
+div.CodeMirror span.CodeMirror-matchingbracket {color: #0b0;}
+div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #a22;}
+.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }
+.CodeMirror-activeline-background {background: #e8f2ff;}
+
+/* STOP */
+
+/* The rest of this file contains styles related to the mechanics of
+   the editor. You probably shouldn't touch them. */
+
+.CodeMirror {
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+.CodeMirror-scroll {
+  overflow: scroll !important; /* Things will break if this is overridden */
+  /* 50px is the magic margin used to hide the element's real scrollbars */
+  /* See overflow: hidden in .CodeMirror */
+  margin-bottom: -50px; margin-right: -50px;
+  padding-bottom: 50px;
+  height: 100%;
+  outline: none; /* Prevent dragging from highlighting the element */
+  position: relative;
+  z-index: 0;
+}
+.CodeMirror-sizer {
+  position: relative;
+  border-right: 50px solid transparent;
+}
+
+/* The fake, visible scrollbars. Used to force redraw during scrolling
+   before actual scrolling happens, thus preventing shaking and
+   flickering artifacts. */
+.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  position: absolute;
+  z-index: 6;
+  display: none;
+  outline: none;
+}
+.CodeMirror-vscrollbar {
+  right: 0; top: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+.CodeMirror-hscrollbar {
+  bottom: 0; left: 0;
+  overflow-y: hidden;
+  overflow-x: scroll;
+}
+.CodeMirror-scrollbar-filler {
+  right: 0; bottom: 0;
+}
+.CodeMirror-gutter-filler {
+  left: 0; bottom: 0;
+}
+
+.CodeMirror-gutters {
+  position: absolute; left: 0; top: 0;
+  min-height: 100%;
+  z-index: 3;
+}
+.CodeMirror-gutter {
+  white-space: normal;
+  height: 100%;
+  display: inline-block;
+  vertical-align: top;
+  margin-bottom: -50px;
+}
+.CodeMirror-gutter-wrapper {
+  position: absolute;
+  z-index: 4;
+  background: none !important;
+  border: none !important;
+}
+.CodeMirror-gutter-background {
+  position: absolute;
+  top: 0; bottom: 0;
+  z-index: 4;
+}
+.CodeMirror-gutter-elt {
+  position: absolute;
+  cursor: default;
+  z-index: 4;
+}
+.CodeMirror-gutter-wrapper ::selection { background-color: transparent }
+.CodeMirror-gutter-wrapper ::-moz-selection { background-color: transparent }
+
+.CodeMirror-lines {
+  cursor: text;
+  min-height: 1px; /* prevents collapsing before first draw */
+}
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like {
+  /* Reset some styles that the rest of the page might have set */
+  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;
+  border-width: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+  white-space: pre;
+  word-wrap: normal;
+  line-height: inherit;
+  color: inherit;
+  z-index: 2;
+  position: relative;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-variant-ligatures: contextual;
+  font-variant-ligatures: contextual;
+}
+.CodeMirror-wrap pre.CodeMirror-line,
+.CodeMirror-wrap pre.CodeMirror-line-like {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
+.CodeMirror-linebackground {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 0;
+}
+
+.CodeMirror-linewidget {
+  position: relative;
+  z-index: 2;
+  padding: 0.1px; /* Force widget margins to stay inside of the container */
+}
+
+.CodeMirror-widget {}
+
+.CodeMirror-rtl pre { direction: rtl; }
+
+.CodeMirror-code {
+  outline: none;
+}
+
+/* Force content-box sizing for the elements where we expect it */
+.CodeMirror-scroll,
+.CodeMirror-sizer,
+.CodeMirror-gutter,
+.CodeMirror-gutters,
+.CodeMirror-linenumber {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
+.CodeMirror-measure {
+  position: absolute;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.CodeMirror-cursor {
+  position: absolute;
+  pointer-events: none;
+}
+.CodeMirror-measure pre { position: static; }
+
+div.CodeMirror-cursors {
+  visibility: hidden;
+  position: relative;
+  z-index: 3;
+}
+div.CodeMirror-dragcursors {
+  visibility: visible;
+}
+
+.CodeMirror-focused div.CodeMirror-cursors {
+  visibility: visible;
+}
+
+.CodeMirror-selected { background: #d9d9d9; }
+.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }
+.CodeMirror-crosshair { cursor: crosshair; }
+.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }
+.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }
+
+.cm-searching {
+  background-color: #ffa;
+  background-color: rgba(255, 255, 0, .4);
+}
+
+/* Used to force a border model for a node */
+.cm-force-border { padding-right: .1px; }
+
+@media print {
+  /* Hide the cursor when printing */
+  .CodeMirror div.CodeMirror-cursors {
+    visibility: hidden;
+  }
+}
+
+/* See issue #2901 */
+.cm-tab-wrap-hack:after { content: ''; }
+
+/* Help users use markselection to safely style text background */
+span.CodeMirror-selectedtext { background: none; }
+
+.diff-added {
+background-color:rgba(74,222,128,0.15);
+}
+.diff-removed {
+background-color:rgba(248,113,113,0.15);
+}
+.diff-added-inline {
+background-color:rgba(74,222,128,0.3);
+}
+.diff-removed-inline {
+background-color:rgba(248,113,113,0.3);
+}
+/*
+1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)
+2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)
+*/
+
+*,
+::before,
+::after {
+  box-sizing: border-box; /* 1 */
+  border-width: 0; /* 2 */
+  border-style: solid; /* 2 */
+  border-color: #e5e7eb; /* 2 */
+}
+
+/*
+1. Use a consistent sensible line-height in all browsers.
+2. Prevent adjustments of font size after orientation changes in iOS.
+3. Use a more readable tab size.
+4. Use the user's configured `sans` font-family by default.
+*/
+
+html {
+  line-height: 1.5; /* 1 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+  -moz-tab-size: 4; /* 3 */
+  tab-size: 4; /* 3 */
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; /* 4 */
+}
+
+/*
+1. Remove the margin in all browsers.
+2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.
+*/
+
+body {
+  margin: 0; /* 1 */
+  line-height: inherit; /* 2 */
+}
+
+/*
+1. Add the correct height in Firefox.
+2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)
+3. Ensure horizontal rules are visible by default.
+*/
+
+hr {
+  height: 0; /* 1 */
+  color: inherit; /* 2 */
+  border-top-width: 1px; /* 3 */
+}
+
+/*
+Add the correct text decoration in Chrome, Edge, and Safari.
+*/
+
+abbr:where([title]) {
+  text-decoration: underline dotted;
+}
+
+/*
+Remove the default font size and weight for headings.
+*/
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/*
+Reset links to optimize for opt-in styling instead of opt-out.
+*/
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/*
+Add the correct font weight in Edge and Safari.
+*/
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+/*
+1. Use the user's configured `mono` font family by default.
+2. Correct the odd `em` font sizing in all browsers.
+*/
+
+code,
+kbd,
+samp,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; /* 1 */
+  font-size: 1em; /* 2 */
+}
+
+/*
+Add the correct font size in all browsers.
+*/
+
+small {
+  font-size: 80%;
+}
+
+/*
+Prevent `sub` and `sup` elements from affecting the line height in all browsers.
+*/
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+/*
+1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)
+2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)
+3. Remove gaps between table borders by default.
+*/
+
+table {
+  text-indent: 0; /* 1 */
+  border-color: inherit; /* 2 */
+  border-collapse: collapse; /* 3 */
+}
+
+/*
+1. Change the font styles in all browsers.
+2. Remove the margin in Firefox and Safari.
+3. Remove default padding in all browsers.
+*/
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit; /* 1 */
+  font-size: 100%; /* 1 */
+  font-weight: inherit; /* 1 */
+  line-height: inherit; /* 1 */
+  color: inherit; /* 1 */
+  margin: 0; /* 2 */
+  padding: 0; /* 3 */
+}
+
+/*
+Remove the inheritance of text transform in Edge and Firefox.
+*/
+
+button,
+select {
+  text-transform: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Remove default button styles.
+*/
+
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  -webkit-appearance: button; /* 1 */
+  background-color: transparent; /* 2 */
+  background-image: none; /* 2 */
+}
+
+/*
+Use the modern Firefox focus style for all focusable elements.
+*/
+
+:-moz-focusring {
+  outline: auto;
+}
+
+/*
+Remove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)
+*/
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/*
+Add the correct vertical alignment in Chrome and Firefox.
+*/
+
+progress {
+  vertical-align: baseline;
+}
+
+/*
+Correct the cursor style of increment and decrement buttons in Safari.
+*/
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+/*
+1. Correct the odd appearance in Chrome and Safari.
+2. Correct the outline style in Safari.
+*/
+
+[type='search'] {
+  -webkit-appearance: textfield; /* 1 */
+  outline-offset: -2px; /* 2 */
+}
+
+/*
+Remove the inner padding in Chrome and Safari on macOS.
+*/
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Change font properties to `inherit` in Safari.
+*/
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button; /* 1 */
+  font: inherit; /* 2 */
+}
+
+/*
+Add the correct display in Chrome and Safari.
+*/
+
+summary {
+  display: list-item;
+}
+
+/*
+Removes the default spacing and border for appropriate elements.
+*/
+
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
+  margin: 0;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+Prevent resizing textareas horizontally by default.
+*/
+
+textarea {
+  resize: vertical;
+}
+
+/*
+1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)
+2. Set the default placeholder color to the user's configured gray 400 color.
+*/
+
+input::placeholder,
+textarea::placeholder {
+  opacity: 1; /* 1 */
+  color: #9ca3af; /* 2 */
+}
+
+/*
+Set the default cursor for buttons.
+*/
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+/*
+Make sure disabled buttons don't get the pointer cursor.
+*/
+:disabled {
+  cursor: default;
+}
+
+/*
+1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)
+2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)
+   This can trigger a poorly considered lint error in some tools but is included by design.
+*/
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block; /* 1 */
+  vertical-align: middle; /* 2 */
+}
+
+/*
+Constrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)
+*/
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html.dark {
+  background: #121212;
+}
+
+.btn {
+  display:inline-block;cursor:pointer;border-radius:0.25rem;--un-bg-opacity:1;background-color:rgba(13,148,136,var(--un-bg-opacity));padding-left:1rem;padding-right:1rem;padding-top:0.25rem;padding-bottom:0.25rem;--un-text-opacity:1;color:rgba(255,255,255,var(--un-text-opacity));
+}.btn:disabled{cursor:default;--un-bg-opacity:1;background-color:rgba(75,85,99,var(--un-bg-opacity));opacity:0.5;}.btn:hover{--un-bg-opacity:1;background-color:rgba(15,118,110,var(--un-bg-opacity));}
+
+.icon-btn {
+  display:inline-block;cursor:pointer;user-select:none;opacity:0.75;outline:2px solid transparent !important;outline-offset:2px !important;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms;transition-duration:200ms;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.9em;
+  height: 1.2em;
+}.icon-btn:hover{--un-text-opacity:1;color:rgba(13,148,136,var(--un-text-opacity));opacity:1;}
+
+.CodeMirror {
+  height: max-content !important;
+  font-family: var(--cm-font-family) !important;
+  font-size: 13px !important;
+}
+
+.CodeMirror-scroll {
+  overflow-y: hidden !important;
+  overflow-x: auto !important;
+}
+:root {
+  --cm-scheme: light;
+
+  /* Colors */
+  --cm-foreground: #6e6e6e;
+  --cm-background: #f4f4f4;
+
+  /* Tokens */
+  --cm-comment: #a8a8a8;
+  --cm-string: #555555;
+  --cm-literal: #333333;
+  --cm-keyword: #000000;
+  --cm-function: #4f4f4f;
+  --cm-deleted: #333333;
+  --cm-class: #333333;
+  --cm-builtin: #757575;
+  --cm-property: #333333;
+  --cm-namespace: #4f4f4f;
+  --cm-punctuation: #ababab;
+  --cm-decorator: var(--cm-class);
+  --cm-operator: var(--cm-punctuation);
+  --cm-number: var(--cm-literal);
+  --cm-boolean: var(--cm-literal);
+  --cm-variable: var(--cm-literal);
+  --cm-constant: var(--cm-literal);
+  --cm-symbol: var(--cm-literal);
+  --cm-interpolation: var(--cm-literal);
+  --cm-selector: var(--cm-keyword);
+  --cm-keyword-control: var(--cm-keyword);
+  --cm-regex: var(--cm-string);
+  --cm-json-property: var(--cm-property);
+  --cm-inline-background: var(--cm-background);
+
+  /* Token Styles */
+  --cm-comment-style: italic;
+  --cm-url-decoration: underline;
+
+  /* Extension */
+  --cm-line-number: #a5a5a5;
+  --cm-line-number-gutter: #333333;
+  --cm-line-highlight-background: #eeeeee;
+  --cm-selection-background: #aaaaaa;
+  --cm-marker-color: var(--cm-foreground);
+  --cm-marker-opacity: 0.4;
+  --cm-marker-font-size: 0.8em;
+
+  /* Font */
+  --cm-font-size: 1em;
+  --cm-line-height: 1.5em;
+  --cm-font-family: monospace;
+  --cm-inline-font-size: var(--cm-font-size);
+  --cm-block-font-size: var(--cm-font-size);
+  
+  /* Sizing */
+  --cm-tab-size: 2;
+  
+  --cm-block-padding-x: 1em;
+  --cm-block-padding-y: 1em;
+  --cm-block-margin-x: 0;
+  --cm-block-margin-y: 0.5em;
+  --cm-block-radius: 0.3em;
+  --cm-inline-padding-x: 0.3em;
+  --cm-inline-padding-y: 0.1em;
+  --cm-inline-radius: 0.3em;
+}
+
+.cm-s-vars.CodeMirror {
+  background-color: var(--cm-background);
+  color: var(--cm-foreground);
+}
+
+.cm-s-vars .CodeMirror-gutters {
+  background: var(--cm-line-number-gutter);
+  color: var(--cm-line-number);
+  border: none;
+}
+
+.cm-s-vars .CodeMirror-guttermarker,
+.cm-s-vars .CodeMirror-guttermarker-subtle,
+.cm-s-vars .CodeMirror-linenumber {
+  color: var(--cm-line-number);
+}
+
+.cm-s-vars div.CodeMirror-selected {
+  background: var(--cm-selection-background);
+}
+
+.cm-s-vars.CodeMirror-focused div.CodeMirror-selected {
+  background: var(--cm-selection-background);
+}
+
+.cm-s-vars .CodeMirror-line::selection,
+.cm-s-vars .CodeMirror-line>span::selection,
+.cm-s-vars .CodeMirror-line>span>span::selection {
+  background: var(--cm-selection-background);
+}
+
+.cm-s-vars .CodeMirror-line::-moz-selection,
+.cm-s-vars .CodeMirror-line>span::-moz-selection,
+.cm-s-vars .CodeMirror-line>span>span::-moz-selection {
+  background: var(--cm-selection-background);
+}
+
+.cm-s-vars .CodeMirror-activeline-background {
+  background: var(--cm-line-highlight-background);
+}
+
+.cm-s-vars .cm-keyword {
+  color: var(--cm-keyword);
+}
+
+.cm-s-vars .cm-operator {
+  color: var(--cm-punctuation);
+}
+
+.cm-s-vars .cm-variable,
+.cm-s-vars .cm-variable-2,
+.cm-s-vars .cm-variable-3,
+.cm-s-vars .cm-type {
+  color: var(--cm-variable);
+}
+
+.cm-s-vars .cm-builtin {
+  color: var(--cm-builtin);
+}
+
+.cm-s-vars .cm-atom {
+  color: var(--cm-literal);
+}
+
+.cm-s-vars .cm-number {
+  color: var(--cm-number);
+}
+
+.cm-s-vars .cm-def {
+  color: var(--cm-decorator);
+}
+
+.cm-s-vars .cm-string,
+.cm-s-vars .cm-string-2 {
+  color: var(--cm-string);
+}
+
+.cm-s-vars .cm-comment {
+  color: var(--cm-comment);
+}
+
+.cm-s-vars .cm-tag {
+  color: var(--cm-property);
+}
+
+.cm-s-vars .cm-meta {
+  color: var(--cm-namespace);
+}
+
+.cm-s-vars .cm-attribute {
+  color: var(--cm-property);
+}
+
+.cm-s-vars .cm-property {
+  color: var(--cm-property);
+}
+
+.cm-s-vars .cm-qualifier {
+  color: var(--cm-keyword);
+}
+
+.cm-s-vars .cm-error {
+  color: var(--prism-deleted);
+}
+
+.cm-s-vars .CodeMirror-matchingbracket {
+  text-decoration: underline;
+}
+
+.cm-s-vars .CodeMirror-cursor {
+  border-left: 1px solid currentColor;
+}
+
+:root {
+  --cm-font-family: 'Input Mono', 'FiraCode', monospace;
+}
+
+html:not(.dark) {
+  --cm-foreground: #393a34;
+  --cm-background: #ffffff;
+  --cm-comment: #a0ada0;
+  --cm-string: #b56959;
+  --cm-literal: #2f8a89;
+  --cm-number: #296aa3;
+  --cm-keyword: #1c6b48;
+  --cm-function: #6c7834;
+  --cm-boolean: #1c6b48;
+  --cm-constant: #a65e2b;
+  --cm-deleted: #a14f55;
+  --cm-variable: #ad944c;
+  --cm-class: #2993a3;
+  --cm-builtin: #ab5959;
+  --cm-property: #b58451;
+  --cm-namespace: #b05a78;
+  --cm-punctuation: #8e8f8b;
+  --cm-decorator: #bd8f8f;
+  --cm-regex: #ab5e3f;
+  --cm-json-property: #698c96;
+  --cm-selection-background: #44444410;
+  --cm-line-number-gutter: #fafafa;
+}
+
+html.dark {
+  --cm-foreground: #d4cfbf;
+  --cm-background: #111111;
+  --cm-comment: #758575;
+  --cm-string: #d48372;
+  --cm-literal: #429988;
+  --cm-keyword: #4d9375;
+  --cm-boolean: #1c6b48;
+  --cm-number: #6394bf;
+  --cm-variable: #c2b36e;
+  --cm-function: #a1b567;
+  --cm-deleted: #a14f55;
+  --cm-class: #54b1bf;
+  --cm-builtin: #e0a569;
+  --cm-property: #dd8e6e;
+  --cm-namespace: #db889a;
+  --cm-punctuation: #858585;
+  --cm-decorator: #bd8f8f;
+  --cm-regex: #ab5e3f;
+  --cm-json-property: #6b8b9e;
+  --cm-line-number: #888888;
+  --cm-line-number-gutter: #eeeeee;
+  --cm-line-highlight-background: #444444;
+  --cm-selection-background: #44444450;
+  --cm-line-number-gutter: #1a1a1a;
+}
+*,::before,::after{--un-rotate:0;--un-rotate-x:0;--un-rotate-y:0;--un-rotate-z:0;--un-scale-x:1;--un-scale-y:1;--un-scale-z:1;--un-skew-x:0;--un-skew-y:0;--un-translate-x:0;--un-translate-y:0;--un-translate-z:0;--un-pan-x: ;--un-pan-y: ;--un-pinch-zoom: ;--un-scroll-snap-strictness:proximity;--un-ordinal: ;--un-slashed-zero: ;--un-numeric-figure: ;--un-numeric-spacing: ;--un-numeric-fraction: ;--un-border-spacing-x:0;--un-border-spacing-y:0;--un-ring-offset-shadow:0 0 rgba(0,0,0,0);--un-ring-shadow:0 0 rgba(0,0,0,0);--un-shadow-inset: ;--un-shadow:0 0 rgba(0,0,0,0);--un-ring-inset: ;--un-ring-offset-width:0px;--un-ring-offset-color:#fff;--un-ring-width:0px;--un-ring-color:rgba(147,197,253,0.5);--un-blur: ;--un-brightness: ;--un-contrast: ;--un-drop-shadow: ;--un-grayscale: ;--un-hue-rotate: ;--un-invert: ;--un-saturate: ;--un-sepia: ;--un-backdrop-blur: ;--un-backdrop-brightness: ;--un-backdrop-contrast: ;--un-backdrop-grayscale: ;--un-backdrop-hue-rotate: ;--un-backdrop-invert: ;--un-backdrop-opacity: ;--un-backdrop-saturate: ;--un-backdrop-sepia: ;}::backdrop{--un-rotate:0;--un-rotate-x:0;--un-rotate-y:0;--un-rotate-z:0;--un-scale-x:1;--un-scale-y:1;--un-scale-z:1;--un-skew-x:0;--un-skew-y:0;--un-translate-x:0;--un-translate-y:0;--un-translate-z:0;--un-pan-x: ;--un-pan-y: ;--un-pinch-zoom: ;--un-scroll-snap-strictness:proximity;--un-ordinal: ;--un-slashed-zero: ;--un-numeric-figure: ;--un-numeric-spacing: ;--un-numeric-fraction: ;--un-border-spacing-x:0;--un-border-spacing-y:0;--un-ring-offset-shadow:0 0 rgba(0,0,0,0);--un-ring-shadow:0 0 rgba(0,0,0,0);--un-shadow-inset: ;--un-shadow:0 0 rgba(0,0,0,0);--un-ring-inset: ;--un-ring-offset-width:0px;--un-ring-offset-color:#fff;--un-ring-width:0px;--un-ring-color:rgba(147,197,253,0.5);--un-blur: ;--un-brightness: ;--un-contrast: ;--un-drop-shadow: ;--un-grayscale: ;--un-hue-rotate: ;--un-invert: ;--un-saturate: ;--un-sepia: ;--un-backdrop-blur: ;--un-backdrop-brightness: ;--un-backdrop-contrast: ;--un-backdrop-grayscale: ;--un-backdrop-hue-rotate: ;--un-backdrop-invert: ;--un-backdrop-opacity: ;--un-backdrop-saturate: ;--un-backdrop-sepia: ;}.container{max-width:100%;}.border-main,.children\:border-main>*{--un-border-opacity:1;border-color:rgba(156,163,175,var(--un-border-opacity));--un-border-opacity:0.3;}.bg-main{--un-bg-opacity:1;background-color:rgba(156,163,175,var(--un-bg-opacity));}@media (min-width: 640px){.container{max-width:640px;}}@media (min-width: 768px){.container{max-width:768px;}}@media (min-width: 1024px){.container{max-width:1024px;}}@media (min-width: 1280px){.container{max-width:1280px;}}@media (min-width: 1536px){.container{max-width:1536px;}}.pointer-events-none{pointer-events:none;}.fixed{position:fixed;}.bottom-0{bottom:0rem;}.left-0{left:0rem;}.right-0{right:0rem;}.top-0{top:0rem;}.grid{display:grid;}.grid-cols-\[1fr_max-content_max-content_max-content_max-content_max-content_1fr\]{grid-template-columns:1fr max-content max-content max-content max-content max-content 1fr;}.grid-cols-\[1fr_min-content_1fr\]{grid-template-columns:1fr min-content 1fr;}.grid-cols-\[300px_3fr\]{grid-template-columns:300px 3fr;}.grid-rows-\[min-content_1fr\]{grid-template-rows:min-content 1fr;}.m-auto{margin:auto;}.children\:my-auto>*,.my-auto{margin-top:auto;margin-bottom:auto;}.mx-0\.5{margin-left:0.125rem;margin-right:0.125rem;}.mx-1{margin-left:0.25rem;margin-right:0.25rem;}.mb-4{margin-bottom:1rem;}.ml-1,[ml-1=""]{margin-left:0.25rem;}.ml-2{margin-left:0.5rem;}.ms{margin-inline-start:1rem;}.mt-2{margin-top:0.5rem;}.block{display:block;}.h-\[calc\(100vh-55px\)\]{height:calc(100vh - 55px);}.h-100vh,.h-screen{height:100vh;}.h-54px{height:54px;}.h-full{height:100%;}.h-min{height:min-content;}.min-w-70px{min-width:70px;}.w-\[calc\(100vw-100px\)\]{width:calc(100vw - 100px);}.w-full{width:100%;}.w-screen{width:100vw;}.flex{display:flex;}.flex-auto{flex:1 1 auto;}.flex-col{flex-direction:column;}.translate-x-0{--un-translate-x:0rem;transform:translateX(var(--un-translate-x)) translateY(var(--un-translate-y)) translateZ(var(--un-translate-z)) rotate(var(--un-rotate)) rotateX(var(--un-rotate-x)) rotateY(var(--un-rotate-y)) rotateZ(var(--un-rotate-z)) skewX(var(--un-skew-x)) skewY(var(--un-skew-y)) scaleX(var(--un-scale-x)) scaleY(var(--un-scale-y)) scaleZ(var(--un-scale-z));}.translate-x-1\/2{--un-translate-x:50%;transform:translateX(var(--un-translate-x)) translateY(var(--un-translate-y)) translateZ(var(--un-translate-z)) rotate(var(--un-rotate)) rotateX(var(--un-rotate-x)) rotateY(var(--un-rotate-y)) rotateZ(var(--un-rotate-z)) skewX(var(--un-skew-x)) skewY(var(--un-skew-y)) scaleX(var(--un-scale-x)) scaleY(var(--un-scale-y)) scaleZ(var(--un-scale-z));}.transform{transform:translateX(var(--un-translate-x)) translateY(var(--un-translate-y)) translateZ(var(--un-translate-z)) rotate(var(--un-rotate)) rotateX(var(--un-rotate-x)) rotateY(var(--un-rotate-y)) rotateZ(var(--un-rotate-z)) skewX(var(--un-skew-x)) skewY(var(--un-skew-y)) scaleX(var(--un-scale-x)) scaleY(var(--un-scale-y)) scaleZ(var(--un-scale-z));}.select-none{user-select:none;}.items-center{align-items:center;}.gap-2{grid-gap:0.5rem;gap:0.5rem;}.gap-4{grid-gap:1rem;gap:1rem;}.overflow-auto{overflow:auto;}.overflow-hidden{overflow:hidden;}.whitespace-nowrap{white-space:nowrap;}.border{border-width:1px;border-style:solid;}.border-b,.children\:border-b>*{border-bottom-width:1px;border-bottom-style:solid;}.border-l{border-left-width:1px;border-left-style:solid;}.border-r{border-right-width:1px;border-right-style:solid;}.rounded{border-radius:0.25rem;}.bg-black\/50{background-color:rgba(0,0,0,0.5);}.bg-green-400\/15{background-color:rgba(74,222,128,0.15);}.bg-green-400\/30{background-color:rgba(74,222,128,0.3);}.bg-green5\/10{background-color:rgba(34,197,94,0.1);}.bg-light-blue-400\/10{background-color:rgba(56,189,248,0.1);}.bg-orange-400\/10{background-color:rgba(251,146,60,0.1);}.bg-purple5\/10{background-color:rgba(168,85,247,0.1);}.bg-red-400\/15{background-color:rgba(248,113,113,0.15);}.bg-red-400\/30{background-color:rgba(248,113,113,0.3);}.bg-rose-400\/10{background-color:rgba(251,113,133,0.1);}.bg-teal-400\/10{background-color:rgba(45,212,191,0.1);}.bg-transparent{background-color:transparent;}.bg-white{--un-bg-opacity:1;background-color:rgba(255,255,255,var(--un-bg-opacity));}.dark .dark\:bg-\[\#111\]{--un-bg-opacity:1;background-color:rgba(17,17,17,var(--un-bg-opacity));}.bg-opacity-10{--un-bg-opacity:0.1;}.p0\!{padding:0rem !important;}.children\:px-4>*{padding-left:1rem;padding-right:1rem;}.children\:py-2>*,.py-2{padding-top:0.5rem;padding-bottom:0.5rem;}.px-2{padding-left:0.5rem;padding-right:0.5rem;}.px-3{padding-left:0.75rem;padding-right:0.75rem;}.px-6{padding-left:1.5rem;padding-right:1.5rem;}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem;}.py-1{padding-top:0.25rem;padding-bottom:0.25rem;}.py-4{padding-top:1rem;padding-bottom:1rem;}.text-center{text-align:center;}.text-left{text-align:left;}.text-right{text-align:right;}.children\:align-middle>*{vertical-align:middle;}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}.text-10px{font-size:10px;}.text-lg{font-size:1.125rem;line-height:1.75rem;}.text-sm{font-size:0.875rem;line-height:1.25rem;}.text-xs,[text-xs=""]{font-size:0.75rem;line-height:1rem;}.font-bold{font-weight:700;}.font-light{font-weight:300;}.tracking-widest{letter-spacing:0.1em;}.italic{font-style:italic;}.dark .dark\:text-gray-200{--un-text-opacity:1;color:rgba(229,231,235,var(--un-text-opacity));}.text-gray-400{--un-text-opacity:1;color:rgba(156,163,175,var(--un-text-opacity));}.text-gray-700{--un-text-opacity:1;color:rgba(55,65,81,var(--un-text-opacity));}.text-green5{--un-text-opacity:1;color:rgba(34,197,94,var(--un-text-opacity));}.text-light-blue-400{--un-text-opacity:1;color:rgba(56,189,248,var(--un-text-opacity));}.text-orange-400{--un-text-opacity:1;color:rgba(251,146,60,var(--un-text-opacity));}.text-purple5{--un-text-opacity:1;color:rgba(168,85,247,var(--un-text-opacity));}.text-red-400{--un-text-opacity:1;color:rgba(248,113,113,var(--un-text-opacity));}.text-rose-400{--un-text-opacity:1;color:rgba(251,113,133,var(--un-text-opacity));}.text-teal-400{--un-text-opacity:1;color:rgba(45,212,191,var(--un-text-opacity));}.text-yellow-400{--un-text-opacity:1;color:rgba(250,204,21,var(--un-text-opacity));}.op50,.op50\:,.opacity-50,[op50=""]{opacity:0.5;}.opacity-0{opacity:0;}.opacity-100{opacity:1;}.opacity-20{opacity:0.2;}.opacity-25{opacity:0.25;}.shadow-lg{--un-shadow:var(--un-shadow-inset) 0 10px 15px -3px var(--un-shadow-color, rgba(0,0,0,0.1)),var(--un-shadow-inset) 0 4px 6px -4px var(--un-shadow-color, rgba(0,0,0,0.1));box-shadow:var(--un-ring-offset-shadow), var(--un-ring-shadow), var(--un-shadow);}.\!outline-none{outline:2px solid transparent !important;outline-offset:2px !important;}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms;}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms;}.duration-300{transition-duration:300ms;}
