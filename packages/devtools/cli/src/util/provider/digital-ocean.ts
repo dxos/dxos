@@ -46,7 +46,8 @@ export class DigitalOceanProvider implements Provider {
 
     const channel = dev ? 'dev' : 'latest';
 
-    const cloudConfigScript = `
+    const cloudConfigScript =
+      `
          #cloud-config
 
          package_update: true
@@ -64,8 +65,9 @@ export class DigitalOceanProvider implements Provider {
              docker.list:
                source: deb [arch=amd64] https://download.docker.com/linux/ubuntu $RELEASE stable
                keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-        ` + (accessToken ?
-        `
+        ` +
+      (accessToken
+        ? `
          write_files:
            - path: /root/.kube/acl/seed.yaml
              content: |
@@ -73,9 +75,9 @@ export class DigitalOceanProvider implements Provider {
                  capabilities:
                    - 100
                  subject: "*"
-        ` : '')
-        +
         `
+        : '') +
+      `
          runcmd:
            - curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
            - chmod +x /usr/local/bin/docker-compose
