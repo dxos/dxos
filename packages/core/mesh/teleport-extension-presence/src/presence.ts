@@ -42,15 +42,11 @@ export class Presence {
     }
   });
 
-  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
+  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash); // TODO(mykola): Memory leak. Never cleared.
   private readonly _peerStates = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);
-  private readonly _connections = new ComplexMap<
-    {
-      localPeerId: PublicKey;
-      remotePeerId: PublicKey;
-    },
-    PresenceExtension
-  >(({ localPeerId, remotePeerId }) => localPeerId.toHex() + remotePeerId.toHex());
+
+  // remotePeerId -> PresenceExtension
+  private readonly _connections = new ComplexMap<PublicKey, PresenceExtension>(PublicKey.hash);
 
   constructor(private readonly _params: PresenceParams) {
     assert(
@@ -86,15 +82,15 @@ export class Presence {
         if (err) {
           log.catch(err);
         }
-        if (this._connections.has({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId })) {
-          this._connections.delete({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId });
+        if (this._connections.has(teleport.remotePeerId)) {
+          this._connections.delete(teleport.remotePeerId);
         }
         scheduleTask(this._ctx, async () => {
           await this._sendAnnounces();
         });
       }
     });
-    this._connections.set({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId }, extension);
+    this._connections.set(teleport.remotePeerId, extension);
     scheduleTask(this._ctx, async () => {
       await this._sendAnnounces();
     });
@@ -118,15 +114,15 @@ export class Presence {
   }
 
   private _getConnections(): PublicKey[] {
-    return [...this._connections.keys()].map(({ remotePeerId }) => remotePeerId);
+    return [...this._connections.keys()];
   }
 
   private _sendAnnounces() {
     return Promise.all(
-      [...this._connections.entries()].map(([{ localPeerId }, presenceExtension]) =>
+      [...this._connections.values()].map((presenceExtension) =>
         presenceExtension
           .sendAnnounce({
-            peerId: localPeerId,
+            peerId: this._params.localPeerId,
             connections: this._getConnections(),
             messageId: PublicKey.random(),
             timestamp: new Date()
@@ -146,8 +142,8 @@ export class Presence {
 
   private _propagateAnnounce(peerState: PeerState) {
     return Promise.all(
-      [...this._connections.entries()].map(async ([{ localPeerId, remotePeerId }, extension]) => {
-        if (localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId)) {
+      [...this._connections.entries()].map(async ([remotePeerId, extension]) => {
+        if (this._params.localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId)) {
           return;
         }
         return extension.sendAnnounce(peerState).catch((err) => log.catch(err));
