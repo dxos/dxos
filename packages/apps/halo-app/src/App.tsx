@@ -42,7 +42,7 @@ const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
 // prettier-ignore
 log.config({
-  filter: process.env.LOG_FILTER ?? 'halo-app:debug,client:debug,warn',
+  filter: process.env.LOG_FILTER ?? 'halo-app:debug,client:debug,config:debug,warn',
   prefix: process.env.LOG_BROWSER_PREFIX
 });
 

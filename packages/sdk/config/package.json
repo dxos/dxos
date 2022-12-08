@@ -25,6 +25,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
