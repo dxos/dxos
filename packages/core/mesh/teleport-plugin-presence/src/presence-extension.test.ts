@@ -4,7 +4,8 @@
 
 import expect from 'expect';
 
-import { latch, Trigger, Event, asyncTimeout } from '@dxos/async';
+import { Trigger } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { TestBuilder } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
@@ -18,117 +19,36 @@ describe('PresenceExtension', () => {
     const { peer1, peer2 } = await builder.createPipedPeers();
 
     const trigger1 = new Trigger<PeerState>();
-    const extension1 = new PresenceExtension(
-      {
-        connections: [peer2.peerId],
-        announceInterval: 25
-      },
-      {
-        onAnnounce: async (peerState: PeerState) => {
-          trigger1.wake(peerState);
-        }
+    const extension1 = new PresenceExtension({
+      onAnnounce: async (peerState: PeerState) => {
+        trigger1.wake(peerState);
       }
-    );
+    });
     peer1.teleport!.addExtension('dxos.mesh.teleport.presence', extension1);
 
     const trigger2 = new Trigger<PeerState>();
-    const extension2 = new PresenceExtension(
-      {
-        connections: [peer1.peerId],
-        announceInterval: 25
-      },
-      {
-        onAnnounce: async (peerState: PeerState) => {
-          trigger2.wake(peerState);
-        }
+    const extension2 = new PresenceExtension({
+      onAnnounce: async (peerState: PeerState) => {
+        trigger2.wake(peerState);
       }
-    );
+    });
     peer2.teleport!.addExtension('dxos.mesh.teleport.presence', extension2);
+
+    await extension1.sendAnnounce({
+      peerId: peer1.peerId,
+      connections: [peer2.peerId],
+      timestamp: new Date(),
+      messageId: PublicKey.random()
+    });
+
+    await extension2.sendAnnounce({
+      peerId: peer2.peerId,
+      connections: [peer1.peerId],
+      timestamp: new Date(),
+      messageId: PublicKey.random()
+    });
 
     expect((await trigger1.wait({ timeout: 50 })).peerId).toEqual(peer2.peerId);
     expect((await trigger2.wait({ timeout: 50 })).peerId).toEqual(peer1.peerId);
-  });
-
-  test('Peer reannounces itself by interval', async () => {
-    const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
-    const { peer1, peer2 } = await builder.createPipedPeers();
-
-    const [announced3Times, inc] = latch({ count: 3 });
-    const extension1 = new PresenceExtension(
-      {
-        connections: [peer2.peerId],
-        announceInterval: 25
-      },
-      {
-        onAnnounce: async (peerState: PeerState) => {
-          expect(peerState.peerId.equals(peer2.peerId)).toBeTruthy();
-          inc();
-        }
-      }
-    );
-    peer1.teleport!.addExtension('dxos.mesh.teleport.presence', extension1);
-
-    const extension2 = new PresenceExtension(
-      {
-        connections: [peer1.peerId],
-        announceInterval: 25
-      },
-      {
-        onAnnounce: async (peerState: PeerState) => {
-          expect(peerState.peerId.equals(peer1.peerId)).toBeTruthy();
-        }
-      }
-    );
-    peer2.teleport!.addExtension('dxos.mesh.teleport.presence', extension2);
-
-    await announced3Times();
-  });
-
-  test('Set new Connections', async () => {
-    const builder = new TestBuilder();
-    afterTest(() => builder.destroy());
-    const { peer1, peer2 } = await builder.createPipedPeers();
-
-    const event = new Event<PeerState>();
-    const extension1 = new PresenceExtension(
-      {
-        connections: [peer2.peerId],
-        announceInterval: 25
-      },
-      {
-        onAnnounce: async (peerState: PeerState) => {
-          expect(peerState.peerId.equals(peer2.peerId)).toBeTruthy();
-          event.emit(peerState);
-        }
-      }
-    );
-    peer1.teleport!.addExtension('dxos.mesh.teleport.presence', extension1);
-
-    const extension2 = new PresenceExtension(
-      {
-        connections: [],
-        announceInterval: 25
-      },
-      {
-        onAnnounce: async (peerState: PeerState) => {
-          expect(peerState.peerId.equals(peer1.peerId)).toBeTruthy();
-        }
-      }
-    );
-    peer2.teleport!.addExtension('dxos.mesh.teleport.presence', extension2);
-
-    await asyncTimeout(
-      event.waitFor((peerState) => peerState.peerId.equals(peer2.peerId) && peerState.connections!.length === 0),
-      100
-    );
-
-    // Set new connections.
-    await extension2.setConnections([peer1.peerId]);
-
-    await asyncTimeout(
-      event.waitFor((peerState) => peerState.peerId.equals(peer2.peerId) && peerState.connections!.length === 1),
-      100
-    );
   });
 });

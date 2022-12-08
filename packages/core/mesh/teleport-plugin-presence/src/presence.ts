@@ -4,7 +4,8 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/async';
+import { Event, scheduleTaskInterval, scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
@@ -35,6 +36,12 @@ export type PresenceParams = {
  */
 export class Presence {
   public readonly updated = new Event<void>();
+  private readonly _ctx = new Context({
+    onError: (err) => {
+      log.catch(err);
+    }
+  });
+
   private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _peerStates = new ComplexMap<PublicKey, PeerState>(PublicKey.hash);
   private readonly _connections = new ComplexMap<
@@ -45,43 +52,46 @@ export class Presence {
     PresenceExtension
   >(({ localPeerId, remotePeerId }) => localPeerId.toHex() + remotePeerId.toHex());
 
-  constructor(private readonly _params: PresenceParams) {}
+  constructor(private readonly _params: PresenceParams) {
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        await this._sendAnnounces();
+      },
+      _params.announceInterval
+    );
+  }
 
   async createExtension({ teleport }: { teleport: Teleport }): Promise<PresenceExtension> {
     assert(
       teleport.localPeerId.equals(this._params.localPeerId),
       'Teleport local peer id does not match presence local peer id.'
     );
-    const extension = new PresenceExtension(
-      {
-        connections: [...this._getConnections()],
-        announceInterval: this._params.announceInterval
-      },
-      {
-        onAnnounce: async (peerState) => {
-          if (this._receivedMessages.has(peerState.messageId)) {
-            return;
-          }
-          this._receivedMessages.add(peerState.messageId);
-          this._saveNewState(peerState);
-          this._propagateAnnounce(peerState);
-        },
-        onClose: async (err) => {
-          if (err) {
-            log.catch(err);
-          }
-          if (this._connections.has({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId })) {
-            this._connections.delete({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId });
-          }
-          void this._reconcileConnections();
+    const extension = new PresenceExtension({
+      onAnnounce: async (peerState) => {
+        if (this._receivedMessages.has(peerState.messageId)) {
+          return;
         }
+        this._receivedMessages.add(peerState.messageId);
+        this._saveNewState(peerState);
+        this._propagateAnnounce(peerState);
+      },
+      onClose: async (err) => {
+        if (err) {
+          log.catch(err);
+        }
+        if (this._connections.has({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId })) {
+          this._connections.delete({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId });
+        }
+        scheduleTask(this._ctx, async () => {
+          await this._sendAnnounces();
+        });
       }
-    );
-    {
-      // Connection management.
-      this._connections.set({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId }, extension);
-      void this._reconcileConnections();
-    }
+    });
+    this._connections.set({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId }, extension);
+    scheduleTask(this._ctx, async () => {
+      await this._sendAnnounces();
+    });
     teleport.addExtension('dxos.mesh.teleport.presence', extension);
 
     return extension;
@@ -95,6 +105,10 @@ export class Presence {
     return this.getPeerStates().filter(
       (peerState) => peerState.timestamp.getTime() > Date.now() - this._params.offlineTimeout
     );
+  }
+
+  async destroy() {
+    await this._ctx.dispose();
   }
 
   private _getConnections(): PublicKey[] {
@@ -122,10 +136,17 @@ export class Presence {
     });
   }
 
-  private _reconcileConnections() {
+  private _sendAnnounces() {
     return Promise.all(
-      [...this._connections.values()].map((presenceExtension) =>
-        presenceExtension.setConnections(this._getConnections()).catch((err) => log.catch(err))
+      [...this._connections.entries()].map(([{ localPeerId }, presenceExtension]) =>
+        presenceExtension
+          .sendAnnounce({
+            peerId: localPeerId,
+            connections: this._getConnections(),
+            messageId: PublicKey.random(),
+            timestamp: new Date()
+          })
+          .catch((err) => log.catch(err))
       )
     );
   }
