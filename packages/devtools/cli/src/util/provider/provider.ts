@@ -27,7 +27,6 @@ export interface Provider {
    * Deploy KUBE to a Provider.
    */
   deploy(options: KubeDeployOptions): Promise<KUBE>;
-  getSshKeys(): Promise<any>;
 }
 
 export const mapKubes = (kubes: KUBE[]) => {
