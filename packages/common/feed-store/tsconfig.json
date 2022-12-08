@@ -43,6 +43,9 @@
       "path": "../log"
     },
     {
+      "path": "../node-std"
+    },
+    {
       "path": "../random-access-storage"
     },
     {

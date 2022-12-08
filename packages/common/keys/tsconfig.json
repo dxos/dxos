@@ -9,6 +9,9 @@
   "references": [
     {
       "path": "../debug"
+    },
+    {
+      "path": "../node-std"
     }
   ]
 }

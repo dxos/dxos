@@ -3,7 +3,7 @@
 //
 
 import { Flags } from '@oclif/core';
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { captureException } from '@dxos/sentry';
 

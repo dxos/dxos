@@ -12,6 +12,9 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/node-std"
+    },
+    {
       "path": "../mesh-protocol"
     },
     {

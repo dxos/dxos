@@ -19,6 +19,9 @@
     },
     {
       "path": "../keys"
+    },
+    {
+      "path": "../node-std"
     }
   ]
 }

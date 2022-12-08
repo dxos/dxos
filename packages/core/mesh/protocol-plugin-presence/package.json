@@ -9,7 +9,6 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -22,8 +21,8 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
     "ngraph.graph": "^19.0.1",

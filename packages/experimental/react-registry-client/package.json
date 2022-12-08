@@ -9,7 +9,6 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -19,9 +18,9 @@
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {

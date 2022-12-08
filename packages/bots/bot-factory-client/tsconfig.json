@@ -21,6 +21,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/node-std"
+    },
+    {
       "path": "../../core/mesh/messaging"
     },
     {

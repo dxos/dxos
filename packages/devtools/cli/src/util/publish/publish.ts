@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
+import assert from 'node:assert';
 import { join } from 'path';
 import { promisify } from 'util';
 
