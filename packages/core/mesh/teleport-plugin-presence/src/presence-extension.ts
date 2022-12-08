@@ -32,16 +32,6 @@ export class PresenceExtension implements TeleportExtension {
 
   constructor(private readonly _params: PresenceParams) {}
 
-  setConnections(connections: PublicKey[]) {
-    this._params.connections = connections;
-  }
-
-  async sendAnnounce(peerState: PeerState) {
-    await this.opened.wait();
-    assert(this._rpc, 'RPC not initialized');
-    await this._rpc.rpc.PresenceService.announce(peerState);
-  }
-
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this._extensionContext = context;
@@ -71,6 +61,16 @@ export class PresenceExtension implements TeleportExtension {
     await this._rpc?.close();
     this._sendInterval && clearInterval(this._sendInterval);
     this.closed.wake();
+  }
+
+  setConnections(connections: PublicKey[]) {
+    this._params.connections = connections;
+  }
+
+  async sendAnnounce(peerState: PeerState) {
+    await this.opened.wait();
+    assert(this._rpc, 'RPC not initialized');
+    await this._rpc.rpc.PresenceService.announce(peerState);
   }
 
   private async _sendAnnounce() {
