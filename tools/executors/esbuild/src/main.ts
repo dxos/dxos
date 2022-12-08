@@ -5,14 +5,10 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'path';
 
 import { LogTransformer } from './log-transform-plugin';
-
-const processOutput = (output: string) => {
-  return output.replace(/__require\(/g, 'require(');
-};
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
@@ -32,7 +28,6 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   }
 
   const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
-  const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
   const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
 
@@ -73,35 +68,9 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
                 const module = args.path.replace(/^node:/, '');
                 return { external: true, path: `@dxos/node-std/${module}` };
-                // const browserMapped = packageJson.browser?.[args.path];
-                // if (!browserMapped) {
-                //   return null;
-                // }
-
-                // return { external: true, path: browserMapped };
               });
             }
           },
-          // ...(platform === 'browser'
-          //   ? [
-          //       {
-          //         name: 'fix-require',
-          //         setup: ({ onEnd }) => {
-          //           onEnd(async (args) => {
-          //             if (!args.metafile) {
-          //               throw new Error('Metafile is required for fixRequirePlugin');
-          //             }
-
-          //             for (const file of Object.keys(args.metafile.outputs)) {
-          //               const content = await readFile(file, 'utf-8');
-          //               const fixedContent = processOutput(content);
-          //               await writeFile(file, fixedContent, 'utf-8');
-          //             }
-          //           });
-          //         }
-          //       } as Plugin
-          //     ]
-          //   : []),
           nodeExternalsPlugin({
             packagePath,
             allowList: options.bundlePackages
