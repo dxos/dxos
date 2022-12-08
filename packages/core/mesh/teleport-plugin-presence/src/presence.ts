@@ -11,11 +11,24 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { PresenceExtension } from './presence-extension';
 
-export type PresenceManagerParams = {
+export type PresenceParams = {
+  /**
+   * Interval between presence announces.
+   */
   announceInterval: number;
+  /**
+   * Timeout after which a peer is considered offline.
+   * Should be greater than announceInterval.
+   */
   offlineTimeout: number;
 };
 
+/**
+ * Presence manager.
+ * Keeps track of all peers that are connected to the local peer.
+ * Routes received presence announces to all connected peers.
+ * Exposes API to get the list of peers that are online.
+ */
 export class Presence {
   public readonly updated = new Event<void>();
   private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
@@ -28,7 +41,7 @@ export class Presence {
     PresenceExtension
   >(({ localPeerId, remotePeerId }) => localPeerId.toHex() + remotePeerId.toHex());
 
-  constructor(private readonly _params: PresenceManagerParams) {}
+  constructor(private readonly _params: PresenceParams) {}
 
   createExtension({ teleport }: { teleport: Teleport }): PresenceExtension {
     const extension = new PresenceExtension({

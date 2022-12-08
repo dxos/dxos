@@ -13,13 +13,24 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
 
 export type PresenceParams = {
+  /**
+   * List of direct connections for current peer.
+   */
   connections: PublicKey[];
+
+  /**
+   * Interval between announces.
+   */
   announceInterval: number;
+
+  /**
+   * Callback to be called when a new announce is received.
+   */
   onAnnounce: (peerState: PeerState) => Promise<void>;
 };
 
 /**
- * Sending presence pings between a set peers for a single teleport session.
+ * Sends presence announces between two peers for a single teleport session.
  */
 export class PresenceExtension implements TeleportExtension {
   private readonly opened = new Trigger();
