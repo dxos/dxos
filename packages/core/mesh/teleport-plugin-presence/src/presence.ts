@@ -53,6 +53,10 @@ export class Presence {
   >(({ localPeerId, remotePeerId }) => localPeerId.toHex() + remotePeerId.toHex());
 
   constructor(private readonly _params: PresenceParams) {
+    assert(
+      this._params.announceInterval < this._params.offlineTimeout,
+      'Announce interval should be less than offline timeout.'
+    );
     scheduleTaskInterval(
       this._ctx,
       async () => {

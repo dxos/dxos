@@ -102,10 +102,10 @@ describe('Presence', () => {
     afterTest(() => builder.destroy());
 
     // Initialize 3 peers.
-    const agent1 = builder.createAgent({ announceInterval: 10 });
-    const agent2 = builder.createAgent({ announceInterval: 10 });
-    const agent3 = builder.createAgent({ announceInterval: 10 });
-    const agent4 = builder.createAgent({ announceInterval: 10 });
+    const agent1 = builder.createAgent({ announceInterval: 10, offlineTimeout: 50 });
+    const agent2 = builder.createAgent({ announceInterval: 10, offlineTimeout: 50 });
+    const agent3 = builder.createAgent({ announceInterval: 10, offlineTimeout: 50 });
+    const agent4 = builder.createAgent({ announceInterval: 10, offlineTimeout: 50 });
 
     {
       // Connect first and second peer.
