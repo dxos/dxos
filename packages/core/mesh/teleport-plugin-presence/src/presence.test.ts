@@ -2,9 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
-
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -68,10 +65,8 @@ describe('Presence', () => {
     await builder.connectAgents(agent2, agent3);
 
     // Check if first and third peers "see" each other.
-    await waitForExpect(() => {
-      expect(agent1.presence.getPeersOnline().some((state) => state.peerId.equals(agent3.peerId))).toBeTruthy();
-      expect(agent3.presence.getPeersOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
-    }, 500);
+    await agent1.waitForAgentsToBeOnline([agent2, agent3], 200);
+    await agent3.waitForAgentsToBeOnline([agent1, agent2], 200);
   });
 
   test('One connection drops after some time', async () => {
@@ -92,19 +87,14 @@ describe('Presence', () => {
     await builder.connectAgents(agent2, agent3);
 
     // Check if first and third peers "see" each other.
-    await waitForExpect(() => {
-      expect(agent1.presence.getPeersOnline().some((state) => state.peerId.equals(agent3.peerId))).toBeTruthy();
-      expect(agent3.presence.getPeersOnline().some((state) => state.peerId.equals(agent1.peerId))).toBeTruthy();
-    }, 500);
+    await agent1.waitForAgentsToBeOnline([agent2, agent3], 200);
+    await agent3.waitForAgentsToBeOnline([agent1, agent2], 200);
 
     // Third peer got disconnected.
     await agent3.destroy();
 
     // Check if third peer is offline for first and second peer.
-    await waitForExpect(() => {
-      expect(agent1.presence.getPeersOnline().every((state) => !state.peerId.equals(agent3.peerId))).toBeTruthy();
-      expect(agent2.presence.getPeersOnline().every((state) => !state.peerId.equals(agent3.peerId))).toBeTruthy();
-    }, 500);
+    await agent1.waitForAgentsToBeOnline([agent2], 200);
   });
 
   test('Four peers connected', async () => {
@@ -114,7 +104,8 @@ describe('Presence', () => {
     const checkFirstAgentConnections = (agents: TestAgent[]) => {
       const connections = new Set(agent1.presence.getPeersOnline().map((state) => state.peerId.toHex()));
       const expectedConnections = new Set(agents.map((agent) => agent.peerId.toHex()));
-      expect(connections).toEqual(expectedConnections);
+      const eqSets = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((value) => b.has(value));
+      return connections.size === agents.length && eqSets(connections, expectedConnections);
     };
 
     // Initialize 3 peers.
@@ -143,10 +134,7 @@ describe('Presence', () => {
       // Run system for some time.
       await sleep(200);
 
-      await waitForExpect(() => {
-        expect(agent1.presence.getPeersOnline().length).toEqual(3);
-      });
-      checkFirstAgentConnections([agent2, agent3, agent4]);
+      await agent1.waitForAgentsToBeOnline([agent2, agent3, agent4], 200);
     }
 
     {
@@ -157,10 +145,7 @@ describe('Presence', () => {
       //                       |
       // fourth peer  --  third peer
 
-      await waitForExpect(() => {
-        expect(agent1.presence.getPeersOnline().length).toEqual(3);
-      });
-      checkFirstAgentConnections([agent2, agent3, agent4]);
+      await agent1.waitForAgentsToBeOnline([agent2, agent3, agent4], 200);
     }
 
     {
@@ -171,11 +156,7 @@ describe('Presence', () => {
       //                       |
       // fourth peer      third peer
 
-      await waitForExpect(() => {
-        expect(agent1.presence.getPeersOnline().length).toEqual(2);
-        expect(agent4.presence.getPeersOnline().length).toEqual(0);
-      });
-      checkFirstAgentConnections([agent2, agent3]);
+      await agent1.waitForAgentsToBeOnline([agent2, agent3], 200);
     }
 
     {
@@ -186,10 +167,7 @@ describe('Presence', () => {
       //                       |
       // fourth peer  --  third peer
 
-      await waitForExpect(() => {
-        expect(agent1.presence.getPeersOnline().length).toEqual(3);
-      });
-      checkFirstAgentConnections([agent2, agent3, agent4]);
+      await agent1.waitForAgentsToBeOnline([agent2, agent3, agent4], 200);
     }
   });
 });

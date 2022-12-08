@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as ConnectionFactory, TestPeer as Connection } from '@dxos/teleport/testing';
 import { ComplexMap } from '@dxos/util';
@@ -70,6 +71,21 @@ export class TestAgent {
       await connection.destroy();
       this._connections.delete(remotePeerId);
     }
+  }
+
+  waitForAgentsToBeOnline(agents: TestAgent[], timeout = 1000) {
+    assert(agents.length > 0, 'At least one agent is required.');
+    return asyncTimeout(
+      this.presence.updated.waitFor(() => {
+        const connections = this.presence.getPeersOnline().map((state) => state.peerId.toHex());
+        const expectedConnections = agents.map((agent) => agent.peerId.toHex());
+        return (
+          connections.length === expectedConnections.length &&
+          expectedConnections.every((value) => connections.includes(value))
+        );
+      }),
+      timeout
+    );
   }
 
   async destroy() {
