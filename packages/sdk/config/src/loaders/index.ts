@@ -29,6 +29,8 @@ const maybeLoadFile = (file: string): any => {
 
 /**
  * File storage.
+ *
+ * @deprecated
  */
 export const LocalStorage = <T = ConfigProto>(): T => ({} as T);
 
