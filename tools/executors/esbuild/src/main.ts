@@ -37,8 +37,6 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       const extension = format === 'esm' ? '.mjs' : '.cjs';
       const outdir = `${options.outputPath}/${platform}`;
 
-      console.log({ options, format, extension });
-
       const start = Date.now();
       const result = await build({
         entryPoints: options.entryPoints,
