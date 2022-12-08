@@ -30,7 +30,7 @@ export const tailwindConfig = ({
       colors: {
         success: tailwindColors.emerald,
         warning: tailwindColors.amber,
-        error: tailwindColors.red,
+        error: tailwindColors.rose,
         info: tailwindColors.cyan,
         neutral: {
           // Key color #707076
@@ -88,7 +88,7 @@ export const tailwindConfig = ({
       fontSize: {
         // Base size 16px
         // Scale 1.125
-        xs: ['0.79rem', { lineHeight: '1rem' }],
+        xs: ['0.790rem', { lineHeight: '1rem' }],
         sm: ['0.889rem', { lineHeight: '1.25rem' }],
         base: ['1rem', { lineHeight: '1.5rem' }],
         lg: ['1.125rem', { lineHeight: '1.75rem' }],
@@ -96,11 +96,11 @@ export const tailwindConfig = ({
         '2xl': ['1.424rem', { lineHeight: '2rem' }],
         '3xl': ['1.602rem', { lineHeight: '2.25rem' }],
         '4xl': ['1.802rem', { lineHeight: '2.5rem' }],
-        '5xl': ['2.027rem', { lineHeight: '1' }],
-        '6xl': ['2.281rem', { lineHeight: '1' }],
-        '7xl': ['2.566rem', { lineHeight: '1' }],
-        '8xl': ['2.887rem', { lineHeight: '1' }],
-        '9xl': ['3.247rem', { lineHeight: '1' }]
+        '5xl': ['2.027rem', { lineHeight: '2.5rem' }],
+        '6xl': ['2.281rem', { lineHeight: '2.5rem' }],
+        '7xl': ['2.566rem', { lineHeight: '2.75rem' }],
+        '8xl': ['2.887rem', { lineHeight: '3rem' }],
+        '9xl': ['3.247rem', { lineHeight: '3.25rem' }]
       },
       outlineWidth: {
         3: '3px'
