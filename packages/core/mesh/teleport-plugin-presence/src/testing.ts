@@ -57,7 +57,7 @@ export class TestAgent {
     offlineTimeout?: number;
   }) {
     this.peerId = peerId;
-    this.presence = new Presence({ announceInterval, offlineTimeout });
+    this.presence = new Presence({ localPeerId: peerId, announceInterval, offlineTimeout });
   }
 
   addConnection(connection: Connection) {

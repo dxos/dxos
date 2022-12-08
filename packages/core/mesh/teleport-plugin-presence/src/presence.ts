@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -12,6 +14,8 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import { PresenceExtension } from './presence-extension';
 
 export type PresenceParams = {
+  localPeerId: PublicKey;
+
   /**
    * Interval between presence announces.
    */
@@ -44,6 +48,10 @@ export class Presence {
   constructor(private readonly _params: PresenceParams) {}
 
   createExtension({ teleport }: { teleport: Teleport }): PresenceExtension {
+    assert(
+      teleport.localPeerId.equals(this._params.localPeerId),
+      'Teleport local peer id does not match presence local peer id.'
+    );
     const extension = new PresenceExtension({
       connections: [...this._getConnections()],
       announceInterval: this._params.announceInterval,
