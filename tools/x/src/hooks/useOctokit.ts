@@ -3,7 +3,7 @@
 //
 
 import { Octokit } from '@octokit/rest';
-import assert from 'assert';
+import assert from 'node:assert';
 import { createContext, useContext } from 'react';
 
 export const OctokitContext = createContext<any | undefined>(undefined);

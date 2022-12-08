@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
+import assert from 'node:assert';
 
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 

@@ -17,6 +17,9 @@
       "path": "../../../common/keys"
     },
     {
+      "path": "../../../common/node-std"
+    },
+    {
       "path": "../../protocols"
     },
     {

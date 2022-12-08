@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import { inspect } from 'util';
+import assert from 'node:assert';
+import { inspect } from 'node:util';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';

@@ -8,7 +8,6 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
   },
@@ -36,6 +35,7 @@
     "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -46,7 +46,6 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
-    "assert": "^2.0.0",
     "base-x": "~3.0.9",
     "jsondown": "dxos/jsondown#main",
     "level-js": "^5.0.2",

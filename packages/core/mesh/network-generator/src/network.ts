@@ -3,10 +3,10 @@
 //
 
 import eos from 'end-of-stream';
-import { EventEmitter } from 'events';
 import { EventedType } from 'ngraph.events';
 import createGraph, { Graph } from 'ngraph.graph';
 import assert from 'node:assert';
+import { EventEmitter } from 'node:events';
 import { PassThrough, Stream } from 'node:stream';
 
 import { PublicKey } from '@dxos/keys';
