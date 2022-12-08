@@ -5,7 +5,7 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { latch } from '@dxos/async';
+import { latch, Trigger } from '@dxos/async';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
 import { TestBuilder } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
@@ -18,28 +18,28 @@ describe('PresenceExtension', () => {
     afterTest(() => builder.destroy());
     const { peer1, peer2 } = await builder.createPipedPeers();
 
-    const received1: PeerState[] = [];
+    const trigger1 = new Trigger<PeerState>();
     const extension1 = new PresenceExtension({
       connections: [peer2.peerId],
       announceInterval: 50,
       onAnnounce: async (peerState: PeerState) => {
-        received1.push(peerState);
+        trigger1.wake(peerState);
       }
     });
     peer1.teleport!.addExtension('dxos.mesh.teleport.presence', extension1);
 
-    const received2: PeerState[] = [];
+    const trigger2 = new Trigger<PeerState>();
     const extension2 = new PresenceExtension({
       connections: [peer1.peerId],
       announceInterval: 50,
       onAnnounce: async (peerState: PeerState) => {
-        received2.push(peerState);
+        trigger2.wake(peerState);
       }
     });
     peer2.teleport!.addExtension('dxos.mesh.teleport.presence', extension2);
 
-    await waitForExpect(() => expect(received1[0].peerId).toEqual(peer2.peerId));
-    await waitForExpect(() => expect(received2[0].peerId).toEqual(peer1.peerId));
+    expect((await trigger1.wait()).peerId).toEqual(peer2.peerId);
+    expect((await trigger2.wait()).peerId).toEqual(peer1.peerId);
   });
 
   test('Peer reannounces itself by interval', async () => {
