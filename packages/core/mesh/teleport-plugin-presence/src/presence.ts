@@ -78,7 +78,9 @@ export class Presence {
         }
         this._receivedMessages.add(peerState.messageId);
         this._saveNewState(peerState);
-        this._propagateAnnounce(peerState);
+        scheduleTask(this._ctx, async () => {
+          await this._propagateAnnounce(peerState);
+        });
       },
       onClose: async (err) => {
         if (err) {
@@ -143,15 +145,13 @@ export class Presence {
   }
 
   private _propagateAnnounce(peerState: PeerState) {
-    this._connections.forEach(async (presenceExtension, { localPeerId, remotePeerId }) => {
-      if (localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId)) {
-        return;
-      }
-      try {
-        await presenceExtension.sendAnnounce(peerState);
-      } catch (err) {
-        log.catch(err);
-      }
-    });
+    return Promise.all(
+      [...this._connections.entries()].map(async ([{ localPeerId, remotePeerId }, extension]) => {
+        if (localPeerId.equals(peerState.peerId) || remotePeerId.equals(peerState.peerId)) {
+          return;
+        }
+        return extension.sendAnnounce(peerState).catch((err) => log.catch(err));
+      })
+    );
   }
 }

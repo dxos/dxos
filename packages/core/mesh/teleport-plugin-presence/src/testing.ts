@@ -32,8 +32,7 @@ export class TestBuilder {
   }
 
   async disconnectAgents(agent1: TestAgent, agent2: TestAgent) {
-    await agent1.deleteConnection(agent2.peerId);
-    await agent2.deleteConnection(agent1.peerId);
+    await Promise.all([agent1.deleteConnection(agent2.peerId), agent2.deleteConnection(agent1.peerId)]);
   }
 
   async destroy() {
