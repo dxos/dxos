@@ -1,7 +1,3 @@
-//
-// Copyright 2022 DXOS.org
-//
-
 import { defineConfig } from 'vite';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -12,6 +8,7 @@ export default defineConfig({
   server: {
     host: true
   },
+  
   optimizeDeps: {
     force: true,
     include: [
@@ -28,6 +25,7 @@ export default defineConfig({
       ]
     }
   },
+
   plugins: [
     ConfigPlugin()
   ]

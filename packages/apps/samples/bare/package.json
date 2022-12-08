@@ -2,12 +2,7 @@
   "name": "@dxos/bare-template",
   "version": "0.1.15",
   "private": true,
-  "description": "Application template with only the essentials.",
-  "homepage": "https://dxos.org",
-  "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
-  "license": "MIT",
-  "author": "DXOS.org",
+  "description": "bare - a DXOS application",
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "deploy": "dx app publish",

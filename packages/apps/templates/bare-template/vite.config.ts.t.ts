@@ -2,11 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TemplateFunction } from '@dxos/plate';
-
-export type Input = {
-  monorepo?: boolean
-}
+import { defineTemplate, text } from '@dxos/plate';
+import config from './config.t';
 
 const monorepoConfig = /* javascript */ `
   optimizeDeps: {
@@ -34,8 +31,9 @@ const basicBuildConfig = /* javascript */ `
 `;
 
 // TODO(wittjosiah): Nx executor to execute in place.
-const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `
-import { defineConfig } from 'vite';
+export default defineTemplate<typeof config>(
+  ({ input }) => /* javascript */ text`
+  import { defineConfig } from 'vite';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
@@ -50,6 +48,5 @@ export default defineConfig({
     ConfigPlugin()
   ]
 });
-`;
-
-export default template;
+`
+);

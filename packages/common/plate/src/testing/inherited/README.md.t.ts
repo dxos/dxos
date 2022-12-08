@@ -4,7 +4,7 @@ export default defineTemplate(({ input, inherited }) => {
   return text`
     # Overridden package
     \`\`\`
-    ${JSON.stringify(input, null, 2)}
+    input = ${JSON.stringify(input, null, 2)}
     \`\`\`
 
     inherited output follows
