@@ -47,37 +47,40 @@ export class Presence {
 
   constructor(private readonly _params: PresenceParams) {}
 
-  createExtension({ teleport }: { teleport: Teleport }): PresenceExtension {
+  async createExtension({ teleport }: { teleport: Teleport }): Promise<PresenceExtension> {
     assert(
       teleport.localPeerId.equals(this._params.localPeerId),
       'Teleport local peer id does not match presence local peer id.'
     );
-    const extension = new PresenceExtension({
-      connections: [...this._getConnections()],
-      announceInterval: this._params.announceInterval,
-      onAnnounce: async (peerState) => {
-        if (this._receivedMessages.has(peerState.messageId)) {
-          return;
-        }
-        this._receivedMessages.add(peerState.messageId);
-        this._saveNewState(peerState);
-        this._propagateAnnounce(peerState);
-      }
-    });
-    {
-      // Connection management.
-      this._connections.set({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId }, extension);
-      this._reconcileConnections();
-      extension.closed.wait().then(
-        () => {
+    const extension = new PresenceExtension(
+      {
+        connections: [...this._getConnections()],
+        announceInterval: this._params.announceInterval
+      },
+      {
+        onAnnounce: async (peerState) => {
+          if (this._receivedMessages.has(peerState.messageId)) {
+            return;
+          }
+          this._receivedMessages.add(peerState.messageId);
+          this._saveNewState(peerState);
+          this._propagateAnnounce(peerState);
+        },
+        onClose: async (err) => {
+          if (err) {
+            log.catch(err);
+          }
           if (this._connections.has({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId })) {
             this._connections.delete({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId });
           }
-        },
-        (err) => {
-          log.catch(err);
+          void this._reconcileConnections();
         }
-      );
+      }
+    );
+    {
+      // Connection management.
+      this._connections.set({ localPeerId: teleport.localPeerId, remotePeerId: teleport.remotePeerId }, extension);
+      void this._reconcileConnections();
     }
     teleport.addExtension('dxos.mesh.teleport.presence', extension);
 
@@ -120,8 +123,10 @@ export class Presence {
   }
 
   private _reconcileConnections() {
-    this._connections.forEach((presenceExtension) => {
-      presenceExtension.setConnections(this._getConnections());
-    });
+    return Promise.all(
+      [...this._connections.values()].map((presenceExtension) =>
+        presenceExtension.setConnections(this._getConnections()).catch((err) => log.catch(err))
+      )
+    );
   }
 }

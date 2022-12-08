@@ -41,7 +41,7 @@ export type PresenceCallbacks = {
  */
 export class PresenceExtension implements TeleportExtension {
   private readonly opened = new Trigger();
-  public readonly closed = new Trigger();
+  private _closed = false;
 
   private _sendInterval?: NodeJS.Timeout;
 
@@ -69,9 +69,9 @@ export class PresenceExtension implements TeleportExtension {
       port: context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' })
     });
     await this._rpc.open();
+    this.opened.wake();
     await this._sendAnnounce();
     this._sendInterval = setInterval(() => this._sendAnnounce(), this._params.announceInterval);
-    this.opened.wake();
   }
 
   async onClose(err?: Error): Promise<void> {
@@ -79,7 +79,7 @@ export class PresenceExtension implements TeleportExtension {
     await this._rpc?.close();
     this._sendInterval && clearInterval(this._sendInterval);
     await this._callbacks.onClose?.(err);
-    this.closed.wake();
+    this._closed = true;
   }
 
   async setConnections(connections: PublicKey[]) {
@@ -94,7 +94,9 @@ export class PresenceExtension implements TeleportExtension {
   }
 
   private async _sendAnnounce() {
-    await this._rpc?.rpc.PresenceService.announce({
+    await this.opened.wait();
+    assert(this._rpc, 'RPC not initialized');
+    await this._rpc.rpc.PresenceService.announce({
       peerId: this._extensionContext!.localPeerId,
       connections: this._params.connections,
       messageId: PublicKey.random(),
