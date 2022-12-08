@@ -3,30 +3,21 @@
 //
 
 import type { Plugin } from 'esbuild';
-import assert from 'node:assert';
-import { readFile } from 'node:fs/promises';
 
 import { definitions } from './definitions';
 import { ConfigPluginOpts } from './types';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
-  const dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : options.dynamic ?? false;
-  assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
-
-  const contents = Object.entries(definitions({ ...options, dynamic }))
-    .map(([key, value]) => `globalThis.${key} = ${JSON.stringify(value)};`)
-    .join('\n');
-
   return {
     name: 'dxos-config',
-    setup: ({ onResolve, onLoad }) => {
-      onLoad({ filter: /dxos\/.*config\/dist\/lib\/browser\/index.mjs/ }, async (args) => {
-        const code = await readFile(args.path, 'utf-8');
-        return {
-          resolveDir: process.cwd(),
-          contents: contents + code
-        };
-      });
+    setup: ({ initialOptions }) => {
+      const esbuildOptions = initialOptions;
+      esbuildOptions.define ||= {};
+
+      Object.entries(definitions(options)).reduce((define, [key, value]) => {
+        define[key] = JSON.stringify(value);
+        return define;
+      }, esbuildOptions.define);
     }
   };
 };
