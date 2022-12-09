@@ -9,7 +9,7 @@ import { ConfigPlugin as EsbuildConfigPlugin } from './esbuild-plugin';
 import { ConfigPlugin as RollupConfigPlugin } from './rollup-plugin';
 
 export const ConfigPlugin = (): Plugin => ({
-  name: 'dxos',
+  name: 'dxos-config',
   config: ({ root }) => {
     const configPath = root && resolve(root, 'dx.yml');
     const envPath = root && resolve(root, 'dx-env.yml');
