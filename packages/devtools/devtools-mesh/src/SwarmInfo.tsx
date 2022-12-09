@@ -18,7 +18,7 @@ export interface SwarmInfoViewProps {
 }
 
 // TODO(burdon): Convert to table.
-export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps): JSX.Element => (
+export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps) => (
   <div>
     <div>
       Topic: <CopyText value={swarmInfo.topic.toHex()} />
