@@ -5,11 +5,17 @@
 import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
 
+/**
+ * Base class for Host/Guest invitation RPCs.
+ */
 export abstract class RpcExtension<Client, Server> implements TeleportExtension {
   private _extensionContext!: ExtensionContext;
   private _rpc!: ProtoRpcPeer<Client>;
 
-  constructor(private readonly _params: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
+  // prettier-ignore
+  protected constructor(
+    private readonly _params: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>
+  ) {}
 
   get initiator() {
     return this._extensionContext.initiator;
@@ -33,10 +39,10 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
     this._extensionContext = context;
 
     const handlers = await this.getHandlers();
-
     const port = context.createPort('rpc', {
       contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
     });
+
     this._rpc = createProtoRpcPeer({
       ...this._params,
       handlers,

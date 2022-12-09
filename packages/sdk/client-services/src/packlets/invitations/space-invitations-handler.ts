@@ -88,13 +88,18 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
     const complete = new Trigger<PublicKey>();
 
+    // TODO(burdon): Instead of creating a complex closure over a specialized class (HostSpaceInvitationExtension)
+    //  that requires callbacks, make a more concrete class that manages its own state.
+    //  i.e., keep `createInvitation` simple.
+    //  Possibility to factor out space/halo extensions?
+
     // Called for every connecting peer.
     const createExtension = (): HostSpaceInvitationExtension => {
       let guestProfile: ProfileDocument | undefined;
 
-      const hostInvitationExtension = new HostSpaceInvitationExtension({
+      const extension = new HostSpaceInvitationExtension({
         introduce: async ({ profile }) => {
-          log('guest introduced itself', {
+          log('received introduction from guest', {
             guestProfile: profile,
             host: this._signingContext.deviceKey,
             spaceKey: space.key
@@ -149,7 +154,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
             assert(credentials[0]['@type'] === 'dxos.echo.feed.CredentialsMessage');
             const spaceMemberCredential = credentials[0].credential;
             assert(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-
             await writeMessages(space.controlPipeline.writer, credentials);
 
             // Updating credentials complete.
@@ -183,9 +187,11 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
           });
         }
       });
-      return hostInvitationExtension;
+
+      return extension;
     };
 
+    // Join swarm with specific extension to handle invitation requests from guest.
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
       const swarmConnection = await this._networkManager.joinSwarm({
@@ -239,7 +245,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         onOpen: () => {
           scheduleTask(ctx, async () => {
             try {
-              // TODO(burdon): Bug where guest may create multiple connections.
+              // TODO(burdon): Bug where guest may create multiple connections <== is this still true with teleport?
               if (++connectionCount > 1) {
                 throw new Error(`multiple connections detected: ${connectionCount}`);
               }
@@ -277,6 +283,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                   }
                 }
               }
+
               // 3. Generate a pair of keys for our feeds.
               const controlFeedKey = await this._keyring.createKey();
               const dataFeedKey = await this._keyring.createKey();
@@ -318,9 +325,11 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
           });
         }
       });
+
       return extension;
     };
 
+    // Join swarm with specific extension to make invitation request.
     scheduleTask(ctx, async () => {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
@@ -347,7 +356,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 type HostSpaceInvitationExtensionCallbacks = {
   // Deliberately not async to not block the extensions opening.
   onOpen: () => void;
-
   introduce: (introduction: Introduction) => Promise<void>;
   authenticate: (request: AuthenticationRequest) => Promise<AuthenticationResponse>;
   requestAdmission: (request: SpaceAdmissionRequest) => Promise<SpaceAdmissionCredentials>;
