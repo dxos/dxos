@@ -38,7 +38,7 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
         )
       }
       {...(isNeedRefreshToast(props) && {
-        duration: 240e3,
+        slots: { root: { duration: 240e3 } },
         description: t('need refresh description'),
         actionTriggers: [
           {
