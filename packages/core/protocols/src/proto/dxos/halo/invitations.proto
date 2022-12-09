@@ -63,11 +63,16 @@ message SpaceAdmissionOffer {
   dxos.keys.PublicKey genesis_feed_key = 3;
 }
 
-message SpaceAdmissionCredentials {
+message SpaceAdmissionRequest {
   dxos.keys.PublicKey identity_key = 1;
   dxos.keys.PublicKey device_key = 2;
   dxos.keys.PublicKey control_feed_key = 3;
   dxos.keys.PublicKey data_feed_key = 4;
+}
+
+message SpaceAdmissionCredentials {
+  /// Credential of type `SpaceMember` that grants Guest's identity access to the space.
+  dxos.halo.credentials.Credential credential = 1;
 }
 
 message AdmissionParameters {

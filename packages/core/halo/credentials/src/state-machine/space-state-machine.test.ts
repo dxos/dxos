@@ -44,7 +44,8 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.ADMIN
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed,
           },
           signer: keyring
         }),
@@ -144,7 +145,8 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.ADMIN
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed,
           },
           signer: keyring
         }),
@@ -173,7 +175,8 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.MEMBER
+            role: SpaceMember.Role.MEMBER,
+            genesisFeedKey: feed,
           },
           signer: keyring,
           signingKey: device,
@@ -239,7 +242,8 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: haloSpace,
-            role: SpaceMember.Role.ADMIN
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed
           },
           signer: keyring
         }),
