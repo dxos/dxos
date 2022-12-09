@@ -1,4 +1,4 @@
-import { defineTemplate, text } from '@dxos/plate';
+import { defineTemplate, text } from '../../index';
 
 export default defineTemplate(({ input, inherited }) => {
   return text`

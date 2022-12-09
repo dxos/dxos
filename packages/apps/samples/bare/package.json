@@ -3,6 +3,10 @@
   "version": "0.1.15",
   "private": true,
   "description": "@dxos/bare - a DXOS application",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "deploy": "dx app publish",
