@@ -18,7 +18,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { Database, DataServiceSubscriptions } from '../database';
 import { MetadataStore } from '../metadata';
-import { AuthProvider, AuthVerifier } from './auth-plugin';
+import { AuthProvider, AuthVerifier } from './auth';
 import { Space } from './space';
 import { SpaceProtocol } from './space-protocol';
 
