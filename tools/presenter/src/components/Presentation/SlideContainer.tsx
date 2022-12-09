@@ -2,24 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ReactNode, useEffect, useMemo } from 'react';
+import React, { FC, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { usePresentation } from '../../hooks';
-
-// TODO(burdon): Factor out.
-export const Pager: FC<{ slide: number; length: number }> = ({ slide, length }) => {
-  return (
-    <div className='absolute bottom-1 right-1 font-mono text-3xl'>
-      {slide + 1}/{length}
-    </div>
-  );
-};
+import { PresentationProps } from './types';
 
 /**
  * Contains deck of slides.
  */
-export const SlideContainer: FC<{ slides: ReactNode[] }> = ({ slides }) => {
+export const SlideContainer: FC<PresentationProps> = ({ title, slides }) => {
   const presentation = usePresentation();
   const navigate = useNavigate();
   const { slide } = useParams();
@@ -28,6 +20,10 @@ export const SlideContainer: FC<{ slides: ReactNode[] }> = ({ slides }) => {
     presentation.setSlide(num);
     return num;
   }, [slide]);
+
+  useEffect(() => {
+    presentation.title = title;
+  }, [title]);
 
   const handleNav = (slide: number) => {
     slide >= 0 && slide < slides.length && navigate(presentation.slidePath(slide));
@@ -59,7 +55,6 @@ export const SlideContainer: FC<{ slides: ReactNode[] }> = ({ slides }) => {
   /* @ts-ignore */
   const Slide: FC<{ num: number }> = ({ num }) => slides[num]!;
 
-  // TODO(burdon): Could be better?
   const style: any = {
     position: 'absolute',
     left: 0,
@@ -71,7 +66,10 @@ export const SlideContainer: FC<{ slides: ReactNode[] }> = ({ slides }) => {
     flex: 1
   };
 
-  // NOTE: Render everything up-front to keep state.
+  // Frontmatter attr set by layout plugin.
+  const { layout } = JSON.parse((slides[slideNum] as any)?.type().props['data-frontmatter'] ?? '{}');
+
+  // TODO(burdon): Set visibility:hidden (not display:none) to preserve render state.
   return (
     <>
       {slides.map((_, num) => (
@@ -80,8 +78,15 @@ export const SlideContainer: FC<{ slides: ReactNode[] }> = ({ slides }) => {
         </div>
       ))}
 
-      {/* TODO(burdon): Show/hide based on front-matter. */}
-      <Pager slide={slideNum} length={slides.length} />
+      {/* Show/hide title/page number based on front-matter. */}
+      {layout !== 'full' && (
+        <>
+          <div className='absolute bottom-1 left-1 text-3xl'>{title}</div>
+          <div className='absolute bottom-1 right-1 font-mono text-3xl'>
+            {slideNum + 1}/{slides.length}
+          </div>
+        </>
+      )}
     </>
   );
 };
