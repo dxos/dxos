@@ -61,12 +61,12 @@ const basicBuildConfig = /* javascript */ `
 
 // TODO(wittjosiah): Nx executor to execute in place.
 const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `
-import react from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { themePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-ui/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
@@ -78,7 +78,7 @@ export default defineConfig({
   ${input.monorepo ? monorepoConfig : basicBuildConfig}
   plugins: [
     ConfigPlugin(),
-    themePlugin({
+    ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
@@ -89,7 +89,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
       ]
     }),
-    react(),
+    ReactPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {

@@ -2,7 +2,7 @@ const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
 const { ConfigPlugin } = require('@dxos/config/vite-plugin');
-const { themePlugin } = require('@dxos/react-ui/plugin');
+const { ThemePlugin } = require('@dxos/react-ui/plugin');
 
 module.exports = {
   stories: [
@@ -45,7 +45,7 @@ module.exports = {
         ]
       }
     },
-    plugins: [ConfigPlugin(), themePlugin({
+    plugins: [ConfigPlugin(), ThemePlugin({
       content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
     })]
   })

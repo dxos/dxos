@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -38,6 +38,6 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin(),
-    react()
+    ReactPlugin()
   ]
 });

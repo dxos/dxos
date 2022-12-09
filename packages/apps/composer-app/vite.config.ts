@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { themePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-ui/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
@@ -67,7 +67,7 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin(),
-    themePlugin({
+    ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
@@ -77,7 +77,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs')
       ]
     }),
-    react(),
+    ReactPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {

@@ -3,7 +3,7 @@
 //
 
 import mdx, { Options } from '@mdx-js/rollup';
-import react from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react';
 import remarkDirective from 'remark-directive';
 import { codeImport } from 'remark-code-import';
 import remarkFrontmatter from 'remark-frontmatter';
@@ -116,7 +116,7 @@ export default defineConfig({
   plugins: [
     ConfigPlugin(),
 
-    react(),
+    ReactPlugin(),
 
     // https://mdxjs.com/packages/remark-mdx
     mdx(mdxOptions),
