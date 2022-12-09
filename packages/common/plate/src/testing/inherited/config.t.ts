@@ -1,4 +1,4 @@
-import { z, defineConfig } from '@dxos/plate';
+import { z, defineConfig } from '../../index';
 import inherited from '../template/config.t';
 
 export const inputShape = z.object({
