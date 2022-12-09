@@ -16,7 +16,6 @@ interface SwarmDetailsProps {
 }
 
 export const SwarmDetails = ({ swarms }: SwarmDetailsProps) => {
-  console.log('swarms', swarms);
   const [swarmId, setSwarmId] = useState<PublicKey | undefined>();
   const [sessionId, setSessionId] = useState<PublicKey | undefined>();
 
