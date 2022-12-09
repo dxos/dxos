@@ -143,6 +143,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/node-std/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/plate/package.json",
           "jsonpath": "$.version"
         },
@@ -284,6 +289,11 @@
         {
           "type": "json",
           "path": "packages/core/mesh/teleport/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/teleport-extension-presence/package.json",
           "jsonpath": "$.version"
         },
         {

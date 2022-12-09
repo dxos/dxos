@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
+import assert from 'node:assert';
+import { inspect } from 'node:util';
 import { Writable } from 'streamx';
-import { inspect } from 'util';
 
 import { Event, latch, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';

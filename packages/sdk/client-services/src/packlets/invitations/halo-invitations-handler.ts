@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';

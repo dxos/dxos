@@ -23,18 +23,6 @@ export const dxosPlugin = (): Plugin => ({
     const devPath = root && resolve(root, 'dx-dev.yml');
 
     return {
-      // TODO(wittjosiah): This shouldn't be required.
-      //   Inspecting the bundle without this, import { inspect } from 'node:util'; in PublicKey seemed to be mapped to
-      //   @dxos/util instead of the node polyfill. This needs further investigation.
-      resolve: {
-        alias: {
-          'node:assert': 'assert/',
-          'node:events': 'events/',
-          'node:path': 'path-browserify/',
-          'node:stream': 'readable-stream/',
-          'node:util': 'util/'
-        }
-      },
       define: {
         'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
         'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX)

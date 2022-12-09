@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import { AbstractValueEncoding, Crypto } from 'hypercore';
+import assert from 'node:assert';
 import { callbackify } from 'node:util';
 
 import { Codec } from '@dxos/codec-protobuf';

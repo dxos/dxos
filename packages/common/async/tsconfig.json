@@ -18,6 +18,9 @@
       "path": "../debug"
     },
     {
+      "path": "../node-std"
+    },
+    {
       "path": "../util"
     }
   ]

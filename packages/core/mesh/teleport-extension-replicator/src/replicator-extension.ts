@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import type { ProtocolStream } from 'hypercore-protocol';
-import { Duplex } from 'stream';
+import assert from 'node:assert';
+import { Duplex } from 'node:stream';
 
 import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';

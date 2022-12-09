@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import defaultsDeep from 'lodash.defaultsdeep';
+import assert from 'node:assert';
 import path from 'path';
 
 import { Config } from '@dxos/config';

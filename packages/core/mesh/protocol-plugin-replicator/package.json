@@ -9,7 +9,6 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -24,8 +23,8 @@
     "@dxos/keys": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/network-generator": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
     "hypercore": "^9.12.0"
