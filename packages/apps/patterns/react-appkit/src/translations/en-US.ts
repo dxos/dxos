@@ -19,7 +19,7 @@ export const appkit = {
   'need refresh description': 'You’ll need these updates to continue without interruption.',
   'refresh label': 'Refresh',
   'refresh alt': 'Click your browser’s refresh button or use the refresh keyboard shortcut.',
-  'offline ready label': '{appName} is ready to use offline.',
+  'offline ready label': '{{appName}} is ready to use offline.',
   'spaces label': 'Spaces',
   'empty invitations message': 'No pending invitations',
   'invitations label': 'Invitations',
