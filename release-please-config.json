@@ -78,16 +78,6 @@
         },
         {
           "type": "json",
-          "path": "packages/bots/bot-factory-client/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/bots/botkit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },
@@ -424,11 +414,6 @@
         {
           "type": "json",
           "path": "packages/gravity/gravity-dashboard/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/orchestrator/package.json",
           "jsonpath": "$.version"
         },
         {
