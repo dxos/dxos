@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.15](https://github.com/dxos/dxos/compare/v0.1.14...v0.1.15) (2022-12-09)
+
+
+### Features
+
+* node-std globals ([#2077](https://github.com/dxos/dxos/issues/2077)) ([91a51fc](https://github.com/dxos/dxos/commit/91a51fc215c7753c054e4879b300af3d653cf8d8))
+
 ## [0.1.14](https://github.com/dxos/dxos/compare/v0.1.13...v0.1.14) (2022-12-09)
 
 
