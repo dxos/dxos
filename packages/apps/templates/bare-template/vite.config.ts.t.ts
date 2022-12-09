@@ -5,11 +5,6 @@
 import { defineTemplate, Imports, text } from '@dxos/plate';
 import config from './config.t';
 
-// const monorepoConfig = (name: string, react: boolean) => /* javascript */ ;
-
-// const basicBuildConfig = (name: string) => /* javascript */ ;
-
-// TODO(wittjosiah): Nx executor to execute in place.
 export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
   const { react, name } = input;
   const imports = new Imports();
