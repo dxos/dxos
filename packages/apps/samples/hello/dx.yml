@@ -1,11 +1,11 @@
 version: 1
 package:
   modules:
-    - name: exampledomain:app/@dxos/bare
+    - name: exampledomain:app/@dxos/hello
       type: dxos:type/app
       build:
         command: npm run build
-        outdir: out/@dxos/bare
+        outdir: out/@dxos/hello
 runtime:
   client:
     storage:
