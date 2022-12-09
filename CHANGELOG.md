@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.16](https://github.com/dxos/dxos/compare/v0.1.15...v0.1.16) (2022-12-09)
+
+
+### Bug Fixes
+
+* **codec-protobuf:** Missing dependency ([#2084](https://github.com/dxos/dxos/issues/2084)) ([b66accc](https://github.com/dxos/dxos/commit/b66accceda62e5219a337960d38ef0a6e5ed9b03))
+
 ## [0.1.15](https://github.com/dxos/dxos/compare/v0.1.14...v0.1.15) (2022-12-09)
 
 
