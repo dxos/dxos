@@ -32,7 +32,7 @@ export default defineTemplate<typeof config>(async ({ input }) => {
       '@dxos/cli': depVersion,
       '@dxos/vite-plugin': depVersion,
       typescript: '^4.8.4',
-      vite: '3.0.9',
+      vite: '3.2.5',
       ...(react ? reactDevDeps : {})
     },
     ...(!monorepo

@@ -58,8 +58,8 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
     },
     ${input.monorepo ? monorepoConfig : basicConfig}
     plugins: [
+      ConfigPlugin(),
       ${react ? `${reactPlugin()}(),` : ''}
-      ConfigPlugin()
     ]
   });
   `
