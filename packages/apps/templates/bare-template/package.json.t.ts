@@ -6,9 +6,12 @@ import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 import config from './config.t';
 
 export default defineTemplate<typeof config>(async ({ input }) => {
-  const { name, monorepo } = input;
+  const { name, react, monorepo } = input;
   const { version: dxosVersion, patchedDependencies } = await getDxosRepoInfo();
   const version = monorepo ? dxosVersion : '0.1.0';
+  const depVersion = monorepo ? `workspace:*` : dxosVersion;
+  const reactDeps = { '@dxos/react-client': depVersion, react: '^18.2.0', 'react-dom': '^18.2.0' };
+  const reactDevDeps = { '@types/react': '^18.0.21', '@types/react-dom': '^18.0.6', '@vitejs/plugin-react': '^2.0.1' };
   const packageJson = {
     name,
     version: version,
@@ -21,14 +24,16 @@ export default defineTemplate<typeof config>(async ({ input }) => {
       serve: 'vite'
     },
     dependencies: {
-      '@dxos/client': 'workspace:*',
-      '@dxos/config': 'workspace:*'
+      '@dxos/client': depVersion,
+      '@dxos/config': depVersion,
+      ...(react ? reactDeps : {})
     },
     devDependencies: {
-      '@dxos/cli': 'workspace:*',
-      '@dxos/vite-plugin': 'workspace:*',
+      '@dxos/cli': depVersion,
+      '@dxos/vite-plugin': depVersion,
       typescript: '^4.8.4',
-      vite: '3.0.9'
+      vite: '3.0.9',
+      ...(react ? reactDevDeps : {})
     },
     ...(!monorepo
       ? {

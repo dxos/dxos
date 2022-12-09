@@ -13,11 +13,11 @@ import {
   TemplateResultMetadata
 } from './executeFileTemplate';
 import { File } from './file';
-import { logger } from './logger';
-import { runPromises } from './runPromises';
-import { Config, loadConfig, unDefault } from './config';
-import { inquire } from './zodInquire';
-import { includeExclude } from './includeExclude';
+import { logger } from './util/logger';
+import { runPromises } from './util/runPromises';
+import { Config, loadConfig, unDefault, prettyConfig } from './config';
+import { inquire } from './util/zodInquire';
+import { includeExclude } from './util/includeExclude';
 
 export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions &
   Config & {
@@ -45,21 +45,28 @@ export const executeDirectoryTemplate = async <TInput>(
     mergedOptions;
   const debug = logger(verbose);
   debug(`executing template ${templateDirectory}`);
-  debug(mergedOptions);
+  debug(prettyConfig(mergedOptions));
   let input = mergedOptions.input;
   if (inputShape) {
-    const parse = unDefault(inputShape).safeParse(input);
-    if (!parse.success && !interactive) throw new Error(parse.error.toString());
-    if (!parse.success) {
-      const inquired = await inquire(inputShape, {
-        defaults: input
-      });
-      const inquiredParsed = inputShape.safeParse(inquired);
-      if (!inquiredParsed.success) throw new Error(inquiredParsed.error.toString());
-      input = inquiredParsed.data as TInput;
+    if (interactive) {
+      const parse = unDefault(inputShape).safeParse(input);
+      if (!parse.success) {
+        const inquired = await inquire(inputShape, {
+          defaults: input
+        });
+        const inquiredParsed = inputShape.safeParse(inquired);
+        if (!inquiredParsed.success) throw new Error('invalid input: ' + inquiredParsed.error.toString());
+        input = inquiredParsed.data as TInput;
+      } else {
+        input = parse.data as TInput;
+      }
+    } else {
+      const parse = inputShape.safeParse(input);
+      if (!parse.success) throw new Error('invalid input: ' + parse.error.toString());
+      input = parse.data as TInput;
     }
   }
-  debug({ input });
+  debug('inputs:', input);
   inherits && debug(`executing inherited template ${inherits}`);
   const inherited = inherits
     ? await executeDirectoryTemplate({
@@ -87,17 +94,18 @@ export const executeDirectoryTemplate = async <TInput>(
   debug(templateFiles.join('\n'));
   debug(`${regularFiles.length} regular files:`);
   debug(regularFiles.join('\n'));
-  debug('executing template files ...');
+  debug(`getting ready to execute ${templateFiles.length} template files ...`);
   const templatingPromises = templateFiles?.map((t) => {
     const templateFile = path.relative(templateDirectory, t);
-    return executeFileTemplate({
+    const result = executeFileTemplate({
       ...restOptions,
       templateFile,
       templateRelativeTo: templateDirectory,
       input,
-      inherited: inherits ? inherited?.filter((result) => result.metadata.templateFile === templateFile) : undefined,
+      // inherited: inherits ? inherited?.filter((result) => result.metadata.templateFile === templateFile) : undefined,
       overwrite
     });
+    return result;
   });
   const runner = runPromises({
     before: (_p, i) => {
@@ -107,17 +115,18 @@ export const executeDirectoryTemplate = async <TInput>(
       debug(`${templateFiles[Number(i)]} done`);
     }
   });
+  debug(`executing template files ${parallel ? 'in parallel' : 'sequentially'} ...`);
   const templateOutputs = await (parallel
     ? runner.inParallel(templatingPromises)
     : runner.inSequence(templatingPromises));
   const stringPath = (p: string | string[]) => (typeof p === 'string' ? p : path.join(...p));
-  const isOverwrittenByTemplateOutput = (f: string): boolean => {
+  const isWithinTemplateOutput = (f: string): boolean => {
     return templateOutputs.some((files) => files.some((file) => !!file && stringPath(file.path) === f));
   };
-  debug(`template ${templateDirectory} done`);
-  return [
+  debug(`template files executed : ${templateDirectory}`);
+  const flatOutput = [
     ...regularFiles
-      ?.filter((f) => !isOverwrittenByTemplateOutput(f))
+      ?.filter((f) => !isWithinTemplateOutput(f))
       .map(
         (r) =>
           new File<string, TemplateResultMetadata>({
@@ -128,4 +137,10 @@ export const executeDirectoryTemplate = async <TInput>(
       ),
     ...flatten(templateOutputs)
   ];
+  const inheritedOutputMinusFlatOutput = inherited
+    ? inherited.filter((inheritedOut) => {
+        return !flatOutput.find((existing) => existing.path == inheritedOut.path);
+      })
+    : flatOutput;
+  return [...flatOutput, ...inheritedOutputMinusFlatOutput];
 };
