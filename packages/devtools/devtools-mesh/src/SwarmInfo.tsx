@@ -4,9 +4,7 @@
 
 import React from 'react';
 
-import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
-import InfoIcon from '@mui/icons-material/Info';
-import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Button, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
 import { ConnectionState } from '@dxos/network-manager';
@@ -20,7 +18,7 @@ export interface SwarmInfoViewProps {
 }
 
 // TODO(burdon): Convert to table.
-export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps) => (
+export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps): JSX.Element => (
   <div>
     <div>
       Topic: <CopyText value={swarmInfo.topic.toHex()} />
@@ -40,18 +38,17 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
             <CopyText value={connection.remotePeerId.toHex()} />
           </ListItemText>
           <ListItemIcon>
-            <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
-              <InfoIcon />
-            </IconButton>
+            <Button variant='contained' onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
+              Details
+            </Button>
           </ListItemIcon>
         </ListItem>
       ))}
     </List>
     {onReturn && (
-      <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
-        <ArrowBackIos />
+      <Button variant='contained' onClick={onReturn} title='Back'>
         Back
-      </IconButton>
+      </Button>
     )}
   </div>
 );
