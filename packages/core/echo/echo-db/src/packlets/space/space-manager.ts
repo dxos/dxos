@@ -26,6 +26,8 @@ import { SpaceProtocol } from './space-protocol';
 export interface AcceptSpaceOptions {
   spaceKey: PublicKey;
   genesisFeedKey: PublicKey;
+  controlFeedKey: PublicKey;
+  dataFeedKey: PublicKey;
 }
 
 // TODO(burdon): Factor out to CredentialGenerator?
@@ -154,8 +156,8 @@ export class SpaceManager {
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
-      controlFeedKey: await this._keyring.createKey(),
-      dataFeedKey: await this._keyring.createKey()
+      controlFeedKey: opts.controlFeedKey,
+      dataFeedKey: opts.dataFeedKey
     };
 
     log('accepting space...', { spaceKey: opts.spaceKey });

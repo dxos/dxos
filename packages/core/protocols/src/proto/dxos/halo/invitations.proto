@@ -58,30 +58,30 @@ service HaloHostService {
 // Space agent invitations.
 //
 
-message SpaceAdmissionOffer {
-  dxos.keys.PublicKey space_key = 1;
-  dxos.keys.PublicKey genesis_feed_key = 3;
+message Introduction {
+  /// Guest's profile.
+  optional halo.credentials.ProfileDocument profile = 1;
 }
 
-message SpaceAdmissionCredentials {
+message SpaceAdmissionRequest {
   dxos.keys.PublicKey identity_key = 1;
   dxos.keys.PublicKey device_key = 2;
   dxos.keys.PublicKey control_feed_key = 3;
   dxos.keys.PublicKey data_feed_key = 4;
 }
 
-message AdmissionParameters {
-  /// Guest's profile.
-  optional halo.credentials.ProfileDocument profile = 1;
+message SpaceAdmissionCredentials {
+  /// Credential of type `SpaceMember` that grants Guest's identity access to the space.
+  dxos.halo.credentials.Credential credential = 1;
 }
 
 service SpaceHostService {
-  /// Process admission request.
-  rpc RequestAdmission(AdmissionParameters) returns (SpaceAdmissionOffer);
+  /// Introduce Guest to the host.
+  rpc Introduce(Introduction) returns (google.protobuf.Empty);
 
   /// Authenticate request.
   rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
 
   /// Process admission credentials.
-  rpc PresentAdmissionCredentials(SpaceAdmissionCredentials) returns (google.protobuf.Empty);
+  rpc RequestAdmission(SpaceAdmissionRequest) returns (SpaceAdmissionCredentials);
 }
