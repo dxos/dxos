@@ -4,7 +4,7 @@
 
 import { defineConfig } from 'vite';
 
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -30,8 +30,8 @@ export default defineConfig({
       ]
     }
   },
-  plugins: [dxosPlugin()],
+  plugins: [ConfigPlugin()],
   worker: {
-    plugins: [dxosPlugin()]
+    plugins: [ConfigPlugin()]
   }
 });

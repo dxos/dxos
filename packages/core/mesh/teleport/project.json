@@ -20,6 +20,7 @@
           "packages/core/mesh/teleport/src/index.ts",
           "packages/core/mesh/teleport/src/testing.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/mesh/teleport/dist/lib"
       },
       "outputs": [

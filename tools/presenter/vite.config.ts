@@ -3,7 +3,7 @@
 //
 
 import mdx, { Options } from '@mdx-js/rollup';
-import react from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react';
 import remarkDirective from 'remark-directive';
 import { codeImport } from 'remark-code-import';
 import remarkFrontmatter from 'remark-frontmatter';
@@ -13,7 +13,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // @ts-ignore
 import { remarkDirectiveTest, remarkPluginLayout } from './src';
@@ -114,9 +114,9 @@ export default defineConfig({
 
   // TODO(burdon): dxosPlugin, themePlugin (see halo-app).
   plugins: [
-    dxosPlugin(),
+    ConfigPlugin(),
 
-    react(),
+    ReactPlugin(),
 
     // https://mdxjs.com/packages/remark-mdx
     mdx(mdxOptions),

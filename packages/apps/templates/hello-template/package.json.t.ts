@@ -51,7 +51,6 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/cli": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-    "@dxos/vite-plugin": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@storybook/addon-actions": "^6.5.10",
     "@storybook/addon-essentials": "^6.5.10",
     "@storybook/addon-interactions": "^6.5.10",

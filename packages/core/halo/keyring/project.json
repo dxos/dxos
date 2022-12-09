@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/core/halo/keyring/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/halo/keyring/dist/lib"
       },
       "outputs": [

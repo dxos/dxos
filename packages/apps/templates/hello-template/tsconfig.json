@@ -44,9 +44,6 @@
       "path": "../../../sdk/react-uikit"
     },
     {
-      "path": "../../../sdk/vite-plugin"
-    },
-    {
       "path": "../../patterns/react-appkit"
     },
     {
