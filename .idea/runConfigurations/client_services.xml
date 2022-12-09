@@ -2,7 +2,7 @@
   <configuration default="false" name="client-services" type="mocha-javascript-test-runner">
     <node-interpreter>project</node-interpreter>
     <node-options />
-    <mocha-package>$PROJECT_DIR$/tools/executors/mocha</mocha-package>
+    <mocha-package>$PROJECT_DIR$/tools/executors/test</mocha-package>
     <working-directory>$PROJECT_DIR$</working-directory>
     <pass-parent-env>true</pass-parent-env>
     <envs>

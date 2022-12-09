@@ -50,7 +50,7 @@
     left: -1.0em;
     position: absolute;
     content: "\203A";
-    @apply text-orange-600; /** TODO(burdon): Style. */
+    @apply text-orange-600;
   }
   ul > li > ul > li {
     font-size: 80%;
@@ -61,7 +61,7 @@
 
   ol {
     counter-reset: paragraph;
-    margin-left: 1.2em;
+    margin-left: 1.5em;
     margin-top: 0.4em;
     margin-bottom: 0.4em;
   }
@@ -72,10 +72,10 @@
     margin-bottom: 0.3em;
   }
   ol > li::before {
-    left: -1.2em;
+    left: -1.5em;
     position: absolute;
     /*content: "§";*/
-    content: counter(paragraph) ". ";
+    content: counter(paragraph) ".";
     @apply text-orange-600; /** TODO(burdon): Style. */
   }
 
@@ -99,7 +99,7 @@
 }
 
 .bg-slide-header {
-  @apply bg-gray-200;
+  @apply bg-zinc-200;
   font-weight: 100;
   font-family: Sharp Sans, ui-sans-serif;
 }
