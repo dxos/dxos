@@ -1,6 +1,6 @@
 const { mergeConfig } = require('vite');
 
-const { dxosPlugin } = require('@dxos/vite-plugin');
+const { ConfigPlugin } = require('@dxos/config/vite-plugin');
 
 module.exports = {
   stories: [
@@ -50,6 +50,6 @@ module.exports = {
         ]
       }
     },
-    plugins: [dxosPlugin()]
+    plugins: [ConfigPlugin()]
   })
 };

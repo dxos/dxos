@@ -40,9 +40,6 @@
     },
     {
       "path": "../react-client"
-    },
-    {
-      "path": "../vite-plugin"
     }
   ]
 }

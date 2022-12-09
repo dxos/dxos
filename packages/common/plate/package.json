@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@swc/core": "^1.3.21",
-    "esbuild": "~0.14.1",
+    "esbuild": "^0.15.1",
     "lodash.flatten": "^4.4.0",
     "lodash.merge": "^4.6.2",
     "lodash.zip": "^4.2.0",

@@ -1,8 +1,8 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { dxosPlugin } = require('@dxos/vite-plugin');
-const { themePlugin } = require('@dxos/react-ui/plugin');
+const { ConfigPlugin } = require('@dxos/config/vite-plugin');
+const { ThemePlugin } = require('@dxos/react-ui/plugin');
 
 // TODO(wittjosiah): Plate this config.
 module.exports = {
@@ -44,8 +44,8 @@ module.exports = {
         }
       },
       plugins: [
-        dxosPlugin(),
-        themePlugin({
+        ConfigPlugin(),
+        ThemePlugin({
           content: [
             resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
             resolve(__dirname, '../node_modules/@dxos/react-uikit/dist/**/*.js')

@@ -28,7 +28,6 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/vite-plugin": "workspace:*",
     "@types/lodash.debounce": "^4.0.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

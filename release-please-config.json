@@ -463,11 +463,6 @@
         },
         {
           "type": "json",
-          "path": "packages/sdk/vite-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },

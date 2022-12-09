@@ -39,9 +39,6 @@
     },
     {
       "path": "../../deprecated/react-components"
-    },
-    {
-      "path": "../../sdk/vite-plugin"
     }
   ]
 }

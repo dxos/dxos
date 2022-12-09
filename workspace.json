@@ -105,7 +105,6 @@
     "toolbox": "tools/executors/toolbox",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
-    "vite-plugin": "packages/sdk/vite-plugin",
     "wallet-extension": "packages/deprecated/wallet/wallet-extension",
     "wallet-playground": "packages/deprecated/wallet/wallet-playground",
     "x": "tools/x"

@@ -15,6 +15,7 @@ export interface EsbuildExecutorOptions {
   bundlePackages: string[];
   entryPoints: string[];
   format?: Format;
+  injectGlobals: boolean;
   metafile: boolean;
   outputPath: string;
   platforms: Platform[];
@@ -58,7 +59,16 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           // TODO(wittjosiah): Factor out plugin and use for running browser tests as well.
           {
             name: 'node-external',
-            setup: ({ onResolve }) => {
+            setup: ({ initialOptions, onResolve }) => {
+              if (options.injectGlobals && platform === 'browser') {
+                if (!packageJson.dependencies['@dxos/node-std']) {
+                  throw new Error('Missing @dxos/node-std dependency.');
+                }
+
+                initialOptions.banner ||= {};
+                initialOptions.banner.js = 'import "@dxos/node-std/globals"';
+              }
+
               onResolve({ filter: /^node:.*/ }, (args) => {
                 if (platform !== 'browser') {
                   return null;

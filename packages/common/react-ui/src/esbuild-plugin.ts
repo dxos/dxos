@@ -11,7 +11,7 @@ import tailwindcss from 'tailwindcss';
 
 import { tailwindConfig } from './config';
 
-export const themePlugins = (options: { content: string[]; outdir: string }): Plugin[] => {
+export const ThemePlugins = (options: { content: string[]; outdir: string }): Plugin[] => {
   return [
     // TODO (thure): This really shouldn’t be this way, but after hours of searching for a reasonable way to do this I came up empty. The prior art I found was mainly this thread, though it’s only tangentially related: https://github.com/evanw/esbuild/issues/800#issuecomment-786151076
     {
