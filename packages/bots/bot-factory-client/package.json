@@ -16,6 +16,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -26,7 +27,6 @@
   "devDependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/messaging": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "jsonify": "^0.0.0"
