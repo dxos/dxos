@@ -77,9 +77,6 @@
       "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../core/mesh/protocol-plugin-rpc"
-    },
-    {
       "path": "../../core/mesh/rpc"
     },
     {

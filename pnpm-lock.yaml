@@ -3638,7 +3638,6 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/object-model': workspace:*
-      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
@@ -3674,7 +3673,6 @@ importers:
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/node-std': link:../../common/node-std
       '@dxos/object-model': link:../../core/echo/object-model
-      '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
