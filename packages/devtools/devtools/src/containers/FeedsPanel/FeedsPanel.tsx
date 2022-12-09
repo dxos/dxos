@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client';
+import { ComplexSet } from '@dxos/util';
 
 import { KeySelect, MessageTable, Panel } from '../../components';
 
@@ -62,7 +63,7 @@ export const FeedsPanel = () => {
           <KeySelect
             id='feed-select'
             label='Feed'
-            keys={[...new Set(spaceFeeds)]}
+            keys={[...new ComplexSet(PublicKey.hash, spaceFeeds)]}
             selected={selectedFeed}
             onChange={handleFeedChange}
           />
