@@ -133,7 +133,7 @@ export class ServiceContext {
 
     await spaceManager.open();
     this.spaceManager = spaceManager;
-    this.spaceInvitations = new SpaceInvitationsHandler(this.networkManager, this.spaceManager, signingContext);
+    this.spaceInvitations = new SpaceInvitationsHandler(this.networkManager, this.spaceManager, signingContext, this.keyring);
     this.initialized.wake();
   }
 }

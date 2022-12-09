@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createAdmissionCredentials, generatePasscode } from '@dxos/credentials';
+import { createAdmissionCredentials, generatePasscode, getCredentialAssertion } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -16,15 +16,15 @@ import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
-  AdmissionParameters,
   AuthenticationRequest,
   AuthenticationResponse,
-  SpaceAdmissionCredentials,
-  SpaceAdmissionOffer,
+  Introduction,
+  SpaceAdmissionCredentials, SpaceAdmissionRequest,
   SpaceHostService
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext } from '@dxos/teleport';
 
+import { Keyring } from '@dxos/keyring';
 import {
   AuthenticatingInvitationProvider,
   AUTHENTICATION_CODE_LENGTH,
@@ -46,7 +46,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
   constructor(
     networkManager: NetworkManager,
     private readonly _spaceManager: SpaceManager,
-    private readonly _signingContext: SigningContext
+    private readonly _signingContext: SigningContext,
+    private readonly _keyring: Keyring,
   ) {
     super(networkManager);
   }
@@ -91,8 +92,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
       let guestProfile: ProfileDocument | undefined;
 
       const hostInvitationExtension = new HostSpaceInvitationExtension({
-        requestAdmission: async ({ profile }) => {
-          log('responding with admission offer', {
+        introduce: async ({ profile }) => {
+          log('guest introduced itself', {
             guestProfile: profile,
             host: this._signingContext.deviceKey,
             spaceKey: space.key
@@ -103,10 +104,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
           // TODO(burdon): Is this the right place to set this state?
           // TODO(dmaretskyi): Should we expose guest's profile in this callback?
           observable.callback.onAuthenticating?.(invitation);
-          return {
-            spaceKey: space.key,
-            genesisFeedKey: space.genesisFeedKey
-          };
         },
 
         authenticate: async ({ authenticationCode: code }) => {
@@ -125,7 +122,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
           return { status };
         },
 
-        presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
+        requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
           try {
             // Check authenticated.
             if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
@@ -136,21 +133,28 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
             log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
             // TODO(burdon): Check if already admitted.
-            await writeMessages(
-              space.controlPipeline.writer,
-              await createAdmissionCredentials(
-                this._signingContext.credentialSigner,
-                identityKey,
-                deviceKey,
-                space.key,
-                controlFeedKey,
-                dataFeedKey,
-                guestProfile
-              )
+            const credentials = await createAdmissionCredentials(
+              this._signingContext.credentialSigner,
+              identityKey,
+              deviceKey,
+              space.key,
+              controlFeedKey,
+              dataFeedKey,
+              space.genesisFeedKey,
+              guestProfile,
             );
+
+            // TODO(dmaretskyi): Refactor.
+            assert(credentials[0]['@type'] === 'dxos.echo.feed.CredentialsMessage');
+            const spaceMemberCredential = credentials[0].credential;
+            assert(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+
+            await writeMessages(space.controlPipeline.writer, credentials);
 
             // Updating credentials complete.
             complete.wake(deviceKey);
+
+            return { credential: spaceMemberCredential };
           } catch (err) {
             // TODO(burdon): Generic RPC callback to report error to client.
             observable.callback.onError(err);
@@ -242,9 +246,9 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
               log('connected', { guest: this._signingContext.deviceKey });
               observable.callback.onConnected?.(invitation);
 
-              // 1. Send request.
-              log('sending admission request', { guest: this._signingContext.deviceKey });
-              const { spaceKey, genesisFeedKey } = await extension.rpc.SpaceHostService.requestAdmission({
+              // 1. Introduce guest to host.
+              log('introduce', { guest: this._signingContext.deviceKey });
+              await extension.rpc.SpaceHostService.introduce({
                 profile: this._signingContext.profile
               });
 
@@ -273,18 +277,34 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                 }
               }
 
-              // 3. Create local space.
-              // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
-              const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
+              
+              // 3. Generate a pair of keys for our feeds.
+              const controlFeedKey = await this._keyring.createKey();
+              const dataFeedKey = await this._keyring.createKey();
 
               // 4. Send admission credentials to host (with local space keys).
-              log('presenting admission credentials', { guest: this._signingContext.deviceKey, spaceKey: space.key });
-              await extension.rpc.SpaceHostService.presentAdmissionCredentials({
+              log('request admission', { guest: this._signingContext.deviceKey });
+              const { credential } = await extension.rpc.SpaceHostService.requestAdmission({
                 identityKey: this._signingContext.identityKey,
                 deviceKey: this._signingContext.deviceKey,
-                controlFeedKey: space.controlFeedKey,
-                dataFeedKey: space.dataFeedKey
+                controlFeedKey,
+                dataFeedKey,
               });
+
+              // TODO(dmaretskyi): Record credential in our HALO.
+
+              // 4. Create local space.
+              const assertion = getCredentialAssertion(credential);
+              assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
+              assert(credential.subject.id.equals(this._signingContext.identityKey));
+
+
+              const space = await this._spaceManager.acceptSpace({ 
+                spaceKey: assertion.spaceKey,
+                genesisFeedKey: assertion.genesisFeedKey,
+                controlFeedKey,
+                dataFeedKey,
+              });                
 
               // 5. Success.
               log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
@@ -327,11 +347,12 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 }
 
 type HostSpaceInvitationExtensionCallbacks = {
-  requestAdmission: (params: AdmissionParameters) => Promise<SpaceAdmissionOffer>;
-  authenticate: (request: AuthenticationRequest) => Promise<AuthenticationResponse>;
-  presentAdmissionCredentials: (request: SpaceAdmissionCredentials) => Promise<void>;
   // Deliberately not async to not block the extensions opening.
   onOpen: () => void;
+
+  introduce: (introduction: Introduction) => Promise<void>;
+  authenticate: (request: AuthenticationRequest) => Promise<AuthenticationResponse>;
+  requestAdmission: (request: SpaceAdmissionRequest) => Promise<SpaceAdmissionCredentials>;
 };
 
 /**
@@ -351,17 +372,16 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
       // TODO(dmaretskyi): For now this is just forwarding the data to callbacks since we don't have session-specific logic.
       // Perhaps in the future we will have more complex logic here.
       SpaceHostService: {
-        requestAdmission: async (params) => {
-          return this._callbacks.requestAdmission(params);
+        introduce: async (params) => {
+          return this._callbacks.introduce(params);
         },
 
         authenticate: async (credentials) => {
           return this._callbacks.authenticate(credentials);
         },
 
-        // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
-        presentAdmissionCredentials: async (credentials) => {
-          return this._callbacks.presentAdmissionCredentials(credentials);
+        requestAdmission: async (credentials) => {
+          return this._callbacks.requestAdmission(credentials);
         }
       }
     };
