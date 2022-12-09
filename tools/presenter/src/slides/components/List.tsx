@@ -57,7 +57,6 @@ export const List: FC<{}> = () => {
     }
   };
 
-  // TODO(burdon): Tailwind classes work here, but not in MDX.
   // TODO(burdon): Need smaller padding sizes for components vs. slides.
   return (
     <div>

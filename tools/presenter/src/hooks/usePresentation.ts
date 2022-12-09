@@ -5,7 +5,17 @@
 import { createContext, useContext } from 'react';
 
 class Presentation {
+  // TODO(burdon): Generalize meta.
+  private _title?: string;
   private _currentSlide = 0;
+
+  get title() {
+    return this._title;
+  }
+
+  set title(title: string | undefined) {
+    this._title = title;
+  }
 
   indexPath() {
     return '/index';

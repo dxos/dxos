@@ -25,7 +25,7 @@ const Routes: FC<PresentationProps> = ({ title, slides }) => {
     },
     {
       path: '/slide/:slide',
-      element: <SlideContainer slides={slides} />
+      element: <SlideContainer title={title} slides={slides} />
     }
   ]);
 };

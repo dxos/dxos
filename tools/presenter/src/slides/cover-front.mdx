@@ -6,12 +6,14 @@ layout: full
 import { Image } from '../components';
 import BG from './images/bg-surface-tall.png';
 
+[//]: # (Margin/bottom vs classname)
+
 <Image
   backgroundImage={`url(${BG})`}
   bottom={100}
 />
 
-<div className='flex flex-col' style={{ position: 'absolute', alignItems: 'center', left: 0, right: 0, bottom: '2em' }}>
+<div className='flex flex-col absolute' style={{ alignItems: 'center', left: 0, right: 0, bottom: '2em' }}>
   <div className='text-title font-dxos'>DXOS</div>
   <div className='text-subtitle font-caps'>The Decentralized Operating System</div>
 </div>
