@@ -10,6 +10,7 @@ import { visit, Node } from 'unist-util-visit';
 // NOTE: Sync with vite.config.ts
 type Meta = {
   layout?: string;
+  header?: boolean;
   title?: string;
   subheading?: string;
 };
@@ -52,37 +53,33 @@ export const remarkPluginLayout = (options: Options) => (tree: any) => {
  * Create DOM layout based on frontmatter.
  */
 const createLayout = (meta: Meta, children: Node[]) => {
-  const { layout, title, subheading } = meta;
-  const props = {
-    // Frontmatter for parsing by container.
-    'data-frontmatter': JSON.stringify(meta)
-  };
+  const { layout, header, title, subheading } = meta;
 
-  const withHeader = (body: Node) => {
-    if (!title) {
-      return body;
-    }
-
-    return div(
-      {
-        ...props,
-        className: 'flex flex-col flex-1 overflow-hidden'
-      },
-      [
+  const page = (body: Node[]) => {
+    const parts: Node[] = [];
+    if (layout !== 'full' && header !== false && title) {
+      parts.push(
         div({ className: 'flex flex-col pl-2 pr-2 pt-1 pb-1 bg-slide-header' }, [
           u('heading', { depth: 1 }, [u('text', title ?? '')]),
           u('heading', { depth: 3 }, [u('text', subheading ?? '')])
-        ]),
-        body
-      ]
+        ])
+      );
+    }
+
+    parts.push(...body);
+
+    return div(
+      {
+        // Frontmatter for parsing by container.
+        'data-frontmatter': JSON.stringify(meta),
+
+        className: 'flex flex-col flex-1 overflow-hidden'
+      },
+      parts
     );
   };
 
   switch (layout) {
-    case 'full': {
-      return div({ ...props, className: 'flex flex-col flex-1' }, children);
-    }
-
     case 'col-2':
     case 'col-3':
     case 'col-4': {
@@ -98,13 +95,14 @@ const createLayout = (meta: Meta, children: Node[]) => {
 
       // prettier-ignore
       // https://tailwindcss.com/docs/grid-column
-      return withHeader(div({ className: 'flex flex-1' }, [
+      return page([
         div({ className: clsx('flex', 'flex-1', 'grid', gridCols) }, columns)
-      ]));
+      ]);
     }
 
+    case 'full':
     default: {
-      return withHeader(div({ className: 'flex flex-col flex-1 m-2' }, children));
+      return page(children);
     }
   }
 };

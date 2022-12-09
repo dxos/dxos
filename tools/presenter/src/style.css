@@ -99,7 +99,7 @@
 }
 
 .bg-slide-header {
-  @apply bg-gray-200;
+  @apply bg-zinc-200;
   font-weight: 100;
   font-family: Sharp Sans, ui-sans-serif;
 }

@@ -55,7 +55,6 @@ export const SlideContainer: FC<PresentationProps> = ({ title, slides }) => {
   /* @ts-ignore */
   const Slide: FC<{ num: number }> = ({ num }) => slides[num]!;
 
-  // TODO(burdon): Could be better?
   const style: any = {
     position: 'absolute',
     left: 0,
@@ -68,8 +67,7 @@ export const SlideContainer: FC<PresentationProps> = ({ title, slides }) => {
   };
 
   // Frontmatter attr set by layout plugin.
-  const meta = JSON.parse((slides[slideNum] as any)?.type().props['data-frontmatter'] ?? '{}');
-  const { layout } = meta ?? {};
+  const { layout } = JSON.parse((slides[slideNum] as any)?.type().props['data-frontmatter'] ?? '{}');
 
   // TODO(burdon): Set visibility:hidden (not display:none) to preserve render state.
   return (
@@ -80,7 +78,7 @@ export const SlideContainer: FC<PresentationProps> = ({ title, slides }) => {
         </div>
       ))}
 
-      {/* Show/hide based on front-matter. */}
+      {/* Show/hide title/page number based on front-matter. */}
       {layout !== 'full' && (
         <>
           <div className='absolute bottom-1 left-1 text-3xl'>{title}</div>
