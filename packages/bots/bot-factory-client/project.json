@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/bots/bot-factory-client/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/bots/bot-factory-client/dist/lib"
       },
       "outputs": [

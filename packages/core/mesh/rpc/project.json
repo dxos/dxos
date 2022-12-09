@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/rpc/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/mesh/rpc/dist/lib"
       },
       "outputs": [

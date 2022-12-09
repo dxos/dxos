@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/network-generator/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/mesh/network-generator/dist/lib"
       },
       "outputs": [

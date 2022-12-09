@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/broadcast/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/mesh/broadcast/dist/lib"
       },
       "outputs": [

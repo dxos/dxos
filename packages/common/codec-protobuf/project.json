@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/common/codec-protobuf/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/common/codec-protobuf/dist/lib"
       },
       "outputs": [

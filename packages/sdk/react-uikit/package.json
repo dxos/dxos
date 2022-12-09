@@ -29,7 +29,6 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@dxos/vite-plugin": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/lodash.throttle": "^4.1.7",
     "@types/react": "^18.0.21",
