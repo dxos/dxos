@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 set -euxo pipefail
 
-plate packages/apps/templates/bare-template --output packages/apps/samples/bare --verbose --name bare
+plate packages/apps/templates/bare-template --output packages/apps/samples/bare --name @dxos/bare --interactive false
+
+plate packages/apps/templates/hello-template --output packages/apps/samples/hello --name @dxos/hello --interactive false

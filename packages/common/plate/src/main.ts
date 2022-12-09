@@ -7,10 +7,10 @@
 import process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { catFiles } from './catFiles';
+import { catFiles } from './util/catFiles';
 
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
-import { logger } from './logger';
+import { logger } from './util/logger';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
 
@@ -62,6 +62,12 @@ const main = async () => {
       requiresArg: false,
       type: 'boolean'
     })
+    .option('interactive', {
+      description: 'allow templates to ask questions interactively',
+      requiresArg: false,
+      type: 'boolean',
+      default: true
+    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
@@ -77,6 +83,7 @@ const main = async () => {
           verbose: boolean;
           overwrite: boolean;
           quiet: boolean;
+          interactive: boolean;
         } & any
       ) => {
         const tstart = Date.now();
@@ -91,6 +98,7 @@ const main = async () => {
           verbose = false,
           quiet = false,
           overwrite,
+          interactive,
           ...restArgs
         } = args;
         const debug = logger(verbose);
@@ -100,24 +108,26 @@ const main = async () => {
           throw new Error('no template specified');
         }
         debug('working directory', process.cwd());
+        const extraArgs =  { ...restArgs };
+        delete extraArgs['$0']; // yargs cruft
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: input ? await catFiles(input?.split(',')) : { ...restArgs },
+          input: input ? await catFiles(input?.split(',')) : extraArgs,
           parallel: !sequential,
           verbose,
           overwrite,
           include: include?.split(','),
-          exclude: exclude?.split(',')
+          exclude: exclude?.split(','),
+          interactive
         });
         let written = 0;
-        
         debug(`output folder: ${output}`);
         info(`template generated ${files.length} files ...`);
         await Promise.all(
           files.map(async (f) => {
             try {
-              const saved = !dry && await f.save();
+              const saved = !dry && (await f.save());
               info(saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
               written += saved ? 1 : 0;
             } catch (err: any) {
@@ -126,7 +136,6 @@ const main = async () => {
             }
           })
         );
-        
         const now = Date.now();
         info(`wrote ${written} files [${fmtDuration(now - tstart)}]`);
       }

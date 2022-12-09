@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/bare-template",
-  "version": "0.1.15",
+  "name": "@dxos/hello",
+  "version": "0.1.13",
   "private": true,
-  "description": "@dxos/bare - a DXOS application",
+  "description": "@dxos/hello - a DXOS application",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -22,11 +22,11 @@
   },
   "devDependencies": {
     "@dxos/cli": "workspace:*",
-    "@dxos/config": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",
     "typescript": "^4.8.4",
-    "vite": "3.2.5"
+    "vite": "3.0.9"
   }
 }

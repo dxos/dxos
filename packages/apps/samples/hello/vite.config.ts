@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { dxosPlugin } from '@dxos/vite-plugin';
 import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
@@ -30,7 +30,7 @@ export default defineConfig({
   }
 },
 build: {
-  outDir: 'out/app/@dxos/bare',
+  outDir: 'out/app/@dxos/hello',
   commonjsOptions: {
     include: [
       /packages/,
@@ -39,7 +39,7 @@ build: {
   }
 },
   plugins: [
-    ConfigPlugin(),
-    react()
+    react(),
+    dxosPlugin(__dirname)
   ]
 });

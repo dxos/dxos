@@ -1,9 +1,9 @@
 import path from 'path';
 import { z } from 'zod';
-import { logger } from './logger';
+import { logger } from './util/logger';
 import { TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
-import { LoadModuleOptions, safeLoadModule } from './loadModule';
-import { InquirableZodType, InquirableZodObject, InquirablePrimitive } from './zodInquire';
+import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
+import { InquirableZodType, InquirableZodObject, InquirablePrimitive } from './util/zodInquire';
 
 export type Config<TInput extends InquirableZodType = InquirableZodType> = {
   include?: (string | RegExp)[];
@@ -55,29 +55,38 @@ export const mergeConfigs = (a: Config, b: Config) => {
   return merged as Config;
 };
 
+export const prettyConfig = (o?: Config) => {
+  if (!o) return o;
+  const { inputShape, ...rest } = o;
+  return {
+    ...rest,
+    inputShape: inputShape ? '[ZodObject]' : undefined
+  };
+}
+
 export const loadConfig = async (templateDirectory: string, options?: LoadConfigOptions): Promise<Config> => {
   const tsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.ts');
   const jsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.js');
-  const { verbose } = { ...options };
+  const { verbose } = { verbose: false, ...options };
   const debug = logger(!!verbose);
   try {
     const module = (await safeLoadModule(tsName, options))?.module ?? (await safeLoadModule(jsName, options))?.module;
     const config = { ...module?.default };
-    debug('loaded config', config);
+    debug('loaded config', prettyConfig(config));
     const inherited = config.inherits
       ? await loadConfig(path.resolve(templateDirectory, config.inherits), options)
       : undefined;
-    debug('inherited config', inherited);
-    debug('default config', defaultConfig);
+    debug('inherited config', prettyConfig(inherited));
+    debug('default config', prettyConfig(defaultConfig));
     const merged = [defaultConfig, inherited, config, options?.overrides].reduce(
       (memo, next) => (next ? mergeConfigs(memo, next) : memo),
       {}
     );
-    debug('merged config', merged);
+    debug('merged config', prettyConfig(merged));
     return merged;
   } catch (err: any) {
     if (verbose) console.warn('exception while loading template config:\n' + err.toString());
-    debug('default config', defaultConfig);
+    debug('default config', prettyConfig(defaultConfig));
     return defaultConfig;
   }
 };

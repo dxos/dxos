@@ -1,4 +1,4 @@
-# @dxos/bare
+# @dxos/hello
 
 This app was created with the DXOS `bare` application template.
 
