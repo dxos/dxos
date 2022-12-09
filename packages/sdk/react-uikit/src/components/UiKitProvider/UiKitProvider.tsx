@@ -17,13 +17,20 @@ export interface UiKitProviderProps
   children?: ReactNode;
 }
 
-export const UiKitProvider = ({ children, fallback, resourceExtensions, ...uiProviderProps }: UiKitProviderProps) => {
+export const UiKitProvider = ({
+  children,
+  fallback,
+  resourceExtensions,
+  appNs,
+  ...uiProviderProps
+}: UiKitProviderProps) => {
   return (
     <UiProvider {...uiProviderProps}>
       <TranslationsProvider
         {...{
           fallback,
-          resourceExtensions
+          resourceExtensions,
+          appNs
         }}
       >
         {children}
