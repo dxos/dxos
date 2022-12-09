@@ -18,6 +18,5 @@ export const SwarmPanel = () => {
     return null;
   }
 
-  // TODO(burdon): Requires cast despite substitutions.
   return <SwarmDetails swarms={data} />;
 };
