@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import InfoIcon from '@mui/icons-material/Info';
-import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
 import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
@@ -53,9 +52,14 @@ export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
             <BooleanIcon value={swarm.isActive ? true : undefined} />
           </TableCell>
           <TableCell>
-            <IconButton onClick={() => onClick?.(swarm.id)} title='Details'>
-              <InfoIcon />
-            </IconButton>
+            <Button
+              variant='contained'
+              onClick={() => {
+                onClick?.(swarm.id);
+              }}
+            >
+              Info
+            </Button>
           </TableCell>
         </TableRow>
       ))}
