@@ -25,7 +25,7 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -46,7 +46,7 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -72,7 +72,7 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -98,7 +98,7 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -125,7 +125,7 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -167,7 +167,7 @@ describe('verifier', () => {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,
@@ -191,7 +191,7 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity,
+            identityKey: identity
           },
           subject: device,
           issuer: identity,
@@ -232,7 +232,7 @@ describe('verifier', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity,
+            identityKey: identity
           },
           subject: device,
           issuer: identity,

@@ -50,7 +50,7 @@ export class CredentialGenerator {
           spaceKey,
           role: SpaceMember.Role.ADMIN,
           profile: creatorProfile,
-          genesisFeedKey: controlKey,
+          genesisFeedKey: controlKey
         }
       }),
 
@@ -80,7 +80,7 @@ export class CredentialGenerator {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.MEMBER,
-          genesisFeedKey,
+          genesisFeedKey
         }
       }),
 

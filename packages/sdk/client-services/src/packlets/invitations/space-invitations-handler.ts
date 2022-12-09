@@ -9,6 +9,7 @@ import { Context } from '@dxos/context';
 import { createAdmissionCredentials, generatePasscode, getCredentialAssertion } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
@@ -19,12 +20,12 @@ import {
   AuthenticationRequest,
   AuthenticationResponse,
   Introduction,
-  SpaceAdmissionCredentials, SpaceAdmissionRequest,
+  SpaceAdmissionCredentials,
+  SpaceAdmissionRequest,
   SpaceHostService
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext } from '@dxos/teleport';
 
-import { Keyring } from '@dxos/keyring';
 import {
   AuthenticatingInvitationProvider,
   AUTHENTICATION_CODE_LENGTH,
@@ -47,7 +48,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     networkManager: NetworkManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _signingContext: SigningContext,
-    private readonly _keyring: Keyring,
+    private readonly _keyring: Keyring
   ) {
     super(networkManager);
   }
@@ -141,7 +142,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
               controlFeedKey,
               dataFeedKey,
               space.genesisFeedKey,
-              guestProfile,
+              guestProfile
             );
 
             // TODO(dmaretskyi): Refactor.
@@ -276,8 +277,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                   }
                 }
               }
-
-              
               // 3. Generate a pair of keys for our feeds.
               const controlFeedKey = await this._keyring.createKey();
               const dataFeedKey = await this._keyring.createKey();
@@ -288,7 +287,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                 identityKey: this._signingContext.identityKey,
                 deviceKey: this._signingContext.deviceKey,
                 controlFeedKey,
-                dataFeedKey,
+                dataFeedKey
               });
 
               // TODO(dmaretskyi): Record credential in our HALO.
@@ -298,13 +297,12 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
               assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
               assert(credential.subject.id.equals(this._signingContext.identityKey));
 
-
-              const space = await this._spaceManager.acceptSpace({ 
+              const space = await this._spaceManager.acceptSpace({
                 spaceKey: assertion.spaceKey,
                 genesisFeedKey: assertion.genesisFeedKey,
                 controlFeedKey,
-                dataFeedKey,
-              });                
+                dataFeedKey
+              });
 
               // 5. Success.
               log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
