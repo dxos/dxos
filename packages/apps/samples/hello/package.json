@@ -3,10 +3,6 @@
   "version": "0.1.13",
   "private": true,
   "description": "@dxos/hello - a DXOS application",
-  "homepage": "https://dxos.org",
-  "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "deploy": "dx app publish",
@@ -23,10 +19,10 @@
   "devDependencies": {
     "@dxos/cli": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
+    "typescript": "^4.8.4",
+    "vite": "3.0.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^2.0.1",
-    "typescript": "^4.8.4",
-    "vite": "3.0.9"
+    "@vitejs/plugin-react": "^2.0.1"
   }
 }
