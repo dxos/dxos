@@ -34,7 +34,7 @@ export const UiProvider = ({
       <ToastViewport
         {...toastViewportProps}
         className={mx(
-          'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg',
+          'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
           defaultFocus,
           toastViewportProps?.className
         )}
