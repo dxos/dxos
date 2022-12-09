@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ipfs",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "private": true,
   "description": "React IPFS utils",
   "homepage": "https://dxos.org",
