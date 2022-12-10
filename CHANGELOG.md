@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.17](https://github.com/dxos/dxos/compare/v0.1.16...v0.1.17) (2022-12-10)
+
+
+### Bug Fixes
+
+* **esbuild:** clear output path before build ([#2088](https://github.com/dxos/dxos/issues/2088)) ([04caaf3](https://github.com/dxos/dxos/commit/04caaf347ce8397739fee02bc3fdfef1e470df54))
+
 ## [0.1.16](https://github.com/dxos/dxos/compare/v0.1.15...v0.1.16) (2022-12-09)
 
 
