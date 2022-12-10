@@ -40,6 +40,6 @@ build: {
 },
   plugins: [
     ConfigPlugin(),
-    react()
+    react(),
   ]
 });

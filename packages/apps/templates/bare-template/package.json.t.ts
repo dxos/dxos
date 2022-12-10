@@ -18,8 +18,8 @@ export default defineTemplate<typeof config>(async ({ input }) => {
     private: true,
     description: `${name} - a DXOS application`,
     scripts: {
-      build: 'tsc --noEmit && vite build',
-      deploy: 'dx app publish',
+      build: 'NODE_OPTIONS="--max-old-space-size=4096" tsc --noEmit && vite build',
+      deploy: 'NODE_OPTIONS="--max-old-space-size=4096" dx app publish',
       preview: 'vite preview',
       serve: 'vite'
     },
@@ -30,7 +30,6 @@ export default defineTemplate<typeof config>(async ({ input }) => {
     },
     devDependencies: {
       '@dxos/cli': depVersion,
-      '@dxos/vite-plugin': depVersion,
       typescript: '^4.8.4',
       vite: '3.2.5',
       ...(react ? reactDevDeps : {})
@@ -43,7 +42,8 @@ export default defineTemplate<typeof config>(async ({ input }) => {
         }
       : {})
   };
-  return JSON.stringify(packageJson, null, 2);
+  const result = JSON.stringify(packageJson, null, 2);
+  return result;
 });
 
 // export type Input = {

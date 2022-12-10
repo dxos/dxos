@@ -49,6 +49,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
   return /* javascript */ text`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
+  ${() => imports.render(defaultOutputFile)}
 
   // https://vitejs.dev/config/
   export default defineConfig({
@@ -62,5 +63,5 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       ${react ? `${reactPlugin()}(),` : ''}
     ]
   });
-  `
-);
+  `;
+});
