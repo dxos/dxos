@@ -5,7 +5,7 @@
 import { promises as fs } from 'fs';
 import mkdirp from 'mkdirp';
 import * as path from 'path';
-
+// import chalk from 'chalk';
 import { fileExists, ellipsis, kib } from './utils';
 
 export type Path = string | string[];
@@ -75,7 +75,7 @@ export class File<D = string, Meta extends Record<string, any> = {}> {
     const clone = new Ctor({
       path,
       transform,
-      content: JSON.parse(JSON.stringify(content)) // TODO: ??
+      content: JSON.parse(JSON.stringify(content)) // TODO: make better clone?
     });
     return clone;
   }
@@ -137,6 +137,8 @@ export class File<D = string, Meta extends Record<string, any> = {}> {
           }
         }
         await mkdirp(path.dirname(this.path));
+        // console.log(this.path);
+        // console.log(chalk.gray(serialized));
         await fs.writeFile(this.path, serialized);
         return this;
       }
