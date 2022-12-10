@@ -22,7 +22,7 @@
     "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
     "nx": "nx",
     "prepare": "husky install",
-    "run:templates": "scripts/exec_app_templates",
+    "run:templates": "scripts/run_templates",
     "test": "nx run-many --target=test"
   },
   "dependencies": {

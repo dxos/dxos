@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
@@ -39,7 +39,7 @@ build: {
   }
 },
   plugins: [
+    ConfigPlugin(),
     react(),
-    dxosPlugin(__dirname)
   ]
 });
