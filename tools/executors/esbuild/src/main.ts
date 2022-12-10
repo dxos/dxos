@@ -5,8 +5,8 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'path';
+import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { LogTransformer } from './log-transform-plugin';
 
@@ -27,6 +27,11 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
+
+  try {
+    await readdir(options.outputPath);
+    await rm(options.outputPath, { recursive: true });
+  } catch {}
 
   const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
