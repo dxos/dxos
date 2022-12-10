@@ -12,11 +12,24 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 import { ExtensionContext, TeleportExtension } from './teleport';
 
+interface TestExtensionCallbacks {
+  onOpen?: () => Promise<void>
+  onClose?: () => Promise<void>
+}
+
 export class TestExtension implements TeleportExtension {
   public readonly closed = new Trigger();
+  private public = new Trigger();
   public extensionContext: ExtensionContext | undefined;
   private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
-  private _opened = new Trigger();
+
+  constructor(
+    public readonly callbacks: TestExtensionCallbacks = {}
+  ) {}
+
+  get remotePeerId() {
+    return this.extensionContext!.remotePeerId;
+  }
 
   async onOpen(context: ExtensionContext) {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
@@ -47,18 +60,20 @@ export class TestExtension implements TeleportExtension {
     });
 
     await this._rpc.open();
+    await this.callbacks.onOpen?.();
 
-    this._opened.wake();
+    this.public.wake();
   }
 
   async onClose(err?: Error) {
     log('onClose', { err });
+    await this.callbacks.onClose?.();
     this.closed.wake();
     await this._rpc.close();
   }
 
   async test() {
-    await this._opened.wait({ timeout: 500 });
+    await this.public.wait({ timeout: 500 });
     const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: 'test' }), 500);
     assert(res.data === 'test');
   }
