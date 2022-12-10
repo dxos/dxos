@@ -3644,7 +3644,7 @@ importers:
       '@types/readable-stream': ^2.3.9
       abstract-leveldown: ~7.0.0
       base-x: ~3.0.9
-      jsondown: dxos/jsondown#main
+      jsondown: ^1.0.0
       level-js: ^5.0.2
       memdown: ^5.1.0
     dependencies:
@@ -3676,7 +3676,7 @@ importers:
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
       base-x: 3.0.9
-      jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
+      jsondown: 1.0.0_abstract-leveldown@7.0.0
       level-js: 5.0.2
       memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
     devDependencies:
@@ -8562,6 +8562,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/x-global': 6.11.1
+    dev: false
 
   /@polkadot/x-textencoder/6.11.1:
     resolution: {integrity: sha512-8ipjWdEuqFo+R4Nxsc3/WW9CSEiprX4XU91a37ZyRVC4e9R1bmvClrpXmRQLVcAQyhRvG8DKOOtWbz8xM+oXKg==}
@@ -8569,6 +8570,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/x-global': 6.11.1
+    dev: false
 
   /@polkadot/x-ws/6.11.1:
     resolution: {integrity: sha512-GNu4ywrMlVi0QF6QSpKwYWMK6JRK+kadgN/zEhMoH1z5h8LwpqDLv128j5WspWbQti2teCQtridjf7t2Lzoe8Q==}
@@ -12513,6 +12515,7 @@ packages:
     resolution: {integrity: sha512-pqr857jrp2kPuO9uRjZ3PwnJTjoQy+fcdxvBTvHm6dkmEL9q+hDD/2j/0ELOBPtPnS8LjCX0gI9nbl8lVkadpg==}
     dependencies:
       '@types/node': 18.11.9
+    dev: false
 
   /@types/body-scroll-lock/3.1.0:
     resolution: {integrity: sha512-3owAC4iJub5WPqRhxd8INarF2bWeQq1yQHBgYhN0XLBJMpd5ED10RrJ3aKiAwlTyL5wK7RkBD4SZUQz2AAAMdA==}
@@ -24775,6 +24778,16 @@ packages:
     resolution: {integrity: sha512-gfFQZrcTc8CnKXp6Y4/CBT3fTc0OVuDofpre4aEeEpSBPV5X5v4+Vmx+8snU7RLPrNHPKSgLxGo9YuQzz20o+w==}
     dev: true
 
+  /jsondown/1.0.0_abstract-leveldown@7.0.0:
+    resolution: {integrity: sha512-p6XxPaq59aXwcdDQV3ISMA5xk+1z6fJuctcwwSdR9iQgbYOcIrnknNrhcMGG+0FaUfKHGkdDpQNaZrovfBoyOw==}
+    peerDependencies:
+      abstract-leveldown: '*'
+    dependencies:
+      abstract-leveldown: 7.0.0
+      memdown: 1.4.1
+      mkdirp: 0.5.1
+    dev: false
+
   /jsonfile/4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
     optionalDependencies:
@@ -35894,16 +35907,3 @@ packages:
 
   /zwitch/2.0.2:
     resolution: {integrity: sha512-JZxotl7SxAJH0j7dN4pxsTV6ZLXoLdGME+PsjkL/DaBrVryK9kTGq06GfKrwcSOqypP+fdXGoCHE36b99fWVoA==}
-
-  github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0:
-    resolution: {tarball: https://codeload.github.com/dxos/jsondown/tar.gz/0bec0436f00973e7f2528115c72a5ab96dc45576}
-    id: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576
-    name: jsondown
-    version: 1.0.0
-    peerDependencies:
-      abstract-leveldown: '*'
-    dependencies:
-      abstract-leveldown: 7.0.0
-      memdown: 1.4.1
-      mkdirp: 0.5.1
-    dev: false
