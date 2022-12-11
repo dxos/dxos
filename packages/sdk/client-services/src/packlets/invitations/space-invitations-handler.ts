@@ -83,6 +83,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
     // Join swarm with specific extension to handle invitation requests from guest.
     scheduleTask(ctx, async () => {
+      // TODO(burdon): Reuse same context?
       const extension = new HostSpaceInvitationExtension(
         ctx,
         space,
