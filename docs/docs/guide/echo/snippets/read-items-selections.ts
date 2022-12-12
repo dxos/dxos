@@ -14,5 +14,7 @@ const { value: spaces } = client.echo.querySpaces();
 
 const space = spaces[0];
 
-// query items by selecting them
-const selection = space.database.select({ type });
+// filter selections by chaining
+const selection = space.database
+  .select({ type })
+  .filter((item) => !item.deleted);

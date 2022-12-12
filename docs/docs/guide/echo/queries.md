@@ -18,10 +18,22 @@ const type = 'yourdomain:type/some-type-identifier';
 // get a list of all spaces
 const { value: spaces } = client.echo.querySpaces();
 
+const space = spaces[0];
+
 // query items by selecting them
-const selection = spaces[0].database.select({ type });
+const selection = space.database.select({ type });
 ```
 
 ### Filtering data
-```ts file=./snippets/read-items-selections.ts#L10-
+
+```ts file=./snippets/read-items-selections.ts#L17-
+const type = 'yourdomain:type/some-type-identifier';
+
+// get a list of all spaces
+const { value: spaces } = client.echo.querySpaces();
+
+const space = spaces[0];
+
+// query items by selecting them
+const selection = space.database.select({ type });
 ```
