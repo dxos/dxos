@@ -16,7 +16,7 @@ import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 
 describe('space/space-protocol', () => {
-  test('two peers discover each other', async () => {
+  test('two peers discover each other via presence', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
