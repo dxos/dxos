@@ -44,7 +44,7 @@ export const KeySelect = ({
             sx={{
               display: 'flex',
               position: 'relative',
-              'align-items': 'center'
+              alignItems: 'center'
             }}
           >
             <Avatar size={12} fallbackValue={key.toHex()} />

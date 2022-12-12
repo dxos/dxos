@@ -2,54 +2,66 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TemplateFunction } from '@dxos/plate';
+import { defineTemplate, Imports, text } from '@dxos/plate';
+import config from './config.t';
 
-export type Input = {
-  monorepo?: boolean
-}
-
-const monorepoConfig = /* javascript */ `
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/client',
-      '@dxos/config'
-    ]
-  },
-  build: {
-    outDir: 'out/example/app/bare',
-    commonjsOptions: {
+export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
+  const { react, name } = input;
+  const imports = new Imports();
+  const reactPlugin = imports.lazy('react', '@vitejs/plugin-react', { isDefault: true });
+  const monorepoConfig = text`
+    optimizeDeps: {
+      force: true,
       include: [
-        /packages/,
-        /node_modules/
-      ]
+        '@dxos/client',
+        ${react ? "'@dxos/react-client'," : ''}
+        '@dxos/config'
+      ],
+      esbuildOptions: {
+        // TODO(wittjosiah): Remove.
+        plugins: [
+          {
+            name: 'yjs',
+            setup: ({ onResolve }) => {
+              onResolve({ filter: /yjs/ }, () => {
+                return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
+              })
+            }
+          }
+        ]
+      }
+    },
+    build: {
+      outDir: 'out/app/${name}',
+      commonjsOptions: {
+        include: [
+          /packages/,
+          /node_modules/
+        ]
+      }
+    },
+    `;
+  const basicConfig = text`
+    build: {
+      outDir: 'out/app/${name}'
     }
-  },
-`;
+    `;
+  return /* javascript */ text`
+  import { defineConfig } from 'vite';
+  import { ConfigPlugin } from '@dxos/config/vite-plugin';
+  ${() => imports.render(defaultOutputFile)}
 
-const basicBuildConfig = /* javascript */ `
-  build: {
-    outDir: 'out/example/app/bare'
-  }
-`;
-
-// TODO(wittjosiah): Nx executor to execute in place.
-const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `
-import { defineConfig } from 'vite';
-
-import { dxosPlugin } from '@dxos/vite-plugin';
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  base: '', // Ensures relative path to assets.
-  server: {
-    host: true
-  },
-  ${input.monorepo ? monorepoConfig : basicBuildConfig}
-  plugins: [
-    dxosPlugin(${input.monorepo ? '__dirname' : ''})
-  ]
+  // https://vitejs.dev/config/
+  export default defineConfig({
+    base: '', // Ensures relative path to assets.
+    server: {
+      host: true
+    },
+    ${input.monorepo ? monorepoConfig : basicConfig}
+    plugins: [
+      ConfigPlugin(),
+      ${react ? `${reactPlugin()}(),` : ''}
+    ]
+  });
+  `;
 });
-`;
-
-export default template;

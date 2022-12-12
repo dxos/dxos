@@ -16,13 +16,13 @@ project’s Vite config to use it, e.g.:
 
 ```ts
 // ...
-import { themePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-ui/plugin';
 // ...
 export default defineConfig({
   // ...
   plugins: [
     // ...
-    themePlugin({content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']}),
+    ThemePlugin({content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']}),
     // ...
   ]
   // ...
@@ -63,12 +63,12 @@ project’s ESBuild config to use it, e.g.:
 
 ```ts
 // ...
-import { themePlugins } from '@dxos/react-ui/esbuild-plugin';
+import { ThemePlugins } from '@dxos/react-ui/esbuild-plugin';
 // ...
 void build({
   entryPoints: [/* ... */, resolve(__dirname, '../node_modules/@dxos/react-ui/src/theme.css')],
   // ...
-  plugins: themePlugins({
+  plugins: ThemePlugins({
     outdir: resolve(__dirname, '../dist'),
     content: [
       resolve(__dirname, '../index.html'),
@@ -81,7 +81,7 @@ void build({
 // ...
 ```
 
-Ensure `theme.css` from `react-ui` is included as an entrypoint, and `outdir` passed to `themePlugins` is the same as
+Ensure `theme.css` from `react-ui` is included as an entrypoint, and `outdir` passed to `ThemePlugins` is the same as
 provided to ESBuild.
 
 ### 2. Reference the basic stylesheet

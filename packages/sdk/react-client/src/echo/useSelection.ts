@@ -11,8 +11,7 @@ import { Falsy } from '@dxos/util';
  * Hook to generate values from a selection using a selector function.
  *
  * NOTE:
- * All values that may change the selection result,
- * apart from changes in ECHO database itself, must be passed to deps array
+ * All values that may change the selection result  must be passed to deps array
  * for updates to work correctly.
  *
  * @param selection Selection from which to query data. Can be falsy - in that case the hook will return undefined.

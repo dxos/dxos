@@ -1,5 +1,76 @@
 # Changelog
 
+## [0.1.17](https://github.com/dxos/dxos/compare/v0.1.16...v0.1.17) (2022-12-10)
+
+
+### Bug Fixes
+
+* **esbuild:** clear output path before build ([#2088](https://github.com/dxos/dxos/issues/2088)) ([04caaf3](https://github.com/dxos/dxos/commit/04caaf347ce8397739fee02bc3fdfef1e470df54))
+
+## [0.1.16](https://github.com/dxos/dxos/compare/v0.1.15...v0.1.16) (2022-12-09)
+
+
+### Bug Fixes
+
+* **codec-protobuf:** Missing dependency ([#2084](https://github.com/dxos/dxos/issues/2084)) ([b66accc](https://github.com/dxos/dxos/commit/b66accceda62e5219a337960d38ef0a6e5ed9b03))
+
+## [0.1.15](https://github.com/dxos/dxos/compare/v0.1.14...v0.1.15) (2022-12-09)
+
+
+### Features
+
+* node-std globals ([#2077](https://github.com/dxos/dxos/issues/2077)) ([91a51fc](https://github.com/dxos/dxos/commit/91a51fc215c7753c054e4879b300af3d653cf8d8))
+
+## [0.1.14](https://github.com/dxos/dxos/compare/v0.1.13...v0.1.14) (2022-12-09)
+
+
+### Features
+
+* Add google.protobuf.Struct substitutions  ([#1988](https://github.com/dxos/dxos/issues/1988)) ([7df721e](https://github.com/dxos/dxos/commit/7df721edfdcc617f13db6d0a40f1656a52e1baa3))
+* Add Presence ([#2040](https://github.com/dxos/dxos/issues/2040)) ([c4e8e2e](https://github.com/dxos/dxos/commit/c4e8e2e3e5314fa4ef325483d7635149adea2233))
+* Convert space invitations to use teleport ([#2065](https://github.com/dxos/dxos/issues/2065)) ([d728ab3](https://github.com/dxos/dxos/commit/d728ab37a1ce67fb750d426360c779e5882b05cb))
+* **devtools:** Add Keyring panel ([#2019](https://github.com/dxos/dxos/issues/2019)) ([39b477e](https://github.com/dxos/dxos/commit/39b477e081b6472b630a2aab036c009ac3a5ed7c))
+* **devtools:** Add Profile panel  ([#2018](https://github.com/dxos/dxos/issues/2018)) ([bd945ba](https://github.com/dxos/dxos/commit/bd945baf965a7a42b8dc247fd1ad36905b6d7343))
+* End-to-end gravity test. ([#2024](https://github.com/dxos/dxos/issues/2024)) ([59dbbe0](https://github.com/dxos/dxos/commit/59dbbe08be8989293cb85224eb39cf878ad75cfd))
+* ESBuild plugin ([#2064](https://github.com/dxos/dxos/issues/2064)) ([b4594bf](https://github.com/dxos/dxos/commit/b4594bfabb89dec2592483e43d2c2bb0c5a9d355))
+* **keyring:** List keys in Keyring ([#2020](https://github.com/dxos/dxos/issues/2020)) ([fcd1944](https://github.com/dxos/dxos/commit/fcd1944fc3edb161586e7b209177d5dbae403264))
+* mdx presentation ([#2047](https://github.com/dxos/dxos/issues/2047)) ([a95409c](https://github.com/dxos/dxos/commit/a95409cb14eb0a0025c661aae130f67bba0c318d))
+* Migrate esbuild plugins into monorepo ([#2010](https://github.com/dxos/dxos/issues/2010)) ([7680ac0](https://github.com/dxos/dxos/commit/7680ac06e97ea303bc0a7f8cdec385d7f79ccd2b))
+* Refactor network manager to improve stability ([#2031](https://github.com/dxos/dxos/issues/2031)) ([0eb060e](https://github.com/dxos/dxos/commit/0eb060e13fbd4ecd8dde025939e6134647c0f87f))
+* Rework space invitation sequnce. ([#2080](https://github.com/dxos/dxos/issues/2080)) ([67aeb97](https://github.com/dxos/dxos/commit/67aeb97c0ea2445f0fb735b0be0ebad9d246613c))
+* slide layout ([#2073](https://github.com/dxos/dxos/issues/2073)) ([9526181](https://github.com/dxos/dxos/commit/952618119c3837711fbe3146ede0c5a7ded3c5ad))
+* SWC plugin for logger ([#2045](https://github.com/dxos/dxos/issues/2045)) ([d545aed](https://github.com/dxos/dxos/commit/d545aed67a3b0418359a828a541e59de2f13830d))
+* Teleport ([#1762](https://github.com/dxos/dxos/issues/1762)) ([1d2469c](https://github.com/dxos/dxos/commit/1d2469c0ade41bd94e0895b267822755ca6242a0))
+* **test:** Add tags filter to executor ([#1973](https://github.com/dxos/dxos/issues/1973)) ([6b67c97](https://github.com/dxos/dxos/commit/6b67c977bb2885cb228433316b4daaf83f771aeb))
+* TodoMVC demo ([#2005](https://github.com/dxos/dxos/issues/2005)) ([2724742](https://github.com/dxos/dxos/commit/2724742905562406caad6d14147a50ed71d1efa6))
+* Use teleport in HALO invitations ([#2041](https://github.com/dxos/dxos/issues/2041)) ([7695129](https://github.com/dxos/dxos/commit/76951297a5591e6b299613ef15ca1afa5b9b05fd))
+
+
+### Bug Fixes
+
+* bare input onChange ([#2052](https://github.com/dxos/dxos/issues/2052)) ([56c3afb](https://github.com/dxos/dxos/commit/56c3afb078e4e1f0ebff527025677f9041470719))
+* bundled app ([#2068](https://github.com/dxos/dxos/issues/2068)) ([de27522](https://github.com/dxos/dxos/commit/de2752203870f69ac7ea0cf527856741eb8bb7b0))
+* **config:** Improve config plugins injection ([#2067](https://github.com/dxos/dxos/issues/2067)) ([7f650cf](https://github.com/dxos/dxos/commit/7f650cf827a8cc9bd239820d097200fdaa02e4b3))
+* **config:** Re-add plugin dynamic env var parsing ([#2072](https://github.com/dxos/dxos/issues/2072)) ([4ccc099](https://github.com/dxos/dxos/commit/4ccc0995ff4536efbe0abe753d4e5103d804ecca))
+* **devtools:** Instant update items with parents ([#2081](https://github.com/dxos/dxos/issues/2081)) ([1335cd1](https://github.com/dxos/dxos/commit/1335cd1cf3ac2daedb69b692368c7cf8f496015e))
+* **devtools:** SwarmPanel ([#2079](https://github.com/dxos/dxos/issues/2079)) ([14dc8cb](https://github.com/dxos/dxos/commit/14dc8cb13a30c24c6c07f536aa65b3d07f419dfe))
+* display links for published apps. ([#2032](https://github.com/dxos/dxos/issues/2032)) ([db9bbf5](https://github.com/dxos/dxos/commit/db9bbf5d93409279c83e0d1c00ca1beb5ef015b0))
+* Enable authentication retries. ([#2026](https://github.com/dxos/dxos/issues/2026)) ([e289349](https://github.com/dxos/dxos/commit/e2893490fa9dff84bf5761cb0c9592cfe854ed8c))
+* Increase heartbeat timeout in vault ([#2049](https://github.com/dxos/dxos/issues/2049)) ([b2377a7](https://github.com/dxos/dxos/commit/b2377a7bb6dce3c4a2ce459169f83725660fd305))
+* Issues missed by slots refactor ([#2053](https://github.com/dxos/dxos/issues/2053)) ([b3bc449](https://github.com/dxos/dxos/commit/b3bc449e8d34c695370a48bac56bfa5cb63e978c))
+* Lint toolbox ([#2066](https://github.com/dxos/dxos/issues/2066)) ([902f381](https://github.com/dxos/dxos/commit/902f381d612d974c5f625d080be87fa394846328))
+* Menubar radix issues ([#2063](https://github.com/dxos/dxos/issues/2063)) ([bc9f9a3](https://github.com/dxos/dxos/commit/bc9f9a39c82003dd7f37392b1e3769c5b1c8089e))
+* **react-appkit:** slightly safer telemetry ([#2002](https://github.com/dxos/dxos/issues/2002)) ([b17fc4d](https://github.com/dxos/dxos/commit/b17fc4d89707e1fb8c910a91e2c09908f3d08944)), closes [#2001](https://github.com/dxos/dxos/issues/2001)
+* react-ui Storybook, tokens ([#2070](https://github.com/dxos/dxos/issues/2070)) ([f684390](https://github.com/dxos/dxos/commit/f684390e5f2a26cb14b2c196fb5718c709ef4d35))
+* Remove tsc executor patch ([#2044](https://github.com/dxos/dxos/issues/2044)) ([e0df1df](https://github.com/dxos/dxos/commit/e0df1dfabf1bc2a6125dc7e3013c2b13ce12eb38))
+* Restore missing controlled value on bare inputs ([#2060](https://github.com/dxos/dxos/issues/2060)) ([f9d4cb6](https://github.com/dxos/dxos/commit/f9d4cb67a134a130b9438bbc6e5620f656300cd3))
+* Restore missing Tailwind content directories ([#2061](https://github.com/dxos/dxos/issues/2061)) ([e604b38](https://github.com/dxos/dxos/commit/e604b381198ccf756a678294178e208247f9e252))
+* Service worker Toast messages ([#2015](https://github.com/dxos/dxos/issues/2015)) ([b73c69c](https://github.com/dxos/dxos/commit/b73c69c34f1bf1a180a8668181c1b783932db868))
+* Space metadata item bug ([#2071](https://github.com/dxos/dxos/issues/2071)) ([302ca8a](https://github.com/dxos/dxos/commit/302ca8a9a43ed24384dbebacb125c54d328a3d73))
+* **teleport:** Make both Teleports destroy themselves when one disconnects ([#2056](https://github.com/dxos/dxos/issues/2056)) ([171e4ac](https://github.com/dxos/dxos/commit/171e4ac2b38832a9dc153628c28386708c43b36c))
+* Toast bugs & i18n issues ([#2076](https://github.com/dxos/dxos/issues/2076)) ([a1b0a2b](https://github.com/dxos/dxos/commit/a1b0a2b0a047827008e3bc06f16d171716d31519))
+* Tooltip in dialog z-index ([#2016](https://github.com/dxos/dxos/issues/2016)) ([43ad765](https://github.com/dxos/dxos/commit/43ad76582b5c0fef56978cf3e8c84b465377babe)), closes [#1994](https://github.com/dxos/dxos/issues/1994)
+
 ## [0.1.13](https://github.com/dxos/dxos/compare/v0.1.12...v0.1.13) (2022-11-25)
 
 

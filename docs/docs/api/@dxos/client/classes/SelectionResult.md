@@ -1,5 +1,5 @@
 # Class `SelectionResult`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:16]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/selection/result.d.ts:16]()</sub>
 
 
 Query subscription.

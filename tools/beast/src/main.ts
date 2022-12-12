@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { cosmiconfig } from 'cosmiconfig';
 import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -11,8 +12,19 @@ import { log } from '@dxos/log';
 import { PackageDependencyBuilder, WorkspaceProcessor } from './nx';
 import { getBaseDir } from './util';
 
-const main = () => {
-  log.info('Started');
+export type Config = {
+  exclude?: string[];
+};
+
+const loadConfig = async () => {
+  const explorer = cosmiconfig('beast');
+  return explorer.search();
+};
+
+const main = async () => {
+  const config = await loadConfig();
+
+  log.info(`beast config: ${config?.filepath ?? 'internal defaults'}`);
 
   yargs(hideBin(process.argv))
     .scriptName('beast')
@@ -112,15 +124,7 @@ const main = () => {
             description: 'Excluded files',
             type: 'string',
             // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
-            default: [
-              '@dxos/async',
-              '@dxos/debug',
-              '@dxos/feeds',
-              '@dxos/keys',
-              '@dxos/log',
-              '@dxos/testutils',
-              '@dxos/util'
-            ].join(',')
+            default: (config?.config?.exclude ?? []).join(',')
           }),
       handler: ({
         verbose,
@@ -144,12 +148,10 @@ const main = () => {
           verbose,
           exclude: exclude?.split(',')
         });
-
         processor.getProjects(pattern).forEach((project) => {
           if (verbose) {
             console.log(`Updating: ${project.name.padEnd(32)} ${project.subDir}`);
           }
-
           builder.createDocs(project, outDir, baseUrl);
         });
       }

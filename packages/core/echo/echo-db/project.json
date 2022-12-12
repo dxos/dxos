@@ -20,6 +20,7 @@
           "packages/core/echo/echo-db/src/index.ts",
           "packages/core/echo/echo-db/src/packlets/testing/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/echo/echo-db/dist/lib"
       },
       "outputs": [

@@ -4,4 +4,4 @@
 // Copyright 2022 DXOS.org
 //
 
-require('../dist/lib/node/main.js');
+require('../dist/lib/node/main.cjs');

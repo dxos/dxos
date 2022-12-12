@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.1.13",
+  "version": "0.1.17",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,7 +15,11 @@
   "files": [
     "dist",
     "esbuild-plugin.js",
-    "rollup-plugin.js"
+    "esbuild-plugin.d.ts",
+    "rollup-plugin.js",
+    "rollup-plugin.d.ts",
+    "vite-plugin.js",
+    "vite-plugin.d.ts"
   ],
   "scripts": {
     "test-build": "node ./src/testing/build.js"

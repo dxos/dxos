@@ -38,7 +38,7 @@ export const ItemsPanel = () => {
 
   const spaces = useSpaces();
   const space = useSpace(selectedSpaceKey);
-  const items = useSelection(space?.select().filter((item) => !item.parent)) ?? [];
+  const items = useSelection(space?.select()) ?? [];
 
   return (
     <Panel
@@ -63,9 +63,11 @@ export const ItemsPanel = () => {
             height: '100%'
           }}
         >
-          {items.map((item) => (
-            <ItemNode key={item.id} item={item} onSelect={setSelectedItem} />
-          ))}
+          {items
+            .filter((item) => !item.parent)
+            .map((item) => (
+              <ItemNode key={item.id} item={item} onSelect={setSelectedItem} />
+            ))}
         </TreeView>
 
         <Box flex={1}>{selectedItem && <ItemDetails item={selectedItem} />}</Box>

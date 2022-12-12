@@ -57,7 +57,7 @@ describe('Lock', () => {
     await p2;
     events.push('after');
 
-    expect(events).to.deep.equal(['lock1', 'lock2', 'lock3', 'p1 resolve', 'p2 resolve', 'after']);
+    expect(events).to.deep.equal(['lock1', 'lock2', 'p1 resolve', 'lock3', 'p2 resolve', 'after']);
   });
 
   test('deadlock', async () => {
