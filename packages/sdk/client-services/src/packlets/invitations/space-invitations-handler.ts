@@ -103,8 +103,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         }),
         topology: new StarTopology(topic)
       });
-      ctx.onDispose(() => swarmConnection.close());
 
+      ctx.onDispose(() => swarmConnection.close());
       observable.callback.onConnecting?.(invitation);
     });
 
@@ -157,6 +157,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         }),
         topology: new StarTopology(topic)
       });
+
       ctx.onDispose(() => swarmConnection.close());
       observable.callback.onConnecting?.(invitation);
 
@@ -252,9 +253,9 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
               identityKey,
               deviceKey,
               this._space.key,
+              this._space.genesisFeedKey,
               controlFeedKey,
               dataFeedKey,
-              this._space.genesisFeedKey,
               guestProfile
             );
 
@@ -282,9 +283,8 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
     await super.onOpen(context);
 
     scheduleTask(this._ctx, async () => {
-      const { timeout = INVITATION_TIMEOUT } = this._options ?? {};
-
       try {
+        const { timeout = INVITATION_TIMEOUT } = this._options ?? {};
         log('connected', { host: this._signingContext.deviceKey });
         this._observable.callback.onConnected?.(this._invitation);
         const deviceKey = await this.complete.wait({ timeout });

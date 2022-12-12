@@ -170,9 +170,9 @@ export const createAdmissionCredentials = async (
   identityKey: PublicKey,
   deviceKey: PublicKey,
   spaceKey: PublicKey,
+  genesisFeedKey: PublicKey,
   controlFeedKey: PublicKey,
   dataFeedKey: PublicKey,
-  genesisFeedKey: PublicKey,
   profile?: ProfileDocument
 ): Promise<TypedMessage[]> => {
   const credentials = await Promise.all([
