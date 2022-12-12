@@ -177,8 +177,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
 class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: SpaceHostService }> {
-  _authenticationCode?: string;
-  _authenticationRetry = 0;
+  private _authenticationCode?: string;
+  private _authenticationAttempts = 0;
 
   readonly complete = new Trigger<PublicKey>();
 
@@ -222,7 +222,7 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
           log('received authentication request', { authenticationCode: code });
           let status = AuthenticationResponse.Status.OK;
           if (this._invitation.authenticationCode) {
-            if (this._authenticationRetry++ > MAX_OTP_ATTEMPTS) {
+            if (this._authenticationAttempts++ > MAX_OTP_ATTEMPTS) {
               status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
             } else if (code !== this._invitation.authenticationCode) {
               status = AuthenticationResponse.Status.INVALID_OTP;
@@ -356,7 +356,6 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
         // TODO(burdon): Test timeout (options for timeouts at different steps).
         if (this._invitation.type === undefined || this._invitation.type === Invitation.Type.INTERACTIVE) {
           const { timeout = INVITATION_TIMEOUT } = this._options ?? {};
-
           for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
             log('guest waiting for authentication code...');
             this._observable.callback.onAuthenticating?.(this._invitation);
