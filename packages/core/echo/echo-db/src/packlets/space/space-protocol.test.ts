@@ -9,10 +9,10 @@ import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { describe, test, afterTest } from '@dxos/test';
+import { Timeframe } from '@dxos/timeframe';
 
 import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
-import { Timeframe } from '@dxos/timeframe';
 
 describe('space/space-protocol', () => {
   test.skip('two peers discover each other', async () => {
@@ -79,7 +79,7 @@ describe('space/space-protocol', () => {
 
     // await authFailedPromise;
   });
-  
+
   test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();

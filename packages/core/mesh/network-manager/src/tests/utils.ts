@@ -2,9 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { latch, Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { afterTest } from '@dxos/test';
 import { Provider } from '@dxos/util';
@@ -32,7 +29,9 @@ export const openAndCloseAfterTest = async (peers: TestPeer[]) => {
 export const joinSwarm = async (peers: TestPeer[], topic: PublicKey, topology?: Provider<Topology>) => {
   const swarms = peers.map((peer) => peer.createSwarm(topic));
   await Promise.all(swarms.map((swarm) => swarm.join(topology?.())));
-  await Promise.all(swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size >= 0)));
+  await Promise.all(
+    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size >= 0))
+  );
   return swarms;
 };
 
@@ -42,7 +41,9 @@ export const joinSwarm = async (peers: TestPeer[], topic: PublicKey, topology?: 
 export const leaveSwarm = async (peers: TestPeer[], topic: PublicKey) => {
   const swarms = peers.map((peer) => peer.getSwarm(topic));
   await Promise.all(swarms.map((swarm) => swarm.leave()));
-  await Promise.all(swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size == 0)));
+  await Promise.all(
+    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === 0))
+  );
   return swarms;
 };
 

@@ -47,6 +47,7 @@ export class MemoryTransport implements Transport {
 
   @logInfo
   private readonly _instanceId = PublicKey.random(); // TODO(burdon): Rename peerId? (Use local/remote labels in logs).
+
   private readonly _remote = new Trigger<PublicKey>();
 
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
@@ -56,6 +57,7 @@ export class MemoryTransport implements Transport {
 
   @logInfo
   private _remoteInstanceId!: PublicKey;
+
   private _remoteConnection?: MemoryTransport;
 
   constructor(private readonly options: TransportOptions) {
@@ -90,7 +92,10 @@ export class MemoryTransport implements Transport {
             return;
           }
 
-          assert(!this._remoteConnection._remoteConnection, new Error(`Remote already connected: ${this._remoteInstanceId}`));
+          assert(
+            !this._remoteConnection._remoteConnection,
+            new Error(`Remote already connected: ${this._remoteInstanceId}`)
+          );
           this._remoteConnection._remoteConnection = this;
           this._remoteConnection._remoteInstanceId = this._instanceId;
 

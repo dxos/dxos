@@ -39,7 +39,7 @@ export class SwarmMapper {
 
   // prettier-ignore
   constructor(
-    private readonly _swarm: Swarm,
+    private readonly _swarm: Swarm
   ) {
     this._subscriptions.add(
       _swarm.connectionAdded.on((connection) => {

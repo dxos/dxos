@@ -20,7 +20,7 @@ describe('WebRTCTransportProxy', () => {
   const setupProxy = async ({
     initiator = true,
     stream = new TestStream(),
-    sendSignal = async () => { }
+    sendSignal = async () => {}
   }: {
     initiator?: boolean;
     stream?: NodeJS.ReadWriteStream;

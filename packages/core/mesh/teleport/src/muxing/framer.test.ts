@@ -96,7 +96,7 @@ describe('Framer', () => {
 
     const TOTAL_FRAMES = 1000;
     while (framesSent.length < TOTAL_FRAMES) {
-      for(let i = 0; i < 3; i++) {
+      for (let i = 0; i < 3; i++) {
         const frame = randomBytes(Math.floor(Math.random() * 400));
         // console.log('wrt', frame.length)
         void peer2.port.send(frame);

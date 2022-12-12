@@ -1,5 +1,10 @@
-import { test } from "@dxos/test";
-import { TestStream } from "./test-stream";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { test } from '@dxos/test';
+
+import { TestStream } from './test-stream';
 
 test('TestStream', async () => {
   const stream1 = new TestStream();
@@ -9,8 +14,5 @@ test('TestStream', async () => {
   stream1.push('ping');
   stream2.push('pong');
 
-  await Promise.all([
-    stream2.assertReceivedAsync('ping'),
-    stream1.assertReceivedAsync('pong')
-  ]);
-})
+  await Promise.all([stream2.assertReceivedAsync('ping'), stream1.assertReceivedAsync('pong')]);
+});

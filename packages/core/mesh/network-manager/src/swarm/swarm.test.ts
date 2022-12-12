@@ -52,7 +52,7 @@ describe('Swarm', () => {
 
     const { swarm: swarm1, protocol: protocol1 } = setupSwarm({ topic, peerId: peerId1 });
 
-    const { swarm: swarm2, protocol: protocol2 } = setupSwarm({ topic, peerId: peerId2 });
+    const { swarm: swarm2 } = setupSwarm({ topic, peerId: peerId2 });
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -121,7 +121,7 @@ describe('Swarm', () => {
 
     const { swarm: swarm1, protocol: protocol1 } = setupSwarm({ topic, peerId: peerId1 });
 
-    const { swarm: swarm2, protocol: protocol2 } = setupSwarm({ topic, peerId: peerId2 });
+    const { swarm: swarm2 } = setupSwarm({ topic, peerId: peerId2 });
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);

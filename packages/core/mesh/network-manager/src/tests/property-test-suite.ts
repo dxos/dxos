@@ -6,11 +6,11 @@ import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
+import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { test } from '@dxos/test';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
-import { todo } from '@dxos/debug';
 import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 
@@ -124,7 +124,7 @@ export const propertyTestSuite = () => {
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
           protocolProvider: todo(),
-          topology: new FullyConnectedTopology(),
+          topology: new FullyConnectedTopology()
           // presence
         });
 

@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import { TestStream } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { TestStream } from '@dxos/async';
 import { MemoryTransport } from './memory-transport';
 
 // TODO(burdon): Flaky test.

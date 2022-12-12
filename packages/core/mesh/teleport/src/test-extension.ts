@@ -13,8 +13,8 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from './teleport';
 
 interface TestExtensionCallbacks {
-  onOpen?: () => Promise<void>
-  onClose?: () => Promise<void>
+  onOpen?: () => Promise<void>;
+  onClose?: () => Promise<void>;
 }
 
 export class TestExtension implements TeleportExtension {
@@ -23,9 +23,7 @@ export class TestExtension implements TeleportExtension {
   public extensionContext: ExtensionContext | undefined;
   private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
 
-  constructor(
-    public readonly callbacks: TestExtensionCallbacks = {}
-  ) {}
+  constructor(public readonly callbacks: TestExtensionCallbacks = {}) {}
 
   get remotePeerId() {
     return this.extensionContext?.remotePeerId;

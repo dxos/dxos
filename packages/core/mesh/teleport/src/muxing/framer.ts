@@ -127,7 +127,7 @@ export const decodeFrame = (buffer: Buffer, offset: number): { payload: Buffer; 
 export const encodeFrame = (payload: Uint8Array): Buffer => {
   const tagLength = varint.encodingLength(payload.length);
   const frame = Buffer.allocUnsafe(tagLength + payload.length);
-  varint.encode(payload.length, frame)
+  varint.encode(payload.length, frame);
   frame.set(payload, tagLength);
-  return frame
-}
+  return frame;
+};

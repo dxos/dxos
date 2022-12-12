@@ -171,7 +171,7 @@ export class TestAgent {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
-      networkManager: this._networkManagerProvider(),
+      networkManager: this._networkManagerProvider()
     });
   }
 }

@@ -95,16 +95,15 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       const swarm2a = await peer2a.createSwarm(topicA).join();
 
       return { swarm1a, swarm2a, peer1a, peer2a };
-
     };
 
     const test1 = await createSwarm();
     const test2 = await createSwarm();
-    
+
     await Promise.all([
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
-      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId),
-    ])
+      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId)
+    ]);
   });
 
   test('many peers and connections', async () => {
@@ -119,7 +118,9 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
           range(peersPerTopic).map(async () => {
             const peer = testBuilder.createPeer();
             const swarm = await peer.createSwarm(topic).join();
-            await swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === peersPerTopic - 1);
+            await swarm.protocol.connected.waitForCondition(
+              () => swarm.protocol.connections.size === peersPerTopic - 1
+            );
           })
         );
       })

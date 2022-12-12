@@ -41,7 +41,6 @@ export type SpaceProtocolOptions = {
  * Manages hypercore protocol stream creation and joining swarms.
  */
 export class SpaceProtocol {
-
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
 

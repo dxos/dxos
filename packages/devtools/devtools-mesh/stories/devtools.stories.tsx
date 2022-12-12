@@ -3,6 +3,7 @@
 //
 
 // TODO(dmaretskyi): Re-enable once we fix this story.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
 import React, { useState, useEffect } from 'react';

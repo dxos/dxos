@@ -118,7 +118,7 @@ export class Connection {
     });
 
     this._transport.errors.handle((err) => {
-      if(this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
+      if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
         this.errors.raise(err);
       }
     });
