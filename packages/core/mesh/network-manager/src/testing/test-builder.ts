@@ -17,8 +17,6 @@ import {
   WebRTCTransportProxyFactory,
   WebRTCTransportService
 } from '../transport';
-import { adaptProtocolProvider } from '../wire-protocol';
-import { TestProtocolPlugin, testProtocolProvider } from './test-protocol';
 import { TestWireProtocol } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.

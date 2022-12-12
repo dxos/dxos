@@ -3,12 +3,9 @@
 //
 
 import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
 
-import { latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Protocol } from '@dxos/mesh-protocol';
 import { test } from '@dxos/test';
 import { range } from '@dxos/util';
 

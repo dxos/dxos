@@ -7,14 +7,12 @@ import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
-import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { afterTest, test } from '@dxos/test';
-import { range, ComplexMap, ComplexSet } from '@dxos/util';
+import { test } from '@dxos/test';
+import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
+import { todo } from '@dxos/debug';
 import { NetworkManager } from '../network-manager';
-import { createProtocolFactory } from '../protocol-factory';
 import { FullyConnectedTopology } from '../topology';
-import { adaptProtocolProvider } from '../wire-protocol';
 
 /**
  * Performs random actions in the real system and compares its state with a simplified model.
@@ -35,7 +33,7 @@ export const propertyTestSuite = () => {
      * The real system being tested.
      */
     interface Real {
-      peers: ComplexMap<PublicKey, { networkManager: NetworkManager; presence?: PresencePlugin }>;
+      peers: ComplexMap<PublicKey, { networkManager: NetworkManager; presence?: any }>;
     }
 
     const assertState = async (model: Model, real: Real) => {
@@ -48,12 +46,12 @@ export const propertyTestSuite = () => {
               }
 
               const actuallyConnectedPeers = peer.presence!.peers;
-              if (!actuallyConnectedPeers.some((peer) => PublicKey.equals(expectedPeerId, peer))) {
+              if (!actuallyConnectedPeers.some((peer: any) => PublicKey.equals(expectedPeerId, peer))) {
                 // TODO(burdon): More concise error.
                 const context = {
                   peerId: peer.presence.peerId,
                   expectedPeerId: expectedPeerId.truncate(),
-                  connectedPeerIds: actuallyConnectedPeers.map((key) => key.toString('hex'))
+                  connectedPeerIds: actuallyConnectedPeers.map((key: any) => key.toString('hex'))
                 };
 
                 throw new Error(`Expected peer to be in the list of joined peers: ${context}`);
@@ -118,19 +116,19 @@ export const propertyTestSuite = () => {
 
         const peer = real.peers.get(this.peerId)!;
 
-        const presence = new PresencePlugin(this.peerId.asBuffer());
-        afterTest(() => presence.stop());
-        const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
+        // const presence = new PresencePlugin(this.peerId.asBuffer());
+        // afterTest(() => presence.stop());
+        // const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
         await peer.networkManager.joinSwarm({
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
-          protocolProvider: adaptProtocolProvider(protocol),
+          protocolProvider: todo(),
           topology: new FullyConnectedTopology(),
-          presence
+          // presence
         });
 
-        peer.presence = presence;
+        // peer.presence = presence;
 
         await assertState(model, real);
       }
