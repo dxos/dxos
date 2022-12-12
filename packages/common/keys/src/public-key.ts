@@ -24,6 +24,8 @@ export type PublicKeyLike = PublicKey | Buffer | Uint8Array | string;
 export class PublicKey {
   /**
    * Creates new instance of PublicKey automatically determining the input format.
+   * @param source A Buffer, or Uint8Array, or hex encoded string, or something with an `asUint8Array` method on it
+   * @returns PublicKey
    */
   static from(source: PublicKeyLike): PublicKey {
     assert(source);
@@ -39,6 +41,20 @@ export class PublicKey {
       return new PublicKey((<any>source).asUint8Array());
     } else {
       throw new TypeError(`Unable to create PublicKey from ${source}`);
+    }
+  }
+
+  /**
+   * Same as `PublicKey.from` but does not throw and instead returns a `{ key: PublicKey }` or `{ error: Error }`
+   * @param source Same PublicKeyLike argument as for `PublicKey.from`
+   * @returns PublicKey
+   */
+  static safeFrom(source?: PublicKeyLike): PublicKey | undefined {
+    if (!source) return undefined;
+    try {
+      return PublicKey.from(source);
+    } catch (error: any) {
+      return undefined;
     }
   }
 
