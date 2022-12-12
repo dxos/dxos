@@ -7,6 +7,17 @@ import { asyncTimeout } from "./timeout";
  * If this stream is piped into another stream, use `push` to send data, and `assertReceivedAsync` to assert the received data.
  */
 export class TestStream extends Duplex {
+
+  static async assertConnectivity(stream1: TestStream, stream2: TestStream, { timeout = 200 }: { timeout?: number } = {}) {
+    stream1.push('ping');
+    stream2.push('pong');
+
+    await Promise.all([
+      stream2.assertReceivedAsync('ping'),
+      stream1.assertReceivedAsync('pong'),
+    ]);
+  }
+
   private _received = Buffer.alloc(0);
   private _onWrite = new Event();
 

@@ -2,16 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
-
 import { PublicKey } from '@dxos/keys';
-import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { asyncTimeout, Event, TestStream } from '@dxos/async';
-import { Duplex } from 'node:stream';
+import { TestStream } from '@dxos/async';
 import { MemoryTransport } from './memory-transport';
 
 // TODO(burdon): Flaky test.
@@ -60,26 +55,16 @@ const createPair = () => {
 };
 
 describe('MemoryTransport', () => {
-  test.only('establish connection and send data through with protocol', async () => {
+  test('establish connection and send data through with protocol', async () => {
     const { stream1, stream2 } = createPair();
-
-    stream1.push('ping');
-    stream2.push('pong');
-
-    await stream2.assertReceivedAsync('ping');
-    await stream1.assertReceivedAsync('pong');
+    await TestStream.assertConnectivity(stream1, stream2);
   });
 
-  test.only('10 pairs of peers connecting at the same time', async () => {
+  test('10 pairs of peers connecting at the same time', async () => {
     await Promise.all(
       range(10).map(async () => {
         const { stream1, stream2 } = createPair();
-
-        stream1.push('ping');
-        stream2.push('pong');
-
-        await stream2.assertReceivedAsync('ping');
-        await stream1.assertReceivedAsync('pong');
+        await TestStream.assertConnectivity(stream1, stream2);
       })
     );
   });
