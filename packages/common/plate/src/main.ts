@@ -9,8 +9,8 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
-import { loadInputs } from './loadInputs';
-import { logger } from './logger';
+import { catFiles } from './util/catFiles';
+import { logger } from './util/logger';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
 
@@ -23,26 +23,21 @@ const main = async () => {
       default: false
     })
     .option('input', {
-      description: 'Provide an json file to the template as input',
+      description: 'Comma separated filenames of json or yaml files to merge as input',
       type: 'string'
     })
     .option('output', {
-      description: 'Provide a destination folder',
+      description: 'Destination folder',
       requiresArg: true,
       type: 'string'
     })
-    .option('filter', {
-      description: 'Filter the template files by regular expression string',
+    .option('include', {
+      description: 'filter the template files by a set of glob strings (comma separated)',
       requiresArg: false,
       type: 'string'
     })
     .option('exclude', {
-      description: 'A regex to exclude entries from the template',
-      requiresArg: false,
-      type: 'string'
-    })
-    .option('glob', {
-      description: 'Filter the template files by glob expression string',
+      description: 'globs to exclude entries from the template (comma separated)',
       requiresArg: false,
       type: 'string'
     })
@@ -54,14 +49,12 @@ const main = async () => {
     .option('verbose', {
       description: 'Print debugging information',
       requiresArg: false,
-      type: 'boolean',
-      alias: ['-v']
+      type: 'boolean'
     })
     .option('quiet', {
       description: 'Print nothing to standard out',
       requiresArg: false,
       type: 'boolean',
-      alias: ['-v'],
       default: false
     })
     .option('overwrite', {
@@ -69,35 +62,45 @@ const main = async () => {
       requiresArg: false,
       type: 'boolean'
     })
+    .option('interactive', {
+      description: 'allow templates to ask questions interactively',
+      requiresArg: false,
+      type: 'boolean',
+      default: true
+    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
-      handler: async ({
-        _,
-        dry,
-        input,
-        output = process.cwd(),
-        filter,
-        glob,
-        exclude,
-        sequential = false,
-        verbose = false,
-        quiet = false,
-        overwrite
-      }: {
-        _: string[];
-        dry: boolean;
-        input: string;
-        output: string;
-        filter: string;
-        glob: string;
-        exclude: string;
-        sequential: boolean;
-        verbose: boolean;
-        overwrite: boolean;
-        quiet: boolean;
-      }) => {
+      handler: async (
+        args: {
+          _: string[];
+          dry: boolean;
+          input: string;
+          output: string;
+          include: string;
+          exclude: string;
+          sequential: boolean;
+          verbose: boolean;
+          overwrite: boolean;
+          quiet: boolean;
+          interactive: boolean;
+        } & any
+      ) => {
         const tstart = Date.now();
+        const {
+          _,
+          dry,
+          input,
+          output = process.cwd(),
+          include,
+          exclude,
+          sequential = false,
+          verbose = false,
+          quiet = false,
+          overwrite,
+          interactive,
+          ...restArgs
+        } = args;
         const debug = logger(verbose);
         const info = logger(!quiet);
         const [template] = _;
@@ -105,44 +108,38 @@ const main = async () => {
           throw new Error('no template specified');
         }
         debug('working directory', process.cwd());
-        debug(
-          `executing template '${template}'...`,
-          filter ? `filter: '${filter}'` : '',
-          exclude ? ` exclude: '${exclude}'` : ''
-        );
+        const extraArgs = { ...restArgs };
+        delete extraArgs.$0; // yargs cruft
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: await loadInputs(input.split(',')),
-          filterGlob: glob,
-          filterRegEx: filter ? new RegExp(filter) : undefined,
-          filterExclude: exclude ? new RegExp(exclude) : undefined,
+          input: input ? await catFiles(input?.split(',')) : extraArgs,
           parallel: !sequential,
           verbose,
-          overwrite
+          overwrite,
+          include: include?.split(','),
+          exclude: exclude?.split(','),
+          interactive
         });
         let written = 0;
-        if (!dry) {
-          debug(`output folder: ${output}`);
-          info(`template generated ${files.length} files ...`);
-          await Promise.all(
-            files.map(async (f) => {
-              try {
-                const saved = await f.save();
-                info(saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
-                written += saved ? 1 : 0;
-              } catch (err: any) {
-                info('failed', f?.shortDescription(process.cwd()) ?? f);
-                info(err);
-              }
-            })
-          );
-        }
+        debug(`output folder: ${output}`);
+        info(`template generated ${files.length} files ...`);
+        await Promise.all(
+          files.map(async (f) => {
+            try {
+              const saved = !dry && (await f.save());
+              info(saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
+              written += saved ? 1 : 0;
+            } catch (err: any) {
+              info('failed', f?.shortDescription(process.cwd()) ?? f);
+              info(err);
+            }
+          })
+        );
         const now = Date.now();
         info(`wrote ${written} files [${fmtDuration(now - tstart)}]`);
       }
-    })
-    .help().argv;
+    }).argv;
 };
 
 void main();

@@ -51,7 +51,7 @@ export const ManageSpacePage = ({
   const handleRemove = useCallback((id: string) => space?.removeInvitation(id), [space]);
 
   return (
-    <main className='max-is-5xl mli-auto pli-7'>
+    <>
       <HeadingWithActions
         heading={{
           level: 2,
@@ -77,6 +77,6 @@ export const ManageSpacePage = ({
         createInvitationUrl={createInvitationUrl}
         onClickRemove={handleRemove}
       />
-    </main>
+    </>
   );
 };

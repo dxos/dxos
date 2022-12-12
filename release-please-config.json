@@ -53,17 +53,17 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/samples/bare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/samples/hello/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/tasks-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/bare-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/hello-template/package.json",
           "jsonpath": "$.version"
         },
         {

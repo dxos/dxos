@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/bare",
+  "version": "0.1.17",
+  "private": true,
+  "description": "@dxos/bare - a DXOS application",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "scripts": {
+    "build": "NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit && vite build",
+    "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
+    "preview": "vite preview",
+    "serve": "vite"
+  },
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@dxos/cli": "workspace:*",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^2.0.1",
+    "typescript": "^4.8.4",
+    "vite": "3.2.5"
+  }
+}

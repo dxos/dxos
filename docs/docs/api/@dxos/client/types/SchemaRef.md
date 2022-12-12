@@ -1,5 +1,5 @@
 # Type `SchemaRef`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:4]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/api/schema.d.ts:4]()</sub>
 
 
 
