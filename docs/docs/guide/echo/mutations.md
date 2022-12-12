@@ -5,7 +5,7 @@ title: Mutations
 
 # Mutating data
 
-```ts file=./snippets/write-items.ts
+```ts file=./snippets/write-items.ts#L5-
 //
 // Copyright 2022 DXOS.org
 //
