@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import * as tsnode from 'ts-node';
 
 export const isCodeModule = (file: string) => /\.[tj]sx?$/.test(file);

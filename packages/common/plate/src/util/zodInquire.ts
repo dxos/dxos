@@ -1,20 +1,20 @@
-import { z } from 'zod';
+//
+// Copyright 2022 DXOS.org
+//
+
 import inquirer, { Question } from 'inquirer';
+import { z } from 'zod';
 
 type MaybePromise<T> = T | Promise<T>;
 
-function isPromise<T = any>(o: any): o is Promise<T> {
-  return o?.then && typeof o.then == 'function';
-}
+const isPromise = <T = any>(o: any): o is Promise<T> => o?.then && typeof o.then === 'function';
 
-function promise<T = any>(o: any): Promise<T> {
-  return isPromise(o) ? o : Promise.resolve(o);
-}
+const promise = <T = any>(o: any): Promise<T> => (isPromise(o) ? o : Promise.resolve(o));
 
-export function getQuestion(shape: z.ZodTypeAny): inquirer.Question | null {
-  let defaultValue = void 0,
-    message = '',
-    type: string | undefined = void 0;
+export const getQuestion = (shape: z.ZodTypeAny): inquirer.Question | null => {
+  let defaultValue;
+  let message = '';
+  let type: string | undefined;
   const typesToQnType: { [k: string]: inquirer.Question['type'] } = {
     ZodString: 'input',
     ZodNumber: 'number',
@@ -32,20 +32,20 @@ export function getQuestion(shape: z.ZodTypeAny): inquirer.Question | null {
       defaultValue = dv?.();
     }
     if (description) {
-      message = description[description.length - 1] == ':' ? description : description + ':';
+      message = description[description.length - 1] === ':' ? description : description + ':';
     }
     next = next._def?.innerType;
   }
-  function validate(data: any) {
+  const validate = (data: any) => {
     const parsed = shape.safeParse(data);
     if (parsed.success === true) {
       return true;
     } else {
       return parsed.error.format()._errors?.join('\n');
     }
-  }
+  };
   return type ? { message, type, default: defaultValue, validate } : null;
-}
+};
 
 export type QuestionGenerator<T extends InquirableZodType = InquirableZodType> = (
   shape: T,
@@ -63,25 +63,25 @@ export type InquireOptions<T extends InquirableZodType = InquirableZodType> = {
   questionGenerator?: QuestionGenerator<InquirableZodType>;
 };
 
-export async function getQuestions<TShape extends InquirableZodType = InquirableZodType>(
+export const getQuestions = async <TShape extends InquirableZodType = InquirableZodType>(
   shape: TShape,
   options?: InquireOptions<TShape>
-): Promise<Question[]> {
+): Promise<Question[]> => {
   const questions: { [k: string]: Question } = {};
-  function defaultHook(q: Question, key: string) {
+  const defaultHook = (q: Question, key: string) => {
     const d = q.default;
     return async (answers: any) => {
-      if (typeof options?.defaults == 'function') {
+      if (typeof options?.defaults === 'function') {
         return (await promise(options.defaults(answers)))?.[key] ?? d;
-      } else if (typeof options?.defaults == 'object') {
+      } else if (typeof options?.defaults === 'object') {
         return (options.defaults as any)[key] ?? d;
       }
       return d;
     };
-  }
+  };
   const extractFromObject = (shape: InquirableZodObject) => {
     const rawShape = shape._def.shape();
-    for (let k in rawShape) {
+    for (const k in rawShape) {
       const v = rawShape[k];
       const qqn = getQuestion(v);
       if (qqn) {
@@ -112,18 +112,20 @@ export async function getQuestions<TShape extends InquirableZodType = Inquirable
     r.askAnswered = true;
     return r;
   });
-}
+};
 
-function noUndefined<T extends object>(o: T) {
-  if (!o) return o;
+const noUndefined = <T extends object>(o: T) => {
+  if (!o) {
+    return o;
+  }
   const r: T = {} as any;
-  for (let i in o) {
+  for (const i in o) {
     if (typeof o[i] !== 'undefined') {
       r[i] = o[i];
     }
   }
   return r;
-}
+};
 
 // export async function inquire<T extends z.ZodObject<z.ZodRawShape> = z.ZodObject<z.ZodRawShape>>(
 //   shape: T,
@@ -135,12 +137,12 @@ function noUndefined<T extends object>(o: T) {
 //   return noUndefined(responses);
 // }
 
-export async function inquire<TShape extends InquirableZodType = InquirableZodType>(
+export const inquire = async <TShape extends InquirableZodType = InquirableZodType>(
   shape: TShape,
   options?: InquireOptions<TShape>
-): Promise<z.infer<TShape>> {
+): Promise<z.infer<TShape>> => {
   const questions = await getQuestions(shape, options);
   const responses =
-    (await inquirer.prompt(questions, typeof options?.defaults != 'function' ? options?.defaults : {})) ?? {};
+    (await inquirer.prompt(questions, typeof options?.defaults !== 'function' ? options?.defaults : {})) ?? {};
   return noUndefined(responses) as z.infer<TShape>;
-}
+};

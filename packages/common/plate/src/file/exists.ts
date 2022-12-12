@@ -1,7 +1,11 @@
-import path from "path";
-import { promises as fs } from "fs";
+//
+// Copyright 2022 DXOS.org
+//
 
-//TODO: factor out to own fs package like @dxos/fs
+import { promises as fs } from 'fs';
+import path from 'path';
+
+// TODO: factor out to own fs package like @dxos/fs
 export const exists = async (...args: string[]): Promise<boolean> => {
   try {
     const result = await fs.stat(path.join(...args));

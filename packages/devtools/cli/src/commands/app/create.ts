@@ -3,23 +3,26 @@
 //
 
 import { Flags } from '@oclif/core';
+import { promises as fs } from 'fs';
 import { exec } from 'node:child_process';
 import { mkdir, copyFile, rm } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cwd } from 'process';
-import { promises as fs } from 'fs';
+import tempy from 'tempy';
+
 import { executeDirectoryTemplate, exists } from '@dxos/plate';
-import tempy from "tempy";
 
 import { BaseCommand } from '../../base-command';
 
 export const APP_TEMPLATES = ['hello', 'bare', 'tasks'];
 
-//TODO: factor this out into @dxos/fs or something (along with 'exists' from plate?)
+// TODO: factor this out into @dxos/fs or something (along with 'exists' from plate?)
 const isDirEmpty = async (dirpath: string) => {
   const dirIter = await fs.opendir(dirpath);
   const { done } = await dirIter[Symbol.asyncIterator]().next();
-  if (!done) await dirIter.close();
+  if (!done) {
+    await dirIter.close();
+  }
   return !!done;
 };
 
@@ -51,7 +54,7 @@ export default class Create extends BaseCommand {
     const { args, flags } = await this.parse(Create);
     const { name } = args;
     const { tag = `v${this.config.version}`, template } = flags;
-    
+
     const tmpDirectory = tempy.directory({ prefix: `dxos-app-create-${name}` });
     const templateDirectory = `${tmpDirectory}/packages/apps/templates/${template}-template`;
     const outputDirectory = `${cwd()}/${name}`;

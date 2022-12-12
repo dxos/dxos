@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/bare-template",
+  "name": "@dxos/bare",
   "version": "0.1.17",
   "private": true,
   "description": "@dxos/bare - a DXOS application",

@@ -3,7 +3,9 @@
 //
 
 import React from 'react';
+
 import { useStatus } from '@dxos/react-client';
+
 import { Indicator } from './Indicator';
 
 // TODO(burdon): Extend to show heartbeat, network status, etc.

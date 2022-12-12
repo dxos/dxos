@@ -24,9 +24,7 @@ export const Separator = ToolbarPrimitive.Separator;
  * @param props props
  * @returns ReactNode
  */
-export const Menubar2 = ({
-  children,
-}: MenubarProps2) => {
+export const Menubar2 = ({ children }: MenubarProps2) => {
   const [atTop, setAtTop] = useState(true);
 
   const handleScroll = useCallback(() => {

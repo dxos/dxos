@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { cosmiconfig } from 'cosmiconfig';
 import * as process from 'process';
 import yargs from 'yargs';
-import { cosmiconfig } from 'cosmiconfig';
 import { hideBin } from 'yargs/helpers';
 
 import { log } from '@dxos/log';
