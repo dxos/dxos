@@ -132,4 +132,3 @@ dx app publish
 Read more:
 
 *   [Publishing apps](kube/publishing)
-

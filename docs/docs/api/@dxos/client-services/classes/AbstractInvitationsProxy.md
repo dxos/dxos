@@ -31,7 +31,7 @@ Arguments:
 ### [createInvitation(context, \[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L37)
 
 
-Returns: <code>[InvitationObservable](/api/@dxos/client-services/interfaces/InvitationObservable)</code>
+Returns: <code>[CancellableInvitationObservable](/api/@dxos/client-services/interfaces/CancellableInvitationObservable)</code>
 
 Arguments: 
 

@@ -1,5 +1,5 @@
 # Class `WorkerRuntime`
-<sub>Declared in [packages/sdk/client-services/dist/src/packlets/vault/worker-runtime.d.ts:13]()</sub>
+<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/vault/worker-runtime.d.ts:13]()</sub>
 
 
 Runtime for the shared worker.

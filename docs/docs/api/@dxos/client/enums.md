@@ -2,6 +2,17 @@
 title: Enumerations
 ---
 # Enumerations
+### [`Error`]()
+
+Defined in:
+   file://./../../../dxos/client/services.proto
+
+Values:
+- `INVALID_CREDENTIALS`
+- `INVALID_OPT_ATTEMPTS`
+- `INVALID_OTP`
+- `OK`
+- `TIMEOUT`
 ### [`State`]()
 
 Defined in:

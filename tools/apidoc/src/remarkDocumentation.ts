@@ -38,7 +38,7 @@ export const remarkDocumentation = async (config: Config) => {
         })
       );
     if (content !== processed.value) {
-      console.log('writing', file);
+      console.log('processing', file);
       await fs.writeFile(file, processed.value);
     }
   });
