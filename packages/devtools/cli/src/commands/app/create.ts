@@ -3,14 +3,28 @@
 //
 
 import { Flags } from '@oclif/core';
+import { promises as fs } from 'fs';
 import { exec } from 'node:child_process';
 import { mkdir, copyFile, rm } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cwd } from 'process';
+import tempy from 'tempy';
 
-import { executeDirectoryTemplate } from '@dxos/plate';
+import { executeDirectoryTemplate, exists } from '@dxos/plate';
 
 import { BaseCommand } from '../../base-command';
+
+export const APP_TEMPLATES = ['hello', 'bare', 'tasks'];
+
+// TODO: factor this out into @dxos/fs or something (along with 'exists' from plate?)
+const isDirEmpty = async (dirpath: string) => {
+  const dirIter = await fs.opendir(dirpath);
+  const { done } = await dirIter[Symbol.asyncIterator]().next();
+  if (!done) {
+    await dirIter.close();
+  }
+  return !!done;
+};
 
 export default class Create extends BaseCommand {
   static override description = 'Create a DXOS project.';
@@ -32,7 +46,7 @@ export default class Create extends BaseCommand {
       char: 't',
       description: 'Template to use when creating the project.',
       default: 'hello',
-      options: ['hello', 'bare']
+      options: APP_TEMPLATES
     })
   };
 
@@ -41,10 +55,16 @@ export default class Create extends BaseCommand {
     const { name } = args;
     const { tag = `v${this.config.version}`, template } = flags;
 
-    // TODO(wittjosiah): Cross-platform.
-    const tmpDirectory = `/tmp/dxos-app-create-${Date.now()}`;
+    const tmpDirectory = tempy.directory({ prefix: `dxos-app-create-${name}` });
     const templateDirectory = `${tmpDirectory}/packages/apps/templates/${template}-template`;
     const outputDirectory = `${cwd()}/${name}`;
+
+    const outputDirExists = await exists(outputDirectory);
+
+    const isOutputEmpty = outputDirExists && (await isDirEmpty(outputDirectory));
+    if (outputDirExists && !isOutputEmpty) {
+      this.error(`Output directory ${outputDirectory} is not empty`, { exit: 1 });
+    }
 
     try {
       this.log('Cloning template from Github...');
@@ -61,10 +81,6 @@ export default class Create extends BaseCommand {
       await mkdir(`${templateDirectory}/patches`);
       await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
 
-      // Remove unneccessary files.
-      await rm(`${templateDirectory}/project.json`);
-      await rm(`${templateDirectory}/tsconfig.plate.json`);
-
       this.log('Creating app...');
 
       // TS templating.
@@ -76,6 +92,7 @@ export default class Create extends BaseCommand {
           name
         }
       });
+
       await Promise.all(result.map((file) => file.save()));
 
       this.log(`App created. To get started run the following commands:\n\n  cd ${name}\n  pnpm install\n  pnpm serve`);

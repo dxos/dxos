@@ -127,7 +127,8 @@ describe('space/space', () => {
         agent2.identityKey,
         agent2.deviceKey,
         space2.controlFeedKey,
-        space2.dataFeedKey
+        space2.dataFeedKey,
+        space1.genesisFeedKey
       );
 
       for (const credential of credentials) {

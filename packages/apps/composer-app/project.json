@@ -81,7 +81,7 @@
             "command": "nx serve halo-app"
           },
           {
-            "command": "nx serve tasks-app"
+            "command": "nx serve composer-app"
           }
         ],
         "parallel": true

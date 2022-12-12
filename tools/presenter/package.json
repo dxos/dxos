@@ -1,6 +1,6 @@
 {
   "name": "@dxos/presenter",
-  "version": "0.1.10",
+  "version": "0.1.17",
   "private": true,
   "description": "Slide presentations using Vite/Tailwind.",
   "homepage": "https://dxos.org",
@@ -32,7 +32,6 @@
     "react-router-dom": "^6.3.0"
   },
   "devDependencies": {
-    "@dxos/vite-plugin": "workspace:*",
     "@mdx-js/rollup": "^2.1.5",
     "@react-pdf/renderer": "^3.0.1",
     "@tailwindcss/aspect-ratio": "^0.4.2",
@@ -52,7 +51,7 @@
     "remark-mdx-frontmatter": "^2.1.1",
     "remark-parse-frontmatter": "^1.0.3",
     "remark-unwrap-texts": "^1.0.3",
-    "rollup": "~2.77.3",
+    "rollup": "^2.77.3",
     "tailwindcss": "^3.1.8",
     "tailwindcss-logical": "^3.0.0",
     "tailwindcss-radix": "^2.6.0",

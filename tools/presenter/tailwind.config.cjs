@@ -2,15 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+// https://tailwindcss.com/docs/configuration
 // TODO(burdon): Create TS plugin for re-use (see @dxos/react-ui).
 
 const tailwindcss = require('tailwindcss/plugin');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // https://tailwindcss.com/docs/content-configuration
   content: [
     './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
+    './src/**/*.{js,jsx,ts,tsx}',
+    './src/slides/**/*.mdx'
   ],
 
   // https://tailwindcss.com/docs/theme#customizing-the-default-theme

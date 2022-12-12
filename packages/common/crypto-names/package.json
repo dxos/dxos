@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto-names",
-  "version": "0.1.13",
+  "version": "0.1.17",
   "description": "Basic crypto key utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +17,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/node-std": "workspace:*",
     "binary-parser": "^2.0.2",
     "hypercore-crypto": "^2.3.0"
   },

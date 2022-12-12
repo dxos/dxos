@@ -1,5 +1,5 @@
 # Class `ResultSet`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:6]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/api/result-set.d.ts:6]()</sub>
 
 
 Reactive query results.

@@ -1,5 +1,5 @@
 # Type `SchemaField`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:8]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/api/schema.d.ts:8]()</sub>
 
 
 

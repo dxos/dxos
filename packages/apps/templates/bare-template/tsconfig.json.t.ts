@@ -2,35 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TemplateFunction } from '@dxos/plate';
-
-import rootTsconfig from '../../../../tsconfig.json';
-
-export type Input = {
-  monorepo?: boolean
-}
+import { defineTemplate } from '@dxos/plate';
+import config from './config.t';
+import { getTsConfig, getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
+// import rootTsconfig from '../../../../tsconfig.json';
 
 // TODO(wittjosiah): Nx executor to execute in place.
-const template: TemplateFunction<Input> = ({ input }) => {
+export default defineTemplate<typeof config>(async ({ input }) => {
+  const info = await getDxosRepoInfo();
+
+  const rootTsConfig = info.isDxosMonorepo ? await getTsConfig(info.repositoryRootPath) : {};
+
   const compilerOptions = {
     emitDeclarationOnly: false,
-    lib: [
-      'DOM',
-      'ESNext'
-    ],
+    lib: ['DOM', 'ESNext'],
     outDir: 'dist',
-    types: [
-      'node'
-    ]
+    types: ['node']
   };
 
-  const include = [
-    'src'
-  ];
+  const include = ['src'];
 
-  const exclude = [
-    'vite.config.ts'
-  ];
+  const exclude = ['vite.config.ts'];
 
   const references = [
     {
@@ -38,44 +30,36 @@ const template: TemplateFunction<Input> = ({ input }) => {
     }
   ];
 
-  const tsconfig = input.monorepo ? {
-    extends: '../../../../tsconfig.json',
-    compilerOptions,
-    include,
-    exclude: [
-      ...exclude,
-      '*.t.ts'
-    ],
-    references: [
-      ...references,
-      {
-        path: '../../../sdk/client'
-      },
-      {
-        path: '../../../sdk/config'
-      },
-      {
-        path: '../../../sdk/vite-plugin'
-      },
-      {
-        path: './tsconfig.plate.json'
-      }
-    ]
-  } : {
-    ...rootTsconfig,
-    compilerOptions: {
-      ...rootTsconfig.compilerOptions,
-      ...compilerOptions
-    },
-    include,
-    exclude: [
-      ...rootTsconfig.exclude,
-      'vite.config.ts'
-    ],
-    references
-  };
+  const tsconfig =
+    input.monorepo && info.isDxosMonorepo
+      ? {
+          extends: '../../../../tsconfig.json',
+          compilerOptions,
+          include,
+          exclude: [...exclude, '*.t.ts'],
+          references: [
+            ...references,
+            {
+              path: '../../../sdk/client'
+            },
+            {
+              path: '../../../sdk/config'
+            },
+            {
+              path: '../../../sdk/vite-plugin'
+            }
+          ]
+        }
+      : {
+          ...rootTsConfig,
+          compilerOptions: {
+            ...rootTsConfig.compilerOptions,
+            ...compilerOptions
+          },
+          include,
+          exclude: [...rootTsConfig.exclude, 'vite.config.ts'],
+          references
+        };
 
   return JSON.stringify(tsconfig, null, 2);
-};
-
-export default template;
+});

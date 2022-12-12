@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/protocol-plugin-replicator/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/mesh/protocol-plugin-replicator/dist/lib"
       },
       "outputs": [

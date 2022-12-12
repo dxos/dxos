@@ -36,16 +36,22 @@ export const SlideIndex: FC<PresentationProps> = ({ title, slides }) => {
     return () => window.removeEventListener('keydown', handler);
   });
 
+  // TODO(burdon): Factor out.
+  const getTitle = (i: number) => {
+    const { title } = JSON.parse((slides[i] as any)?.type().props['data-frontmatter'] ?? '{}');
+    return title;
+  };
+
   return (
     <div className='p-3'>
       {title && <h1>{title}</h1>}
-      <ul className='p-1'>
+      <ol className='p-1'>
         {slides.map((slide, i) => (
           <li key={i}>
-            <Link to={`/slide/${i}`}>Slide {i}</Link>
+            <Link to={`/slide/${i}`}>{getTitle(i) ?? '_'}</Link>
           </li>
         ))}
-      </ul>
+      </ol>
     </div>
   );
 };

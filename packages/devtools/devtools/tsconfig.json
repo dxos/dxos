@@ -81,9 +81,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/vite-plugin"
-    },
-    {
       "path": "../devtools-mesh"
     }
   ]

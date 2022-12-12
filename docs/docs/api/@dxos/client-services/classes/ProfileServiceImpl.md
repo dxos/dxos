@@ -17,7 +17,7 @@ Arguments:
 ## Properties
 
 ## Methods
-### [createProfile(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L43)
+### [createProfile(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L45)
 
 
 Returns: <code>Promise&lt;Profile&gt;</code>
@@ -25,7 +25,7 @@ Returns: <code>Promise&lt;Profile&gt;</code>
 Arguments: 
 
 `request`: <code>CreateProfileRequest</code>
-### [recoverProfile(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L48)
+### [recoverProfile(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L56)
 
 
 Returns: <code>Promise&lt;Profile&gt;</code>

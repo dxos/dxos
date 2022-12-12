@@ -1,5 +1,5 @@
 # Class `Schema`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:21]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/api/schema.d.ts:21]()</sub>
 
 
 Wrapper for ECHO Item that represents an  `ObjectModel`  schema.

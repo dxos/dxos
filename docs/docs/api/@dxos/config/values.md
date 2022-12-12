@@ -3,9 +3,15 @@ title: Values
 ---
 # Values 
 
-### [`FILE_DEFAULTS`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/types.ts#L7)
-Type: "defaults.yml"
-### [`FILE_DYNAMICS`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/types.ts#L9)
-Type: "config.yml"
-### [`FILE_ENVS`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/types.ts#L8)
-Type: "envs-map.yml"
+### [`Config`]()
+Type: typeof __class
+### [`FILE_DEFAULTS`]()
+Type: string
+### [`FILE_DYNAMICS`]()
+Type: string
+### [`FILE_ENVS`]()
+Type: string
+### [`defs`]()
+Type: any
+### [`export=`]()
+Type: any

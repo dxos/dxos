@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
 
@@ -62,8 +62,8 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(__dirname),
-    react(),
+    ConfigPlugin(),
+    ReactPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       // TODO(wittjosiah): Bundle size is massive.
@@ -90,8 +90,5 @@ export default defineConfig({
         ]
       }
     })
-  ],
-  worker: {
-    plugins: [dxosPlugin()]
-  }
+  ]
 });

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.1.13",
+  "version": "0.1.17",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -52,7 +52,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/vite-plugin": "workspace:*",
     "@types/color-hash": "^1.0.1",
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",

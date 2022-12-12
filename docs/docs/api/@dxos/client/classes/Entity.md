@@ -1,5 +1,5 @@
 # Class `Entity`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:10]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/entity.d.ts:10]()</sub>
 
 
 Base class for all ECHO entitities.
