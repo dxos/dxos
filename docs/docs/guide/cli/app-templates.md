@@ -3,7 +3,7 @@ description: DXOS Application templates
 label: Templates
 ---
 # Application Templates
-DXOS provides turnkey application templates complete with all the essentials for local application development.
+DXOS provides turnkey application templates complete with all the essentials for local application development. [Install the CLI](.) to use these.
 ## `hello` template
 This is the default template when using `dx app create`. It inherits everything from the `bare` template and adds a single-page welcome guide which is easy to delete.
 
