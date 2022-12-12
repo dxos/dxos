@@ -14,6 +14,10 @@ html[data-theme=dark] {
   }
 }
 
+html[data-theme=dark] tr:nth-child(2n) {
+  background-color: transparent;
+}
+
 // TODO(wittjosiah): Can the plugin add this?
 .showcase-preview {
   border: 1px solid var(--c-border);
@@ -40,6 +44,10 @@ html[data-theme=dark] div[class^="language-"] {
 
 .custom-container .custom-container-title {
   font-weight: 500;
+}
+
+.custom-container {
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
 }
 
 .home.project .feature h2 {
@@ -116,4 +124,8 @@ html[data-theme=light] .home.project .hero {
   h1 {
     color: black;
   }
+}
+
+html[data-theme=dark] .custom-container.note {
+  background-color: darken($zinc-800, 3%);
 }

@@ -7,7 +7,7 @@ prev: why
 
 # Quick start
 
-## Using an ECHO database for state consensus
+## Using an ECHO database
 
 Install ECHO with your package manager of choice
 
@@ -15,17 +15,19 @@ Install ECHO with your package manager of choice
 npm install --save @dxos/echo
 ```
 
-Create an ECHO client instance either in browser or on the server:
+To use ECHO you start with an instance of the [`Client`](/api/@dxos/client/classes/Client). It needs a configuration object of type [`Config`](/api/@dxos/config/classes/Config). Configuration typically comes from `dx.yml` files.
 
 ```ts
-import { Client } from "@dxos/echo"
+import { Client, Config } from "@dxos/client"
+import { Defaults } from "@dxos/config";
 
-const client = new Client();
+const config = new Config(Defaults());
+const client = new Client({ config });
 ```
 
-See here for the [configuration options](/docs/echo/configuration) you can pass in.
+Read about all the [configuration options](/docs/echo/configuration).
 
-Create a space and query items:
+To store data in ECHO, your client needs to create or join a [space](how-it-works#spaces).
 
 ```ts
 const space = client.spaces.createSpace();
