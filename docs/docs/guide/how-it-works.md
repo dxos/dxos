@@ -29,18 +29,18 @@ ECHO (The **E**ventually **C**onsistent **H**ierrarhical **O**bject store) is a 
 
 ### Spaces
 
-Data is replicated within containers called `spaces`. A `space` is an instance of an ECHO database which can be shared by (replicated) a number of peers.
+Data is replicated within containers called `spaces`. A `space` is an instance of an ECHO database which can be replicated by a number of peers.
 
 ### Items
 
-Specific documents or rows of data are referred to as `items`. `Items` always belong to a specific space and behave according to a specific **consistency model**.
+Specific documents or rows of data are referred to as `items`. `Items` always belong to a space and behave according to a **consistency model**.
 
 ### Models
 
-Every item behaves according to a data consistency model which describes rules by which conflicts are to be resolved between multiple writers. DXOS currently provides two specific model types and will offer custom models in the near future.
+Every item behaves according to consistency model which describes rules by which conflicts are to be resolved between multiple writers. DXOS provides at least two specific model types and and can be extended with custom models.
 
-*   `ObjectModel` supports the equivalent of a document record with keys and values, where last writer wins on any given key.
-*   `TextModel` provides the necessary model for collaborative rich text editing on a "large string" or rich text model.
+*   `ObjectModel` is a document record with keys and values, where last writer wins on any given key.
+*   `TextModel` is for collaborative rich text editing on a "large string" or rich text model.
 
 Continue to [ECHO Installation and usage](echo/installation).
 
