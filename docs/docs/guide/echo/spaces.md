@@ -28,7 +28,14 @@ const space = await client.echo.createSpace();
 ```
 
 ## Querying for spaces
-```ts file=./snippets/query-spaces.ts#L5-
+
+```ts file=./snippets/query-spaces.ts#L7-
+import { Client } from '@dxos/client';
+
+const client = new Client();
+
+// get a list of all spaces
+const { value: spaces } = client.echo.querySpaces();
 ```
 
 ## Creating an invitation
