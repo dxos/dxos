@@ -113,9 +113,8 @@ npm build
 This will produce an `out` folder with an entry point.
 
 Read more:
-
-*   [hello world template](https://)
-*   [bare template](https://)
+*   [hello world template](cli/app-templates.md#hello-template)
+*   [bare template](cli/app-templates.md#bare-template)
 
 ## Starting a KUBE
 
@@ -128,9 +127,10 @@ sudo ch=dev bash -c "$(curl -fsSL https://dxos.nyc3.digitaloceanspaces.com/insta
 Then:
 
 ```bash
-kube start # start the service in the background
-open localhost:9000 # open the browser to the console
+sudo kube start # start the service in the background
+kube status # verify it's running
 ```
+Once KUBE is running, you're ready to deploy :sparkles:.
 
 Read more:
 
@@ -138,14 +138,18 @@ Read more:
 
 ## Deploying your app to a KUBE
 
-Drop a `dx.yml` file in the project root and run the following command. Read more about the [`dx.yml` file schema](/docs/kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
+Drop a `dx.yml` file in the project root and run the following command. 
 
 Publish your app to your local kube:
 
 ```bash
 dx app publish
 ```
+Your app will be accessible in a browser `<app-name>.localhost:9002`.
+
+If you said `dx app create hello`, the app will be on `hello.localhost:9002`.
 
 Read more:
 
 *   [Publishing apps](kube/publishing)
+*   The [`dx.yml` file schema](/docs/kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
