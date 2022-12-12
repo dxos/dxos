@@ -63,7 +63,6 @@
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-test": "tools/protobuf-test",
     "protocol-network-generator": "packages/core/mesh/protocol-network-generator",
-    "protocol-plugin-presence": "packages/core/mesh/protocol-plugin-presence",
     "protocol-plugin-replicator": "packages/core/mesh/protocol-plugin-replicator",
     "protocols": "packages/core/protocols",
     "random-access-storage": "packages/common/random-access-storage",
