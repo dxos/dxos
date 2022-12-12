@@ -18,7 +18,7 @@ dx --version
 ```
 
 ## Creating applications
-Use the following command to generate an app project with everything you need to build a collaborative application with DXOS.
+Use the following command to generate an app project named `hello` with everything you need to build a collaborative application with DXOS.
 ```bash
 dx app create hello
 cd hello
@@ -42,3 +42,4 @@ pnpm run deploy
 :::tip
 Take care not to omit the term `run` as `pnpm` will assume `deploy` means something else otherwise
 :::
+The configuration is read from a file `dx.yml` in the root of the project. Read more about [dx.yml](../kube/dx-yml-file.md).
