@@ -3,9 +3,10 @@
 //
 
 import React from 'react';
+
 import { Config } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
 import { Dynamics, Defaults } from '@dxos/config';
+import { ClientProvider } from '@dxos/react-client';
 
 const App = () => {
   return (

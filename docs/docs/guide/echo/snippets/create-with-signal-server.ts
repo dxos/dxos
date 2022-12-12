@@ -9,7 +9,7 @@ const client = new Client({
     runtime: {
       services: {
         signal: {
-          server: `wss://kube.dxos.org/.well-known/dx/signal`
+          server: 'wss://kube.dxos.org/.well-known/dx/signal'
         }
       }
     }

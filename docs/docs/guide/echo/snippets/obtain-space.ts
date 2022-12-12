@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, InvitationEncoder } from "@dxos/client";
+import { Client, InvitationEncoder } from '@dxos/client';
 
 const client = new Client();
 
