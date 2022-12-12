@@ -92,7 +92,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   // TODO(burdon): This just tests multiple swarms (not peers in the same swarm)?
   //  Generalize for n swarms and factor into other tests; configure message activity.
   test.skip('joins multiple swarms concurrently', async () => {
-    const createSwarm = async (messages: any[], label: string) => {
+    const createSwarm = async () => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
       const peer2a = testBuilder.createPeer();
@@ -100,19 +100,15 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       const swarm1a = await peer1a.createSwarm(topicA).join();
       const swarm2a = await peer2a.createSwarm(topicA).join();
 
-      swarm1a.plugin.on('receive', (_, msg: string) => {
-        messages.push(msg);
-      });
-      swarm2a.plugin.on('connect', async () => {
-        await swarm2a.plugin.send(peer1a.peerId.asBuffer(), label);
-      });
-    };
+      return { swarm1a, swarm2a, peer1a, peer2a, messages, label };
 
-    const receivedA: any[] = [];
-    const receivedB: any[] = [];
+    };
 
     void createSwarm(receivedA, 'Swarm A');
     void createSwarm(receivedB, 'Swarm B');
+
+    (await swarm1a.protocol.waitForConnection(peer2a.peerId)).test();
+
 
     // TODO(burdon): Replace with triggers.
     await waitForExpect(() => {

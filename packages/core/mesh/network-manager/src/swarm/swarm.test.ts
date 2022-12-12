@@ -17,7 +17,7 @@ import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory } from '../transport';
 import { Swarm } from './swarm';
 
-describe('Swarm', () => {
+describe.only('Swarm', () => {
   const context = new MemorySignalManagerContext();
   let signalManager: MemorySignalManager;
 

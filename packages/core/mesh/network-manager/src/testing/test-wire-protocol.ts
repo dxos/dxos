@@ -33,4 +33,9 @@ export class TestWireProtocol {
     await this.connected.waitFor(connectedId => connectedId.equals(peerId))
     return this.connections.get(peerId)!;
   }
+
+  async testConnection(peerId: PublicKey) {
+    const connection = await this.waitForConnection(peerId);
+    await connection.test();
+  }
 }

@@ -19,6 +19,7 @@ import {
 } from '../transport';
 import { adaptProtocolProvider } from '../wire-protocol';
 import { TestProtocolPlugin, testProtocolProvider } from './test-protocol';
+import { TestWireProtocol } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
 export const TEST_SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
@@ -152,12 +153,12 @@ export class TestPeer {
 
 // TODO(burdon): Reconcile with new Swarm concept.
 export class TestSwarmConnection {
-  plugin: TestProtocolPlugin;
+  protocol: TestWireProtocol;
 
   constructor(readonly peer: TestPeer, readonly topic: PublicKey) {
     // TODO(burdon): Configure plugins.
     // TODO(burdon): Prevent reuse?
-    this.plugin = new TestProtocolPlugin(this.peer.peerId.asBuffer()); // TODO(burdon): PublicKey.
+    this.protocol = new TestWireProtocol(this.peer.peerId);
   }
 
   // TODO(burdon): Need to create new plugin instance per swarm?
@@ -166,9 +167,7 @@ export class TestSwarmConnection {
     await this.peer._networkManager.joinSwarm({
       topic: this.topic,
       peerId: this.peer.peerId,
-      protocolProvider: adaptProtocolProvider(
-        testProtocolProvider(this.topic.asBuffer(), this.peer.peerId, this.plugin)
-      ),
+      protocolProvider: this.protocol.factory,
       topology
     });
 
