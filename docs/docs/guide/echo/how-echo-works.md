@@ -1,5 +1,5 @@
 ---
-order: 10
+order: 20
 title: How ECHO Works
 ---
 
