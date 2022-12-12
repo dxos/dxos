@@ -31,7 +31,7 @@ Read more about [configuring the client](echo/configuration).
 
 Now you can manipulate items in the space and they will replicate with all members of the space in a peer-to-peer fashion.
 
-```ts file=./echo/snippets/query-spaces.ts#L9-
+```ts file=./echo/snippets/write-items.ts#L9-
 // decide on a type for your items
 const type = 'yourdomain:type/some-type-identifier';
 

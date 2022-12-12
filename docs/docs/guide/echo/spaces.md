@@ -27,6 +27,10 @@ const client = new Client();
 const space = await client.echo.createSpace();
 ```
 
+## Querying for spaces
+```ts file=./snippets/query-spaces.ts#L5-
+```
+
 ## Creating an invitation
 
 ```ts file=./snippets/invite-to-space.ts#L5-
