@@ -73,11 +73,11 @@ const App = () => {
 
 Read more:
 
-*   [ECHO overview](/docs/echo/overview)
-*   [ECHO configuration](/docs/echo/configuration)
-*   [ECHO with React](/docs/echo/react)
-*   [how ECHO works](/docs/echo/how-echo-works)
-*   Implement user identity with [HALO](/docs/halo/overview)
+*   [ECHO overview](guide/echo)
+*   [ECHO configuration](guide/echo/configuration)
+*   [ECHO with React](guide/echo/react)
+*   [how ECHO works](guide/echo/how-echo-works)
+*   Implement user identity with [HALO](guide/halo/overview)
 
 ## Creating apps
 
