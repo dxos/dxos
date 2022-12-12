@@ -205,6 +205,9 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
       // TODO(dmaretskyi): For now this is just forwarding the data to callbacks since we don't have session-specific logic.
       // Perhaps in the future we will have more complex logic here.
       SpaceHostService: {
+        //
+        // Get profile from guest.
+        //
         introduce: async ({ profile }) => {
           guestProfile = profile;
           log('received introduction from guest', {
@@ -218,6 +221,9 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
           this._observable.callback.onAuthenticating?.(this._invitation);
         },
 
+        //
+        // Get authentication code from guest.
+        //
         authenticate: async ({ authenticationCode: code }) => {
           log('received authentication request', { authenticationCode: code });
           let status = AuthenticationResponse.Status.OK;
@@ -234,6 +240,9 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
           return { status };
         },
 
+        //
+        // Process admission request.
+        //
         requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
           try {
             // Check authenticated.
@@ -346,13 +355,19 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
         log('connected', { guest: this._signingContext.deviceKey });
         this._observable.callback.onConnected?.(this._invitation);
 
-        // 1. Introduce guest to host.
+        //
+        // 1. Send profile to host.
+        //
+
         log('introduce', { guest: this._signingContext.deviceKey });
         await this.rpc.SpaceHostService.introduce({
           profile: this._signingContext.profile
         });
 
-        // 2. Get authentication code.
+        //
+        // 2. Get authentication code from user.
+        //
+
         // TODO(burdon): Test timeout (options for timeouts at different steps).
         if (this._invitation.type === undefined || this._invitation.type === Invitation.Type.INTERACTIVE) {
           const { timeout = INVITATION_TIMEOUT } = this._options ?? {};
@@ -378,11 +393,14 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
           }
         }
 
+        //
         // 3. Generate a pair of keys for our feeds.
+        //
+
         const controlFeedKey = await this._keyring.createKey();
         const dataFeedKey = await this._keyring.createKey();
 
-        // 4. Send admission credentials to host (with local space keys).
+        // Send admission credentials to host (with local space keys).
         log('request admission', { guest: this._signingContext.deviceKey });
         const { credential } = await this.rpc.SpaceHostService.requestAdmission({
           identityKey: this._signingContext.identityKey,
@@ -393,7 +411,10 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
 
         // TODO(dmaretskyi): Record credential in guest's HALO.
 
+        //
         // 4. Create local space.
+        //
+
         const assertion = getCredentialAssertion(credential);
         assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
         assert(credential.subject.id.equals(this._signingContext.identityKey));
@@ -405,7 +426,7 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
           dataFeedKey
         });
 
-        // 5. Success.
+        // Success.
         log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
         this.complete.wake();
       } catch (err) {
