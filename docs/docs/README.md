@@ -23,5 +23,5 @@ features:
     details: Command line and browser tools to create and publish applications, and manage KUBE infrastructure.
   - title: 'Apps and Components'
     details: UI components to create real-time data-driven PWA applications.
-  - footer: MIT Licensed | Copyright © DXOS.org
+footer: MIT Licensed | Copyright © DXOS.org
 ---
