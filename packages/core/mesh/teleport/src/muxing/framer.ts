@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
 import * as varint from 'varint';
@@ -24,7 +23,6 @@ export class Framer {
     objectMode: false,
     read: () => {},
     write: (chunk, encoding, callback) => {
-      log('chunk', { len: chunk.length, chunk: Buffer.from(chunk).toString('hex') })
       assert(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.');
 
       if (this._buffer && this._buffer.length > 0) {

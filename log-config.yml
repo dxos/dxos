@@ -12,7 +12,7 @@ filter:
   # - peer:debug
   # - connection:debug
   # - test:debug
-  - rpc:debug
+  - framer:debug
   # - feed-wrapper:debug
   # - service-host:debug
   # - client:debug
