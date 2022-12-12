@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import minimatch from 'minimatch';
 
 export const includeExclude = <T>(

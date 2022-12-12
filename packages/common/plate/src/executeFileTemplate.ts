@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 import path from 'path';
-
-import { loadModule, LoadModuleOptions } from './util/loadModule';
-
-import { File, getFileType, MaybePromise, promise } from './file';
-import { Config } from './config';
 import { z } from 'zod';
+
+import { Config } from './config';
+import { File, getFileType, MaybePromise, promise } from './file';
 import { Imports } from './util/imports';
+import { loadModule, LoadModuleOptions } from './util/loadModule';
 
 /** Include all template files that end with .t.ts or .t.js */
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
@@ -64,11 +63,12 @@ export const renderSlots =
   <Map extends TemplateSlotMap>(slots?: Map) =>
   (context: TemplateSlotContext) => {
     const result: FunctionalMap<Map> = {} as FunctionalMap<Map>;
-    if (slots)
-      for (let i in slots) {
+    if (slots) {
+      for (const i in slots) {
         const val = slots[i];
-        result[i] = typeof val == 'function' ? (c?: TemplateSlotContext) => val({ ...context, ...c }) : () => val;
+        result[i] = typeof val === 'function' ? (c?: TemplateSlotContext) => val({ ...context, ...c }) : () => val;
       }
+    }
     return result;
   };
 

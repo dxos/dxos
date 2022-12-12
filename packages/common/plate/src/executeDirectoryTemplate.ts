@@ -5,6 +5,7 @@ import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 
+import { Config, loadConfig, unDefault, prettyConfig } from './config';
 import {
   executeFileTemplate,
   TemplatingResult,
@@ -13,11 +14,10 @@ import {
   TemplateResultMetadata
 } from './executeFileTemplate';
 import { File } from './file';
+import { includeExclude } from './util/includeExclude';
 import { logger } from './util/logger';
 import { runPromises } from './util/runPromises';
-import { Config, loadConfig, unDefault, prettyConfig } from './config';
 import { inquire } from './util/zodInquire';
-import { includeExclude } from './util/includeExclude';
 
 export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions &
   Config & {
@@ -55,14 +55,18 @@ export const executeDirectoryTemplate = async <TInput>(
           defaults: input
         });
         const inquiredParsed = inputShape.safeParse(inquired);
-        if (!inquiredParsed.success) throw new Error('invalid input: ' + inquiredParsed.error.toString());
+        if (!inquiredParsed.success) {
+          throw new Error('invalid input: ' + inquiredParsed.error.toString());
+        }
         input = inquiredParsed.data as TInput;
       } else {
         input = parse.data as TInput;
       }
     } else {
       const parse = inputShape.safeParse(input);
-      if (!parse.success) throw new Error('invalid input: ' + parse.error.toString());
+      if (!parse.success) {
+        throw new Error('invalid input: ' + parse.error.toString());
+      }
       input = parse.data as TInput;
     }
   }
@@ -139,7 +143,7 @@ export const executeDirectoryTemplate = async <TInput>(
   ];
   const inheritedOutputMinusFlatOutput = inherited
     ? inherited.filter((inheritedOut) => {
-        return !flatOutput.find((existing) => existing.path == inheritedOut.path);
+        return !flatOutput.find((existing) => existing.path === inheritedOut.path);
       })
     : flatOutput;
   return [...flatOutput, ...inheritedOutputMinusFlatOutput];

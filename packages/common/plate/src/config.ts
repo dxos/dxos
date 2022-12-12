@@ -1,8 +1,13 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import path from 'path';
 import { z } from 'zod';
-import { logger } from './util/logger';
+
 import { TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
 import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
+import { logger } from './util/logger';
 import { InquirableZodType, InquirableZodObject, InquirablePrimitive } from './util/zodInquire';
 
 export type Config<TInput extends InquirableZodType = InquirableZodType> = {
@@ -36,7 +41,7 @@ export const unDefault = <T extends InquirableZodType = InquirableZodType>(shape
     return z.intersection(unDefault(shape._def.left), unDefault(shape._def.right));
   } else {
     const undefshape = { ...shape._def.shape() };
-    for (let i in undefshape) {
+    for (const i in undefshape) {
       const val = undefshape[i];
       undefshape[i] = val instanceof z.ZodDefault ? val?.removeDefault() : val;
     }
@@ -50,19 +55,25 @@ export const mergeConfigs = (a: Config, b: Config) => {
     ...a,
     ...b
   };
-  if (include?.length || a.include?.length) merged.include = [...(a.include ?? []), ...(include ?? [])];
-  if (exclude?.length || a.exclude?.length) merged.exclude = [...(a.exclude ?? []), ...(exclude ?? [])];
+  if (include?.length || a.include?.length) {
+    merged.include = [...(a.include ?? []), ...(include ?? [])];
+  }
+  if (exclude?.length || a.exclude?.length) {
+    merged.exclude = [...(a.exclude ?? []), ...(exclude ?? [])];
+  }
   return merged as Config;
 };
 
 export const prettyConfig = (o?: Config) => {
-  if (!o) return o;
+  if (!o) {
+    return o;
+  }
   const { inputShape, ...rest } = o;
   return {
     ...rest,
     inputShape: inputShape ? '[ZodObject]' : undefined
   };
-}
+};
 
 export const loadConfig = async (templateDirectory: string, options?: LoadConfigOptions): Promise<Config> => {
   const tsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.ts');
@@ -85,7 +96,9 @@ export const loadConfig = async (templateDirectory: string, options?: LoadConfig
     debug('merged config', prettyConfig(merged));
     return merged;
   } catch (err: any) {
-    if (verbose) console.warn('exception while loading template config:\n' + err.toString());
+    if (verbose) {
+      console.warn('exception while loading template config:\n' + err.toString());
+    }
     debug('default config', prettyConfig(defaultConfig));
     return defaultConfig;
   }

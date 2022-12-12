@@ -50,7 +50,9 @@ export class PublicKey {
    * @returns PublicKey
    */
   static safeFrom(source?: PublicKeyLike): PublicKey | undefined {
-    if (!source) return undefined;
+    if (!source) {
+      return undefined;
+    }
     try {
       return PublicKey.from(source);
     } catch (error: any) {

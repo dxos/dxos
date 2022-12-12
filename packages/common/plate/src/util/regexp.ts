@@ -4,4 +4,8 @@
  * @param str the regex string to escape (which may contain regex characters)
  * @returns a string passable to a RegExp constructor
  */
-export const escapeRegExp = (str: string) => String(str).replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1');
+//
+// Copyright 2022 DXOS.org
+//
+
+export const escapeRegExp = (str: string) => String(str).replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1'); // eslint-disable-line no-useless-escape

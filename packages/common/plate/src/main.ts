@@ -7,9 +7,9 @@
 import process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { catFiles } from './util/catFiles';
 
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
+import { catFiles } from './util/catFiles';
 import { logger } from './util/logger';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
@@ -108,8 +108,8 @@ const main = async () => {
           throw new Error('no template specified');
         }
         debug('working directory', process.cwd());
-        const extraArgs =  { ...restArgs };
-        delete extraArgs['$0']; // yargs cruft
+        const extraArgs = { ...restArgs };
+        delete extraArgs.$0; // yargs cruft
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
