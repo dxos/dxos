@@ -5,7 +5,6 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { discoveryKey, sha256 } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
@@ -33,9 +32,9 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.peers).toContainEqual(PublicKey.from(discoveryKey(sha256(peer2.deviceKey.toHex()))));
-      expect(protocol2.peers).toContainEqual(PublicKey.from(discoveryKey(sha256(peer1.deviceKey.toHex()))));
-    });
+      expect(protocol1.peers).toContainEqual(peer2.deviceKey);
+      expect(protocol2.peers).toContainEqual(peer1.deviceKey);
+    }, 1_000);
   });
 
   test('failing authentication', async () => {

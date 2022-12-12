@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { discoveryKey, sha256 } from '@dxos/crypto';
+import { Event } from '@dxos/async';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
@@ -46,9 +46,8 @@ export class SpaceProtocol {
   private readonly _swarmIdentity: SwarmIdentity;
 
   private readonly _presence: TeleportPresence;
-
-  private readonly _discoveryKey: PublicKey;
-  private readonly _peerId: PublicKey;
+  
+  private readonly _topic: PublicKey;
 
   private _connection?: SwarmConnection;
 
@@ -67,13 +66,11 @@ export class SpaceProtocol {
   constructor({ topic, identity, networkManager }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = identity;
-
-    this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())));
-    this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())));
+    this._topic = topic;
 
     // Presence (Teleport).
     this._presence = new Presence({
-      localPeerId: this._peerId,
+      localPeerId: this._swarmIdentity.peerKey,
       announceInterval: 1000,
       offlineTimeout: 30_000
     });
@@ -105,10 +102,11 @@ export class SpaceProtocol {
     log('starting...');
     this._connection = await this._networkManager.joinSwarm({
       protocolProvider: this._createProtocolProvider(credentials),
-      peerId: this._peerId,
-      topic: this._discoveryKey,
+      peerId: this._swarmIdentity.peerKey,
+      topic: this._topic,
+      presence: this._presencePlugin,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${this._discoveryKey}`
+      label: `Protocol swarm: ${this._topic}`
     });
 
     log('started');
