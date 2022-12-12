@@ -16,7 +16,7 @@ import {
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
-import { Presence as TeleportPresence } from '@dxos/teleport-extension-presence';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
@@ -72,7 +72,7 @@ export class SpaceProtocol {
     this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())));
 
     // Presence (Teleport).
-    this._presence = new TeleportPresence({
+    this._presence = new Presence({
       localPeerId: this._peerId,
       announceInterval: 1000,
       offlineTimeout: 30_000
@@ -166,7 +166,7 @@ export class SpaceProtocolSession implements WireProtocol {
   private readonly _swarmIdentity: SwarmIdentity;
 
   private readonly _teleport: Teleport;
-  private readonly presence: TeleportPresence;
+  private readonly presence: Presence;
 
   // TODO(dmaretskyi): Start with upload=false when switching it on the fly works.
   public readonly replicator = new TeleportReplicatorExtension().setOptions({ upload: true });
@@ -179,7 +179,7 @@ export class SpaceProtocolSession implements WireProtocol {
   }
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.
-  constructor({ wireParams, swarmIdentity, presence }: SpaceProtocolSessionParams & { presence: TeleportPresence }) {
+  constructor({ wireParams, swarmIdentity, presence }: SpaceProtocolSessionParams & { presence: Presence }) {
     this._wireParams = wireParams;
     this._swarmIdentity = swarmIdentity;
 
