@@ -61,9 +61,9 @@ const client = new Client({
 See the API documentaion for [Config](/api/@dxos/client/classes/Config).
 
 #### Loading defaults from a file
-```ts file=./snippets/config-with-defaults.ts#L5-
+```ts file=./snippets/create-with-defaults.ts#L5-
 ```
 
 #### Receiving config from a KUBE
-```ts file=./snippets/config-with-dynamics.ts#L5-
+```ts file=./snippets/create-with-dynamics.ts#L5-
 ```
