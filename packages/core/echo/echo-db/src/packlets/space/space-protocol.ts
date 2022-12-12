@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 import {
   MMSTTopology,
   NetworkManager,
-  Plugin,
   SwarmConnection,
   WireProtocol,
   WireProtocolParams,
@@ -36,7 +35,6 @@ export type SpaceProtocolOptions = {
   topic: PublicKey; // TODO(burdon): Rename?
   identity: SwarmIdentity;
   networkManager: NetworkManager;
-  plugins?: Plugin[];
 };
 
 /**
@@ -56,7 +54,7 @@ export class SpaceProtocol {
   private _feeds = new Set<FeedWrapper<FeedMessage>>();
   private _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
 
-  constructor({ topic, identity, networkManager, plugins = [] }: SpaceProtocolOptions) {
+  constructor({ topic, identity, networkManager }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = identity;
 

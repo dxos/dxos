@@ -85,10 +85,10 @@ describe('space/space-protocol', () => {
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
-    const protocol1 = peer1.createSpaceProtocol(topic, []);
+    const protocol1 = peer1.createSpaceProtocol(topic);
 
     const peer2 = await builder.createPeer();
-    const protocol2 = peer2.createSpaceProtocol(topic, []);
+    const protocol2 = peer2.createSpaceProtocol(topic);
 
     await protocol1.start();
     await protocol2.start();
