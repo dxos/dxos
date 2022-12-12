@@ -11,7 +11,7 @@ import waitForExpect from 'wait-for-expect';
 import { sleep } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { Framer, readFrame } from './framer';
+import { Framer, decodeFrame, encodeFrame } from './framer';
 
 const pipeWithRandomizedChunks = (from: NodeJS.ReadableStream, to: NodeJS.WritableStream): (() => void) => {
   let buffers: Buffer[] = [];
@@ -66,10 +66,9 @@ describe('Framer', () => {
   test('frame encoding', () => {
     const sizes = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
     for (const size of sizes) {
-      const tag = varint.encode(size, Buffer.allocUnsafe(4)).slice(0, varint.encode.bytes);
       const payload = randomBytes(size);
-      const frame = Buffer.concat([tag, payload]);
-      const decoded = readFrame(frame, 0);
+      const frame = encodeFrame(payload);
+      const decoded = decodeFrame(frame, 0);
       expect(decoded?.bytesConsumed).to.equal(frame.length);
       expect(decoded?.payload).to.deep.equal(payload);
     }
@@ -97,10 +96,12 @@ describe('Framer', () => {
 
     const TOTAL_FRAMES = 1000;
     while (framesSent.length < TOTAL_FRAMES) {
-      const frame = randomBytes(Math.floor(Math.random() * 400));
-      // console.log('wrt', frame.length)
-      void peer2.port.send(frame);
-      framesSent.push(frame);
+      for(let i = 0; i < 3; i++) {
+        const frame = randomBytes(Math.floor(Math.random() * 400));
+        // console.log('wrt', frame.length)
+        void peer2.port.send(frame);
+        framesSent.push(frame);
+      }
 
       if (Math.random() < 0.1) {
         // 10% chance to pause and check the messages.
