@@ -5,15 +5,38 @@ label: Configuration
 
 # Configuration
 
+## Creating a client instance
+
 Having [installed the client](./installation), create an instance:
 
-```ts
-import { Client } from "@dxos/client";
+```ts file=./snippets/create-client.ts#L5-
+import { Client } from '@dxos/client';
 
-const client = new Client({ /* options */ });
+// create a client
+const client = new Client();
 ```
 
-### Options:
+## Usage with React
+
+Use `ClientProvider` to supply the `client` instance via `ReactContext` to any nested `useClient()` hooks.
+
+```tsx file=./snippets/create-client-react.tsx#L5-
+import React from "react";
+import { Client } from "@dxos/client";
+import { ClientProvider } from "@dxos/react-client";
+
+const client = new Client();
+
+const App = () => {
+  return (
+    <ClientProvider client={client}>
+      {/* Your components here  */}
+    </ClientProvider>
+  );
+};
+```
+
+### Options
 
 :::apidoc[@dxos/client.ClientOptions]{.properties level="2"}
 #### [config](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L30)

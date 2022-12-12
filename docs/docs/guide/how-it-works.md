@@ -37,9 +37,12 @@ Specific documents or rows of data are referred to as `items`. `Items` always be
 
 ### Models
 
-Every item behaves according to a data consistency model which describes rules by which conflicts are to be resolved between multiple writers. DXOS currently provides two specific model types and will offer custom models in the near future. `ObjectModel` supports the equivalent of a document record with keys and values, where last writer wins on any given key. `TextModel` provides the necessary model for collaborative rich text editing on a "large string" or rich text model.
+Every item behaves according to a data consistency model which describes rules by which conflicts are to be resolved between multiple writers. DXOS currently provides two specific model types and will offer custom models in the near future.
 
-Read more about [ECHO Installation and usage](echo/installation).
+*   `ObjectModel` supports the equivalent of a document record with keys and values, where last writer wins on any given key.
+*   `TextModel` provides the necessary model for collaborative rich text editing on a "large string" or rich text model.
+
+Continue to [ECHO Installation and usage](echo/installation).
 
 ## HALO
 

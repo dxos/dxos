@@ -23,6 +23,9 @@
       "path": "../packages/common/telemetry"
     },
     {
+      "path": "../packages/sdk/client"
+    },
+    {
       "path": "../packages/sdk/react-client"
     },
     {

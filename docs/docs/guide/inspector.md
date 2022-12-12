@@ -1,9 +1,6 @@
 ---
-order: 1
-title: DXOS Inspector
-dir:
-  title: Inspector Tool
-  order: 20
+order: 20
+title: Inspector Tool
 ---
 
 # DXOS Inspector
