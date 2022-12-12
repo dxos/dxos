@@ -3,7 +3,7 @@ position: 0
 label: Contributor Guide
 dir:
   text: Contributing
-  order: 30
+  order: 40
 ---
 
 # Contributing to DXOS

@@ -12,26 +12,48 @@ prev: why
 Install ECHO with your package manager of choice
 
 ```bash
-npm install --save @dxos/echo
+npm install --save @dxos/client
 ```
 
-To use ECHO you start with an instance of the [`Client`](/api/@dxos/client/classes/Client). It needs a configuration object of type [`Config`](/api/@dxos/config/classes/Config). Configuration typically comes from `dx.yml` files.
+To use ECHO you start with an instance of the [`Client`](/api/@dxos/client/classes/Client).
 
-```ts file=./echo/snippets/create-client.ts#L5-
-import { Client } from '@dxos/client';
+To store data in ECHO, your client needs to [create or join a space](echo/spaces).
 
-// create a client
+```ts file=./echo/snippets/create-space.ts#L5-
+import { Client } from "@dxos/client";
+
 const client = new Client();
+
+const space = await client.echo.createSpace();
 ```
 
-Read about all the [configuration options](/docs/echo/configuration).
+Read more about [configuring the client](echo/configuration).
 
-To store data in ECHO, your client needs to create or join a [space](how-it-works#spaces).
+Now you can manipulate items in the space and they will replicate with all members of the space in a peer-to-peer fashion.
 
-```ts
+```ts file=./echo/snippets/query-spaces.ts#L9-
+// decide on a type for your items
+const type = 'yourdomain:type/some-type-identifier';
+
+// get a list of all spaces
+const { value: spaces } = client.echo.querySpaces();
+
+// create a regular ObjectModel item
+const item = await spaces[0].database.createItem({
+  type,
+  model: ObjectModel
+});
+
+// set a property value
+item.model.set('someKey', 'someValue');
+
+// query items
+const items = spaces[0].database.select({ type });
 ```
 
-Using `ClientProvider` and `useClient` with React:
+### React usage
+
+Use `ClientProvider` and `useClient` with React:
 
 ```tsx file=./echo/snippets/create-client-react.tsx#L5-
 import React from "react";
@@ -61,7 +83,7 @@ Read more:
 
 The `dx` cli offers a production-ready application template for building **local-first applications** with ECHO. The template is made of `vite`, `typescript`, `react`, `echo`, `pwa`, and other opinions.
 
-Using your favorite package manager of choice like `npm`, `yarn`, or `pnpm`:
+Using `pnpm`:
 
 ```bash
 npm i -g @dxos/cli 
@@ -72,10 +94,14 @@ Now you can use the `dx` command line tool:
 ```bash
 dx app create hello # or with --template=bare
 cd hello
-npm run dev
+pnpm serve
 ```
 
-This will start the development server in the new application .
+This will start the development server in the new application.
+
+:::warning
+Only `pnpm` is currently supported by the application templates for now due to a need to patch `vite`. This should be resolved soon.
+:::
 
 Building your app for production:
 
@@ -83,7 +109,7 @@ Building your app for production:
 npm build
 ```
 
-This will produce a `dist` folder with an entry point and a `dist/README.md`
+This will produce an `out` folder with an entry point.
 
 Read more:
 
