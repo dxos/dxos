@@ -7,7 +7,7 @@ import { Flags } from '@oclif/core';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { DEFAULT_PROVIDER, DigitalOceanProvider, Provider, printKubes } from '../../util/provider';
+import { DEFAULT_PROVIDER, DigitalOceanProvider, MachineryProvider, printKubes } from '../../util/provider';
 
 export default class Deploy extends BaseCommand {
   static override description = 'Deploy KUBE.';
@@ -40,7 +40,7 @@ export default class Deploy extends BaseCommand {
           throw new Error('Halo profile should be initialized first.');
         }
         // TODO(egorgripasov): HALO <-> KUBE integration.
-        let provider: Provider;
+        let provider: MachineryProvider;
         switch (providerName) {
           case DEFAULT_PROVIDER: {
             provider = new DigitalOceanProvider(this.clientConfig!);

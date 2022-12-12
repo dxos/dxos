@@ -22,7 +22,7 @@ export type KUBE = {
   ipAddress: string;
 };
 
-export interface Provider {
+export interface MachineryProvider {
   /**
    * Deploy KUBE to a Provider.
    */

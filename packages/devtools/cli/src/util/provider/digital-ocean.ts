@@ -8,13 +8,13 @@ import DigitalOcean from 'do-wrapper';
 import { waitForCondition } from '@dxos/async';
 import type { Config } from '@dxos/client';
 
-import { KUBE_TAG, KubeDeployOptions, Provider } from './provider';
+import { KUBE_TAG, KubeDeployOptions, MachineryProvider } from './provider';
 
 const DEFAULT_REGION = 'nyc3';
 const DEFAULT_MEMORY = 4;
 
-export class DigitalOceanProvider implements Provider {
-  _session: any;
+export class DigitalOceanProvider implements MachineryProvider {
+  private _session: any;
 
   constructor(config: Config) {
     const doAccessToken = config.get('runtime.services.machine.doAccessToken');
