@@ -23,6 +23,7 @@ export const remarkDocumentation = async (config: Config) => {
   const eligibleFiles = files.filter((file) => include.some((pattern) => minimatch(file, pattern)));
   const promises = eligibleFiles.map(async (file) => {
     const content = await fs.readFile(file, 'utf8');
+    try {
     const processed = await unified()
       .use(remarkParse)
       .use(remarkFrontmatter)
@@ -37,10 +38,14 @@ export const remarkDocumentation = async (config: Config) => {
           value: content
         })
       );
-    if (content !== processed.value) {
-      console.log('processing', file);
-      await fs.writeFile(file, processed.value);
-    }
+      if (content !== processed.value && !!processed.value) {
+        console.log('processing', file);
+        await fs.writeFile(file, processed.value);
+      }
+    } catch (err: any) {
+      console.warn(`problem in file ${file}`);
+      console.error(err);
+    };
   });
   await Promise.all(promises);
 };
