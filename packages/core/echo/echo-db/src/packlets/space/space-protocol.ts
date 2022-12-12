@@ -156,6 +156,8 @@ export enum AuthStatus {
 }
 
 // TODO(dmaretskyi): Move to a separate file.
+export type SpaceProtocolSessionParams = WireProtocolParams & { presence: Presence };
+
 /**
  * Represents a single connection to a remote peer
  */
