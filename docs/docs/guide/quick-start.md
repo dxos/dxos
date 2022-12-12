@@ -131,6 +131,3 @@ Read more:
 
 *   [Publishing apps](kube/publishing)
 
-## Sharing your app
-
-> TODO

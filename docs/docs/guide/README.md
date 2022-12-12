@@ -11,8 +11,6 @@ prev: ./why
 
 ## Platform Components
 
-`// TODO: insert overall platform diagram`
-
 *   [ECHO](echo) Database and state container for offline-first and real-time collaborative apps.
 *   [HALO](halo) Identity for decentralized apps.
 *   [MESH](mesh) Networking for peer to peer apps.
@@ -25,4 +23,4 @@ Read more about [how it works](how-it-works)
 *   Create an [ECHO database](quick-start#using-an-echo-database-for-state-consensus)
 *   Build an app with [@dxos/cli](quick-start#creating-apps)
 *   Start up a [KUBE](quick-start#starting-a-kube)
-*   [Deploy and share your app](quick-start#deploying-your-app-to-a-kube)
+*   [Deploy your app to a KUBE](quick-start#deploying-your-app-to-a-kube)
