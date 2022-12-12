@@ -38,26 +38,32 @@ const App = () => {
 
 ### Options
 
-:::apidoc[@dxos/client.ClientOptions]{.properties level="2"}
-#### [config](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L30)
+The client can be given a custom configuration via the config property of it's constructor's options. 
 
-Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
+For example, here's how to set a custom signaling server:
 
-client configuration object
+```ts file=./snippets/create-with-signal-server.ts#L5-
+import { Client, Config } from '@dxos/client';
 
-#### [modelFactory](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L34)
+const client = new Client({
+  config: new Config({
+    runtime: {
+      services: {
+        signal: {
+          server: `wss://kube.dxos.org/.well-known/dx/signal`
+        }
+      }
+    }
+  })
+});
+```
 
-Type: <code>ModelFactory</code>
+See the API documentaion for [Config](/api/@dxos/client/classes/Config).
 
-custom model factory
+#### Loading defaults from a file
+```ts file=./snippets/config-with-defaults.ts#L5-
+```
 
-#### [services](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L32)
-
-Type: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
-
-custom services provider
-:::
-
-***
-
-Read the full API documentaion for Client [here](/api/@dxos/client)
+#### Receiving config from a KUBE
+```ts file=./snippets/config-with-dynamics.ts#L5-
+```

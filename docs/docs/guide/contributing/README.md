@@ -7,6 +7,7 @@ dir:
 ---
 
 # Contributing to DXOS
+
 :::note
 This section is under development
 :::
@@ -18,4 +19,3 @@ We welcome everyone's contributions and offer the following resources for contri
 *   Opening PRs
 *   Contributor Documentation
     *   How the code is organized
-

@@ -26,6 +26,9 @@
       "path": "../packages/sdk/client"
     },
     {
+      "path": "../packages/sdk/config"
+    },
+    {
       "path": "../packages/sdk/react-client"
     },
     {
