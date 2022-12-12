@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { trigger } from './trigger';
-
 /**
  * A locking mechanism to ensure that a given section of the code is executed by only one single "thread" at a time.
  *
@@ -21,7 +19,26 @@ import { trigger } from './trigger';
  * https://docs.oracle.com/javase/tutorial/essential/concurrency/locksync.html
  */
 export class Lock {
-  private _lastPromise = Promise.resolve();
+  private _queue = Promise.resolve();
+
+  /**
+   * Acquires the lock.
+   * Caller is responsible for releasing the lock using the returned callback.
+   * NOTE: Using `executeSynchronized` is preferred over using `acquire` directly.
+   * @returns Release callback
+   */
+  async acquire(): Promise<() => void> {
+    const prev = this._queue;
+
+    // Immediately update the promise before invoking any async actions so that next invocation waits for our task to complete.
+    let release!: () => void;
+    this._queue = new Promise((resolve) => {
+      release = resolve;
+    });
+
+    await prev;
+    return release;
+  }
 
   /**
    * Waits for all previous executions to complete and then executes a given function.
@@ -30,22 +47,21 @@ export class Lock {
    * WARNING: Calling `executeSynchronized` inside of `executeSynchronized` on the same lock instance is a deadlock.
    */
   async executeSynchronized<T>(fun: () => Promise<T>): Promise<T> {
-    const prevPromise = this._lastPromise;
+    const release = await this.acquire();
 
-    // Immediately update the promise before invoking any async actions so that next invocation waits for our task to complete.
-    const [getPromise, resolve] = trigger();
-    this._lastPromise = getPromise();
-
-    await prevPromise;
     try {
       return await fun();
     } finally {
-      resolve();
+      release();
     }
   }
 }
 
 const classLockSymbol = Symbol('class-lock');
+
+interface LockableClass {
+  [classLockSymbol]?: Lock;
+}
 
 /**
  * Same as `synchronized` in Java.
@@ -58,8 +74,15 @@ export const synchronized = (
   descriptor: TypedPropertyDescriptor<(...args: any) => any>
 ) => {
   const method = descriptor.value!;
-  descriptor.value = function (this: any, ...args: any) {
-    const lock: Lock = this[classLockSymbol] ?? (this[classLockSymbol] = new Lock());
-    return lock.executeSynchronized(() => method.apply(this, args));
+  descriptor.value = async function (this: any & LockableClass, ...args: any) {
+    const lock = (this[classLockSymbol] ??= new Lock());
+    const release = await lock.acquire();
+
+    try {
+      return await method.apply(this, args);
+    } finally {
+      release();
+    }
   };
+  Object.defineProperty(descriptor.value, 'name', { value: propertyName + '$synchronized' });
 };
