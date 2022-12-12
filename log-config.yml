@@ -8,10 +8,11 @@ filter:
   - info
   # - debug
   # - swarm.ts:debug
-  - swarm:debug
-  - peer:debug
-  - connection:debug
-  - test:debug
+  # - swarm:debug
+  # - peer:debug
+  # - connection:debug
+  # - test:debug
+  - rpc:debug
   # - feed-wrapper:debug
   # - service-host:debug
   # - client:debug

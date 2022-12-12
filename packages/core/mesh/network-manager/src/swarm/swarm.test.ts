@@ -17,7 +17,7 @@ import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory } from '../transport';
 import { Swarm } from './swarm';
 
-describe.only('Swarm', () => {
+describe('Swarm', () => {
   const context = new MemorySignalManagerContext();
   let signalManager: MemorySignalManager;
 
@@ -81,7 +81,7 @@ describe.only('Swarm', () => {
     await promise;
     log('Swarms connected');
 
-    (await protocol1.waitForConnection(peerId2)).test();
+    await protocol1.testConnection(peerId2);
   }).timeout(5_000);
 
   test('two peers try to originate connections to each other simultaneously', async () => {
@@ -144,6 +144,6 @@ describe.only('Swarm', () => {
 
     await connectPromises;
 
-    (await protocol1.waitForConnection(peerId2)).test();
+    await protocol1.testConnection(peerId2);
   }).timeout(10_000);
 });
