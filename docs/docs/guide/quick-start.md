@@ -134,7 +134,7 @@ Once KUBE is running, you're ready to deploy :sparkles:.
 
 Read more:
 
-*   [KUBE Overview](/docs/kube/overview)
+*   [KUBE Overview](kube)
 
 ## Deploying your app to a KUBE
 
