@@ -4,6 +4,7 @@
 
 import React, { ReactNode, useState, Context, createContext, useContext } from 'react';
 
+import { EventSubscriptions } from '@dxos/async';
 import { Client } from '@dxos/client';
 import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
 import { Config } from '@dxos/config';
@@ -91,10 +92,21 @@ export const ClientProvider = ({
   }
 
   useAsyncEffect(async () => {
+    console.log('ClientProvider init: ', {
+      clientProvider,
+      configProvider,
+      createServices
+    });
+    const cleanUp = new EventSubscriptions();
     const done = async (client: Client) => {
       log('client ready', { client });
       await onInitialize?.(client);
       setClient(client);
+      cleanUp.add(() => {
+        log('cleanUp');
+        setClient(undefined);
+        client.destroy().catch((err) => log.catch(err));
+      });
       printBanner(client);
     };
 
@@ -113,6 +125,10 @@ export const ClientProvider = ({
       await client.initialize().catch((err) => setError(err));
       await done(client);
     }
+
+    return () => {
+      cleanUp.clear();
+    };
   }, [clientProvider, configProvider, createServices]);
 
   if (!client) {
