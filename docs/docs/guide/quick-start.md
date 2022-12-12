@@ -137,13 +137,7 @@ Read more:
 
 ## Deploying your app to a KUBE
 
-Use the `dx` cli to create a default `dx.yml` file:
-
-```bash
-dx app init
-```
-
-Read more about the [`dx.yml` file schema](/docs/kube/dx-yml-file).
+Drop a `dx.yml` file in the project root and run the following command. Read more about the [`dx.yml` file schema](/docs/kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
 
 Publish your app to your local kube:
 

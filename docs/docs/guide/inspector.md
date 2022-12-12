@@ -6,7 +6,8 @@ title: Inspector Tool
 # DXOS Inspector
 
 Using this tool you can connect to any instance of ECHO to visualize and debug the state of the application.
-- Launch the [Inspector Tool](https://devtools.dxos.org)
+
+*   Launch the [Inspector Tool](https://devtools.dxos.org)
 
 ![inspector-tool](../assets/images/inspector.png)
 
