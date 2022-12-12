@@ -9,6 +9,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "scripts": {
+    "beast": "beast docs",
     "build": "nx run-many --target=build",
     "changed-packages": "scripts/changed",
     "check-dependencies": "syncpack list-mismatches",
@@ -21,6 +22,7 @@
     "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
     "nx": "nx",
     "prepare": "husky install",
+    "run:templates": "scripts/run_templates",
     "test": "nx run-many --target=test"
   },
   "dependencies": {
@@ -31,6 +33,7 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/async": "workspace:*",
+    "@dxos/beast": "workspace:*",
     "@dxos/esbuild": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin": "workspace:*",

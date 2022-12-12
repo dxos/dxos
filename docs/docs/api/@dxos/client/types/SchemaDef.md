@@ -1,5 +1,5 @@
 # Type `SchemaDef`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:14]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/api/schema.d.ts:14]()</sub>
 
 
 

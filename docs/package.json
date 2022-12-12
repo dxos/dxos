@@ -17,6 +17,8 @@
   },
   "devDependencies": {
     "@dxos/apidoc": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@types/eslint": "^8.4.6",
@@ -40,7 +42,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "ts-node": "10.9.1",
-    "typedoc": "^0.23.21",
+    "typedoc": "^0.23.22",
     "typescript": "^4.8.4",
     "vite": "3.2.5",
     "vue": "^3.2.45",

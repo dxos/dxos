@@ -7,63 +7,84 @@ prev: why
 
 # Quick start
 
-## Using an ECHO database for state consensus
+## Using an ECHO database
 
 Install ECHO with your package manager of choice
 
 ```bash
-npm install --save @dxos/echo
+npm install --save @dxos/client
 ```
 
-Create an ECHO client instance either in browser or on the server:
+To use ECHO you start with an instance of the [`Client`](/api/@dxos/client/classes/Client).
 
-```ts
-import { Client } from "@dxos/echo"
+To store data in ECHO, your client needs to [create or join a space](echo/spaces).
+
+```ts file=./echo/snippets/create-space.ts#L5-
+import { Client } from '@dxos/client';
 
 const client = new Client();
+
+const space = await client.echo.createSpace();
 ```
 
-See here for the [configuration options](/docs/echo/configuration) you can pass in.
+Read more about [configuring the client](echo/configuration).
 
-Create a space and query items:
+Now you can manipulate items in the space and they will replicate with all members of the space in a peer-to-peer fashion.
 
-```ts
-const space = client.spaces.createSpace();
-const items = await space.getItems();
+```ts file=./echo/snippets/write-items.ts#L9-
+// decide on a type for your items
+const type = 'yourdomain:type/some-type-identifier';
+
+// get a list of all spaces
+const { value: spaces } = client.echo.querySpaces();
+
+// create a regular ObjectModel item
+const item = await spaces[0].database.createItem({
+  type,
+  model: ObjectModel
+});
+
+// set a property value
+item.model.set('someKey', 'someValue');
+
+// query items
+const items = spaces[0].database.select({ type });
 ```
 
-Using `ClientProvider` and `useClient` with React:
+### React usage
 
-```tsx
-import { ClientProvider, useClient } from "@dxos/react-client";
+Use `ClientProvider` and `useClient` with React:
 
-export const App = () => {
-  const client = useClient();
-  // ...
-  return (<div />);
+```tsx file=./echo/snippets/create-client-react.tsx#L5-
+import React from 'react';
+
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
+
+const client = new Client();
+
+const App = () => {
+  return (
+    <ClientProvider client={client}>
+      {/* Your components can useClient() here  */}
+    </ClientProvider>
+  );
 };
-
-ReactDOM.render(
-  <ClientProvider client={client}>
-    <App />
-  </ClientProvider>,
-  document.getElementById('root')
-);
 ```
 
 Read more:
 
-*   [ECHO overview](/docs/echo/overview)
-*   [ECHO configuration](/docs/echo/configuration)
-*   [ECHO with React](/docs/echo/react)
-*   [how ECHO works](/docs/echo/how-echo-works)
-*   Implement user identity with [HALO](/docs/halo/overview)
+*   [ECHO overview](guide/echo)
+*   [ECHO configuration](guide/echo/configuration)
+*   [ECHO with React](guide/echo/react)
+*   [how ECHO works](guide/echo/how-echo-works)
+*   Implement user identity with [HALO](guide/halo/overview)
 
 ## Creating apps
 
 The `dx` cli offers a production-ready application template for building **local-first applications** with ECHO. The template is made of `vite`, `typescript`, `react`, `echo`, `pwa`, and other opinions.
 
-Using your favorite package manager of choice like `npm`, `yarn`, or `pnpm`:
+Using `pnpm`:
 
 ```bash
 npm i -g @dxos/cli 
@@ -74,10 +95,14 @@ Now you can use the `dx` command line tool:
 ```bash
 dx app create hello # or with --template=bare
 cd hello
-npm run dev
+pnpm serve
 ```
 
-This will start the development server in the new application .
+This will start the development server in the new application.
+
+:::warning
+Only `pnpm` is currently supported by the application templates for now due to a need to patch `vite`. This should be resolved soon.
+:::
 
 Building your app for production:
 
@@ -85,7 +110,7 @@ Building your app for production:
 npm build
 ```
 
-This will produce a `dist` folder with an entry point and a `dist/README.md`
+This will produce an `out` folder with an entry point.
 
 Read more:
 
@@ -113,13 +138,7 @@ Read more:
 
 ## Deploying your app to a KUBE
 
-Use the `dx` cli to create a default `dx.yml` file:
-
-```bash
-dx app init
-```
-
-Read more about the [`dx.yml` file schema](/docs/kube/dx-yml-file).
+Drop a `dx.yml` file in the project root and run the following command. Read more about the [`dx.yml` file schema](/docs/kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
 
 Publish your app to your local kube:
 
@@ -130,7 +149,3 @@ dx app publish
 Read more:
 
 *   [Publishing apps](kube/publishing)
-
-## Sharing your app
-
-> TODO

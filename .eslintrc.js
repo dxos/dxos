@@ -26,7 +26,9 @@ module.exports = {
 
     // Templates
     // TODO(wittjosiah): Fix lint config to lint these files.
-    '*.t.ts'
+    '*.t.ts',
+    // Docs snippets
+    'docs/docs/**/*',
   ],
   overrides: [
     {

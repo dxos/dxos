@@ -23,23 +23,28 @@ export const remarkDocumentation = async (config: Config) => {
   const eligibleFiles = files.filter((file) => include.some((pattern) => minimatch(file, pattern)));
   const promises = eligibleFiles.map(async (file) => {
     const content = await fs.readFile(file, 'utf8');
-    const processed = await unified()
-      .use(remarkParse)
-      .use(remarkFrontmatter)
-      .use(remarkDirective)
-      .use(Remark.apiDocGenerateDirective)
-      .use([codeImport])
-      .use([remarkPrettier])
-      .use([remarkStringify])
-      .process(
-        new VFile({
-          path: file,
-          value: content
-        })
-      );
-    if (content !== processed.value) {
-      console.log('writing', file);
-      await fs.writeFile(file, processed.value);
+    try {
+      const processed = await unified()
+        .use(remarkParse)
+        .use(remarkFrontmatter)
+        .use(remarkDirective)
+        .use(Remark.apiDocGenerateDirective)
+        .use([codeImport])
+        .use([remarkPrettier])
+        .use([remarkStringify])
+        .process(
+          new VFile({
+            path: file,
+            value: content
+          })
+        );
+      if (content !== processed.value && !!processed.value) {
+        console.log('processing', file);
+        await fs.writeFile(file, processed.value);
+      }
+    } catch (err: any) {
+      console.warn(`problem in file ${file}`);
+      console.error(err);
     }
   });
   await Promise.all(promises);

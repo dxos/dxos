@@ -34,5 +34,6 @@
   "hediet.vscode-drawio.theme": "Kennedy",
   "eslint.workingDirectories": [
     { "mode": "auto" }
-  ]
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
