@@ -1530,31 +1530,6 @@ importers:
       '@types/debug': 4.1.7
       '@types/node': 18.11.9
 
-  packages/core/mesh/broadcast:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/network-generator': workspace:*
-      '@dxos/node-std': workspace:*
-      '@dxos/protocols': workspace:*
-      '@types/debug': ^4.1.7
-      debug: ^4.3.3
-      tiny-lru: ^7.0.6
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/crypto': link:../../../common/crypto
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/node-std': link:../../../common/node-std
-      '@dxos/protocols': link:../../protocols
-      debug: 4.3.4
-      tiny-lru: 7.0.6
-    devDependencies:
-      '@dxos/network-generator': link:../network-generator
-      '@types/debug': 4.1.7
-
   packages/core/mesh/mesh-protocol:
     specifiers:
       '@dxos/async': workspace:*
@@ -1631,29 +1606,6 @@ importers:
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
-  packages/core/mesh/network-generator:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/node-std': workspace:*
-      '@types/end-of-stream': ^1.4.0
-      '@types/pump': ^1.1.0
-      end-of-stream: ^1.4.1
-      ngraph.generators: ^19.0.1
-      ngraph.graph: ^19.0.1
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/log': link:../../../common/log
-      '@dxos/node-std': link:../../../common/node-std
-      end-of-stream: 1.4.4
-      ngraph.generators: 19.3.1
-      ngraph.graph: 19.1.0
-    devDependencies:
-      '@types/end-of-stream': 1.4.1
-      '@types/pump': 1.1.1
-
   packages/core/mesh/network-manager:
     specifiers:
       '@dxos/async': workspace:*
@@ -1714,23 +1666,6 @@ importers:
       earljs: 0.1.12_typescript@4.8.4
       fast-check: 3.3.0
       typescript: 4.8.4
-
-  packages/core/mesh/protocol-network-generator:
-    specifiers:
-      '@dxos/log': workspace:*
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/network-generator': workspace:*
-      '@dxos/node-std': workspace:*
-      '@types/pump': ^1.1.0
-      pump: ^3.0.0
-    dependencies:
-      '@dxos/log': link:../../../common/log
-      '@dxos/network-generator': link:../network-generator
-      '@dxos/node-std': link:../../../common/node-std
-      pump: 3.0.0
-    devDependencies:
-      '@dxos/mesh-protocol': link:../mesh-protocol
-      '@types/pump': 1.1.1
 
   packages/core/mesh/rpc:
     specifiers:
@@ -26863,27 +26798,6 @@ packages:
   /next-tick/1.1.0:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
 
-  /ngraph.events/1.2.2:
-    resolution: {integrity: sha512-JsUbEOzANskax+WSYiAPETemLWYXmixuPAlmZmhIbIj6FH/WDgEGCGnRwUQBK0GjOnVm8Ui+e5IJ+5VZ4e32eQ==}
-    dev: false
-
-  /ngraph.generators/19.3.1:
-    resolution: {integrity: sha512-fvWtbCDE5/6aJIEOXOD1cE0vVCWCsROVqXPxD5Pe4RspeFz6tdr37ZkwpT+nUEp80i3fQ7aAlYMMLhEpO/7jgg==}
-    dependencies:
-      ngraph.graph: 19.1.0
-      ngraph.random: 1.1.0
-    dev: false
-
-  /ngraph.graph/19.1.0:
-    resolution: {integrity: sha512-9cws84qfPkrYa7BaBtT+KgZfLXrd6pNL9Gl5Do+MBO/0Hm6rOM7qK78MZaO1uEoIK6p2pgUs6lu29zn/6tP59w==}
-    dependencies:
-      ngraph.events: 1.2.2
-    dev: false
-
-  /ngraph.random/1.1.0:
-    resolution: {integrity: sha512-h25UdUN/g8U7y29TzQtRm/GvGr70lK37yQPvPKXXuVfs7gCm82WipYFZcksQfeKumtOemAzBIcT7lzzyK/edLw==}
-    dev: false
-
   /nice-try/1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
 
@@ -32455,11 +32369,6 @@ packages:
   /tiny-inflate/1.0.3:
     resolution: {integrity: sha512-pkY1fj1cKHb2seWDy0B16HeWyczlJA9/WW3u3c4z/NiWDsO3DOU5D7nhTLE9CF0yXv/QZFY7sEJmj24dK+Rrqw==}
     dev: true
-
-  /tiny-lru/7.0.6:
-    resolution: {integrity: sha512-zNYO0Kvgn5rXzWpL0y3RS09sMK67eGaQj9805jlK9G6pSadfriTczzLHFXa/xcW4mIRfmlB9HyQ/+SgL0V1uow==}
-    engines: {node: '>=6'}
-    dev: false
 
   /tippy.js/6.3.7:
     resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}

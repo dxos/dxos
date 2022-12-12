@@ -218,11 +218,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/broadcast/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/mesh/mesh-protocol/package.json",
           "jsonpath": "$.version"
         },
@@ -233,17 +228,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/network-generator/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/mesh/network-manager/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/mesh/protocol-network-generator/package.json",
           "jsonpath": "$.version"
         },
         {
