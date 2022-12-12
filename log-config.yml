@@ -6,9 +6,12 @@ formatter:
 filter:
   - warn
   - info
-  - debug
+  # - debug
   # - swarm.ts:debug
-  - client:debug
+  - swarm:debug
+  - peer:debug
+  - connection:debug
+  - test:debug
   # - feed-wrapper:debug
   # - service-host:debug
   # - client:debug

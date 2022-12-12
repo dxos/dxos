@@ -28,7 +28,7 @@ export class TestExtension implements TeleportExtension {
   ) {}
 
   get remotePeerId() {
-    return this.extensionContext!.remotePeerId;
+    return this.extensionContext?.remotePeerId;
   }
 
   async onOpen(context: ExtensionContext) {
@@ -69,7 +69,7 @@ export class TestExtension implements TeleportExtension {
     log('onClose', { err });
     await this.callbacks.onClose?.();
     this.closed.wake();
-    await this._rpc.close();
+    await this._rpc?.close();
   }
 
   async test() {

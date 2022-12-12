@@ -35,6 +35,11 @@ export enum ConnectionState {
   CONNECTED = 'CONNECTED',
 
   /**
+   * Connection is being closed.
+   */
+  CLOSING = 'CLOSING',
+
+  /**
    * Connection closed.
    */
   CLOSED = 'CLOSED'
@@ -112,7 +117,11 @@ export class Connection {
       this.close().catch((err) => this.errors.raise(err));
     });
 
-    this._transport.errors.pipeTo(this.errors);
+    this._transport.errors.handle((err) => {
+      if(this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
+        this.errors.raise(err);
+      }
+    });
 
     // Replay signals that were received before transport was created.
     for (const signal of this._bufferedSignals) {
@@ -127,6 +136,8 @@ export class Connection {
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
+
+    this._changeState(ConnectionState.CLOSING);
 
     log('closing...', { peerId: this.ownId });
 
