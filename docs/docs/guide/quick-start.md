@@ -17,12 +17,11 @@ npm install --save @dxos/echo
 
 To use ECHO you start with an instance of the [`Client`](/api/@dxos/client/classes/Client). It needs a configuration object of type [`Config`](/api/@dxos/config/classes/Config). Configuration typically comes from `dx.yml` files.
 
-```ts
-import { Client, Config } from "@dxos/client"
-import { Defaults } from "@dxos/config";
+```ts file=./echo/snippets/create-client.ts#L5-
+import { Client } from '@dxos/client';
 
-const config = new Config(Defaults());
-const client = new Client({ config });
+// create a client
+const client = new Client();
 ```
 
 Read about all the [configuration options](/docs/echo/configuration).
@@ -30,27 +29,24 @@ Read about all the [configuration options](/docs/echo/configuration).
 To store data in ECHO, your client needs to create or join a [space](how-it-works#spaces).
 
 ```ts
-const space = client.spaces.createSpace();
-const items = await space.getItems();
 ```
 
 Using `ClientProvider` and `useClient` with React:
 
-```tsx
-import { ClientProvider, useClient } from "@dxos/react-client";
+```tsx file=./echo/snippets/create-client-react.tsx#L5-
+import React from "react";
+import { Client } from "@dxos/client";
+import { ClientProvider } from "@dxos/react-client";
 
-export const App = () => {
-  const client = useClient();
-  // ...
-  return (<div />);
+const client = new Client();
+
+const App = () => {
+  return (
+    <ClientProvider client={client}>
+      {/* Your components can useClient() here  */}
+    </ClientProvider>
+  );
 };
-
-ReactDOM.render(
-  <ClientProvider client={client}>
-    <App />
-  </ClientProvider>,
-  document.getElementById('root')
-);
 ```
 
 Read more:

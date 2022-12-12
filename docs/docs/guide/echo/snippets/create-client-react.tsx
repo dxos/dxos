@@ -11,7 +11,7 @@ const client = new Client();
 const App = () => {
   return (
     <ClientProvider client={client}>
-      {/* Your components here  */}
+      {/* Your components can useClient() here  */}
     </ClientProvider>
   );
 };
