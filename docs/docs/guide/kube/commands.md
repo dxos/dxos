@@ -1,6 +1,7 @@
 ---
 order: 2
 ---
+
 # Commands
 
 To list all commands:
@@ -41,7 +42,7 @@ On Linux:
 systemctl status kube.service -n100
 ```
 
-## Status 
+## Status
 
 To display the current status:
 
@@ -50,6 +51,7 @@ kube status --json
 ```
 
 ## Updates
+
 To update to the latest available version:
 
 ```bash
@@ -73,6 +75,7 @@ kube config host newkube.local # set a different hostname
 kube config port 9005
 sudo kube restart
 ```
+
 ## Telemetry
 
 To disable telemetry:
@@ -86,7 +89,7 @@ sudo kube restart
 
 To enable HTTPS (public KUBEs):
 
-- Generate certificate, e.g.:
+*   Generate certificate, e.g.:
 
 ```bash
 sudo apt-get install certbot
@@ -94,9 +97,9 @@ sudo apt-get install certbot
 certbot certonly -d *.exampledomain.com -d exampledomain.com --preferred-challenges dns-01 --server https://acme-v02.api.letsencrypt.org/directory --manual
 ```
 
-- Setup DNS - add suggested TXT record;
+*   Setup DNS - add suggested TXT record;
 
-- After cert is generated, setup KUBE:
+*   After cert is generated, setup KUBE:
 
 ```bash
 kube config host exampledomain.com
@@ -106,7 +109,8 @@ kube config https.certfile /etc/letsencrypt/live/exampledomain.com/fullchain.pem
 kube config https.keyfile /etc/letsencrypt/live/exampledomain.com/privkey.pem
 sudo kube restart
 ```
-- Setup DNS record to point domain name to KUBE server
+
+*   Setup DNS record to point domain name to KUBE server
 
 # Uninstall
 

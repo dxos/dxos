@@ -22,7 +22,7 @@ const App = () => {
 };
 ```
 
-Alternatively, a config function may be supplied instead of a client, and a client will be generated internally. The fallback element will be displayed while the client is being initialized. 
+Alternatively, a config function may be supplied instead of a client, and a client will be generated internally. The fallback element will be displayed while the client is being initialized.
 
 ```tsx file=./snippets/create-client-react-with-config.tsx#L5-
 import React from 'react';
@@ -34,15 +34,16 @@ const App = () => {
   return (
     <ClientProvider
       config={async () => new Config(Defaults(), await Dynamics())}
+      fallback={<div>Loading</div>}
     >
       {/* Your components can useClient() here  */}
     </ClientProvider>
   );
 };
 ```
+
 ## useClient
 
 ## useSpace
 
 ## useSelection
-
