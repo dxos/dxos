@@ -1,7 +1,9 @@
 ---
 order: 4
 ---
+
 # Auto update
+
 KUBE keeps itself up to date automatically.
 
 To configure this feature:

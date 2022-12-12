@@ -7,9 +7,10 @@ description: Using ECHO with React
 Create a `Client` and use it with `ClientProvider` to allow nested components to use `useClient` and the other hooks available in `@dxos/react-client`.
 
 ```tsx file=./snippets/create-client-react.tsx#L5-
-import React from "react";
-import { Client } from "@dxos/client";
-import { ClientProvider } from "@dxos/react-client";
+import React from 'react';
+
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
 
 const client = new Client();
 
@@ -26,9 +27,10 @@ Alternatively, a config function may be supplied instead of a client, and a clie
 
 ```tsx file=./snippets/create-client-react-with-config.tsx#L5-
 import React from 'react';
+
 import { Config } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
 import { Dynamics, Defaults } from '@dxos/config';
+import { ClientProvider } from '@dxos/react-client';
 
 const App = () => {
   return (

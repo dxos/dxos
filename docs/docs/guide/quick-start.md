@@ -20,7 +20,7 @@ To use ECHO you start with an instance of the [`Client`](/api/@dxos/client/class
 To store data in ECHO, your client needs to [create or join a space](echo/spaces).
 
 ```ts file=./echo/snippets/create-space.ts#L5-
-import { Client } from "@dxos/client";
+import { Client } from '@dxos/client';
 
 const client = new Client();
 
@@ -56,9 +56,10 @@ const items = spaces[0].database.select({ type });
 Use `ClientProvider` and `useClient` with React:
 
 ```tsx file=./echo/snippets/create-client-react.tsx#L5-
-import React from "react";
-import { Client } from "@dxos/client";
-import { ClientProvider } from "@dxos/react-client";
+import React from 'react';
+
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
 
 const client = new Client();
 

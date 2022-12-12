@@ -23,9 +23,10 @@ Continue to manipulating data with [spaces](spaces) or read on about further way
 Use `ClientProvider` to supply the `client` instance via `ReactContext` to any nested `useClient()` hooks.
 
 ```tsx file=./snippets/create-client-react.tsx#L5-
-import React from "react";
-import { Client } from "@dxos/client";
-import { ClientProvider } from "@dxos/react-client";
+import React from 'react';
+
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
 
 const client = new Client();
 
@@ -52,7 +53,7 @@ const client = new Client({
     runtime: {
       services: {
         signal: {
-          server: `wss://kube.dxos.org/.well-known/dx/signal`
+          server: 'wss://kube.dxos.org/.well-known/dx/signal'
         }
       }
     }
@@ -68,7 +69,7 @@ In a Node environment, you can use `@dxos/config` to load from a `config/default
 
 ```ts file=./snippets/create-with-defaults.ts#L5-
 import { Client, Config } from '@dxos/client';
-import { Defaults } from "@dxos/config";
+import { Defaults } from '@dxos/config';
 
 const client = new Client({
   config: new Config(Defaults())
@@ -81,7 +82,7 @@ If your app is being hosted on a KUBE, use `Dynamics` to receive more specific c
 
 ```ts file=./snippets/create-with-dynamics.ts#L5-
 import { Client, Config } from '@dxos/client';
-import { Defaults, Dynamics } from "@dxos/config";
+import { Defaults, Dynamics } from '@dxos/config';
 
 const client = new Client({
   config: new Config(Defaults(), await Dynamics())

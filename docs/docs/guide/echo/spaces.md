@@ -20,7 +20,7 @@ After a space with a peer is established, the peer's public key becomes "known" 
 ## Creating spaces
 
 ```ts file=./snippets/create-space.ts#L5-
-import { Client } from "@dxos/client";
+import { Client } from '@dxos/client';
 
 const client = new Client();
 
@@ -37,7 +37,7 @@ const { value: spaces } = client.echo.querySpaces();
 ## Creating an invitation
 
 ```ts file=./snippets/invite-to-space.ts#L5-
-import { Client, InvitationEncoder } from "@dxos/client";
+import { Client, InvitationEncoder } from '@dxos/client';
 
 const client = new Client();
 
@@ -47,32 +47,32 @@ const space = await client.echo.createSpace();
 const { invitation } = space.createInvitation();
 
 // share this code with a friend, it will be used to locate the peer and
-// establish a secure connection 
-//TODO: ignore the exclamation mark
+// establish a secure connection
+// TODO: ignore the exclamation mark
 const code = InvitationEncoder.encode(invitation!);
 
 // later we will pass this second authentication code to our friend over a
 // side-channel and they'll send it to us over the new secure connection which
 // will verify that it's secure.
-//TODO: ignore the exclamation mark
+// TODO: ignore the exclamation mark
 const authCode = invitation?.authenticationCode!;
 ```
 
 ## Accepting invitations
 
 ```ts file=./snippets/join-space.ts#L5-
-import { Client, InvitationEncoder } from "@dxos/client";
+import { Client, InvitationEncoder } from '@dxos/client';
 
 const client = new Client();
 
 // friend decodes the invitation code
-const receivedInvitation = InvitationEncoder.decode("<invitation code here>");
+const receivedInvitation = InvitationEncoder.decode('<invitation code here>');
 
 // accept the invitation
 const { authenticate } = client.echo.acceptInvitation(receivedInvitation);
 
 // verify it's secure by sending the second factor authCode from above
-await authenticate("<authentication code here>");
+await authenticate('<authentication code here>');
 
 // space joined!
 const { value: spaces } = await client.echo.querySpaces();

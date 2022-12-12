@@ -15,7 +15,7 @@ KUBE instances form and propagate the MESH peer-to-peer networks of DXOS. Some o
 | **Signaling Service** | helps peers locate the network and each other on top of `libp2p` |
 | [STUN](https://en.wikipedia.org/wiki/STUN), [TURN](https://en.wikipedia.org/wiki/Traversal_Using_Relays_around_NAT), [ICE](https://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment) | Network hole punching, traversal, and relay services |
 | **App Server** | applications are served as subdomains of the KUBE's hostname |
-| **IPFS** | KUBE runs an IPFS node and hosts app content in an IPFS instance | 
+| **IPFS** | KUBE runs an IPFS node and hosts app content in an IPFS instance |
 
 ## Installation
 
