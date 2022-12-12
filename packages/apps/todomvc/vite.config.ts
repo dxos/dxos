@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react';
+import ReactPlugin from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 
@@ -16,6 +16,8 @@ export default defineConfig({
     host: true
   },
   define: {
+    'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
+    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
     'process.env.DX_VAULT': env(process.env.DX_VAULT),
   },
   optimizeDeps: {
@@ -35,7 +37,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(),
-    react()
+    ConfigPlugin(),
+    ReactPlugin()
   ]
 });

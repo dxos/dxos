@@ -13,10 +13,10 @@ Authentication code created by host.
 
 Options:
   - proto3_optional = true
-### [errorCode]()
-Type: <code>number</code>
+### [error]()
+Type: <code>[Error](/api/@dxos/client/enums#Error)</code>
 
-Local error code.
+Error.
 
 Options:
   - proto3_optional = true
@@ -37,7 +37,7 @@ Options:
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
-Space key (if data invitation).
+Space to join.
 
 Options:
   - proto3_optional = true

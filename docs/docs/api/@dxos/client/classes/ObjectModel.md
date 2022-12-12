@@ -1,5 +1,5 @@
 # Class `ObjectModel`
-<sub>Declared in [packages/core/echo/object-model/dist/src/object-model.d.ts:24]()</sub>
+<sub>Declared in [packages/core/echo/object-model/dist/types/src/object-model.d.ts:24]()</sub>
 
 
 Object mutation model.

@@ -5,27 +5,30 @@ title: Mutations
 
 # Mutating data
 
-```tsx
-import { usespace } from '@dxos/react-client';
+```ts file=./snippets/write-items.ts
+//
+// Copyright 2022 DXOS.org
+//
 
-export const List = ({ key }) => {
-  const space = usespace(key);
-  const textRef = useRef();
+import { Client, ObjectModel } from '@dxos/client';
 
-  const handleCreate = async () => {
-    space.database.createItem({
-      type: 'task',
-      properties: {
-        title: textRef.current.value
-      }
-    });
-  };
+const client = new Client();
 
-  return (
-    <div>
-      <input ref={textRef} type='text' />
-      <button onClick={handleCreate}>New Task</button>
-    </div>
-  );
-}
+// decide on a type for your items
+const type = 'yourdomain:type/some-type-identifier';
+
+// get a list of all spaces
+const { value: spaces } = client.echo.querySpaces();
+
+// create a regular ObjectModel item
+const item = await spaces[0].database.createItem({
+  type,
+  model: ObjectModel
+});
+
+// set a property value
+item.model.set('someKey', 'someValue');
+
+// query items
+const items = spaces[0].database.select({ type });
 ```

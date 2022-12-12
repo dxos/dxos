@@ -5,35 +5,86 @@ label: Configuration
 
 # Configuration
 
+## Creating a client instance
+
 Having [installed the client](./installation), create an instance:
 
-```ts
-import { Client } from "@dxos/client";
+```ts file=./snippets/create-client.ts#L5-
+import { Client } from '@dxos/client';
 
-const client = new Client({ /* options */ });
+// create a client
+const client = new Client();
 ```
 
-### Options:
-:::apidoc[@dxos/client.ClientOptions]{.properties level="2"}
-#### [config](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L27)
+Continue to manipulating data with [spaces](spaces) or read on about further ways to configure the client.
 
-Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
+## Usage with React
 
-client configuration object
+Use `ClientProvider` to supply the `client` instance via `ReactContext` to any nested `useClient()` hooks.
 
-#### [modelFactory](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L31)
+```tsx file=./snippets/create-client-react.tsx#L5-
+import React from 'react';
 
-Type: <code>ModelFactory</code>
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
 
-custom model factory
+const client = new Client();
 
-#### [services](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L29)
+const App = () => {
+  return (
+    <ClientProvider client={client}>
+      {/* Your components can useClient() here  */}
+    </ClientProvider>
+  );
+};
+```
 
-Type: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+### Options
 
-custom services provider
-:::
+The client can be given a custom configuration via the config property of it's constructor's options.
 
----
+For example, here's how to set a custom signaling server:
 
-Read the full API documentaion for Client [here](/api/@dxos/client)
+```ts file=./snippets/create-with-signal-server.ts#L5-
+import { Client, Config } from '@dxos/client';
+
+const client = new Client({
+  config: new Config({
+    runtime: {
+      services: {
+        signal: {
+          server: 'wss://kube.dxos.org/.well-known/dx/signal'
+        }
+      }
+    }
+  })
+});
+```
+
+See the API documentaion for [Config](/api/@dxos/client/classes/Config).
+
+#### Loading defaults from a file
+
+In a Node environment, you can use `@dxos/config` to load from a `config/default.yml` file in your project.
+
+```ts file=./snippets/create-with-defaults.ts#L5-
+import { Client, Config } from '@dxos/client';
+import { Defaults } from '@dxos/config';
+
+const client = new Client({
+  config: new Config(Defaults())
+});
+```
+
+#### Receiving config from a KUBE
+
+If your app is being hosted on a KUBE, use `Dynamics` to receive more specific configuration from that KUBE. With this mechanism, KUBE can serve apps in ways that redirect them to different signaling servers or `HALO` identity vaults.
+
+```ts file=./snippets/create-with-dynamics.ts#L5-
+import { Client, Config } from '@dxos/client';
+import { Defaults, Dynamics } from '@dxos/config';
+
+const client = new Client({
+  config: new Config(Defaults(), await Dynamics())
+});
+```

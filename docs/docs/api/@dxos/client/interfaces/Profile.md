@@ -4,6 +4,11 @@
 Defined in:
    file://./../../dxos/client.proto
 ## Properties
+### [deviceKey]()
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+
+Options:
+  - proto3_optional = true
 ### [displayName]()
 Type: <code>string</code>
 

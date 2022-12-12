@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-list",
-  "version": "0.1.13",
+  "version": "0.1.17",
   "description": "A list editing experience component for DXOS.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,7 +28,6 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/vite-plugin": "workspace:*",
     "@types/lodash.debounce": "^4.0.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

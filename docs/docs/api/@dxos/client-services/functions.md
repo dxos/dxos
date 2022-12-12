@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [createDefaultModelFactory()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L32)
+### [createDefaultModelFactory()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L26)
 
 
 Returns: <code>ModelFactory</code>
@@ -42,16 +42,6 @@ Arguments:
 `options`: <code>object</code>
 
 `request`: <code>GetNetworkPeersRequest</code>
-### [invitationObservable(observable)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L103)
-
-
-Util to wrap observable with promise.
-
-Returns: <code>Promise&lt;Invitation&gt;</code>
-
-Arguments: 
-
-`observable`: <code>Observable&lt;[InvitationEvents](/api/@dxos/client-services/interfaces/InvitationEvents)&gt;</code>
 ### [subscribeToFeedBlocks(options, options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/feeds.ts#L54)
 
 
@@ -114,3 +104,14 @@ Returns: <code>Stream&lt;SubscribeToSwarmInfoResponse&gt;</code>
 Arguments: 
 
 `options`: <code>object</code>
+### [wrapObservable(observable)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L98)
+
+
+Testing util to wrap non-authenticating observable with promise.
+Don't use this in production code.
+
+Returns: <code>Promise&lt;Invitation&gt;</code>
+
+Arguments: 
+
+`observable`: <code>[CancellableInvitationObservable](/api/@dxos/client-services/interfaces/CancellableInvitationObservable)</code>

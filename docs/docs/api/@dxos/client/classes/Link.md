@@ -1,5 +1,5 @@
 # Class `Link`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts:15]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/link.d.ts:15]()</sub>
 
 
 Link variant of an item. Link two objects together. Can hold a custom model.

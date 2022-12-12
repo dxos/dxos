@@ -1,11 +1,11 @@
 # Class `HaloProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/proxies/halo-proxy.ts:48](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L48)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/proxies/halo-proxy.ts:51](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L51)</sub>
 
 
 TODO(burdon): Public API (move comments here).
 
 ## Constructors
-### [constructor(_serviceProvider)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L61)
+### [constructor(_serviceProvider)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L64)
 
 
 Returns: <code>[HaloProxy](/api/@dxos/client/classes/HaloProxy)</code>
@@ -16,42 +16,56 @@ Arguments:
 
 ## Properties
 ### [invitationsUpdate](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L54)
-Type: <code>Event&lt;[InvitationObservable](/api/@dxos/client/interfaces/InvitationObservable)&gt;</code>
+Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)&gt;</code>
 ### [profileChanged](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L55)
 Type: <code>Event&lt;void&gt;</code>
-### [invitations](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L83)
-Type: <code>[InvitationObservable](/api/@dxos/client/interfaces/InvitationObservable)[]</code>
-### [profile](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L79)
+### [invitations](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L86)
+Type: <code>[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)[]</code>
+### [opened](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L91)
+Type: <code>boolean</code>
+### [profile](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L82)
 Type: <code>undefined | [Profile](/api/@dxos/client/interfaces/Profile)</code>
 
 User profile info.
 
 ## Methods
-### [\[custom\]()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L65)
+### [\[custom\]()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L68)
 
 
 Returns: <code>string</code>
 
 Arguments: none
-### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L163)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L255)
 
 
-Returns: <code>Promise&lt;[AuthenticatingInvitationObservable](/api/@dxos/client/interfaces/AuthenticatingInvitationObservable)&gt;</code>
+Initiates accepting invitation.
+
+Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/client/interfaces/AuthenticatingInvitationObservable)</code>
 
 Arguments: 
 
 `invitation`: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 `options`: <code>InvitationsOptions</code>
-### [createInvitation(\[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L141)
+### [close()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L127)
 
 
-Returns: <code>Promise&lt;[InvitationObservable](/api/@dxos/client/interfaces/InvitationObservable)&gt;</code>
+Destroy the instance and clean-up subscriptions.
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: none
+### [createInvitation(\[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L213)
+
+
+Initiates device invitation.
+
+Returns: <code>[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)</code>
 
 Arguments: 
 
 `options`: <code>InvitationsOptions</code>
-### [createProfile(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L103)
+### [createProfile(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L147)
 
 
 Create Profile.
@@ -65,7 +79,15 @@ Returns: <code>Promise&lt;[Profile](/api/@dxos/client/interfaces/Profile)&gt;</c
 Arguments: 
 
 `options`: <code>CreateProfileOptions</code>
-### [queryContacts()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L137)
+### [open()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L98)
+
+
+Allocate resources and set-up internal subscriptions.
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: none
+### [queryContacts()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L181)
 
 
 Query for contacts. Contacts represent member keys across all known Spaces.
@@ -73,13 +95,15 @@ Query for contacts. Contacts represent member keys across all known Spaces.
 Returns: <code>[ResultSet](/api/@dxos/client/classes/ResultSet)&lt;[Contact](/api/@dxos/client/interfaces/Contact)&gt;</code>
 
 Arguments: none
-### [queryDevices()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L182)
+### [queryDevices()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L189)
 
+
+Get set of authenticated devices.
 
 Returns: <code>Promise&lt;DeviceInfo[]&gt;</code>
 
 Arguments: none
-### [recoverProfile(seedPhrase)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L127)
+### [recoverProfile(seedPhrase)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L171)
 
 
 Joins an existing identity HALO from a recovery seed phrase.
@@ -89,7 +113,17 @@ Returns: <code>Promise&lt;[Profile](/api/@dxos/client/interfaces/Profile)&gt;</c
 Arguments: 
 
 `seedPhrase`: <code>string</code>
-### [subscribeToProfile(callback)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L91)
+### [removeInvitation(id)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L244)
+
+
+Removes device invitation.
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`id`: <code>string</code>
+### [subscribeToProfile(callback)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L135)
 
 
 Returns: <code>function</code>
@@ -97,7 +131,7 @@ Returns: <code>function</code>
 Arguments: 
 
 `callback`: <code>function</code>
-### [toJSON()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L70)
+### [toJSON()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L73)
 
 
 Returns: <code>object</code>

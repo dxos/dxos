@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/common/random-access-storage/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/common/random-access-storage/dist/lib"
       },
       "outputs": [

@@ -1,5 +1,5 @@
 # Class `Item`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:14]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:14]()</sub>
 
 
 A globally addressable data item.

@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/core/mesh/mesh-protocol/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/mesh/mesh-protocol/dist/lib"
       },
       "outputs": [

@@ -47,10 +47,10 @@ jobs:
       - name: Build
         run: pnpm nx run-many --target=build --skip-nx-cache
         env:
+          # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
           DX_ENVIRONMENT: production
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           NODE_ENV: production
-          # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
           SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
           TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
@@ -60,6 +60,15 @@ jobs:
           pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=latest
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Bundle
+        run: pnpm nx run-many --target=bundle --projects=devtools-extension
+        env:
+          DX_ENVIRONMENT: production
+          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          NODE_ENV: production
+          SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
+          TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
       - name: Gather Artifacts
         run: |

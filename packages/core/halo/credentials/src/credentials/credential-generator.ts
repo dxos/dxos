@@ -49,7 +49,8 @@ export class CredentialGenerator {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
           role: SpaceMember.Role.ADMIN,
-          profile: creatorProfile
+          profile: creatorProfile,
+          genesisFeedKey: controlKey
         }
       }),
 
@@ -67,7 +68,8 @@ export class CredentialGenerator {
     identityKey: PublicKey,
     deviceKey: PublicKey,
     controlKey: PublicKey,
-    dataKey: PublicKey
+    dataKey: PublicKey,
+    genesisFeedKey: PublicKey
   ): Promise<Credential[]> {
     return [
       await createCredential({
@@ -77,7 +79,8 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.MEMBER
+          role: SpaceMember.Role.MEMBER,
+          genesisFeedKey
         }
       }),
 
@@ -169,6 +172,7 @@ export const createAdmissionCredentials = async (
   spaceKey: PublicKey,
   controlFeedKey: PublicKey,
   dataFeedKey: PublicKey,
+  genesisFeedKey: PublicKey,
   profile?: ProfileDocument
 ): Promise<TypedMessage[]> => {
   const credentials = await Promise.all([
@@ -178,7 +182,8 @@ export const createAdmissionCredentials = async (
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey,
         role: SpaceMember.Role.ADMIN, // TODO(burdon): Configure.
-        profile
+        profile,
+        genesisFeedKey
       }
     }),
 

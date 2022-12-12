@@ -48,7 +48,8 @@
       "options": {
         "entryPoints": [
           "packages/sdk/config/src/plugin/esbuild-plugin.ts",
-          "packages/sdk/config/src/plugin/rollup-plugin.js"
+          "packages/sdk/config/src/plugin/rollup-plugin.ts",
+          "packages/sdk/config/src/plugin/vite-plugin.ts"
         ],
         "outputPath": "packages/sdk/config/dist/plugin",
         "platforms": [
