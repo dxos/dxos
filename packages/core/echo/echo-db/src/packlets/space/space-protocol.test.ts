@@ -5,6 +5,7 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
+import { discoveryKey, sha256 } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
@@ -15,7 +16,7 @@ import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 
 describe('space/space-protocol', () => {
-  test.skip('two peers discover each other', async () => {
+  test.only('two peers discover each other', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -32,8 +33,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.peers).toContainEqual(peer2.deviceKey);
-      expect(protocol2.peers).toContainEqual(peer1.deviceKey);
+      expect(protocol1.peers).toContainEqual(PublicKey.from(discoveryKey(sha256(peer2.deviceKey.toHex()))));
+      expect(protocol2.peers).toContainEqual(PublicKey.from(discoveryKey(sha256(peer1.deviceKey.toHex()))));
     });
   });
 
