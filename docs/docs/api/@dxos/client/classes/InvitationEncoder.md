@@ -1,5 +1,5 @@
 # Class `InvitationEncoder`
-<sub>Declared in [packages/sdk/client-services/dist/src/packlets/invitations/encoder.d.ts:5]()</sub>
+<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/invitations/encoder.d.ts:5]()</sub>
 
 
 Encodes and decodes an invitation proto into/from alphanumeric chars.

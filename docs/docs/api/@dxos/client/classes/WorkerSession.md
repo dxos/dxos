@@ -1,5 +1,5 @@
 # Class `WorkerSession`
-<sub>Declared in [packages/sdk/client-services/dist/src/packlets/vault/worker-session.d.ts:18]()</sub>
+<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/vault/worker-session.d.ts:18]()</sub>
 
 
 Represents a tab connection within the worker.

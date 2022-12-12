@@ -3,10 +3,14 @@ position: 0
 label: Contributor Guide
 dir:
   text: Contributing
-  order: 30
+  order: 40
 ---
 
 # Contributing to DXOS
+
+:::note
+This section is under development
+:::
 
 We welcome everyone's contributions and offer the following resources for contributors.
 
@@ -14,5 +18,4 @@ We welcome everyone's contributions and offer the following resources for contri
 *   GitHub Issues
 *   Opening PRs
 *   Contributor Documentation
-    *   How our code is organized
-    *   How documentation works
+    *   How the code is organized

@@ -1,5 +1,5 @@
 # Class `OrderedList`
-<sub>Declared in [packages/core/echo/object-model/dist/src/ordered-list.d.ts:7]()</sub>
+<sub>Declared in [packages/core/echo/object-model/dist/types/src/ordered-list.d.ts:7]()</sub>
 
 
 Utility class that wraps an  `ObjectModel`  and implements a linked list via key-values on a given property.
