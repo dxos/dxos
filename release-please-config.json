@@ -258,11 +258,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/protocol-plugin-rpc/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/mesh/rpc/package.json",
           "jsonpath": "$.version"
         },

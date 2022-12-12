@@ -65,7 +65,6 @@
     "protocol-network-generator": "packages/core/mesh/protocol-network-generator",
     "protocol-plugin-presence": "packages/core/mesh/protocol-plugin-presence",
     "protocol-plugin-replicator": "packages/core/mesh/protocol-plugin-replicator",
-    "protocol-plugin-rpc": "packages/core/mesh/protocol-plugin-rpc",
     "protocols": "packages/core/protocols",
     "random-access-storage": "packages/common/random-access-storage",
     "react-appkit": "packages/apps/patterns/react-appkit",
