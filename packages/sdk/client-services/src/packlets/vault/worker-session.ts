@@ -2,13 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Trigger } from '@dxos/async';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { clientServiceBundle, ClientServicesHost } from '../services';
+import { clientServiceBundle, ClientServices, ClientServicesHost } from '../services';
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
@@ -25,8 +27,8 @@ export type WorkerSessionParams = {
  * Represents a tab connection within the worker.
  */
 export class WorkerSession {
-  private readonly _clientRpc: ProtoRpcPeer<{}>;
-  private readonly _systemRpc: ProtoRpcPeer<IframeServiceBundle>;
+  private readonly _clientRpc: ProtoRpcPeer<ClientServices>;
+  private readonly _iframeRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _getServices: () => Promise<ClientServicesHost>;
   private readonly _options: NonNullable<WorkerSessionParams['options']>;
@@ -34,7 +36,9 @@ export class WorkerSession {
 
   public readonly onClose = new Callback<() => Promise<void>>();
 
+  @logInfo
   public origin?: string;
+
   public bridgeService?: BridgeService;
 
   constructor({
@@ -42,9 +46,11 @@ export class WorkerSession {
     systemPort,
     appPort,
     options = {
-      heartbeatInterval: 1000
+      heartbeatInterval: 1_000
     }
   }: WorkerSessionParams) {
+    assert(options);
+    assert(getServices);
     this._options = options;
     this._getServices = getServices;
 
@@ -65,7 +71,7 @@ export class WorkerSession {
       port: appPort
     });
 
-    this._systemRpc = createProtoRpcPeer({
+    this._iframeRpc = createProtoRpcPeer({
       requested: iframeServiceBundle,
       exposed: workerServiceBundle,
       handlers: {
@@ -87,21 +93,26 @@ export class WorkerSession {
         }
       },
       port: systemPort,
-      timeout: 200
+      timeout: 1000 // With low timeout heartbeat may fail if the tab's thread is saturated.
     });
 
-    this.bridgeService = this._systemRpc.rpc.BridgeService;
+    this.bridgeService = this._iframeRpc.rpc.BridgeService;
   }
 
   async open() {
-    await Promise.all([this._clientRpc.open(), this._systemRpc.open()]);
+    log.info('opening..');
+    await Promise.all([this._clientRpc.open(), this._iframeRpc.open()]);
 
     await this._startTrigger.wait({ timeout: 3_000 });
 
+    // Detect if bridge is present.
+    // TODO(burdon): Add heartbeat to client's System service.
+    //  How do we detect if the client's tab closed?
     this._heartbeatTimer = setInterval(async () => {
       try {
-        await this._systemRpc.rpc.IframeService.heartbeat();
+        await this._iframeRpc.rpc.IframeService.heartbeat();
       } catch (err) {
+        log.warn('Heartbeat failed', { err });
         try {
           await this.close();
         } catch (err: any) {
@@ -112,6 +123,7 @@ export class WorkerSession {
   }
 
   async close() {
+    log.info('closing..');
     try {
       await this.onClose.callIfSet();
     } catch (err: any) {
@@ -122,6 +134,6 @@ export class WorkerSession {
       clearInterval(this._heartbeatTimer);
     }
 
-    await Promise.all([this._clientRpc.close(), this._systemRpc.close()]);
+    await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
   }
 }

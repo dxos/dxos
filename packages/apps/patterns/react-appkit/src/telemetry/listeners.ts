@@ -17,62 +17,70 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
       console.warn('Click event on element without id:', event.target);
     }
 
-    Telemetry.event({
-      identityId: getTelemetryIdentifier(client),
-      name: `${namespace}.window.click`,
-      properties: {
-        ...BASE_TELEMETRY_PROPERTIES,
-        href: window.location.href,
-        id: (event.target as HTMLElement)?.id,
-        path: (event.path as HTMLElement[])
-          ?.filter((el) => Boolean(el.tagName))
-          .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}`)
-          .reverse()
-          .join('>')
-      }
-    });
+    setTimeout(() =>
+      Telemetry.event({
+        identityId: getTelemetryIdentifier(client),
+        name: `${namespace}.window.click`,
+        properties: {
+          ...BASE_TELEMETRY_PROPERTIES,
+          href: window.location.href,
+          id: (event.target as HTMLElement)?.id,
+          path: (event.path as HTMLElement[])
+            ?.filter((el) => Boolean(el.tagName))
+            .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}`)
+            .reverse()
+            .join('>')
+        }
+      })
+    );
   };
 
   const focusCallback = () => {
     const now = new Date();
-    Telemetry.event({
-      identityId: getTelemetryIdentifier(client),
-      name: `${namespace}.window.focus`,
-      properties: {
-        ...BASE_TELEMETRY_PROPERTIES,
-        href: window.location.href,
-        timeAway: now.getTime() - lastFocusEvent.getTime()
-      }
-    });
+    setTimeout(() =>
+      Telemetry.event({
+        identityId: getTelemetryIdentifier(client),
+        name: `${namespace}.window.focus`,
+        properties: {
+          ...BASE_TELEMETRY_PROPERTIES,
+          href: window.location.href,
+          timeAway: now.getTime() - lastFocusEvent.getTime()
+        }
+      })
+    );
     lastFocusEvent = now;
   };
 
   const blurCallback = () => {
     const now = new Date();
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
-    Telemetry.event({
-      identityId: getTelemetryIdentifier(client),
-      name: `${namespace}.window.blur`,
-      properties: {
-        ...BASE_TELEMETRY_PROPERTIES,
-        href: window.location.href,
-        timeSpent
-      }
-    });
+    setTimeout(() =>
+      Telemetry.event({
+        identityId: getTelemetryIdentifier(client),
+        name: `${namespace}.window.blur`,
+        properties: {
+          ...BASE_TELEMETRY_PROPERTIES,
+          href: window.location.href,
+          timeSpent
+        }
+      })
+    );
     lastFocusEvent = now;
     totalTime = totalTime + timeSpent;
   };
 
   const unloadCallback = () => {
-    Telemetry.event({
-      identityId: getTelemetryIdentifier(client),
-      name: `${namespace}.page.unload`,
-      properties: {
-        ...BASE_TELEMETRY_PROPERTIES,
-        href: window.location.href,
-        timeSpent: totalTime
-      }
-    });
+    setTimeout(() =>
+      Telemetry.event({
+        identityId: getTelemetryIdentifier(client),
+        name: `${namespace}.page.unload`,
+        properties: {
+          ...BASE_TELEMETRY_PROPERTIES,
+          href: window.location.href,
+          timeSpent: totalTime
+        }
+      })
+    );
   };
 
   window.addEventListener('click', clickCallback, true);
@@ -81,7 +89,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
   window.addEventListener('beforeunload', unloadCallback);
 
   return () => {
-    window.removeEventListener('click', clickCallback);
+    window.removeEventListener('click', clickCallback, true);
     window.removeEventListener('focus', focusCallback);
     window.removeEventListener('blur', blurCallback);
     window.removeEventListener('beforeunload', unloadCallback);

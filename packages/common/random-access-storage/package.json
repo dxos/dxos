@@ -1,30 +1,26 @@
 {
   "name": "@dxos/random-access-storage",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "Multiple random storage types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "./dist/src/index.js",
+  "main": "./dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
-    "node:path": "path-browserify",
-    "./dist/src/index.js": "./dist/src/browser/index.js"
+    "./src/index.ts": "./src/browser/index.ts",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "./dist/src/index.d.ts",
+  "types": "./dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
-    "assert": "^2.0.0",
+    "@dxos/node-std": "workspace:*",
     "del": "^5.1.0",
-    "path-browserify": "^1.0.1",
     "pify": "~5.0.0",
     "random-access-file": "^2.2.1",
     "random-access-idb": "^1.2.2",

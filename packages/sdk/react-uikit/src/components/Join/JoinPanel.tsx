@@ -5,22 +5,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationEncoder, InvitationObservable, Invitation, AuthenticatingInvitationObservable } from '@dxos/client';
+import {
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
+  Invitation,
+  InvitationEncoder
+} from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 
 import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';
+
+const pinLength = 6;
 
 export interface JoinPanelProps {
   // TODO(burdon): Use InvitationEncoder to parse/decode?
   parseInvitation?: (invitationCode: string) => string;
   initialInvitationCode?: string;
   onJoin?: (result: InvitationResult) => void;
-  acceptInvitation: (invitation: Invitation) => Promise<AuthenticatingInvitationObservable>;
+  acceptInvitation: (invitation: Invitation) => AuthenticatingInvitationObservable;
 }
 
 interface JoinStep1Props extends JoinPanelProps {
-  connect: (wrapper: InvitationObservable) => void;
+  connect: (wrapper: CancellableInvitationObservable) => void;
   status: Invitation.State;
   cancel: () => void;
   error?: number;
@@ -47,7 +54,7 @@ const JoinStep1 = ({
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
 
   const onConnectNext = useCallback(async () => {
-    const invitation = await acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
+    const invitation = acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
     connect(invitation);
   }, [invitationCode]);
 
@@ -65,8 +72,7 @@ const JoinStep1 = ({
         inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
         inputProps: {
           initialValue: invitationCode,
-          autoFocus: true,
-          className: 'text-center',
+          slots: { input: { autoFocus: true, className: 'text-center' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const
@@ -85,10 +91,18 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
   const [invitationSecret, setInvitationSecret] = useState('');
   const [pending, setPending] = useState(false);
 
-  const onAuthenticateNext = useCallback(() => {
+  const onAuthenticateNext = useCallback((secret: string) => {
     setPending(true);
-    authenticate(invitationSecret).finally(() => setPending(false));
-  }, [invitationSecret]);
+    authenticate(secret).finally(() => setPending(false));
+  }, []);
+
+  const onChange = useCallback(
+    (value: string) => {
+      setInvitationSecret(value);
+      value.length === pinLength && onAuthenticateNext(value);
+    },
+    [onAuthenticateNext]
+  );
 
   return (
     <SingleInputStep
@@ -97,17 +111,16 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
         inputLabel: t('invitation secret label', { ns: 'uikit' }),
         inputProps: {
           size: 'pin',
-          length: 6,
+          length: pinLength,
           initialValue: '',
-          autoFocus: true,
-          className: 'text-center',
+          slots: { input: { autoFocus: true, className: 'text-center' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const
           })
         },
-        onChange: setInvitationSecret,
-        onNext: onAuthenticateNext,
+        onChange,
+        onNext: () => onAuthenticateNext(invitationSecret),
         onCancelPending: cancel
       }}
     />

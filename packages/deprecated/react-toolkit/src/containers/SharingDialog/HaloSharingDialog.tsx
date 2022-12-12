@@ -22,7 +22,7 @@ export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
   const _invitations = useHaloInvitations();
 
   const handleCreateInvitation = async () => {
-    await client.halo.createInvitation();
+    client.halo.createInvitation();
     throw new Error('Not implemented.');
   };
 

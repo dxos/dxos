@@ -8,14 +8,17 @@ import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui
 
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { HashIcon } from '@dxos/react-components';
+import { humanize } from '@dxos/util';
+
+import { Avatar } from '../Avatar';
 
 interface KeySelectProps {
-  id?: string
-  label?: string
-  keys: PublicKey[]
-  selected: PublicKey | undefined
-  onChange: (value: PublicKey | undefined) => void
+  id?: string;
+  label?: string;
+  keys: PublicKey[];
+  selected: PublicKey | undefined;
+  onChange: (value: PublicKey | undefined) => void;
+  humanize?: boolean;
 }
 
 export const KeySelect = ({
@@ -23,7 +26,8 @@ export const KeySelect = ({
   label = 'Key',
   keys,
   selected,
-  onChange
+  onChange,
+  humanize: humanizeFlag = false
 }: KeySelectProps) => (
   <FormControl fullWidth variant='standard'>
     <InputLabel id={id}>{label}</InputLabel>
@@ -32,14 +36,26 @@ export const KeySelect = ({
       label={label}
       variant='standard'
       value={selected?.toHex() ?? ''}
-      onChange={event => onChange(keys.find(key => key.equals(event.target.value)))}
+      onChange={(event) => onChange(keys.find((key) => key.equals(event.target.value)))}
     >
-      {keys.map(key => (
+      {keys.map((key) => (
         <MenuItem key={key.toHex()} value={key.toHex()}>
-          <Box sx={{ display: 'flex' }}>
-            <HashIcon value={key.toHex()} />
-            <Typography variant='h6' sx={{ marginLeft: 2, fontFamily: 'monospace' }}>
-              {truncateKey(key.toHex(), 8)}
+          <Box
+            sx={{
+              display: 'flex',
+              position: 'relative',
+              alignItems: 'center'
+            }}
+          >
+            <Avatar size={12} fallbackValue={key.toHex()} />
+            <Typography
+              sx={{
+                marginLeft: 2,
+                fontFamily: 'monospace'
+              }}
+              variant='h6'
+            >
+              {humanizeFlag ? humanize(key.toHex()) : truncateKey(key.toHex(), 8)}
             </Typography>
           </Box>
         </MenuItem>

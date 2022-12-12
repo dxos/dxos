@@ -21,12 +21,13 @@ import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
-import { IdentityManager } from '../identity';
+import { CreateIdentityOptions, IdentityManager } from '../identity';
 import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
 
 /**
  * Shared backend for all client services.
  */
+
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
@@ -87,13 +88,21 @@ export class ServiceContext {
     await this.identityManager.close();
     await this.spaceManager?.close();
     await this.feedStore.close();
-    await this.networkManager.destroy(); // TODO(burdon): Close.
+    await this.networkManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
   }
 
-  async createIdentity() {
-    const identity = await this.identityManager.createIdentity();
+  async reset() {
+    log('resetting...');
+    await this.close();
+    await this.storage.reset();
+    log('reset');
+  }
+
+  async createIdentity(params: CreateIdentityOptions = {}) {
+    const identity = await this.identityManager.createIdentity(params);
+
     this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
@@ -107,7 +116,8 @@ export class ServiceContext {
       credentialAuthenticator: MOCK_AUTH_VERIFIER,
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
-      deviceKey: identity.deviceKey
+      deviceKey: identity.deviceKey,
+      profile: identity.profileDocument
     };
 
     // Create in constructor (avoid all of these private variables).
@@ -123,7 +133,12 @@ export class ServiceContext {
 
     await spaceManager.open();
     this.spaceManager = spaceManager;
-    this.spaceInvitations = new SpaceInvitationsHandler(this.networkManager, this.spaceManager, signingContext);
+    this.spaceInvitations = new SpaceInvitationsHandler(
+      this.networkManager,
+      this.spaceManager,
+      signingContext,
+      this.keyring
+    );
     this.initialized.wake();
   }
 }

@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { createElement, PropsWithChildren, ReactNode } from 'react';
+
+import { mx } from '../../util';
 
 export interface HeadingProps extends React.ComponentProps<'h1'> {
   level?: 1 | 2 | 3 | 4 | 5 | 6;
@@ -19,10 +20,10 @@ const levelClassNameMap = new Map<number, string>([
   [6, 'text-lg']
 ]);
 
-export const Heading = ({ level, ...props }: PropsWithChildren<HeadingProps>) => {
+export const Heading = ({ level, ...rootSlot }: PropsWithChildren<HeadingProps>) => {
   const resolvedLevel = level || 1;
   return createElement(`h${resolvedLevel}`, {
-    ...props,
-    className: cx('font-bold font-display', levelClassNameMap.get(resolvedLevel), props.className)
+    ...rootSlot,
+    className: mx('font-bold font-display', levelClassNameMap.get(resolvedLevel), rootSlot.className)
   });
 };

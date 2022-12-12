@@ -6,8 +6,9 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
-import { Item, ObjectModel, Space, Schema, SchemaField, TYPE_SCHEMA, Client } from '@dxos/client';
+import { Item, ObjectModel, Space, Schema, SchemaField, TYPE_SCHEMA, Client, fromHost } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
+import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
 import { log, SchemaBuilder, TestType } from './builders';
 
@@ -15,27 +16,26 @@ let client: Client;
 let space: Space;
 let builder: SchemaBuilder;
 
-describe('Schemas', function () {
-  beforeEach(async function () {
-    client = new Client();
+describe('Schemas', () => {
+  beforeEach(async () => {
+    client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createProfile({ displayName: 'test-user' });
     space = await client.echo.createSpace();
     builder = new SchemaBuilder(space.database);
   });
 
-  afterEach(async function () {
-    await space.destroy();
+  afterEach(async () => {
     await client.destroy();
   });
 
-  it('creation of Schema', async function () {
+  test('creation of Schema', async () => {
     const [schema] = await builder.createSchemas();
     expect(schema.name).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
   });
 
-  it('add Schema field', async function () {
+  test('add Schema field', async () => {
     const [schema] = await builder.createSchemas();
 
     const newField: SchemaField = {
@@ -47,7 +47,7 @@ describe('Schemas', function () {
     expect(schema.getField('location')).toBeTruthy();
   });
 
-  it('add Schema linked field', async function () {
+  test('add Schema linked field', async () => {
     const [orgSchema, personSchema] = await builder.createSchemas();
 
     const fieldRef: SchemaField = {
@@ -77,7 +77,7 @@ describe('Schemas', function () {
     });
   });
 
-  it('Use schema to validate the fields of an item', async function () {
+  test('Use schema to validate the fields of an item', async () => {
     await builder.createSchemas();
     await builder.createData(undefined, {
       [builder.defaultSchemas[TestType.Org].schema]: 8,

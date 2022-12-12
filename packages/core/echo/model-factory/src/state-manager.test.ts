@@ -5,9 +5,10 @@
 import expect from 'expect';
 
 import { asyncTimeout } from '@dxos/async';
-import { MockFeedWriter } from '@dxos/feed-store';
+import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
+import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Model } from './model';
@@ -20,8 +21,8 @@ const feedB = PublicKey.fromHex('0x000000000000000000000000000000000000000000000
 
 const createId = () => PublicKey.random().toHex();
 
-describe('StateManager', function () {
-  it('construct readonly and apply mutations', function () {
+describe('StateManager', () => {
+  test('construct readonly and apply mutations', () => {
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
 
     expect(stateManager.model).toBeInstanceOf(TestListModel);
@@ -36,8 +37,8 @@ describe('StateManager', function () {
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
   });
 
-  describe('snapshot and restore', function () {
-    it('with model snapshots - TestListModel', function () {
+  describe('snapshot and restore', () => {
+    test('with model snapshots - TestListModel', () => {
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
 
       stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message1' }));
@@ -50,7 +51,7 @@ describe('StateManager', function () {
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
     });
 
-    it('with framework snapshots - TestListModel', function () {
+    test('with framework snapshots - TestListModel', () => {
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
 
       stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message1' }));
@@ -64,7 +65,7 @@ describe('StateManager', function () {
     });
   });
 
-  it('write loop', async function () {
+  test('write loop', async () => {
     const feedWriter = new MockFeedWriter<Uint8Array>();
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
     feedWriter.written.on(([message, meta]) =>
@@ -84,7 +85,7 @@ describe('StateManager', function () {
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
   });
 
-  it('late initialization', function () {
+  test('late initialization', () => {
     const stateManager = new StateManager<TestListModel>(
       TestListModel.meta.type,
       undefined,
@@ -106,7 +107,7 @@ describe('StateManager', function () {
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
   });
 
-  it('update event gets triggered', async function () {
+  test('update event gets triggered', async () => {
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
 
     const gotUpdate = stateManager.model.update.waitForCount(1);
@@ -115,8 +116,8 @@ describe('StateManager', function () {
     await asyncTimeout(gotUpdate, 100, new Error('timeout'));
   });
 
-  describe('optimistic mutations', function () {
-    it('single mutation gets applied synchronously', async function () {
+  describe('optimistic mutations', () => {
+    test('single mutation gets applied synchronously', async () => {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) =>
@@ -138,7 +139,7 @@ describe('StateManager', function () {
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
     });
 
-    it('two optimistic mutations queued together', async function () {
+    test('two optimistic mutations queued together', async () => {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) =>
@@ -164,7 +165,7 @@ describe('StateManager', function () {
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
     });
 
-    it('with reordering', async function () {
+    test('with reordering', async () => {
       const feedWriter = new MockFeedWriter<Uint8Array>(feedB);
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) =>

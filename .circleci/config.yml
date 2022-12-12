@@ -36,6 +36,13 @@ aliases:
       paths:
         - /mnt/ramdisk/pnpm-store
       key: pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+  - &codecov_upload
+    run:
+      name: Upload to codecov.com
+      command: ./.circleci/scripts/upload-codecov.sh
+  - &store_test_results
+    store_test_results:
+      path: test-results
 
 jobs:
   #
@@ -72,14 +79,11 @@ jobs:
             - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
             - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
-      - run:
-          name: Upload to codecov.com
-          command: ./.circleci/scripts/upload-codecov.sh
-      - store_test_results:
-          path: test-results
+      - *codecov_upload
+      - *store_test_results
 
   #
-  # End-to-end integration tests.
+  # Heavier checks which don't block PR merges.
   #
   e2e:
     docker:
@@ -91,34 +95,18 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
-
-  #
-  # Create application bundles.
-  #
-  bundle:
-    docker:
-      - *docker_image
-    steps:
-      - checkout
-      - *cache_restore
-      - run: pnpm install
-      - *cache_save
-      - nx/set-shas
-      # TODO(wittjosiah): Exclude apps because they can't be bundled in parallel currently.
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags e2e --coverage --xmlReport
+      # TODO(wittjosiah): Re-enable playwright tests. Use mocha executor?
+      # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
+      # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       - run:
-          name: Bundle
-          command: |
-            APPS=$(pnpm nx print-affected --type=app --select=projects | tail -n1)
-            pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --exclude="$APPS"
-      - run:
-          name: Bundle (Apps)
-          command: |
-            APPS=$(pnpm nx print-affected --type=app --select=projects | tail -n1)
-            pnpm nx run-many --base=$NX_BASE --head=$NX_HEAD --target=bundle --projects="$APPS" --parallel=1
+          name: Bundle Apps
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
-            # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
+            # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
             NODE_OPTIONS: --max_old_space_size=8198
+      - *codecov_upload
+      - *store_test_results
 
   #
   # Deploy applications.
@@ -132,6 +120,7 @@ jobs:
       - run: pnpm install
       - *cache_save
       - run: pnpm nx build cli
+      # TODO(wittjosiah): Factor out the deployable apps list to the script.
       - run:
           name: Deploy HALO
           working_directory: ./packages/apps/halo-app
@@ -167,7 +156,7 @@ jobs:
             ../../../.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=4096
+            NODE_OPTIONS: --max_old_space_size=5120
       - run:
           name: Deploy Docs
           working_directory: ./docs
@@ -180,18 +169,14 @@ jobs:
             NODE_OPTIONS: --max_old_space_size=5120
 
 workflows:
-  main:
+  check:
     jobs:
       - check:
           context:
             - Github
-      # TODO(wittjosiah): Move these jobs back into check.
-      # - e2e:
-      #     context:
-      #       - Github
-      # - bundle:
-      #     context:
-      #       - Github
+      - e2e:
+          context:
+            - Github
 
   deploy:
     jobs:

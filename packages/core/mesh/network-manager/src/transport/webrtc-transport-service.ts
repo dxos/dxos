@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-import { Duplex } from 'stream';
+import assert from 'node:assert';
+import { Duplex } from 'node:stream';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
@@ -102,7 +102,7 @@ export class WebRTCTransportService implements BridgeService {
   }
 
   async close({ proxyId }: CloseRequest) {
-    await this.transports.get(proxyId)?.transport.close();
+    await this.transports.get(proxyId)?.transport.destroy();
     await this.transports.get(proxyId)?.stream.end();
     this.transports.delete(proxyId);
     log('Closed.');

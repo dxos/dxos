@@ -24,8 +24,7 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "license": "MIT",
   "author": "DXOS.org",
   ` : ''}"scripts": {
-    "build": "tsc",
-    "bundle": "vite build",
+    "build": "tsc --noEmit && vite build",
     "deploy": "dx app publish",
     "preview": "vite preview",
     "serve": "vite"
@@ -36,7 +35,6 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   },
   "devDependencies": {
     "@dxos/cli": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-    "@dxos/vite-plugin": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "typescript": "^4.8.4",
     "vite": "3.0.9"
   }${input.monorepo ? '' : `,

@@ -3,7 +3,6 @@
 //
 
 import { LogConfig, LogFilter, LogLevel } from './config';
-import { OwnershipScope } from './ownership';
 
 /**
  * Optional object passed to the logging API.
@@ -17,11 +16,20 @@ export interface LogMetadata {
   file: string;
   line: number;
 
-  // TODO(burdon): Document.
-  ownershipScope: OwnershipScope | undefined;
+  /**
+   * Value of `this` at the site of the log call.
+   * Will be set to the class instance if the call is inside a method, or to the `globalThis` (`window` or `global`) otherwise.
+   */
+  scope: any | undefined;
 
   // Useful for pre-processor hook debugging.
   bugcheck?: string;
+
+  /**
+   * A callback that will invoke the provided function with provided arguments.
+   * Useful in the browser to force a `console.log` call to have a certain stack-trace.
+   */
+  callSite?: (fn: Function, args: any[]) => void;
 }
 
 /**

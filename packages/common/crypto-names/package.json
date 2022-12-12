@@ -1,22 +1,23 @@
 {
   "name": "@dxos/crypto-names",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "Basic crypto key utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/names.d.ts",
   "files": [
     "data",
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
+    "@dxos/node-std": "workspace:*",
     "binary-parser": "^2.0.2",
     "hypercore-crypto": "^2.3.0"
   },

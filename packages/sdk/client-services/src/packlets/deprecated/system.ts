@@ -3,15 +3,17 @@
 //
 
 import { Config } from '@dxos/config';
-import { todo } from '@dxos/debug';
 import { SystemService } from '@dxos/protocols/proto/dxos/client';
+
+import { ServiceContext } from '../services';
 
 /**
  * @deprecated
  */
 export class SystemServiceImpl implements SystemService {
-  constructor(private readonly _config: Config) {}
+  constructor(private readonly _config: Config, private readonly _serviceContext: ServiceContext) {}
 
+  // TODO(burdon): Remove.
   async initSession() {
     // Ok.
   }
@@ -20,7 +22,14 @@ export class SystemServiceImpl implements SystemService {
     return this._config.values;
   }
 
+  // TODO(burdon): Connect to iframe RPC heartbeat for network status?
+  async getStatus(request: void) {
+    return {
+      message: `ok: ${Date.now()}`
+    };
+  }
+
   async reset(request: any) {
-    todo();
+    await this._serviceContext.reset();
   }
 }

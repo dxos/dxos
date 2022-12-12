@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -11,8 +11,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "dx": "./bin/run"
   },
@@ -32,6 +32,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",

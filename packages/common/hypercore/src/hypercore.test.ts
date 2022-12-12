@@ -8,6 +8,7 @@ import util from 'node:util';
 
 import { Codec } from '@dxos/codec-protobuf';
 import { createKeyPair } from '@dxos/crypto';
+import { describe, test } from '@dxos/test';
 
 import { createCodecEncoding } from './crypto';
 import { HypercoreFactory } from './hypercore-factory';
@@ -24,8 +25,8 @@ const codec: Codec<TestItem> = {
 
 const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
 
-describe('Hypercore', function () {
-  it('create, append, and close a feed', async function () {
+describe('Hypercore', () => {
+  test('create, append, and close a feed', async () => {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
@@ -61,7 +62,7 @@ describe('Hypercore', function () {
     }
   });
 
-  it('encoding with typed hypercore', async function () {
+  test('encoding with typed hypercore', async () => {
     const factory = new HypercoreFactory<TestItem>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey, valueEncoding });

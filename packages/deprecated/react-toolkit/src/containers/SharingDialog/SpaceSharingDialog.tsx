@@ -29,7 +29,7 @@ export const SpaceSharingDialog = ({ spaceKey, ...props }: SpaceSharingDialogPro
   // const botClient = useBotFactoryClient(false);
 
   const handleCreateInvitation = async () => {
-    await space!.createInvitation();
+    space!.createInvitation();
     throw new Error('Not implemented.');
   };
 

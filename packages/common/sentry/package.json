@@ -1,18 +1,18 @@
 {
   "name": "@dxos/sentry",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "Provides a common interface for Sentry node & browser",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "./dist/src/node.js": "./dist/src/browser.js",
     "./src/node.ts": "./src/browser.ts",
-    "./testing/testkit/index.ts": "./testing/testkit/browser.ts"
+    "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"

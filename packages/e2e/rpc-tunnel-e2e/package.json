@@ -1,21 +1,15 @@
 {
   "name": "@dxos/rpc-tunnel-e2e",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true",
-    "dev": "vite"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -36,10 +30,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/vite-plugin": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "vite": "3.0.9"
+    "vite": "3.2.5"
   }
 }

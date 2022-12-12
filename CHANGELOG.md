@@ -1,5 +1,145 @@
 # Changelog
 
+## [0.1.17](https://github.com/dxos/dxos/compare/v0.1.16...v0.1.17) (2022-12-10)
+
+
+### Bug Fixes
+
+* **esbuild:** clear output path before build ([#2088](https://github.com/dxos/dxos/issues/2088)) ([04caaf3](https://github.com/dxos/dxos/commit/04caaf347ce8397739fee02bc3fdfef1e470df54))
+
+## [0.1.16](https://github.com/dxos/dxos/compare/v0.1.15...v0.1.16) (2022-12-09)
+
+
+### Bug Fixes
+
+* **codec-protobuf:** Missing dependency ([#2084](https://github.com/dxos/dxos/issues/2084)) ([b66accc](https://github.com/dxos/dxos/commit/b66accceda62e5219a337960d38ef0a6e5ed9b03))
+
+## [0.1.15](https://github.com/dxos/dxos/compare/v0.1.14...v0.1.15) (2022-12-09)
+
+
+### Features
+
+* node-std globals ([#2077](https://github.com/dxos/dxos/issues/2077)) ([91a51fc](https://github.com/dxos/dxos/commit/91a51fc215c7753c054e4879b300af3d653cf8d8))
+
+## [0.1.14](https://github.com/dxos/dxos/compare/v0.1.13...v0.1.14) (2022-12-09)
+
+
+### Features
+
+* Add google.protobuf.Struct substitutions  ([#1988](https://github.com/dxos/dxos/issues/1988)) ([7df721e](https://github.com/dxos/dxos/commit/7df721edfdcc617f13db6d0a40f1656a52e1baa3))
+* Add Presence ([#2040](https://github.com/dxos/dxos/issues/2040)) ([c4e8e2e](https://github.com/dxos/dxos/commit/c4e8e2e3e5314fa4ef325483d7635149adea2233))
+* Convert space invitations to use teleport ([#2065](https://github.com/dxos/dxos/issues/2065)) ([d728ab3](https://github.com/dxos/dxos/commit/d728ab37a1ce67fb750d426360c779e5882b05cb))
+* **devtools:** Add Keyring panel ([#2019](https://github.com/dxos/dxos/issues/2019)) ([39b477e](https://github.com/dxos/dxos/commit/39b477e081b6472b630a2aab036c009ac3a5ed7c))
+* **devtools:** Add Profile panel  ([#2018](https://github.com/dxos/dxos/issues/2018)) ([bd945ba](https://github.com/dxos/dxos/commit/bd945baf965a7a42b8dc247fd1ad36905b6d7343))
+* End-to-end gravity test. ([#2024](https://github.com/dxos/dxos/issues/2024)) ([59dbbe0](https://github.com/dxos/dxos/commit/59dbbe08be8989293cb85224eb39cf878ad75cfd))
+* ESBuild plugin ([#2064](https://github.com/dxos/dxos/issues/2064)) ([b4594bf](https://github.com/dxos/dxos/commit/b4594bfabb89dec2592483e43d2c2bb0c5a9d355))
+* **keyring:** List keys in Keyring ([#2020](https://github.com/dxos/dxos/issues/2020)) ([fcd1944](https://github.com/dxos/dxos/commit/fcd1944fc3edb161586e7b209177d5dbae403264))
+* mdx presentation ([#2047](https://github.com/dxos/dxos/issues/2047)) ([a95409c](https://github.com/dxos/dxos/commit/a95409cb14eb0a0025c661aae130f67bba0c318d))
+* Migrate esbuild plugins into monorepo ([#2010](https://github.com/dxos/dxos/issues/2010)) ([7680ac0](https://github.com/dxos/dxos/commit/7680ac06e97ea303bc0a7f8cdec385d7f79ccd2b))
+* Refactor network manager to improve stability ([#2031](https://github.com/dxos/dxos/issues/2031)) ([0eb060e](https://github.com/dxos/dxos/commit/0eb060e13fbd4ecd8dde025939e6134647c0f87f))
+* Rework space invitation sequnce. ([#2080](https://github.com/dxos/dxos/issues/2080)) ([67aeb97](https://github.com/dxos/dxos/commit/67aeb97c0ea2445f0fb735b0be0ebad9d246613c))
+* slide layout ([#2073](https://github.com/dxos/dxos/issues/2073)) ([9526181](https://github.com/dxos/dxos/commit/952618119c3837711fbe3146ede0c5a7ded3c5ad))
+* SWC plugin for logger ([#2045](https://github.com/dxos/dxos/issues/2045)) ([d545aed](https://github.com/dxos/dxos/commit/d545aed67a3b0418359a828a541e59de2f13830d))
+* Teleport ([#1762](https://github.com/dxos/dxos/issues/1762)) ([1d2469c](https://github.com/dxos/dxos/commit/1d2469c0ade41bd94e0895b267822755ca6242a0))
+* **test:** Add tags filter to executor ([#1973](https://github.com/dxos/dxos/issues/1973)) ([6b67c97](https://github.com/dxos/dxos/commit/6b67c977bb2885cb228433316b4daaf83f771aeb))
+* TodoMVC demo ([#2005](https://github.com/dxos/dxos/issues/2005)) ([2724742](https://github.com/dxos/dxos/commit/2724742905562406caad6d14147a50ed71d1efa6))
+* Use teleport in HALO invitations ([#2041](https://github.com/dxos/dxos/issues/2041)) ([7695129](https://github.com/dxos/dxos/commit/76951297a5591e6b299613ef15ca1afa5b9b05fd))
+
+
+### Bug Fixes
+
+* bare input onChange ([#2052](https://github.com/dxos/dxos/issues/2052)) ([56c3afb](https://github.com/dxos/dxos/commit/56c3afb078e4e1f0ebff527025677f9041470719))
+* bundled app ([#2068](https://github.com/dxos/dxos/issues/2068)) ([de27522](https://github.com/dxos/dxos/commit/de2752203870f69ac7ea0cf527856741eb8bb7b0))
+* **config:** Improve config plugins injection ([#2067](https://github.com/dxos/dxos/issues/2067)) ([7f650cf](https://github.com/dxos/dxos/commit/7f650cf827a8cc9bd239820d097200fdaa02e4b3))
+* **config:** Re-add plugin dynamic env var parsing ([#2072](https://github.com/dxos/dxos/issues/2072)) ([4ccc099](https://github.com/dxos/dxos/commit/4ccc0995ff4536efbe0abe753d4e5103d804ecca))
+* **devtools:** Instant update items with parents ([#2081](https://github.com/dxos/dxos/issues/2081)) ([1335cd1](https://github.com/dxos/dxos/commit/1335cd1cf3ac2daedb69b692368c7cf8f496015e))
+* **devtools:** SwarmPanel ([#2079](https://github.com/dxos/dxos/issues/2079)) ([14dc8cb](https://github.com/dxos/dxos/commit/14dc8cb13a30c24c6c07f536aa65b3d07f419dfe))
+* display links for published apps. ([#2032](https://github.com/dxos/dxos/issues/2032)) ([db9bbf5](https://github.com/dxos/dxos/commit/db9bbf5d93409279c83e0d1c00ca1beb5ef015b0))
+* Enable authentication retries. ([#2026](https://github.com/dxos/dxos/issues/2026)) ([e289349](https://github.com/dxos/dxos/commit/e2893490fa9dff84bf5761cb0c9592cfe854ed8c))
+* Increase heartbeat timeout in vault ([#2049](https://github.com/dxos/dxos/issues/2049)) ([b2377a7](https://github.com/dxos/dxos/commit/b2377a7bb6dce3c4a2ce459169f83725660fd305))
+* Issues missed by slots refactor ([#2053](https://github.com/dxos/dxos/issues/2053)) ([b3bc449](https://github.com/dxos/dxos/commit/b3bc449e8d34c695370a48bac56bfa5cb63e978c))
+* Lint toolbox ([#2066](https://github.com/dxos/dxos/issues/2066)) ([902f381](https://github.com/dxos/dxos/commit/902f381d612d974c5f625d080be87fa394846328))
+* Menubar radix issues ([#2063](https://github.com/dxos/dxos/issues/2063)) ([bc9f9a3](https://github.com/dxos/dxos/commit/bc9f9a39c82003dd7f37392b1e3769c5b1c8089e))
+* **react-appkit:** slightly safer telemetry ([#2002](https://github.com/dxos/dxos/issues/2002)) ([b17fc4d](https://github.com/dxos/dxos/commit/b17fc4d89707e1fb8c910a91e2c09908f3d08944)), closes [#2001](https://github.com/dxos/dxos/issues/2001)
+* react-ui Storybook, tokens ([#2070](https://github.com/dxos/dxos/issues/2070)) ([f684390](https://github.com/dxos/dxos/commit/f684390e5f2a26cb14b2c196fb5718c709ef4d35))
+* Remove tsc executor patch ([#2044](https://github.com/dxos/dxos/issues/2044)) ([e0df1df](https://github.com/dxos/dxos/commit/e0df1dfabf1bc2a6125dc7e3013c2b13ce12eb38))
+* Restore missing controlled value on bare inputs ([#2060](https://github.com/dxos/dxos/issues/2060)) ([f9d4cb6](https://github.com/dxos/dxos/commit/f9d4cb67a134a130b9438bbc6e5620f656300cd3))
+* Restore missing Tailwind content directories ([#2061](https://github.com/dxos/dxos/issues/2061)) ([e604b38](https://github.com/dxos/dxos/commit/e604b381198ccf756a678294178e208247f9e252))
+* Service worker Toast messages ([#2015](https://github.com/dxos/dxos/issues/2015)) ([b73c69c](https://github.com/dxos/dxos/commit/b73c69c34f1bf1a180a8668181c1b783932db868))
+* Space metadata item bug ([#2071](https://github.com/dxos/dxos/issues/2071)) ([302ca8a](https://github.com/dxos/dxos/commit/302ca8a9a43ed24384dbebacb125c54d328a3d73))
+* **teleport:** Make both Teleports destroy themselves when one disconnects ([#2056](https://github.com/dxos/dxos/issues/2056)) ([171e4ac](https://github.com/dxos/dxos/commit/171e4ac2b38832a9dc153628c28386708c43b36c))
+* Toast bugs & i18n issues ([#2076](https://github.com/dxos/dxos/issues/2076)) ([a1b0a2b](https://github.com/dxos/dxos/commit/a1b0a2b0a047827008e3bc06f16d171716d31519))
+* Tooltip in dialog z-index ([#2016](https://github.com/dxos/dxos/issues/2016)) ([43ad765](https://github.com/dxos/dxos/commit/43ad76582b5c0fef56978cf3e8c84b465377babe)), closes [#1994](https://github.com/dxos/dxos/issues/1994)
+
+## [0.1.13](https://github.com/dxos/dxos/compare/v0.1.12...v0.1.13) (2022-11-25)
+
+
+### Bug Fixes
+
+* **client-services:** Lengthen proxy timeout ([#1997](https://github.com/dxos/dxos/issues/1997)) ([bd282df](https://github.com/dxos/dxos/commit/bd282dfc1e7ef8ebb421f7be9f563bff9e115b43))
+* party properties item being created multiple times. ([#1991](https://github.com/dxos/dxos/issues/1991)) ([717b927](https://github.com/dxos/dxos/commit/717b927f3f527a2a889f90ca4b737144048a2000))
+
+## [0.1.12](https://github.com/dxos/dxos/compare/v0.1.11...v0.1.12) (2022-11-25)
+
+
+### Features
+
+* add indicator to layout. ([#1989](https://github.com/dxos/dxos/issues/1989)) ([088782d](https://github.com/dxos/dxos/commit/088782dd78078d1d74549f82dcf39adfebdfadb1))
+* **halo-app:** Cleanup apps page ([#1984](https://github.com/dxos/dxos/issues/1984)) ([39d16df](https://github.com/dxos/dxos/commit/39d16dfa45a1ccaf0cebfc133e723cf8d8603fd1))
+* heartbeat indicator. ([#1981](https://github.com/dxos/dxos/issues/1981)) ([d77178b](https://github.com/dxos/dxos/commit/d77178bc27bbb89ae7245d231faf60314f834c3a))
+* **hello-template:** Add list as default component ([#1992](https://github.com/dxos/dxos/issues/1992)) ([ab90b1a](https://github.com/dxos/dxos/commit/ab90b1a0bdc5bdfba51bc88c7d25fb1b56af242d))
+* metagraph SDK ([#1975](https://github.com/dxos/dxos/issues/1975)) ([d8837f3](https://github.com/dxos/dxos/commit/d8837f325dc1f7fde7b46ba0cce6b00a2d2a172c))
+* **react-client:** Ensure client failing to initialize triggers error boundary ([#1982](https://github.com/dxos/dxos/issues/1982)) ([aa83711](https://github.com/dxos/dxos/commit/aa837119a34bf71bf3ebeef3a5a843e3ba69684b))
+
+
+### Bug Fixes
+
+* Demo feedback responses 3 ([#1968](https://github.com/dxos/dxos/issues/1968)) ([6da0161](https://github.com/dxos/dxos/commit/6da0161d29465de515cac74f79ac1c0798365146))
+* **halo-app:** Check for real device key for labelling 'this device' ([#1985](https://github.com/dxos/dxos/issues/1985)) ([67e532d](https://github.com/dxos/dxos/commit/67e532d6b76a00b08df49c5e20ed1ac171f0a2a3))
+* **halo-app:** Show member display names in member list ([#1987](https://github.com/dxos/dxos/issues/1987)) ([7f945c8](https://github.com/dxos/dxos/commit/7f945c8ae1815cebeb472fed31f3d11b1672716c))
+* Presence z-index. ([#1990](https://github.com/dxos/dxos/issues/1990)) ([ddcdcfb](https://github.com/dxos/dxos/commit/ddcdcfb4cafd4310f72301089911066ca0a363a1))
+
+## [0.1.11](https://github.com/dxos/dxos/compare/v0.1.10...v0.1.11) (2022-11-24)
+
+
+### Features
+
+* Add query param for remouteSource in Devtools ([#1977](https://github.com/dxos/dxos/issues/1977)) ([9700cf5](https://github.com/dxos/dxos/commit/9700cf5f35f94b083cd334364e72f0abbf306152))
+* Icon assets. ([#1969](https://github.com/dxos/dxos/issues/1969)) ([eb3e2c7](https://github.com/dxos/dxos/commit/eb3e2c7c3402f20560085f356cc2c8ef92e41faf))
+* Log at the right callsite in browser & add custom PublicKey formatter ([#1963](https://github.com/dxos/dxos/issues/1963)) ([ae67027](https://github.com/dxos/dxos/commit/ae67027f4ca3824dfa36d6771495ac3d4d3f89d1))
+* logging features ([#1931](https://github.com/dxos/dxos/issues/1931)) ([bf17bdd](https://github.com/dxos/dxos/commit/bf17bdd4c560ec8bd4aa0b3449fc992a332164fa))
+* Remove terminated invitations ([#1959](https://github.com/dxos/dxos/issues/1959)) ([6f42273](https://github.com/dxos/dxos/commit/6f42273ebaf98c16b1df8a419977367180ea5592))
+* Reset client ([#1954](https://github.com/dxos/dxos/issues/1954)) ([2c27812](https://github.com/dxos/dxos/commit/2c278124f67305d2ef38115dbf85290dad3091d5))
+
+
+### Bug Fixes
+
+* **client-services:** Ensure always subscribed to spaces ([#1961](https://github.com/dxos/dxos/issues/1961)) ([8ef94f4](https://github.com/dxos/dxos/commit/8ef94f4373107e86255a60746892472694aad8c4))
+* Devtools production behavior ([#1950](https://github.com/dxos/dxos/issues/1950)) ([dfe6316](https://github.com/dxos/dxos/commit/dfe6316b5fb4ab521cd48b1e4696079e968b08f4))
+* plate index ignore ([#1979](https://github.com/dxos/dxos/issues/1979)) ([a687752](https://github.com/dxos/dxos/commit/a687752dd1161c6f4775913d0d4dbf1a690ce31d))
+* **react-uikit:** Auto-auth with actual code ([#1958](https://github.com/dxos/dxos/issues/1958)) ([19109e7](https://github.com/dxos/dxos/commit/19109e7ad177e52cccac0e9c9dd05ffc81d4330f))
+
+## [0.1.10](https://github.com/dxos/dxos/compare/v0.1.9...v0.1.10) (2022-11-22)
+
+
+### Features
+
+* Add Telemetry to devtools ([#1877](https://github.com/dxos/dxos/issues/1877)) ([3211eeb](https://github.com/dxos/dxos/commit/3211eebfdd331f5b5c29660e5ac26d06b19022c5))
+* Automatic scope capture during log ([#1946](https://github.com/dxos/dxos/issues/1946)) ([04acc9d](https://github.com/dxos/dxos/commit/04acc9d0e77bd74a6c23d5d718ed2676fdf1f1c1))
+* Basic TS analyzer. ([#1937](https://github.com/dxos/dxos/issues/1937)) ([95a7120](https://github.com/dxos/dxos/commit/95a712030ab68c0953acd5c7243883eac1f60ee9))
+* fix flaky network-manager tests ([#1870](https://github.com/dxos/dxos/issues/1870)) ([0ae7349](https://github.com/dxos/dxos/commit/0ae73492dadb160f5c740d82b22c316b1e158ab6))
+* Gravity test agent. ([#1933](https://github.com/dxos/dxos/issues/1933)) ([250ac4b](https://github.com/dxos/dxos/commit/250ac4b44fae6c28937edd0a68cbe43781b1912c))
+* Identity display name ([#1945](https://github.com/dxos/dxos/issues/1945)) ([841c560](https://github.com/dxos/dxos/commit/841c5607efb2b9f324dc5c9b023d4fa66dcbc699))
+* markdown directives for inserting api docs ([#1940](https://github.com/dxos/dxos/issues/1940)) ([b8499e8](https://github.com/dxos/dxos/commit/b8499e80a6c21c005f8ef553a09e3f94a4d8fffd))
+
+
+### Bug Fixes
+
+* Demo feedback responses 2 ([#1947](https://github.com/dxos/dxos/issues/1947)) ([be547fc](https://github.com/dxos/dxos/commit/be547fcc51a4ec201c99ea12c9361b297fee3e97))
+* Devtools bundle "Reached heap limit Allocation failed" error fix ([#1948](https://github.com/dxos/dxos/issues/1948)) ([bd1e335](https://github.com/dxos/dxos/commit/bd1e3354e5fc464a5e4af61f3e4c26b022addbfa))
+* docs deploy ([#1953](https://github.com/dxos/dxos/issues/1953)) ([ef8f94c](https://github.com/dxos/dxos/commit/ef8f94c81f8b393fa4a6f86be929850481609f62))
+* **halo-app:** Remove old space management button in nav ([#1943](https://github.com/dxos/dxos/issues/1943)) ([d66c33c](https://github.com/dxos/dxos/commit/d66c33cc908e168095e0f6c7dbf69df7aea9d1cf))
+
 ## [0.1.9](https://github.com/dxos/dxos/compare/v0.1.8...v0.1.9) (2022-11-18)
 
 

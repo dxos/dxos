@@ -3,12 +3,13 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromHost, fromIFrame, Space } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
+import { log } from '@dxos/log';
 import {
   AppLayout,
   ErrorProvider,
@@ -31,6 +32,8 @@ import { TextModel } from '@dxos/text-model';
 import { SpacePage } from './pages';
 import composerTranslations from './translations';
 
+log.config({ filter: process.env.LOG_FILTER ?? 'client:debug,warn', prefix: process.env.LOG_BROWSER_PREFIX });
+
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 const Routes = () => {
@@ -40,12 +43,12 @@ const Routes = () => {
   // TODO(wittjosiah): Config defaults should be available from the config.
   const remoteSource = new URL(config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
 
-  const handleSpaceCreate = async (space: Space) => {
+  const handleSpaceCreate = useCallback(async (space: Space) => {
     await space.database.createItem({
       model: TextModel,
       type: DOCUMENT_TYPE
     });
-  };
+  }, []);
 
   return useRoutes([
     {
@@ -54,11 +57,11 @@ const Routes = () => {
       children: [
         {
           path: '/',
-          element: <AppLayout onSpaceCreate={handleSpaceCreate} />,
+          element: <AppLayout spacesPath='/' />,
           children: [
             {
               path: '/',
-              element: <SpacesPage />
+              element: <SpacesPage onSpaceCreate={handleSpaceCreate} />
             },
             {
               path: '/spaces/:space',
@@ -83,7 +86,7 @@ export const App = () => {
   } = useRegisterSW({
     onRegisterError: (err) => {
       captureException(err);
-      console.error(err);
+      log.error(err);
     }
   });
 
@@ -91,6 +94,7 @@ export const App = () => {
     <UiKitProvider
       resourceExtensions={[translations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
+      appNs='composer'
     >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}

@@ -5,16 +5,12 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "@dxos/mocha",
-      "mocha",
+      "@dxos/test",
       "node"
     ]
   },
-  "exclude": [
-    "**/deprecated"
-  ],
   "include": [
     "src"
   ],
@@ -23,16 +19,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/feed-store"
     },
     {
       "path": "../../common/keys"
@@ -41,16 +31,13 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/testutils"
+      "path": "../../common/node-std"
     },
     {
-      "path": "../../common/timeframe"
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -87,6 +74,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../errors"
     }
   ]
 }

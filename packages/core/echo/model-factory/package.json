@@ -1,19 +1,16 @@
 {
   "name": "@dxos/model-factory",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "ECHO model factory.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
+  "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -22,10 +19,10 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {

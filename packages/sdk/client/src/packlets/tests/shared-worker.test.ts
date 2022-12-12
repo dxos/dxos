@@ -2,17 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import { sleep } from '@dxos/async';
 import { ClientServicesProxy, IFrameRuntime, WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
+import { describe, test, afterTest } from '@dxos/test';
 
-import { Client } from '../client';
+import { Client, fromIFrame } from '../client';
+import { TestBuilder } from '../testing';
 
-describe('WorkerRuntime', function () {
-  it('client connects to the worker', async function () {
+chai.use(chaiAsPromised);
+
+describe('Shared worker', () => {
+  test('client connects to the worker', async () => {
     const workerRuntime = new WorkerRuntime(() => new Config({}));
 
     const systemPorts = createLinkedPorts();
@@ -36,7 +41,7 @@ describe('WorkerRuntime', function () {
     await client.halo.createProfile();
   });
 
-  it('initialization errors get propagated to the client', async function () {
+  test('initialization errors get propagated to the client', async () => {
     const workerRuntime = new WorkerRuntime(async () => {
       await sleep(1);
       throw new Error('Test error');
@@ -49,11 +54,13 @@ describe('WorkerRuntime', function () {
       systemPort: systemPorts[1],
       appPort: workerProxyPorts[1]
     });
+
     const clientProxy = new IFrameRuntime({
       systemPort: systemPorts[0],
       windowAppPort: proxyWindowPorts[0],
       workerAppPort: workerProxyPorts[0]
     });
+
     const client = new Client({
       services: new ClientServicesProxy(proxyWindowPorts[1])
     });
@@ -63,8 +70,21 @@ describe('WorkerRuntime', function () {
       clientProxy.open('*')
     ]);
 
-    await expect(client.initialize()).rejects.toEqual(new Error('Test error'));
+    await expect(client.initialize()).to.be.rejectedWith('Test error');
 
     await promise;
+  });
+
+  // TODO(burdon): Browser-only.
+  test.skip('creates client with remote iframe', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({
+      services: fromIFrame(testBuilder.config)
+    });
+
+    await client.initialize();
+    afterTest(() => client.destroy());
+    expect(client.initialized).to.be.true;
   });
 });

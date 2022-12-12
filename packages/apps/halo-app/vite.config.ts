@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import ReactPlugin from '@vitejs/plugin-react';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { themePlugin } from '@dxos/react-ui/plugin';
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ThemePlugin } from '@dxos/react-ui/plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
 
@@ -17,12 +18,14 @@ const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/halo-app@${pac
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
+  base: '', // Ensure relative path to assets.
   server: {
     host: true,
     port: 3967
   },
   define: {
+    'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
+    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
     'process.env.DX_VAULT': env(process.env.DX_VAULT),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
@@ -38,6 +41,7 @@ export default defineConfig({
       '@dxos/keys',
       '@dxos/log',
       '@dxos/config',
+      '@dxos/metagraph',
       '@dxos/protocols',
       '@dxos/react-appkit',
       '@dxos/react-async',
@@ -53,29 +57,33 @@ export default defineConfig({
     ]
   },
   build: {
-    // TODO(wittjosiah): Remove.
-    minify: false,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     },
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        headless: resolve(__dirname, 'vault.html')
+        vault: resolve(__dirname, 'vault.html')
+      },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-router-dom', 'react-dom']
+        }
       }
     }
   },
   plugins: [
-    dxosPlugin(),
-    themePlugin({
+    ConfigPlugin(),
+    ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js')
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
       ]
     }),
-    react(),
+    ReactPlugin(),
     VitePWA({
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
@@ -100,10 +108,31 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // https://www.bundle-buddy.com/rollup
+    {
+      name: 'bundle-buddy',
+      buildEnd() {
+        const deps: { source: string; target: string }[] = [];
+        for (const id of this.getModuleIds()) {
+          const m = this.getModuleInfo(id);
+          if (m != null && !m.isExternal) {
+            for (const target of m.importedIds) {
+              deps.push({ source: m.id, target });
+            }
+          }
+        }
+
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+      }
+    }
   ],
   worker: {
     format: 'es',
-    plugins: [dxosPlugin()]
+    plugins: [ConfigPlugin()]
   }
 });

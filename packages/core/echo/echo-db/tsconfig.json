@@ -1,9 +1,9 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "@dxos/mocha",
+      "@dxos/test",
       "@dxos/typings"
     ]
   },
@@ -39,10 +39,10 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/random-access-storage"
+      "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/testutils"
+      "path": "../../../common/random-access-storage"
     },
     {
       "path": "../../../common/timeframe"
@@ -76,6 +76,12 @@
     },
     {
       "path": "../../mesh/rpc"
+    },
+    {
+      "path": "../../mesh/teleport"
+    },
+    {
+      "path": "../../mesh/teleport-extension-replicator"
     },
     {
       "path": "../../protocols"

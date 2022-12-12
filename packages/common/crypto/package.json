@@ -1,30 +1,24 @@
 {
   "name": "@dxos/crypto",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
-    "./dist/src/subtle.js": "./dist/src/browser/subtle.js"
+    "./src/subtle.ts": "./src/browser/subtle.ts",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/keys": "workspace:*",
-    "assert": "^2.0.0",
+    "@dxos/node-std": "workspace:*",
     "crypto-js": "^3.1.9-1",
     "hypercore-crypto": "^2.3.0"
   },

@@ -2,13 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+// @dxos/test platform=nodejs
 
 import crypto from 'crypto';
 import del from 'del';
 import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
+
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { File, StorageType } from '../common';
 import { randomText, storageTests } from '../testing';
@@ -30,26 +32,22 @@ const write = async (file: File, data = 'test') => {
 /**
  * Node file system specific tests.
  */
-describe('testing node storage types', function () {
-  before(function () {
-    return del(ROOT_DIRECTORY);
-  });
+describe('testing node storage types', () => {
+  beforeAll(() => del(ROOT_DIRECTORY));
 
-  after(function () {
-    return del(ROOT_DIRECTORY);
-  });
+  afterAll(() => del(ROOT_DIRECTORY));
 
   for (const storageType of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
     storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
   }
 
-  it('create storage with node file by default', async function () {
+  test('create storage with node file by default', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     expect(storage.type).toBe(StorageType.NODE);
   });
 
-  it('create file', async function () {
+  test('create file', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -60,7 +58,7 @@ describe('testing node storage types', function () {
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
   });
 
-  it('delete directory', async function () {
+  test('delete directory', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -73,7 +71,7 @@ describe('testing node storage types', function () {
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  it('destroy storage', async function () {
+  test('destroy storage', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -82,15 +80,15 @@ describe('testing node storage types', function () {
     await write(file);
 
     // Check storage destroy.
-    await storage.destroy();
+    await storage.reset();
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  it('should throw an assert error if invalid type for platform', function () {
+  test('should throw an assert error if invalid type for platform', () => {
     expect(() => createStorage({ type: StorageType.IDB, root: 'error' })).toThrow(/Invalid/);
   });
 
-  it('file exists and destroys in subDirectory', async function () {
+  test('file exists and destroys in subDirectory', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -99,12 +97,12 @@ describe('testing node storage types', function () {
     await write(file);
     await expect(fs.access(path.join(dir, 'dir', 'sub', 'file'), constants.F_OK)).resolves.toBeUndefined();
 
-    await storage.destroy();
+    await storage.reset();
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
   // TODO(burdon): Factor out into suites of blueprints.
-  it('persistence', async function () {
+  test('persistence', async () => {
     const filename = randomText();
     const data = Buffer.from(randomText());
 

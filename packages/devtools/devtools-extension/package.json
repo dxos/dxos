@@ -1,21 +1,17 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "build": "node scripts/build.js",
-    "check": "true",
+    "bundle": "node scripts/build.js",
     "pack:crx": "crx pack dist -o dxos-devtools.crx",
     "pack:webext": "web-ext build --source-dir ./dist",
     "start:firefox": "web-ext run --source-dir ./dist"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@babel/runtime": "^7.9.6",
     "@dxos/async": "workspace:*",
@@ -45,7 +41,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-plugins": "workspace:*",
     "@types/chrome": "^0.0.125",
     "@types/debug": "^4.1.7",
     "@types/download": "^8.0.1",

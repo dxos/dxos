@@ -14,7 +14,7 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { createDefaultModelFactory } from '../services';
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
@@ -22,8 +22,8 @@ import { Identity } from './identity';
 
 const modelFactory = createDefaultModelFactory();
 
-describe('identity/identity', function () {
-  it('create', async function () {
+describe('identity/identity', () => {
+  test('create', async () => {
     const keyring = new Keyring();
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
@@ -116,7 +116,7 @@ describe('identity/identity', function () {
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
   });
 
-  it('two devices', async function () {
+  test('two devices', async () => {
     const signalContext = new MemorySignalManagerContext();
 
     let spaceKey: PublicKey;

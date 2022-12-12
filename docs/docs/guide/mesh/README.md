@@ -3,7 +3,7 @@ position: 1
 label: Overview
 dir:
   text: MESH Networking
-  order: 13
+  order: 15
 ---
 
 # MESH Overview

@@ -5,10 +5,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    "types": [
-      "mocha"
-    ]
+    "outDir": "dist/types"
   },
   "include": [
     "src"
@@ -25,9 +22,6 @@
     },
     {
       "path": "../../common/random-access-storage"
-    },
-    {
-      "path": "../../common/testutils"
     },
     {
       "path": "../../common/util"

@@ -8,7 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { discoveryKey } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
@@ -18,6 +18,7 @@ import { MemoryTransport } from './memory-transport';
 //  Cannot log after tests are done. Did you forget to wait for something async in your test?
 //  Attempted to log "Ignoring unsupported ICE candidate.".
 
+// TODO(burdon): Move to TestBuilder.
 const createPair = () => {
   const topic = PublicKey.random();
   const peer1Id = PublicKey.random();
@@ -33,7 +34,7 @@ const createPair = () => {
     initiator: true
   });
 
-  afterTest(() => connection1.close());
+  afterTest(() => connection1.destroy());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
@@ -46,7 +47,7 @@ const createPair = () => {
     initiator: false
   });
 
-  afterTest(() => connection2.close());
+  afterTest(() => connection2.destroy());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
   return {
@@ -60,8 +61,8 @@ const createPair = () => {
   };
 };
 
-describe('MemoryTransport', function () {
-  it('establish connection and send data through with protocol', async function () {
+describe('MemoryTransport', () => {
+  test('establish connection and send data through with protocol', async () => {
     const { plugin1, plugin2, peer1Id } = createPair();
 
     const received: any[] = [];
@@ -82,7 +83,7 @@ describe('MemoryTransport', function () {
     });
   });
 
-  it.skip('10 pairs of peers connecting at the same time', async function () {
+  test.skip('10 pairs of peers connecting at the same time', async () => {
     await Promise.all(
       range(10).map(async () => {
         const { plugin1, plugin2, peer1Id } = createPair();

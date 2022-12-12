@@ -7,7 +7,7 @@ import React from 'react';
 import { HashRouter, useOutletContext, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Item, Space } from '@dxos/client';
+import { Item, Space, ObjectModel } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import {
   ServiceWorkerToast,
@@ -20,9 +20,8 @@ import {
   ManageSpacePage
 } from '@dxos/react-appkit';
 import { ClientProvider, useConfig, useSelection } from '@dxos/react-client';
-import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
+import { List, LIST_TYPE } from '@dxos/react-list';
 import { Loading, UiKitProvider, useTranslation } from '@dxos/react-uikit';
-import { TextModel } from '@dxos/text-model';
 
 import translationResources from './translations';
 
@@ -39,6 +38,7 @@ export const App = () => {
     <UiKitProvider
       resourceExtensions={[translations, translationResources]}
       fallback={<Fallback message='Loading...' />}
+      appNs='hello'
     >
       <ClientProvider config={configProvider} fallback={<GenericFallback />}>
         <HashRouter>
@@ -60,8 +60,8 @@ const Routes = () => {
 
   const handleSpaceCreate = async (space: Space) => {
     await space.database.createItem({
-      model: TextModel,
-      type: DOCUMENT_TYPE
+      model: ObjectModel,
+      type: LIST_TYPE
     });
   };
 
@@ -72,11 +72,11 @@ const Routes = () => {
       children: [
         {
           path: '/',
-          element: <AppLayout onSpaceCreate={handleSpaceCreate} />,
+          element: <AppLayout spacesPath='/' />,
           children: [
             {
               path: '/',
-              element: <SpacesPage />
+              element: <SpacesPage onSpaceCreate={handleSpaceCreate} />
             },
             {
               path: '/spaces/:space',
@@ -97,7 +97,11 @@ const SpacePage = () => {
   const { t } = useTranslation('hello');
   const { space } = useOutletContext<{ space: Space }>();
 
-  const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
+  const [item] = useSelection<Item<ObjectModel>>(space?.select().filter({ type: LIST_TYPE })) ?? [];
 
-  return item ? <Composer item={item} className='z-0' /> : <Loading label={t('generic loading label')} size='md' />;
+  return item ? (
+    <List itemId={item.id} spaceKey={space.key} />
+  ) : (
+    <Loading label={t('generic loading label')} size='md' />
+  );
 };

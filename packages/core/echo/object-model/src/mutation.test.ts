@@ -5,11 +5,12 @@
 import expect from 'expect';
 
 import { ObjectMutation } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { describe, test } from '@dxos/test';
 
 import { MutationUtil, ValueUtil } from './mutation';
 
-describe('Mutations', function () {
-  it('ValueUtil', function () {
+describe('Mutations', () => {
+  test('ValueUtil', () => {
     {
       const message = ValueUtil.createMessage(null);
       expect(message).toStrictEqual({
@@ -69,23 +70,23 @@ describe('Mutations', function () {
     }
   });
 
-  it('ValueUtil.applyValue null', function () {
+  test('ValueUtil.applyValue null', () => {
     const object = ValueUtil.applyValue({ title: 'DXOS' }, 'title', ValueUtil.createMessage(null));
     expect(object.title).toBe(null);
   });
 
-  it('ValueUtil.applyValue integer', function () {
+  test('ValueUtil.applyValue integer', () => {
     const object = ValueUtil.applyValue({}, 'number', ValueUtil.createMessage(2 ** 33));
     expect(object.number).toBe(2 ** 33);
   });
 
   // TODO(burdon): Test other scalars.
-  it('ValueUtil.applyValue scalars', function () {
+  test('ValueUtil.applyValue scalars', () => {
     const object = ValueUtil.applyValue({}, 'title', ValueUtil.createMessage('DXOS'));
     expect(object.title).toBe('DXOS');
   });
 
-  it('ValueUtil.applyValue nested keys', function () {
+  test('ValueUtil.applyValue nested keys', () => {
     {
       const object = ValueUtil.applyValue({}, 'foo.bar', ValueUtil.createMessage(100));
       expect(object).toEqual({ foo: { bar: 100 } });
@@ -107,7 +108,7 @@ describe('Mutations', function () {
     }
   });
 
-  it('ValueUtil.applyValue object', function () {
+  test('ValueUtil.applyValue object', () => {
     const object = {
       version: '0.0.1',
       packages: {
@@ -120,7 +121,7 @@ describe('Mutations', function () {
     expect(module).toStrictEqual(object);
   });
 
-  it('ValueUtil bytes', function () {
+  test('ValueUtil bytes', () => {
     {
       const data = Buffer.from('Hello');
       const message = ValueUtil.createMessage({
@@ -154,7 +155,7 @@ describe('Mutations', function () {
     }
   });
 
-  it('MutationUtil', function () {
+  test('MutationUtil', () => {
     const data1 = MutationUtil.applyMutationSet(
       {},
       {

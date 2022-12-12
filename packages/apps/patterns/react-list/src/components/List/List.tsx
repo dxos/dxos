@@ -88,6 +88,7 @@ const ListLoaded = ({ space, list, listItems: propsListItems }: ListLoadedProps)
             };
             return acc;
           }, {}),
+        onChangePeriod: 640,
         onAction,
         createListItemId
       }}

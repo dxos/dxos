@@ -6,11 +6,21 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/halo/keyring/src/index.ts",
-        "outputPath": "packages/core/halo/keyring/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/halo/keyring/dist/types",
         "tsConfig": "packages/core/halo/keyring/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/halo/keyring/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/halo/keyring/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,7 +39,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/halo/keyring",
         "outputPath": "tmp/mocha/packages/core/halo/keyring",
@@ -49,6 +59,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }

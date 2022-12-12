@@ -8,11 +8,12 @@ import expect from 'expect';
 import { latch } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { MockFeedWriter } from '@dxos/feed-store';
+import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Item } from './item';
@@ -21,8 +22,8 @@ import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo:item-demuxer:test');
 
-describe('Item demuxer', function () {
-  it('set-up', async function () {
+describe('Item demuxer', () => {
+  test('set-up', async () => {
     const memberKey = PublicKey.random();
 
     const modelFactory = new ModelFactory().registerModel(TestModel);
@@ -95,7 +96,7 @@ describe('Item demuxer', function () {
     unsubscribe();
   });
 
-  it('models can be registered after item was already created', async function () {
+  test('models can be registered after item was already created', async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
     // TODO(burdon): Create mock.

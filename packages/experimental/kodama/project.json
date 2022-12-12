@@ -7,9 +7,6 @@
       "options": {
         "main": "packages/experimental/kodama/src/index.ts",
         "outputPath": "packages/experimental/kodama/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
         "tsConfig": "packages/experimental/kodama/tsconfig.json"
       },
       "outputs": [
@@ -29,7 +26,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/experimental/kodama",
         "outputPath": "tmp/mocha/packages/experimental/kodama",
@@ -49,6 +46,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "test"
   ]
 }

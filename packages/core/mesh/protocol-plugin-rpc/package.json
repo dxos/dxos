@@ -1,34 +1,30 @@
 {
   "name": "@dxos/protocol-plugin-rpc",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "Protocol plugin to be used with @dxos/rpc",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
+  "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/messaging": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "assert": "^2.0.0"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/testutils": "workspace:*"
+    "@dxos/protocols": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

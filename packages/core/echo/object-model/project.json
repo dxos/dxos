@@ -6,11 +6,21 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/echo/object-model/src/index.ts",
-        "outputPath": "packages/core/echo/object-model/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/echo/object-model/dist/types",
         "tsConfig": "packages/core/echo/object-model/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/object-model/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/echo/object-model/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,7 +39,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/echo/object-model",
         "outputPath": "tmp/mocha/packages/core/echo/object-model",
@@ -49,6 +59,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }

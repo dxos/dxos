@@ -1,5 +1,19 @@
 formatter:
   column: 100
 
+# processor: debug
+
 filter:
   - warn
+  - info
+  # - swarm.ts:debug
+  - client:debug
+  # - feed-wrapper:debug
+  # - service-host:debug
+  # - client:debug
+  # - replicator:debug
+  # - teleport:debug
+  # - member:debug
+  # - deprecated/space:debug
+  # - space-proxy:debug
+  # - stress:debug

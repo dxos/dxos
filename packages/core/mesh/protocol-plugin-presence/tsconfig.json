@@ -1,7 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
     "src/**/*",
@@ -16,6 +16,9 @@
     },
     {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/node-std"
     },
     {
       "path": "../../protocols"

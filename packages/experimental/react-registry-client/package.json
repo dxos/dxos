@@ -1,33 +1,32 @@
 {
   "name": "@dxos/react-registry-client",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "description": "React registry client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "scripts": {
-    "book": "esbuild-server book",
-    "check": "true"
+    "book": "esbuild-server book"
   },
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/esbuild-server": "~2.29.0",
     "@types/debug": "^4.1.7",
     "@types/react": "^18.0.21",

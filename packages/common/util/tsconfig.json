@@ -1,9 +1,9 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "@dxos/mocha"
+      "@dxos/test"
     ]
   },
   "include": [
@@ -19,6 +19,9 @@
     },
     {
       "path": "../keys"
+    },
+    {
+      "path": "../node-std"
     }
   ]
 }

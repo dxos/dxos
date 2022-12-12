@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { CredentialGenerator } from '@dxos/credentials';
@@ -36,6 +36,10 @@ export type JoinIdentityParams = {
   identityKey: PublicKey;
   haloSpaceKey: PublicKey;
   haloGenesisFeedKey: PublicKey;
+};
+
+export type CreateIdentityOptions = {
+  displayName?: string;
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
@@ -74,7 +78,7 @@ export class IdentityManager {
     await this._identity?.close();
   }
 
-  async createIdentity() {
+  async createIdentity({ displayName }: CreateIdentityOptions = {}) {
     assert(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
@@ -107,11 +111,16 @@ export class IdentityManager {
           identityRecord.haloSpace.spaceKey,
           identityRecord.haloSpace.writeDataFeedKey,
           AdmittedFeed.Designation.DATA
-        ),
-
-        // Device authorization (writes device chain).
-        await generator.createDeviceAuthorization(identityRecord.deviceKey)
+        )
       ];
+
+      if (displayName) {
+        credentials.push(await generator.createProfileCredential({ displayName }));
+      }
+
+      // Device authorization (writes device chain).
+      // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
+      credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
@@ -135,13 +144,13 @@ export class IdentityManager {
   }
 
   /**
-   * Accept an existing identity. Expects it's device key to be authorized.
+   * Accept an existing identity. Expects it's device key to be authorized (now or later).
    */
   async acceptIdentity(params: JoinIdentityParams) {
     log('accepting identity', { params });
     assert(!this._identity, 'Identity already exists.');
 
-    const identity = await this._constructIdentity({
+    const identityRecord: IdentityRecord = {
       identityKey: params.identityKey,
       deviceKey: await this._keyring.createKey(),
       haloSpace: {
@@ -150,10 +159,12 @@ export class IdentityManager {
         writeControlFeedKey: await this._keyring.createKey(),
         writeDataFeedKey: await this._keyring.createKey()
       }
-    });
+    };
+    const identity = await this._constructIdentity(identityRecord);
 
     await identity.open();
     this._identity = identity;
+    await this._metadataStore.setIdentityRecord(identityRecord);
     this.stateUpdate.emit();
     return identity;
   }

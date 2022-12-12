@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
-
 import { MessageValence } from '../props';
+import { mx } from '../util';
 import { defaultDisabled } from './disabled';
 import { defaultFocus, staticFocus } from './focus';
 import { defaultHover } from './hover';
@@ -18,11 +17,11 @@ export const defaultInput = ({
   disabled?: boolean;
   validationValence?: MessageValence;
 }) => {
-  return cx(
+  return mx(
+    'text-base border rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
     defaultFocus,
     defaultPlaceholder,
     defaultHover({ disabled }),
-    'bg-white/50 border text-neutral-900 text-sm rounded-lg dark:bg-neutral-700/50 dark:text-white',
     valenceInputBorder(validationValence),
     disabled && defaultDisabled
   );
@@ -37,9 +36,9 @@ export const staticInput = ({
   focused?: boolean;
   validationValence?: MessageValence;
 }) => {
-  return cx(
+  return mx(
     defaultPlaceholder,
-    'bg-white/50 border text-neutral-900 text-sm rounded-lg dark:bg-neutral-700/50 dark:text-white',
+    'text-base border rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
     valenceInputBorder(validationValence),
     disabled && defaultDisabled,
     focused && staticFocus

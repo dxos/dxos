@@ -148,7 +148,7 @@ const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: stri
   useEffect(() => {
     setTimeout(async () => {
       const space = await client.echo.createSpace();
-      await space.createInvitation();
+      space.createInvitation();
       throw new Error('Not implemented.');
       // invitation.finished.on(() => setPin(''));
       // invitation.connected.on(() => setPin(invitation.secret.toString()));

@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { subtleCrypto, Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -18,6 +18,7 @@ import { ComplexMap } from '@dxos/util';
  */
 export class Keyring implements Signer {
   private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(PublicKey.hash);
+  readonly keysUpdate = new Event();
 
   constructor(
     private readonly _storage: Directory = createStorage({
@@ -70,7 +71,7 @@ export class Keyring implements Signer {
       const record = schema.getCodecForType('dxos.halo.keyring.KeyRecord').decode(recordBytes);
       const publicKey = PublicKey.from(record.publicKey);
       assert(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
-
+      assert(record.privateKey, 'Corrupted keyring: Missing private key');
       const keyPair: CryptoKeyPair = {
         publicKey: await subtleCrypto.importKey(
           'raw',
@@ -113,6 +114,7 @@ export class Keyring implements Signer {
     const file = this._storage.getOrCreateFile(publicKey.toHex());
     await file.write(0, Buffer.from(schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)));
     await file.close();
+    this.keysUpdate.emit();
   }
 
   // TODO(burdon): ???
@@ -120,9 +122,14 @@ export class Keyring implements Signer {
     return todo('We need a method to delete a file.');
   }
 
-  // TODO(burdon): ???
-  list(): Promise<PublicKey[]> {
-    return todo('We need a method to enumerate files in a directory.');
+  list(): KeyRecord[] {
+    const keys: KeyRecord[] = [];
+    for (const path of this._storage.getFiles().keys()) {
+      const fileName = path.split('/').pop(); // get last portion of the path
+      assert(fileName, 'Invalid file name');
+      keys.push({ publicKey: PublicKey.fromHex(fileName).asUint8Array() });
+    }
+    return keys;
   }
 }
 

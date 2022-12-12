@@ -1,14 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "types": [
-      "mocha"
-    ]
+    "outDir": "dist/types"
   },
   "include": [
     "src",
-    "src/**/*.json",
     "stories"
   ],
   "references": [

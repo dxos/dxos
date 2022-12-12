@@ -3,10 +3,10 @@
 //
 
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
-import cx from 'classnames';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
 import { defaultFocus, defaultHover, defaultInlineSeparator } from '../../styles';
+import { mx } from '../../util';
 import { defaultButtonColors, primaryButtonColors } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
 
@@ -40,8 +40,17 @@ export type NavMenuItem =
   | NavMenuInvokerItemProps
   | NavMenuSeparatorProps;
 
-export interface NavMenuProps extends ComponentProps<typeof NavigationMenuPrimitive.Root> {
+export interface NavMenuSlots {
+  root?: Omit<ComponentProps<typeof NavigationMenuPrimitive.Root>, 'children'>;
+  viewport?: Omit<ComponentProps<typeof NavigationMenuPrimitive.Viewport>, 'children'>;
+  list?: Omit<ComponentProps<typeof NavigationMenuPrimitive.List>, 'children'>;
+  indicator?: Omit<ComponentProps<typeof NavigationMenuPrimitive.Indicator>, 'children'>;
+  indicatorIcon?: Pick<ComponentProps<'div'>, 'className'>;
+}
+
+export interface NavMenuProps {
   items: NavMenuItem[];
+  slots?: NavMenuSlots;
 }
 
 const NavMenuInvokerItem = forwardRef(
@@ -49,7 +58,7 @@ const NavMenuInvokerItem = forwardRef(
     return (
       <NavigationMenuPrimitive.Item ref={ref}>
         <NavigationMenuPrimitive.Trigger
-          className={cx(
+          className={mx(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryButtonColors : defaultButtonColors,
             defaultFocus,
@@ -59,7 +68,7 @@ const NavMenuInvokerItem = forwardRef(
           {children}
         </NavigationMenuPrimitive.Trigger>
         <NavigationMenuPrimitive.Content
-          className={cx(
+          className={mx(
             'absolute w-auto top-0 left-0 rounded-lg',
             'radix-motion-from-start:animate-enter-from-left',
             'radix-motion-from-end:animate-enter-from-right',
@@ -80,7 +89,7 @@ const NavMenuLinkItem = forwardRef(
       <NavigationMenuPrimitive.Link
         {...triggerLinkProps}
         active={active}
-        className={cx(
+        className={mx(
           'px-3 py-2 text-sm rounded-md transition-color',
           active ? primaryButtonColors : defaultButtonColors,
           active ? 'font-medium' : 'font-normal',
@@ -103,7 +112,7 @@ const NavMenuTooltipLinkItem = forwardRef(
         <NavigationMenuPrimitive.Link
           {...triggerLinkProps}
           active={active}
-          className={cx(
+          className={mx(
             'px-3 py-2 text-sm rounded-md transition-color',
             active ? primaryButtonColors : defaultButtonColors,
             active ? 'font-medium' : 'font-normal',
@@ -122,17 +131,23 @@ const NavMenuTooltipLinkItem = forwardRef(
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
 export const NavMenuSeparatorItem = (_props: NavMenuSeparatorProps) => {
-  return <span role='none' className={cx(defaultInlineSeparator, 'bs-5')} />;
+  return <span role='none' className={mx(defaultInlineSeparator, 'bs-5')} />;
 };
 
 const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps => 'tooltip' in o;
 const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in o;
 const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
 
-export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
+export const NavMenu = ({ items, slots = {} }: NavMenuProps) => {
   return (
-    <NavigationMenuPrimitive.Root {...rootProps} className={cx('flex justify-center', rootProps.className)}>
-      <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-1 rounded-lg bg-white dark:bg-neutral-750 p-1 button-elevation overflow-x-auto'>
+    <NavigationMenuPrimitive.Root {...slots.root} className={mx('flex justify-center', slots.root?.className)}>
+      <NavigationMenuPrimitive.List
+        {...slots.list}
+        className={mx(
+          'relative flex flex-row items-center gap-1 rounded-lg bg-white dark:bg-neutral-750 p-1 button-elevation overflow-x-auto',
+          slots.list?.className
+        )}
+      >
         {items.map((item: NavMenuItem, i) => {
           return isTooltipLinkItem(item) ? (
             <NavMenuTooltipLinkItem key={i} {...item} />
@@ -146,32 +161,40 @@ export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
         })}
 
         <NavigationMenuPrimitive.Indicator
-          className={cx(
-            'z-10',
-            'top-[100%] flex items-end justify-center h-2 overflow-hidden',
+          {...slots.indicator}
+          className={mx(
+            'z-10 top-[100%] flex items-end justify-center h-2 overflow-hidden',
             'radix-state-visible:animate-fade-in',
             'radix-state-hidden:animate-fade-out',
-            'transition-[width_transform] duration-[250ms] ease-[ease]'
+            'transition-[width_transform] duration-[250ms] ease-[ease]',
+            slots.indicator?.className
           )}
         >
-          <div className='top-1 relative bg-white dark:bg-neutral-750 w-2 h-2 rotate-45' />
+          <div
+            className={mx(
+              'top-1 relative bg-white dark:bg-neutral-750 w-2 h-2 rotate-45',
+              slots.indicatorIcon?.className
+            )}
+          />
         </NavigationMenuPrimitive.Indicator>
       </NavigationMenuPrimitive.List>
 
       <div
-        className={cx('absolute flex justify-center', 'w-[140%] left-[-20%] top-[100%]')}
+        className={mx('absolute flex justify-center', 'w-[140%] left-[-20%] top-[100%]')}
         style={{
           perspective: '2000px'
         }}
       >
         <NavigationMenuPrimitive.Viewport
-          className={cx(
-            'relative mt-2 shadow-lg rounded-md bg-white dark:bg-neutral-750 overflow-hidden',
+          {...slots.viewport}
+          className={mx(
+            'relative mbs-2 shadow-lg rounded-md bg-white dark:bg-neutral-750 overflow-hidden',
             'w-radix-navigation-menu-viewport',
             'h-radix-navigation-menu-viewport',
             'radix-state-open:animate-scale-in-content',
             'radix-state-closed:animate-scale-out-content',
-            'origin-[top_center] transition-[width_height] duration-300 ease-[ease]'
+            'origin-[top_center] transition-[width_height] duration-300 ease-[ease]',
+            slots.viewport?.className
           )}
         />
       </div>

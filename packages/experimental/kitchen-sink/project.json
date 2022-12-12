@@ -7,9 +7,6 @@
       "options": {
         "main": "packages/experimental/kitchen-sink/src/index.ts",
         "outputPath": "packages/experimental/kitchen-sink/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
         "tsConfig": "packages/experimental/kitchen-sink/tsconfig.json"
       },
       "outputs": [

@@ -54,6 +54,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/metagraph"
+    },
+    {
       "path": "../../experimental/react-client-testing"
     },
     {
@@ -67,9 +70,6 @@
     },
     {
       "path": "../../sdk/react-uikit"
-    },
-    {
-      "path": "../../sdk/vite-plugin"
     },
     {
       "path": "../patterns/react-appkit"

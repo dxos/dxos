@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { asyncTimeout } from '@dxos/async';
 import type { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { adaptProtocolProvider, createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { BotFactoryService, BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
@@ -61,16 +61,18 @@ export class BotFactoryClient {
     const peerId = PublicKey.random();
     const port = await asyncTimeout(
       new Promise<RpcPort>((resolve) => {
-        void this._networkManager.openSwarmConnection({
+        void this._networkManager.joinSwarm({
           topic,
           peerId,
           topology: new StarTopology(topic),
-          protocol: createProtocolFactory(topic, peerId, [
-            new RpcPlugin(async (port) => {
-              log('Connected.');
-              resolve(port);
-            })
-          ])
+          protocolProvider: adaptProtocolProvider(
+            createProtocolFactory(topic, peerId, [
+              new RpcPlugin(async (port) => {
+                log('Connected.');
+                resolve(port);
+              })
+            ])
+          )
         });
       }),
       30_000,
@@ -88,7 +90,7 @@ export class BotFactoryClient {
     if (this._rpcClient) {
       log('stopping...');
       await this._rpcClient.close();
-      await this._networkManager.closeSwarmConnection(this._topic!);
+      await this._networkManager.leaveSwarm(this._topic!);
       this._rpcClient = undefined;
       this._topic = undefined;
       this._isReady = false;

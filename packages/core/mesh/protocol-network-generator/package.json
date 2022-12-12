@@ -1,28 +1,25 @@
 {
   "name": "@dxos/protocol-network-generator",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "Protocol network generator.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-network-generator#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "index.js"
+    "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/network-generator": "workspace:*",
-    "assert": "^2.0.0",
+    "@dxos/node-std": "workspace:*",
     "pump": "^3.0.0"
   },
   "devDependencies": {

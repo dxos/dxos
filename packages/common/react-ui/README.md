@@ -2,7 +2,9 @@
 
 The `react-ui` package is the single source of truth for DXOS’s design system.
 
-## How to use
+To get started, you’ll need to add the build plugin (Vite or ESBuild), then set up the provider, then set up theming.
+
+## How to use with Vite
 
 Using the design system requires opting-in in a few places, but by design it
 otherwise needs no configuration.
@@ -14,18 +16,28 @@ project’s Vite config to use it, e.g.:
 
 ```ts
 // ...
-import { themePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-ui/plugin';
 // ...
 export default defineConfig({
   // ...
   plugins: [
     // ...
-    themePlugin({content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']}),
+    ThemePlugin({content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']}),
     // ...
   ]
   // ...
 });
 // ...
+```
+
+Ensure `content` contains globs for your project’s own files that will use Tailwind classnames, as well as any DXOS
+design system packages your project uses, e.g.:
+
+```
+'./node_modules/@dxos/react-ui/dist/**/*.mjs',
+'./node_modules/@dxos/react-uikit/dist/**/*.mjs',
+'./node_modules/@dxos/react-appkit/dist/**/*.mjs',
+'./node_modules/@dxos/react-composer/dist/**/*.mjs',
 ```
 
 ### 2. Reference the basic stylesheet
@@ -36,7 +48,62 @@ In the file which calls React DOM’s `createRoot` or `render`, add:
 import '@dxosTheme';
 ```
 
-### 3. Boostrap theming
+### Done
+
+Now you can use Tailwind utility classnames in your project.
+
+## How to use with ESBuild
+
+The ESBuild plugin is experimental and has several caveats noted below, proceed with caution.
+
+### 1. Add the ESBuild plugin
+
+Add `@dxos/react-ui` to the project’s dev dependencies, then extend the
+project’s ESBuild config to use it, e.g.:
+
+```ts
+// ...
+import { ThemePlugins } from '@dxos/react-ui/esbuild-plugin';
+// ...
+void build({
+  entryPoints: [/* ... */, resolve(__dirname, '../node_modules/@dxos/react-ui/src/theme.css')],
+  // ...
+  plugins: ThemePlugins({
+    outdir: resolve(__dirname, '../dist'),
+    content: [
+      resolve(__dirname, '../index.html'),
+      resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
+      resolve(__dirname, '../node_modules/@dxos/react-ui/dist/**/*.mjs')
+      // other sources to scan
+    ]
+  })
+});
+// ...
+```
+
+Ensure `theme.css` from `react-ui` is included as an entrypoint, and `outdir` passed to `ThemePlugins` is the same as
+provided to ESBuild.
+
+### 2. Reference the basic stylesheet
+
+Load the built stylesheet as appropriate for your project, e.g. simply add it to `index.html`:
+
+```html
+<link rel="stylesheet" href="./dist/node_modules/@dxos/react-ui/src/theme.css"/>
+```
+
+Note that _this is not in your project’s node_modules directory_, it’s in your project’s `outdir`.
+
+### Done
+
+Now you can use Tailwind utility classnames in your project.
+
+## Set up the provider
+
+In order for the project to render correctly, wrap your app with `<UiKitProvider/>` if your project uses `react-uikit`,
+or `<UiProvider/>` if your project only uses this package. Don’t use both, since the former already includes the latter.
+
+## Set up theming
 
 In order to display the correct theme, you need to mark `<html>` with the correct class _from the `<head>` tag_, otherwise it will flash the wrong theme:
 
@@ -53,6 +120,7 @@ In order to display the correct theme, you need to mark `<html>` with the correc
 ```
 
 If you want to keep up with `prevers-color-scheme`, add:
+
 ```js
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e){ if(e.matches){
   document.documentElement.classList.add('dark')
@@ -61,8 +129,18 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fun
 }})
 ```
 
+You could combine the two with a script like this one:
+
+```js
+function setTheme(darkMode) {
+  document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+}
+setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+  setTheme(e.matches)
+});
+```
+
 You can augment this predicate checking any preferences saved in `localStorage`, etc.
 
-### Done
-
-Now you can use Tailwind CSS classnames in components.
+Note that you can apply this classname selectively further down the DOM tree if needed.

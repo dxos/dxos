@@ -9,11 +9,17 @@ import waitForExpect from 'wait-for-expect';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { createProtocolFactory, MemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import {
+  adaptProtocolProvider,
+  createProtocolFactory,
+  MemoryTransportFactory,
+  NetworkManager,
+  StarTopology
+} from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPort, ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { RpcPlugin } from './rpc-plugin';
 
@@ -33,23 +39,20 @@ const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port:
     transportFactory: MemoryTransportFactory
   });
 
-  // TODO(burdon): Close connections.
-  afterTest(() => networkManager.destroy());
+  afterTest(() => networkManager.close());
   const plugin = new RpcPlugin(onConnect);
-  await networkManager.openSwarmConnection({
+  await networkManager.joinSwarm({
     topic,
     peerId,
-    protocol: createProtocolFactory(topic, peerId, [plugin]),
+    protocolProvider: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
     topology: new StarTopology(topic)
   });
 
   return { plugin, networkManager };
 };
 
-// TODO(burdon):
-
-describe('Protocol plugin rpc', function () {
-  it('Works with rpc port', async function () {
+describe('Protocol plugin rpc', () => {
+  test('Works with rpc port', async () => {
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
     let serverPort: RpcPort | undefined;
@@ -87,7 +90,7 @@ describe('Protocol plugin rpc', function () {
     await server.close();
   });
 
-  it('Works with protobuf service', async function () {
+  test('Works with protobuf service', async () => {
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
     const connected = new Event();
@@ -133,7 +136,7 @@ describe('Protocol plugin rpc', function () {
     expect(response.data).toEqual('responseData');
   });
 
-  it('One server two clients', async function () {
+  test('One server two clients', async () => {
     const topic = PublicKey.random();
     const client1Id = PublicKey.random();
     const client2Id = PublicKey.random();

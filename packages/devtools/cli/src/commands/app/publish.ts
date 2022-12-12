@@ -3,7 +3,7 @@
 //
 
 import { Flags } from '@oclif/core';
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { captureException } from '@dxos/sentry';
 
@@ -40,7 +40,7 @@ export default class Publish extends BaseCommand {
       assert(moduleConfig.values.package, 'Missing package definition in dx.yml');
 
       for (const module of moduleConfig.values.package!.modules ?? []) {
-        verbose && this.log(`Deploying module ${module.name}...`);
+        this.log(`Building module ${module.name}...`);
 
         await build({ verbose }, { log: (...args) => this.log(...args), module });
         const cid = await publish({ verbose }, { module, config: this.clientConfig });
@@ -58,12 +58,19 @@ export default class Publish extends BaseCommand {
         )
       });
 
+      this.log('Publishing to KUBE...');
+
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
-        await publisher.rpc.publish({
+        const result = await publisher.rpc.publish({
           package: moduleConfig.values.package!,
           skipExisting
         });
-        verbose && this.log('Published to KUBE.');
+
+        result?.modules?.forEach(({ module, urls }) => {
+          urls?.length && this.log(`Module ${module.name} published to ${urls.join(', ')}`);
+        });
+
+        this.log('Published to KUBE.');
       });
     } catch (err: any) {
       captureException(err);

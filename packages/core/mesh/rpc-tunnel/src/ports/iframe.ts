@@ -9,7 +9,7 @@ import { MessageData } from '../message';
 
 const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
   if (!iframe.contentWindow) {
-    log.debug('IFrame content window missing', { origin });
+    log('IFrame content window missing', { origin });
     return;
   }
 
@@ -40,10 +40,11 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
   return {
     send: async (data) => {
       if (!origin) {
-        log.warn('No origin set yet', { channel });
+        log.warn('no origin set', { channel });
         return;
       }
 
+      log('sending', { channel, data: data.length });
       const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
       const message = { channel, payload };
       if (iframe) {
@@ -75,7 +76,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
           onOrigin?.(origin);
         }
 
-        log.debug('Received message', message);
+        log('received', message);
         callback(new Uint8Array(message.payload));
       };
 
@@ -102,9 +103,18 @@ export const createIFrame = (source: string, id: string) => {
     return iframe;
   };
 
-  console.log(
-    'DXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
-  );
+  {
+    const cssStyle = 'color:#C026D3;font-weight:bold';
+
+    console.log(
+      `%cDXOS Client is communicating with the shared worker on ${source}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
+      cssStyle
+    );
+    console.log(
+      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${source}`,
+      cssStyle
+    );
+  }
 
   return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };

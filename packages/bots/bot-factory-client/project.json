@@ -6,29 +6,24 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/bots/bot-factory-client/src/index.ts",
-        "outputPath": "packages/bots/bot-factory-client/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/bots/bot-factory-client/dist/types",
         "tsConfig": "packages/bots/bot-factory-client/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "bundlePackages": [
-          "@dxos/network-manager"
-        ],
         "entryPoints": [
           "packages/bots/bot-factory-client/src/index.ts"
         ],
-        "outfile": "packages/bots/bot-factory-client/dist/browser.js"
+        "injectGlobals": true,
+        "outputPath": "packages/bots/bot-factory-client/dist/lib"
       },
       "outputs": [
-        "{options.outfile}"
+        "{options.outputPath}"
       ]
     },
     "lint": {
@@ -46,6 +41,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha"
+    "test"
   ]
 }

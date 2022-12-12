@@ -41,10 +41,7 @@ export interface SwarmState {
 export interface Topology {
   /**
    * Called when swarm is created.
-   *
    * May be used to bind the swarm controller and initialize any asynchronous actions.
-   *
-   * @param controller
    */
   init(controller: SwarmController): void;
 
@@ -55,14 +52,12 @@ export interface Topology {
 
   /**
    * Called when remote peer offers a connection.
-   *
    * @returns true - to accept the connection, false - to reject.
    */
   onOffer(peer: PublicKey): Promise<boolean>;
 
   /**
    * Called when swarm is destroyed or topology is changed.
-   *
    * Any error thrown here will be a critical error for the swarm.
    */
   destroy(): Promise<void>;

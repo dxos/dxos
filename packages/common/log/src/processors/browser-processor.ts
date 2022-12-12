@@ -17,7 +17,26 @@ const getRelativeFilename = (filename: string) => {
   return filename;
 };
 
-export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
+type Config = {
+  useTestProcessor: boolean;
+  printFileLinks: boolean;
+};
+
+const CONFIG: Config =
+  typeof mochaExecutor !== 'undefined'
+    ? {
+        useTestProcessor: true,
+        printFileLinks: true
+      }
+    : {
+        useTestProcessor: false,
+        printFileLinks: false
+      };
+
+/**
+ * For running apps in the browser normally.
+ */
+const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   if (!shouldLog(config, entry.level, entry.meta?.file ?? '')) {
     return;
   }
@@ -41,7 +60,7 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     link = `${filepath}#L${entry.meta.line}`;
   }
 
-  const args = [];
+  let args = [];
   args.push(entry.message);
   if (entry.context && Object.keys(entry.context).length > 0) {
     args.push(entry.context);
@@ -53,10 +72,57 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     [LogLevel.DEBUG]: console.log
   };
 
+  if (CONFIG.printFileLinks) {
+    if (LOG_BROWSER_CSS?.length) {
+      args = [`%c${link}\n%c${args.join(' ')}`, ...LOG_BROWSER_CSS];
+    } else {
+      args = [link + '\n', ...args];
+    }
+  }
+
   const level = levels[entry.level] ?? console.log;
-  if (LOG_BROWSER_CSS?.length) {
-    level.call(level, `%c${link}\n%c${args.join(' ')}`, ...LOG_BROWSER_CSS);
+  if (typeof entry.meta?.callSite === 'function') {
+    entry.meta.callSite(level, args);
   } else {
-    level.call(level, link + '\n', ...args);
+    level(...args);
   }
 };
+
+/**
+ * For running unit tests in the headless browser.
+ */
+const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
+  if (!shouldLog(config, entry.level, entry.meta?.file ?? '')) {
+    return;
+  }
+
+  let path = '';
+  if (entry.meta) {
+    path = `${getRelativeFilename(entry.meta.file)}:${entry.meta.line}`;
+  }
+
+  let args = [];
+  args.push(entry.message);
+  if (entry.context && Object.keys(entry.context).length > 0) {
+    args.push(entry.context);
+  }
+
+  const levels: any = {
+    [LogLevel.ERROR]: console.error,
+    [LogLevel.WARN]: console.warn,
+    [LogLevel.DEBUG]: console.log
+  };
+
+  if (CONFIG.printFileLinks) {
+    args = [path, ...args];
+  }
+
+  const level = levels[entry.level] ?? console.log;
+  if (typeof entry.meta?.callSite === 'function') {
+    entry.meta.callSite(level, args);
+  } else {
+    level(...args);
+  }
+};
+
+export const BROWSER_PROCESSOR: LogProcessor = CONFIG.useTestProcessor ? TEST_BROWSER_PROCESSOR : APP_BROWSER_PROCESSOR;

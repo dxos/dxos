@@ -1,11 +1,13 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "esModuleInterop": true,
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "module": "ESNext",
+    "outDir": "dist/types",
     "strict": false
   },
   "exclude": [
@@ -15,5 +17,9 @@
     "src",
     "stories"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/esbuild-plugins"
+    }
+  ]
 }

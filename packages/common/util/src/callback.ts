@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 /**
  * Represents a callback that can be set once.
@@ -35,13 +35,13 @@ export class Callback<T extends (...args: any[]) => any> {
   }
 }
 
-export type ArrayCallbacks<T> = { handlers: T[] };
+export type SetCallbacks<T> = { handlers: Set<T> };
 
 /**
  * Create a fan-out callback handler.
  * NOTE: Methods cannot return values.
  */
-export const createArrayDispatch = <T extends {}>({ handlers }: ArrayCallbacks<T>) => {
+export const createSetDispatch = <T extends {}>({ handlers }: SetCallbacks<T>) => {
   type Obj = { [i: string | symbol]: any };
   return new Proxy<any>(
     {

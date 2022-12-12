@@ -3,9 +3,9 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
+import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
-import { RemoteServiceConnectionTimeout } from '../../errors';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
 
 /**
@@ -22,7 +22,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
     port: RpcPort,
     // NOTE: With lower timeout the shared worker does not have enough time to start.
     // TODO(dmaretskyi): Find better ways to detected when the worker has finished loading. It might take a while on slow connections.
-    private readonly _timeout = 3000
+    private readonly _timeout = 30_000
   ) {
     this._proxy = createProtoRpcPeer({
       requested: clientServiceBundle,

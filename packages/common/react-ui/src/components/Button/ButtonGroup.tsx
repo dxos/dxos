@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ComponentProps, ReactNode } from 'react';
+
+import { mx } from '../../util';
 
 export interface ButtonGroupProps extends ComponentProps<'div'> {
   children?: ReactNode;
@@ -14,7 +15,7 @@ export const ButtonGroup = ({ children, ...divProps }: ButtonGroupProps) => {
     <div
       role='none'
       {...divProps}
-      className={cx('button-elevation [&>*]:grouped-buttons rounded-md', divProps.className)}
+      className={mx('button-elevation [&>*]:grouped-buttons rounded-md', divProps.className)}
     >
       {children}
     </div>

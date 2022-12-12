@@ -4,8 +4,8 @@
 
 // Test/mock Protocol implementation used in network-manager tests.
 
-import { EventEmitter } from 'events';
 import assert from 'node:assert';
+import { EventEmitter } from 'node:events';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -15,13 +15,29 @@ import { protocolFactory } from '../protocol-factory';
 
 const EXTENSION_NAME = 'test';
 
+// TODO(burdon): PublicKey.
 // TODO(dboreham): This method should be added to Protocol (and one for "my ID"?).
 export const getPeerId = (protocol: Protocol) => {
   const { peerId } = protocol.getSession() ?? {};
   if (!peerId) {
     return undefined;
   }
+
   return PublicKey.bufferize(peerId);
+};
+
+/**
+ * @deprecated
+ */
+// TODO(burdon): Reconcile with transportProtocolProvider.
+export const testProtocolProvider = (topic: Buffer, peerId: PublicKey, protocolPlugin: any) => {
+  log('creating protocol-factory', { topic: PublicKey.from(topic), peerId });
+
+  return protocolFactory({
+    getTopics: () => [topic],
+    session: { peerId: peerId.toHex() }, // TODO(burdon): PublicKey.
+    plugins: [protocolPlugin]
+  });
 };
 
 /**
@@ -81,8 +97,12 @@ export class TestProtocolPlugin extends EventEmitter {
       .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
 
-  // Methods below are per-peer-connection.
+  // Methods below are per-peer connection.
   // TODO(dboreham): Why are these here and not on Protocol?
+
+  private async _init(protocol: Protocol) {
+    this.initCalled = true;
+  }
 
   /**
    * Send/Receive messages with peer when initiating a request/response interaction.
@@ -92,38 +112,38 @@ export class TestProtocolPlugin extends EventEmitter {
    */
   async send(peerId: Buffer, payload: string): Promise<string> {
     assert(Buffer.isBuffer(peerId));
-    const peerIdStr = PublicKey.stringify(peerId);
+    const peerIdStr = PublicKey.stringify(peerId); // TODO(burdon): PublicKey.
     const peer = this._peers.get(peerIdStr);
-    // TODO(dboreham): Throw fatal error if peer not found.
+    if (!peer) {
+      throw new Error(`peer not found: ${PublicKey.from(peerId).truncate()}`);
+    }
+
     const extension = peer.getExtension(EXTENSION_NAME);
     const encoded = Buffer.from(payload);
 
-    log('sent', { peerIdStr, payload });
+    log('sending', { peerId: PublicKey.from(peerId), payload });
     return await extension.send(encoded, { oneway: true });
-  }
-
-  private async _init(protocol: Protocol) {
-    this.initCalled = true;
   }
 
   async _receive(protocol: Protocol, data: any) {
     const peerId = getPeerId(protocol);
     assert(peerId !== undefined);
-    const peerIdStr = PublicKey.stringify(peerId);
     let payload = data.data.toString();
     if (this._uppercase) {
       payload = payload.toUpperCase();
     }
 
-    log('received', { peerIdStr, payload });
+    log('received', { peerId: PublicKey.from(peerId), payload });
     this.emit('receive', protocol, payload);
   }
 
   async _onPeerConnect(protocol: Protocol) {
+    log('connecting', { id: PublicKey.from(protocol.id) });
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;
     }
+
     const peerIdStr = PublicKey.stringify(peerId);
     if (this._peers.has(peerIdStr)) {
       return;
@@ -134,6 +154,7 @@ export class TestProtocolPlugin extends EventEmitter {
   }
 
   async _onPeerDisconnect(protocol: Protocol) {
+    log('disconnecting', { id: PublicKey.from(protocol.id) });
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;
@@ -143,16 +164,3 @@ export class TestProtocolPlugin extends EventEmitter {
     this.emit('disconnect', peerId);
   }
 }
-
-/**
- * @return {ProtocolProvider}
- */
-// TODO(dboreham): Try to encapsulate swarm_key, nodeId.
-export const testProtocolProvider = (swarmKey: Buffer, peerId: PublicKey, protocolPlugin: any) => {
-  log('creating protocol factory', { swarmKey: PublicKey.from(swarmKey), peerId });
-  return protocolFactory({
-    getTopics: () => [swarmKey],
-    session: { peerId: peerId.toHex() },
-    plugins: [protocolPlugin]
-  });
-};

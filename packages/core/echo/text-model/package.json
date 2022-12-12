@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
@@ -8,25 +8,22 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/model-factory": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@types/node": "^18.11.9",
-    "assert": "^2.0.0",
     "yjs": "^13.5.41"
   },
   "devDependencies": {

@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/esbuild-plugins"
+    },
+    {
       "path": "../../../sdk/client"
     },
     {

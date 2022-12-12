@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hello-template",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "description": "DXOS 'hello world' application template.",
   "homepage": "https://dxos.org",
@@ -9,9 +9,8 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "build": "tsc",
-    "bundle": "vite build",
-    "deploy": "dx app publish",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit && vite build",
+    "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
     "preview": "vite preview",
     "serve": "vite",
     "storybook": "start-storybook -p 9009 --no-open"
@@ -22,11 +21,11 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-composer": "workspace:*",
+    "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
-    "classnames": "^2.3.2",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -36,7 +35,6 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/cli": "workspace:*",
-    "@dxos/vite-plugin": "workspace:*",
     "@storybook/addon-actions": "^6.5.10",
     "@storybook/addon-essentials": "^6.5.10",
     "@storybook/addon-interactions": "^6.5.10",
@@ -52,7 +50,7 @@
     "require-from-string": "^2.0.2",
     "storybook-dark-mode": "^1.1.2",
     "typescript": "^4.8.4",
-    "vite": "3.0.9",
+    "vite": "3.2.5",
     "vite-plugin-pwa": "^0.12.4",
     "webpack": "^5.74.0",
     "workbox-window": "^6.5.4"

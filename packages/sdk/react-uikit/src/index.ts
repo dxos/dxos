@@ -7,3 +7,4 @@ export * from '@dxos/react-ui';
 
 export * from './components';
 export * from './types';
+export { useTranslationsContext } from './translations/TranslationsProvider';

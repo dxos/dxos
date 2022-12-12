@@ -47,13 +47,15 @@ export default class Create extends BaseCommand {
     const outputDirectory = `${cwd()}/${name}`;
 
     try {
-      // Git clone template.
+      this.log('Cloning template from Github...');
       await promisify(exec)(`
         git clone --filter=blob:none --no-checkout git@github.com:dxos/dxos.git ${tmpDirectory} &&
           cd ${tmpDirectory} &&
           git sparse-checkout set --cone tsconfig.json patches packages/apps/templates/${template}-template &&
           git checkout ${tag}
       `);
+
+      this.log('Preparing template...');
 
       // Copy vite patch.
       await mkdir(`${templateDirectory}/patches`);
@@ -62,6 +64,8 @@ export default class Create extends BaseCommand {
       // Remove unneccessary files.
       await rm(`${templateDirectory}/project.json`);
       await rm(`${templateDirectory}/tsconfig.plate.json`);
+
+      this.log('Creating app...');
 
       // TS templating.
       const result = await executeDirectoryTemplate({
@@ -73,6 +77,8 @@ export default class Create extends BaseCommand {
         }
       });
       await Promise.all(result.map((file) => file.save()));
+
+      this.log(`App created. To get started run the following commands:\n\n  cd ${name}\n  pnpm install\n  pnpm serve`);
     } catch (err: any) {
       this.log(`Unable to create: ${err.message}`);
       this.error(err, { exit: 1 });

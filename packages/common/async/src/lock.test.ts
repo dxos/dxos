@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 
 import { expectToThrow } from '@dxos/debug';
+import { describe, test } from '@dxos/test';
 
 import { Lock, synchronized } from './lock';
 import { sleep } from './timeout';
 
-describe('Lock', function () {
-  it('single execution', async function () {
+describe('Lock', () => {
+  test('single execution', async () => {
     const events = [];
     const lock = new Lock();
 
@@ -22,7 +23,7 @@ describe('Lock', function () {
     expect(events).to.deep.equal(['lock', 'after']);
   });
 
-  it('return value', async function () {
+  test('return value', async () => {
     const lock = new Lock();
 
     const value = await lock.executeSynchronized(async () => 'foo');
@@ -30,7 +31,7 @@ describe('Lock', function () {
     expect(value).to.equal('foo');
   });
 
-  it('two concurrent synchronizations', async function () {
+  test('two concurrent synchronizations', async () => {
     const events = [];
     const lock = new Lock();
 
@@ -59,7 +60,7 @@ describe('Lock', function () {
     expect(events).to.deep.equal(['lock1', 'lock2', 'p1 resolve', 'lock3', 'p2 resolve', 'after']);
   });
 
-  it('deadlock', async function () {
+  test('deadlock', async () => {
     const lock = new Lock();
 
     const promise = lock.executeSynchronized(async () => {
@@ -78,7 +79,7 @@ describe('Lock', function () {
     expect(resolved).to.be.false;
   });
 
-  it('errors do not break the lock', async function () {
+  test('errors do not break the lock', async () => {
     const lock = new Lock();
 
     let p1Status, p2Status;
@@ -116,11 +117,7 @@ describe('Lock', function () {
     expect(p2Status).to.equal('resolved');
   });
 
-  it('errors are propagated with stack traces', async function () {
-    if (mochaExecutor.environment === 'webkit') {
-      this.skip();
-    }
-
+  test('errors are propagated with stack traces', async () => {
     const lock = new Lock();
 
     const throwsError = async () => {
@@ -143,7 +140,7 @@ describe('Lock', function () {
 
     expect(error!.stack!.includes('throwsError')).to.be.true;
     expect(error!.stack!.includes('callLock')).to.be.true;
-  });
+  }).skipEnvironments('webkit');
 });
 
 class TestClass {
@@ -164,8 +161,8 @@ class TestClass {
   }
 }
 
-describe('synchronized decorator', function () {
-  it('different methods on same instance', async function () {
+describe('synchronized decorator', () => {
+  test('different methods on same instance', async () => {
     const events: string[] = [];
     const testClass = new TestClass(events);
 
@@ -178,7 +175,7 @@ describe('synchronized decorator', function () {
     expect(events).to.deep.equal(['foo start', 'foo end', 'bar start', 'bar end']);
   });
 
-  it('methods on different instances', async function () {
+  test('methods on different instances', async () => {
     const events: string[] = [];
     const testClass1 = new TestClass(events);
     const testClass2 = new TestClass(events);

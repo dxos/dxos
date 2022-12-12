@@ -6,11 +6,21 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/mesh/mesh-protocol/src/index.ts",
-        "outputPath": "packages/core/mesh/mesh-protocol/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/core/mesh/mesh-protocol/dist/types",
         "tsConfig": "packages/core/mesh/mesh-protocol/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/mesh/mesh-protocol/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/mesh/mesh-protocol/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,7 +39,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "nodejs"
@@ -52,6 +62,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }

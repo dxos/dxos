@@ -3,6 +3,7 @@
 //
 
 export const uikit = {
+  'current app name': 'This app',
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',
@@ -26,6 +27,7 @@ export const uikit = {
   'next label': 'Next',
   'redeem invitation label': 'Redeem invitation',
   'cancel label': 'Cancel',
+  'remove label': 'Remove',
   'confirm label': 'Okay',
   'validate seed phrase label': 'Validate seed phrase',
   'fatal error label': 'Runtime error',
@@ -49,5 +51,14 @@ export const uikit = {
   'space members label': 'Members',
   'go to space label': 'Done',
   'halo logo alt': 'Halo logo',
-  'close label': 'Close'
+  'close label': 'Close',
+  'error status label': 'Error accepting invitation',
+  'cancelled status label': 'Cancelled',
+  'timeout status label': 'Timed out',
+  'init status label': 'Enter an invitation code to start',
+  'connecting status label': 'Connecting…',
+  'connected status label': 'Enter the PIN for this invitation to continue',
+  'authenticating status label': 'Checking PIN…',
+  'success status label': 'Successfully accepted invitation',
+  'back to spaces label': 'Back to spaces'
 };

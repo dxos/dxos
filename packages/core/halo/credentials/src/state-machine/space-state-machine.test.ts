@@ -6,12 +6,13 @@ import expect from 'expect';
 
 import { Keyring } from '@dxos/keyring';
 import { AdmittedFeed, Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { describe, test } from '@dxos/test';
 
 import { createCredential, verifyCredential } from '../credentials';
 import { SpaceStateMachine } from './space-state-machine';
 
-describe('SpaceStateMachine', function () {
-  it('basic space creation', async function () {
+describe('SpaceStateMachine', () => {
+  test('basic space creation', async () => {
     const keyring = new Keyring();
     const space = await keyring.createKey();
     const identity = await keyring.createKey();
@@ -43,7 +44,8 @@ describe('SpaceStateMachine', function () {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.ADMIN
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed
           },
           signer: keyring
         }),
@@ -108,7 +110,7 @@ describe('SpaceStateMachine', function () {
     expect(spaceState.credentials).toHaveLength(3);
   });
 
-  it('admitting a member', async function () {
+  test('admitting a member', async () => {
     const keyring = new Keyring();
     const space = await keyring.createKey();
     const identity = await keyring.createKey();
@@ -143,7 +145,8 @@ describe('SpaceStateMachine', function () {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.ADMIN
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed
           },
           signer: keyring
         }),
@@ -172,7 +175,8 @@ describe('SpaceStateMachine', function () {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.MEMBER
+            role: SpaceMember.Role.MEMBER,
+            genesisFeedKey: feed
           },
           signer: keyring,
           signingKey: device,
@@ -203,7 +207,7 @@ describe('SpaceStateMachine', function () {
     expect(spaceState.credentials).toHaveLength(3);
   });
 
-  it('storing device credentials and building a chain', async function () {
+  test('storing device credentials and building a chain', async () => {
     const keyring = new Keyring();
     const haloSpace = await keyring.createKey();
     const identity = await keyring.createKey();
@@ -238,7 +242,8 @@ describe('SpaceStateMachine', function () {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: haloSpace,
-            role: SpaceMember.Role.ADMIN
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed
           },
           signer: keyring
         }),

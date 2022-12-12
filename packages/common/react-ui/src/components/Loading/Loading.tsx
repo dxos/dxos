@@ -2,20 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
-import React from 'react';
+import React, { ComponentProps } from 'react';
 
 import { useId } from '../../hooks';
+import { mx } from '../../util';
 
 export type LoadingSize = 'sm' | 'md' | 'lg' | 'xl';
 
 export type LoadingColor = 'primary' | 'neutral';
 
+export interface LoadingSlots {
+  root?: Omit<ComponentProps<'div'>, 'children'>;
+  svg?: Pick<ComponentProps<'svg'>, 'className'>;
+}
+
 export interface LoadingProps {
   label: string;
   size?: LoadingSize;
   color?: LoadingColor;
-  className?: string;
+  slots?: LoadingSlots;
 }
 
 const sizeMap = new Map<LoadingSize, string>([
@@ -25,18 +30,23 @@ const sizeMap = new Map<LoadingSize, string>([
   ['xl', 'w-16 h-16']
 ]);
 
-export const Loading = ({ size, color, className, label }: LoadingProps & { label: string }) => {
+export const Loading = ({ size, color, label, slots = {} }: LoadingProps) => {
   const labelId = useId('loading-label');
   const sizeClassName = sizeMap.get(size ?? 'md');
   return (
-    <div role='status' className={cx('flex justify-center p-4', className)} aria-labelledby={labelId}>
+    <div
+      {...slots.root}
+      className={mx('flex justify-center p-4', slots.root?.className)}
+      role='status'
+      aria-labelledby={labelId}
+    >
       <svg
         role='none'
-        aria-hidden='true'
-        className={cx(
+        className={mx(
           sizeClassName,
           'text-neutral-200/50 animate-spin dark:text-neutral-600/50',
-          color === 'neutral' ? 'fill-neutral-400' : 'fill-primary-400'
+          color === 'neutral' ? 'fill-neutral-400' : 'fill-primary-400',
+          slots.svg?.className
         )}
         viewBox='0 0 100 101'
         fill='none'

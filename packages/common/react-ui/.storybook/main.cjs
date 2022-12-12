@@ -1,7 +1,7 @@
 const { mergeConfig } = require('vite');
-const { resolve } = require('path');
+const { resolve } = require('node:path');
 
-const { themePlugin } = require('../dist/src/plugin.js');
+const { ThemePlugin } = require('../dist/plugin/node/plugin.cjs');
 
 module.exports = {
   stories: [
@@ -37,7 +37,7 @@ module.exports = {
         ]
       }
     },
-    plugins: [themePlugin({
+    plugins: [ThemePlugin({
       content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
     })],
   })

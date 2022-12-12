@@ -40,7 +40,7 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('signal', async (data) => {
       log('signal', data);
-      await this.params.sendSignal({ json: JSON.stringify(data) });
+      await this.params.sendSignal({ payload: { data } });
     });
 
     this._peer.on('connect', () => {
@@ -57,11 +57,11 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('error', async (err) => {
       this.errors.raise(err);
-      await this.close();
+      await this.destroy();
     });
   }
 
-  async close() {
+  async destroy() {
     log('closing...');
     await this._disconnectStreams();
     this._peer!.destroy();
@@ -69,10 +69,10 @@ export class WebRTCTransport implements Transport {
     log('closed');
   }
 
-  async signal(signal: Signal) {
+  signal(signal: Signal) {
     assert(this._peer, 'Connection not ready to accept signals.');
-    assert(signal.json, 'Signal message must contain signal data.');
-    this._peer.signal(JSON.parse(signal.json));
+    assert(signal.payload.data, 'Signal message must contain signal data.');
+    this._peer.signal(signal.payload.data);
   }
 
   private async _disconnectStreams() {
@@ -83,7 +83,7 @@ export class WebRTCTransport implements Transport {
 
 // TODO(dmaretskyi): Convert to class.
 export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => ({
-  create: (params) =>
+  createTransport: (params) =>
     new WebRTCTransport({
       ...params,
       webrtcConfig

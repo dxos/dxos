@@ -4,7 +4,8 @@ package:
   modules:
     - name: halo
       type: dxos:type/app
-      display_name: HALO
+      displayName: HALO
+      description: Self-sovereign identity management.
       build:
         command: pnpm -w nx bundle halo-app
 
@@ -21,3 +22,7 @@ runtime:
       - urls: turn:kube.dxos.org:3478
         username: dxos
         credential: dxos
+    dxns:
+      # TODO(burdon): Replace once KUBE deployed with endpoint.
+      # server: https://kube.dxos.org/.well-known/dx/registry
+      server: https://kube.dxos.org/.well-known/dx/registry

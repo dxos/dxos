@@ -5,7 +5,7 @@
 import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
-import { AdmittedFeed, Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, Credential, ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, CredentialSigner } from './credential-factory';
 
@@ -25,7 +25,11 @@ export class CredentialGenerator {
   /**
    * Create genesis messages for new Space.
    */
-  async createSpaceGenesis(spaceKey: PublicKey, controlKey: PublicKey): Promise<Credential[]> {
+  async createSpaceGenesis(
+    spaceKey: PublicKey,
+    controlKey: PublicKey,
+    creatorProfile?: ProfileDocument
+  ): Promise<Credential[]> {
     return [
       await createCredential({
         signer: this._signer,
@@ -44,7 +48,9 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          profile: creatorProfile,
+          genesisFeedKey: controlKey
         }
       }),
 
@@ -62,7 +68,8 @@ export class CredentialGenerator {
     identityKey: PublicKey,
     deviceKey: PublicKey,
     controlKey: PublicKey,
-    dataKey: PublicKey
+    dataKey: PublicKey,
+    genesisFeedKey: PublicKey
   ): Promise<Credential[]> {
     return [
       await createCredential({
@@ -72,7 +79,8 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.MEMBER
+          role: SpaceMember.Role.MEMBER,
+          genesisFeedKey
         }
       }),
 
@@ -119,6 +127,18 @@ export class CredentialGenerator {
       }
     });
   }
+
+  async createProfileCredential(profile: ProfileDocument): Promise<Credential> {
+    return createCredential({
+      signer: this._signer,
+      issuer: this._identityKey,
+      subject: this._identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.IdentityProfile',
+        profile
+      }
+    });
+  }
 }
 
 // TODO(burdon): Reconcile with above (esp. Signer).
@@ -151,7 +171,9 @@ export const createAdmissionCredentials = async (
   deviceKey: PublicKey,
   spaceKey: PublicKey,
   controlFeedKey: PublicKey,
-  dataFeedKey: PublicKey
+  dataFeedKey: PublicKey,
+  genesisFeedKey: PublicKey,
+  profile?: ProfileDocument
 ): Promise<TypedMessage[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
@@ -159,7 +181,9 @@ export const createAdmissionCredentials = async (
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey,
-        role: SpaceMember.Role.ADMIN // TODO(burdon): Configure.
+        role: SpaceMember.Role.ADMIN, // TODO(burdon): Configure.
+        profile,
+        genesisFeedKey
       }
     }),
 

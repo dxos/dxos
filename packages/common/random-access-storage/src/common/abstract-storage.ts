@@ -3,8 +3,10 @@
 //
 
 import { join } from 'node:path';
+import { inspect } from 'node:util';
 import type { RandomAccessStorage } from 'random-access-storage';
 
+import { inspectObject } from '@dxos/debug';
 import { log } from '@dxos/log';
 
 import { Directory } from './directory';
@@ -25,8 +27,12 @@ export abstract class AbstractStorage implements Storage {
   // TODO(burdon): Make required.
   constructor(protected readonly path: string) {}
 
-  toString() {
-    return `Storage(${JSON.stringify({ type: this.type, path: this.path })})`;
+  [inspect.custom]() {
+    return inspectObject(this);
+  }
+
+  toJSON() {
+    return { type: this.type, path: this.path };
   }
 
   public get size() {
@@ -39,17 +45,22 @@ export abstract class AbstractStorage implements Storage {
     return new Directory(
       this.type,
       getFullPath(this.path, sub),
-      () => Array.from(this._getFiles(sub).values()),
+      () => this._getFiles(sub),
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub)
     );
   }
 
-  async destroy() {
+  /**
+   * Delete all files.
+   */
+  async reset() {
     try {
+      log.warn('Erasing all data...');
       await this._closeFilesInPath('');
       await this._delete('');
       await this._destroy();
+      log('Erased...');
     } catch (err: any) {
       log.catch(err);
     }
@@ -102,9 +113,7 @@ export abstract class AbstractStorage implements Storage {
   private _getFiles(path: string): Map<string, File> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
-      Array.from(this._files.entries()).filter(([path]) => {
-        return path.includes(fullPath);
-      })
+      [...this._files.entries()].filter(([path, file]) => path.includes(fullPath) && file.destroyed !== true)
     );
   }
 

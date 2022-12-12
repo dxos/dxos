@@ -13,8 +13,9 @@ export interface Transport {
   closed: Event;
   connected: Event;
   errors: ErrorStream;
-  signal(signal: Signal): Promise<void>; // TODO(burdon): Remove async?
-  close(): Promise<void>;
+
+  destroy(): Promise<void>;
+  signal(signal: Signal): void;
 }
 
 export type TransportOptions = {
@@ -32,8 +33,13 @@ export type TransportOptions = {
    * Send a signal message to remote peer.
    */
   sendSignal: (signal: Signal) => Promise<void>; // TODO(burdon): Remove async?
+
+  timeout?: number;
 };
 
+/**
+ *
+ */
 export interface TransportFactory {
-  create(options: TransportOptions): Transport;
+  createTransport(options: TransportOptions): Transport;
 }

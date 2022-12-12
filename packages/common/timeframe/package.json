@@ -1,30 +1,26 @@
 {
   "name": "@dxos/timeframe",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "Timeframe vector clock.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
-    "node:util": "util"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "debug": "^4.3.3",
-    "util": "^0.12.4"
+    "debug": "^4.3.3"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7"

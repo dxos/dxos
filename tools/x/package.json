@@ -1,6 +1,6 @@
 {
   "name": "@dxos/x",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "description": "Tools.",
   "homepage": "https://dxos.org",
@@ -13,7 +13,6 @@
     "x": "./bin/x.js"
   },
   "scripts": {
-    "check": "true",
     "demo": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.tsx",
     "info": "tsc --showConfig | jq"
   },
@@ -46,11 +45,9 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pick": "^4.4.7",
     "@types/minimatch": "^5.1.2",
-    "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/yargs": "~16.0.1",
-    "mocha": "^8.4.0",
     "typescript": "^4.8.4"
   }
 }

@@ -21,7 +21,8 @@ import {
   PeerInfo,
   Topology,
   ConnectionLog,
-  createWebRTCTransportFactory
+  createWebRTCTransportFactory,
+  adaptProtocolProvider
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
@@ -44,11 +45,13 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
   });
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
-  await networkManager.openSwarmConnection({
+  await networkManager.joinSwarm({
     topic: controlTopic,
     peerId,
     topology: topologyFactory(),
-    protocol: transportProtocolProvider(controlTopic.asBuffer(), peerId.asBuffer(), presencePlugin),
+    protocolProvider: adaptProtocolProvider(
+      transportProtocolProvider(controlTopic.asBuffer(), peerId.asBuffer(), presencePlugin)
+    ),
     presence: presencePlugin
   });
 
@@ -57,7 +60,7 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
     swarm: networkManager.getSwarm(controlTopic)!,
     map: networkManager.getSwarmMap(controlTopic)!,
     log: networkManager.connectionLog!,
-    signal: networkManager.signal
+    signal: networkManager.signalManager
   };
 };
 

@@ -9,10 +9,10 @@ import {
   ToastViewportProps
 } from '@radix-ui/react-toast';
 import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/react-tooltip';
-import cx from 'classnames';
 import React, { PropsWithChildren } from 'react';
 
 import { defaultFocus } from '../../styles';
+import { mx } from '../../util';
 
 export type UiProviderProps = PropsWithChildren<{
   tooltipProviderProps?: TooltipProviderProps;
@@ -33,8 +33,8 @@ export const UiProvider = ({
       </TooltipProvider>
       <ToastViewport
         {...toastViewportProps}
-        className={cx(
-          'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg',
+        className={mx(
+          'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
           defaultFocus,
           toastViewportProps?.className
         )}

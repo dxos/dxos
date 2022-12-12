@@ -7,7 +7,7 @@ import type { Event } from '@sentry/node';
 
 import { InitOptions } from './types';
 
-export * from '@sentry/node';
+export { captureException } from '@sentry/node';
 
 export const init = (options: InitOptions) => {
   sentryInit({

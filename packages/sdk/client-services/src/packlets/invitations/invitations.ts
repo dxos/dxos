@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import {
   AsyncEvents,
   CancellableObservable,
   CancellableObservableEvents,
-  Observable,
   CancellableObservableProvider
 } from '@dxos/async';
 import type { Stream } from '@dxos/codec-protobuf';
@@ -43,13 +42,13 @@ export interface InvitationEvents extends AsyncEvents, CancellableObservableEven
  * Base class for all invitation observables and providers.
  * Observable that supports inspection of the current value.
  */
-export interface InvitationObservable extends CancellableObservable<InvitationEvents> {
+export interface CancellableInvitationObservable extends CancellableObservable<InvitationEvents> {
   get invitation(): Invitation | undefined;
 }
 
 export class InvitationObservableProvider
   extends CancellableObservableProvider<InvitationEvents>
-  implements InvitationObservable
+  implements CancellableInvitationObservable
 {
   private _invitation?: Invitation;
 
@@ -61,11 +60,6 @@ export class InvitationObservableProvider
     this._invitation = invitation;
   }
 }
-
-/**
- * Cancelable observer.
- */
-export type CancellableInvitationObservable = InvitationObservable;
 
 /**
  * Cancelable observer that relays authentication requests.
@@ -96,11 +90,12 @@ export class AuthenticatingInvitationProvider
 }
 
 /**
- * Util to wrap observable with promise.
+ * Testing util to wrap non-authenticating observable with promise.
+ * Don't use this in production code.
  * @deprecated
  */
-// TODO(burdon): Replace with ObservableInvitationProvider.
-export const invitationObservable = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
+// TODO(burdon): Throw error if auth requested.
+export const wrapObservable = async (observable: CancellableInvitationObservable): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
     const unsubscribe = observable.subscribe({
       onSuccess: (invitation: Invitation) => {

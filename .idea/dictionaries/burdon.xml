@@ -1,16 +1,24 @@
 <component name="ProjectDictionaryState">
   <dictionary name="burdon">
     <words>
+      <w>braneframe</w>
       <w>burdon</w>
+      <w>ctors</w>
+      <w>delimitered</w>
       <w>demuxer</w>
       <w>deno</w>
       <w>dmaretskyi</w>
       <w>dxns</w>
       <w>dxos</w>
       <w>dxos's</w>
+      <w>frontmatter</w>
       <w>hypercore</w>
+      <w>hypercore's</w>
       <w>hypertrie</w>
       <w>kodama</w>
+      <w>memdown</w>
+      <w>metagraph</w>
+      <w>micromark</w>
       <w>mins</w>
       <w>nanoerror</w>
       <w>nanomessage</w>
@@ -31,18 +39,21 @@
       <w>onwait</w>
       <w>onwant</w>
       <w>packlets</w>
+      <w>rehype</w>
       <w>reopenable</w>
       <w>ridoculous</w>
       <w>rpcs</w>
       <w>seedphrase</w>
       <w>statable</w>
       <w>streamx</w>
+      <w>stringified</w>
       <w>testutils</w>
       <w>truncatable</w>
       <w>undownload</w>
       <w>unhave</w>
       <w>unwant</w>
       <w>wittjosiah</w>
+      <w>zoomable</w>
     </words>
   </dictionary>
 </component>

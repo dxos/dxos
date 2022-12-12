@@ -115,7 +115,7 @@ class TraceInjector extends Visitor {
 
   override visitCallExpression(n: CallExpression): Expression {
     if (isLoggerInvocation(n)) {
-      if (n.arguments.length === 1) {
+      if (n.arguments.length <= 1) {
         // Add empty context.
         n.arguments.push({
           expression: {
@@ -151,22 +151,8 @@ class TraceInjector extends Visitor {
         value: position.line,
         span: ZERO_SPAN
       },
-      ownershipScope: {
-        type: 'CallExpression',
-        callee: {
-          type: 'Identifier',
-          value: ID_GET_CURRENT_OWNERSHIP_SCOPE,
-          optional: false,
-          span: ZERO_SPAN
-        },
-        arguments: [
-          {
-            expression: {
-              type: 'ThisExpression',
-              span: ZERO_SPAN
-            }
-          }
-        ],
+      scope: {
+        type: 'ThisExpression',
         span: ZERO_SPAN
       },
       bugcheck: {
@@ -175,6 +161,7 @@ class TraceInjector extends Visitor {
         optional: false,
         span: ZERO_SPAN
       }
+      // TODO(dmaretskyi): callSite.
     });
   }
 }

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=browser
+// @dxos/test platform=browser
 
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
@@ -10,19 +10,17 @@ import waitForExpect from 'wait-for-expect';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
-import { TestFeedBuilder } from '../common';
-import { ReplicatorPlugin } from './replicator-plugin';
-import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
+import { TestFeedBuilder, TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
-describe('space/space-protocol', function () {
-  it('two peers discover each other', async function () {
+describe('space/space-protocol', () => {
+  test.skip('two peers discover each other', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -44,17 +42,15 @@ describe('space/space-protocol', function () {
     });
   });
 
-  it('replicates a feed', async function () {
+  test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
-    const replicator1 = new ReplicatorPlugin();
-    const protocol1 = peer1.createSpaceProtocol(topic, [replicator1]);
+    const protocol1 = peer1.createSpaceProtocol(topic);
 
     const peer2 = await builder.createPeer();
-    const replicator2 = new ReplicatorPlugin();
-    const protocol2 = peer2.createSpaceProtocol(topic, [replicator2]);
+    const protocol2 = peer2.createSpaceProtocol(topic);
 
     await protocol1.start();
     await protocol2.start();
@@ -72,8 +68,8 @@ describe('space/space-protocol', function () {
     const feed1 = await feedStore1.openFeed(feedKey, { writable: true });
     const feed2 = await feedStore2.openFeed(feedKey);
 
-    await replicator1.addFeed(feed1);
-    await replicator2.addFeed(feed2);
+    await protocol1.addFeed(feed1);
+    await protocol2.addFeed(feed2);
 
     await feed1.append({ timeframe: new Timeframe() });
     await waitForExpect(() => {
@@ -88,12 +84,7 @@ describe('space/space-protocol', function () {
     await builder.close();
   });
 
-  it('replicates a feed through a webrtc connection', async function () {
-    // Some storage drivers may break when there are multiple storage instances.
-    if (mochaExecutor.environment === 'webkit') {
-      this.skip();
-    }
-
+  test('replicates a feed through a webrtc connection', async () => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
@@ -102,13 +93,11 @@ describe('space/space-protocol', function () {
     const keyring = new Keyring();
     const topic = await keyring.createKey();
 
-    const replicator1 = new ReplicatorPlugin();
     const peer1 = await builder.createPeer();
-    const protocol1 = peer1.createSpaceProtocol(topic, [replicator1]);
+    const protocol1 = peer1.createSpaceProtocol(topic);
 
-    const replicator2 = new ReplicatorPlugin();
     const peer2 = await builder.createPeer();
-    const protocol2 = peer2.createSpaceProtocol(topic, [replicator2]);
+    const protocol2 = peer2.createSpaceProtocol(topic);
 
     await protocol1.start();
     await protocol2.start();
@@ -121,8 +110,8 @@ describe('space/space-protocol', function () {
     const feed1 = await peer1.feedStore.openFeed(feedKey, { writable: true });
     const feed2 = await peer2.feedStore.openFeed(feedKey);
 
-    await replicator1.addFeed(feed1);
-    await replicator2.addFeed(feed2);
+    await protocol1.addFeed(feed1);
+    await protocol2.addFeed(feed2);
 
     await feed1.append({ timeframe: new Timeframe() });
     await waitForExpect(() => {
@@ -135,5 +124,5 @@ describe('space/space-protocol', function () {
     });
 
     await builder.close();
-  });
+  }).skipEnvironments('webkit'); // Some storage drivers may break when there are multiple storage instances.
 });

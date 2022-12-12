@@ -1,6 +1,6 @@
 {
   "name": "@dxos/toolbox",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +9,6 @@
   "main": "dist/src/main.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "check": "true",
     "toolbox": "ts-node ./src/toolbox.ts"
   },
   "dependencies": {

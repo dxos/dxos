@@ -2,7 +2,7 @@
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "compile": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/protocols/src/index.ts",
@@ -28,7 +28,11 @@
         "{options.outputFile}"
       ]
     },
-    "proto": {
+    "prebuild": {
+      "dependsOn": [
+        "^build",
+        "^compile"
+      ],
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
@@ -40,7 +44,11 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/protocols",
         "outputPath": "tmp/mocha/packages/core/protocols",
@@ -60,7 +68,7 @@
     }
   },
   "implicitDependencies": [
-    "mocha",
-    "protobuf-compiler"
+    "protobuf-compiler",
+    "test"
   ]
 }

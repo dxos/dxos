@@ -1,14 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    "types": [
-      "mocha"
-    ]
+    "outDir": "dist"
   },
   "include": [
     "src",
@@ -28,6 +26,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/plate"
+    },
+    {
       "path": "../../common/sentry"
     },
     {
@@ -43,10 +44,10 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../sdk/client-services"
     },
     {
-      "path": "../plate"
+      "path": "../../sdk/config"
     }
   ]
 }

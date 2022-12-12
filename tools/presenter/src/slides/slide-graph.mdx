@@ -1,0 +1,21 @@
+---
+title: Components
+layout: col-2
+---
+
+import { Counter, Graph } from './components';
+
+export const now = new Date();
+
+- This slide was created on {now.toDateString()} at {now.toTimeString()}.
+- This is a React component:
+
+<Counter interval={250} />
+
+<br />
+
+[//]: # (TODO: Margin/border.)
+
+<div className='flex flex-1 -m-2 border-l-2 border-zinc-300 '>
+  <Graph />
+</div>

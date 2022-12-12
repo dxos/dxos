@@ -37,7 +37,7 @@ const basicBuildConfig = /* javascript */ `
 const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `
 import { defineConfig } from 'vite';
 
-import { dxosPlugin } from '@dxos/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -47,7 +47,7 @@ export default defineConfig({
   },
   ${input.monorepo ? monorepoConfig : basicBuildConfig}
   plugins: [
-    dxosPlugin(${input.monorepo ? '__dirname' : ''})
+    ConfigPlugin()
   ]
 });
 `;

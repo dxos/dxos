@@ -5,11 +5,10 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "@dxos/mocha",
+      "@dxos/test",
       "@dxos/typings",
-      "mocha",
       "node"
     ]
   },
@@ -22,6 +21,9 @@
     },
     {
       "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/crypto"
@@ -39,10 +41,10 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random-access-storage"
+      "path": "../../common/node-std"
     },
     {
-      "path": "../../common/testutils"
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/timeframe"
@@ -84,10 +86,16 @@
       "path": "../../core/mesh/signal"
     },
     {
+      "path": "../../core/mesh/teleport"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../errors"
     }
   ]
 }

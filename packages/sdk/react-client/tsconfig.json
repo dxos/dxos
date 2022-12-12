@@ -6,7 +6,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
     "playwright",
@@ -57,9 +57,6 @@
     },
     {
       "path": "../config"
-    },
-    {
-      "path": "../vite-plugin"
     }
   ]
 }

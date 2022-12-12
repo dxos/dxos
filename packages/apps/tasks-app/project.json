@@ -69,6 +69,23 @@
         "configFile": "packages/apps/tasks-app/vite.config.ts",
         "outputPath": "packages/apps/tasks-app/out/tasks"
       }
+    },
+    "serve-with-halo": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx serve halo-app"
+          },
+          {
+            "command": "nx serve tasks-app"
+          }
+        ],
+        "parallel": true
+      }
     }
   }
 }

@@ -5,7 +5,7 @@ This site is based on `vuepress`.
 To start the app:
 
 ```sh
-pnpm nx serve docs # dxos monorepo
+pnpm nx serve docs
 # pnpm serve if it were a standalone package
 ```
 

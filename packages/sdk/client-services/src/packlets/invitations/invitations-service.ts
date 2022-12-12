@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { TimeoutError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -43,8 +43,8 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
       log('stream opened', this.getLoggingContext());
 
       let invitationId: string;
-      const { type } = invitation;
-      const observable = invitationsHandler.createInvitation(context, { type });
+      const { type, swarmKey } = invitation;
+      const observable = invitationsHandler.createInvitation(context, { type, swarmKey });
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);

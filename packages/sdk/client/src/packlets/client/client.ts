@@ -6,15 +6,18 @@ import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { synchronized } from '@dxos/async';
-import { InvalidConfigurationError, ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
+import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
+import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
+import { Status } from '@dxos/protocols/proto/dxos/client';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
 import { EXPECTED_CONFIG_VERSION } from './config';
+import { SpaceSerializer } from './serializer';
 import { fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
@@ -56,15 +59,17 @@ export class Client {
   }: ClientOptions = {}) {
     this._config = config ?? new Config();
     this._services = services ?? fromIFrame(this._config);
-    // NOTE: Defaults to the same as the backend services.
+
+    // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
 
     this._halo = new HaloProxy(this._services);
     this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
 
+    // TODO(burdon): Reconcile with Config.sanitizer.
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigurationError(
-        `Invalid config version: ${this._config.values.version} !== ${EXPECTED_CONFIG_VERSION}]`
+      throw new InvalidConfigError(
+        'Invalid config version', { current: this._config.values.version, expected: EXPECTED_CONFIG_VERSION }
       );
     }
   }
@@ -117,7 +122,6 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  // TODO(burdon): Rename open; remove callback (return observer).
   async initialize() {
     if (this._initialized) {
       return;
@@ -132,25 +136,24 @@ export class Client {
 
     await this._services.services.SystemService.initSession();
 
-    await this._halo._open();
-    await this._echo._open();
+    await this._halo.open();
+    await this._echo.open();
 
-    // TODO(burdon): Initialized === halo.initialized?
     this._initialized = true;
   }
 
   /**
    * Cleanup, release resources.
+   * Open/close is re-entrant.
    */
   @synchronized
-  // TODO(burdon): Rename close (make sure re-entrant).
   async destroy() {
     if (!this._initialized) {
       return;
     }
 
-    await this._halo._close();
-    await this._echo._close();
+    await this._halo.close();
+    await this._echo.close();
 
     await this._services.close();
 
@@ -158,14 +161,28 @@ export class Client {
   }
 
   /**
+   * Get system status.
+   */
+  async getStatus(): Promise<Status> {
+    return this._services.services?.SystemService.getStatus();
+  }
+
+  /**
    * Resets and destroys client storage.
    * Warning: Inconsistent state after reset, do not continue to use this client instance.
    */
-  // TODO(burdon): Should not require reloading the page (make re-entrant). Rename destroy.
-  @synchronized
   async reset() {
+    if (!this._initialized) {
+      throw new ApiError('Client not open.');
+    }
+
     await this._services.services?.SystemService.reset();
+    await this.destroy();
     this._halo.profileChanged.emit();
     this._initialized = false;
+  }
+
+  createSerializer() {
+    return new SpaceSerializer(this._echo);
   }
 }

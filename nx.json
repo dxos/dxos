@@ -12,12 +12,13 @@
         "cacheableOperations": [
           "build",
           "bundle",
-          "check",
+          "compile",
+          "compile-lib",
+          "compile-node",
           "e2e",
           "lint",
           "prebuild",
           "prerelease",
-          "proto",
           "test"
         ],
         "parallel": 6,
@@ -51,9 +52,7 @@
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^build",
-        "^bundle",
-        "proto",
-        "prebuild"
+        "compile"
       ]
     },
     "bundle": {
@@ -65,27 +64,22 @@
         }
       ],
       "dependsOn": [
-        "^bundle",
-        "build",
-        "proto",
-        "prebuild"
+        // TODO(wittjosiah): This might be able to be ^compile to speed up deploys.
+        //   Some experimental/deprecated projects still depend on build for transpiling.
+        "^build"
       ]
     },
-    "check": {
-      "inputs": ["default", "^production"],
+    "compile": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
-        "lint",
-        "test",
-        "proto",
-        "build"
+        "^compile",
+        "prebuild"
       ]
     },
     "e2e": {
       "inputs": ["default", "^production"],
       "dependsOn": [
-        "proto",
-        "build",
-        "bundle"
+        "build"
       ]
     },
     "lint": {
@@ -94,18 +88,11 @@
     "prebuild": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build"
+        "^compile"
       ]
     },
     "prerelease": {
       "inputs": ["default", "^production"],
-      "dependsOn": [
-        "^build",
-        "^bundle"
-      ]
-    },
-    "proto": {
-      "inputs": ["production", "^production"],
       "dependsOn": [
         "^build"
       ]
@@ -113,9 +100,7 @@
     "serve": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build",
-        "^bundle",
-        "proto"
+        "^compile"
       ]
     },
     "test": {
@@ -133,8 +118,7 @@
         }
       ],
       "dependsOn": [
-        "^build",
-        "proto"
+        "^compile"
       ]
     }
   },

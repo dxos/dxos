@@ -1,37 +1,31 @@
 {
   "name": "@dxos/codec-protobuf",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
-    "node:path": "path-browserify",
-    "./dist/src/index.js": "./dist/browser.js"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "lodash.merge": "^4.6.2"
+    "lodash.merge": "^4.6.2",
+    "protobufjs": "^6.9.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/lodash.merge": "^4.6.6",
-    "path-browserify": "^1.0.1",
-    "protobufjs": "^6.9.0"
+    "@types/lodash.merge": "^4.6.6"
   },
   "publishConfig": {
     "access": "public"

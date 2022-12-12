@@ -1,24 +1,21 @@
 {
   "name": "@dxos/protocol-plugin-replicator",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "Protocol plugin replicator.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "index.js"
+    "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -26,8 +23,8 @@
     "@dxos/keys": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/network-generator": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
     "hypercore": "^9.12.0"

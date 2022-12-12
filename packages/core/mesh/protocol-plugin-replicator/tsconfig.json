@@ -1,10 +1,9 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "@dxos/typings",
-      "mocha",
       "node"
     ]
   },
@@ -27,6 +26,9 @@
     },
     {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/node-std"
     },
     {
       "path": "../../../common/random-access-storage"

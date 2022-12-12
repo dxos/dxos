@@ -2,21 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React from 'react';
 
-import { InvitationObservable } from '@dxos/client';
-import { defaultDisabled, Group } from '@dxos/react-ui';
-import { useTranslation } from '@dxos/react-uikit';
+import { CancellableInvitationObservable } from '@dxos/client';
+import { defaultDisabled, Group, useTranslation, mx } from '@dxos/react-uikit';
 
 import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
 
 export interface InvitationListProps {
   createInvitationUrl: PendingInvitationProps['createInvitationUrl'];
-  invitations?: InvitationObservable[];
+  onClickRemove: PendingInvitationProps['onClickRemove'];
+  invitations?: CancellableInvitationObservable[];
 }
 
-export const InvitationList = ({ createInvitationUrl, invitations }: InvitationListProps) => {
+export const InvitationList = ({ createInvitationUrl, invitations, onClickRemove }: InvitationListProps) => {
   const { t } = useTranslation('appkit');
   const empty = !invitations || invitations.length < 1;
   return (
@@ -25,7 +24,7 @@ export const InvitationList = ({ createInvitationUrl, invitations }: InvitationL
       label={{
         level: 2,
         children: !empty ? t('invitations label') : t('empty invitations message'),
-        className: cx('text-xl', empty && defaultDisabled)
+        className: mx('text-xl', empty && defaultDisabled)
       }}
       elevation={0}
     >
@@ -35,6 +34,7 @@ export const InvitationList = ({ createInvitationUrl, invitations }: InvitationL
             key={wrapper.invitation?.invitationId ?? index}
             wrapper={wrapper}
             createInvitationUrl={createInvitationUrl}
+            onClickRemove={onClickRemove}
           />
         ))}
     </Group>

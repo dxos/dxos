@@ -1,17 +1,14 @@
 {
   "name": "@dxos/botkit",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "description": "Bot",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "browser": {
-    "node:assert": "assert"
-  },
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
   "bin": {
     "bot-factory": "bin/main.js"
   },
@@ -19,9 +16,6 @@
     "bin",
     "dist"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/bot-factory-client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -39,7 +33,7 @@
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "download": "^8.0.0",
-    "esbuild": "~0.14.1",
+    "esbuild": "^0.15.1",
     "node-fetch": "^2.6.0",
     "source-map-support": "^0.5.12",
     "tail": "~2.2.4"

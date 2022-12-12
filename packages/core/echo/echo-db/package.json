@@ -1,23 +1,23 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
+    "testing.d.ts",
+    "testing.js",
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -33,6 +33,7 @@
     "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocol-plugin-replicator": "workspace:*",
@@ -40,13 +41,13 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/teleport": "workspace:*",
+    "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
     "hypercore-protocol": "^8.0.7",
     "source-map-support": "^0.5.12",
@@ -54,5 +55,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/space/space.ts"
+      },
+      {
+        "root": "src/packlets/database/database.ts"
+      },
+      {
+        "root": "src/packlets/database/database-backend.ts"
+      }
+    ]
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "description": "Low-level material components.",
   "homepage": "https://dxos.org",
@@ -14,8 +14,7 @@
     "src"
   ],
   "scripts": {
-    "book": "esbuild-server book",
-    "check": "true"
+    "book": "esbuild-server book"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -36,7 +35,7 @@
     "@babel/core": "^7.18.13",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/client": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protocols": "workspace:*",
     "@emotion/react": "^11.9.0",

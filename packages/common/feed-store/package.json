@@ -1,26 +1,27 @@
 {
   "name": "@dxos/feed-store",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "A consistent store for hypercore feeds.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
-    "node:util": "util"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing/index.cjs": "./dist/lib/browser/testing/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
-    "src",
-    "dist"
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src"
   ],
   "scripts": {
     "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
     "benchmark:browser": "browser-runner dist/src/benchmark.js --timeout 0",
-    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js",
-    "check": "true"
+    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -31,14 +32,13 @@
     "@dxos/hypercore": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "debug": "^4.3.3",
     "hypercore": "^9.12.0",
     "random-access-storage": "^3.0.0",
-    "streamx": "^2.12.5",
-    "util": "^0.12.4"
+    "streamx": "^2.12.5"
   },
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
@@ -51,5 +51,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/feed-store.ts"
+      },
+      {
+        "root": "src/feed-iterator.ts"
+      }
+    ]
   }
 }

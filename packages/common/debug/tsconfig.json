@@ -5,14 +5,17 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "mocha",
       "node"
     ]
   },
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../node-std"
+    }
+  ]
 }

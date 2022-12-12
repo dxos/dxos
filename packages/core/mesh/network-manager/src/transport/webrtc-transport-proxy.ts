@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -39,6 +39,7 @@ export class WebRTCTransportProxy implements Transport {
       proxyId: this._proxyId,
       initiator: this._params.initiator
     });
+
     this._serviceStream.waitUntilReady().then(
       () => {
         this._serviceStream.subscribe(async (event: BridgeEvent) => {
@@ -78,7 +79,7 @@ export class WebRTCTransportProxy implements Transport {
         break;
       }
       case ConnectionState.CLOSED: {
-        await this.close();
+        await this.destroy();
         break;
       }
     }
@@ -93,23 +94,29 @@ export class WebRTCTransportProxy implements Transport {
     await this._params.sendSignal(signalEvent.payload);
   }
 
-  async signal(signal: Signal): Promise<void> {
-    await this._params.bridgeService.sendSignal({
-      proxyId: this._proxyId,
-      signal
-    });
+  signal(signal: Signal): void {
+    this._params.bridgeService
+      .sendSignal({
+        proxyId: this._proxyId,
+        signal
+      })
+      .catch((err) => this.errors.raise(err));
   }
 
-  async close(): Promise<void> {
+  // TODO(burdon): Move open from constructor.
+  async destroy(): Promise<void> {
     if (this._closed) {
       return;
     }
+
     this._serviceStream.close();
+
     try {
       await this._params.bridgeService.close({ proxyId: this._proxyId });
     } catch (err: any) {
       log.catch(err);
     }
+
     this.closed.emit();
     this._closed = true;
   }
@@ -117,6 +124,7 @@ export class WebRTCTransportProxy implements Transport {
   /**
    * Called when underlying proxy service becomes unavailable.
    */
+  // TODO(burdon): Option on close method.
   forceClose() {
     this._serviceStream.close();
     this.closed.emit();
@@ -124,6 +132,7 @@ export class WebRTCTransportProxy implements Transport {
   }
 }
 
+// TODO(burdon): Why is this named Proxy?
 export class WebRTCTransportProxyFactory implements TransportFactory {
   private _bridgeService: BridgeService | undefined;
   private _connections = new Set<WebRTCTransportProxy>();
@@ -141,7 +150,7 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
     return this;
   }
 
-  create(options: TransportOptions): Transport {
+  createTransport(options: TransportOptions): Transport {
     assert(this._bridgeService, 'WebRTCTransportProxyFactory is not ready to open connections');
 
     const transport = new WebRTCTransportProxy({

@@ -24,9 +24,8 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "license": "MIT",
   "author": "DXOS.org",
   ` : ''}"scripts": {
-    "build": "tsc",
-    "bundle": "vite build",
-    "deploy": "dx app publish",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit && vite build",
+    "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
     "preview": "vite preview",
     "serve": "vite",
     "storybook": "start-storybook -p 9009 --no-open"
@@ -37,6 +36,7 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
     "@dxos/react-appkit": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/react-client": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/react-composer": "${input.monorepo ? 'workspace:*' : packageJson.version}",
+    "@dxos/react-list": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/text-model": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/react-ui": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/react-uikit": "${input.monorepo ? 'workspace:*' : packageJson.version}",
@@ -51,7 +51,6 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/cli": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-    "@dxos/vite-plugin": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@storybook/addon-actions": "^6.5.10",
     "@storybook/addon-essentials": "^6.5.10",
     "@storybook/addon-interactions": "^6.5.10",

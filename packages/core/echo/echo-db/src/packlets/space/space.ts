@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { TypedMessage } from '@dxos/protocols';
 import type { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -16,7 +16,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { createMappedFeedWriter } from '../common';
-import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
+import { Database, DatabaseBackend, DatabaseBackendHost } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { SpaceProtocol } from './space-protocol';
@@ -71,7 +71,7 @@ export class Space implements ISpace {
 
   private _isOpen = false;
   private _dataPipeline?: Pipeline;
-  private _databaseBackend?: FeedDatabaseBackend;
+  private _databaseBackend?: DatabaseBackendHost;
   private _database?: Database;
 
   constructor({
@@ -117,6 +117,7 @@ export class Space implements ISpace {
 
     this._controlPipeline.onCredentialProcessed.set(async (credential) => {
       await this.onCredentialProcessed.callIfSet(credential);
+      log('onCredentialProcessed', { credential });
       this.stateUpdate.emit();
     });
 
@@ -125,6 +126,7 @@ export class Space implements ISpace {
     this._protocol.addFeed(genesisFeed);
   }
 
+  @logInfo
   get key() {
     return this._key;
   }
@@ -219,7 +221,7 @@ export class Space implements ISpace {
         this._dataPipeline.writer ?? failUndefined()
       );
 
-      this._databaseBackend = new FeedDatabaseBackend(
+      this._databaseBackend = new DatabaseBackendHost(
         feedWriter,
         {}, // TODO(dmaretskyi): Populate snapshot.
         {
@@ -230,9 +232,7 @@ export class Space implements ISpace {
 
     // Connect pipeline to the database.
     {
-      this._database = await this._databaseFactory({
-        databaseBackend: this._databaseBackend
-      });
+      this._database = await this._databaseFactory({ databaseBackend: this._databaseBackend });
       await this._database.initialize();
     }
 

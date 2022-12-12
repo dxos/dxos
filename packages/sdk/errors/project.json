@@ -1,0 +1,64 @@
+{
+  "sourceRoot": "packages/sdk/errors/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/errors/src/index.ts",
+        "outputPath": "packages/sdk/errors/dist/types",
+        "tsConfig": "packages/sdk/errors/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/errors/src/index.ts"
+        ],
+        "outputPath": "packages/sdk/errors/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/sdk/errors/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/sdk/errors",
+        "outputPath": "tmp/mocha/packages/sdk/errors",
+        "resultsPath": "test-results/packages/sdk/errors",
+        "testPatterns": [
+          "packages/sdk/errors/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/errors/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

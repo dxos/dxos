@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import { expect } from 'chai';
+import assert from 'node:assert';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
@@ -20,8 +20,8 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/space-invitation-service', function () {
-  it('creates space and invites peer', async function () {
+describe('services/space-invitation-service', () => {
+  test('creates space and invites peer', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     assert(host.spaceManager);
@@ -82,7 +82,7 @@ describe('services/space-invitation-service', function () {
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
   });
 
-  it('creates space and cancels invitation', async function () {
+  test('creates space and cancels invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     assert(host.spaceManager);

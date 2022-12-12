@@ -14,12 +14,6 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // https://github.com/nxext/nx-extensions/issues/755
-    case '@nxext/vite': {
-      packageJson.peerDependencies['vite'] = '3.0.9'
-      break;
-    }
-
     case '@typescript-eslint/eslint-plugin': 
     case '@typescript-eslint/parser': {
       packageJson.dependencies['eslint'] = '^8.0.0'
@@ -33,6 +27,11 @@ function readPackage(packageJson, context) {
     case 'react-reconciler': {
       packageJson.peerDependencies['react'] = '^18.0.0'
       break;
+    }
+
+    // @dxos/presenter
+    case '@react-pdf/renderer': {
+      packageJson.peerDependencies['react'] = '^18.0.0'
     }
 
     // @storybook/react transitive dep

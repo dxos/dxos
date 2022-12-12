@@ -36,14 +36,14 @@ export class ConnectionLog {
 
   swarmJoined(swarm: Swarm) {
     const info: SwarmInfo = {
-      id: swarm.id,
+      id: swarm.instanceId,
       topic: swarm.topic,
       isActive: true,
       label: swarm.label,
       connections: []
     };
 
-    this._swarms.set(swarm.id, info);
+    this._swarms.set(swarm.instanceId, info);
     this.update.emit();
 
     swarm.connectionAdded.on((connection) => {
@@ -52,7 +52,7 @@ export class ConnectionLog {
         remotePeerId: connection.remoteId,
         sessionId: connection.sessionId,
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
-        protocolExtensions: connection.protocol.extensionNames,
+        protocolExtensions: connection.protocol.protocol?.extensionNames,
         events: []
       };
       info.connections!.push(connectionInfo);
@@ -67,26 +67,26 @@ export class ConnectionLog {
         this.update.emit();
       });
 
-      connection.protocol.error.on((error) => {
+      connection.protocol.protocol?.error.on((error) => {
         connectionInfo.events!.push({
           type: EventType.PROTOCOL_ERROR,
           error: error.stack ?? error.message
         });
         this.update.emit();
       });
-      connection.protocol.extensionsInitialized.on(() => {
+      connection.protocol.protocol?.extensionsInitialized.on(() => {
         connectionInfo.events!.push({
           type: EventType.PROTOCOL_EXTENSIONS_INITIALIZED
         });
         this.update.emit();
       });
-      connection.protocol.extensionsHandshake.on(() => {
+      connection.protocol.protocol?.extensionsHandshake.on(() => {
         connectionInfo.events!.push({
           type: EventType.PROTOCOL_EXTENSIONS_HANDSHAKE
         });
         this.update.emit();
       });
-      connection.protocol.handshake.on(() => {
+      connection.protocol.protocol?.handshake.on(() => {
         connectionInfo.events!.push({
           type: EventType.PROTOCOL_HANDSHAKE
         });
@@ -96,7 +96,7 @@ export class ConnectionLog {
   }
 
   swarmLeft(swarm: Swarm) {
-    this.getSwarmInfo(swarm.id).isActive = false;
+    this.getSwarmInfo(swarm.instanceId).isActive = false;
     this.update.emit();
   }
 }

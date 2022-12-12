@@ -2,30 +2,36 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import React, { ComponentProps, ReactNode } from 'react';
 
 import { useId } from '../../hooks';
 import { MessageValence } from '../../props';
 import { valenceAlertColors } from '../../styles';
+import { mx } from '../../util';
 
-export interface AlertProps extends Omit<ComponentProps<'div'>, 'title'> {
+export interface AlertSlots {
+  root?: Omit<ComponentProps<'div'>, 'children'>;
+  title?: Omit<ComponentProps<'p'>, 'children'>;
+}
+
+export interface AlertProps {
   title: ReactNode;
   assertive?: boolean;
   valence?: MessageValence;
   children?: ReactNode;
+  slots?: AlertSlots;
 }
 
-export const Alert = ({ title, children, assertive, valence, ...divProps }: AlertProps) => {
+export const Alert = ({ title, children, assertive, valence, slots = {} }: AlertProps) => {
   const labelId = useId('alertLabel');
   return (
     <div
+      {...slots.root}
       role={assertive ? 'alert' : 'group'}
-      {...divProps}
-      className={cx('p-3 border rounded-md', valenceAlertColors(valence), divProps.className)}
       aria-labelledby={labelId}
+      className={mx('p-3 border rounded-md', valenceAlertColors(valence), slots.root?.className)}
     >
-      <p id={labelId} className='font-medium mb-2'>
+      <p {...slots.title} id={labelId} className={mx('font-medium mb-2', slots.title?.className)}>
         {title}
       </p>
       {children}

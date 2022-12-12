@@ -1,9 +1,8 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "mocha",
       "node"
     ]
   },
@@ -19,7 +18,13 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
     }
   ]
 }

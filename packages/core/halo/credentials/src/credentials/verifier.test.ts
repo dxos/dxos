@@ -7,13 +7,14 @@ import expect from 'expect';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { describe, test } from '@dxos/test';
 
 import { createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
 
-describe('verifier', function () {
-  describe('no chain', function () {
-    it('pass', async function () {
+describe('verifier', () => {
+  describe('no chain', () => {
+    test('pass', async () => {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
@@ -23,7 +24,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -33,7 +35,7 @@ describe('verifier', function () {
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
     });
 
-    it('fail - invalid signature', async function () {
+    test('fail - invalid signature', async () => {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
@@ -43,7 +45,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -58,7 +61,7 @@ describe('verifier', function () {
       });
     });
 
-    it('fail - invalid issuer', async function () {
+    test('fail - invalid issuer', async () => {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
@@ -68,7 +71,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -83,7 +87,7 @@ describe('verifier', function () {
       });
     });
 
-    it('fail - invalid nonce', async function () {
+    test('fail - invalid nonce', async () => {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
@@ -93,7 +97,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -109,7 +114,7 @@ describe('verifier', function () {
       });
     });
 
-    it('fail - no nonce provided', async function () {
+    test('fail - no nonce provided', async () => {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const spaceKey = PublicKey.random();
@@ -119,7 +124,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer,
         signer: keyring,
@@ -135,8 +141,8 @@ describe('verifier', function () {
     });
   });
 
-  describe('chain', function () {
-    it('pass - delegated authority with 1 device', async function () {
+  describe('chain', () => {
+    test('pass - delegated authority with 1 device', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
@@ -160,7 +166,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,
@@ -172,7 +179,7 @@ describe('verifier', function () {
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
     });
 
-    it('fail - missing chain', async function () {
+    test('fail - missing chain', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
@@ -196,7 +203,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,
@@ -212,7 +220,7 @@ describe('verifier', function () {
       });
     });
 
-    it('fail - invalid chain signature', async function () {
+    test('fail - invalid chain signature', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
@@ -236,7 +244,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,
@@ -252,7 +261,7 @@ describe('verifier', function () {
       });
     });
 
-    it('fail - invalid chain assertion', async function () {
+    test('fail - invalid chain assertion', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
@@ -275,7 +284,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,
@@ -288,7 +298,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,
@@ -300,7 +311,7 @@ describe('verifier', function () {
       });
     });
 
-    it('fail - chain does not lead to issuer', async function () {
+    test('fail - chain does not lead to issuer', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const identity2 = await keyring.createKey();
@@ -324,7 +335,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,
@@ -349,7 +361,7 @@ describe('verifier', function () {
       });
     });
 
-    it('pass - delegated authority with 2 devices', async function () {
+    test('pass - delegated authority with 2 devices', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device1 = await keyring.createKey();
@@ -387,7 +399,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,
@@ -399,7 +412,7 @@ describe('verifier', function () {
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
     });
 
-    it('fail - cyclic chain', async function () {
+    test('fail - cyclic chain', async () => {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device1 = await keyring.createKey();
@@ -437,7 +450,8 @@ describe('verifier', function () {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          genesisFeedKey: PublicKey.random()
         },
         issuer: identity,
         signer: keyring,

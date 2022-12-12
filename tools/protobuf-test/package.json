@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-test",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,7 +12,6 @@
   ],
   "scripts": {
     "build": "true",
-    "check": "true",
     "test": "true"
   },
   "protobuf": "src/proto/example/testing/util.proto"

@@ -1,19 +1,16 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:util": "util"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
+  "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -29,13 +26,10 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
-    "debug": "^4.3.3",
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/vite-plugin": "workspace:*",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",

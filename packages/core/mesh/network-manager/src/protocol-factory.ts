@@ -9,13 +9,16 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 
-import { ProtocolProvider } from './network-manager';
-
 interface ProtocolFactoryOptions {
   plugins: any[];
   getTopics: () => Buffer[];
   session: Record<string, any>;
 }
+
+/**
+ * @deprecated Replaced by WireProtocolProvider.
+ */
+export type MeshProtocolProvider = (params: { channel: Buffer; initiator: boolean }) => Protocol;
 
 /**
  * Returns a function that takes a channel parameter, returns a Protocol object
@@ -30,8 +33,9 @@ export const protocolFactory = ({
   session = {},
   plugins = [],
   getTopics
-}: ProtocolFactoryOptions): ProtocolProvider => {
+}: ProtocolFactoryOptions): MeshProtocolProvider => {
   assert(getTopics);
+
   // eslint-disable-next-line no-unused-vars
   return ({ channel, initiator }) => {
     log('creating protocol');
@@ -42,6 +46,7 @@ export const protocolFactory = ({
         if (publicKey) {
           protocol.setContext({ topic: PublicKey.stringify(publicKey) });
         }
+
         assert(publicKey, 'PublicKey not found in discovery.');
         return publicKey;
       },
@@ -51,7 +56,6 @@ export const protocolFactory = ({
     });
 
     protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
-
     return protocol;
   };
 };
@@ -75,9 +79,10 @@ export const transportProtocolProvider = (
   rendezvousKey: Buffer,
   peerId: Buffer,
   protocolPlugin: any
-): ProtocolProvider =>
-  protocolFactory({
+): MeshProtocolProvider => {
+  return protocolFactory({
     getTopics: () => [rendezvousKey],
     session: { peerId: PublicKey.stringify(peerId) },
     plugins: [protocolPlugin]
   });
+};

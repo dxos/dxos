@@ -1,6 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
@@ -26,9 +27,6 @@
     },
     {
       "path": "../../../sdk/config"
-    },
-    {
-      "path": "../../../sdk/vite-plugin"
     }
   ]
 }

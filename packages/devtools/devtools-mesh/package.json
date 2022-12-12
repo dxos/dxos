@@ -1,16 +1,18 @@
 {
   "name": "@dxos/devtools-mesh",
-  "version": "0.1.9",
+  "version": "0.1.17",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
   "scripts": {
-    "book": "esbuild-server book",
-    "check": "true"
+    "book": "esbuild-server book"
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
@@ -33,7 +35,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protocols": "workspace:*",
     "@types/react": "^18.0.21",

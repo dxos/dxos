@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+// @dxos/test platform=nodejs
 
 import expect from 'expect';
 import { Duplex } from 'stream';
@@ -16,13 +16,13 @@ import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-import { afterTest } from '@dxos/testutils';
+import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
-describe('WebRTCTransportProxy', function () {
+describe('WebRTCTransportProxy', () => {
   const setupProxy = async ({
     initiator = true,
     stream = new Duplex({ write: () => {}, read: () => {} }),
@@ -73,13 +73,13 @@ describe('WebRTCTransportProxy', function () {
       sendSignal,
       bridgeService: rpcClient.rpc.BridgeService
     });
-    afterTest(async () => await webRTCTransportProxy.close());
+    afterTest(async () => await webRTCTransportProxy.destroy());
 
     return { webRTCService: rpcService, webRTCTransportProxy };
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
-  it('open and close', async function () {
+  test('open and close', async () => {
     const { webRTCTransportProxy: connection } = await setupProxy();
 
     let callsCounter = 0;
@@ -89,7 +89,7 @@ describe('WebRTCTransportProxy', function () {
     connection.closed.once(closedCb);
 
     await sleep(10); // Let simple-peer process events.
-    await connection.close();
+    await connection.destroy();
 
     await sleep(1); // Process events.
 
@@ -98,11 +98,7 @@ describe('WebRTCTransportProxy', function () {
     .timeout(1_000)
     .retries(3);
 
-  it('establish connection and send data through with protocol', async function () {
-    if (mochaExecutor.environment !== 'nodejs') {
-      this.skip();
-    }
-
+  test('establish connection and send data through with protocol', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -156,11 +152,11 @@ describe('WebRTCTransportProxy', function () {
     .timeout(2_000)
     .retries(3);
 
-  describe('Multiplexing', function () {
+  describe('Multiplexing', () => {
     let service: any;
     let rpcClient: ProtoRpcPeer<{ BridgeService: BridgeService }>;
 
-    before(async function () {
+    beforeAll(async () => {
       const [port1, port2] = createLinkedPorts();
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
@@ -190,12 +186,12 @@ describe('WebRTCTransportProxy', function () {
       await rpcClient.open();
     });
 
-    after(async function () {
+    afterAll(async () => {
       await service?.close();
       await rpcClient?.close();
     });
 
-    it('establish connection and send data through with protocol', async function () {
+    test('establish connection and send data through with protocol', async () => {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
       const peer2Id = PublicKey.random();
