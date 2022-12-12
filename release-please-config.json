@@ -218,11 +218,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/mesh-protocol/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/mesh/messaging/package.json",
           "jsonpath": "$.version"
         },
