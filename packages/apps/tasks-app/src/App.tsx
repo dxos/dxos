@@ -3,7 +3,7 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { HashRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -16,7 +16,8 @@ import {
   FatalError,
   GenericFallback,
   ServiceWorkerToast,
-  translations
+  translations,
+  StatusIndicator2
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 
@@ -44,7 +45,6 @@ export const App = () => {
       log.error(err);
     }
   });
-  
   return (
     <UiKitProvider
       appNs='halo'
@@ -52,13 +52,14 @@ export const App = () => {
       fallback={<Fallback message='Loading...' />}
     >
       <ErrorProvider>
-        {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
+        {/* TODO: (wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider
             config={configProvider}
             services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
             fallback={<GenericFallback />}
           >
+            <StatusIndicator2 />
             <HashRouter>
               <Routes />
               {needRefresh ? (

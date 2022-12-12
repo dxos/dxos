@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Profile as ProfileType } from '@dxos/client';
 import { Avatar, Button, getSize, Popover } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
+import { useClient } from '@dxos/react-client';
 
 export interface ProfileMenuProps {
   profile: ProfileType;
@@ -16,7 +17,13 @@ export interface ProfileMenuProps {
 }
 
 export const ProfileMenu = (props: ProfileMenuProps) => {
-  const { profile, onClickManageProfile } = props;
+  const client = useClient();
+  const defaultManageProfile = () => {
+    const remoteSource = new URL(client?.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
+    const tab = window.open(remoteSource.origin, '_blank');
+    tab?.focus();
+  };
+  const { profile, onClickManageProfile = defaultManageProfile } = props;
   const { t } = useTranslation('uikit');
   return (
     <Popover

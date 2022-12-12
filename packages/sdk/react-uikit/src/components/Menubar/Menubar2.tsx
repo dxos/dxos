@@ -8,29 +8,25 @@ import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'rea
 
 import { mx } from '@dxos/react-ui';
 
-import { ProfileMenu, ProfileMenuProps } from './ProfileMenu';
-import { SpaceLink, SpaceLinkProps } from './SpaceLink';
-import { SpaceMenu, SpaceMenuProps } from './SpaceMenu';
-import { SpacesLink, SpacesLinkProps } from './SpacesLink';
+// import { ProfileMenu, ProfileMenuProps } from './ProfileMenu';
+// import { SpaceLink, SpaceLinkProps } from './SpaceLink';
+// import { SpaceMenu, SpaceMenuProps } from './SpaceMenu';
+// import { SpacesLink, SpacesLinkProps } from './SpacesLink';
 
-export interface MenubarProps extends ProfileMenuProps, SpaceLinkProps, Partial<SpaceMenuProps>, SpacesLinkProps {
+export interface MenubarProps2 {
   children?: ReactNode;
 }
+
+export const Separator = ToolbarPrimitive.Separator;
 
 /**
  * A fixed header bar
  * @param props props
  * @returns ReactNode
  */
-export const Menubar = ({
+export const Menubar2 = ({
   children,
-  profile,
-  space,
-  onClickManageProfile,
-  onClickGoToSpaces,
-  onClickGoToSpace,
-  onClickManageSpace
-}: MenubarProps) => {
+}: MenubarProps2) => {
   const [atTop, setAtTop] = useState(true);
 
   const handleScroll = useCallback(() => {
@@ -55,24 +51,8 @@ export const Menubar = ({
           atTop ? 'pointer-events-none' : 'backdrop-blur-md bg-white/20 dark:bg-neutral-700/20'
         )}
       >
-        {onClickGoToSpaces && <SpacesLink {...{ onClickGoToSpaces }} />}
-        <ToolbarPrimitive.Separator className='grow' />
-        {space &&
-          (onClickGoToSpace ? (
-            <SpaceLink {...{ onClickGoToSpace }} />
-          ) : (
-            onClickManageSpace && <SpaceMenu {...{ space, onClickManageSpace }} />
-          ))}
-        <ProfileMenu {...{ profile, onClickManageProfile }} />
+        {children}
       </ToolbarPrimitive.Root>
-      {children && (
-        <div
-          role='none'
-          className='fixed inset-inline-0 block-start-0 z-[2] bs-16 flex items-center justify-center pointer-events-none'
-        >
-          {children}
-        </div>
-      )}
     </>
   );
 };
