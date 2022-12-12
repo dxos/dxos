@@ -13,7 +13,7 @@ const isGitClean = async () => {
     exec(cmd, (err, stdout, stderr) => {
       if (err) reject(err);
       if (stderr) reject(stderr);
-      resolve(stdout === 'clean');
+      resolve(!stdout.trim().length);
     });
   });
 };
