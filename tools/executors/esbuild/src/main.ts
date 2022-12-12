@@ -5,8 +5,8 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'path';
+import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { LogTransformer } from './log-transform-plugin';
 
@@ -15,6 +15,7 @@ export interface EsbuildExecutorOptions {
   bundlePackages: string[];
   entryPoints: string[];
   format?: Format;
+  injectGlobals: boolean;
   metafile: boolean;
   outputPath: string;
   platforms: Platform[];
@@ -26,6 +27,11 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
+
+  try {
+    await readdir(options.outputPath);
+    await rm(options.outputPath, { recursive: true });
+  } catch {}
 
   const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
@@ -58,7 +64,16 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           // TODO(wittjosiah): Factor out plugin and use for running browser tests as well.
           {
             name: 'node-external',
-            setup: ({ onResolve }) => {
+            setup: ({ initialOptions, onResolve }) => {
+              if (options.injectGlobals && platform === 'browser') {
+                if (!packageJson.dependencies['@dxos/node-std']) {
+                  throw new Error('Missing @dxos/node-std dependency.');
+                }
+
+                initialOptions.banner ||= {};
+                initialOptions.banner.js = 'import "@dxos/node-std/globals"';
+              }
+
               onResolve({ filter: /^node:.*/ }, (args) => {
                 if (platform !== 'browser') {
                   return null;

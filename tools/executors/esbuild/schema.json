@@ -21,6 +21,11 @@
       "type": "string",
       "description": "Format to output the build files in"
     },
+    "injectGlobals": {
+      "type": "boolean",
+      "description": "Inject import for node stdlib globals",
+      "default": false
+    },
     "metafile": {
       "type": "boolean",
       "description": "Whether or not to output a build meta file",

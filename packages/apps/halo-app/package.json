@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-app",
-  "version": "0.1.13",
+  "version": "0.1.17",
   "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
@@ -38,7 +38,6 @@
   },
   "devDependencies": {
     "@dxos/react-client-testing": "workspace:*",
-    "@dxos/vite-plugin": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",

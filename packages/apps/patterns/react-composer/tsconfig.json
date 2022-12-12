@@ -41,9 +41,6 @@
     },
     {
       "path": "../../../sdk/react-uikit"
-    },
-    {
-      "path": "../../../sdk/vite-plugin"
     }
   ]
 }

@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/core/echo/object-model/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/core/echo/object-model/dist/lib"
       },
       "outputs": [

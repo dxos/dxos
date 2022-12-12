@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hello-template",
-  "version": "0.1.13",
+  "version": "0.1.17",
   "private": true,
   "description": "DXOS 'hello world' application template.",
   "homepage": "https://dxos.org",
@@ -35,7 +35,6 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/cli": "workspace:*",
-    "@dxos/vite-plugin": "workspace:*",
     "@storybook/addon-actions": "^6.5.10",
     "@storybook/addon-essentials": "^6.5.10",
     "@storybook/addon-interactions": "^6.5.10",
