@@ -18,3 +18,4 @@ export * from './trigger';
 export * from './types';
 export * from './until';
 export * from './task-scheduling';
+export * from './test-stream';

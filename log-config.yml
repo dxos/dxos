@@ -6,6 +6,7 @@ formatter:
 filter:
   - warn
   - info
+  - debug
   # - swarm.ts:debug
   - client:debug
   # - feed-wrapper:debug
