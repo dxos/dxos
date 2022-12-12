@@ -56,4 +56,4 @@ runtime:
 
 ## Configuration schema
 
-See the API documentation entry for [`Config`](../../api/%40dxos/config/classes/Config)
+See the API documentation entry for [`Config`](../../api/@dxos/config/classes/Config)
