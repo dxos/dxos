@@ -18,3 +18,5 @@ runtime:
         credential: 'dxos'
     publisher:
       server: 'wss://kube.dxos.org/.well-known/dx/deploy'
+    machine:
+      doAccessToken: ''

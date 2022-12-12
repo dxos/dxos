@@ -49,6 +49,7 @@
     "chalk": "^4.1.0",
     "cli-progress": "^3.11.2",
     "debug": "^4.3.3",
+    "do-wrapper": "^4.5.1",
     "faker": "^5.5.3",
     "fs-extra": "^8.1.0",
     "get-folder-size": "^2.0.1",
