@@ -20,7 +20,7 @@ const isGitClean = async () => {
 
 const main = async () => {
   if (!await isGitClean()) {
-    console.error('git repository not clean prior to regenerating docs, bailing.');
+    console.error('ERROR: git repository not clean prior to regenerating docs, bailing.');
     process.exit(1);
   }
   const config = await loadConfig();
