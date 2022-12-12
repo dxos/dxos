@@ -92,11 +92,6 @@ export const ClientProvider = ({
   }
 
   useAsyncEffect(async () => {
-    console.log('ClientProvider init: ', {
-      clientProvider,
-      configProvider,
-      createServices
-    });
     const cleanUp = new EventSubscriptions();
     const done = async (client: Client) => {
       log('client ready', { client });
