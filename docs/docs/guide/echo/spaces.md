@@ -30,8 +30,6 @@ const space = await client.echo.createSpace();
 ## Querying for spaces
 
 ```ts file=./snippets/query-spaces.ts#L9-
-const client = new Client();
-
 // get a list of all spaces
 const { value: spaces } = client.echo.querySpaces();
 ```

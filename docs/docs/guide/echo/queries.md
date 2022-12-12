@@ -4,20 +4,7 @@ label: Queries
 ---
 
 # Querying data
+Once access is obtained to a space, select items to retrieve them.
 
-```tsx
-import { usespace, useSelection } from '@dxos/react-client';
-
-export const List = ({ key }) => {
-  const space = usespace(key);
-  const items = useSelection(space.select({ type: 'task' }));
-
-  return (
-    <ul>
-      {items.map((item) => (
-        <li key={item.id}>{item.model.get('name')}</li>
-      ))}
-    </ul>
-  );
-};
+```ts file=./snippets/read-items.ts#L5-
 ```
