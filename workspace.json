@@ -5,7 +5,7 @@
     "apidoc": "tools/apidoc",
     "assets": "packages/apps/patterns/assets",
     "async": "packages/common/async",
-    "bare-template": "packages/apps/samples/bare",
+    "bare": "packages/apps/samples/bare",
     "beast": "tools/beast",
     "bender-bot": "packages/bots/bender-bot",
     "bot-factory-client": "packages/bots/bot-factory-client",
