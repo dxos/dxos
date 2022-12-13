@@ -9,46 +9,48 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v3
-        name: Github Release
+      - name: Github Release
         id: release
+        uses: google-github-actions/release-please-action@v3
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
           default-branch: ${{ github.ref_name }}
           release-type: node
           command: github-release
 
-      - uses: google-github-actions/release-please-action@v3
-        name: Version Bump
+      - name: Version Bump
+        uses: google-github-actions/release-please-action@v3
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
           default-branch: ${{ github.ref_name }}
           release-type: node
           command: manifest-pr
 
-      - uses: actions/checkout@v3
-        name: Checkout production
+      - name: Checkout production
+        uses: actions/checkout@v3
         with:
-          ref: production
+          fetch-depth: 0
+
+      - name: Merge with production
         if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git switch production
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
 
-      - run: git merge --no-ff origin/${{ github.ref_name }}
-        name: Merge with production
+      - name: Merge with main
         if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git switch main
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
 
-      - uses: actions/checkout@v3
-        name: Checkout main
-        with:
-          ref: main
-
-      - run: git merge --no-ff origin/${{ github.ref_name }}
-        name: Merge with main
-        if: ${{ steps.release.outputs.release_created }}
-
-      - run: git merge --ff-only origin/${{ github.ref_name }}
-        name: Fast-forward main
+      - name: Fast-forward main
         if: ${{ !steps.release.outputs.release_created }}
+        run: |
+          git switch main
+          git merge --ff-only ${{ github.ref_name }}
 
-      - run: git push origin :${{ github.ref_name }}
-        name: Delete rc branch
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Delete rc branch
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.CREATE_PR_TOKEN }}
+          branches: ${{ github.ref_name }}
