@@ -15,6 +15,17 @@ import { loadTypedocJson as _loadTypedocJson } from './loadTypedocJson.js';
 import { Stringifier, packagesInProject, findReflection } from './templates/api/util.t/index.js';
 
 export namespace Remark {
+  /**
+   * Use this directive statement in a remark stack to process `apidoc` directives and emit generated API documentation within the directive fences. See https://www.npmjs.com/package/remark-directive.
+   * For example:
+   * ```md
+   * :::apidoc[@dxos/client.Client]{.methods level=2}
+   * // contents will be replaced by the methods of Client from @dxos/client
+   * // and headings will start at level 2
+   * :::
+   * ```
+   * @returns a remark compatible plugin
+   */
   export const apiDocGenerateDirective = () => {
     const loadConfig = memoize(_loadConfig);
     const loadTypedocJson = memoize(_loadTypedocJson, (c) => c.typedocJsonPath);
