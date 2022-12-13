@@ -46,7 +46,6 @@ pnpm run demo:grid
 ## Installation and usage
 
 
-
 ## Troubleshooting
 
 For debugging, use the [DXOS DevTools extension](./packages/sdk/devtools-extension/README.md).
