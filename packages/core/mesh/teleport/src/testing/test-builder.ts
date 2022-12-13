@@ -7,7 +7,7 @@ import { pipeline } from 'node:stream';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Teleport } from './teleport';
+import { Teleport } from '../teleport';
 
 export class TestBuilder {
   private readonly _peers = new Array<TestPeer>();

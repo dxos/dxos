@@ -10,7 +10,7 @@ import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
-import { ExtensionContext, TeleportExtension } from './teleport';
+import { ExtensionContext, TeleportExtension } from '../teleport';
 
 interface TestExtensionCallbacks {
   onOpen?: () => Promise<void>;
@@ -18,8 +18,8 @@ interface TestExtensionCallbacks {
 }
 
 export class TestExtension implements TeleportExtension {
+  public readonly open = new Trigger();
   public readonly closed = new Trigger();
-  private public = new Trigger();
   public extensionContext: ExtensionContext | undefined;
   private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
 
@@ -60,7 +60,7 @@ export class TestExtension implements TeleportExtension {
     await this._rpc.open();
     await this.callbacks.onOpen?.();
 
-    this.public.wake();
+    this.open.wake();
   }
 
   async onClose(err?: Error) {
@@ -71,7 +71,7 @@ export class TestExtension implements TeleportExtension {
   }
 
   async test() {
-    await this.public.wait({ timeout: 500 });
+    await this.open.wait({ timeout: 500 });
     const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: 'test' }), 500);
     assert(res.data === 'test');
   }

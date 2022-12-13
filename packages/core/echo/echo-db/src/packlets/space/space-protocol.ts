@@ -38,7 +38,7 @@ export type SpaceProtocolOptions = {
 };
 
 /**
- * Manages hypercore protocol stream creation and joining swarms.
+ * Manages Teleport protocol stream creation and joining swarms with replication and presence extensions.
  */
 export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
@@ -49,7 +49,6 @@ export class SpaceProtocol {
 
   private _connection?: SwarmConnection;
 
-  // Teleport-specific
   private _feeds = new Set<FeedWrapper<FeedMessage>>();
   private _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
 

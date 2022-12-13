@@ -20,7 +20,10 @@ export class TestStream extends Duplex {
     stream1.push('ping');
     stream2.push('pong');
 
-    await Promise.all([stream2.assertReceivedAsync('ping'), stream1.assertReceivedAsync('pong')]);
+    await Promise.all([
+      stream2.assertReceivedAsync('ping', { timeout }),
+      stream1.assertReceivedAsync('pong', { timeout }),
+    ]);
   }
 
   private _received = Buffer.alloc(0);

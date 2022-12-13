@@ -4,4 +4,4 @@
 
 export * from './muxing';
 export * from './teleport';
-export * from './test-extension';
+export * from './testing/test-extension';

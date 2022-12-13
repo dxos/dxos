@@ -8,7 +8,7 @@ import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { TestExtension } from './test-extension';
+import { TestExtension } from './testing/test-extension';
 import { TestBuilder } from './testing';
 
 describe('Teleport', () => {
