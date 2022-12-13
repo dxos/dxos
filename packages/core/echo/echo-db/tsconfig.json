@@ -57,22 +57,10 @@
       "path": "../../halo/keyring"
     },
     {
-      "path": "../../mesh/mesh-protocol"
-    },
-    {
       "path": "../../mesh/messaging"
     },
     {
       "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../../mesh/protocol-plugin-presence"
-    },
-    {
-      "path": "../../mesh/protocol-plugin-replicator"
-    },
-    {
-      "path": "../../mesh/protocol-plugin-rpc"
     },
     {
       "path": "../../mesh/rpc"

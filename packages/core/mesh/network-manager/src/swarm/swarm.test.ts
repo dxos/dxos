@@ -5,18 +5,16 @@
 // @dxos/test platform=nodejs
 
 import { expect } from 'earljs';
-import waitForExpect from 'wait-for-expect';
 
-import { sleep, asyncTimeout } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
-import { beforeEach, describe, test, afterTest } from '@dxos/test';
+import { afterTest, beforeEach, describe, test } from '@dxos/test';
 
-import { TestProtocolPlugin, testProtocolProvider } from '../testing';
+import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory } from '../transport';
-import { adaptProtocolProvider } from '../wire-protocol';
 import { Swarm } from './swarm';
 
 describe('Swarm', () => {
@@ -29,12 +27,12 @@ describe('Swarm', () => {
   });
 
   const setupSwarm = ({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) => {
-    const plugin = new TestProtocolPlugin(peerId.asBuffer());
+    const protocol = new TestWireProtocol(peerId);
     const swarm = new Swarm(
       topic,
       peerId,
       new FullyConnectedTopology(),
-      adaptProtocolProvider(testProtocolProvider(topic.asBuffer(), peerId, plugin)),
+      protocol.factory,
       new Messenger({ signalManager }),
       createWebRTCTransportFactory(),
       undefined
@@ -44,25 +42,17 @@ describe('Swarm', () => {
       await swarm.destroy();
     });
 
-    return { swarm, plugin };
+    return { swarm, protocol };
   };
 
   test('connects two peers in a swarm', async () => {
     const topic = PublicKey.random();
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
-    const data = 'Hello';
 
-    const { swarm: swarm1, plugin: plugin1 } = setupSwarm({ topic, peerId: peerId1 });
-    let receivedData: string;
-    plugin1.on('receive', async (_, payload) => {
-      receivedData = payload;
-    });
+    const { swarm: swarm1, protocol: protocol1 } = setupSwarm({ topic, peerId: peerId1 });
 
-    const { swarm: swarm2, plugin: plugin2 } = setupSwarm({ topic, peerId: peerId2 });
-    plugin2.on('connect', async () => {
-      await plugin2.send(peerId1.asBuffer(), data);
-    });
+    const { swarm: swarm2 } = setupSwarm({ topic, peerId: peerId2 });
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -91,9 +81,7 @@ describe('Swarm', () => {
     await promise;
     log('Swarms connected');
 
-    await waitForExpect(() => {
-      expect(receivedData).toEqual(data);
-    });
+    await protocol1.testConnection(peerId2);
   }).timeout(5_000);
 
   test('two peers try to originate connections to each other simultaneously', async () => {
@@ -130,18 +118,10 @@ describe('Swarm', () => {
     const topic = PublicKey.random();
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
-    const data = 'Hello';
 
-    const { swarm: swarm1, plugin: plugin1 } = setupSwarm({ topic, peerId: peerId1 });
-    let receivedData: string;
-    plugin1.on('receive', async (_, payload) => {
-      receivedData = payload;
-    });
+    const { swarm: swarm1, protocol: protocol1 } = setupSwarm({ topic, peerId: peerId1 });
 
-    const { swarm: swarm2, plugin: plugin2 } = setupSwarm({ topic, peerId: peerId2 });
-    plugin2.on('connect', async () => {
-      await plugin2.send(peerId1.asBuffer(), data);
-    });
+    const { swarm: swarm2 } = setupSwarm({ topic, peerId: peerId2 });
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -164,8 +144,6 @@ describe('Swarm', () => {
 
     await connectPromises;
 
-    await waitForExpect(() => {
-      expect(receivedData).toEqual(data);
-    });
+    await protocol1.testConnection(peerId2);
   }).timeout(10_000);
 });

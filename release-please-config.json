@@ -78,16 +78,6 @@
         },
         {
           "type": "json",
-          "path": "packages/bots/bot-factory-client/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/bots/botkit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },
@@ -228,47 +218,12 @@
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/broadcast/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/mesh/mesh-protocol/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/mesh/messaging/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/network-generator/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/mesh/network-manager/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/mesh/protocol-network-generator/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/mesh/protocol-plugin-presence/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/mesh/protocol-plugin-replicator/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/mesh/protocol-plugin-rpc/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -424,11 +379,6 @@
         {
           "type": "json",
           "path": "packages/gravity/gravity-dashboard/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/orchestrator/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -2,6 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(dmaretskyi): Re-enable once we fix this story.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
 import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';

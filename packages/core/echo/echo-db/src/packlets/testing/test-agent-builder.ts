@@ -8,7 +8,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager, MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, Plugin } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
@@ -163,7 +163,7 @@ export class TestAgent {
     return space;
   }
 
-  createSpaceProtocol(topic: PublicKey, plugins: Plugin[] = []) {
+  createSpaceProtocol(topic: PublicKey) {
     return new SpaceProtocol({
       topic,
       identity: {
@@ -171,8 +171,7 @@ export class TestAgent {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
-      networkManager: this._networkManagerProvider(),
-      plugins
+      networkManager: this._networkManagerProvider()
     });
   }
 }
