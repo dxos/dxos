@@ -4,9 +4,19 @@ order: 10
 
 # Troubleshooting
 
-In a rear case of breaking changes it might be required to manually remove KUBE from system services.
+## Logging
 
-In order to do that use `sudo kube uninstall` command. If manual removal is required, a combination of commands could be used:
+To run the daemon with logging:
+
+```bash
+GOLOG_LOG_LEVEL=warn,signal/p2p=debug kube daemon
+```
+
+## Reinstalling KUBE 
+
+In the rare case of breaking changes it might be required to manually remove KUBE from system services.
+
+In order to do that use `sudo kube uninstall` command. If manual removal is required, a combination of commands can be used:
 
 Darwin:
 
@@ -27,8 +37,3 @@ sudo systemctl daemon-reload
 sudo systemctl reset-failed
 ```
 
-To run the daemon with logging:
-
-```bash
-GOLOG_LOG_LEVEL=warn,signal/p2p=debug kube daemon
-```
