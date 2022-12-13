@@ -8,7 +8,7 @@ import { Transform } from 'node:stream';
 import { Event, Trigger } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
@@ -45,29 +45,34 @@ export class MemoryTransport implements Transport {
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
 
-  private readonly _id = PublicKey.random(); // TODO(burdon): Rename peerId? (Use local/remote labels in logs).
+  @logInfo
+  private readonly _instanceId = PublicKey.random(); // TODO(burdon): Rename peerId? (Use local/remote labels in logs).
+
   private readonly _remote = new Trigger<PublicKey>();
 
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
 
   private _destroyed = false;
-  private _remoteId!: PublicKey;
+
+  @logInfo
+  private _remoteInstanceId!: PublicKey;
+
   private _remoteConnection?: MemoryTransport;
 
   constructor(private readonly options: TransportOptions) {
-    log('creating', { id: this._id });
+    log('creating');
 
-    assert(!MemoryTransport._connections.has(this._id), 'Duplicate memory connection');
-    MemoryTransport._connections.set(this._id, this);
+    assert(!MemoryTransport._connections.has(this._instanceId), 'Duplicate memory connection');
+    MemoryTransport._connections.set(this._instanceId, this);
 
     // Initiator will send a signal, the receiver will receive the unique ID and connect the streams.
     if (this.options.initiator) {
       // prettier-ignore
       setTimeout(async () => {
-        log('sending signal', { transportId: this._id });
+        log('sending signal');
         void this.options.sendSignal({
-          payload: { transportId: this._id.toHex() }
+          payload: { transportId: this._instanceId.toHex() }
         });
     });
     } else {
@@ -78,8 +83,8 @@ export class MemoryTransport implements Transport {
             return;
           }
 
-          this._remoteId = remoteId;
-          this._remoteConnection = MemoryTransport._connections.get(this._remoteId);
+          this._remoteInstanceId = remoteId;
+          this._remoteConnection = MemoryTransport._connections.get(this._remoteInstanceId);
           if (!this._remoteConnection) {
             // Remote connection was destroyed before we could connect.
             this._destroyed = true;
@@ -87,11 +92,14 @@ export class MemoryTransport implements Transport {
             return;
           }
 
-          assert(!this._remoteConnection._remoteConnection, new Error(`Remote already connected: ${this._remoteId}`));
+          assert(
+            !this._remoteConnection._remoteConnection,
+            new Error(`Remote already connected: ${this._remoteInstanceId}`)
+          );
           this._remoteConnection._remoteConnection = this;
-          this._remoteConnection._remoteId = this._id;
+          this._remoteConnection._remoteInstanceId = this._instanceId;
 
-          log('connected', { id: this._id, remote: this._remoteId });
+          log('connected');
           this.options.stream
             .pipe(this._outgoingDelay)
             .pipe(this._remoteConnection.options.stream)
@@ -112,14 +120,14 @@ export class MemoryTransport implements Transport {
   }
 
   async destroy(): Promise<void> {
-    log('closing', { id: this._id });
+    log('closing');
     this._destroyed = true;
 
-    MemoryTransport._connections.delete(this._id);
+    MemoryTransport._connections.delete(this._instanceId);
     if (this._remoteConnection) {
-      log('closing', { id: this._remoteId });
+      log('closing');
       this._remoteConnection._destroyed = true;
-      MemoryTransport._connections.delete(this._remoteId);
+      MemoryTransport._connections.delete(this._remoteInstanceId);
 
       // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.
       //  NOTE(burdon): Using readable-stream.wrap() might help (see feed-store).
@@ -135,23 +143,23 @@ export class MemoryTransport implements Transport {
       this._remoteConnection.closed.emit();
       this._remoteConnection._remoteConnection = undefined;
       this._remoteConnection = undefined;
-      log('closed', { id: this._remoteId });
+      log('closed');
     }
 
     this.closed.emit();
-    log('closed', { id: this._id });
+    log('closed');
   }
 
-  signal(signal: Signal) {
-    const { payload: json } = signal;
-    if (json && json.transportId) {
-      // TODO(burdon): Check open?
-      const transportId = json.transportId as string;
-      if (transportId) {
-        const remoteId = PublicKey.fromHex(transportId);
-        log('received signal', { id: this._id, remoteId });
-        this._remote.wake(remoteId);
-      }
+  signal({ payload }: Signal) {
+    log('received signal', { payload });
+    if (!payload?.transportId) {
+      return;
+    }
+    // TODO(burdon): Check open?
+    const transportId = payload.transportId as string;
+    if (transportId) {
+      const remoteId = PublicKey.fromHex(transportId);
+      this._remote.wake(remoteId);
     }
   }
 }

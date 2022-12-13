@@ -5,27 +5,21 @@
 // @dxos/test platform=nodejs
 
 import expect from 'expect';
-import { Duplex } from 'stream';
-import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
-import { discoveryKey } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
-import { Protocol } from '@dxos/mesh-protocol';
+import { sleep, TestStream } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
+import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
-import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
 describe('WebRTCTransportProxy', () => {
   const setupProxy = async ({
     initiator = true,
-    stream = new Duplex({ write: () => {}, read: () => {} }),
+    stream = new TestStream(),
     sendSignal = async () => {}
   }: {
     initiator?: boolean;
@@ -99,18 +93,10 @@ describe('WebRTCTransportProxy', () => {
     .retries(3);
 
   test('establish connection and send data through with protocol', async () => {
-    const topic = PublicKey.random();
-    const peer1Id = PublicKey.random();
-    const peer2Id = PublicKey.random();
-
-    const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-    const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id, plugin1);
+    const stream1 = new TestStream();
     const { webRTCTransportProxy: connection1 } = await setupProxy({
       initiator: true,
-      stream: protocolProvider1({
-        channel: discoveryKey(topic),
-        initiator: true
-      }).stream,
+      stream: stream1,
       sendSignal: async (signal) => {
         await sleep(10);
         await connection2.signal(signal);
@@ -118,36 +104,17 @@ describe('WebRTCTransportProxy', () => {
     });
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
-    const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-    const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id, plugin2);
+    const stream2 = new TestStream();
     const { webRTCTransportProxy: connection2 } = await setupProxy({
       initiator: false,
-      stream: protocolProvider2({
-        channel: discoveryKey(topic),
-        initiator: false
-      }).stream,
+      stream: stream2,
       sendSignal: async (signal) => {
         await sleep(10);
         await connection1.signal(signal);
       }
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
-
-    const received: any[] = [];
-    const mockReceive = (p: Protocol, s: string) => {
-      received.push(p, s);
-      return undefined;
-    };
-    plugin1.on('receive', mockReceive);
-
-    plugin2.on('connect', async (protocol) => {
-      await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
-    });
-    await waitForExpect(() => {
-      expect(received.length).toBe(2);
-      expect(received[0]).toBeInstanceOf(Protocol);
-      expect(received[1]).toBe('{"message": "Hello"}');
-    });
+    await TestStream.assertConnectivity(stream1, stream2);
   })
     .timeout(2_000)
     .retries(3);
@@ -192,18 +159,10 @@ describe('WebRTCTransportProxy', () => {
     });
 
     test('establish connection and send data through with protocol', async () => {
-      const topic = PublicKey.random();
-      const peer1Id = PublicKey.random();
-      const peer2Id = PublicKey.random();
-
-      const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-      const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id, plugin1);
+      const stream1 = new TestStream();
       const proxy1 = new WebRTCTransportProxy({
         initiator: true,
-        stream: protocolProvider1({
-          channel: discoveryKey(topic),
-          initiator: true
-        }).stream,
+        stream: stream1,
         sendSignal: async (signal) => {
           await sleep(10);
           await proxy2.signal(signal);
@@ -212,14 +171,10 @@ describe('WebRTCTransportProxy', () => {
       });
       afterTest(() => proxy1.errors.assertNoUnhandledErrors());
 
-      const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-      const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id, plugin2);
+      const stream2 = new TestStream();
       const proxy2 = new WebRTCTransportProxy({
         initiator: false,
-        stream: protocolProvider2({
-          channel: discoveryKey(topic),
-          initiator: false
-        }).stream,
+        stream: stream2,
         sendSignal: async (signal) => {
           await sleep(10);
           await proxy1.signal(signal);
@@ -228,22 +183,7 @@ describe('WebRTCTransportProxy', () => {
       });
       afterTest(() => proxy2.errors.assertNoUnhandledErrors());
 
-      const received: any[] = [];
-      const mockReceive = (p: Protocol, s: string) => {
-        received.push(p, s);
-        return undefined;
-      };
-      plugin1.on('receive', mockReceive);
-
-      plugin2.on('connect', async (protocol) => {
-        await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
-      });
-
-      await waitForExpect(() => {
-        expect(received.length).toBe(2);
-        expect(received[0]).toBeInstanceOf(Protocol);
-        expect(received[1]).toBe('{"message": "Hello"}');
-      });
+      await TestStream.assertConnectivity(stream1, stream2);
     })
       .timeout(5_000)
       .retries(3);

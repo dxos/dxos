@@ -3,12 +3,9 @@
 //
 
 import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
 
-import { latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Protocol } from '@dxos/mesh-protocol';
 import { test } from '@dxos/test';
 import { range } from '@dxos/util';
 
@@ -88,11 +85,8 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     expect(topics).to.have.length(numSwarms);
   });
 
-  // TODO(burdon): Fails with WebRTC.
-  // TODO(burdon): This just tests multiple swarms (not peers in the same swarm)?
-  //  Generalize for n swarms and factor into other tests; configure message activity.
-  test.skip('joins multiple swarms concurrently', async () => {
-    const createSwarm = async (messages: any[], label: string) => {
+  test('joins multiple swarms concurrently', async () => {
+    const createSwarm = async () => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
       const peer2a = testBuilder.createPeer();
@@ -100,33 +94,19 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       const swarm1a = await peer1a.createSwarm(topicA).join();
       const swarm2a = await peer2a.createSwarm(topicA).join();
 
-      swarm1a.plugin.on('receive', (_, msg: string) => {
-        messages.push(msg);
-      });
-      swarm2a.plugin.on('connect', async () => {
-        await swarm2a.plugin.send(peer1a.peerId.asBuffer(), label);
-      });
+      return { swarm1a, swarm2a, peer1a, peer2a };
     };
 
-    const receivedA: any[] = [];
-    const receivedB: any[] = [];
+    const test1 = await createSwarm();
+    const test2 = await createSwarm();
 
-    void createSwarm(receivedA, 'Swarm A');
-    void createSwarm(receivedB, 'Swarm B');
-
-    // TODO(burdon): Replace with triggers.
-    await waitForExpect(() => {
-      expect(receivedA).to.have.length(1);
-      expect(receivedB).to.have.length(1);
-
-      expect(receivedA[0]).to.eq('Swarm A');
-      expect(receivedB[0]).to.eq('Swarm B');
-    });
+    await Promise.all([
+      test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
+      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId)
+    ]);
   });
 
-  // TODO(burdon): Fails with WebRTC.
-  // TODO(burdon): Factor out components of test.
-  test.skip('many peers and connections', async () => {
+  test('many peers and connections', async () => {
     const numTopics = 5;
     const peersPerTopic = 5;
 
@@ -138,29 +118,9 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
           range(peersPerTopic).map(async () => {
             const peer = testBuilder.createPeer();
             const swarm = await peer.createSwarm(topic).join();
-
-            const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
-
-            swarm.plugin.on('connect', async (protocol: Protocol) => {
-              const { peerId } = protocol.getSession() ?? {};
-              const remoteId = PublicKey.from(peerId);
-              await swarm.plugin.send(remoteId.asBuffer(), 'ping');
-            });
-
-            swarm.plugin.on('receive', async (protocol: Protocol, data: any) => {
-              const { peerId } = protocol.getSession() ?? {};
-              const remoteId = PublicKey.from(peerId);
-
-              if (data === 'ping') {
-                await swarm.plugin.send(remoteId.asBuffer(), 'pong');
-              } else if (data === 'pong') {
-                pongReceived();
-              } else {
-                throw new Error(`Invalid message: ${data}`);
-              }
-            });
-
-            await done();
+            await swarm.protocol.connected.waitForCondition(
+              () => swarm.protocol.connections.size === peersPerTopic - 1
+            );
           })
         );
       })
