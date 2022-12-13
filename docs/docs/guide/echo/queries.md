@@ -32,3 +32,12 @@ const selection = space.database
   .select({ type })
   .filter((item) => !item.deleted);
 ```
+
+### Selecting children
+
+```ts file=./snippets/read-items-selections-children.ts#L17-
+// filter selections by chaining
+const selection = space.database
+  .select({ type })
+  .filter((item) => !item.deleted);
+```
