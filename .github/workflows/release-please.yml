@@ -36,18 +36,21 @@ jobs:
         run: |
           git switch production
           git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
+          git push
 
       - name: Merge with main
         if: ${{ steps.release.outputs.release_created }}
         run: |
           git switch main
           git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
+          git push
 
       - name: Fast-forward main
         if: ${{ !steps.release.outputs.release_created }}
         run: |
           git switch main
           git merge --ff-only ${{ github.ref_name }}
+          git push
 
       - name: Delete rc branch
         if: ${{ steps.release.outputs.release_created }}
