@@ -8,8 +8,8 @@ dir:
 
 # MESH Overview
 
-:::info This area is under development
-:::
+\:::info This area is under development
+\:::
 
 MESH is a collection of components for peer to peer networking, discovery, hole-punching and NAT traversal.
 

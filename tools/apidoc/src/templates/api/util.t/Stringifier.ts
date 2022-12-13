@@ -274,6 +274,8 @@ export class Stringifier {
       ? this.type(node, options)
       : node.kind === ReflectionKind.Property
       ? this.property(node, options)
+      : node.kind === ReflectionKind.FunctionOrMethod
+      ? this.method(node)
       : '';
   }
 }

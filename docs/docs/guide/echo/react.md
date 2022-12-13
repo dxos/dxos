@@ -46,12 +46,16 @@ const App = () => {
 ```
 
 ## useClient
+
 :::apidoc[@dxos/react-client.useClient]
 :::
 
 ## useSpace
+
 :::apidoc[@dxos/react-client.useSpace]
 :::
+
 ## useSelection
+
 :::apidoc[@dxos/react-client.useSelection]
 :::

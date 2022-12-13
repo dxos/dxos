@@ -31,7 +31,9 @@ Alternatively, you might want to install latest `dev` version of the kube
 ```bash
 sudo ch=dev bash -c "$(curl -fsSL https://dxos.nyc3.digitaloceanspaces.com/install.sh)"
 ```
+
 After that, `kube` becomes available:
+
 ```bash
 sudo kube start
 ```
