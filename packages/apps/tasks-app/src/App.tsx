@@ -20,11 +20,10 @@ import {
   StatusIndicator2
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-
 import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
-import { Routes } from './Routes';
 
+import { Routes } from './Routes';
 import tasksTranslations from './translations';
 
 log.config({
@@ -33,6 +32,7 @@ log.config({
 });
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
+const servicesProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
 
 export const App = () => {
   const {
@@ -54,11 +54,7 @@ export const App = () => {
       <ErrorProvider>
         {/* TODO: (wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider
-            config={configProvider}
-            services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
-            fallback={<GenericFallback />}
-          >
+          <ClientProvider config={configProvider} services={servicesProvider} fallback={<GenericFallback />}>
             <StatusIndicator2 />
             <HashRouter>
               <Routes />
