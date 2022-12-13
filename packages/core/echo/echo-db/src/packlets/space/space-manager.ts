@@ -95,6 +95,11 @@ export class SpaceManager {
     for (const spaceMetadata of this._metadataStore.spaces) {
       const space = await this._constructSpace(spaceMetadata);
       await space.open();
+
+      if (spaceMetadata.latestTimeframe) {
+        await space.dataPipelineState?.waitUntilTimeframe(spaceMetadata.latestTimeframe);
+      }
+
       this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
       this._spaces.set(spaceMetadata.key, space);
     }
@@ -203,7 +208,10 @@ export class SpaceManager {
       dataFeed,
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
-        new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey)
+        new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey),
+      onDatabaseTimeframeChanged: async (timeframe) => {
+        await this._metadataStore.setSpaceLatestTimeframe(spaceKey, timeframe);
+      }
     });
   }
 }

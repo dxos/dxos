@@ -38,6 +38,7 @@ export type SpaceParams = {
   feedProvider: FeedProvider;
   databaseFactory: DatabaseFactory;
   initialTimeframe?: Timeframe;
+  onDatabaseTimeframeChanged?: (timeframe: Timeframe) => Promise<void>;
 };
 
 /**
@@ -51,6 +52,7 @@ export interface ISpace {
   close(): Promise<void>;
 }
 
+// TODO(dmaretskyi): Extract database stuff.
 /**
  * Spaces are globally addressable databases with access control.
  */
@@ -62,6 +64,7 @@ export class Space implements ISpace {
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _controlFeed: FeedWrapper<FeedMessage>;
   private readonly _feedProvider: FeedProvider;
+  private readonly _onDatabaseTimeframeChanged?: (timeframe: Timeframe) => Promise<void>;
 
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
@@ -82,7 +85,8 @@ export class Space implements ISpace {
     dataFeed,
     feedProvider,
     databaseFactory,
-    initialTimeframe
+    initialTimeframe,
+    onDatabaseTimeframeChanged
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
@@ -91,12 +95,13 @@ export class Space implements ISpace {
     this._feedProvider = feedProvider;
     this._genesisFeedKey = genesisFeed.key;
     this._databaseFactory = databaseFactory;
+    this._onDatabaseTimeframeChanged = onDatabaseTimeframeChanged;
 
     this._controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
       feedProvider,
-      initialTimeframe
+      initialTimeframe // TODO(dmaretskyi): We should always read the control pipeline from the start and use initialTimeframe only for the data pipeline.
     });
 
     this._controlPipeline.setWriteFeed(controlFeed);
@@ -164,6 +169,10 @@ export class Space implements ISpace {
    */
   get controlPipeline(): PipelineAccessor {
     return this._controlPipeline.pipeline;
+  }
+
+  get dataPipelineState() {
+    return this._dataPipeline?.state;
   }
 
   @synchronized
@@ -267,6 +276,8 @@ export class Space implements ISpace {
         } catch (err: any) {
           log.catch(err);
         }
+
+        await this._onDatabaseTimeframeChanged?.(this._dataPipeline.state.timeframe);
       }
     });
   }
