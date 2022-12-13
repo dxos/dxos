@@ -12,11 +12,11 @@ import { ClientProvider } from '@dxos/react-client';
 import { Main, SpaceList } from './components';
 
 export const App = () => {
+  const configProvider = async () => new Config(await Dynamics(), Defaults());
+  const servicesProvider = (config: Config) =>
+    process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config);
   return (
-    <ClientProvider
-      config={async () => new Config(await Dynamics(), Defaults())}
-      services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
-    >
+    <ClientProvider config={configProvider} services={servicesProvider}>
       <HashRouter>
         <Routes>
           <Route path='/' element={<SpaceList />}>
