@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - main
+      - rc-*
 
 name: Release automation with Release Please
 
@@ -10,13 +10,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: google-github-actions/release-please-action@v3
+        name: Github Release
+        id: release
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
           release-type: node
           command: github-release
 
       - uses: google-github-actions/release-please-action@v3
+        name: Version Bump
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
           release-type: node
           command: manifest-pr
+
+      - uses: actions/checkout@v3
+        name: Checkout production
+        with:
+          ref: production
+        if: ${{ steps.release.outputs.release_created }}
+
+      - run: git merge --no-ff ${{ github.ref_name }}
+        name: Merge with production
+        if: ${{ steps.release.outputs.release_created }}
+
+      - uses: actions/checkout@v3
+        name: Checkout main
+        with:
+          ref: main
+
+      - run: git merge --no-ff ${{ github.ref_name }}
+        name: Merge with main
+        if: ${{ steps.release.outputs.release_created }}
+
+      - run: git merge --ff-only ${{ github.ref_name }}
+        name: Fast-forward main
+        if: ${{ !steps.release.outputs.release_created }}
+
+      - run: git push origin :${{ github.ref_name }}
+        name: Delete rc branch
+        if: ${{ steps.release.outputs.release_created }}
