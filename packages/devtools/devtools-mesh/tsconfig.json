@@ -30,9 +30,6 @@
       "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../core/mesh/protocol-plugin-presence"
-    },
-    {
       "path": "../../core/protocols"
     },
     {

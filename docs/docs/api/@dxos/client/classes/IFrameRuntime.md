@@ -1,5 +1,5 @@
 # Class `IFrameRuntime`
-<sub>Declared in [packages/sdk/client-services/dist/src/packlets/vault/iframe-runtime.d.ts:10]()</sub>
+<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/vault/iframe-runtime.d.ts:10]()</sub>
 
 
 Manages the client connection to the shared worker.

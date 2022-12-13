@@ -8,8 +8,8 @@ import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { TestExtension } from './test-extension';
 import { TestBuilder } from './testing';
+import { TestExtension } from './testing/test-extension';
 
 describe('Teleport', () => {
   test('sends rpc via TestExtension', async () => {

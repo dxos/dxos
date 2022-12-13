@@ -47,12 +47,6 @@ export type SwarmOptions = {
   topology?: Topology;
 
   /**
-   * Presence plugin for network mapping, if exists.
-   */
-  // TODO(dmaretskyi): Remove this dependency.
-  presence?: any;
-
-  /**
    * Custom label assigned to this swarm.
    * Used in devtools to display human-readable names for swarms.
    */
@@ -141,7 +135,6 @@ export class NetworkManager {
     peerId,
     topology,
     protocolProvider: protocol,
-    presence,
     label
   }: SwarmOptions): Promise<SwarmConnection> {
     assert(PublicKey.isPublicKey(topic));
@@ -160,7 +153,7 @@ export class NetworkManager {
 
     this._swarms.set(topic, swarm);
     this._signalConnection.join({ topic, peerId }).catch((error) => log.catch(error));
-    this._mappers.set(topic, new SwarmMapper(swarm, presence));
+    this._mappers.set(topic, new SwarmMapper(swarm));
 
     this.topicsUpdated.emit();
     this._connectionLog?.swarmJoined(swarm);

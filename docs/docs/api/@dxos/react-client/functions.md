@@ -70,7 +70,7 @@ Arguments:
 ### [useHaloInvitations()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L12)
 
 
-Returns: <code>InvitationObservable[]</code>
+Returns: <code>CancellableInvitationObservable[]</code>
 
 Arguments: none
 ### [useIdentity()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useIdentity.ts#L13)
@@ -89,7 +89,7 @@ Returns: <code>object</code>
 
 Arguments: 
 
-`initialObservable`: <code>InvitationObservable</code>
+`initialObservable`: <code>CancellableInvitationObservable</code>
 ### [useMembers(spaceKey)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useMembers.ts#L11)
 
 
@@ -98,7 +98,7 @@ Returns: <code>SpaceMember[]</code>
 Arguments: 
 
 `spaceKey`: <code>undefined | PublicKey</code>
-### [useReducer(selection, value, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L54)
+### [useReducer(selection, value, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L53)
 
 
 Hook to process selection reducer.
@@ -123,14 +123,13 @@ Returns: <code>T[]</code>
 Arguments: 
 
 `resultSet`: <code>ResultSet&lt;T&gt;</code>
-### [useSelection(selection, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L21)
+### [useSelection(selection, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L20)
 
 
 Hook to generate values from a selection using a selector function.
 
 NOTE:
-All values that may change the selection result,
-apart from changes in ECHO database itself, must be passed to deps array
+All values that may change the selection result  must be passed to deps array
 for updates to work correctly.
 
 Returns: <code>undefined | T[]</code>
@@ -164,7 +163,7 @@ Arguments:
 ### [useSpaceInvitations(\[spaceKey\])](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L13)
 
 
-Returns: <code>InvitationObservable[]</code>
+Returns: <code>CancellableInvitationObservable[]</code>
 
 Arguments: 
 
@@ -178,7 +177,15 @@ Requires ClientContext to be set via ClientProvider.
 Returns: <code>Space[]</code>
 
 Arguments: none
-### [useStream(streamFactory, defaultValue, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/util/useStream.ts#L12)
+### [useStatus(polling)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useStatus.ts#L12)
+
+
+Returns: <code>boolean</code>
+
+Arguments: 
+
+`polling`: <code>number</code>
+### [useStream(streamFactory, defaultValue, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/util/useStream.ts#L13)
 
 
 Subscribe to service API streams.

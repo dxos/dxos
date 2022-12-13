@@ -1,0 +1,18 @@
+{
+  "sourceRoot": "packages/apps/samples/bare/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/samples/bare/**/*.{ts,js}?(x)"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

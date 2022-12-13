@@ -1,6 +1,5 @@
-#!/bin/sh
-
-set -x
+#!/usr/bin/env sh
+set -euxo pipefail
 
 pnpm nx run-many --target=lint
 pnpm nx run-many --target=build
