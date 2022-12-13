@@ -9,8 +9,13 @@ jobs:
     steps:
       - run: echo "today=$(date +"%Y-%m-%d")" >> $GITHUB_OUTPUT
         id: time
-      - run: echo "sha=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_OUTPUT
+      
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - run: echo "sha=$(git rev-parse --short=8 HEAD)" >> $GITHUB_OUTPUT
         id: git
+
       - uses: peterjgrainger/action-create-branch@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
