@@ -120,53 +120,11 @@ jobs:
       - run: pnpm install
       - *cache_save
       - run: pnpm nx build cli
-      # TODO(wittjosiah): Factor out the deployable apps list to the script.
-      - run:
-          name: Deploy HALO
-          working_directory: ./packages/apps/halo-app
-          command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=4096
-      - run:
-          name: Deploy Tasks
-          working_directory: ./packages/apps/tasks-app
-          command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=4096
-      - run:
-          name: Deploy Composer
-          working_directory: ./packages/apps/composer-app
-          command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=4096
-      - run:
-          name: Deploy Devtools
-          working_directory: ./packages/devtools/devtools
-          command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=5120
-      - run:
-          name: Deploy Docs
-          working_directory: ./docs
-          command: |
-            ../.circleci/scripts/publish.sh production
-            ../.circleci/scripts/publish.sh
-          no_output_timeout: 30m
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=5120
+      - run: Deploy Apps
+        command: ./circleci/scripts/publish.sh
+        environment:
+          NODE_ENV: production
+          NODE_OPTIONS: --max_old_space_size=4096
 
 workflows:
   check:
@@ -185,6 +143,7 @@ workflows:
             branches:
               only:
                 - main
-                - release
+                - production
+                - staging
           context:
             - Github

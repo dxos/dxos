@@ -34,8 +34,8 @@ jobs:
 
       - name: Setup Git
         run: |
-          git config user.name "Josiah Witt"
-          git config user.email "josiah@witt.life"
+          git config user.name "dxos-bot"
+          git config user.email "bot@dxos.org"
 
       - name: Merge with production
         if: ${{ steps.release.outputs.release_created }}
