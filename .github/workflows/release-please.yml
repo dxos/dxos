@@ -29,7 +29,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Checkout all branches
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config user.name "Josiah Witt"
+          git config user.email "josiah@witt.life"
 
       - name: Merge with production
         if: ${{ steps.release.outputs.release_created }}
