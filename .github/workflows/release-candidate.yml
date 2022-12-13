@@ -9,7 +9,7 @@ jobs:
     steps:
       - run: echo "today=$(date +"%Y-%m-%d")" >> $GITHUB_OUTPUT
         id: time
-      - run: echo "sha=$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_OUTPUT
+      - run: echo "sha=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_OUTPUT
         id: git
       - uses: peterjgrainger/action-create-branch@v2.2.0
         env:
