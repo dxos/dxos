@@ -27,15 +27,12 @@ jobs:
           command: manifest-pr
 
       - uses: actions/checkout@v3
-        name: Checkout release
-
-      - uses: actions/checkout@v3
         name: Checkout production
         with:
           ref: production
         if: ${{ steps.release.outputs.release_created }}
 
-      - run: git merge --no-ff ${{ github.ref_name }}
+      - run: git merge --no-ff origin/${{ github.ref_name }}
         name: Merge with production
         if: ${{ steps.release.outputs.release_created }}
 
@@ -44,11 +41,11 @@ jobs:
         with:
           ref: main
 
-      - run: git merge --no-ff ${{ github.ref_name }}
+      - run: git merge --no-ff origin/${{ github.ref_name }}
         name: Merge with main
         if: ${{ steps.release.outputs.release_created }}
 
-      - run: git merge --ff-only ${{ github.ref_name }}
+      - run: git merge --ff-only origin/${{ github.ref_name }}
         name: Fast-forward main
         if: ${{ !steps.release.outputs.release_created }}
 
