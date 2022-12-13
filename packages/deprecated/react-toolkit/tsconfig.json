@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../bots/bot-factory-client"
-    },
-    {
       "path": "../../common/async"
     },
     {

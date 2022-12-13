@@ -20,7 +20,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager, Plugin } from '@dxos/network-manager';
+import { NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -29,7 +29,6 @@ import { Identity } from '../identity';
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
   swarmIdentity: SwarmIdentity;
-  networkPlugins?: Plugin[];
 }
 
 export type JoinIdentityParams = {

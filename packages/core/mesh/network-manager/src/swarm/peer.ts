@@ -203,9 +203,7 @@ export class Peer {
       log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator, err });
 
       // Calls `onStateChange` with CLOSED state.
-      void this.closeConnection().catch(() => {
-        log.catch(err);
-      });
+      void this.closeConnection();
     });
 
     this.connection = connection;
