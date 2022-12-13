@@ -121,7 +121,7 @@ jobs:
       - *cache_save
       - run: pnpm nx build cli
       - run: Deploy Apps
-        command: ./circleci/scripts/publish.sh
+        command: ./.circleci/scripts/publish.sh
         environment:
           NODE_ENV: production
           NODE_OPTIONS: --max_old_space_size=4096
