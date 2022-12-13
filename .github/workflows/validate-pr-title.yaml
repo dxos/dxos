@@ -2,8 +2,6 @@ on:
   pull_request_target:
     types: [edited, opened, synchronize, reopened]
 
-name: Validate PR title
-
 jobs:
   check-pr:
     name: Validate PR title
