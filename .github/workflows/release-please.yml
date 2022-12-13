@@ -3,6 +3,8 @@ on:
     branches:
       - rc-*
 
+name: release-please
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -12,6 +14,7 @@ jobs:
         id: release
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
+          default-branch: ${{ github.ref_name }}
           release-type: node
           command: github-release
 
@@ -19,6 +22,7 @@ jobs:
         name: Version Bump
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
+          default-branch: ${{ github.ref_name }}
           release-type: node
           command: manifest-pr
 

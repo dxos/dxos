@@ -2,8 +2,10 @@ on:
   release:
     types: [published]
 
+name: publish
+
 jobs:
-  release-please:
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
