@@ -22,7 +22,7 @@ export class TestStream extends Duplex {
 
     await Promise.all([
       stream2.assertReceivedAsync('ping', { timeout }),
-      stream1.assertReceivedAsync('pong', { timeout }),
+      stream1.assertReceivedAsync('pong', { timeout })
     ]);
   }
 
