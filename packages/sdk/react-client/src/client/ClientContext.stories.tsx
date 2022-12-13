@@ -71,10 +71,13 @@ class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean
   }
 }
 
-export const Failure = () => (
-  <ErrorBoundary>
-    <ClientProvider config={new Config({ runtime: { client: { remoteSource: 'bad-value' } } })}>
-      <TestApp />
-    </ClientProvider>
-  </ErrorBoundary>
-);
+export const Failure = () => {
+  const config = new Config({ runtime: { client: { remoteSource: 'bad-value' } } });
+  return (
+    <ErrorBoundary>
+      <ClientProvider config={config}>
+        <TestApp />
+      </ClientProvider>
+    </ErrorBoundary>
+  );
+};
