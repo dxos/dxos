@@ -12,6 +12,7 @@ import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
+import { Trigger } from '@dxos/async';
 
 const log = debug('dxos:echo-db:data-mirror');
 
@@ -31,12 +32,15 @@ export class DataMirror {
     private readonly _spaceKey: PublicKey
   ) {}
 
-  open() {
+  async open() {
+    const loaded = new Trigger();
+
     const entities = this._dataService.subscribeEntitySet({
       spaceKey: this._spaceKey
     });
     entities.subscribe(
       async (diff) => {
+        loaded.wake();
         for (const addedEntity of diff.added ?? []) {
           log(`Construct: ${JSON.stringify(addedEntity)}`);
           assert(addedEntity.itemId);
@@ -73,6 +77,9 @@ export class DataMirror {
         log(`Connection closed: ${err}`);
       }
     );
+
+    // Wait for initial set of items.
+    await loaded.wait();
   }
 
   private _subscribeToUpdates(entity: Entity<Model<any>>) {
