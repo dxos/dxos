@@ -27,6 +27,10 @@ jobs:
           command: manifest-pr
 
       - uses: actions/checkout@v3
+        name: Checkout release
+        if: ${{ steps.release.outputs.release_created }}
+
+      - uses: actions/checkout@v3
         name: Checkout production
         with:
           ref: production
