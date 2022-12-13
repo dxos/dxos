@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - rc-*
+      - hotfix-*
 
 name: release-please
 
@@ -58,7 +59,7 @@ jobs:
           git merge --ff-only ${{ github.ref_name }}
           git push
 
-      - name: Delete rc branch
+      - name: Delete release branch
         if: ${{ steps.release.outputs.release_created }}
         uses: dawidd6/action-delete-branch@v3
         with:

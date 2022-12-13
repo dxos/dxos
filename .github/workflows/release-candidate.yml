@@ -1,5 +1,14 @@
 on:
   workflow_dispatch:
+    inputs:
+      type:
+        description: 'Release type'
+        required: true
+        default: 'rc'
+        type: choice
+        options:
+          - rc
+          - hotfix
 
 name: release-candidate
 
@@ -17,4 +26,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
         with:
-          branch: rc-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}
+          branch: ${{ inputs.type }}-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}
