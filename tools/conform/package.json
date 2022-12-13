@@ -1,6 +1,6 @@
 {
   "name": "@dxos/conform",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "private": true,
   "description": "A utility for conforming files across packages in a monorepo",
   "homepage": "https://dxos.org",
