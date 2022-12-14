@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { initializeDevtools } from '@dxos/devtools';
+import { initializeDevtools } from '@dxos/inspector-app';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
 
