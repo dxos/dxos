@@ -11,14 +11,14 @@ export default defineTemplate<typeof config>(({ input }) => {
         type: dxos:type/app
         build:
           command: npm run build
-          outdir: out/${name}
+          outdir: out/app/${name}
   runtime:
     client:
       storage:
         persistent: true
     services:
       signal:
-        server: ws://localhost:8888/.well-known/dx/signal
+        server: ws://kube.dxos.org:8888/.well-known/dx/signal
       ice:
         - urls: turn:kube.dxos.org:3478
           username: dxos

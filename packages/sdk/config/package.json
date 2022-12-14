@@ -12,9 +12,6 @@
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
-  "typedoc": {
-    "entryPoint": "src/index.ts"
-  },
   "files": [
     "dist",
     "esbuild-plugin.js",
@@ -51,5 +48,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typedoc": {
+    "entryPoint": "src/index.ts"
   }
 }
