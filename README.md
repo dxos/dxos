@@ -1,6 +1,6 @@
 ![DXOS](./docs/docs/assets/images/github-repo-banner.png)
 
-# @dxos/dxos
+# DXOS
 
 [![MIT License](https://img.shields.io/npm/l/@dxos/client)](https://github.com/dxos/dxos/blob/main/LICENSE)
 [![CI](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos)
@@ -19,6 +19,12 @@ A decentralized alternative to the commercial cloud for privacy preserving softw
 ```bash
 pnpm install --save @dxos/client
 ```
+
+## Documentation
+
+- [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
+- [📖 Developer Guide](https://docs.dxos.org/guide)
+- [📚 API Reference](https://docs.dxos.org/api)
 
 ## DXOS Resources
 
