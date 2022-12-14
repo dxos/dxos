@@ -92,5 +92,7 @@ Arguments:
 
 ## Example
 
-Here's how a task list app might handle rendering a list in React
+Here's how a task list app might handle rendering a list in React:
 
+```tsx file=./snippets/hooks.tsx#L5-
+```
