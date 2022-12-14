@@ -37,7 +37,7 @@ describe('space/space-protocol', () => {
     });
   });
 
-  test.only('failing authentication', async () => {
+  test('failing authentication', async () => {
     const [topic, peerId1, peerId2] = PublicKey.randomSequence();
     const signalContext = new MemorySignalManagerContext();
 
