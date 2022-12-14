@@ -1,7 +1,13 @@
-import React, { KeyboardEvent } from 'react';
-import { mx, getSize, defaultFocus, Button, defaultHover } from '@dxos/react-uikit';
-import { Input } from './Input';
+//
+// Copyright 2022 DXOS.org
+//
+
 import { X } from 'phosphor-react';
+import React, { KeyboardEvent } from 'react';
+
+import { mx, getSize, defaultFocus, Button, defaultHover } from '@dxos/react-uikit';
+
+import { Input } from './Input';
 
 export type CheckBoxItemProps = {
   isLoading?: boolean;
@@ -28,7 +34,7 @@ export const CheckboxItem = (props: CheckBoxItemProps) => {
         )}
         onChange={(e) => {
           const val = e?.target?.checked;
-          val != isChecked && onChecked?.(val);
+          val !== isChecked && onChecked?.(val);
         }}
       />
       <div role='none' className='grow'>
