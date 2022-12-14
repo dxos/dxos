@@ -35,7 +35,6 @@ const MAX_OTP_ATTEMPTS = 3;
 /**
  * Handles the life-cycle of Space invitations between peers.
  */
-// TODO(dmaretskyi): Split into Host and Guest parts.
 export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
   constructor(
     networkManager: NetworkManager,
@@ -55,7 +54,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     assert(type !== Invitation.Type.OFFLINE);
     assert(space);
 
-    // TODO(dmaretskyi): Add invitation kind: halo/space.
+    // TODO(dmaretskyi): Add invitation kind: halo/space: RB: Doesn't space.key imply this?
     const invitation: Invitation = {
       type,
       invitationId: PublicKey.random().toHex(),
@@ -167,8 +166,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
   }
 }
 
-// TODO(burdon): Factor out subclass shared by space and halo invitations (e.g., credential writing).
-
 /**
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
@@ -275,7 +272,7 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
 
             return { credential: spaceMemberCredential };
           } catch (err) {
-            // TODO(burdon): Generic RPC callback to report error to client.
+            // TODO(burdon): Generic RPC callback to report error to client?
             this._observable.callback.onError(err);
             throw err; // Propagate error to guest.
           }
@@ -340,7 +337,6 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
   override async onOpen(context: ExtensionContext) {
     await super.onOpen(context);
 
-    // TODO(burdon): Can this be split (state machine?)
     scheduleTask(this._ctx, async () => {
       try {
         // TODO(burdon): Bug where guest may create multiple connections <== is this still true with teleport?
