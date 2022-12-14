@@ -1,11 +1,11 @@
-# @dxos/config
+# @dxos/react-list
 
-Config utilities
+A list editing experience component for DXOS.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/config
+pnpm i @dxos/react-list
 ```
 
 ## DXOS Resources

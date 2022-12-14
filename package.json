@@ -2,7 +2,7 @@
   "name": "@dxos/dxos",
   "version": "0.1.17",
   "private": true,
-  "description": "DXOS NodeJS Protocols and SDK.",
+  "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",

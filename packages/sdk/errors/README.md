@@ -1,11 +1,11 @@
-# @dxos/config
+# @dxos/errors
 
-Config utilities
+Error definitions and utilities.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/config
+pnpm i @dxos/errors
 ```
 
 ## DXOS Resources

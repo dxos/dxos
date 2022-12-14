@@ -1,11 +1,11 @@
-# @dxos/config
+# @dxos/assets
 
-Config utilities
+Digital assets.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/config
+pnpm i @dxos/assets
 ```
 
 ## DXOS Resources
