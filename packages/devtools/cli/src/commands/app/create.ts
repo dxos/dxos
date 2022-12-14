@@ -75,11 +75,11 @@ export default class Create extends BaseCommand {
           git checkout ${tag}
       `);
 
-      this.log('Preparing template...');
+      // this.log('Preparing template...');
 
       // Copy vite patch.
-      await mkdir(`${templateDirectory}/patches`);
-      await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
+      // await mkdir(`${templateDirectory}/patches`);
+      // await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
 
       this.log('Creating app...');
 
