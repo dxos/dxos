@@ -65,15 +65,12 @@ export default class Create extends BaseCommand {
     if (outputDirExists && !isOutputEmpty) {
       this.error(`Output directory ${outputDirectory} is not empty`, { exit: 1 });
     }
-
     try {
-      try {
-        await promisify(exec)(`which pnpsm`);
-      } catch {
-        this.error('pnpm not found. Please run "npm i -g pnpm" first.', { exit: 1 });
-        return;
-      }
-
+      await promisify(exec)(`which pnpm`);
+    } catch {
+      this.error('pnpm not found. Please run "npm i -g pnpm" first.', { exit: 1 });
+    }
+    try {
       this.log('Cloning template from Github...');
       await promisify(exec)(`
         git clone --filter=blob:none --no-checkout git@github.com:dxos/dxos.git ${tmpDirectory} &&
