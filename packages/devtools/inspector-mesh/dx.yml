@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:story/devtools-mesh
+    - name: dxos:story/inspector-mesh
       type: dxos:type/app
       build:
         command: npm run build:book

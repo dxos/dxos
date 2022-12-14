@@ -166,7 +166,7 @@ class Toolbox {
             'packages/sdk/client/src/version.ts',
             {
               type: 'json',
-              path: 'packages/devtools/devtools-extension/public/manifest.json',
+              path: 'packages/devtools/inspector-extension/public/manifest.json',
               jsonpath: '$.version'
             },
             ...this.projects

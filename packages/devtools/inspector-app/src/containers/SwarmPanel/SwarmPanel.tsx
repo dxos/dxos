@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { SwarmDetails } from '@dxos/devtools-mesh';
+import { SwarmDetails } from '@dxos/inspector-mesh';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 export const SwarmPanel = () => {

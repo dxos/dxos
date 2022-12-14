@@ -31,7 +31,7 @@ module.exports = {
         '@dxos/config',
         '@dxos/credentials',
         '@dxos/debug',
-        '@dxos/devtools-mesh',
+        '@dxos/inspector-mesh',
         '@dxos/echo-db',
         '@dxos/feed-store',
         '@dxos/keys',

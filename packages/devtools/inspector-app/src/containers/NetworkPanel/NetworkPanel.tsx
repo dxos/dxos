@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { PeerGraph } from '@dxos/devtools-mesh';
+import { PeerGraph } from '@dxos/inspector-mesh';
 import { PublicKey } from '@dxos/keys';
 import { PeerInfo } from '@dxos/network-manager';
 import { SubscribeToNetworkTopicsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
