@@ -3,10 +3,11 @@
 //
 
 import path from 'path';
-import { TemplateFunction, text, fileExists } from '@dxos/plate';
-import { Input } from './index';
+import { TemplateFunction, text, defineTemplate } from '@dxos/plate';
+import { Input } from './config.t';
 
-const template: TemplateFunction<Input> = async ({ input }) => {
+// const template: TemplateFunction<Input> = async ({ input }) => {
+export default defineTemplate<Input>(({ input }) => {
   // const docsReadmeExists = await fileExists(path.resolve(outputDirectory, 'docs/README.md'));
   // const defaultDepDiagramUrl = docsReadmeExists ? './docs/README.md' : '';
   const {
@@ -87,6 +88,4 @@ const template: TemplateFunction<Input> = async ({ input }) => {
 
   License: [MIT](./LICENSE) Copyright 2022 © DXOS
   `;
-};
-
-export default template;
+});

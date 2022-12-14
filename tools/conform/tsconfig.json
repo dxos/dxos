@@ -11,7 +11,7 @@
   ],
   "include": [
     "./src/**/*.ts"
-  ],
+, "src/template/LICENSE"  ],
   "references": [
     {
       "path": "../../packages/common/plate"
