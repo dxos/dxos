@@ -49,7 +49,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: |
           git switch main
-          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into main"
           git push
 
       - name: Fast-forward main
