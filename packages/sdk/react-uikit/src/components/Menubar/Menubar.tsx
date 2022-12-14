@@ -17,6 +17,11 @@ export interface MenubarProps extends ProfileMenuProps, SpaceLinkProps, Partial<
   children?: ReactNode;
 }
 
+/**
+ * A fixed header bar
+ * @param props props
+ * @returns ReactNode
+ */
 export const Menubar = ({
   children,
   profile,

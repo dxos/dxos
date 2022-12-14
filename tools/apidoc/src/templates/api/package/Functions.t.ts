@@ -1,7 +1,7 @@
 import { ReflectionKind, JSONOutput as S } from 'typedoc';
 import { TemplateFunction, text, File } from '@dxos/plate';
 import { packagesInProject, Stringifier, reflectionsOfKind } from '../util.t/index.js';
-import { Input } from '../index.js';
+import { Input } from '../config.t.js';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   if (typeof outputDirectory == 'undefined') throw new Error('invalid output directory');

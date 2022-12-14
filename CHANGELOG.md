@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.18](https://github.com/dxos/dxos/compare/v0.1.17...v0.1.18) (2022-12-14)
+
+
+### Features
+
+* guide docs ([#2093](https://github.com/dxos/dxos/issues/2093)) ([b48ecfc](https://github.com/dxos/dxos/commit/b48ecfcd73ebc9bc9006a332f7577913325fdc83))
+* improved readmes and docs ([#2106](https://github.com/dxos/dxos/issues/2106)) ([827ebad](https://github.com/dxos/dxos/commit/827ebad88c4c582da596c8bde450deaef6426547))
+* Remove old mesh protocol ([#2099](https://github.com/dxos/dxos/issues/2099)) ([f8ccbde](https://github.com/dxos/dxos/commit/f8ccbde75a8aa70c9dfb60e02c01bbf92e039987))
+* Simplify stack for synchronized ([#2096](https://github.com/dxos/dxos/issues/2096)) ([a3be59c](https://github.com/dxos/dxos/commit/a3be59c984b8e6f533e50b8de8087ae92b7e8ea1))
+* start of kube cli extension. ([#2036](https://github.com/dxos/dxos/issues/2036)) ([71810da](https://github.com/dxos/dxos/commit/71810da8b81cfd48f3168c86410e4cebf496555e))
+* Tree of user stories ([#2078](https://github.com/dxos/dxos/issues/2078)) ([089f9a1](https://github.com/dxos/dxos/commit/089f9a11cbd04319a7d4e7c2354f19f892c1185d))
+* upgrade templates ([#2108](https://github.com/dxos/dxos/issues/2108)) ([ce45c99](https://github.com/dxos/dxos/commit/ce45c992227b0572928ca5c7896da44183fa89b6))
+
+
+### Bug Fixes
+
+* apidoc to not complain about git in CI ([#2098](https://github.com/dxos/dxos/issues/2098)) ([b20b606](https://github.com/dxos/dxos/commit/b20b60695d96caf5133508f522c966ad79906b75))
+* bugs in docs ([#2101](https://github.com/dxos/dxos/issues/2101)) ([2214aab](https://github.com/dxos/dxos/commit/2214aab0a7cb4bf9fb587506d7b5e444684a5321))
+* Dual iframes on fresh app ([#2094](https://github.com/dxos/dxos/issues/2094)) ([42b8b59](https://github.com/dxos/dxos/commit/42b8b59faef2c4a6438726d873d20dc5cc86fbec))
+* fixed dx app new flow outside of monorepo ([#2110](https://github.com/dxos/dxos/issues/2110)) ([fbea7a9](https://github.com/dxos/dxos/commit/fbea7a9bf4be08e57224149709ca3fe844517cf6))
+* lint on tasks app ([#2105](https://github.com/dxos/dxos/issues/2105)) ([a5312bb](https://github.com/dxos/dxos/commit/a5312bbb144ce7b4463d5c925d65e2b9be32e5ad))
+
 ## [0.1.17](https://github.com/dxos/dxos/compare/v0.1.16...v0.1.17) (2022-12-10)
 
 

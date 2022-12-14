@@ -1,5 +1,5 @@
 import { ReflectionKind, JSONOutput as S } from 'typedoc';
-import { Input } from '../../index.js';
+import { Input } from '../../config.t.js';
 import { Stringifier, reflectionsOfKind, packagesInProject } from '../../util.t/index.js';
 
 import { TemplateFunction, text, File } from '@dxos/plate';

@@ -1,17 +1,20 @@
 ---
 order: 0
-title: The DXOS Platform
 next: ./quick-start
 prev: ./why
 ---
 
-# The DXOS Platform
+# Introduction
 
-> DXOS enables the development and operation of internet scale, privacy preserving applications. <br/> Read more [motivation](why.md).
+DXOS enables the development and operation of internet scale, privacy preserving applications. <br/> Read more [motivation](why.md).
 
-## Platform Components
+:::note
+DXOS is under development and will continue to change frequently. <br/>Your feedback is most welcome. [Github](https://github.com/dxos/dxos/issues), [Discord](), [`@dxos_org` on Twitter](https://twitter.com/dxos_org). <br/>[Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
+:::
 
-`// TODO: insert overall platform diagram`
+## Overview
+
+DXOS consists of a few technologies that work together:
 
 *   [ECHO](echo) Database and state container for offline-first and real-time collaborative apps.
 *   [HALO](halo) Identity for decentralized apps.
@@ -25,4 +28,4 @@ Read more about [how it works](how-it-works)
 *   Create an [ECHO database](quick-start#using-an-echo-database-for-state-consensus)
 *   Build an app with [@dxos/cli](quick-start#creating-apps)
 *   Start up a [KUBE](quick-start#starting-a-kube)
-*   [Deploy and share your app](quick-start#deploying-your-app-to-a-kube)
+*   [Deploy your app to a KUBE](quick-start#deploying-your-app-to-a-kube)

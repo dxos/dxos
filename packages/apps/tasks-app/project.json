@@ -56,7 +56,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/tasks-app/**/*.{ts,js}"
+          "packages/apps/tasks-app/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [

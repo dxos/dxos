@@ -5,7 +5,6 @@
 import { Event, EventSubscriptions } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState } from './connection';
@@ -40,8 +39,7 @@ export class SwarmMapper {
 
   // prettier-ignore
   constructor(
-    private readonly _swarm: Swarm,
-    private readonly _presence: PresencePlugin | undefined
+    private readonly _swarm: Swarm
   ) {
     this._subscriptions.add(
       _swarm.connectionAdded.on((connection) => {
@@ -63,11 +61,11 @@ export class SwarmMapper {
       })
     );
 
-    if (_presence) {
-      this._subscriptions.add(_presence.graphUpdated.on(() => {
-        this._update();
-      }));
-    }
+    // if (_presence) {
+    //   this._subscriptions.add(_presence.graphUpdated.on(() => {
+    //     this._update();
+    //   }));
+    // }
 
     // TODO(burdon): Do not call from constructor.
     this._update();
@@ -91,29 +89,29 @@ export class SwarmMapper {
       });
     }
 
-    if (this._presence) {
-      this._presence.graph.forEachNode((node: any) => {
-        const id = PublicKey.fromHex(node.id);
-        if (this._peers.has(id)) {
-          return;
-        }
+    // if (this._presence) {
+    //   this._presence.graph.forEachNode((node: any) => {
+    //     const id = PublicKey.fromHex(node.id);
+    //     if (this._peers.has(id)) {
+    //       return;
+    //     }
 
-        this._peers.set(id, {
-          id,
-          state: 'INDIRECTLY_CONNECTED',
-          connections: []
-        });
-      });
+    //     this._peers.set(id, {
+    //       id,
+    //       state: 'INDIRECTLY_CONNECTED',
+    //       connections: []
+    //     });
+    //   });
 
-      this._presence.graph.forEachLink((link: any) => {
-        const from = PublicKey.from(link.fromId);
-        const to = PublicKey.from(link.toId);
-        // Ignore connections to self, they are already handled.
-        if (!from.equals(this._swarm.ownPeerId) && !to.equals(this._swarm.ownPeerId)) {
-          this._peers.get(from)!.connections.push(to);
-        }
-      });
-    }
+    //   this._presence.graph.forEachLink((link: any) => {
+    //     const from = PublicKey.from(link.fromId);
+    //     const to = PublicKey.from(link.toId);
+    //     // Ignore connections to self, they are already handled.
+    //     if (!from.equals(this._swarm.ownPeerId) && !to.equals(this._swarm.ownPeerId)) {
+    //       this._peers.get(from)!.connections.push(to);
+    //     }
+    //   });
+    // }
 
     log('graph changed', {
       directConnections: this._swarm.connections.length,

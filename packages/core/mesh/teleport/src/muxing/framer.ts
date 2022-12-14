@@ -47,8 +47,8 @@ export class Framer {
 
   public readonly port: RpcPort = {
     send: (message) => {
-      this._stream.push(encodeLength(message.length));
-      this._stream.push(message);
+      // log('write', { len: message.length, frame: Buffer.from(message).toString('hex') })
+      this._stream.push(encodeFrame(message));
     },
     subscribe: (callback) => {
       assert(!this._messageCb, 'Rpc port already has a message listener.');
@@ -70,13 +70,14 @@ export class Framer {
   private _popFrames() {
     let offset = 0;
     while (offset < this._buffer!.length) {
-      const frame = readFrame(this._buffer!, offset);
+      const frame = decodeFrame(this._buffer!, offset);
 
       if (!frame) {
         break; // Couldn't read frame but there are still bytes left in the buffer.
       }
       offset += frame.bytesConsumed;
       // TODO(dmaretskyi): Possible bug if the peer unsubscribes while we're reading frames.
+      // log('read', { len: frame.payload.length, frame: Buffer.from(frame.payload).toString('hex') })
       this._messageCb!(frame.payload);
     }
 
@@ -97,7 +98,7 @@ export class Framer {
 /**
  * Attempts to read a frame from the input buffer.
  */
-export const readFrame = (buffer: Buffer, offset: number): { payload: Buffer; bytesConsumed: number } | undefined => {
+export const decodeFrame = (buffer: Buffer, offset: number): { payload: Buffer; bytesConsumed: number } | undefined => {
   try {
     const frameLength = varint.decode(buffer, offset);
     const tagLength = varint.decode.bytes;
@@ -123,10 +124,10 @@ export const readFrame = (buffer: Buffer, offset: number): { payload: Buffer; by
   }
 };
 
-const encodeLength = (length: number) => {
-  const res = varint.encode(length, Buffer.allocUnsafe(4)).subarray(0, varint.encode.bytes);
-  if (varint.encode.bytes > 4) {
-    throw new Error('Frame too large');
-  }
-  return res;
+export const encodeFrame = (payload: Uint8Array): Buffer => {
+  const tagLength = varint.encodingLength(payload.length);
+  const frame = Buffer.allocUnsafe(tagLength + payload.length);
+  varint.encode(payload.length, frame);
+  frame.set(payload, tagLength);
+  return frame;
 };

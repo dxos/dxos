@@ -17,7 +17,7 @@ import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, SpaceHostService } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { ExtensionContext } from '@dxos/teleport';
+import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import {
   AuthenticatingInvitationProvider,
@@ -28,7 +28,6 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
-import { RpcExtension } from './rpc-extension';
 
 const MAX_OTP_ATTEMPTS = 3;
 

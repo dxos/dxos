@@ -2,16 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
-
-import { discoveryKey } from '@dxos/crypto';
+import { TestStream } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { Protocol } from '@dxos/mesh-protocol';
-import { describe, test, afterTest } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { MemoryTransport } from './memory-transport';
 
 // TODO(burdon): Flaky test.
@@ -24,10 +19,9 @@ const createPair = () => {
   const peer1Id = PublicKey.random();
   const peer2Id = PublicKey.random();
 
-  const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-  const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id, plugin1);
+  const stream1 = new TestStream();
   const connection1 = new MemoryTransport({
-    stream: protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
+    stream: stream1,
     sendSignal: async (signal) => {
       await connection2.signal(signal);
     },
@@ -37,10 +31,9 @@ const createPair = () => {
   afterTest(() => connection1.destroy());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
-  const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-  const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id, plugin2);
+  const stream2 = new TestStream();
   const connection2 = new MemoryTransport({
-    stream: protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
+    stream: stream2,
     sendSignal: async (signal) => {
       await connection1.signal(signal);
     },
@@ -53,8 +46,8 @@ const createPair = () => {
   return {
     connection1,
     connection2,
-    plugin1,
-    plugin2,
+    stream1,
+    stream2,
     peer1Id,
     peer2Id,
     topic
@@ -63,47 +56,15 @@ const createPair = () => {
 
 describe('MemoryTransport', () => {
   test('establish connection and send data through with protocol', async () => {
-    const { plugin1, plugin2, peer1Id } = createPair();
-
-    const received: any[] = [];
-    const mockReceive = (p: Protocol, s: string) => {
-      received.push(p, s);
-      return undefined;
-    };
-    plugin1.on('receive', mockReceive);
-
-    plugin2.on('connect', async (protocol) => {
-      await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
-    });
-
-    await waitForExpect(() => {
-      expect(received.length).toBe(2);
-      expect(received[0]).toBeInstanceOf(Protocol);
-      expect(received[1]).toBe('{"message": "Hello"}');
-    });
+    const { stream1, stream2 } = createPair();
+    await TestStream.assertConnectivity(stream1, stream2);
   });
 
-  test.skip('10 pairs of peers connecting at the same time', async () => {
+  test('10 pairs of peers connecting at the same time', async () => {
     await Promise.all(
       range(10).map(async () => {
-        const { plugin1, plugin2, peer1Id } = createPair();
-
-        const received: any[] = [];
-        const mockReceive = (p: Protocol, s: string) => {
-          received.push(p, s);
-          return undefined;
-        };
-        plugin1.on('receive', mockReceive);
-
-        plugin2.on('connect', async (protocol) => {
-          await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
-        });
-
-        await waitForExpect(() => {
-          expect(received.length).toBe(2);
-          expect(received[0]).toBeInstanceOf(Protocol);
-          expect(received[1]).toBe('{"message": "Hello"}');
-        });
+        const { stream1, stream2 } = createPair();
+        await TestStream.assertConnectivity(stream1, stream2);
       })
     );
   });

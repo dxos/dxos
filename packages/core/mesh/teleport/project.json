@@ -18,7 +18,7 @@
       "options": {
         "entryPoints": [
           "packages/core/mesh/teleport/src/index.ts",
-          "packages/core/mesh/teleport/src/testing.ts"
+          "packages/core/mesh/teleport/src/testing/index.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/core/mesh/teleport/dist/lib"

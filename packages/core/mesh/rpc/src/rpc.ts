@@ -273,7 +273,7 @@ export class RpcPeer {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
         const error = new RpcClosedError();
-        error.stack += `\n\nRPC client was closed at:\n${err.stack}`;
+        error.stack += `\n\n info: RPC client was closed at:\n${err.stack?.split('\n').slice(1).join('\n')}`;
         throw error;
       }
 

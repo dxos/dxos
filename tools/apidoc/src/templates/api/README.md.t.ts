@@ -1,5 +1,5 @@
 import { TemplateFunction, text } from '@dxos/plate';
-import { Input } from './index.js';
+import { Input } from './config.t.js';
 import { href, packagesInProject } from './util.t/index.js';
 
 const template: TemplateFunction<Input> = ({ input }) => {

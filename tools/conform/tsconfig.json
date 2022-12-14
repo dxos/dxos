@@ -10,7 +10,8 @@
     "node_modules"
   ],
   "include": [
-    "./src/**/*.ts"
+    "./src/**/*.ts",
+    "src/template/LICENSE"
   ],
   "references": [
     {

@@ -1,5 +1,5 @@
 # Class `Selection`
-<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:32]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/selection/selection.d.ts:32]()</sub>
 
 
 Selections are used to construct database subscriptions.

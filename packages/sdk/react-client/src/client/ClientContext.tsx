@@ -113,6 +113,11 @@ export const ClientProvider = ({
       await client.initialize().catch((err) => setError(err));
       await done(client);
     }
+
+    return async () => {
+      log('cleanUp');
+      await client?.destroy().catch((err) => log.catch(err));
+    };
   }, [clientProvider, configProvider, createServices]);
 
   if (!client) {

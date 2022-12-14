@@ -1,5 +1,5 @@
 # Class `PublicKey`
-<sub>Declared in [packages/common/keys/dist/src/public-key.d.ts:15]()</sub>
+<sub>Declared in [packages/common/keys/dist/types/src/public-key.d.ts:15]()</sub>
 
 
 The purpose of this class is to assure consistent use of keys throughout the project.
@@ -53,6 +53,14 @@ Returns: <code>boolean</code>
 Arguments: 
 
 `other`: <code>PublicKeyLike</code>
+### [getInsecureHash(modulo)]()
+
+
+Returns: <code>number</code>
+
+Arguments: 
+
+`modulo`: <code>number</code>
 ### [toHex()]()
 
 
@@ -158,6 +166,16 @@ Creates a new key.
 Returns: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: none
+### [safeFrom(\[source\])]()
+
+
+Same as  `PublicKey.from`  but does not throw and instead returns a  `{ key: PublicKey }`  or  `{ error: Error }`
+
+Returns: <code>undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+
+Arguments: 
+
+`source`: <code>PublicKeyLike</code>
 ### [stringify(key)]()
 
 

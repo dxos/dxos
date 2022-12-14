@@ -47,6 +47,7 @@ log.config({
 });
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
+const serviceProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
 
 const StatusContainer = () => {
   const status = useStatus();
@@ -115,11 +116,7 @@ export const App = () => {
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider
-            config={configProvider}
-            services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
-            fallback={<GenericFallback />}
-          >
+          <ClientProvider config={configProvider} services={serviceProvider} fallback={<GenericFallback />}>
             <HashRouter>
               <StatusContainer />
               <Routes />
