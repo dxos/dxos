@@ -111,7 +111,7 @@ export const createIFrame = (source: string, id: string) => {
       cssStyle
     );
     console.log(
-      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${source}`,
+      `%cTo inspect this application, click here:\nhttps://inspector.dxos.org/?target=vault:${source}`,
       cssStyle
     );
   }
