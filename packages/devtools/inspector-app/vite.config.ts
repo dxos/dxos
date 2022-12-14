@@ -3,7 +3,6 @@
 //
 
 import ReactPlugin from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -12,7 +11,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import packageJson from './package.json';
 
 const env = (value?: string) => (value ? `"${value}"` : undefined);
-const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/devtools@${packageJson.version}` : undefined;
+const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/inspector-app@${packageJson.version}` : undefined;
 
 // https://vitejs.dev/config/
 export default defineConfig({

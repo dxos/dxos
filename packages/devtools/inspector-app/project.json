@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/devtools/devtools/src",
+  "sourceRoot": "packages/devtools/inspector-app/src",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/devtools/devtools/src/index.ts",
-        "outputPath": "packages/devtools/devtools/dist/types",
-        "tsConfig": "packages/devtools/devtools/tsconfig.json"
+        "main": "packages/devtools/inspector-app/src/index.ts",
+        "outputPath": "packages/devtools/inspector-app/dist/types",
+        "tsConfig": "packages/devtools/inspector-app/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -22,9 +22,9 @@
       "executor": "@nrwl/storybook:build",
       "options": {
         "config": {
-          "configFolder": "packages/devtools/devtools/.storybook"
+          "configFolder": "packages/devtools/inspector-app/.storybook"
         },
-        "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
+        "outputPath": "packages/devtools/inspector-app/out/dxos/storybook/inspector",
         "uiFramework": "@storybook/react"
       },
       "outputs": [
@@ -56,8 +56,8 @@
         "production"
       ],
       "options": {
-        "configFile": "packages/devtools/devtools/vite.config.ts",
-        "outputPath": "packages/devtools/devtools/out/devtools"
+        "configFile": "packages/devtools/inspector-app/vite.config.ts",
+        "outputPath": "packages/devtools/inspector-app/out/inspector"
       },
       "outputs": [
         "{options.outputPath}"
@@ -67,9 +67,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/devtools/devtools/src/index.ts"
+          "packages/devtools/inspector-app/src/index.ts"
         ],
-        "outputPath": "packages/devtools/devtools/dist/lib"
+        "outputPath": "packages/devtools/inspector-app/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -80,7 +80,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/devtools/devtools/**/*.{ts,js}"
+          "packages/devtools/inspector-app/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -90,8 +90,8 @@
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
-        "configFile": "packages/devtools/devtools/vite.config.ts",
-        "outputPath": "packages/devtools/devtools/out/devtools"
+        "configFile": "packages/devtools/inspector-app/vite.config.ts",
+        "outputPath": "packages/devtools/inspector-app/out/inspector"
       }
     },
     "storybook": {
@@ -103,7 +103,7 @@
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "config": {
-          "configFolder": "packages/devtools/devtools/.storybook"
+          "configFolder": "packages/devtools/inspector-app/.storybook"
         },
         "uiFramework": "@storybook/react"
       }

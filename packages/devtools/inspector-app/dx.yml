@@ -2,10 +2,10 @@ version: 1
 
 package:
   modules:
-    - name: devtools
+    - name: inspector
       type: dxos:type/app
       build:
-        command: pnpm -w nx bundle devtools
+        command: pnpm -w nx bundle inspector-app
 
 runtime:
   services:
