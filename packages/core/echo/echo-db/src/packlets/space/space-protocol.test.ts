@@ -12,7 +12,7 @@ import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { TestAgentBuilder, TestFeedBuilder } from '../testing';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
+import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 
 describe('space/space-protocol', () => {
   test.skip('two peers discover each other', async () => {
@@ -37,11 +37,10 @@ describe('space/space-protocol', () => {
     });
   });
 
-  test.skip('failing authentication', async () => {
+  test('failing authentication', async () => {
+    const [topic, peerId1, peerId2] = PublicKey.randomSequence();
     const signalContext = new MemorySignalManagerContext();
-    const topic = PublicKey.random();
 
-    const peerId1 = PublicKey.random();
     const protocol1 = new SpaceProtocol({
       topic,
       identity: {
@@ -55,9 +54,6 @@ describe('space/space-protocol', () => {
       })
     });
 
-    // const authFailedPromise = protocol1.authenticationFailed.waitForCount(1); // TODO(burdon): Move to after?
-
-    const peerId2 = PublicKey.random();
     const protocol2 = new SpaceProtocol({
       topic,
       identity: {
@@ -77,7 +73,9 @@ describe('space/space-protocol', () => {
     await protocol2.start();
     afterTest(() => protocol2.stop());
 
-    // await authFailedPromise;
+    await waitForExpect(() => {
+      expect(protocol1.sessions.get(protocol2.peerId)?.authStatus).toEqual(AuthStatus.FAILURE);
+    });
   });
 
   test('replicates a feed', async () => {

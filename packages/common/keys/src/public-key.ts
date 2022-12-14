@@ -79,6 +79,14 @@ export class PublicKey {
     return PublicKey.from(randomBytes(32));
   }
 
+  static *randomSequence(): Generator<PublicKey> {
+    for (let i = 0; i < 1_0000; i++) {
+      // Counter just to protect against infinite loops.
+      yield PublicKey.random();
+    }
+    throw new Error('Too many keys requested');
+  }
+
   /**
    * Tests if provided values is an instance of PublicKey.
    */
