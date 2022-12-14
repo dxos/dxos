@@ -6,4 +6,8 @@ badges:
   - '![Node](https://img.shields.io/node/v/@dxos/client)'
   - '[![NPM](https://img.shields.io/npm/v/@dxos/client/latest)](https://www.npmjs.com/package/@dxos/client)'
   - '[![Discord](https://img.shields.io/discord/837138313172353095?label=discord)](https://discord.com/channels/837138313172353095)'
+  - '![Activity](https://img.shields.io/github/commit-activity/m/dxos/dxos)'
+  - '![Contributors](https://img.shields.io/github/contributors/dxos/dxos)'
+  
 banner: '![DXOS](./docs/docs/assets/images/github-repo-banner.png)'
+install: pnpm install --save @dxos/client

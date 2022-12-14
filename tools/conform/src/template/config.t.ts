@@ -3,6 +3,7 @@
 //
 
 export type Input = {
+  banner: string;
   name: string;
   background: string;
   badges: string[];

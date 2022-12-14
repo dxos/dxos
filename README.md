@@ -1,3 +1,5 @@
+![DXOS](./docs/docs/assets/images/github-repo-banner.png)
+
 # @dxos/dxos
 
 [![MIT License](https://img.shields.io/npm/l/@dxos/client)](https://github.com/dxos/dxos/blob/main/LICENSE)
@@ -7,13 +9,15 @@
 ![Node](https://img.shields.io/node/v/@dxos/client)
 [![NPM](https://img.shields.io/npm/v/@dxos/client/latest)](https://www.npmjs.com/package/@dxos/client)
 [![Discord](https://img.shields.io/discord/837138313172353095?label=discord)](https://discord.com/channels/837138313172353095)
+![Activity](https://img.shields.io/github/commit-activity/m/dxos/dxos)
+![Contributors](https://img.shields.io/github/contributors/dxos/dxos)
 
 A decentralized alternative to the commercial cloud for privacy preserving software.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/dxos
+pnpm install --save @dxos/client
 ```
 
 ## DXOS Resources

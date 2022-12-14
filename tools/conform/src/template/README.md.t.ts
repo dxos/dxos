@@ -13,6 +13,7 @@ export default defineTemplate<Input>(({ input }) => {
   const {
     name,
     description,
+    banner,
     usage,
     install = `pnpm i ${input?.name}`,
     quickStartUrl,
@@ -44,6 +45,7 @@ export default defineTemplate<Input>(({ input }) => {
   const code = (code: string, lang?: string) => `\`\`\`${lang ?? ''}\n${code}\n\`\`\``;
 
   return text`
+  ${banner}
   # ${name}
   ${badges?.length ? badges.join('\n') + '\n' : ''}
   ${description}
