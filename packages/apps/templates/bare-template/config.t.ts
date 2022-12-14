@@ -1,6 +1,8 @@
 import { defineConfig, z } from '@dxos/plate';
 import { isDxosMonorepoSync } from './utils.t/getDxosRepoInfo';
 
+console.log('bare template', { defineConfig, z });
+
 export default defineConfig({
   exclude: ['project.json', 'tsconfig.plate.json'],
   inputShape: z.object({
