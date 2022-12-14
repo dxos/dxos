@@ -18,6 +18,7 @@ export const reactDevDeps = ({ depVersion }: { depVersion: string }) => ({
 export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
   '@dxos/react-ui': depVersion,
   '@dxos/react-uikit': depVersion,
+  '@dxos/react-appkit': depVersion,
   'phosphor-react': '^1.4.1'
 });
 export const pwaDevDeps = ({ depVersion }: { depVersion: string }) => ({
@@ -39,7 +40,7 @@ export const storybookDevDeps = ({ depVersion }: { depVersion: string }) => ({
   webpack: '^5.74.0'
 });
 
-export default defineTemplate<typeof config>(async ({ input }) => {
+export default defineTemplate(async ({ input }) => {
   const { name, react, monorepo, pwa, storybook, dxosUi: useDxosUi } = input;
   const { version: dxosVersion, patchedDependencies } = await getDxosRepoInfo();
   const version = monorepo ? dxosVersion : '0.1.0';
@@ -85,7 +86,7 @@ export default defineTemplate<typeof config>(async ({ input }) => {
   };
   const result = JSON.stringify(packageJson, null, 2);
   return result;
-});
+}, { config });
 
 // export type Input = {
 //   monorepo?: boolean

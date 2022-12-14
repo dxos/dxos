@@ -542,6 +542,7 @@ importers:
       '@dxos/cli': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
@@ -570,6 +571,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
+      '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
@@ -605,6 +607,7 @@ importers:
       '@dxos/cli': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
@@ -633,6 +636,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
+      '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit

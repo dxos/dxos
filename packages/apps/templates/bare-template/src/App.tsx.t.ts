@@ -3,12 +3,32 @@ import config from '../config.t';
 
 export default defineTemplate(
   ({ input, defaultOutputFile, slots, ...rest }) => {
-    const { react, pwa } = input;
+    const { react, pwa, dxosUi, name } = input;
     const imports = new Imports();
     const render = renderSlots(slots)({ ...rest, input, defaultOutputFile, imports });
     const ClientProvider = imports.lazy('ClientProvider', '@dxos/react-client');
     const { Config, Dynamics, Defaults } = imports.lazy(['Config', 'Dynamics', 'Defaults'], '@dxos/config');
+    const UiKitProvider = imports.lazy('UiKitProvider', '@dxos/react-uikit');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
+    const ServiceWorkerToast = imports.lazy('ServiceWorkerToast', '@dxos/react-appkit');
+    const swToast = () => text`
+    {needRefresh ? (
+      <${ServiceWorkerToast()} {...{ variant: 'needRefresh', updateServiceWorker }} />
+    ) : offlineReady ? (
+      <${ServiceWorkerToast()} variant='offlineReady' />
+    ) : null}`;
+    const Fallback = imports.lazy('Fallback', '@dxos/react-appkit');
+    const GenericFallback = imports.lazy('GenericFallback', '@dxos/react-appkit');
+    const coreContent = text`
+    <${ClientProvider()} config={config} ${dxosUi ? `fallback={<${GenericFallback()} />}` : ''}>
+      ${render.content()}
+      ${dxosUi && pwa && swToast()}
+    </${ClientProvider()}>`;
+    const uiProviders = (content: string) => text`
+    <${UiKitProvider()} appNs='${name}' fallback={<${Fallback()} message='Loading...' />}>
+      ${content}
+    </${UiKitProvider()}>
+    `;
     return !react
       ? null
       : text`
@@ -23,20 +43,21 @@ export default defineTemplate(
         ${
           pwa &&
           text`
-        const {
+        ${
+          !!dxosUi &&
+          `const {
           offlineReady: [offlineReady, _setOfflineReady],
           needRefresh: [needRefresh, _setNeedRefresh],
           updateServiceWorker
-        } = ${useRegisterSW()}({
+        } = `
+        }${useRegisterSW()}({
           onRegisterError: (err) => {
             console.error(err);
           }
         });`
         }
         return (
-          <${ClientProvider()} config={config}>
-            ${render.content()}
-          </${ClientProvider()}>
+          ${dxosUi ? uiProviders(coreContent) : coreContent}
         )
       }
       `;
