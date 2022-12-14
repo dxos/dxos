@@ -20,10 +20,10 @@ Build the app to the `out` folder:
 pnpm build
 ```
 
-Deploy the app to a [DXOS Kube](https://docs.dxos.org/guide/kube/quick-start):
+Deploy the app to a [DXOS Kube](https://docs.dxos.org/guide/kube):
 
 ```bash
-pnpm deploy
+pnpm run deploy
 ```
 
 Run storybook in this project
@@ -32,4 +32,5 @@ Run storybook in this project
 pnpm storybook
 ```
 
+[📚 Using ECHO with React](https://docs.dxos.org/guide/echo/react)
 [📚 DXOS Documentation](https://docs.dxos.org)

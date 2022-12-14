@@ -8,7 +8,7 @@ export default defineTemplate(
     return AppTsx({
       ...rest,
       slots: {
-        content: ({ imports }) => `<${imports.use('Welcome', './Welcome')} />`,
+        content: ({ imports }) => `<${imports.use('Welcome', './Welcome')} name="${context.input.name}" />`,
         extraImports: 'import "./index.scss";'
       }
     });
