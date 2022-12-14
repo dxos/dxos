@@ -288,17 +288,17 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/devtools/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/devtools/devtools-extension/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/devtools/devtools-mesh/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/inspector-app/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -20,7 +20,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/devtools": "workspace:*",
+    "@dxos/inspector-app": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",

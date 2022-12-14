@@ -49,7 +49,7 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../devtools"
+      "path": "../inspector-app"
     }
   ]
 }
