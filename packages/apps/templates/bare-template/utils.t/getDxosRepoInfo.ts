@@ -36,7 +36,7 @@ export const getDxosRepoInfo = async () => {
   }
   const findVitePatch = (patchedDependencies: any) => {
     for (let key in patchedDependencies) {
-      if (/vite/.test(key)) {
+      if (/^vite/.test(key)) {
         return { [key]: patchedDependencies[key] };
       }
     }

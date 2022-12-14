@@ -75,7 +75,7 @@ export default class Create extends BaseCommand {
       await promisify(exec)(`
         git clone --filter=blob:none --no-checkout git@github.com:dxos/dxos.git ${tmpDirectory} &&
           cd ${tmpDirectory} &&
-          git sparse-checkout set --cone tsconfig.json ${template !== 'bare' ? `packages/apps/templates/bare-template ` : ''}packages/apps/templates/${template}-template &&
+          git sparse-checkout set --cone tsconfig.json patches ${template !== 'bare' ? `packages/apps/templates/bare-template ` : ''}packages/apps/templates/${template}-template &&
           git checkout ${tag} && mkdir node_modules && pnpm link ${require.resolve('@dxos/plate').slice(0,-'/dist/lib/node/index.cjs'.length)}
       `);
 
