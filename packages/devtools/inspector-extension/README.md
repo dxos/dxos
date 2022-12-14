@@ -1,8 +1,8 @@
-# DXOS DevTools browser extension
+# DXOS Inspector browser extension
 
 WARNING: This package is currently outdated and unmaintained.
 
-The DevTools extension provides debugging information about all aspects of the currently loaded DXOS app.
+The Inspector extension provides debugging information about all aspects of the currently loaded DXOS app.
 
 <img width="640" alt="Screen Shot 2022-01-26 at 7 04 10 PM" src="https://user-images.githubusercontent.com/3523355/151267314-12169bab-8e45-4662-aa67-57128313ebb7.png">
 
@@ -23,7 +23,7 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/dx
 2. Then to build the extension:
 
 ```
-pnpm -w nx build devtools-extension
+pnpm -w nx build inspector-extension
 ```
 
 ### Chromium
@@ -35,7 +35,7 @@ pnpm -w nx build devtools-extension
 - Edge (Not Supported Yet)
 
 5. Make sure you have the `developer` toggle __on__ and click on `Load Unpacked Extension` button.
-6. Search for the extension __dist__ folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
+6. Search for the extension __dist__ folder (`<repo-root>/packages/inspector-extension/dist`) and select it.
 
 ### Firefox
 
@@ -55,10 +55,10 @@ An alternative method is to run `rushx start:firefox` which will run a temporary
 
 ## Design
 
-![devtools-architecture](../../../docs/docs/design/diagrams/devtools-architecture.drawio.svg)
+![inspector-architecture](../../../docs/docs/design/diagrams/inspector-architecture.drawio.svg)
 
 The injected script attempts to detect the an object exposed by the SDK's client (`window.__DXOS__`).
-A channel is then setup to forward messages between the devtools panel and app client following the client RPC interface.
+A channel is then setup to forward messages between the inspector panel and app client following the client RPC interface.
 The panel and the content script communicate through the background script using the webextension API as they [do not have direct access to each other](https://developer.chrome.com/docs/extensions/mv3/devtools/#content-script-to-devtools).
 The injected script sends messages through the content script via window events as it [does not have access to the webextension APIs](https://developer.chrome.com/docs/extensions/mv3/devtools/#evaluated-scripts-to-devtools).
 
@@ -69,9 +69,9 @@ The injected script sends messages through the content script via window events 
     1. Allows messaging with the page.
 1. Devtools page is created.
     1. Waits for `window.__DXOS__` hook to appear.
-    1. Creates devtools panel.
+    1. Creates inspector panel.
 1. Devtools panel is loaded.
-    1. Renders the devtools application.
+    1. Renders the inspector application.
     1. Client API connects via the `window.__DXOS__` hook.
 1. Devtools panel is ready.
 
