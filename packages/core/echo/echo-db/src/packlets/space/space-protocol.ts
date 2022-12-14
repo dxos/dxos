@@ -5,7 +5,7 @@
 import { discoveryKey, sha256 } from '@dxos/crypto';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import {
   MMSTTopology,
   NetworkManager,
@@ -19,7 +19,8 @@ import { Teleport } from '@dxos/teleport';
 import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
-import { AuthProvider, AuthVerifier } from './auth';
+import { AuthExtension, AuthProvider, AuthVerifier } from './auth';
+
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
@@ -51,6 +52,15 @@ export class SpaceProtocol {
 
   private _feeds = new Set<FeedWrapper<FeedMessage>>();
   private _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
+  
+  get sessions(): ReadonlyMap<PublicKey, SpaceProtocolSession> {
+    return this._sessions;
+  }
+
+  // TODO(dmaretskyi): Remove once we set peerId = swarmIdentity.peerKey.
+  get peerId() {
+    return this._peerId;
+  }
 
   constructor({ topic, identity, networkManager }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
@@ -104,9 +114,9 @@ export class SpaceProtocol {
   }
 
   private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
-    return (params) => {
-      const session = new SpaceProtocolSession(params);
-      this._sessions.set(params.remotePeerId, session);
+    return (wireParams) => {
+      const session = new SpaceProtocolSession({ wireParams, swarmIdentity: this._swarmIdentity });
+      this._sessions.set(wireParams.remotePeerId, session);
 
       for (const feed of this._feeds) {
         session.replicator.addFeed(feed);
@@ -121,19 +131,44 @@ export class SpaceProtocol {
   }
 }
 
+export type SpaceProtocolSessionParams = {
+  wireParams: WireProtocolParams
+  swarmIdentity: SwarmIdentity;
+}
+
+export enum AuthStatus {
+  INITIAL = 'INITIAL',
+  SUCCESS = 'SUCCESS',
+  FAILURE = 'FAILURE'
+}
+
 // TODO(dmaretskyi): Move to a separate file.
 /**
  * Represents a single connection to a remote peer
  */
 export class SpaceProtocolSession implements WireProtocol {
+  @logInfo
+  private readonly _wireParams: WireProtocolParams;
+  private readonly _swarmIdentity: SwarmIdentity;
+
   private readonly _teleport: Teleport;
 
   // TODO(dmaretskyi): Start with upload=false when switching it on the fly works.
   public readonly replicator = new TeleportReplicatorExtension().setOptions({ upload: true });
 
+  private _authStatus = AuthStatus.INITIAL;
+
+  @logInfo
+  get authStatus() {
+    return this._authStatus;
+  }
+
   // TODO(dmaretskyi): Allow to pass in extra extensions.
-  constructor({ initiator, localPeerId, remotePeerId }: WireProtocolParams) {
-    this._teleport = new Teleport({ initiator, localPeerId, remotePeerId });
+  constructor({ wireParams, swarmIdentity }: SpaceProtocolSessionParams) {
+    this._wireParams = wireParams;
+    this._swarmIdentity = swarmIdentity;
+
+    this._teleport = new Teleport(wireParams);
   }
 
   get stream() {
@@ -143,6 +178,20 @@ export class SpaceProtocolSession implements WireProtocol {
   async initialize(): Promise<void> {
     await this._teleport.open();
     this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
+    this._teleport.addExtension('dxos.mesh.teleport.auth', new AuthExtension({
+      provider: this._swarmIdentity.credentialProvider,
+      verifier: this._swarmIdentity.credentialAuthenticator,
+      onAuthSuccess: () => {
+        this._authStatus = AuthStatus.SUCCESS;
+        log.info('Peer authenticated')
+        // TODO(dmaretskyi): Add auth-only plugins: Presence, Greeter (feed admission).
+        // TODO(dmaretskyi): Configure replicator to upload.
+      },
+      onAuthFailure: () => {
+        log.warn('Auth failed')
+        this._authStatus = AuthStatus.FAILURE;
+      }
+    }))
   }
 
   async destroy(): Promise<void> {

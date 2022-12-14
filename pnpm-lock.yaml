@@ -1304,6 +1304,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -1332,6 +1333,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/context': link:../../../common/context
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
