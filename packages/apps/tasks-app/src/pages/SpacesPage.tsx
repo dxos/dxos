@@ -1,11 +1,15 @@
-import React, { useCallback } from "react";
-import { SpacesPage as BaseSpacesPage } from "@dxos/react-appkit";
-import { Space, ObjectModel } from "@dxos/client";
-import { TASK_LIST } from "../containers/TaskList";
+//
+// Copyright 2022 DXOS.org
+//
 
-export type SpacesPageProps = {
+import React, { useCallback } from 'react';
 
-}
+import { Space, ObjectModel } from '@dxos/client';
+import { SpacesPage as BaseSpacesPage } from '@dxos/react-appkit';
+
+import { TASK_LIST } from '../containers/TaskList';
+
+export type SpacesPageProps = {};
 
 export const SpacesPage = (props: SpacesPageProps) => {
   const createListItem = useCallback(async (space: Space) => {
@@ -14,5 +18,5 @@ export const SpacesPage = (props: SpacesPageProps) => {
       type: TASK_LIST
     });
   }, []);
-  return <BaseSpacesPage onSpaceCreate={createListItem} />
-}
+  return <BaseSpacesPage onSpaceCreate={createListItem} />;
+};
