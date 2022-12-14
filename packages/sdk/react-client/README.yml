@@ -3,13 +3,13 @@ usage: |
 
   ```javascript
 
-  import { useClient, ClientProvider, ProfileInitializer } from '@dxos/react-client';
   import React from 'react';
+  import { useClient, ClientProvider } from '@dxos/react-client';
   import { createRoot } from 'react-dom/client';
 
   const App = () => {
     const client = useClient();
-
+    const space = useSpaces();
     return (
       <pre>{JSON.stringify(client.info())}</pre>
     );
@@ -17,9 +17,7 @@ usage: |
 
   const Root = () => (
     <ClientProvider>
-      <ProfileInitializer>
-        <App />
-      </ProfileInitializer>
+      <App />
     </ClientProvider>
   );
 
@@ -30,3 +28,6 @@ usage: |
 storybooks:
   - "The [HALO Invitation Story](./stories/halo-invitations.stories.tsx) demonstrates multiple clients (devices) joining the same HALO. [Demo video](https://user-images.githubusercontent.com/3523355/137532718-a21f1f27-9854-4c0b-831a-e9ff92feac49.mov)."
   - "The [Space Invitation Story](./stories/space-invitations.stories.tsx) demonstrates multiple clients creating and sharing spaces. [Demo video](https://user-images.githubusercontent.com/3523355/137532717-e77395dc-96f9-4e4b-8f67-e6bd026a3abe.mov)."
+quickStartUrl: https://docs.dxos.org/guide/quick-start
+guideUrl: https://docs.dxos.org/guide/echo/react
+apiReferenceUrl: true

@@ -3,6 +3,7 @@
 //
 
 export type Input = {
+  banner: string;
   name: string;
   background: string;
   badges: string[];
@@ -10,6 +11,7 @@ export type Input = {
   features: string[];
   install: string;
   usage: string;
+  demo: string;
   diagram: string;
   storybooks: string[];
   quickStartUrl: string;

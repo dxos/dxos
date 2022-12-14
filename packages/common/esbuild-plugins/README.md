@@ -1,11 +1,9 @@
-# @dxos/config
-
-Config utilities
+# @dxos/esbuild-plugins
 
 ## Installation
 
 ```bash
-pnpm i @dxos/config
+pnpm i @dxos/esbuild-plugins
 ```
 
 ## DXOS Resources

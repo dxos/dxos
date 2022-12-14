@@ -1,11 +1,11 @@
-# @dxos/config
+# @dxos/node-std
 
-Config utilities
+Simple wrapper for browser replacements of node stdlib modules within the DXOS codebase.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/config
+pnpm i @dxos/node-std
 ```
 
 ## DXOS Resources

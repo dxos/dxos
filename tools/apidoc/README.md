@@ -1,11 +1,11 @@
-# @dxos/config
+# @dxos/apidoc
 
-Config utilities
+Generate nice API documentation
 
 ## Installation
 
 ```bash
-pnpm i @dxos/config
+pnpm i @dxos/apidoc
 ```
 
 ## DXOS Resources

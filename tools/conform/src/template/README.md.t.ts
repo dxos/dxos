@@ -3,15 +3,17 @@
 //
 
 import path from 'path';
-import { TemplateFunction, text, fileExists } from '@dxos/plate';
-import { Input } from './index';
+import { TemplateFunction, text, defineTemplate } from '@dxos/plate';
+import { Input } from './config.t';
 
-const template: TemplateFunction<Input> = async ({ input }) => {
+// const template: TemplateFunction<Input> = async ({ input }) => {
+export default defineTemplate<Input>(({ input }) => {
   // const docsReadmeExists = await fileExists(path.resolve(outputDirectory, 'docs/README.md'));
   // const defaultDepDiagramUrl = docsReadmeExists ? './docs/README.md' : '';
   const {
     name,
     description,
+    banner,
     usage,
     install = `pnpm i ${input?.name}`,
     quickStartUrl,
@@ -33,6 +35,7 @@ const template: TemplateFunction<Input> = async ({ input }) => {
     roadmapUrl,
     eventsUrl,
     discordUrl,
+    demo,
     stackOverflowTag = 'dxos'
   } = input;
 
@@ -43,6 +46,7 @@ const template: TemplateFunction<Input> = async ({ input }) => {
   const code = (code: string, lang?: string) => `\`\`\`${lang ?? ''}\n${code}\n\`\`\``;
 
   return text`
+  ${banner}
   # ${name}
   ${badges?.length ? badges.join('\n') + '\n' : ''}
   ${description}
@@ -51,6 +55,7 @@ const template: TemplateFunction<Input> = async ({ input }) => {
   ${section('Features', features?.map((f) => `- [x] ${f}`).join('\n'), features?.length)}
   ${section('Usage', usage)}
   ${section('Diagram', diagram)}
+  ${section('Demo', demo)}
   ${section(
     'Documentation',
     text`
@@ -87,6 +92,4 @@ const template: TemplateFunction<Input> = async ({ input }) => {
 
   License: [MIT](./LICENSE) Copyright 2022 © DXOS
   `;
-};
-
-export default template;
+});

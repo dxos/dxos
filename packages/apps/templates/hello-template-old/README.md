@@ -1,11 +1,11 @@
-# @dxos/config
+# @dxos/hello-template
 
-Config utilities
+DXOS 'hello world' application template.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/config
+pnpm i @dxos/hello-template
 ```
 
 ## DXOS Resources
