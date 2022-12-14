@@ -1,14 +1,16 @@
-# @dxos/client-services
+# @dxos/config
 
-[![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/standard/semistandard)
-
-DXOS client services implementation
+Config utilities
 
 ## Installation
 
 ```bash
-pnpm i @dxos/client-services
+pnpm i @dxos/config
 ```
+
+## Documentation
+
+- [📚 API Reference](https://docs.dxos.org/api/@dxos/config)
 
 ## DXOS Resources
 

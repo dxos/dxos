@@ -24,7 +24,7 @@ const isGitClean = async () => {
 };
 
 const main = async () => {
-  if (!process.env.CI && !(await isGitClean())) {
+  if (!(process.env.CI || process.env.DIRTY_OK) && !(await isGitClean())) {
     console.error('ERROR: git repository not clean prior to regenerating docs, bailing.');
     process.exit(1);
   }
