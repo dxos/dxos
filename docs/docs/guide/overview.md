@@ -10,7 +10,7 @@ Compare DXOS Applications to current Web2 Applications:
 | :-- | :-- | :-- |
 | How code is served | served by web servers | served by web servers |
 | How data is stored | on the server | on the client |
-| How data is exchanged | client to server via HTTP or WS | peer to peer via WebRTC |
+| How data is exchanged | client to server (and server to client) via HTTP or WS | peer to peer via WebRTC |
 | How identity is established | server(s) issue session tokens after validating credentials with methods like OAuth | peers obtain identity directly from [HALO]() or another chosen DXOS application installed on the same client device which contains the user's wallet of identity keys |
 
 ## Key components of DXOS:
@@ -22,7 +22,7 @@ Compare DXOS Applications to current Web2 Applications:
 
 ## ECHO
 
-ECHO (The **E**ventually **C**onsistent **H**ierrarhical **O**bject store) is a peer-to-peer graph database written in TypeScript. ECHO connects to other peers directly via [WebRTC](https://en.wikipedia.org/wiki/WebRTC), and continuously replicates writes with those peers using technologies based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). ECHO supports multiple concurrent writers collaborating on large objects, bodies of text, and other "custom data models". Peers going offline and returning to reconcile changes with the online swarm are also supported.
+ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript. ECHO connects to other peers directly via [WebRTC](https://en.wikipedia.org/wiki/WebRTC), and continuously replicates writes with those peers using technologies based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). ECHO supports multiple concurrent writers collaborating on large objects, bodies of text, and other "custom data models". Peers going offline and returning to reconcile changes with the online swarm are also supported.
 
 ### Spaces
 

@@ -74,11 +74,9 @@ const App = () => {
 
 Read more:
 
-*   [ECHO overview](guide/echo)
-*   [ECHO configuration](guide/echo/configuration)
-*   [ECHO with React](guide/echo/react)
-*   [how ECHO works](guide/echo/how-echo-works)
-*   Implement user identity with [HALO](guide/halo/overview)
+*   [ECHO overview](echo)
+*   [ECHO configuration](echo/configuration)
+*   [ECHO with React](echo/react)
 
 ## Creating apps
 

@@ -12,18 +12,26 @@ import { executeDirectoryTemplate, catFiles } from '@dxos/plate';
 
 const main = async () => {
   yargs(hideBin(process.argv))
-    .scriptName('conform')
+    .scriptName('conform [glob]')
+    .option('overwrite', {
+      description: 'allow overwriting existing files',
+      requiresArg: false,
+      type: 'boolean',
+      default: false
+    })
     .command({
       command: '*',
       describe: 'conform packages specified by glob',
-      handler: async ({ _ }) => {
+      handler: async ({ _, overwrite }) => {
         const glob = (_?.[0] as string) ?? '**/package.json';
-        const dirContents = await readDir(process.cwd(), [(file) => /node_modules/.test(file)]);
-        const packages = dirContents.filter((file) => minimatch(file, glob)).map((pkg) => path.dirname(pkg));
+        const dirContents = await readDir(process.cwd(), [(file) => /node_modules|\/dist\//.test(file)]);
+        const packages = dirContents
+          .filter((file) => minimatch(path.relative(process.cwd(), file), glob))
+          .map((pkg) => path.dirname(pkg));
         const promises = packages.map(async (pkg) =>
           executeDirectoryTemplate({
             outputDirectory: pkg,
-            overwrite: false,
+            overwrite: overwrite ? !!overwrite : false,
             templateDirectory: path.resolve(__dirname, './template'),
             input: await catFiles(['package.json', 'README.yml'], {
               relativeTo: pkg

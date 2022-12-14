@@ -10,8 +10,9 @@
     "node_modules"
   ],
   "include": [
-    "./src/**/*.ts"
-, "src/template/LICENSE"  ],
+    "./src/**/*.ts",
+    "src/template/LICENSE"
+  ],
   "references": [
     {
       "path": "../../packages/common/plate"
