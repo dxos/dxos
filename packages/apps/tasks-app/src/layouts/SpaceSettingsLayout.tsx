@@ -1,9 +1,15 @@
-import { Menubar2, ProfileMenu, Separator, SpaceLink } from '@dxos/react-uikit';
+//
+// Copyright 2022 DXOS.org
+//
+
 import React from 'react';
+import { generatePath, Outlet, useNavigate, useParams } from 'react-router-dom';
+
 import { PublicKey } from '@dxos/client';
 import { useIdentity, useSpace } from '@dxos/react-client';
+import { Menubar2, ProfileMenu, Separator, SpaceLink } from '@dxos/react-uikit';
+
 import { Main } from '../components/Main';
-import { generatePath, Outlet, useNavigate, useParams } from 'react-router-dom';
 
 export const SpaceSettingsLayout = () => {
   const { space: spaceHex } = useParams();
