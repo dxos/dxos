@@ -3,9 +3,9 @@
 //
 
 import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { Space } from '@dxos/client';
 import { ClientProvider, useSpaces, useSelection } from '@dxos/react-client';
-import { createRoot } from 'react-dom/client';
 
 export const TaskList = (props: { space: Space }) => {
   const { space } = props;
@@ -18,7 +18,7 @@ export const TaskList = (props: { space: Space }) => {
   return (
     <>
       {children?.map((item) => (
-        <div>{item.model.get('title')}</div>
+        <div key={item.id}>{item.model.get('title')}</div>
       ))}
     </>
   );

@@ -12,7 +12,7 @@ To run the daemon with logging:
 GOLOG_LOG_LEVEL=warn,signal/p2p=debug kube daemon
 ```
 
-## Reinstalling KUBE 
+## Reinstalling KUBE
 
 In the rare case of breaking changes it might be required to manually remove KUBE from system services.
 
@@ -36,4 +36,3 @@ sudo rm /etc/systemd/system/$service
 sudo systemctl daemon-reload
 sudo systemctl reset-failed
 ```
-

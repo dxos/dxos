@@ -46,16 +46,19 @@ Continue to [ECHO Installation and usage](echo/installation).
 Establishing user identity in a non authoritative internet is hard. Every peer has to learn how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
 
 ### Application
+
 The [HALO application](https://halo.dxos.org) is a software wallet that contains user identities, secrets (i.e., private keys) and other credentials.
 
 ### SDK
+
 The HALO SDK is part of the [`@dxos/client`](https://www.npmjs.com/package/@dxos/client) library and provides user authentication, profile, and contact management for app developers.
 
 ### Protocol
+
 The HALO protocol supports verification, transport, and exchange of identity information between networked peers.
-## MESH
 
 ## KUBE
+
 Running an application requires a lot of supporting technology: process monitoring, observability, deployment management, DNS, SSL, ..., etc. KUBE is a compact, self-contained binary that runs anywhere and provides essential services for applications.
 
 Learn more about [KUBE](kube).

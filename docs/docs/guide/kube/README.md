@@ -8,9 +8,10 @@ dir:
 # KUBE Overview
 
 KUBE is a set of peer-to-peer services for applications
-  - Single, compact binary
-  - Runs as a service
-  - has a command line interface.
+
+*   Single, compact binary
+*   Runs as a service
+*   has a command line interface.
 
 KUBE instances form and propagate the MESH peer-to-peer networks of DXOS. Some of the services offered by KUBE:
 | Service | Description |
