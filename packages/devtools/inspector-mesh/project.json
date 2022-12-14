@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/devtools/devtools-mesh/src",
+  "sourceRoot": "packages/devtools/inspector-mesh/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/devtools/devtools-mesh/src/index.ts",
-        "outputPath": "packages/devtools/devtools-mesh/dist/types",
-        "tsConfig": "packages/devtools/devtools-mesh/tsconfig.json"
+        "main": "packages/devtools/inspector-mesh/src/index.ts",
+        "outputPath": "packages/devtools/inspector-mesh/dist/types",
+        "tsConfig": "packages/devtools/inspector-mesh/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/devtools/devtools-mesh/src/index.ts"
+          "packages/devtools/inspector-mesh/src/index.ts"
         ],
-        "outputPath": "packages/devtools/devtools-mesh/dist/lib"
+        "outputPath": "packages/devtools/inspector-mesh/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/devtools/devtools-mesh/**/*.{ts,tsx,js,jsx}"
+          "packages/devtools/inspector-mesh/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [

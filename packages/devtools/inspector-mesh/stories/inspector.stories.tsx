@@ -35,7 +35,7 @@ import { FullScreen } from '@dxos/react-components';
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
 
 export default {
-  title: 'Devtools/Topology'
+  title: 'Inspector/Topology'
 };
 
 const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {

@@ -81,7 +81,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../devtools-mesh"
+      "path": "../inspector-mesh"
     }
   ]
 }

@@ -34,7 +34,7 @@ export default defineConfig({
       '@dxos/client-services',
       '@dxos/config',
       '@dxos/debug',
-      '@dxos/devtools-mesh',
+      '@dxos/inspector-mesh',
       '@dxos/feed-store',
       '@dxos/keys',
       '@dxos/messaging',
