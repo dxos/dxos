@@ -74,7 +74,7 @@ jobs:
         run: |
           ROOT_CWD="$(pwd)"
           mkdir artifacts
-          pushd packages/devtools/devtools-extension/dist/ && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+          pushd packages/devtools/inspector-extension/dist/ && zip -r $ROOT_CWD/artifacts/inspector.zip . && popd
 
       - name: Upload
         uses: fnkr/github-action-ghr@v1
