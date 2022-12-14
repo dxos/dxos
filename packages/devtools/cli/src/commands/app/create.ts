@@ -5,7 +5,7 @@
 import { Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
 import { exec } from 'node:child_process';
-import { mkdir, copyFile, rm } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cwd } from 'process';
 import tempy from 'tempy';
@@ -75,11 +75,11 @@ export default class Create extends BaseCommand {
           git checkout ${tag}
       `);
 
-      this.log('Preparing template...');
+      // this.log('Preparing template...');
 
       // Copy vite patch.
-      await mkdir(`${templateDirectory}/patches`);
-      await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
+      // await mkdir(`${templateDirectory}/patches`);
+      // await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
 
       this.log('Creating app...');
 
