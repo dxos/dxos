@@ -27,9 +27,11 @@ describe('observable', () => {
     const [done, setDone] = latch();
 
     const openConnection = (): ConnectionObservable => {
-      const observable = new CancellableObservableProvider<ConnectionEvents>(async () => {
-        clearTimeout(timeout);
-        clearTimeout(connectTimeout);
+      const observable = new CancellableObservableProvider<ConnectionEvents>({
+        onCancel: async () => {
+          clearTimeout(timeout);
+          clearTimeout(connectTimeout);
+        }
       });
 
       const timeout = setTimeout(() => {

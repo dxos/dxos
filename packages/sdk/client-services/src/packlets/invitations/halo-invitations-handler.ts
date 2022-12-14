@@ -71,8 +71,10 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     });
 
     // TODO(burdon): Stop anything pending.
-    const observable = new InvitationObservableProvider(async () => {
-      await ctx.dispose();
+    const observable = new InvitationObservableProvider({
+      onCancel: async () => {
+        await ctx.dispose();
+      }
     });
 
     let authenticationCode: string;

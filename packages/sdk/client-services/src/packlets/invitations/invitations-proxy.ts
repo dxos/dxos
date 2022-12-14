@@ -36,9 +36,11 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
 
   createInvitation(context: T, options?: InvitationsOptions): CancellableInvitationObservable {
     let invitationId: string;
-    const observable = new InvitationObservableProvider(async () => {
-      if (invitationId) {
-        await this._invitationsService.cancelInvitation({ invitationId });
+    const observable = new InvitationObservableProvider({
+      onCancel: async () => {
+        if (invitationId) {
+          await this._invitationsService.cancelInvitation({ invitationId });
+        }
       }
     });
 

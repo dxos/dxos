@@ -47,15 +47,16 @@ describe('services/space-invitations-handler', () => {
     await space.close();
   });
 
+  // TODO(burdon): Test remote reject/disconnect.
+
   test('creates and accepts invitation with retry', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
-    const complete1 = new Trigger<PublicKey>();
-    const complete2 = new Trigger<PublicKey>();
-
-    let attempt = 0;
+    const hostDone = new Trigger<PublicKey>();
+    const guestDone = new Trigger<PublicKey>();
     const authenticationCode = new Trigger<string>();
 
+    let attempt = 0;
     const space1 = await host.spaceManager!.createSpace();
     const observable1 = host.spaceInvitations!.createInvitation(space1);
     observable1.subscribe({
@@ -75,7 +76,7 @@ describe('services/space-invitations-handler', () => {
             }
           },
           onSuccess: (invitation: Invitation) => {
-            complete2.wake(invitation.spaceKey!);
+            guestDone.wake(invitation.spaceKey!);
           },
           onCancelled: () => raise(new Error()),
           onTimeout: (err: Error) => raise(new Error(err.message)),
@@ -87,14 +88,14 @@ describe('services/space-invitations-handler', () => {
         authenticationCode.wake(invitation.authenticationCode);
       },
       onSuccess: (invitation: Invitation) => {
-        complete1.wake(invitation.spaceKey!);
+        hostDone.wake(invitation.spaceKey!);
       },
       onCancelled: () => raise(new Error()),
       onTimeout: (err: Error) => raise(new Error(err.message)),
       onError: (err: Error) => raise(new Error(err.message))
     });
 
-    const [spaceKey1, spaceKey2] = await Promise.all([complete1.wait(), complete2.wait()]);
+    const [spaceKey1, spaceKey2] = await Promise.all([hostDone.wait(), guestDone.wait()]);
     expect(spaceKey1).to.deep.eq(spaceKey2);
 
     {
@@ -114,20 +115,20 @@ describe('services/space-invitations-handler', () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const cancelled = new Trigger();
-    const connecting1 = new Trigger<Invitation>(); // peer 1 connected.
-    const connecting2 = new Trigger<Invitation>(); // peer 2 connected.
+    const hostConnecting = new Trigger<Invitation>(); // peer 1 connected.
+    const guestConnecting = new Trigger<Invitation>(); // peer 2 connected.
 
     const space1 = await host.spaceManager!.createSpace();
     const observable1 = await host.spaceInvitations!.createInvitation(space1);
     observable1.subscribe({
       onConnecting: async (invitation1: Invitation) => {
-        connecting1.wake(invitation1);
+        hostConnecting.wake(invitation1);
 
         const observable2 = await guest.spaceInvitations!.acceptInvitation(invitation1);
         observable2.subscribe({
           onConnecting: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
-            connecting2.wake(invitation2);
+            guestConnecting.wake(invitation2);
           },
           onConnected: async (invitation2: Invitation) => {},
           onSuccess: () => {},
@@ -145,8 +146,8 @@ describe('services/space-invitations-handler', () => {
       onError: (err: Error) => raise(new Error(err.message))
     });
 
-    const invitation1 = await connecting1.wait();
-    const invitation2 = await connecting2.wait();
+    const invitation1 = await hostConnecting.wait();
+    const invitation2 = await guestConnecting.wait();
     expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
 
     // TODO(burdon): Simulate network latency.

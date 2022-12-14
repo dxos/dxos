@@ -59,6 +59,7 @@ service HaloHostService {
 //
 
 message Introduction {
+  // TODO(burdon): Don't reuse entire ProfileDocument (may leak info).
   /// Guest's profile.
   optional halo.credentials.ProfileDocument profile = 1;
 }

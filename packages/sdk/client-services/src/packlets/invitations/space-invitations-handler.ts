@@ -72,20 +72,16 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     });
 
     // TODO(burdon): Stop anything pending.
-    const observable = new InvitationObservableProvider(async () => {
-      await swarmConnection?.close();
+    const observable = new InvitationObservableProvider({
+      onCancel: async () => {
+        await swarmConnection?.close();
+      }
     });
-
-    // TODO(burdon): Instead of creating a complex closure over a specialized class (HostSpaceInvitationExtension)
-    //  that requires callbacks, make a more concrete class that manages its own state.
-    //  i.e., keep `createInvitation` simple.
-    //  Possibility to factor out space/halo extensions?
 
     // Join swarm with specific extension to handle invitation requests from guest.
     scheduleTask(ctx, async () => {
-      // TODO(burdon): Reuse same context?
       const extension = new HostSpaceInvitationExtension(
-        ctx,
+        ctx, // TODO(burdon): Reuse same context?
         space,
         this._signingContext,
         this._keyring,
@@ -368,7 +364,6 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
         // 2. Get authentication code from user.
         //
 
-        // TODO(burdon): Test timeout (options for timeouts at different steps).
         if (this._invitation.type === undefined || this._invitation.type === Invitation.Type.INTERACTIVE) {
           const { timeout = INVITATION_TIMEOUT } = this._options ?? {};
           for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
