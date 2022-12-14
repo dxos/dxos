@@ -1,11 +1,18 @@
-import React, { useCallback } from 'react';
-import { Item, ObjectModel, Space } from '@dxos/client';
-import { List } from '../components/List';
-import { useSelection } from '@dxos/react-client';
-import { CheckboxItem } from '../components/CheckboxItem';
-import { Button, getSize } from '@dxos/react-uikit';
+//
+// Copyright 2022 DXOS.org
+//
+
 import { Plus } from 'phosphor-react';
+import React from 'react';
+
+import { Item, ObjectModel, Space } from '@dxos/client';
+import { useSelection } from '@dxos/react-client';
+import { Button, getSize } from '@dxos/react-uikit';
+
+import { CheckboxItem } from '../components/CheckboxItem';
 import { Input } from '../components/Input';
+import { List } from '../components/List';
+
 export const TASK_LIST = 'dxos:type/task-list';
 export const TASK_ITEM = 'dxos:type/task-list/item';
 
@@ -42,11 +49,11 @@ export const TaskListItem = (props: TaskListItemProps) => {
         onTextChanged: (value) => setTaskTitle(task, value),
         onDeleteClicked: () => deleteTask(task),
         onInputKeyUp: (e) => {
-          if (e.key == 'Enter') {
+          if (e.key === 'Enter') {
             // TODO: go to next item or create new
-          } else if (e.key == 'Up') {
-            // TODO: go up one item 
-          } else if (e.key == 'Down') {
+          } else if (e.key === 'Up') {
+            // TODO: go up one item
+          } else if (e.key === 'Down') {
             // TODO: go to next item or create new
           }
         }
@@ -56,13 +63,13 @@ export const TaskListItem = (props: TaskListItemProps) => {
 };
 
 export const TaskList = (props: TaskListProps) => {
-  const { taskList: taskList, space } = props;
+  const { taskList, space } = props;
   const title = taskList.model.get('title');
   const children = useSelection(taskList?.select().children().filter({ type: TASK_ITEM }));
   const visible = children?.filter((child) => !child.model.get('deletedAt'));
 
   const setTaskListTitle = async (taskList: TaskList, title: string) => {
-    taskList.model.set('title', title);
+    void taskList.model.set('title', title);
   };
 
   const createTask = async (space: Space, taskList: TaskList) =>
