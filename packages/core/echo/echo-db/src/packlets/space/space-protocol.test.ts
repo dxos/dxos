@@ -75,7 +75,7 @@ describe('space/space-protocol', () => {
 
     await waitForExpect(() => {
       expect(protocol1.sessions.get(protocol2.peerId)?.authStatus).toEqual(AuthStatus.FAILURE);
-    })
+    });
   });
 
   test('replicates a feed', async () => {

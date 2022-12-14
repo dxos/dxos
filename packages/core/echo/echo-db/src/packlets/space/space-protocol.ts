@@ -21,7 +21,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { AuthExtension, AuthProvider, AuthVerifier } from './auth';
 
-
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
 
@@ -52,7 +51,7 @@ export class SpaceProtocol {
 
   private _feeds = new Set<FeedWrapper<FeedMessage>>();
   private _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
-  
+
   get sessions(): ReadonlyMap<PublicKey, SpaceProtocolSession> {
     return this._sessions;
   }
@@ -132,9 +131,9 @@ export class SpaceProtocol {
 }
 
 export type SpaceProtocolSessionParams = {
-  wireParams: WireProtocolParams
+  wireParams: WireProtocolParams;
   swarmIdentity: SwarmIdentity;
-}
+};
 
 export enum AuthStatus {
   INITIAL = 'INITIAL',
@@ -149,6 +148,7 @@ export enum AuthStatus {
 export class SpaceProtocolSession implements WireProtocol {
   @logInfo
   private readonly _wireParams: WireProtocolParams;
+
   private readonly _swarmIdentity: SwarmIdentity;
 
   private readonly _teleport: Teleport;
@@ -178,20 +178,23 @@ export class SpaceProtocolSession implements WireProtocol {
   async initialize(): Promise<void> {
     await this._teleport.open();
     this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
-    this._teleport.addExtension('dxos.mesh.teleport.auth', new AuthExtension({
-      provider: this._swarmIdentity.credentialProvider,
-      verifier: this._swarmIdentity.credentialAuthenticator,
-      onAuthSuccess: () => {
-        this._authStatus = AuthStatus.SUCCESS;
-        log.info('Peer authenticated')
-        // TODO(dmaretskyi): Add auth-only plugins: Presence, Greeter (feed admission).
-        // TODO(dmaretskyi): Configure replicator to upload.
-      },
-      onAuthFailure: () => {
-        log.warn('Auth failed')
-        this._authStatus = AuthStatus.FAILURE;
-      }
-    }))
+    this._teleport.addExtension(
+      'dxos.mesh.teleport.auth',
+      new AuthExtension({
+        provider: this._swarmIdentity.credentialProvider,
+        verifier: this._swarmIdentity.credentialAuthenticator,
+        onAuthSuccess: () => {
+          this._authStatus = AuthStatus.SUCCESS;
+          log.info('Peer authenticated');
+          // TODO(dmaretskyi): Add auth-only plugins: Presence, Greeter (feed admission).
+          // TODO(dmaretskyi): Configure replicator to upload.
+        },
+        onAuthFailure: () => {
+          log.warn('Auth failed');
+          this._authStatus = AuthStatus.FAILURE;
+        }
+      })
+    );
   }
 
   async destroy(): Promise<void> {

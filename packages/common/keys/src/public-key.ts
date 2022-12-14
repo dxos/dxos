@@ -80,7 +80,8 @@ export class PublicKey {
   }
 
   static *randomSequence(): Generator<PublicKey> {
-    for(let i = 0; i < 1_0000; i++) { // Counter just to protect against infinite loops.
+    for (let i = 0; i < 1_0000; i++) {
+      // Counter just to protect against infinite loops.
       yield PublicKey.random();
     }
     throw new Error('Too many keys requested');

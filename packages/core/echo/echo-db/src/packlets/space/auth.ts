@@ -2,14 +2,15 @@
 // Copyright 2019 DXOS.org
 //
 
-import { ExtensionContext, RpcExtension, TeleportExtension } from "@dxos/teleport";
+import assert from 'assert';
+
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { randomBytes } from '@dxos/crypto';
+import { log } from '@dxos/log';
+import { schema } from '@dxos/protocols';
 import { AuthService } from '@dxos/protocols/proto/dxos/mesh/teleport/auth';
-import { schema } from "@dxos/protocols";
-import { log } from "@dxos/log";
-import { scheduleTask } from "@dxos/async";
-import { Context } from "@dxos/context";
-import { randomBytes } from "@dxos/crypto";
-import assert from "assert";
+import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
 
@@ -20,24 +21,24 @@ export type AuthExtensionParams = {
   verifier: AuthVerifier;
   onAuthSuccess: () => void;
   onAuthFailure: () => void;
-}
+};
 
-export class AuthExtension<T> extends RpcExtension<Services, Services> {
+export class AuthExtension extends RpcExtension<Services, Services> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
     }
-  })
+  });
 
-  constructor (private readonly _authParams: AuthExtensionParams) {
+  constructor(private readonly _authParams: AuthExtensionParams) {
     super({
       requested: {
-        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
+        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService')
       },
       exposed: {
-        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
+        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService')
       },
-      timeout: 60 * 1000, // Long timeout because auth can wait for sync in certain cases.
+      timeout: 60 * 1000 // Long timeout because auth can wait for sync in certain cases.
     });
   }
 
@@ -48,16 +49,16 @@ export class AuthExtension<T> extends RpcExtension<Services, Services> {
           try {
             const credential = await this._authParams.provider(challenge);
             if (!credential) {
-              throw new Error('auth rejected')
+              throw new Error('auth rejected');
             }
             return { credential };
-          } catch(err) {
+          } catch (err) {
             log.error('failed to generate auth credentials', err);
-            throw new Error('auth rejected')
+            throw new Error('auth rejected');
           }
         }
       }
-    }
+    };
   }
 
   override async onOpen(context: ExtensionContext): Promise<void> {
@@ -65,17 +66,17 @@ export class AuthExtension<T> extends RpcExtension<Services, Services> {
     scheduleTask(this._ctx, async () => {
       try {
         const challenge = randomBytes(32);
-        const { credential } = await this.rpc.AuthService.authenticate({ challenge })
+        const { credential } = await this.rpc.AuthService.authenticate({ challenge });
         assert(credential?.length > 0, 'invalid credential');
-        const peerInfo = await this._authParams.verifier(challenge, credential);
-        assert(peerInfo, 'credential not verified');
-        this._authParams.onAuthSuccess(peerInfo);
-      } catch(err) {
+        const success = await this._authParams.verifier(challenge, credential);
+        assert(success, 'credential not verified');
+        this._authParams.onAuthSuccess();
+      } catch (err) {
         log.error('auth failed', err);
         this.close();
         this._authParams.onAuthFailure();
       }
-    })
+    });
   }
 
   override async onClose(): Promise<void> {
@@ -83,4 +84,4 @@ export class AuthExtension<T> extends RpcExtension<Services, Services> {
   }
 }
 
-type Services = { AuthService: AuthService }
+type Services = { AuthService: AuthService };
