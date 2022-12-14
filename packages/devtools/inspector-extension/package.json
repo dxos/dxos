@@ -8,7 +8,7 @@
   "author": "DXOS.org",
   "scripts": {
     "bundle": "node scripts/build.js",
-    "pack:crx": "crx pack dist -o dxos-devtools.crx",
+    "pack:crx": "crx pack dist -o dxos-inspector.crx",
     "pack:webext": "web-ext build --source-dir ./dist",
     "start:firefox": "web-ext run --source-dir ./dist"
   },
