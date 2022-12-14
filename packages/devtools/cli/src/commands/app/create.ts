@@ -5,7 +5,7 @@
 import { Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
 import { exec } from 'node:child_process';
-import { mkdir, copyFile, rm } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cwd } from 'process';
 import tempy from 'tempy';
