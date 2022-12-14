@@ -17,6 +17,6 @@ runtime:
         username: 'dxos'
         credential: 'dxos'
     publisher:
-      server: ws://127.0.0.1:9002/.well-known/dx/deploy
+      server: ws://127.0.0.1/.well-known/dx/deploy
     machine:
       doAccessToken: ''
