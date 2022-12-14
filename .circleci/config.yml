@@ -149,8 +149,8 @@ jobs:
             NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=4096
       - run:
-          name: Deploy Devtools
-          working_directory: ./packages/devtools/devtools
+          name: Deploy Inspector
+          working_directory: ./packages/devtools/inspector-app
           command: |
             ../../../.circleci/scripts/publish.sh production
             ../../../.circleci/scripts/publish.sh

@@ -71,9 +71,9 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'DXOS Devtools',
-        short_name: 'Devtools',
-        description: 'DXOS Devtools Application',
+        name: 'DXOS Inspector',
+        short_name: 'Inspector',
+        description: 'DXOS Inspector Application',
         theme_color: '#ffffff',
         icons: [
           {
