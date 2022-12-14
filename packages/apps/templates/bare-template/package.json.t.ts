@@ -5,13 +5,46 @@ import { defineTemplate } from '@dxos/plate';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 import config from './config.t';
 
+export const reactDeps = ({ depVersion }: { depVersion: string }) => ({
+  '@dxos/react-client': depVersion,
+  react: '^18.2.0',
+  'react-dom': '^18.2.0'
+});
+export const reactDevDeps = ({ depVersion }: { depVersion: string }) => ({
+  '@types/react': '^18.0.21',
+  '@types/react-dom': '^18.0.6',
+  '@vitejs/plugin-react': '^2.0.1'
+});
+export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
+  '@dxos/react-ui': depVersion,
+  '@dxos/react-uikit': depVersion,
+  'phosphor-react': '^1.4.1'
+});
+export const pwaDevDeps = ({ depVersion }: { depVersion: string }) => ({
+  'vite-plugin-pwa': '^0.12.4'
+});
+export const storybookDevDeps = ({ depVersion }: { depVersion: string }) => ({
+  '@storybook/addon-actions': '^6.5.10',
+  '@storybook/addon-essentials': '^6.5.10',
+  '@storybook/addon-interactions': '^6.5.10',
+  '@storybook/addon-links': '^6.5.10',
+  '@storybook/builder-vite': '^0.2.2',
+  '@storybook/mdx2-csf': '^0.0.3',
+  '@storybook/react': '^6.5.10',
+  '@storybook/testing-library': '^0.0.13',
+  'storybook-dark-mode': '^1.1.2',
+  webpack: '^5.74.0'
+});
+
 export default defineTemplate<typeof config>(async ({ input }) => {
-  const { name, react, monorepo } = input;
+  const { name, react, monorepo, pwa, storybook, dxosUi: useDxosUi } = input;
   const { version: dxosVersion, patchedDependencies } = await getDxosRepoInfo();
   const version = monorepo ? dxosVersion : '0.1.0';
   const depVersion = monorepo ? `workspace:*` : dxosVersion;
-  const reactDeps = { '@dxos/react-client': depVersion, react: '^18.2.0', 'react-dom': '^18.2.0' };
-  const reactDevDeps = { '@types/react': '^18.0.21', '@types/react-dom': '^18.0.6', '@vitejs/plugin-react': '^2.0.1' };
+
+  const storybookScripts = {
+    storybook: 'start-storybook -p 9009 --no-open'
+  };
   const packageJson = {
     name,
     version: version,
@@ -21,18 +54,23 @@ export default defineTemplate<typeof config>(async ({ input }) => {
       build: 'NODE_OPTIONS="--max-old-space-size=4096" tsc --noEmit && vite build',
       deploy: 'NODE_OPTIONS="--max-old-space-size=4096" dx app publish',
       preview: 'vite preview',
-      serve: 'vite'
+      serve: 'vite',
+      ...(storybook ? storybookScripts : {})
     },
     dependencies: {
       '@dxos/client': depVersion,
       '@dxos/config': depVersion,
-      ...(react ? reactDeps : {})
+      ...(react ? reactDeps({ depVersion }) : {}),
+      ...(useDxosUi ? uiDeps({ depVersion }) : {})
     },
     devDependencies: {
+      '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
       typescript: '^4.8.4',
       vite: '3.2.5',
-      ...(react ? reactDevDeps : {})
+      ...(react ? reactDevDeps({ depVersion }) : {}),
+      ...(pwa ? pwaDevDeps({ depVersion }) : {}),
+      ...(storybook ? storybookDevDeps({ depVersion }) : {})
     },
     ...(!monorepo
       ? {
