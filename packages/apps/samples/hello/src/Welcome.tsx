@@ -16,7 +16,7 @@ export const Welcome = ({ name }: { name: string }) => {
           See <code>src/App.tsx</code> and <code>src/Welcome.tsx</code>
         </p>
         <p>
-          <a href='https://tailwindcss.com/docs' target='_blank'>
+          <a href='https://tailwindcss.com/docs' target='_blank' rel='noreferrer'>
             Tailwind
           </a>{' '}
           is available.
@@ -26,8 +26,8 @@ export const Welcome = ({ name }: { name: string }) => {
           <code>.ts</code> files directly.
         </p>
         <p>
-          When you're ready you can deploy this app to your{' '}
-          <a href='https://docs.dxos.org/guide/kube' target='_blank'>
+          When you are ready you can deploy this app to your{' '}
+          <a href='https://docs.dxos.org/guide/kube' target='_blank' rel='noreferrer'>
             KUBE
           </a>
           .
@@ -37,17 +37,17 @@ export const Welcome = ({ name }: { name: string }) => {
 
         <ul>
           <li>
-            <a href='https://docs.dxos.org/guide/echo/react' target='_blank'>
+            <a href='https://docs.dxos.org/guide/echo/react' target='_blank' rel='noreferrer'>
               Using ECHO with React
             </a>
           </li>
           <li>
-            <a href='https://docs.dxos.org/guide/kube/dx-yml-file' target='_blank'>
+            <a href='https://docs.dxos.org/guide/kube/dx-yml-file' target='_blank' rel='noreferrer'>
               Deploying to KUBE
             </a>
           </li>
           <li>
-            <a href='https://docs.dxos.org' target='_blank'>
+            <a href='https://docs.dxos.org' target='_blank' rel='noreferrer'>
               DXOS Documentation
             </a>
           </li>

@@ -16,7 +16,7 @@ export const Welcome = ({ name }: { name: string }) => {
           Add your <code>css</code> to <code>src/index.scss</code> or import <code>.scss</code> files from your <code>.ts</code> files directly.
         </p>
         <p>
-          When you're ready you can deploy this app to your <a href="https://docs.dxos.org/guide/kube" target="_blank">KUBE</a>.
+          When you are ready you can deploy this app to your <a href="https://docs.dxos.org/guide/kube" target="_blank">KUBE</a>.
         </p>
         <pre>
           pnpm run deploy
