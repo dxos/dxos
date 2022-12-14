@@ -4,9 +4,13 @@ import { promises as fs } from 'fs';
 import { exists } from '@dxos/plate';
 
 export const isDxosMonorepoSync = () => {
-  const gitRemoteResult = execSync(`git remote --v`).toString();
-  const isDxosMonorepo = /\:dxos\//.test(gitRemoteResult);
-  return isDxosMonorepo;
+  try {
+    const gitRemoteResult = execSync(`git remote --v`).toString();
+    const isDxosMonorepo = /\:dxos\//.test(gitRemoteResult);
+    return isDxosMonorepo;
+  } catch {
+    return false;
+  }
 };
 
 export const getTsConfig = async (rootDir: string) => {
