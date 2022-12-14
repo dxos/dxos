@@ -20,7 +20,8 @@ export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
   '@dxos/react-uikit': depVersion,
   '@dxos/react-appkit': depVersion,
   'phosphor-react': '^1.4.1',
-  'react-router-dom': '^6.3.0'
+  'react-router-dom': '^6.3.0',
+  sass: '^1.56.2'
 });
 export const pwaDevDeps = ({ depVersion }: { depVersion: string }) => ({
   'vite-plugin-pwa': '^0.12.4',
