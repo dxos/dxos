@@ -23,9 +23,9 @@ export default defineTemplate<typeof config>(({ input }) => {
   pnpm build
   \`\`\`
 
-  Deploy the app to a [DXOS Kube](https://docs.dxos.org/guide/kube/quick-start):
+  Deploy the app to a [DXOS Kube](https://docs.dxos.org/guide/kube):
   \`\`\`bash
-  pnpm deploy
+  pnpm run deploy
   \`\`\`
 
   ${storybook && text`
@@ -35,6 +35,7 @@ export default defineTemplate<typeof config>(({ input }) => {
   \`\`\`
   `}
 
+  [📚 Using ECHO with React](https://docs.dxos.org/guide/echo/react)
   [📚 DXOS Documentation](https://docs.dxos.org)
   `
 })

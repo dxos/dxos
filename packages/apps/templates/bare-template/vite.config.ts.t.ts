@@ -78,15 +78,15 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       }
       ${
         pwa
-          ? `${VitePWA()}({
+          ? `,${VitePWA()}({
         registerType: 'autoUpdate',
         workbox: {
           maximumFileSizeToCacheInBytes: 30000000
         },
         includeAssets: ['favicon.ico'],
         manifest: {
-          name: ${name},
-          short_name: ${name},
+          name: '${name}',
+          short_name: '${name}',
           theme_color: '#ffffff',
           icons: [
             {

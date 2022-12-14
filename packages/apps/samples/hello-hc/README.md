@@ -2,6 +2,11 @@
 
 This app was created with the DXOS `bare` application template.
 
+- [x] Progressive Web App support
+- [x] React
+- [x] DXOS UI System
+- [x] Storybook
+
 Run the app with `pnpm`:
 
 ```bash
@@ -17,8 +22,14 @@ pnpm build
 
 Deploy the app to a [DXOS Kube](https://docs.dxos.org/guide/kube/quick-start):
 
-```
+```bash
 pnpm deploy
+```
+
+Run storybook in this project
+
+```bash
+pnpm storybook
 ```
 
 [📚 DXOS Documentation](https://docs.dxos.org)

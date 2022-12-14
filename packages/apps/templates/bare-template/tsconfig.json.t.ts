@@ -44,9 +44,6 @@ export default defineTemplate<typeof config>(async ({ input }) => {
             },
             {
               path: '../../../sdk/config'
-            },
-            {
-              path: '../../../sdk/vite-plugin'
             }
           ]
         }

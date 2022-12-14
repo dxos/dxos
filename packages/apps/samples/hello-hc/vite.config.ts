@@ -33,7 +33,7 @@ export default defineConfig({
   }
 },
 build: {
-  outDir: 'out/app/@dxos/bare',
+  outDir: 'out/app/@dxos/hello',
   commonjsOptions: {
     include: [
       /packages/,
@@ -57,8 +57,8 @@ build: {
         },
         includeAssets: ['favicon.ico'],
         manifest: {
-          name: '@dxos/bare',
-          short_name: '@dxos/bare',
+          name: '@dxos/hello',
+          short_name: '@dxos/hello',
           theme_color: '#ffffff',
           icons: [
             {

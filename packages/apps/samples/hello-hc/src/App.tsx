@@ -4,6 +4,9 @@ import { Dynamics } from "@dxos/config";
 import { Defaults } from "@dxos/config";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { ClientProvider } from "@dxos/react-client";
+import { Welcome } from "./Welcome";
+
+import "./index.scss";
 
 // Dynamics allows configuration to be supplied by the hosting KUBE
 const config = async () => new Config(await Dynamics(), Defaults());
@@ -20,7 +23,7 @@ export const App = () => {
 });
   return (
     <ClientProvider config={config}>
-      {/* your components here */}
+      <Welcome />
     </ClientProvider>
   )
 }

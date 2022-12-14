@@ -4,7 +4,6 @@ const { resolve } = require('path');
 const { ConfigPlugin } = require('@dxos/config/vite-plugin');
 const { ThemePlugin } = require('@dxos/react-ui/plugin');
 
-// TODO(wittjosiah): Plate this config.
 module.exports = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: [

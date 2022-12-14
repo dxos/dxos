@@ -21,9 +21,11 @@ export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
   'phosphor-react': '^1.4.1'
 });
 export const pwaDevDeps = ({ depVersion }: { depVersion: string }) => ({
-  'vite-plugin-pwa': '^0.12.4'
+  'vite-plugin-pwa': '^0.12.4',
+  'workbox-window': '^6.5.4'
 });
 export const storybookDevDeps = ({ depVersion }: { depVersion: string }) => ({
+  '@babel/core': '^7.18.13',
   '@storybook/addon-actions': '^6.5.10',
   '@storybook/addon-essentials': '^6.5.10',
   '@storybook/addon-interactions': '^6.5.10',
@@ -32,6 +34,7 @@ export const storybookDevDeps = ({ depVersion }: { depVersion: string }) => ({
   '@storybook/mdx2-csf': '^0.0.3',
   '@storybook/react': '^6.5.10',
   '@storybook/testing-library': '^0.0.13',
+  'require-from-string': '^2.0.2',
   'storybook-dark-mode': '^1.1.2',
   webpack: '^5.74.0'
 });

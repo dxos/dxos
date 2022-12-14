@@ -8,7 +8,8 @@ export default defineTemplate(
     return AppTsx({
       ...rest,
       slots: {
-        content: ({ imports }) => `<${imports.use('Welcome', './Welcome')} />`
+        content: ({ imports }) => `<${imports.use('Welcome', './Welcome')} />`,
+        extraImports: 'import "./index.scss";'
       }
     });
   },
