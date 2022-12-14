@@ -20,6 +20,8 @@ pnpm install --save @dxos/client
 
 ## Demo
 
+Shown below are two sessions of an application using the ECHO database to replicate state peer-to-peer in real-time.
+
 ![ECHO](https://user-images.githubusercontent.com/3523355/158708286-f9a8c5f1-83ed-4bac-ab9e-65ddb6861fe3.gif)
 
 ## Documentation
