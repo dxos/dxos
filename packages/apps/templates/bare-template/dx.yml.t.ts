@@ -7,7 +7,7 @@ export default defineTemplate<typeof config>(({ input }) => {
   version: 1
   package:
     modules:
-      - name: exampledomain:app/${name}
+      - name: ${name}
         type: dxos:type/app
         build:
           command: npm run build
