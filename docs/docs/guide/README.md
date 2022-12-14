@@ -9,7 +9,7 @@ prev: ./why
 DXOS enables the development and operation of internet scale, privacy preserving applications. <br/> Read more [motivation](why.md).
 
 :::note
-The DXOS platform is still under development and will continue to change frequently. Your feedback is most welcome. [Github](https://github.com/dxos/dxos/issues), [Discord](), [`@dxos_org` on Twitter](https://twitter.com/dxos_org), [Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
+DXOS is under development and will continue to change frequently. <br/>Your feedback is most welcome. [Github](https://github.com/dxos/dxos/issues), [Discord](), [`@dxos_org` on Twitter](https://twitter.com/dxos_org). <br/>[Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
 :::
 
 ## Overview

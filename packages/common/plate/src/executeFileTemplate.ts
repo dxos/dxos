@@ -43,30 +43,34 @@ export type ExecuteFileTemplateOptions<TInput = {}> = LoadTemplateOptions & {
   inherited?: TemplatingResult;
 };
 
-export type TemplateSlotContext = {
+export type TemplateSlotContext<TInput = {}> = ExecuteFileTemplateOptions<TInput> & {
   imports: Imports;
+  input: TInput;
+  defaultOutputFile: string;
 };
 
-export type TemplateSlotFunction = (slotContext: TemplateSlotContext) => string;
+export type TemplateSlotFunction<TInput = any> = (slotContext: TemplateSlotContext<TInput>) => string;
 
-export type SatisfiedTemplateSlotFunction = (slotContext?: TemplateSlotContext) => string;
+export type SatisfiedTemplateSlotFunction<TInput = any> = (slotContext?: TemplateSlotContext<TInput>) => string;
 
-export type TemplateSlotContent = string | TemplateSlotFunction;
+export type TemplateSlotContent<TInput = any> = string | TemplateSlotFunction<TInput>;
 
-export type TemplateSlotMap = Record<string, TemplateSlotContent>;
+export type TemplateSlotMap<TInput = any> = Record<string, TemplateSlotContent<TInput>>;
 
-export type FunctionalMap<T extends TemplateSlotMap> = { [key in keyof T]: SatisfiedTemplateSlotFunction };
+export type FunctionalMap<T extends TemplateSlotMap<TInput>, TInput> = {
+  [key in keyof T]: SatisfiedTemplateSlotFunction<TInput>;
+};
 
-export const defineSlots = <M extends TemplateSlotMap>(map: M) => map;
+export const defineSlots = <M extends TemplateSlotMap<T>, T = {}>(map: M) => map;
 
 export const renderSlots =
-  <Map extends TemplateSlotMap>(slots?: Map) =>
-  (context: TemplateSlotContext) => {
-    const result: FunctionalMap<Map> = {} as FunctionalMap<Map>;
+  <Map extends TemplateSlotMap<T>, T>(slots?: Map) =>
+  (context: TemplateSlotContext<T>) => {
+    const result: FunctionalMap<Map, T> = {} as FunctionalMap<Map, T>;
     if (slots) {
       for (const i in slots) {
         const val = slots[i];
-        result[i] = typeof val === 'function' ? (c?: TemplateSlotContext) => val({ ...context, ...c }) : () => val;
+        result[i] = typeof val === 'function' ? (c?: TemplateSlotContext<T>) => val({ ...context, ...c }) : () => val;
       }
     }
     return result;
@@ -90,7 +94,7 @@ export type ExtractInput<TInput> = TInput extends Config<infer U> ? z.infer<U> :
 export type ExtractConfig<TInput> = TInput extends Config<any> ? TInput : never;
 export type ExtractNonConfig<TInput> = TInput extends Config<any> ? never : TInput;
 
-export const defineTemplate = <TInput = any, TSlots extends TemplateSlotMap = {}>(
+export const defineTemplate = <TInput = any, TSlots extends TemplateSlotMap<TInput> = {}>(
   fun: TemplateFunction<ExtractInput<TInput>, TSlots>,
   options?: { slots?: TSlots; config?: ExtractConfig<TInput> }
 ) => (options?.slots ? (o: TemplateContext<ExtractInput<TInput>, TSlots>) => fun({ slots: options.slots, ...o }) : fun);
