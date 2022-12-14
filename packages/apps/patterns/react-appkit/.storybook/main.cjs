@@ -37,6 +37,7 @@ module.exports = {
           '@dxos/protocols/proto/dxos/halo/keys',
           '@dxos/protocols/proto/dxos/mesh/bridge',
           '@dxos/protocols/proto/dxos/rpc',
+          '@dxos/react-client/testing',
           'storybook-dark-mode'
         ]
       },

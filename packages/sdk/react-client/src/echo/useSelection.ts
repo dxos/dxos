@@ -2,10 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import { Entity, Selection, SelectionResult } from '@dxos/client';
+import { log } from '@dxos/log';
 import { Falsy } from '@dxos/util';
+
+export type UseSelectionResult<T> = {
+  data: T[] | undefined;
+};
 
 /**
  * Hook to generate values from a selection using a selector function.
@@ -20,61 +25,35 @@ import { Falsy } from '@dxos/util';
 export const useSelection = <T extends Entity<any>>(
   selection: Selection<T> | SelectionResult<T> | Falsy,
   deps: readonly any[] = []
-): T[] | undefined => {
-  const [result, setResult] = useState(() => coerceSelection(selection));
-  const [data, setData] = useState<T[] | undefined>(() => (result ? result.entities : undefined));
+): UseSelectionResult<T> => {
+  const result = useMemo(() => {
+    log('coerce selection', selection);
+    return coerceSelection(selection);
+  }, [!!selection && selection.root]);
 
-  // Update selection when the query or customs deps change.
-  useEffect(() => {
-    const newResult = coerceSelection(selection);
-    setResult(newResult);
-    setData(newResult?.entities);
-  }, [!!selection, !!selection && selection.root, ...deps]);
+  const data = useSyncExternalStore(
+    (listener) => {
+      if (!result) {
+        return () => {};
+      }
 
-  // Update data when database updates.
-  useEffect(() => {
-    if (result) {
-      return result.update.on((result) => {
-        setData(result.entities);
+      log('selection subscribe', { result });
+      const unsubscribe = result.update.on(() => {
+        log('selection emit', { result });
+        listener();
       });
+      return () => {
+        log('selection unsubscribe', { result });
+        unsubscribe();
+      };
+    },
+    () => {
+      log('selection snapshot', { data: result?.entities });
+      return result?.entities;
     }
-  }, [result]);
+  );
 
-  return data;
-};
-
-/**
- * Hook to process selection reducer.
- *
- * @param selection
- * @param value
- * @param deps
- */
-export const useReducer = <T extends Entity<any>, R>(
-  selection: Selection<T> | SelectionResult<T> | Falsy,
-  value: R,
-  deps: readonly any[] = []
-) => {
-  const [result, setResult] = useState(() => coerceSelection(selection));
-  const [data, setData] = useState<R | undefined>(() => (result ? result.value : undefined));
-
-  // Update selection when the query or customs deps change.
-  useEffect(() => {
-    const newResult = coerceSelection(selection);
-    setResult(newResult);
-    setData(newResult?.value);
-  }, [!!selection, !!selection && selection.root, ...deps]);
-
-  // Update data when database updates.
-  useEffect(() => {
-    if (result) {
-      return result.update.on((result) => {
-        setData(result.value);
-      });
-    }
-  }, [result]);
-
-  return data;
+  return { data };
 };
 
 /**

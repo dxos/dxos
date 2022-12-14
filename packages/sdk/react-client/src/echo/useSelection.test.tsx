@@ -30,13 +30,13 @@ const createTestComponents = async () => {
 };
 
 const UseSelectionTestComponent = ({ space }: { space: Space }) => {
-  const items = useSelection(space?.select().filter({ type: TYPE_EXAMPLE }), []);
+  const { data } = useSelection(space?.select().filter({ type: TYPE_EXAMPLE }), []);
 
   const addItem = async () => await space.database.createItem({ type: TYPE_EXAMPLE });
 
   return (
     <ul data-testid='add' onClick={addItem}>
-      {items?.map((item) => (
+      {data?.map((item) => (
         <li key={item.id} data-testid='item'>
           {item.id}
         </li>
