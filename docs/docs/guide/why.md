@@ -7,7 +7,7 @@ next: quick-start
 
 ## Mission
 
-Our mission it to create a fully decentralized alternative to the existing Cloud, that enables independent software developers to create scalable privacy preserving applications.
+Our mission is to create a fully decentralized alternative to the existing Cloud, that enables independent software developers to create scalable privacy preserving applications.
 
 ## Vision
 
