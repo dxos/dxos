@@ -74,13 +74,11 @@ const App = () => {
 
 Read more:
 
-*   [ECHO overview](guide/echo)
-*   [ECHO configuration](guide/echo/configuration)
-*   [ECHO with React](guide/echo/react)
-*   [how ECHO works](guide/echo/how-echo-works)
-*   Implement user identity with [HALO](guide/halo/overview)
+*   [ECHO overview](echo)
+*   [ECHO configuration](echo/configuration)
+*   [ECHO with React](echo/react)
 
-## Creating apps
+## Creating apps with `dx` CLI
 
 The `dx` cli offers a production-ready application template for building **local-first applications** with ECHO. The template is made of `vite`, `typescript`, `react`, `echo`, `pwa`, and other opinions.
 
@@ -132,7 +130,7 @@ sudo kube start # start the service in the background
 kube status # verify it's running
 ```
 
-Once KUBE is running, you're ready to deploy \:sparkles:.
+Once KUBE is running, you're ready to deploy.
 
 Read more:
 
@@ -140,19 +138,26 @@ Read more:
 
 ## Deploying your app to a KUBE
 
-Drop a `dx.yml` file in the project root and run the following command.
+To deploy to your local kube:
 
-Publish your app to your local kube:
+- Ensure a [KUBE](#starting-a-kube) is running
+- [Install](#creating-apps) and [configure your `dx` CLI to deploy to your KUBE](kube/dx-yml-file#deploying-to-your-local-kube)
+- Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
+- Run this:
 
 ```bash
 dx app publish
 ```
 
-Your app will be accessible in a browser `<app-name>.localhost:9002`.
+DXOS application templates provide this in a deploy script:
 
-If you said `dx app create hello`, the app will be on `hello.localhost:9002`.
+```bash
+pnpm run deploy
+```
+
+Your app will now be accessible in a browser `<app-name>.localhost:9002`.
+
+If you started with `dx app create hello`, the app will be on [`hello.localhost:9002`](http://hello.localhost:9002).
 
 Read more:
-
-*   [Publishing apps](kube/publishing)
-*   The [`dx.yml` file schema](/docs/kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
+*   The [`dx.yml` file schema](kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
