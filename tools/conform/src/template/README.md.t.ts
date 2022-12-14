@@ -35,6 +35,7 @@ export default defineTemplate<Input>(({ input }) => {
     roadmapUrl,
     eventsUrl,
     discordUrl,
+    demo,
     stackOverflowTag = 'dxos'
   } = input;
 
@@ -54,6 +55,7 @@ export default defineTemplate<Input>(({ input }) => {
   ${section('Features', features?.map((f) => `- [x] ${f}`).join('\n'), features?.length)}
   ${section('Usage', usage)}
   ${section('Diagram', diagram)}
+  ${section('Demo', demo)}
   ${section(
     'Documentation',
     text`

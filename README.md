@@ -9,16 +9,18 @@
 ![Node](https://img.shields.io/node/v/@dxos/client)
 [![NPM](https://img.shields.io/npm/v/@dxos/client/latest)](https://www.npmjs.com/package/@dxos/client)
 [![Discord](https://img.shields.io/discord/837138313172353095?label=discord)](https://discord.com/channels/837138313172353095)
-![Activity](https://img.shields.io/github/commit-activity/m/dxos/dxos)
-![Contributors](https://img.shields.io/github/contributors/dxos/dxos)
 
-A decentralized alternative to the commercial cloud for privacy preserving software.
+A decentralized alternative to the commercial cloud for privacy preserving software. Learn more about the [the mission](https://docs.dxos.org/guide/why)
 
 ## Installation
 
 ```bash
 pnpm install --save @dxos/client
 ```
+
+## Demo
+
+![ECHO](https://user-images.githubusercontent.com/3523355/158708286-f9a8c5f1-83ed-4bac-ab9e-65ddb6861fe3.gif)
 
 ## Documentation
 

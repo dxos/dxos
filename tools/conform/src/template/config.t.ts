@@ -11,6 +11,7 @@ export type Input = {
   features: string[];
   install: string;
   usage: string;
+  demo: string;
   diagram: string;
   storybooks: string[];
   quickStartUrl: string;
