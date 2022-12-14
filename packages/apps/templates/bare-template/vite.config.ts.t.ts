@@ -49,7 +49,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
   const basicConfig = text`
     build: {
       outDir: 'out/app/${name}'
-    }
+    },
     `;
   return /* javascript */ text`
   import { defineConfig } from 'vite';
@@ -73,12 +73,12 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
           ${resolve()}(__dirname, './index.html'),
           ${resolve()}(__dirname, './src/**/*.{js,ts,jsx,tsx}')
         ]
-      })`
+      }),`
           : ''
       }
       ${
         pwa
-          ? `,${VitePWA()}({
+          ? `${VitePWA()}({
         registerType: 'autoUpdate',
         workbox: {
           maximumFileSizeToCacheInBytes: 30000000

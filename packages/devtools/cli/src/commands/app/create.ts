@@ -65,14 +65,22 @@ export default class Create extends BaseCommand {
     if (outputDirExists && !isOutputEmpty) {
       this.error(`Output directory ${outputDirectory} is not empty`, { exit: 1 });
     }
-
+    try {
+      await promisify(exec)('which pnpm');
+    } catch {
+      this.error('pnpm not found. Please run "npm i -g pnpm" first.', { exit: 1 });
+    }
     try {
       this.log('Cloning template from Github...');
       await promisify(exec)(`
         git clone --filter=blob:none --no-checkout git@github.com:dxos/dxos.git ${tmpDirectory} &&
           cd ${tmpDirectory} &&
-          git sparse-checkout set --cone tsconfig.json patches packages/apps/templates/${template}-template &&
-          git checkout ${tag}
+          git sparse-checkout set --cone tsconfig.json patches ${
+            template !== 'bare' ? 'packages/apps/templates/bare-template ' : ''
+          }packages/apps/templates/${template}-template &&
+          git checkout ${tag} && mkdir node_modules && pnpm link ${require
+        .resolve('@dxos/plate')
+        .slice(0, -'/dist/lib/node/index.cjs'.length)}
       `);
 
       // this.log('Preparing template...');
@@ -98,6 +106,7 @@ export default class Create extends BaseCommand {
       this.log(`App created. To get started run the following commands:\n\n  cd ${name}\n  pnpm install\n  pnpm serve`);
     } catch (err: any) {
       this.log(`Unable to create: ${err.message}`);
+      this.log(err?.stack);
       this.error(err, { exit: 1 });
     } finally {
       await rm(tmpDirectory, { recursive: true, force: true });

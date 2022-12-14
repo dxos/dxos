@@ -19,7 +19,9 @@ export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
   '@dxos/react-ui': depVersion,
   '@dxos/react-uikit': depVersion,
   '@dxos/react-appkit': depVersion,
-  'phosphor-react': '^1.4.1'
+  'phosphor-react': '^1.4.1',
+  'react-router-dom': '^6.3.0',
+  sass: '^1.56.2'
 });
 export const pwaDevDeps = ({ depVersion }: { depVersion: string }) => ({
   'vite-plugin-pwa': '^0.12.4',
@@ -40,53 +42,56 @@ export const storybookDevDeps = ({ depVersion }: { depVersion: string }) => ({
   webpack: '^5.74.0'
 });
 
-export default defineTemplate(async ({ input }) => {
-  const { name, react, monorepo, pwa, storybook, dxosUi: useDxosUi } = input;
-  const { version: dxosVersion, patchedDependencies } = await getDxosRepoInfo();
-  const version = monorepo ? dxosVersion : '0.1.0';
-  const depVersion = monorepo ? `workspace:*` : dxosVersion;
+export default defineTemplate(
+  async ({ input }) => {
+    const { name, react, monorepo, pwa, storybook, dxosUi: useDxosUi } = input;
+    const { version: dxosVersion, patchedDependencies } = await getDxosRepoInfo();
+    const version = monorepo ? dxosVersion : '0.1.0';
+    const depVersion = monorepo ? `workspace:*` : dxosVersion;
 
-  const storybookScripts = {
-    storybook: 'start-storybook -p 9009 --no-open'
-  };
-  const packageJson = {
-    name,
-    version: version,
-    private: true,
-    description: `${name} - a DXOS application`,
-    scripts: {
-      build: 'NODE_OPTIONS="--max-old-space-size=4096" tsc --noEmit && vite build',
-      deploy: 'NODE_OPTIONS="--max-old-space-size=4096" dx app publish',
-      preview: 'vite preview',
-      serve: 'vite',
-      ...(storybook ? storybookScripts : {})
-    },
-    dependencies: {
-      '@dxos/client': depVersion,
-      '@dxos/config': depVersion,
-      ...(react ? reactDeps({ depVersion }) : {}),
-      ...(useDxosUi ? uiDeps({ depVersion }) : {})
-    },
-    devDependencies: {
-      '@types/node': '^18.11.9',
-      '@dxos/cli': depVersion,
-      typescript: '^4.8.4',
-      vite: '3.2.5',
-      ...(react ? reactDevDeps({ depVersion }) : {}),
-      ...(pwa ? pwaDevDeps({ depVersion }) : {}),
-      ...(storybook ? storybookDevDeps({ depVersion }) : {})
-    },
-    ...(!monorepo
-      ? {
-          pnpm: {
-            patchedDependencies
+    const storybookScripts = {
+      storybook: 'start-storybook -p 9009 --no-open'
+    };
+    const packageJson = {
+      name,
+      version: version,
+      private: true,
+      description: `${name} - a DXOS application`,
+      scripts: {
+        build: 'NODE_OPTIONS="--max-old-space-size=4096" tsc --noEmit && vite build',
+        deploy: 'NODE_OPTIONS="--max-old-space-size=4096" dx app publish',
+        preview: 'vite preview',
+        serve: 'vite',
+        ...(storybook ? storybookScripts : {})
+      },
+      dependencies: {
+        '@dxos/client': depVersion,
+        '@dxos/config': depVersion,
+        ...(react ? reactDeps({ depVersion }) : {}),
+        ...(useDxosUi ? uiDeps({ depVersion }) : {})
+      },
+      devDependencies: {
+        '@types/node': '^18.11.9',
+        '@dxos/cli': depVersion,
+        typescript: '^4.8.4',
+        vite: '3.2.5',
+        ...(react ? reactDevDeps({ depVersion }) : {}),
+        ...(pwa ? pwaDevDeps({ depVersion }) : {}),
+        ...(storybook ? storybookDevDeps({ depVersion }) : {})
+      },
+      ...(!monorepo
+        ? {
+            pnpm: {
+              patchedDependencies
+            }
           }
-        }
-      : {})
-  };
-  const result = JSON.stringify(packageJson, null, 2);
-  return result;
-}, { config });
+        : {})
+    };
+    const result = JSON.stringify(packageJson, null, 2);
+    return result;
+  },
+  { config }
+);
 
 // export type Input = {
 //   monorepo?: boolean
