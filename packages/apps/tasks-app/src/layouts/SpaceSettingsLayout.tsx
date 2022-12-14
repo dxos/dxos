@@ -3,7 +3,6 @@ import React from 'react';
 import { PublicKey } from '@dxos/client';
 import { useIdentity, useSpace } from '@dxos/react-client';
 import { Main } from '../components/Main';
-import { useSafeSpaceKey } from '@dxos/react-appkit';
 import { generatePath, Outlet, useNavigate, useParams } from 'react-router-dom';
 
 export const SpaceSettingsLayout = () => {

@@ -1,10 +1,9 @@
 ---
 order: 2
-title: How it works
 prev: ./quick-start
 ---
 
-# How it works
+# Platform Overview
 
 Compare DXOS Applications to current Web2 Applications:
 | | Current Web (Web2) | DXOS |
@@ -14,9 +13,7 @@ Compare DXOS Applications to current Web2 Applications:
 | How data is exchanged | client to server via HTTP or WS | peer to peer via WebRTC |
 | How identity is established | server(s) issue session tokens after validating credentials with methods like OAuth | peers obtain identity directly from [HALO]() or another chosen DXOS application installed on the same client device which contains the user's wallet of identity keys |
 
-## Platform Overview
-
-Key components of DXOS:
+## Key components of DXOS:
 
 *   [ECHO](#echo) Database for offline-first and real-time collaborative apps.
 *   [HALO](#halo) Identity for decentralized apps.
@@ -37,7 +34,7 @@ Specific documents or rows of data are referred to as `items`. `Items` always be
 
 ### Models
 
-Every item behaves according to consistency model which describes rules by which conflicts are to be resolved between multiple writers. DXOS provides at least two specific model types and and can be extended with custom models.
+Every item behaves according to a consistency model which describes rules by which conflicts are to be resolved between multiple writers. DXOS provides at least two specific model types and can be extended with custom models.
 
 *   `ObjectModel` is a document record with keys and values, where last writer wins on any given key.
 *   `TextModel` is for collaborative rich text editing on a "large string" or rich text model.
@@ -46,6 +43,22 @@ Continue to [ECHO Installation and usage](echo/installation).
 
 ## HALO
 
-## MESH
+Establishing user identity in a non authoritative internet is hard. Every peer has to learn how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
+
+### Application
+
+The [HALO application](https://halo.dxos.org) is a software wallet that contains user identities, secrets (i.e., private keys) and other credentials.
+
+### SDK
+
+The HALO SDK is part of the [`@dxos/client`](https://www.npmjs.com/package/@dxos/client) library and provides user authentication, profile, and contact management for app developers.
+
+### Protocol
+
+The HALO protocol supports verification, transport, and exchange of identity information between networked peers.
 
 ## KUBE
+
+Running an application requires a lot of supporting technology: process monitoring, observability, deployment management, DNS, SSL, ..., etc. KUBE is a compact, self-contained binary that runs anywhere and provides essential services for applications.
+
+Learn more about [KUBE](kube).

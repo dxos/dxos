@@ -1,11 +1,10 @@
 ---
 order: 0
-title: The DXOS Platform
 next: ./quick-start
 prev: ./why
 ---
 
-# The DXOS Platform
+# Introduction
 
 DXOS enables the development and operation of internet scale, privacy preserving applications. <br/> Read more [motivation](why.md).
 

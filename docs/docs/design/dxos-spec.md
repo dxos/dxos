@@ -27,8 +27,8 @@ This section outlines the core concepts of the DXOS system.
 HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
 
 - The HALO application is a software wallet that contains user identities, secrets (i.e., private keys) and other credentials.
-- The HALO SDK is part of the DXOS client library and provides user authentication, profile, and contact management.
-- The HALO protocol supports the verification, transport, and exchange of identity information between networked peers.
+- The HALO SDK is part of the DXOS client library and provides user authentication, profile, and contact management for app developers.
+- The HALO protocol supports verification, transport, and exchange of identity information between networked peers.
 
 #### Terminology
 
