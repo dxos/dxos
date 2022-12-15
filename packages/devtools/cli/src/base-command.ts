@@ -136,7 +136,7 @@ export abstract class BaseCommand extends Command {
 
     const configExists = await exists(configFile);
     const configContent = await readFile(
-      configExists ? configFile : join(__dirname, '../../config/config.yml'),
+      configExists ? configFile : join(__dirname, '../../config/config-default.yml'),
       'utf-8'
     );
     if (!configExists) {
