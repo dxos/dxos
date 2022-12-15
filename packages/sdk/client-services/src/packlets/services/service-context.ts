@@ -124,10 +124,8 @@ export class ServiceContext {
 
     // Create in constructor (avoid all of these private variables).
     const spaceManager = new SpaceManager({
-      metadataStore: this.metadataStore,
       feedStore: this.feedStore,
       networkManager: this.networkManager,
-      keyring: this.keyring,
       modelFactory: this.modelFactory,
       signingContext
     });
@@ -137,7 +135,9 @@ export class ServiceContext {
     this.dataSpaceManager = new DataSpaceManager(
       this.spaceManager,
       this.metadataStore,
-      this.dataServiceSubscriptions
+      this.dataServiceSubscriptions,
+      this.keyring,
+      signingContext
     );
     await this.dataSpaceManager.open();
     this.spaceInvitations = new SpaceInvitationsHandler(

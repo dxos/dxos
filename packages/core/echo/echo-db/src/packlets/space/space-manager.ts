@@ -21,7 +21,7 @@ import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth';
 import { spaceGenesis } from './genesis';
 import { Space } from './space';
-import { SpaceProtocol } from './space-protocol';
+import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
 // TODO(burdon): ???
 export interface AcceptSpaceOptions {
@@ -42,39 +42,36 @@ export interface SigningContext {
 }
 
 export type SpaceManagerParams = {
-  metadataStore: MetadataStore;
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
-  keyring: Keyring;
   modelFactory: ModelFactory;
   signingContext: SigningContext;
 };
+
+export type ConstructSpaceParams = {
+  metadata: SpaceMetadata;
+  swarmIdentity: SwarmIdentity;
+}
 
 /**
  * Manages a collection of ECHO (Data) Spaces.
  */
 export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
-  private readonly _metadataStore: MetadataStore;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
-  private readonly _keyring: Keyring;
   private readonly _modelFactory: ModelFactory;
   private readonly _signingContext: SigningContext; // TODO(burdon): Contains keyring.
 
   constructor({
-    metadataStore,
     feedStore,
     networkManager,
-    keyring,
     modelFactory,
     signingContext
   }: SpaceManagerParams) {
     // TODO(burdon): Assert.
-    this._metadataStore = metadataStore;
     this._feedStore = feedStore;
     this._networkManager = networkManager;
-    this._keyring = keyring;
     this._modelFactory = modelFactory;
     this._signingContext = signingContext;
   }
@@ -94,62 +91,7 @@ export class SpaceManager {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  /**
-   * Creates a new space writing the genesis credentials to the control feed.
-   */
-  async createSpace() {
-    // TODO(burdon): Extract into genensis workflow/factory.
-    // TODO(burdon): Re-use with Halo space construction.
-    const spaceKey = await this._keyring.createKey();
-    const controlFeedKey = await this._keyring.createKey();
-    const dataFeedKey = await this._keyring.createKey();
-    const metadata: SpaceMetadata = {
-      key: spaceKey,
-      genesisFeedKey: controlFeedKey,
-      controlFeedKey,
-      dataFeedKey
-    };
-
-    log('creating space...', { spaceKey });
-    const space = await this.constructSpace(metadata);
-    await space.open();
-
-    // Write genesis credentials.
-    await spaceGenesis(
-      this._keyring,
-      this._signingContext,
-      space,
-    )
-
-    await this._metadataStore.addSpace(metadata);
-
-    this._insertSpace(space);
-    return space;
-  }
-
-  // TODO(burdon): Rename join space.
-  async acceptSpace(opts: AcceptSpaceOptions): Promise<Space> {
-    const metadata: SpaceMetadata = {
-      key: opts.spaceKey,
-      genesisFeedKey: opts.genesisFeedKey,
-      controlFeedKey: opts.controlFeedKey,
-      dataFeedKey: opts.dataFeedKey
-    };
-
-    log('accepting space...', { spaceKey: opts.spaceKey });
-    const space = await this.constructSpace(metadata);
-    await space.open();
-
-    await this._metadataStore.addSpace(metadata);
-    this._insertSpace(space);
-    return space;
-  }
-
-  private _insertSpace(space: Space) {
-    this._spaces.set(space.key, space);
-  }
-
-  async constructSpace(metadata: SpaceMetadata) {
+  async constructSpace({ metadata, swarmIdentity }: ConstructSpaceParams) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
@@ -161,15 +103,11 @@ export class SpaceManager {
     const spaceKey = metadata.key;
     const protocol = new SpaceProtocol({
       topic: spaceKey,
-      identity: {
-        peerKey: this._signingContext.deviceKey,
-        credentialProvider: this._signingContext.credentialProvider,
-        credentialAuthenticator: this._signingContext.credentialAuthenticator
-      },
+      identity: swarmIdentity ,
       networkManager: this._networkManager
     });
 
-    return new Space({
+    const space = new Space({
       spaceKey,
       protocol,
       genesisFeed,
@@ -179,5 +117,8 @@ export class SpaceManager {
       databaseFactory: async ({ databaseBackend }) =>
         new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey)
     });
+    this._spaces.set(space.key, space);
+    await space.open();
+    return space;
   }
 }

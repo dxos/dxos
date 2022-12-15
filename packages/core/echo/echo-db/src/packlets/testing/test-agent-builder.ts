@@ -115,9 +115,7 @@ export class TestAgent {
 
   createSpaceManager() {
     return new SpaceManager({
-      keyring: this._feedBuilder.keyring,
       feedStore: this._feedBuilder.createFeedStore(),
-      metadataStore: new MetadataStore(this._feedBuilder.storage.createDirectory('metadata')),
       networkManager: this._networkManagerProvider(),
       modelFactory: new ModelFactory().registerModel(ObjectModel),
       signingContext: {
