@@ -46,8 +46,6 @@ export interface SigningContext {
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
-  modelFactory: ModelFactory;
-  signingContext: SigningContext;
 };
 
 export type ConstructSpaceParams = {

@@ -36,11 +36,11 @@ export class ServiceContext {
   public readonly metadataStore: MetadataStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
+  public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly haloInvitations: HaloInvitationsHandler;
 
   // Initialized after identity is initialized.
-  public spaceManager?: SpaceManager;
   public dataSpaceManager?: DataSpaceManager;
   public spaceInvitations?: SpaceInvitationsHandler;
 
@@ -62,7 +62,10 @@ export class ServiceContext {
         }
       })
     });
-
+    this.spaceManager = new SpaceManager({
+      feedStore: this.feedStore,
+      networkManager: this.networkManager,
+    });
     this.identityManager = new IdentityManager(
       this.metadataStore,
       this.feedStore,
@@ -78,6 +81,7 @@ export class ServiceContext {
 
   async open() {
     log('opening...');
+    await this.spaceManager.open();
     await this.identityManager.open();
     if (this.identityManager.identity) {
       await this._initialize();
@@ -87,8 +91,9 @@ export class ServiceContext {
 
   async close() {
     log('closing...');
+    await this.dataSpaceManager?.close();
     await this.identityManager.close();
-    await this.spaceManager?.close();
+    await this.spaceManager.close();
     await this.feedStore.close();
     await this.networkManager.close();
     this.dataServiceSubscriptions.clear();
@@ -121,16 +126,6 @@ export class ServiceContext {
       profile: identity.profileDocument
     };
 
-    // Create in constructor (avoid all of these private variables).
-    const spaceManager = new SpaceManager({
-      feedStore: this.feedStore,
-      networkManager: this.networkManager,
-      modelFactory: this.modelFactory,
-      signingContext
-    });
-
-    await spaceManager.open();
-    this.spaceManager = spaceManager;
     this.dataSpaceManager = new DataSpaceManager(
       this.spaceManager,
       this.metadataStore,

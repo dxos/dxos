@@ -118,15 +118,6 @@ export class TestAgent {
     return new SpaceManager({
       feedStore: this._feedBuilder.createFeedStore(),
       networkManager: this._networkManagerProvider(),
-      modelFactory: new ModelFactory().registerModel(ObjectModel),
-      signingContext: {
-        // TODO(burdon): Util to convert to Identity in SpaceProtocol
-        identityKey: this.identityKey,
-        deviceKey: this.deviceKey,
-        credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER,
-        credentialSigner: createCredentialSignerWithKey(this._feedBuilder.keyring, this.identityKey)
-      }
     });
   }
 
