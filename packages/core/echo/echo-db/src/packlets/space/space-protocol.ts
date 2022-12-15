@@ -182,11 +182,6 @@ export class SpaceProtocolSession implements WireProtocol {
   async initialize(): Promise<void> {
     await this._teleport.open();
     this._teleport.addExtension(
-      'dxos.mesh.teleport.presence',
-      await this._presence.createExtension({ remotePeerId: this._teleport.remotePeerId })
-    );
-    this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
-    this._teleport.addExtension(
       'dxos.mesh.teleport.auth',
       new AuthExtension({
         provider: this._swarmIdentity.credentialProvider,
@@ -203,6 +198,11 @@ export class SpaceProtocolSession implements WireProtocol {
         }
       })
     );
+    this._teleport.addExtension(
+      'dxos.mesh.teleport.presence',
+      await this._presence.createExtension({ remotePeerId: this._teleport.remotePeerId })
+    );
+    this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
 
   async destroy(): Promise<void> {
