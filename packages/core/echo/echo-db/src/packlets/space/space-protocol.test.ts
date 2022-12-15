@@ -15,7 +15,7 @@ import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 
 describe('space/space-protocol', () => {
-  test('two peers discover each other via presence', async () => {
+  test.only('two peers discover each other via presence', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -32,8 +32,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.peers).toContainEqual(peer2.deviceKey);
-      expect(protocol2.peers).toContainEqual(peer1.deviceKey);
+      expect(protocol1.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
+      expect(protocol2.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
     }, 1_000);
   });
 
