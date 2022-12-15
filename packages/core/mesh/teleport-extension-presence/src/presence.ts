@@ -77,6 +77,13 @@ export class Presence {
         scheduleTask(this._ctx, async () => {
           await this._propagateAnnounce(peerState);
         });
+        scheduleTask(
+          this._ctx,
+          () => {
+            this.updated.emit();
+          },
+          this._params.offlineTimeout + 10 // 10 milliseconds over timeout to be sure that peer will be offline
+        );
       },
       onClose: async (err) => {
         if (err) {
