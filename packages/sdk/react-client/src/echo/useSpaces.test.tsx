@@ -10,16 +10,17 @@ import { Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { ClientProvider } from '../client';
-import { useDevices } from './useDevices';
+import { useSpaces } from './useSpaces';
 
-describe('useDevices', () => {
-  test('lists existing devices', async () => {
+describe('useSpaces', () => {
+  test('lists existing spaces', async () => {
     const client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createProfile();
+    await client.echo.createSpace();
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
-    const { result } = renderHook(() => useDevices(), { wrapper });
-    expect(result.current.devices?.length).to.eq(1);
+    const { result } = renderHook(() => useSpaces(), { wrapper });
+    expect(result.current.spaces?.length).to.eq(1);
   });
 });
