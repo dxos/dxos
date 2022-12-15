@@ -72,7 +72,7 @@ export class AuthExtension extends RpcExtension<Services, Services> {
         assert(success, 'credential not verified');
         this._authParams.onAuthSuccess();
       } catch (err) {
-        log.error('auth failed', err);
+        log.warn('auth failed', err);
         this.close();
         this._authParams.onAuthFailure();
       }

@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { CredentialGenerator, verifyCredential, createCredentialSignerWithKey } from '@dxos/credentials';
-import { valueEncoding, Database, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from '@dxos/echo-db';
+import { valueEncoding, Database, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol, NoopDataPipelineController } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -67,7 +67,7 @@ describe('identity/identity', () => {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-      databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
+      dataPipelineControllerProvider: () => new NoopDataPipelineController(),
     });
 
     const identity = new Identity({
@@ -173,7 +173,7 @@ describe('identity/identity', () => {
         controlFeed,
         dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
+        dataPipelineControllerProvider: () => new NoopDataPipelineController(),
       });
 
       const identity = (identity1 = new Identity({
@@ -254,7 +254,7 @@ describe('identity/identity', () => {
         controlFeed,
         dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
+        dataPipelineControllerProvider: () => new NoopDataPipelineController(),
       });
 
       const identity = (identity2 = new Identity({

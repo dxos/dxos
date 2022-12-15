@@ -105,7 +105,6 @@ export class ServiceContext {
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
 
-    this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
   }
@@ -137,7 +136,8 @@ export class ServiceContext {
       this.metadataStore,
       this.dataServiceSubscriptions,
       this.keyring,
-      signingContext
+      signingContext,
+      this.modelFactory,
     );
     await this.dataSpaceManager.open();
     this.spaceInvitations = new SpaceInvitationsHandler(

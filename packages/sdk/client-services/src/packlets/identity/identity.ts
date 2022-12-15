@@ -101,10 +101,6 @@ export class Identity {
     return this._space.genesisFeedKey;
   }
 
-  get haloDatabase(): Database {
-    return this._space.database ?? failUndefined();
-  }
-
   getAdmissionCredentials(): HaloAdmissionCredentials {
     return {
       deviceKey: this.deviceKey,

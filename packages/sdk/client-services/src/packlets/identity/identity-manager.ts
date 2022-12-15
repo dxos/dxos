@@ -13,7 +13,8 @@ import {
   Space,
   SwarmIdentity,
   Database,
-  SpaceProtocol
+  SpaceProtocol,
+  NoopDataPipelineController
 } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -211,8 +212,7 @@ export class IdentityManager {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
-      databaseFactory: async ({ databaseBackend }) =>
-        new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
+      dataPipelineControllerProvider: () => new NoopDataPipelineController(),
     });
   }
 }

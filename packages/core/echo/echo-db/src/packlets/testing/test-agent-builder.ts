@@ -17,6 +17,7 @@ import { ComplexMap } from '@dxos/util';
 import { Database, DataServiceSubscriptions } from '../database';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
+import { DataPipelineController, DataPipelineControllerImpl } from '../space/data-pipeline-controller';
 import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => NetworkManager;
@@ -133,7 +134,7 @@ export class TestAgent {
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
     genesisKey?: PublicKey
-  ): Promise<Space> {
+  ): Promise<[Space, DataPipelineControllerImpl]> {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
     }
@@ -145,6 +146,11 @@ export class TestAgent {
     const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
 
+    const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl(
+      new ModelFactory().registerModel(ObjectModel),
+      identityKey,
+      feedKey => space.spaceState.feeds.get(feedKey),
+    )
     const space = new Space({
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
@@ -152,12 +158,11 @@ export class TestAgent {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
-      databaseFactory: async ({ databaseBackend }) =>
-        new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
+      dataPipelineControllerProvider: () => dataPipelineController,
     });
 
     this._spaces.set(spaceKey, space);
-    return space;
+    return [space, dataPipelineController];
   }
 
   createSpaceProtocol(topic: PublicKey) {
