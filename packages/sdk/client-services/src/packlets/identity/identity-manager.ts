@@ -29,6 +29,7 @@ import { Identity } from '../identity';
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
   swarmIdentity: SwarmIdentity;
+  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
 }
 
 export type JoinIdentityParams = {
@@ -178,7 +179,8 @@ export class IdentityManager {
         peerKey: identityRecord.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      }
+      },
+      identityKey: identityRecord.identityKey
     });
 
     log('done', { identityKey: identityRecord.identityKey });
@@ -190,7 +192,7 @@ export class IdentityManager {
     });
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
+  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey }: ConstructSpaceParams) {
     const controlFeed = await this._feedStore.openFeed(spaceRecord.writeControlFeedKey, { writable: true });
     const dataFeed = await this._feedStore.openFeed(spaceRecord.writeDataFeedKey, { writable: true });
 
@@ -200,8 +202,9 @@ export class IdentityManager {
 
     const protocol = new SpaceProtocol({
       topic: spaceRecord.spaceKey,
-      identity: swarmIdentity,
-      networkManager: this._networkManager
+      swarmIdentity,
+      networkManager: this._networkManager,
+      identityKey
     });
 
     return new Space({

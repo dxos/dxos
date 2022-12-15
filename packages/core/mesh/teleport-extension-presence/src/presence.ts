@@ -29,7 +29,7 @@ export type PresenceParams = {
   /**
    * Identity key of the local peer.
    */
-  identityKey: PublicKey; // TODO(mykola): Remove. We need it despite localPeerId (which corresponds to deviceKey) because we currently can't get Identity from deviseKey.
+  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
 };
 
 /**

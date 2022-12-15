@@ -49,7 +49,7 @@ describe('identity/identity', () => {
 
     const protocol = new SpaceProtocol({
       topic: spaceKey,
-      identity: {
+      swarmIdentity: {
         peerKey: identityKey,
         credentialProvider: createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
         credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
@@ -57,7 +57,8 @@ describe('identity/identity', () => {
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory
-      })
+      }),
+      identityKey
     });
 
     const space: Space = new Space({
@@ -120,6 +121,7 @@ describe('identity/identity', () => {
     const signalContext = new MemorySignalManagerContext();
 
     let spaceKey: PublicKey;
+    let identityKey: PublicKey;
     let genesisFeedKey: PublicKey;
     let identity1: Identity;
     let identity2: Identity;
@@ -129,7 +131,7 @@ describe('identity/identity', () => {
     //
     {
       const keyring = new Keyring();
-      const identityKey = await keyring.createKey();
+      identityKey = await keyring.createKey();
       const deviceKey = await keyring.createKey();
       spaceKey = await keyring.createKey();
 
@@ -155,7 +157,7 @@ describe('identity/identity', () => {
 
       const protocol = new SpaceProtocol({
         topic: spaceKey,
-        identity: {
+        swarmIdentity: {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
@@ -163,7 +165,8 @@ describe('identity/identity', () => {
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
-        })
+        }),
+        identityKey
       });
 
       const space = new Space({
@@ -236,7 +239,7 @@ describe('identity/identity', () => {
 
       const protocol = new SpaceProtocol({
         topic: spaceKey,
-        identity: {
+        swarmIdentity: {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
@@ -244,7 +247,8 @@ describe('identity/identity', () => {
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
-        })
+        }),
+        identityKey
       });
 
       const space = new Space({

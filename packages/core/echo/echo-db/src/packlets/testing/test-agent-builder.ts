@@ -166,12 +166,13 @@ export class TestAgent {
   createSpaceProtocol(topic: PublicKey) {
     return new SpaceProtocol({
       topic,
-      identity: {
+      swarmIdentity: {
         peerKey: this.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
-      networkManager: this._networkManagerProvider()
+      networkManager: this._networkManagerProvider(),
+      identityKey: this.identityKey
     });
   }
 }

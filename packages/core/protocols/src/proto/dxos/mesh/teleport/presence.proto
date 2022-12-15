@@ -16,7 +16,7 @@ message PeerState {
   /// Peer tracks what had been sent by message id
   dxos.keys.PublicKey message_id = 3;
   google.protobuf.Timestamp timestamp = 4;
-  //TODO(mykola): remove when device keys list will be avaible for remotePeers.
+  // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
   dxos.keys.PublicKey identity_key = 5;
 }
 

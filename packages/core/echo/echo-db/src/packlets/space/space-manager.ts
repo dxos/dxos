@@ -187,12 +187,13 @@ export class SpaceManager {
     const spaceKey = metadata.key;
     const protocol = new SpaceProtocol({
       topic: spaceKey,
-      identity: {
+      swarmIdentity: {
         peerKey: this._signingContext.deviceKey,
         credentialProvider: this._signingContext.credentialProvider,
         credentialAuthenticator: this._signingContext.credentialAuthenticator
       },
-      networkManager: this._networkManager
+      networkManager: this._networkManager,
+      identityKey: this._signingContext.identityKey
     });
 
     return new Space({
