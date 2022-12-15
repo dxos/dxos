@@ -61,7 +61,8 @@ export class TestAgent {
   addConnection(connection: Connection) {
     assert(connection.teleport);
     this._connections.set(connection.teleport!.remotePeerId, connection);
-    this.presence.createExtension({ teleport: connection.teleport! });
+    const extension = this.presence.createExtension({ remotePeerId: connection.teleport!.remotePeerId });
+    connection.teleport.addExtension('dxos.mesh.teleport.presence', extension);
   }
 
   async deleteConnection(remotePeerId: PublicKey) {
