@@ -67,6 +67,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       '@types/node': ^18.11.9
+      '@types/node-ipc': ^9.2.0
       '@types/react': ^18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': ~8.3.3
@@ -163,11 +164,12 @@ importers:
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
       '@types/node': 18.11.9
+      '@types/node-ipc': 9.2.0
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       babel-loader: 8.2.5_wfdvla2jorjoj23kkavho2upde
       chai: 4.3.6
       chai-as-promised: 7.1.1_chai@4.3.6
@@ -3164,10 +3166,12 @@ importers:
       '@dxos/util': workspace:*
       '@types/js-yaml': ^4.0.5
       '@types/node': ^18.11.9
+      '@types/node-ipc': ^9.2.0
       '@types/yargs': ~16.0.1
       assert: ^2.0.0
       debug: ^4.3.3
       js-yaml: ^4.1.0
+      node-ipc: ^11.1.0
       source-map-support: ^0.5.12
       typescript: ^4.8.4
       util: ^0.12.4
@@ -3188,6 +3192,7 @@ importers:
     devDependencies:
       '@types/js-yaml': 4.0.5
       '@types/node': 18.11.9
+      '@types/node-ipc': 9.2.0
       '@types/yargs': 16.0.4
       source-map-support: 0.5.21
       typescript: 4.8.4
@@ -7352,7 +7357,7 @@ packages:
     dependencies:
       '@nrwl/devkit': 15.2.1_nx@15.2.1+typescript@4.8.4
       '@nrwl/workspace': 15.2.1_dnhystwcd2eoufsqmretfh5x6y
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       '@typescript-eslint/utils': 5.40.0_z4bbprzjrhnsfa24uvmcbu7f5q
       chalk: 4.1.0
       confusing-browser-globals: 1.0.11
@@ -7980,7 +7985,7 @@ packages:
       react-refresh: 0.11.0
       schema-utils: 3.1.1
       source-map: 0.7.4
-      webpack: 5.74.0
+      webpack: 5.74.0_fy4pgkcz4tfaax55jcbuzdmrzi
     dev: true
 
   /@polkadot/api-derive/4.17.1:
@@ -10211,7 +10216,7 @@ packages:
       typescript: 4.8.4
       unfetch: 4.2.0
       util-deprecate: 1.0.2
-      webpack: 5.74.0
+      webpack: 5.74.0_fy4pgkcz4tfaax55jcbuzdmrzi
     dev: true
 
   /@storybook/core-client/6.5.12_vknrbelhugdkckamahrfl2bl2m:
@@ -10914,7 +10919,7 @@ packages:
       react-docgen-typescript: 2.2.2_typescript@4.8.4
       tslib: 2.4.0
       typescript: 4.8.4
-      webpack: 5.74.0
+      webpack: 5.74.0_fy4pgkcz4tfaax55jcbuzdmrzi
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -12842,6 +12847,12 @@ packages:
       '@types/node': 18.11.9
       form-data: 3.0.1
 
+  /@types/node-ipc/9.2.0:
+    resolution: {integrity: sha512-0v1oucUgINvWPhknecSBE5xkz74sVgeZgiL/LkWXNTSzFaGspEToA4oR56hjza0Jkk6DsS2EiNU3M2R2KQza9A==}
+    dependencies:
+      '@types/node': 18.11.9
+    dev: true
+
   /@types/node/11.11.6:
     resolution: {integrity: sha512-Exw4yUWMBXM3X+8oqzJNRqZSwUAaS4+7NdvHqQuFi/d+synz++xmX3QIf+BFqneW8N31R8Ky+sikfZUXq07ggQ==}
     dev: false
@@ -13200,6 +13211,33 @@ packages:
       typescript: 4.8.4
     transitivePeerDependencies:
       - supports-color
+    dev: false
+
+  /@typescript-eslint/eslint-plugin/5.45.0_usuh4uodfyzfr5qbbynfqnfnsy:
+    resolution: {integrity: sha512-CXXHNlf0oL+Yg021cxgOdMHNTXD17rHkq7iW6RFHoybdFgQBjU3yIXhhcPpGwr1CjZlo6ET8C6tzX5juQoXeGA==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      '@typescript-eslint/parser': ^5.0.0
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
+      '@typescript-eslint/scope-manager': 5.45.0
+      '@typescript-eslint/type-utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      debug: 4.3.4
+      eslint: 8.25.0
+      ignore: 5.2.0
+      natural-compare-lite: 1.4.0
+      regexpp: 3.2.0
+      semver: 7.3.8
+      tsutils: 3.21.0_typescript@4.8.4
+      typescript: 4.8.4
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
 
   /@typescript-eslint/experimental-utils/5.20.0_z4bbprzjrhnsfa24uvmcbu7f5q:
     resolution: {integrity: sha512-w5qtx2Wr9x13Dp/3ic9iGOGmVXK5gMwyc8rwVgZU46K9WTjPZSyPvdER9Ycy+B5lNHvoz+z2muWhUvlTpQeu+g==}
@@ -13213,6 +13251,25 @@ packages:
       - supports-color
       - typescript
     dev: false
+
+  /@typescript-eslint/parser/5.45.0_typescript@4.8.4:
+    resolution: {integrity: sha512-brvs/WSM4fKUmF5Ot/gEve6qYiCMjm6w4HkHPfS6ZNmxTS0m0iNN4yOChImaCkqc1hRwFGqUyanMXuGal6oyyQ==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/scope-manager': 5.45.0
+      '@typescript-eslint/types': 5.45.0
+      '@typescript-eslint/typescript-estree': 5.45.0_typescript@4.8.4
+      debug: 4.3.4
+      eslint: 8.25.0
+      typescript: 4.8.4
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
 
   /@typescript-eslint/parser/5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q:
     resolution: {integrity: sha512-brvs/WSM4fKUmF5Ot/gEve6qYiCMjm6w4HkHPfS6ZNmxTS0m0iNN4yOChImaCkqc1hRwFGqUyanMXuGal6oyyQ==}
@@ -13232,6 +13289,7 @@ packages:
       typescript: 4.8.4
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@typescript-eslint/scope-manager/5.20.0:
     resolution: {integrity: sha512-h9KtuPZ4D/JuX7rpp1iKg3zOH0WNEa+ZIXwpW/KWmEFDxlA/HSfCMhiyF1HS/drTICjIbpA6OqkAhrP/zkCStg==}
@@ -13447,7 +13505,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.18.6_@babel+core@7.19.3
       magic-string: 0.26.7
       react-refresh: 0.14.0
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -15081,7 +15139,7 @@ packages:
       loader-utils: 2.0.2
       make-dir: 3.1.0
       schema-utils: 2.7.1
-      webpack: 5.74.0
+      webpack: 5.74.0_fy4pgkcz4tfaax55jcbuzdmrzi
     dev: true
 
   /babel-plugin-add-module-exports/1.0.4:
