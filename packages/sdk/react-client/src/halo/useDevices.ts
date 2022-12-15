@@ -2,26 +2,33 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
-import { useAsyncEffect } from '@dxos/react-async';
 
 import { useClient } from '../client';
 
-export const useDevices = (): DeviceInfo[] => {
+export type UseDevicesResult = {
+  devices: DeviceInfo[];
+};
+
+export const useDevices = (): UseDevicesResult => {
   const client = useClient();
-  const [devices, setDevices] = useState<DeviceInfo[]>([]);
+  const observable = useMemo(() => client.halo.queryDevices(), [client]);
+  const [isLoading, setIsLoading] = useState(false);
+  const devices =
+    useSyncExternalStore(
+      (listener) =>
+        observable.subscribe({
+          onUpdate: (devices) => {
+            isLoading && setIsLoading(false);
+            observable.setValue(devices);
+            listener();
+          },
+          onError: () => {}
+        }),
+      () => observable.value
+    ) ?? [];
 
-  useAsyncEffect(async () => {
-    const result = await client.halo.queryDevices();
-    setDevices(result);
-
-    // TODO(wittjosiah): Make reactive.
-    //   return result.subscribe((value) => {
-    //     setDevices(value);
-    //   });
-  }, [client]);
-
-  return devices;
+  return { devices };
 };

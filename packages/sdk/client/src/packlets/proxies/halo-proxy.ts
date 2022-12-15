@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions } from '@dxos/async';
+import { Event, EventSubscriptions, Observable, observableError, ObservableProvider } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
@@ -31,6 +31,12 @@ type CreateProfileOptions = {
   seedphrase?: string;
 };
 
+// TODO(wittjosiah): This is kind of cumbersome.
+type DeviceEvents = {
+  onUpdate(devices: DeviceInfo[]): void;
+  onError(error?: Error): void;
+};
+
 /**
  * TODO(burdon): Public API (move comments here).
  */
@@ -41,7 +47,7 @@ export interface Halo {
   recoverProfile(seedPhrase: string): Promise<Profile>;
   subscribeToProfile(callback: (profile: Profile) => void): void;
 
-  queryDevices(): Promise<DeviceInfo[]>;
+  queryDevices(): Observable<DeviceEvents, DeviceInfo[]>;
   queryContacts(): ResultSet<Contact>;
 
   createInvitation(): CancellableInvitationObservable;
@@ -192,6 +198,7 @@ export class HaloProxy implements Halo {
   /**
    * Get set of authenticated devices.
    */
+<<<<<<< HEAD
   // TODO(burdon): Standardize Promise vs. stream.
   async queryDevices(): Promise<DeviceInfo[]> {
     return new Promise((resolve, reject) => {
@@ -210,9 +217,32 @@ export class HaloProxy implements Halo {
         (error) => {
           reject(error);
           stream.close();
+=======
+  queryDevices() {
+    // TODO(wittjosiah): Try to make this easier to use for simple cases like this.
+    const observable = new ObservableProvider<DeviceEvents, DeviceInfo[]>();
+    const stream = this._serviceProvider.services.DevicesService.queryDevices();
+
+    // TODO(wittjosiah): Does stream need to be closed?
+    stream.subscribe(
+      (data) => {
+        const devices =
+          data.devices?.map((device) => ({
+            publicKey: device.deviceKey,
+            displayName: humanize(device.deviceKey)
+          })) ?? [];
+        observable.setValue(devices);
+        observable.callback.onUpdate(devices);
+      },
+      (err) => {
+        if (err) {
+          observableError(observable, err);
+>>>>>>> 8eb10567b (refactor(react-client): cleanup all hooks)
         }
-      );
-    });
+      }
+    );
+
+    return observable;
   }
 
   /**

@@ -2,9 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
-
-import { Contact } from '@dxos/client';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import { useClient } from '../client';
 
@@ -15,16 +13,8 @@ import { useClient } from '../client';
  */
 export const useContacts = () => {
   const client = useClient();
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const result = useMemo(() => client.halo.queryContacts(), [client]);
+  const contacts = useSyncExternalStore(result.subscribe, () => result.value);
 
-  useEffect(() => {
-    const result = client.halo.queryContacts();
-    setContacts(result.value);
-
-    return result.subscribe(() => {
-      setContacts(result.value);
-    });
-  }, []);
-
-  return contacts;
+  return { contacts };
 };

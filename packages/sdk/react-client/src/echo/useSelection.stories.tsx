@@ -22,7 +22,7 @@ const TASK_TYPE = 'example:task';
 let count = 1;
 
 const Template = ({ spaceKey }: { spaceKey?: PublicKey }) => {
-  const space = useSpace(spaceKey);
+  const { space } = useSpace(spaceKey);
 
   const handleAddTask = useCallback(
     () =>
