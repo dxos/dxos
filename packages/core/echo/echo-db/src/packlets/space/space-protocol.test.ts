@@ -15,7 +15,7 @@ import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 
 describe('space/space-protocol', () => {
-  test.only('two peers discover each other via presence', async () => {
+  test('two peers discover each other via presence', async () => {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -74,7 +74,7 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.sessions.get(protocol2.peerId)?.authStatus).toEqual(AuthStatus.FAILURE);
+      expect(protocol1.sessions.get(peerId2)?.authStatus).toEqual(AuthStatus.FAILURE);
     });
   });
 
