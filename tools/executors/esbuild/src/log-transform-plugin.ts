@@ -5,6 +5,7 @@
 import { transform } from '@swc/core';
 import { Plugin } from 'esbuild';
 import { readFile } from 'fs/promises';
+import { relative } from 'path';
 
 const wasmModule = require.resolve('@dxos/swc-log-plugin');
 
@@ -22,7 +23,7 @@ export class LogTransformer {
     const source = await readFile(filename, 'utf8');
 
     const output = await transform(source, {
-      filename,
+      filename: relative(process.cwd(), filename),
       sourceMaps: 'inline',
       minify: false,
       jsc: {
