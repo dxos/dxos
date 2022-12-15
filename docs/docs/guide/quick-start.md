@@ -56,27 +56,13 @@ const items = spaces[0].database.select({ type });
 Use `ClientProvider` and `useClient` with React:
 
 ```tsx file=./echo/snippets/create-client-react.tsx#L5-
-import React from 'react';
-
-import { Client } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
-
-const client = new Client();
-
-const App = () => {
-  return (
-    <ClientProvider client={client}>
-      {/* Your components can useClient() here  */}
-    </ClientProvider>
-  );
-};
 ```
 
 Read more:
 
-*   [ECHO overview](echo)
-*   [ECHO configuration](echo/configuration)
-*   [ECHO with React](echo/react)
+- [ECHO overview](echo)
+- [ECHO configuration](echo/configuration)
+- [ECHO with React](echo/react)
 
 ## Creating apps with `dx` CLI
 
@@ -85,7 +71,7 @@ The `dx` cli offers a production-ready application template for building **local
 Using `pnpm`:
 
 ```bash
-npm i -g @dxos/cli 
+npm i -g @dxos/cli
 ```
 
 Now you can use the `dx` command line tool:
@@ -112,14 +98,14 @@ This will produce an `out` folder with an entry point.
 
 Read more:
 
-*   [hello world template](cli/app-templates.md#hello-template)
-*   [bare template](cli/app-templates.md#bare-template)
+- [hello world template](cli/app-templates.md#hello-template)
+- [bare template](cli/app-templates.md#bare-template)
 
 ## Starting a KUBE
 
 Runnig a [KUBE](/docs/kube/overview) gives you superpowers. Installation:
 
-```bash
+```bash file=./snippets/install-kube.sh
 sudo ch=dev bash -c "$(curl -fsSL https://dxos.nyc3.digitaloceanspaces.com/install.sh)"
 ```
 
@@ -134,7 +120,7 @@ Once KUBE is running, you're ready to deploy.
 
 Read more:
 
-*   [KUBE Overview](kube)
+- [KUBE Overview](kube)
 
 ## Deploying your app to a KUBE
 
@@ -160,4 +146,5 @@ Your app will now be accessible in a browser `<app-name>.localhost:9002`.
 If you started with `dx app create hello`, the app will be on [`hello.localhost:9002`](http://hello.localhost:9002).
 
 Read more:
-*   The [`dx.yml` file schema](kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
+
+- The [`dx.yml` file schema](kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
