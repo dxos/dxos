@@ -185,7 +185,7 @@ export class SpaceProtocolSession implements WireProtocol {
         verifier: this._swarmIdentity.credentialAuthenticator,
         onAuthSuccess: () => {
           this._authStatus = AuthStatus.SUCCESS;
-          log.info('Peer authenticated');
+          log('Peer authenticated');
           // TODO(dmaretskyi): Add auth-only plugins: Presence, Greeter (feed admission).
           // TODO(dmaretskyi): Configure replicator to upload.
         },

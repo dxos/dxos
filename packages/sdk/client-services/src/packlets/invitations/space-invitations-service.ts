@@ -11,21 +11,23 @@ import { Provider } from '@dxos/util';
 import { IdentityManager } from '../identity';
 import { InvitationsHandler } from './invitations-handler';
 import { AbstractInvitationsService } from './invitations-service';
+import { DataSpaceManager } from '../spaces/data-space-manager';
+import { DataSpace } from '../spaces/data-space';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
-export class SpaceInvitationsServiceImpl extends AbstractInvitationsService<Space> {
+export class SpaceInvitationsServiceImpl extends AbstractInvitationsService<DataSpace> {
   // prettier-ignore
   constructor (
     identityManager: IdentityManager,
-    private readonly invitationsHandler: Provider<InvitationsHandler<Space>>,
-    private readonly _getSpaceManager: Provider<SpaceManager>
+    private readonly invitationsHandler: Provider<InvitationsHandler<DataSpace>>,
+    private readonly _getSpaceManager: Provider<DataSpaceManager>
   ) {
     super(identityManager, invitationsHandler);
   }
 
-  override getContext(invitation: Invitation): Space {
+  override getContext(invitation: Invitation): DataSpace {
     assert(invitation.spaceKey);
     const spaceManager = this._getSpaceManager();
     const space = spaceManager.spaces.get(invitation.spaceKey!);

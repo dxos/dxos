@@ -23,6 +23,7 @@ import { Storage } from '@dxos/random-access-storage';
 
 import { CreateIdentityOptions, IdentityManager } from '../identity';
 import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
+import { DataSpaceManager } from '../spaces/data-space-manager';
 
 /**
  * Shared backend for all client services.
@@ -40,6 +41,7 @@ export class ServiceContext {
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
+  public dataSpaceManager?: DataSpaceManager;
   public spaceInvitations?: SpaceInvitationsHandler;
 
   // prettier-ignore
@@ -133,9 +135,10 @@ export class ServiceContext {
 
     await spaceManager.open();
     this.spaceManager = spaceManager;
+    this.dataSpaceManager = new DataSpaceManager(this.spaceManager);
     this.spaceInvitations = new SpaceInvitationsHandler(
       this.networkManager,
-      this.spaceManager,
+      this.dataSpaceManager,
       signingContext,
       this.keyring
     );
