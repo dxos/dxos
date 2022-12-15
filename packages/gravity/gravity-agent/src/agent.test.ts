@@ -13,7 +13,8 @@ import { log } from '@dxos/log';
 import { AgentSpec, Command } from '@dxos/protocols/proto/dxos/gravity';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { Agent, AgentStateMachine, StateMachineFactory } from './agent';
+import { Agent } from './agent';
+import { AgentStateMachine, StateMachineFactory } from './statemachine';
 
 // TODO(burdon): Run local signal server for tests.
 describe('Agent', () => {
@@ -66,7 +67,7 @@ describe('Agent', () => {
             {
               createSpaceInvitation: {
                 id: 'space-1',
-                swarmKey
+                swarmKey: swarmKey.toHex()
               }
             }
           ]
@@ -88,7 +89,7 @@ describe('Agent', () => {
           commands: [
             {
               acceptSpaceInvitation: {
-                swarmKey
+                swarmKey: swarmKey.toHex()
               }
             }
           ]
@@ -185,7 +186,7 @@ class HostAgentStateMachine extends AgentStateMachine {
       const space = this.spaces.get(id)!;
       const observable = await space.createInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: command.createSpaceInvitation.swarmKey
+        swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey)
       });
 
       const trigger = new Trigger();
@@ -215,7 +216,7 @@ class GuestAgentStateMachine extends AgentStateMachine {
     } else if (command.acceptSpaceInvitation) {
       const observable = await this.agent.client.echo.acceptInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: command.acceptSpaceInvitation.swarmKey
+        swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey)
       });
 
       const trigger = new Trigger();

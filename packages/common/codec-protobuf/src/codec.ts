@@ -70,6 +70,10 @@ export class ProtoCodec<T = any> implements Codec<T> {
     return this._decodeMapper(obj, [this._schema, options]);
   }
 
+  fromObject(obj: any): T {
+    return this._decodeMapper(this._type.fromObject(obj).toJSON(), [this._schema]);
+  }
+
   /**
    * Dynamically add new definitions to this codec. Mutates the underlying schema.
    */
