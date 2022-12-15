@@ -11,7 +11,6 @@ import { raise } from '@dxos/debug';
 import { ISpace } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
