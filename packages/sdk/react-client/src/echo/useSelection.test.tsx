@@ -4,7 +4,6 @@
 
 import { act, renderHook } from '@testing-library/react';
 import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
 
 import { Space, Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
@@ -32,19 +31,26 @@ describe('useSelection', () => {
   });
 
   test('gets items selection updates', async () => {
-    const { result } = renderHook(() => useSelection(space.select({ type: TYPE_EXAMPLE })));
+    const selection = space.select({ type: TYPE_EXAMPLE }).exec();
+    const { result } = renderHook(() => useSelection(selection));
+    const listA = result.current.data;
     const itemA = result.current.data?.[0];
-    // TODO(wittjosiah): `act` is not working as expected.
-    act(() => {
-      void space.database.createItem({ type: TYPE_EXAMPLE });
+
+    await act(async () => {
+      await space.database.createItem({ type: TYPE_EXAMPLE });
+      // TODO(wittjosiah): Why does createItem fire 2 selection updates?
+      await selection.update.waitForCount(2);
     });
-    await waitForExpect(() => {
-      expect(result.current.data?.length).to.eq(count + 1);
-    });
+
+    expect(result.current.data?.length).to.eq(count + 1);
+    const listB = result.current.data;
     const itemB = result.current.data?.[0];
+
+    // Ensure lists are no referentially equal after selection updates.
+    expect(listA).to.not.eq(listB);
+
     // Ensure items are referentially equal if they don't change.
     expect(itemA!.id).to.eq(itemB!.id);
     expect(itemA).to.eq(itemB);
-    // TODO(wittjosiah): Ensure items are not referentially equal if a property changes?
   });
 });
