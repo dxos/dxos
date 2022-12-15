@@ -159,6 +159,10 @@ export class Space implements ISpace {
     return this._controlPipeline.spaceState;
   }
 
+  get protocol() {
+    return this._protocol;
+  }
+
   /**
    * @test-only
    */

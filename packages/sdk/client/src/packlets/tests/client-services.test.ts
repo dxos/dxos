@@ -10,6 +10,7 @@ import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { ISpace } from '@dxos/echo-db';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
@@ -171,7 +172,7 @@ describe('Client services', () => {
     });
   });
 
-  test('synchronizes data between two spaces after competing invitation', async () => {
+  test.only('synchronizes data between two spaces after competing invitation', async () => {
     const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
@@ -242,14 +243,16 @@ describe('Client services', () => {
           profile: {
             identityKey: client1.halo.profile!.identityKey,
             displayName: 'Peer 1'
-          }
+          },
+          presenceState: SpaceMember.PresenceState.ONLINE
         },
         {
           identityKey: client2.halo.profile!.identityKey,
           profile: {
             identityKey: client2.halo.profile!.identityKey,
             displayName: 'Peer 2'
-          }
+          },
+          presenceState: SpaceMember.PresenceState.ONLINE
         }
       ]);
     }
