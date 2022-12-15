@@ -1,13 +1,25 @@
-import { Event, synchronized } from "@dxos/async";
-import { AcceptSpaceOptions, DataServiceSubscriptions, MetadataStore, SigningContext, Space, SpaceManager, spaceGenesis } from "@dxos/echo-db";
-import {  } from "@dxos/echo-db";
-import { Keyring } from "@dxos/keyring";
-import { PublicKey } from "@dxos/keys";
-import { log } from "@dxos/log";
-import { ModelFactory } from "@dxos/model-factory";
-import { SpaceMetadata } from "@dxos/protocols/proto/dxos/echo/metadata";
-import { ComplexMap } from "@dxos/util";
-import { DataSpace } from "./data-space";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { Event, synchronized } from '@dxos/async';
+import {
+  AcceptSpaceOptions,
+  DataServiceSubscriptions,
+  MetadataStore,
+  SigningContext,
+  Space,
+  SpaceManager,
+  spaceGenesis
+} from '@dxos/echo-db';
+import { Keyring } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { ModelFactory } from '@dxos/model-factory';
+import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { ComplexMap } from '@dxos/util';
+
+import { DataSpace } from './data-space';
 
 export class DataSpaceManager {
   public readonly updated = new Event();
@@ -20,8 +32,8 @@ export class DataSpaceManager {
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
-    private readonly _modelFactory: ModelFactory,
-  ) { }
+    private readonly _modelFactory: ModelFactory
+  ) {}
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -38,9 +50,7 @@ export class DataSpaceManager {
   }
 
   @synchronized
-  async close() {
-
-  }
+  async close() {}
 
   /**
    * Creates a new space writing the genesis credentials to the control feed.
@@ -59,11 +69,7 @@ export class DataSpaceManager {
     log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
 
-    await spaceGenesis(
-      this._keyring,
-      this._signingContext,
-      space.inner,
-    )
+    await spaceGenesis(this._keyring, this._signingContext, space.inner);
     await this._metadataStore.addSpace(metadata);
 
     this.updated.emit();
@@ -93,7 +99,7 @@ export class DataSpaceManager {
         credentialProvider: this._signingContext.credentialProvider,
         credentialAuthenticator: this._signingContext.credentialAuthenticator
       },
-      dataPipelineControllerProvider: () => dataSpace.dataPipelineController,
+      dataPipelineControllerProvider: () => dataSpace.dataPipelineController
     });
     const dataSpace = new DataSpace(space, this._modelFactory, this._signingContext.identityKey);
     await space.open();

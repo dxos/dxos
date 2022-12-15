@@ -1,8 +1,13 @@
-import { Context } from "@dxos/context";
-import { Database, DataPipelineControllerImpl, ISpace, Space } from "@dxos/echo-db";
-import { PublicKey } from "@dxos/keys";
-import { ModelFactory } from "@dxos/model-factory";
-import assert from "node:assert";
+//
+// Copyright 2022 DXOS.org
+//
+
+import assert from 'node:assert';
+
+import { Context } from '@dxos/context';
+import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
+import { ModelFactory } from '@dxos/model-factory';
 
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
@@ -11,13 +16,11 @@ export class DataSpace implements ISpace {
   constructor(
     private readonly _inner: Space,
     private readonly _modelFactory: ModelFactory,
-    private readonly _memberKey: PublicKey,
-  ) { 
-    this._dataPipelineController = new DataPipelineControllerImpl(
-      _modelFactory,
-      _memberKey,
-      (feedKey) => _inner.spaceState.feeds.get(feedKey)
-    )
+    private readonly _memberKey: PublicKey
+  ) {
+    this._dataPipelineController = new DataPipelineControllerImpl(_modelFactory, _memberKey, (feedKey) =>
+      _inner.spaceState.feeds.get(feedKey)
+    );
   }
 
   get key() {
@@ -53,5 +56,4 @@ export class DataSpace implements ISpace {
     await this._ctx.dispose();
     await this._inner.close();
   }
-
 }

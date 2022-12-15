@@ -13,7 +13,6 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { createDefaultModelFactory } from '../services';
 import { IdentityManager } from './identity-manager';
 
 describe('identity/identity-manager', () => {
@@ -45,13 +44,9 @@ describe('identity/identity-manager', () => {
     });
     const spaceManager = new SpaceManager({
       feedStore,
-      networkManager,
-    })
-    const identityManager = new IdentityManager(
-      metadataStore,
-      keyring,
-      spaceManager,
-    );
+      networkManager
+    });
+    const identityManager = new IdentityManager(metadataStore, keyring, spaceManager);
 
     return {
       identityManager,

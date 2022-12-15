@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { synchronized } from '@dxos/async';
 import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
-import assert from 'node:assert';
 
 import { ExtensionContext, TeleportExtension } from './teleport';
 

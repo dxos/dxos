@@ -64,12 +64,12 @@ export class ServiceContext {
     });
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this.networkManager,
+      networkManager: this.networkManager
     });
     this.identityManager = new IdentityManager(
       this.metadataStore,
       this.keyring,
-      this.spaceManager,
+      this.spaceManager
     );
 
     // TODO(burdon): _initialize called in multiple places.
@@ -130,7 +130,7 @@ export class ServiceContext {
       this.dataServiceSubscriptions,
       this.keyring,
       signingContext,
-      this.modelFactory,
+      this.modelFactory
     );
     await this.dataSpaceManager.open();
     this.spaceInvitations = new SpaceInvitationsHandler(

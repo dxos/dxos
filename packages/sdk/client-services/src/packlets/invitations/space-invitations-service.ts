@@ -4,15 +4,14 @@
 
 import assert from 'node:assert';
 
-import { Space, SpaceManager } from '@dxos/echo-db';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
+import { DataSpace } from '../spaces/data-space';
+import { DataSpaceManager } from '../spaces/data-space-manager';
 import { InvitationsHandler } from './invitations-handler';
 import { AbstractInvitationsService } from './invitations-service';
-import { DataSpaceManager } from '../spaces/data-space-manager';
-import { DataSpace } from '../spaces/data-space';
 
 /**
  * Adapts invitation service observable to client/service stream.

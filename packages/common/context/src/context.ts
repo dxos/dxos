@@ -39,13 +39,13 @@ export class Context {
    * Schedules a callback to run when the context is disposed.
    * May be async, in this case the disposer might choose to wait for all resource to released.
    * Throwing an error inside the callback will result in the error being logged, but not re-thrown.
-   * 
+   *
    * NOTE: Will call the callback immediately if the context is already disposed.
    */
   onDispose(callback: DisposeCallback) {
     if (this._isDisposed) {
       // Call the callback immediately if the context is already disposed.
-      (async () => {
+      void (async () => {
         try {
           await callback();
         } catch (error: any) {

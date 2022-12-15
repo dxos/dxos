@@ -7,9 +7,12 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { CredentialGenerator } from '@dxos/credentials';
 import {
-  MetadataStore, MOCK_AUTH_PROVIDER,
-  MOCK_AUTH_VERIFIER, NoopDataPipelineController,
-  SpaceManager, SwarmIdentity
+  MetadataStore,
+  MOCK_AUTH_PROVIDER,
+  MOCK_AUTH_VERIFIER,
+  NoopDataPipelineController,
+  SpaceManager,
+  SwarmIdentity
 } from '@dxos/echo-db';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -44,7 +47,7 @@ export class IdentityManager {
   constructor(
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
-    private readonly _spaceManager: SpaceManager,
+    private readonly _spaceManager: SpaceManager
   ) {}
 
   get identity() {
@@ -189,7 +192,7 @@ export class IdentityManager {
         dataFeedKey: spaceRecord.writeDataFeedKey
       },
       dataPipelineControllerProvider: () => new NoopDataPipelineController(),
-      swarmIdentity,
-    })
+      swarmIdentity
+    });
   }
 }

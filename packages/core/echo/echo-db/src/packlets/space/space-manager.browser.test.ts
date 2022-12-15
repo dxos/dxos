@@ -4,8 +4,6 @@
 
 // @dxos/test platform=browser
 
-import { expect } from 'chai';
-
 import { createStorage } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 

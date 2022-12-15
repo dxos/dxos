@@ -9,12 +9,12 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { ISpace } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
 import { TestBuilder } from '../testing';
-import { log } from '@dxos/log';
 
 // TODO(wittjosiah): Copied from @dxos/client-services. Factor out.
 const syncItems = async (space1: ISpace, space2: ISpace) => {
@@ -194,7 +194,7 @@ describe('Client services', () => {
       await client1.halo.createProfile({ displayName: 'Peer 1' });
       await client2.halo.createProfile({ displayName: 'Peer 2' });
     }
-    log('initialized')
+    log('initialized');
 
     afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
     afterTest(() => Promise.all([client2.destroy(), server2.close(), peer2.close()]));
@@ -203,7 +203,7 @@ describe('Client services', () => {
     const success2 = new Trigger<Invitation>();
 
     const space1 = await client1.echo.createSpace();
-    log('createSpace', { key: space1.key })
+    log('createSpace', { key: space1.key });
     const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
 
     observable1.subscribe({
@@ -217,7 +217,7 @@ describe('Client services', () => {
         });
       },
       onSuccess: (invitation) => {
-        log('onSuccess')
+        log('onSuccess');
         success1.wake(invitation);
       },
       onError: (err) => raise(err)
@@ -227,7 +227,7 @@ describe('Client services', () => {
     expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
 
-    log('Invitation complete')
+    log('Invitation complete');
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();

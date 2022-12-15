@@ -2,26 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
-import { CredentialSigner, CredentialGenerator } from '@dxos/credentials';
+import { synchronized } from '@dxos/async';
+import { CredentialSigner } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { Database, DataServiceSubscriptions } from '../database';
-import { MetadataStore } from '../metadata';
-import { Pipeline } from '../pipeline';
 import { AuthProvider, AuthVerifier } from './auth';
 import { DataPipelineController } from './data-pipeline-controller';
-import { spaceGenesis } from './genesis';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
@@ -51,8 +45,8 @@ export type SpaceManagerParams = {
 export type ConstructSpaceParams = {
   metadata: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
-  dataPipelineControllerProvider: () => DataPipelineController,
-}
+  dataPipelineControllerProvider: () => DataPipelineController;
+};
 
 /**
  * Manages a collection of ECHO (Data) Spaces.
@@ -62,10 +56,7 @@ export class SpaceManager {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
 
-  constructor({
-    feedStore,
-    networkManager,
-  }: SpaceManagerParams) {
+  constructor({ feedStore, networkManager }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
@@ -77,9 +68,7 @@ export class SpaceManager {
   }
 
   @synchronized
-  async open() {
-  
-  }
+  async open() {}
 
   @synchronized
   async close() {
@@ -109,7 +98,7 @@ export class SpaceManager {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
-      dataPipelineControllerProvider,
+      dataPipelineControllerProvider
     });
     this._spaces.set(space.key, space);
     return space;

@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -14,10 +13,8 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { Database, DataServiceSubscriptions } from '../database';
-import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
-import { DataPipelineController, DataPipelineControllerImpl } from '../space/data-pipeline-controller';
+import { DataPipelineControllerImpl } from '../space/data-pipeline-controller';
 import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => NetworkManager;
@@ -117,7 +114,7 @@ export class TestAgent {
   createSpaceManager() {
     return new SpaceManager({
       feedStore: this._feedBuilder.createFeedStore(),
-      networkManager: this._networkManagerProvider(),
+      networkManager: this._networkManagerProvider()
     });
   }
 
@@ -140,8 +137,8 @@ export class TestAgent {
     const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl(
       new ModelFactory().registerModel(ObjectModel),
       identityKey,
-      feedKey => space.spaceState.feeds.get(feedKey),
-    )
+      (feedKey) => space.spaceState.feeds.get(feedKey)
+    );
     const space = new Space({
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
@@ -149,7 +146,7 @@ export class TestAgent {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
-      dataPipelineControllerProvider: () => dataPipelineController,
+      dataPipelineControllerProvider: () => dataPipelineController
     });
 
     this._spaces.set(spaceKey, space);

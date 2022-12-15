@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createAdmissionCredentials, generatePasscode, getCredentialAssertion } from '@dxos/credentials';
-import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
+import { SigningContext } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -26,6 +26,8 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
+import { DataSpace } from '../spaces/data-space';
+import { DataSpaceManager } from '../spaces/data-space-manager';
 import {
   AuthenticatingInvitationProvider,
   AUTHENTICATION_CODE_LENGTH,
@@ -35,8 +37,6 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
-import { DataSpaceManager } from '../spaces/data-space-manager';
-import { DataSpace } from '../spaces/data-space';
 
 const MAX_OTP_ATTEMPTS = 3;
 

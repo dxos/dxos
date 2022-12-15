@@ -5,22 +5,19 @@
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { TypedMessage } from '@dxos/protocols';
-import type { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { createMappedFeedWriter } from '../common';
-import { Database, DatabaseBackend, DatabaseBackendHost } from '../database';
+import { Database, DatabaseBackend } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
-import { SpaceProtocol } from './space-protocol';
 import { DataPipelineController } from './data-pipeline-controller';
+import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Factor out types.
 export type DatabaseFactoryParams = {
@@ -82,7 +79,7 @@ export class Space {
     dataFeed,
     feedProvider,
     initialTimeframe,
-    dataPipelineControllerProvider,
+    dataPipelineControllerProvider
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
@@ -207,7 +204,6 @@ export class Space {
 
     this._dataPipelineController = this._dataPipelineControllerProvider();
     await this._dataPipelineController.open(this._dataPipeline);
-
   }
 
   private async _closeDataPipeline() {

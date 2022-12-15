@@ -4,8 +4,15 @@
 
 import expect from 'expect';
 
-import { CredentialGenerator, verifyCredential, createCredentialSignerWithKey } from '@dxos/credentials';
-import { valueEncoding, Database, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol, NoopDataPipelineController } from '@dxos/echo-db';
+import { createCredentialSignerWithKey, CredentialGenerator, verifyCredential } from '@dxos/credentials';
+import {
+  MOCK_AUTH_PROVIDER,
+  MOCK_AUTH_VERIFIER,
+  NoopDataPipelineController,
+  Space,
+  SpaceProtocol,
+  valueEncoding
+} from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -14,13 +21,10 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
-import { createDefaultModelFactory } from '../services';
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
-
-const modelFactory = createDefaultModelFactory();
 
 describe('identity/identity', () => {
   test('create', async () => {
@@ -67,7 +71,7 @@ describe('identity/identity', () => {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-      dataPipelineControllerProvider: () => new NoopDataPipelineController(),
+      dataPipelineControllerProvider: () => new NoopDataPipelineController()
     });
 
     const identity = new Identity({
@@ -173,7 +177,7 @@ describe('identity/identity', () => {
         controlFeed,
         dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        dataPipelineControllerProvider: () => new NoopDataPipelineController(),
+        dataPipelineControllerProvider: () => new NoopDataPipelineController()
       });
 
       const identity = (identity1 = new Identity({
@@ -254,7 +258,7 @@ describe('identity/identity', () => {
         controlFeed,
         dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        dataPipelineControllerProvider: () => new NoopDataPipelineController(),
+        dataPipelineControllerProvider: () => new NoopDataPipelineController()
       });
 
       const identity = (identity2 = new Identity({

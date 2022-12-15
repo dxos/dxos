@@ -1,16 +1,20 @@
-import { scheduleTask } from "@dxos/async";
-import { Context } from "@dxos/context";
-import { FeedInfo } from "@dxos/credentials";
-import { failUndefined } from "@dxos/debug";
-import { PublicKey } from "@dxos/keys";
-import { log } from "@dxos/log";
-import { ModelFactory } from "@dxos/model-factory";
-import { TypedMessage } from "@dxos/protocols";
-import { EchoEnvelope } from "@dxos/protocols/proto/dxos/echo/feed";
-import { createMappedFeedWriter } from "../common";
-import { Database, DatabaseBackendHost } from "../database";
-import { Pipeline } from "../pipeline";
-import { SigningContext } from "./space-manager";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { FeedInfo } from '@dxos/credentials';
+import { failUndefined } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { ModelFactory } from '@dxos/model-factory';
+import { TypedMessage } from '@dxos/protocols';
+import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+
+import { createMappedFeedWriter } from '../common';
+import { Database, DatabaseBackendHost } from '../database';
+import { Pipeline } from '../pipeline';
 
 /**
  * Controls data pipeline in the space.
@@ -23,10 +27,9 @@ export interface DataPipelineController {
 }
 
 export class NoopDataPipelineController implements DataPipelineController {
-  async open(dataPipeline: Pipeline): Promise<void> {
-  }
-  async close(): Promise<void> {
-  }
+  async open(dataPipeline: Pipeline): Promise<void> {}
+
+  async close(): Promise<void> {}
 }
 
 export class DataPipelineControllerImpl implements DataPipelineController {
@@ -35,7 +38,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
-    private readonly _feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined,
+    private readonly _feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined
   ) {}
 
   public databaseBackend?: DatabaseBackendHost;
@@ -63,7 +66,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
     // Connect pipeline to the database.
     {
-      this.database = new Database(this._modelFactory, this.databaseBackend, this._memberKey)
+      this.database = new Database(this._modelFactory, this.databaseBackend, this._memberKey);
       await this.database.initialize();
     }
 
@@ -101,7 +104,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
   async close() {
     await this._ctx.dispose();
-    await this.databaseBackend?.close()
+    await this.databaseBackend?.close();
     await this.database?.destroy();
   }
 }
