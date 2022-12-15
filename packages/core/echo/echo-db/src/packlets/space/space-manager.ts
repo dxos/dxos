@@ -19,6 +19,7 @@ import { ComplexMap } from '@dxos/util';
 import { Database, DataServiceSubscriptions } from '../database';
 import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth';
+import { spaceGenesis } from './genesis';
 import { Space } from './space';
 import { SpaceProtocol } from './space-protocol';
 
@@ -123,25 +124,11 @@ export class SpaceManager {
     await space.open();
 
     // Write genesis credentials.
-    {
-      const generator = new CredentialGenerator(
-        this._keyring,
-        this._signingContext.identityKey,
-        this._signingContext.deviceKey
-      );
-
-      const credentials = [
-        ...(await generator.createSpaceGenesis(spaceKey, controlFeedKey, this._signingContext.profile)),
-        await generator.createFeedAdmission(spaceKey, dataFeedKey, AdmittedFeed.Designation.DATA)
-      ];
-
-      for (const credential of credentials) {
-        await space.controlPipeline.writer.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
-        });
-      }
-    }
+    await spaceGenesis(
+      this._keyring,
+      this._signingContext,
+      space,
+    )
 
     await this._metadataStore.addSpace(metadata);
 
