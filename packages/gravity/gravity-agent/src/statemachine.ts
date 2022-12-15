@@ -103,7 +103,7 @@ export class GenericStateMachine extends AgentStateMachine {
  * Required by test set-up.
  */
 // TODO(burdon): Configurable by map/annotations?
-export const TestStateMachineFactory: StateMachineFactory = (id: string): AgentStateMachine => {
+export const testStateMachineFactory: StateMachineFactory = (id: string): AgentStateMachine => {
   switch (id) {
     case 'test-host':
     case 'test-guest':

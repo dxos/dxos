@@ -16,7 +16,7 @@ import { schema } from '@dxos/protocols';
 import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Agent } from './agent';
-import { TestStateMachineFactory } from './statemachine';
+import { testStateMachineFactory } from './statemachine';
 
 // TODO(burdon): Logging meta doesn't work when running from pnpm agent.
 log.config({
@@ -70,7 +70,7 @@ const main = () => {
           }
           const testBuilder = new TestBuilder(new Config(config));
           const services = testBuilder.createClientServicesHost();
-          const stateMachine = TestStateMachineFactory(spec.stateMachine!);
+          const stateMachine = testStateMachineFactory(spec.stateMachine!);
           const agent = await new Agent({ config, services, spec, stateMachine });
           await agent.initialize();
           await agent.start();
