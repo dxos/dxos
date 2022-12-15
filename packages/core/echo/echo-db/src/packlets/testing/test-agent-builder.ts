@@ -119,7 +119,6 @@ export class TestAgent {
       feedStore: this._feedBuilder.createFeedStore(),
       metadataStore: new MetadataStore(this._feedBuilder.storage.createDirectory('metadata')),
       networkManager: this._networkManagerProvider(),
-      dataServiceSubscriptions: new DataServiceSubscriptions(),
       modelFactory: new ModelFactory().registerModel(ObjectModel),
       signingContext: {
         // TODO(burdon): Util to convert to Identity in SpaceProtocol

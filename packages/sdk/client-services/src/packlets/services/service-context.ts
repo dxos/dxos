@@ -128,14 +128,18 @@ export class ServiceContext {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       keyring: this.keyring,
-      dataServiceSubscriptions: this.dataServiceSubscriptions,
       modelFactory: this.modelFactory,
       signingContext
     });
 
     await spaceManager.open();
     this.spaceManager = spaceManager;
-    this.dataSpaceManager = new DataSpaceManager(this.spaceManager);
+    this.dataSpaceManager = new DataSpaceManager(
+      this.spaceManager,
+      this.metadataStore,
+      this.dataServiceSubscriptions
+    );
+    await this.dataSpaceManager.open();
     this.spaceInvitations = new SpaceInvitationsHandler(
       this.networkManager,
       this.dataSpaceManager,

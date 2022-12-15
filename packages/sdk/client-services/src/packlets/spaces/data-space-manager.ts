@@ -1,5 +1,5 @@
-import { Event } from "@dxos/async";
-import { AcceptSpaceOptions, SpaceManager } from "@dxos/echo-db";
+import { Event, synchronized } from "@dxos/async";
+import { AcceptSpaceOptions, DataServiceSubscriptions, MetadataStore, SpaceManager } from "@dxos/echo-db";
 import { PublicKey } from "@dxos/keys";
 import { ComplexMap } from "@dxos/util";
 import { DataSpace } from "./data-space";
@@ -11,11 +11,31 @@ export class DataSpaceManager {
 
   constructor(
     private readonly _spaceManager: SpaceManager,
+    private readonly _metadataStore: MetadataStore,
+    private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
   ) { }
 
   // TODO(burdon): Remove.
   get spaces() {
     return this._spaces;
+  }
+
+  @synchronized
+  async open() {
+    await this._metadataStore.load();
+
+    for (const spaceMetadata of this._metadataStore.spaces) {
+      const space = await this._spaceManager.constructSpace(spaceMetadata);
+      await space.open();
+      const dataSpace = new DataSpace(space);
+      this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
+      this._spaces.set(spaceMetadata.key, dataSpace);
+    }
+  }
+
+  @synchronized
+  async close() {
+
   }
 
   /**
@@ -25,6 +45,7 @@ export class DataSpaceManager {
     const space = await this._spaceManager.createSpace();
     const dataSpace = new DataSpace(space);
     this._spaces.set(dataSpace.key, dataSpace);
+    this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
     this.updated.emit();
     return dataSpace;
   }
@@ -34,6 +55,7 @@ export class DataSpaceManager {
     const space = await this._spaceManager.acceptSpace(opts);
     const dataSpace = new DataSpace(space);
     this._spaces.set(dataSpace.key, dataSpace);
+    this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
     this.updated.emit();
     return dataSpace;
   }

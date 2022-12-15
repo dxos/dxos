@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { CredentialSigner, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
@@ -46,7 +46,6 @@ export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
   keyring: Keyring;
-  dataServiceSubscriptions: DataServiceSubscriptions;
   modelFactory: ModelFactory;
   signingContext: SigningContext;
 };
@@ -60,7 +59,6 @@ export class SpaceManager {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
   private readonly _keyring: Keyring;
-  private readonly _dataServiceSubscriptions: DataServiceSubscriptions;
   private readonly _modelFactory: ModelFactory;
   private readonly _signingContext: SigningContext; // TODO(burdon): Contains keyring.
 
@@ -69,7 +67,6 @@ export class SpaceManager {
     feedStore,
     networkManager,
     keyring,
-    dataServiceSubscriptions,
     modelFactory,
     signingContext
   }: SpaceManagerParams) {
@@ -78,7 +75,6 @@ export class SpaceManager {
     this._feedStore = feedStore;
     this._networkManager = networkManager;
     this._keyring = keyring;
-    this._dataServiceSubscriptions = dataServiceSubscriptions;
     this._modelFactory = modelFactory;
     this._signingContext = signingContext;
   }
@@ -88,17 +84,12 @@ export class SpaceManager {
     return this._spaces;
   }
 
+  @synchronized
   async open() {
-    await this._metadataStore.load();
-
-    for (const spaceMetadata of this._metadataStore.spaces) {
-      const space = await this._constructSpace(spaceMetadata);
-      await space.open();
-      this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
-      this._spaces.set(spaceMetadata.key, space);
-    }
+  
   }
 
+  @synchronized
   async close() {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
@@ -120,7 +111,7 @@ export class SpaceManager {
     };
 
     log('creating space...', { spaceKey });
-    const space = await this._constructSpace(metadata);
+    const space = await this.constructSpace(metadata);
     await space.open();
 
     // Write genesis credentials.
@@ -146,7 +137,7 @@ export class SpaceManager {
     };
 
     log('accepting space...', { spaceKey: opts.spaceKey });
-    const space = await this._constructSpace(metadata);
+    const space = await this.constructSpace(metadata);
     await space.open();
 
     await this._metadataStore.addSpace(metadata);
@@ -155,11 +146,10 @@ export class SpaceManager {
   }
 
   private _insertSpace(space: Space) {
-    this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
     this._spaces.set(space.key, space);
   }
 
-  private async _constructSpace(metadata: SpaceMetadata) {
+  async constructSpace(metadata: SpaceMetadata) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
