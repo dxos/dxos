@@ -54,8 +54,6 @@ export type SpaceManagerParams = {
  * Manages a collection of ECHO (Data) Spaces.
  */
 export class SpaceManager {
-  public readonly updated = new Event();
-
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _metadataStore: MetadataStore;
   private readonly _feedStore: FeedStore<FeedMessage>;
@@ -172,7 +170,6 @@ export class SpaceManager {
   private _insertSpace(space: Space) {
     this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
     this._spaces.set(space.key, space);
-    this.updated.emit();
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {
