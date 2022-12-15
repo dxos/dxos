@@ -29,8 +29,8 @@ export interface WireProtocol {
 
 /**
  * Create a wire-protocol provider backed by a teleport instance.
- * @param onConnection Called after teleport is initialized for the session. Protocol extensions could be attached here.
- * @returns
+ * @param onConnection Called after teleport is initialized for the session.
+ *  Protocol extensions could be attached here.
  */
 export const createTeleportProtocolFactory = (
   onConnection: (teleport: Teleport) => Promise<void>

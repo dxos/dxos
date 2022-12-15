@@ -78,24 +78,25 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
     // Join swarm with specific extension to handle invitation requests from guest.
     scheduleTask(ctx, async () => {
-      const extension = new HostSpaceInvitationExtension(
-        ctx, // TODO(burdon): Reuse same context?
-        space,
-        this._signingContext,
-        this._keyring,
-        observable,
-        invitation,
-        options
-      );
-
       const topic = invitation.swarmKey!;
       const swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
+        topology: new StarTopology(topic),
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-          teleport.addExtension('dxos.halo.invitations', extension);
-        }),
-        topology: new StarTopology(topic)
+          teleport.addExtension(
+            'dxos.halo.invitations',
+            new HostSpaceInvitationExtension(
+              ctx, // TODO(burdon): Reuse same context?
+              space,
+              this._signingContext,
+              this._keyring,
+              observable,
+              invitation,
+              options
+            )
+          );
+        })
       });
 
       ctx.onDispose(() => swarmConnection.close());
@@ -118,44 +119,52 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
       }
     });
 
+    const authenticated = new Trigger<string>();
+    const complete = new Trigger();
+
     const observable = new AuthenticatingInvitationProvider({
       onCancel: async () => {
         await ctx.dispose();
       },
 
       onAuthenticate: async (code: string) => {
-        // TODO(burdon): Reset creates a race condition? Event?
-        extension.authenticated.wake(code);
+        // TODO(burdon): Reset creates a race condition? Replace with Event?
+        authenticated.wake(code);
       }
     });
-
-    const extension = new GuestSpaceInvitationExtension(
-      ctx,
-      this._spaceManager,
-      this._signingContext,
-      this._keyring,
-      observable,
-      invitation,
-      options
-    );
 
     // Join swarm with specific extension to make invitation request.
     scheduleTask(ctx, async () => {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
+      // TODO(burdon): Catch if swarm disconnects (or other side disconnects)?
       const swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
+        topology: new StarTopology(topic),
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-          teleport.addExtension('dxos.halo.invitations', extension);
-        }),
-        topology: new StarTopology(topic)
+          teleport.addExtension(
+            'dxos.halo.invitations',
+            // TODO(burdon): Can multiple be created?
+            new GuestSpaceInvitationExtension(
+              ctx,
+              this._spaceManager,
+              this._signingContext,
+              this._keyring,
+              authenticated,
+              complete,
+              observable,
+              invitation,
+              options
+            )
+          );
+        })
       });
 
       ctx.onDispose(() => swarmConnection.close());
       observable.callback.onConnecting?.(invitation);
 
-      await extension.complete.wait();
+      await complete.wait();
       observable.callback.onSuccess(invitation);
 
       await ctx.dispose();
@@ -310,15 +319,18 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
 class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: SpaceHostService }, {}> {
   private _connectionCount = 0;
 
-  readonly complete = new Trigger();
-  readonly authenticated = new Trigger<string>();
-
   constructor(
     private readonly _ctx: Context,
     private readonly _spaceManager: SpaceManager,
     private readonly _signingContext: SigningContext,
     private readonly _keyring: Keyring,
+    // Trigger when authenticated.
+    private readonly _authenticated: Trigger<string>,
+    // Trigger when complete.
+    private readonly _complete: Trigger,
+    // Observable returned to caller.
     private readonly _observable: AuthenticatingInvitationProvider,
+    // Invitation structure from caller.
     private readonly _invitation: Invitation,
     private readonly _options?: InvitationsOptions
   ) {
@@ -329,6 +341,7 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
     });
   }
 
+  // TODO(burdon): Make default.
   protected override async getHandlers() {
     return {};
   }
@@ -364,7 +377,7 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
           for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
             log('guest waiting for authentication code...');
             this._observable.callback.onAuthenticating?.(this._invitation);
-            const authenticationCode = await this.authenticated.wait({ timeout });
+            const authenticationCode = await this._authenticated.wait({ timeout });
 
             log('sending authentication request');
             const response = await this.rpc.SpaceHostService.authenticate({ authenticationCode });
@@ -377,7 +390,7 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
                 throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
               } else {
                 log('retrying invalid code', { attempt });
-                this.authenticated.reset();
+                this._authenticated.reset();
               }
             }
           }
@@ -418,7 +431,7 @@ class GuestSpaceInvitationExtension extends RpcExtension<{ SpaceHostService: Spa
 
         // Success.
         log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
-        this.complete.wake();
+        this._complete.wake();
       } catch (err) {
         if (!this._observable.cancelled) {
           log.warn('auth failed', err);

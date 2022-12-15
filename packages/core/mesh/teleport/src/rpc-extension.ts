@@ -36,6 +36,11 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
 
   protected abstract getHandlers(): Promise<Server>;
 
+  // TODO(burdon): Async?
+  close() {
+    this._extensionContext.close();
+  }
+
   async onOpen(context: ExtensionContext): Promise<void> {
     this._extensionContext = context;
 
@@ -55,9 +60,5 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
 
   async onClose(err?: Error | undefined): Promise<void> {
     await this._rpc.close();
-  }
-
-  close() {
-    this._extensionContext.close();
   }
 }
