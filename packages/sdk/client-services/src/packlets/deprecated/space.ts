@@ -13,6 +13,7 @@ import {
   CreateSnapshotRequest,
   GetSpaceDetailsRequest,
   Space,
+  SpaceMember,
   SpaceDetails,
   SpaceService,
   SetSpaceStateRequest,
@@ -107,7 +108,12 @@ export class SpaceServiceImpl implements SpaceService {
               profile: {
                 identityKey: member.key,
                 displayName: member.assertion.profile?.displayName ?? humanize(member.key)
-              }
+              },
+              presenceState:
+                space.protocol.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key))
+                  .length > 0
+                  ? SpaceMember.PresenceState.ONLINE
+                  : SpaceMember.PresenceState.OFFLINE
             }))
           })
         );
@@ -133,6 +139,7 @@ export class SpaceServiceImpl implements SpaceService {
 
         this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
           subscriptions.add(space.stateUpdate.on(onUpdate));
+          subscriptions.add(space.protocol.presence.updated.on(onUpdate));
         });
 
         onUpdate();

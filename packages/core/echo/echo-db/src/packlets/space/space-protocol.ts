@@ -58,7 +58,7 @@ export class SpaceProtocol {
     return this._sessions;
   }
 
-  constructor({ topic, swarmIdentity: swarmIdentity, networkManager, identityKey }: SpaceProtocolOptions) {
+  constructor({ topic, swarmIdentity, networkManager, identityKey }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = swarmIdentity;
 
