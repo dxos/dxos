@@ -71,7 +71,7 @@ const main = () => {
           const testBuilder = new TestBuilder(new Config(config));
           const services = testBuilder.createClientServicesHost();
           const stateMachine = testStateMachineFactory(spec.stateMachine!);
-          const agent = await new Agent({ config, services, spec, stateMachine });
+          const agent = new Agent({ config, services, spec, stateMachine });
           await agent.initialize();
           await agent.start();
           await agent.stop();
