@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { screen, render, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import expect from 'expect';
-import React from 'react';
+import { act, renderHook } from '@testing-library/react';
+import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { Space, Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
@@ -15,43 +14,37 @@ import { useSelection } from './useSelection';
 const count = 10;
 const TYPE_EXAMPLE = 'example:type/org';
 
-const createTestComponents = async () => {
-  const client = new Client({ services: fromHost() });
-  await client.initialize();
-  await client.halo.createProfile();
-
-  const space = await client.echo.createSpace();
-  const items = await Promise.all(
-    Array.from({ length: count }).map(async () => await space.database.createItem({ type: TYPE_EXAMPLE }))
-  );
-  expect(items.length).toBe(count);
-
-  return { client, space };
-};
-
-const UseSelectionTestComponent = ({ space }: { space: Space }) => {
-  const { data } = useSelection(space?.select().filter({ type: TYPE_EXAMPLE }), []);
-
-  const addItem = async () => await space.database.createItem({ type: TYPE_EXAMPLE });
-
-  return (
-    <ul data-testid='add' onClick={addItem}>
-      {data?.map((item) => (
-        <li key={item.id} data-testid='item'>
-          {item.id}
-        </li>
-      ))}
-    </ul>
-  );
-};
-
 describe('useSelection', () => {
-  test('gets updated items selection', async () => {
-    const { space } = await createTestComponents();
-    render(<UseSelectionTestComponent space={space} />);
+  let space: Space;
 
-    expect((await screen.findAllByTestId('item')).length).toEqual(count);
-    await userEvent.click(screen.getByTestId('add'));
-    await waitFor(() => screen.getAllByTestId('item').length === count + 1);
+  beforeEach(async () => {
+    const client = new Client({ services: fromHost() });
+    await client.initialize();
+    await client.halo.createProfile();
+
+    space = await client.echo.createSpace();
+    await Promise.all(Array.from({ length: count }).map(() => space.database.createItem({ type: TYPE_EXAMPLE })));
+  });
+
+  test('gets items selection', () => {
+    const { result } = renderHook(() => useSelection(space.select({ type: TYPE_EXAMPLE })));
+    expect(result.current.data?.length).to.eq(count);
+  });
+
+  test('gets items selection updates', async () => {
+    const { result } = renderHook(() => useSelection(space.select({ type: TYPE_EXAMPLE })));
+    const itemA = result.current.data?.[0];
+    // TODO(wittjosiah): `act` is not working as expected.
+    act(() => {
+      void space.database.createItem({ type: TYPE_EXAMPLE });
+    });
+    await waitForExpect(() => {
+      expect(result.current.data?.length).to.eq(count + 1);
+    });
+    const itemB = result.current.data?.[0];
+    // Ensure items are referentially equal if they don't change.
+    expect(itemA!.id).to.eq(itemB!.id);
+    expect(itemA).to.eq(itemB);
+    // TODO(wittjosiah): Ensure items are not referentially equal if a property changes?
   });
 });
