@@ -11,7 +11,7 @@ import { promisify } from 'util';
 
 import type { Config } from '@dxos/client';
 
-import { PackageModule } from './common';
+import { Logger, PackageModule } from './common';
 import { uploadToIPFS } from './ipfs-upload';
 
 const DEFAULT_OUTDIR = 'out';
@@ -27,6 +27,7 @@ const encodeName = (name: string) => name.replaceAll(':', '/');
 
 export interface PublishParams {
   config?: Config;
+  log: Logger;
   module: PackageModule;
 }
 
@@ -38,9 +39,9 @@ interface PublishArgs {
   config?: string;
 }
 
-export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { config, module }: PublishParams) => {
+export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { log, config, module }: PublishParams) => {
   assert(module.name, 'Module name is required to publish.');
-  verbose && console.log(`Publishing ${module.name}...`);
+  log(`Uploading ${module.name}...`);
 
   const moduleOut = `out/${encodeName(module.name)}`;
   const outdir = path ?? module.build?.outdir ?? (fs.existsSync(moduleOut) ? moduleOut : DEFAULT_OUTDIR);
@@ -59,7 +60,7 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { co
   verbose && bar.update(total);
   verbose && bar.stop();
 
-  verbose && console.log(`Published ${module.name} to IPFS with cid ${cid.toString()}`);
+  log(`Uploaded ${module.name} to IPFS with cid ${cid.toString()}.`);
 
   return cid;
 };
