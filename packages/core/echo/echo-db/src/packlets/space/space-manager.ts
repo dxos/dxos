@@ -98,7 +98,7 @@ export class SpaceManager {
     const spaceKey = metadata.key;
     const protocol = new SpaceProtocol({
       topic: spaceKey,
-      identity: swarmIdentity ,
+      identity: swarmIdentity,
       networkManager: this._networkManager
     });
 

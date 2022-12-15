@@ -80,6 +80,7 @@ export class AuthExtension extends RpcExtension<Services, Services> {
   }
 
   override async onClose(): Promise<void> {
+    await this._ctx.dispose();
     await super.onClose();
   }
 }

@@ -68,10 +68,8 @@ export class ServiceContext {
     });
     this.identityManager = new IdentityManager(
       this.metadataStore,
-      this.feedStore,
       this.keyring,
-      networkManager,
-      modelFactory
+      this.spaceManager,
     );
 
     // TODO(burdon): _initialize called in multiple places.
