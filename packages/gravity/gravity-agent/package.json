@@ -24,14 +24,17 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/testutils": "0.1.13",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "js-yaml": "^4.1.0",
+    "node-ipc": "^11.1.0",
     "util": "^0.12.4",
     "yargs": "~16.2.0"
   },
