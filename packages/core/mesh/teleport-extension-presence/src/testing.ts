@@ -55,7 +55,12 @@ export class TestAgent {
 
   constructor({ peerId = PublicKey.random(), announceInterval = 25, offlineTimeout = 50 }: TestAgentOptions) {
     this.peerId = peerId;
-    this.presence = new Presence({ localPeerId: peerId, announceInterval, offlineTimeout });
+    this.presence = new Presence({
+      localPeerId: peerId,
+      announceInterval,
+      offlineTimeout,
+      identityKey: PublicKey.random()
+    });
   }
 
   addConnection(connection: Connection) {

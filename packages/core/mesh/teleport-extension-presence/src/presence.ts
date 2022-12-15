@@ -25,6 +25,11 @@ export type PresenceParams = {
    * Should be greater than announceInterval.
    */
   offlineTimeout: number;
+
+  /**
+   * Identity key of the local peer.
+   */
+  identityKey: PublicKey; // TODO(mykola): Remove. We need it despite localPeerId (which corresponds to deviceKey) because we currently can't get Identity from deviseKey.
 };
 
 /**
@@ -119,7 +124,8 @@ export class Presence {
             peerId: this._params.localPeerId,
             connections: this._getConnections(),
             messageId: PublicKey.random(),
-            timestamp: new Date()
+            timestamp: new Date(),
+            identityKey: this._params.identityKey
           })
           .catch((err) => log.catch(err))
       )
