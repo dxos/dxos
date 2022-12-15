@@ -17,7 +17,7 @@ import {
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
 import { Presence } from '@dxos/teleport-extension-presence';
-import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-extension-replicator';
+import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
 import { AuthExtension, AuthProvider, AuthVerifier } from './auth';
@@ -45,8 +45,8 @@ export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
 
-  private readonly _presence: TeleportPresence;
-  
+  public readonly presence: Presence;
+
   private readonly _topic: PublicKey;
 
   private _connection?: SwarmConnection;
@@ -69,7 +69,7 @@ export class SpaceProtocol {
     this._topic = topic;
 
     // Presence (Teleport).
-    this._presence = new Presence({
+    this.presence = new Presence({
       localPeerId: this._swarmIdentity.peerKey,
       announceInterval: 1000,
       offlineTimeout: 30_000
@@ -136,10 +136,6 @@ export class SpaceProtocol {
       return session;
     };
   }
-
-  get peers() {
-    return this._presence.getPeersOnline().map(({ peerId }) => peerId);
-  }
 }
 
 export type SpaceProtocolSessionParams = {
@@ -153,8 +149,18 @@ export enum AuthStatus {
   FAILURE = 'FAILURE'
 }
 
+export type SpaceProtocolSessionParams = {
+  wireParams: WireProtocolParams;
+  swarmIdentity: SwarmIdentity;
+  presence: Presence;
+};
+
+export enum AuthStatus {
+  INITIAL = 'INITIAL',
+  SUCCESS = 'SUCCESS',
+  FAILURE = 'FAILURE'
+}
 // TODO(dmaretskyi): Move to a separate file.
-export type SpaceProtocolSessionParams = WireProtocolParams & { presence: Presence };
 
 /**
  * Represents a single connection to a remote peer
@@ -169,7 +175,7 @@ export class SpaceProtocolSession implements WireProtocol {
   private readonly presence: Presence;
 
   // TODO(dmaretskyi): Start with upload=false when switching it on the fly works.
-  public readonly replicator = new TeleportReplicatorExtension().setOptions({ upload: true });
+  public readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
 
   private _authStatus = AuthStatus.INITIAL;
 
