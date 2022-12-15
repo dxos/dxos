@@ -111,6 +111,7 @@ export class SpaceProtocol {
       await this._connection.close();
       log('stopped');
     }
+    await this.presence.destroy();
   }
 
   private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
