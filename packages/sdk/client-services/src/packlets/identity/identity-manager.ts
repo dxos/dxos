@@ -19,6 +19,7 @@ import { createHaloAuthProvider } from './authenticator';
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
   swarmIdentity: SwarmIdentity;
+  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
 }
 
 export type JoinIdentityParams = {
@@ -168,7 +169,8 @@ export class IdentityManager {
           createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)
         ),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier)
-      }
+      },
+      identityKey: identityRecord.identityKey
     });
     const identity: Identity = new Identity({
       space,

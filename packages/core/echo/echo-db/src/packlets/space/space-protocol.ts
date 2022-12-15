@@ -34,8 +34,9 @@ export interface SwarmIdentity {
 
 export type SpaceProtocolOptions = {
   topic: PublicKey; // TODO(burdon): Rename?
-  identity: SwarmIdentity;
+  swarmIdentity: SwarmIdentity;
   networkManager: NetworkManager;
+  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
 };
 
 /**
@@ -57,14 +58,15 @@ export class SpaceProtocol {
     return this._sessions;
   }
 
-  constructor({ topic, identity, networkManager }: SpaceProtocolOptions) {
+  constructor({ topic, swarmIdentity: swarmIdentity, networkManager, identityKey }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
-    this._swarmIdentity = identity;
+    this._swarmIdentity = swarmIdentity;
 
     this.presence = new Presence({
       localPeerId: this._swarmIdentity.peerKey,
       announceInterval: 1_000,
-      offlineTimeout: 30_000
+      offlineTimeout: 30_000,
+      identityKey
     });
 
     this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
