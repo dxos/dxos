@@ -6,18 +6,48 @@ prev: why
 ---
 
 # Quick start
+DXOS is the developer platform for collaborative, local-first applications. Learn more about our [mission](why).
 
-## Using an ECHO database
+In this guide:
+- [Templates](#creating-apps-with-dx-cli) for creating local-first apps
+- [Using an ECHO database](#using-the-echo-database) for real-time, offline-first consensus
+- [Installing decentralized KUBE infrastructure](#starting-a-kube) for hosting apps locally
+- [Deploying apps to KUBE](#deploying-your-app-to-a-kube)
+## Creating apps with `dx` CLI
 
-Install ECHO with your package manager of choice
+The `dx` cli offers a production-ready application template based on `vite` with `typescript`, `react`, `pwa`, and other opinions built in.
+
+Install:
 
 ```bash
-npm install --save @dxos/client
+pnpm i -g @dxos/cli
 ```
 
-To use ECHO you start with an instance of the [`Client`](/api/@dxos/client/classes/Client).
+:::note
+Please note that only `pnpm` is supported for now.
+:::
 
-To store data in ECHO, your client needs to [create or join a space](echo/spaces).
+Now you can use the `dx` command line tool:
+
+```bash
+dx app create hello # or with --template=bare
+cd hello
+pnpm serve
+```
+
+This will start the development server.
+
+## Using the ECHO database
+
+Install:
+
+```bash
+pnpm i @dxos/client
+```
+
+To use ECHO, start with an instance of the [`Client`](echo/configuration).
+
+Before storing data, your client needs to create or join a [space](echo/spaces).
 
 ```ts file=./echo/snippets/create-space.ts#L5-
 import { Client } from '@dxos/client';
@@ -26,8 +56,6 @@ const client = new Client();
 
 const space = await client.echo.createSpace();
 ```
-
-Read more about [configuring the client](echo/configuration).
 
 Now you can manipulate items in the space and they will replicate with all members of the space in a peer-to-peer fashion.
 
@@ -56,57 +84,34 @@ const items = spaces[0].database.select({ type });
 Use `ClientProvider` and `useClient` with React:
 
 ```tsx file=./echo/snippets/create-client-react.tsx#L5-
+import React, { createRoot } from 'react';
+import { ClientProvider, useClient } from '@dxos/react-client';
+
+const App = () => {
+  const client = useClient();
+  return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
+};
+
+createRoot(document.body).render(
+  <ClientProvider>
+    <App />
+  </ClientProvider>
+);
 ```
 
 Read more:
 
-- [ECHO overview](echo)
-- [ECHO configuration](echo/configuration)
-- [ECHO with React](echo/react)
+*   [ECHO overview](echo)
+*   [ECHO configuration](echo/configuration)
+*   [ECHO with React](echo/react)
 
-## Creating apps with `dx` CLI
-
-The `dx` cli offers a production-ready application template for building **local-first applications** with ECHO. The template is made of `vite`, `typescript`, `react`, `echo`, `pwa`, and other opinions.
-
-Using `pnpm`:
-
-```bash
-npm i -g @dxos/cli
-```
-
-Now you can use the `dx` command line tool:
-
-```bash
-dx app create hello # or with --template=bare
-cd hello
-pnpm serve
-```
-
-This will start the development server in the new application.
-
-:::warning
-Only `pnpm` is currently supported by the application templates for now due to a need to patch `vite`. This should be resolved soon.
-:::
-
-Building your app for production:
-
-```bash
-npm build
-```
-
-This will produce an `out` folder with an entry point.
-
-Read more:
-
-- [hello world template](cli/app-templates.md#hello-template)
-- [bare template](cli/app-templates.md#bare-template)
 
 ## Starting a KUBE
 
 Runnig a [KUBE](/docs/kube/overview) gives you superpowers. Installation:
 
 ```bash file=./snippets/install-kube.sh
-sudo ch=dev bash -c "$(curl -fsSL https://dxos.nyc3.digitaloceanspaces.com/install.sh)"
+sudo ch=dev bash -c "$(curl -fsSL https://install-kube.dxos.org)"
 ```
 
 Then:
@@ -120,16 +125,16 @@ Once KUBE is running, you're ready to deploy.
 
 Read more:
 
-- [KUBE Overview](kube)
+*   [KUBE Overview](kube)
 
 ## Deploying your app to a KUBE
 
 To deploy to your local kube:
 
-- Ensure a [KUBE](#starting-a-kube) is running
-- [Install](#creating-apps) and [configure your `dx` CLI to deploy to your KUBE](kube/dx-yml-file#deploying-to-your-local-kube)
-- Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
-- Run this:
+*   Ensure a [KUBE](#starting-a-kube) is running
+*   [Install](#creating-apps) and [configure your `dx` CLI to deploy to your KUBE](kube/dx-yml-file#deploying-to-your-local-kube)
+*   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
+*   Run this:
 
 ```bash
 dx app publish
@@ -147,4 +152,4 @@ If you started with `dx app create hello`, the app will be on [`hello.localhost:
 
 Read more:
 
-- The [`dx.yml` file schema](kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
+*   The [`dx.yml` file schema](kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).

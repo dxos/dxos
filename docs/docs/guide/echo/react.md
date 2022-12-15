@@ -8,20 +8,19 @@ description: Using ECHO with React
 Create a `Client` and use it with `ClientProvider` to allow nested components to use `useClient` and the other hooks available in `@dxos/react-client`.
 
 ```tsx file=./snippets/create-client-react.tsx#L5-
-import React from 'react';
-
-import { Client } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
-
-const client = new Client();
+import React, { createRoot } from 'react';
+import { ClientProvider, useClient } from '@dxos/react-client';
 
 const App = () => {
-  return (
-    <ClientProvider client={client}>
-      {/* Your components can useClient() here  */}
-    </ClientProvider>
-  );
+  const client = useClient();
+  return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
 };
+
+createRoot(document.body).render(
+  <ClientProvider>
+    <App />
+  </ClientProvider>
+);
 ```
 
 Alternatively, a config function may be supplied instead of a client, and a client will be generated internally. The fallback element will be displayed while the client is being initialized.
@@ -131,5 +130,4 @@ root.render(
     <App />
   </ClientProvider>
 );
-
 ```

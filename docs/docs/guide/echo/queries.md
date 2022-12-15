@@ -39,5 +39,6 @@ const selection = space.database
 // filter selections by chaining
 const selection = space.database
   .select({ type })
+  .children()
   .filter((item) => !item.deleted);
 ```

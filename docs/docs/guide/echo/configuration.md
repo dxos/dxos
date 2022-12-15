@@ -23,20 +23,19 @@ Continue to manipulating data with [spaces](spaces) or read on about further way
 Use `ClientProvider` to supply the `client` instance via `ReactContext` to any nested `useClient()` hooks.
 
 ```tsx file=./snippets/create-client-react.tsx#L5-
-import React from 'react';
-
-import { Client } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
-
-const client = new Client();
+import React, { createRoot } from 'react';
+import { ClientProvider, useClient } from '@dxos/react-client';
 
 const App = () => {
-  return (
-    <ClientProvider client={client}>
-      {/* Your components can useClient() here  */}
-    </ClientProvider>
-  );
+  const client = useClient();
+  return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
 };
+
+createRoot(document.body).render(
+  <ClientProvider>
+    <App />
+  </ClientProvider>
+);
 ```
 
 ### Options
