@@ -47,13 +47,18 @@ export default class Create extends BaseCommand {
       description: 'Template to use when creating the project.',
       default: 'hello',
       options: APP_TEMPLATES
+    }),
+    interactive: Flags.boolean({
+      char: 'i',
+      description: 'Customize app template options via interactive prompt',
+      default: false
     })
   };
 
   async run(): Promise<any> {
     const { args, flags } = await this.parse(Create);
     const { name } = args;
-    const { tag = `v${this.config.version}`, template } = flags;
+    const { tag = `v${this.config.version}`, template, interactive } = flags;
 
     const tmpDirectory = tempy.directory({ prefix: `dxos-app-create-${name}` });
     const templateDirectory = `${tmpDirectory}/packages/apps/templates/${template}-template`;
@@ -91,14 +96,34 @@ export default class Create extends BaseCommand {
 
       this.log('Creating app...');
 
+      // TODO: find a way to import this type from the real template
+      type AppTemplateInput = {
+        name: string;
+        react: boolean;
+        monorepo: boolean;
+        dxosUi: boolean;
+        storybook: boolean;
+        pwa: boolean;
+      };
+
       // TS templating.
-      const result = await executeDirectoryTemplate({
+      const result = await executeDirectoryTemplate<AppTemplateInput>({
         templateDirectory,
         outputDirectory,
-        input: {
-          monorepo: false,
-          name
-        }
+        interactive,
+        input: interactive
+          ? {
+              monorepo: false,
+              name
+            }
+          : {
+              monorepo: false,
+              name,
+              react: true,
+              dxosUi: true,
+              storybook: false,
+              pwa: true
+            }
       });
 
       await Promise.all(result.map((file) => file.save()));

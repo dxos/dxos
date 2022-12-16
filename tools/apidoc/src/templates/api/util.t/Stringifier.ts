@@ -264,6 +264,19 @@ export class Stringifier {
     `;
   }
 
+  interface(node: Schema.DeclarationReflection, options?: StringifyOptions) {
+    const sourceFileName = node?.sources?.[0]?.fileName;
+    const properties = reflectionsOfKind(node, ReflectionKind.Property);
+    return text`
+      # Interface \`${node.name}\`
+      > Declared in [\`${sourceFileName}\`]()
+
+      ${this.comment(node.comment)}
+      ## Properties
+      ${properties.map((p) => this.property(p))}
+    `;
+  }
+
   stringify(node?: Schema.Reflection | null, options?: StringifyOptions): string {
     if (!node) {
       return '';
@@ -276,6 +289,8 @@ export class Stringifier {
       ? this.property(node, options)
       : node.kind === ReflectionKind.FunctionOrMethod || node.kind === ReflectionKind.Function
       ? this.method(node)
+      : node.kind === ReflectionKind.Interface
+      ? this.interface(node, options)
       : '';
   }
 }

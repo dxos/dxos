@@ -9,3 +9,4 @@ To get started with DXOS components and learn how to use them, check out the [gu
 - [@dxos/client](/api/@dxos/client)
 - [@dxos/config](/api/@dxos/config)
 - [@dxos/react-client](/api/@dxos/react-client)
+- [@dxos/text-model](/api/@dxos/text-model)

@@ -1,9 +1,8 @@
 ---
 order: 5
-label: Queries
 ---
 
-# Querying data
+# Reading data
 
 Once access is obtained to a space, select items to retrieve them.
 
@@ -39,5 +38,6 @@ const selection = space.database
 // filter selections by chaining
 const selection = space.database
   .select({ type })
+  .children()
   .filter((item) => !item.deleted);
 ```

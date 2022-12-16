@@ -1,6 +1,5 @@
 ---
 order: 6
-title: Mutations
 ---
 
 # Mutating data

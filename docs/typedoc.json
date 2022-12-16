@@ -10,6 +10,7 @@
   "entryPoints": [
     "../packages/sdk/client",
     "../packages/sdk/react-client",
-    "../packages/sdk/config"
+    "../packages/sdk/config",
+    "../packages/core/echo/text-model"
   ]
 }
