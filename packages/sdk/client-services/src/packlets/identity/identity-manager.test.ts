@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { valueEncoding, MetadataStore } from '@dxos/echo-db';
+import { valueEncoding, MetadataStore, SpaceManager } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -13,7 +13,6 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { createDefaultModelFactory } from '../services';
 import { IdentityManager } from './identity-manager';
 
 describe('identity/identity-manager', () => {
@@ -43,14 +42,11 @@ describe('identity/identity-manager', () => {
       signalManager: new MemorySignalManager(signalContext),
       transportFactory: MemoryTransportFactory
     });
-
-    const identityManager = new IdentityManager(
-      metadataStore,
+    const spaceManager = new SpaceManager({
       feedStore,
-      keyring,
-      networkManager,
-      createDefaultModelFactory()
-    );
+      networkManager
+    });
+    const identityManager = new IdentityManager(metadataStore, keyring, spaceManager);
 
     return {
       identityManager,

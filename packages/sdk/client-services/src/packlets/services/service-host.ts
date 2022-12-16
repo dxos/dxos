@@ -99,7 +99,7 @@ export class ClientServicesHost implements ClientServicesProvider {
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
         this._serviceContext.identityManager,
         () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
-        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized'))
+        () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
       ),
 
       SpacesService: new SpacesServiceImpl(),

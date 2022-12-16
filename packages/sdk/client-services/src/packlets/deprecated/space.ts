@@ -97,12 +97,12 @@ export class SpaceServiceImpl implements SpaceService {
       const subscriptions = new EventSubscriptions();
 
       const onUpdate = () => {
-        const spaces = Array.from(this.serviceContext.spaceManager!.spaces.values()).map(
+        const spaces = Array.from(this.serviceContext.dataSpaceManager!.spaces.values()).map(
           (space): Space => ({
             publicKey: space.key,
             isOpen: true,
             isActive: true,
-            members: Array.from(space.spaceState.members.values()).map((member) => ({
+            members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
               identityKey: member.key,
               profile: {
                 identityKey: member.key,
@@ -116,22 +116,22 @@ export class SpaceServiceImpl implements SpaceService {
       };
 
       setTimeout(async () => {
-        if (!this.serviceContext.spaceManager) {
+        if (!this.serviceContext.dataSpaceManager) {
           next({ spaces: [] });
         }
 
         await this.serviceContext.initialized.wait();
 
         subscriptions.add(
-          this.serviceContext.spaceManager!.updated.on(() => {
-            this.serviceContext.spaceManager!.spaces.forEach((space) => {
+          this.serviceContext.dataSpaceManager!.updated.on(() => {
+            this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
               subscriptions.add(space.stateUpdate.on(onUpdate));
             });
             onUpdate();
           })
         );
 
-        this.serviceContext.spaceManager!.spaces.forEach((space) => {
+        this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
           subscriptions.add(space.stateUpdate.on(onUpdate));
         });
 
@@ -152,7 +152,7 @@ export class SpaceServiceImpl implements SpaceService {
 
   async createSpace(): Promise<Space> {
     await this.serviceContext.initialized.wait();
-    const space = await this.serviceContext.spaceManager!.createSpace();
+    const space = await this.serviceContext.dataSpaceManager!.createSpace();
     return {
       publicKey: space.key,
       isOpen: true,
