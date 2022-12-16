@@ -22,10 +22,12 @@ describe('space/space-protocol', () => {
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
-    const protocol1 = peer1.createSpaceProtocol(topic);
+    const presence1 = peer1.createPresence();
+    const protocol1 = peer1.createSpaceProtocol(topic, presence1);
 
     const peer2 = await builder.createPeer();
-    const protocol2 = peer2.createSpaceProtocol(topic);
+    const presence2 = peer2.createPresence();
+    const protocol2 = peer2.createSpaceProtocol(topic, presence2);
 
     await protocol1.start();
     afterTest(() => protocol1.stop());
@@ -34,8 +36,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(peer1.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
-      expect(peer2.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
+      expect(presence1.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
+      expect(presence2.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
     }, 1_000);
   });
 

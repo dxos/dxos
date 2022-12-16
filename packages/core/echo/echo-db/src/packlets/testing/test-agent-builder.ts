@@ -154,7 +154,7 @@ export class TestAgent {
     return [space, dataPipelineController];
   }
 
-  createSpaceProtocol(topic: PublicKey) {
+  createSpaceProtocol(topic: PublicKey, presence?: Presence) {
     return new SpaceProtocol({
       topic,
       swarmIdentity: {
@@ -163,11 +163,11 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: this._networkManagerProvider(),
-      presence: this._createPresence()
+      presence: presence ?? this.createPresence()
     });
   }
 
-  _createPresence() {
+  createPresence() {
     return new Presence({
       localPeerId: this.deviceKey,
       announceInterval: 30,
