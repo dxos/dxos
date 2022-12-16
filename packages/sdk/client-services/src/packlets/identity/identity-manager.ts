@@ -7,21 +7,16 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { CredentialGenerator } from '@dxos/credentials';
 import {
+  MetadataStore,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
-  MetadataStore,
-  Space,
-  SwarmIdentity,
-  Database,
-  SpaceProtocol
+  NoopDataPipelineController,
+  SpaceManager,
+  SwarmIdentity
 } from '@dxos/echo-db';
-import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { Identity } from '../identity';
@@ -51,10 +46,8 @@ export class IdentityManager {
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(
     private readonly _metadataStore: MetadataStore,
-    private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _keyring: Keyring,
-    private readonly _networkManager: NetworkManager,
-    private readonly _modelFactory: ModelFactory
+    private readonly _spaceManager: SpaceManager
   ) {}
 
   get identity() {
@@ -191,28 +184,15 @@ export class IdentityManager {
   }
 
   private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
-    const controlFeed = await this._feedStore.openFeed(spaceRecord.writeControlFeedKey, { writable: true });
-    const dataFeed = await this._feedStore.openFeed(spaceRecord.writeDataFeedKey, { writable: true });
-
-    // The genesis feed will be the same as the control feed if the space was created by the local agent.
-    // NOTE: Must be initialized after writable feeds so that it is in a writable state.
-    const genesisFeed = await this._feedStore.openFeed(spaceRecord.genesisFeedKey);
-
-    const protocol = new SpaceProtocol({
-      topic: spaceRecord.spaceKey,
-      identity: swarmIdentity,
-      networkManager: this._networkManager
-    });
-
-    return new Space({
-      spaceKey: spaceRecord.spaceKey,
-      protocol,
-      genesisFeed,
-      controlFeed,
-      dataFeed,
-      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
-      databaseFactory: async ({ databaseBackend }) =>
-        new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
+    return this._spaceManager.constructSpace({
+      metadata: {
+        key: spaceRecord.spaceKey,
+        genesisFeedKey: spaceRecord.genesisFeedKey,
+        controlFeedKey: spaceRecord.writeControlFeedKey,
+        dataFeedKey: spaceRecord.writeDataFeedKey
+      },
+      dataPipelineControllerProvider: () => new NoopDataPipelineController(),
+      swarmIdentity
     });
   }
 }

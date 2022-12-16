@@ -24,23 +24,23 @@ describe('services/space-invitation-service', () => {
   test('creates space and invites peer', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
-    assert(host.spaceManager);
+    assert(host.dataSpaceManager);
     assert(host.spaceInvitations);
     const service1: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       host.identityManager,
       () => host.spaceInvitations!,
-      () => host.spaceManager!
+      () => host.dataSpaceManager!
     );
 
-    assert(guest.spaceManager);
+    assert(guest.dataSpaceManager);
     assert(guest.spaceInvitations);
     const service2: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       guest.identityManager,
       () => guest.spaceInvitations!,
-      () => guest.spaceManager!
+      () => guest.dataSpaceManager!
     );
 
-    const space1 = await host.spaceManager.createSpace();
+    const space1 = await host.dataSpaceManager.createSpace();
 
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
@@ -85,23 +85,23 @@ describe('services/space-invitation-service', () => {
   test('creates space and cancels invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
-    assert(host.spaceManager);
+    assert(host.dataSpaceManager);
     assert(host.spaceInvitations);
     const service1: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       host.identityManager,
       () => host.spaceInvitations!,
-      () => host.spaceManager!
+      () => host.dataSpaceManager!
     );
 
-    assert(guest.spaceManager);
+    assert(guest.dataSpaceManager);
     assert(guest.spaceInvitations);
     const service2: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       guest.identityManager,
       () => guest.spaceInvitations!,
-      () => guest.spaceManager!
+      () => guest.dataSpaceManager!
     );
 
-    const space1 = await host.spaceManager.createSpace();
+    const space1 = await host.dataSpaceManager.createSpace();
     const cancelled = new Trigger();
 
     {

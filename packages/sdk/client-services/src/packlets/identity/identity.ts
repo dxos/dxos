@@ -13,8 +13,7 @@ import {
   ProfileStateMachine
 } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
-import { failUndefined } from '@dxos/debug';
-import { Database, Space } from '@dxos/echo-db';
+import { Space } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -99,10 +98,6 @@ export class Identity {
 
   get haloGenesisFeedKey() {
     return this._space.genesisFeedKey;
-  }
-
-  get haloDatabase(): Database {
-    return this._space.database ?? failUndefined();
   }
 
   getAdmissionCredentials(): HaloAdmissionCredentials {
