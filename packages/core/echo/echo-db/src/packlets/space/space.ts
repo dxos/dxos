@@ -62,10 +62,9 @@ export class Space {
   private readonly _feedProvider: FeedProvider;
   private readonly _dataPipelineControllerProvider: () => DataPipelineController;
 
-  // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
   private readonly _controlPipeline: ControlPipeline;
-  private readonly _protocol: SpaceProtocol;
+  public readonly protocol: SpaceProtocol;
 
   private _isOpen = false;
   private _dataPipeline?: Pipeline;
@@ -108,7 +107,7 @@ export class Space {
       }
 
       if (!info.key.equals(genesisFeed.key)) {
-        this._protocol.addFeed(await feedProvider(info.key));
+        this.protocol.addFeed(await feedProvider(info.key));
       }
     });
 
@@ -119,8 +118,8 @@ export class Space {
     });
 
     // Start replicating the genesis feed.
-    this._protocol = protocol;
-    this._protocol.addFeed(genesisFeed);
+    this.protocol = protocol;
+    this.protocol.addFeed(genesisFeed);
   }
 
   @logInfo
@@ -165,7 +164,7 @@ export class Space {
     // Order is important.
     await this._controlPipeline.start();
     await this._openDataPipeline();
-    await this._protocol.start();
+    await this.protocol.start();
 
     this._isOpen = true;
     log('opened');
@@ -179,7 +178,7 @@ export class Space {
     }
 
     // Closes in reverse order to open.
-    await this._protocol.stop();
+    await this.protocol.stop();
     await this._closeDataPipeline();
     await this._controlPipeline.stop();
 
