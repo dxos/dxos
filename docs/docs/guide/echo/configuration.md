@@ -42,6 +42,11 @@ const client = new Client({
 });
 ```
 
+Here's how to set a custom [HALO](../halo) source. By default the client will use `https://halo.dxos.org`, but if there was a version of HALO deployed to a local KUBE, the remoteSource setting can be used to point a client to it:
+
+```ts file=./snippets/create-with-custom-vault.ts#L5-
+```
+
 See the API documentaion for [Config](/api/@dxos/client/classes/Config).
 
 ### Loading defaults from a file
