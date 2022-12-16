@@ -13,26 +13,26 @@ import { ComplexSet } from '@dxos/util';
 
 export const createHaloAuthProvider =
   (signer: CredentialSigner): AuthProvider =>
-    async (nonce) => {
-      const credential = await signer.createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.Auth'
-        },
-        subject: signer.getIssuer(),
-        nonce
-      });
+  async (nonce) => {
+    const credential = await signer.createCredential({
+      assertion: {
+        '@type': 'dxos.halo.credentials.Auth'
+      },
+      subject: signer.getIssuer(),
+      nonce
+    });
 
-      return schema.getCodecForType('dxos.halo.credentials.Credential').encode(credential);
-    };
+    return schema.getCodecForType('dxos.halo.credentials.Credential').encode(credential);
+  };
 
 export type HaloAuthVerifierParams = {
-  trustedDevicesProvider: () => ComplexSet<PublicKey>,
-  update: Event<void>
+  trustedDevicesProvider: () => ComplexSet<PublicKey>;
+  update: Event<void>;
   /**
    * Timeout to wait for the device key to be added to the trusted set.
    */
-  authTimeout: number
-}
+  authTimeout: number;
+};
 
 /**
  * Verifies credentials of another device of the same identity in the HALO space.
@@ -41,7 +41,7 @@ export type HaloAuthVerifierParams = {
 export class HaloAuthVerifier {
   private _ctx = new Context();
 
-  constructor(private readonly _params: HaloAuthVerifierParams) { }
+  constructor(private readonly _params: HaloAuthVerifierParams) {}
 
   async close() {
     await this._ctx.dispose();
@@ -68,11 +68,13 @@ export class HaloAuthVerifier {
       }
 
       if (this._isTrustedDevice(credential.issuer)) {
-        return true
+        return true;
       }
 
       const trigger = new Trigger<boolean>();
-      this._ctx.onDispose(() => void trigger.wake(false))
+      this._ctx.onDispose(() => {
+        trigger.wake(false);
+      });
       const clear = this._params.update.on(this._ctx, () => {
         if (this._isTrustedDevice(credential.issuer)) {
           trigger.wake(true);

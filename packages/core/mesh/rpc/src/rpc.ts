@@ -12,7 +12,7 @@ import { schema } from '@dxos/protocols';
 import { Request, Response, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
-import { decodeError, encodeError, RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
+import { decodeError, encodeError, RpcClosedError, RpcNotOpenError } from './errors';
 
 const DEFAULT_TIMEOUT = 3000;
 

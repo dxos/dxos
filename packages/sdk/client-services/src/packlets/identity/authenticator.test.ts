@@ -5,6 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
+import { Event } from '@dxos/async';
 import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -12,7 +13,6 @@ import { describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
 
 import { createHaloAuthProvider, HaloAuthVerifier } from './authenticator';
-import { Event } from '@dxos/async';
 
 describe('identity/authenticator', () => {
   test('verifies credentials', async () => {
@@ -23,7 +23,7 @@ describe('identity/authenticator', () => {
     const authVerifier = new HaloAuthVerifier({
       trustedDevicesProvider: () => new ComplexSet(PublicKey.hash, [deviceKey]),
       update: new Event(),
-      authTimeout: 10,
+      authTimeout: 10
     });
 
     const nonce = new Uint8Array([2, 1, 3, 7]);

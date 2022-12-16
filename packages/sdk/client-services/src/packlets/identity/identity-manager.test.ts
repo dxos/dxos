@@ -14,7 +14,6 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { describe, test, afterTest } from '@dxos/test';
 
 import { IdentityManager } from './identity-manager';
-import waitForExpect from 'wait-for-expect';
 
 describe('identity/identity-manager', () => {
   const setupPeer = async ({

@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { createCredentialSignerWithKey, CredentialGenerator, verifyCredential } from '@dxos/credentials';
+import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,

@@ -21,6 +21,7 @@ import { TypedMessage } from '@dxos/protocols';
 import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
+
 import { HaloAuthVerifier } from './authenticator';
 
 /**
@@ -71,7 +72,7 @@ export class Identity {
     this.authVerifier = new HaloAuthVerifier({
       trustedDevicesProvider: () => this.authorizedDeviceKeys,
       update: this.stateUpdate,
-      authTimeout: AUTH_TIMEOUT,
+      authTimeout: AUTH_TIMEOUT
     });
   }
 

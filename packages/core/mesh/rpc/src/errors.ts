@@ -11,7 +11,7 @@ export class SerializedRpcError extends Error {
   // prettier-ignore
   constructor(
     name: string,
-    message: string,
+    message: string
   ) {
     super(message);
     this.name = name;
@@ -45,7 +45,6 @@ export class RpcNotOpenError extends Error {
   }
 }
 
-
 export const encodeError = (err: any): ErrorResponse => {
   if (typeof err === 'object' && err?.message) {
     return {
@@ -66,7 +65,7 @@ export const encodeError = (err: any): ErrorResponse => {
 
 export const decodeError = (err: ErrorResponse, rpcMethod: string): Error => {
   let error: Error;
-  switch(err.name) {
+  switch (err.name) {
     case 'RpcClosedError':
       error = new RpcClosedError();
       break;
@@ -74,12 +73,9 @@ export const decodeError = (err: ErrorResponse, rpcMethod: string): Error => {
       error = new RpcNotOpenError();
       break;
     default:
-      error = new SerializedRpcError(
-        err.name ?? 'Error',
-        err.message ?? 'Unknown Error',
-      );
+      error = new SerializedRpcError(err.name ?? 'Error', err.message ?? 'Unknown Error');
   }
   error.stack = err.stack ?? '' + `\n    at RPC call: ${rpcMethod} \n` + preprocessStack(error.stack!);
 
   return error;
-}
+};
