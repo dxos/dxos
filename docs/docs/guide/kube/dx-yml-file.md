@@ -45,13 +45,13 @@ runtime:
       server: http://localhost:5001/
       gateway: http://localhost:8888/ipfs
     signal:
-      server: ws://localhost:9002/.well-known/dx/signal
+      server: ws://localhost/.well-known/dx/signal
     ice:
       - urls: turn:localhost:3478
         username: dxos
         credential: dxos
     publisher:
-      server: ws://localhost:9002/.well-known/dx/deploy
+      server: ws://localhost/.well-known/dx/deploy
 ```
 
 ## Configuration schema
