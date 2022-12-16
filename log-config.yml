@@ -7,12 +7,15 @@ filter:
   - warn
   - info
   # - debug
+  # - test:debug
+  # - debug
   # - swarm.ts:debug
   # - swarm:debug
   # - peer:debug
   # - connection:debug
   # - test:debug
-  - framer:debug
+  - client-services:debug
+  # - framer:debug
   # - feed-wrapper:debug
   # - service-host:debug
   # - client:debug

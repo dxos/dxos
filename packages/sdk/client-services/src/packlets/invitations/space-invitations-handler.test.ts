@@ -24,15 +24,15 @@ describe('services/space-invitations-handler', () => {
   test('genesis', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
-    const space = await peer.spaceManager!.createSpace();
+    const space = await peer.dataSpaceManager!.createSpace();
     expect(space.database).not.to.be.undefined;
-    expect(peer.spaceManager!.spaces.has(space.key)).to.be.true;
+    expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
     await space.close();
   });
 
   test('genesis with database mutations', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
-    const space = await peer.spaceManager!.createSpace();
+    const space = await peer.dataSpaceManager!.createSpace();
 
     {
       const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
@@ -56,7 +56,7 @@ describe('services/space-invitations-handler', () => {
     let attempt = 0;
     const authenticationCode = new Trigger<string>();
 
-    const space1 = await host.spaceManager!.createSpace();
+    const space1 = await host.dataSpaceManager!.createSpace();
     const observable1 = host.spaceInvitations!.createInvitation(space1);
     observable1.subscribe({
       onConnecting: async (invitation1: Invitation) => {
@@ -98,8 +98,8 @@ describe('services/space-invitations-handler', () => {
     expect(spaceKey1).to.deep.eq(spaceKey2);
 
     {
-      const space1 = host.spaceManager!.spaces.get(spaceKey1)!;
-      const space2 = guest.spaceManager!.spaces.get(spaceKey2)!;
+      const space1 = host.dataSpaceManager!.spaces.get(spaceKey1)!;
+      const space2 = guest.dataSpaceManager!.spaces.get(spaceKey2)!;
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
@@ -117,7 +117,7 @@ describe('services/space-invitations-handler', () => {
     const connecting1 = new Trigger<Invitation>(); // peer 1 connected.
     const connecting2 = new Trigger<Invitation>(); // peer 2 connected.
 
-    const space1 = await host.spaceManager!.createSpace();
+    const space1 = await host.dataSpaceManager!.createSpace();
     const observable1 = await host.spaceInvitations!.createInvitation(space1);
     observable1.subscribe({
       onConnecting: async (invitation1: Invitation) => {

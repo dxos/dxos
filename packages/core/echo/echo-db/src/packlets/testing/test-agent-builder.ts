@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -14,9 +13,8 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { Database, DataServiceSubscriptions } from '../database';
-import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
+import { DataPipelineControllerImpl } from '../space/data-pipeline-controller';
 import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => NetworkManager;
@@ -115,20 +113,8 @@ export class TestAgent {
 
   createSpaceManager() {
     return new SpaceManager({
-      keyring: this._feedBuilder.keyring,
       feedStore: this._feedBuilder.createFeedStore(),
-      metadataStore: new MetadataStore(this._feedBuilder.storage.createDirectory('metadata')),
-      networkManager: this._networkManagerProvider(),
-      dataServiceSubscriptions: new DataServiceSubscriptions(),
-      modelFactory: new ModelFactory().registerModel(ObjectModel),
-      signingContext: {
-        // TODO(burdon): Util to convert to Identity in SpaceProtocol
-        identityKey: this.identityKey,
-        deviceKey: this.deviceKey,
-        credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER,
-        credentialSigner: createCredentialSignerWithKey(this._feedBuilder.keyring, this.identityKey)
-      }
+      networkManager: this._networkManagerProvider()
     });
   }
 
@@ -136,7 +122,7 @@ export class TestAgent {
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
     genesisKey?: PublicKey
-  ): Promise<Space> {
+  ): Promise<[Space, DataPipelineControllerImpl]> {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
     }
@@ -148,6 +134,11 @@ export class TestAgent {
     const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
 
+    const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl(
+      new ModelFactory().registerModel(ObjectModel),
+      identityKey,
+      (feedKey) => space.spaceState.feeds.get(feedKey)
+    );
     const space = new Space({
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
@@ -155,12 +146,11 @@ export class TestAgent {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
-      databaseFactory: async ({ databaseBackend }) =>
-        new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
+      dataPipelineControllerProvider: () => dataPipelineController
     });
 
     this._spaces.set(spaceKey, space);
-    return space;
+    return [space, dataPipelineController];
   }
 
   createSpaceProtocol(topic: PublicKey) {
