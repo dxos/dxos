@@ -147,10 +147,6 @@ export class Space {
     return this._controlPipeline.spaceState;
   }
 
-  get protocol() {
-    return this._protocol;
-  }
-
   /**
    * @test-only
    */
