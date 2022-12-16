@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Error as ErrorResponse } from '@dxos/protocols/proto/dxos/rpc';
+
 /**
  * Error that is reconstructed after being sent over the RPC boundary.
  */
@@ -10,12 +12,9 @@ export class SerializedRpcError extends Error {
   constructor(
     name: string,
     message: string,
-    public readonly remoteStack: string,
-    public readonly rpcMethod: string
   ) {
     super(message);
     this.name = name;
-    this.stack = remoteStack + `\n at RPC call: ${rpcMethod} \n` + preprocessStack(this.stack!);
   }
 }
 
@@ -44,4 +43,43 @@ export class RpcNotOpenError extends Error {
   constructor() {
     super('RPC has not been opened.');
   }
+}
+
+
+export const encodeError = (err: any): ErrorResponse => {
+  if (typeof err === 'object' && err?.message) {
+    return {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    };
+  } else if (typeof err === 'string') {
+    return {
+      message: err
+    };
+  } else {
+    return {
+      message: JSON.stringify(err)
+    };
+  }
+};
+
+export const decodeError = (err: ErrorResponse, rpcMethod: string): Error => {
+  let error: Error;
+  switch(err.name) {
+    case 'RpcClosedError':
+      error = new RpcClosedError();
+      break;
+    case 'RpcNotOpenError':
+      error = new RpcNotOpenError();
+      break;
+    default:
+      error = new SerializedRpcError(
+        err.name ?? 'Error',
+        err.message ?? 'Unknown Error',
+      );
+  }
+  error.stack = err.stack ?? '' + `\n    at RPC call: ${rpcMethod} \n` + preprocessStack(error.stack!);
+
+  return error;
 }

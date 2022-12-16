@@ -9,10 +9,10 @@ import { Stream, Any } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Request, Response, Error as ErrorResponse, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { Request, Response, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
-import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
+import { decodeError, encodeError, RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 
 const DEFAULT_TIMEOUT = 3000;
 
@@ -283,12 +283,7 @@ export class RpcPeer {
     if (response.payload) {
       return response.payload;
     } else if (response.error) {
-      throw new SerializedRpcError(
-        response.error.name ?? 'Error',
-        response.error.message ?? 'Unknown Error',
-        response.error.stack ?? '',
-        method
-      );
+      throw decodeError(response.error, method);
     } else {
       throw new Error('Malformed response.');
     }
@@ -314,14 +309,7 @@ export class RpcPeer {
           close();
         } else if (response.error) {
           // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
-          close(
-            new SerializedRpcError(
-              response.error.name ?? 'Error',
-              response.error.message ?? 'Unknown Error',
-              response.error.stack ?? '',
-              method
-            )
-          );
+          close(decodeError(response.error, method));
         } else if (response.payload) {
           next(response.payload);
         } else {
@@ -431,22 +419,3 @@ export class RpcPeer {
     }
   }
 }
-
-// TODO(burdon): Factor out.
-const encodeError = (err: any): ErrorResponse => {
-  if (typeof err === 'object' && err?.message) {
-    return {
-      name: err.name,
-      message: err.message,
-      stack: err.stack
-    };
-  } else if (typeof err === 'string') {
-    return {
-      message: err
-    };
-  } else {
-    return {
-      message: JSON.stringify(err)
-    };
-  }
-};
