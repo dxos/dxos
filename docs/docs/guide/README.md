@@ -30,5 +30,3 @@ Read more about [how it works](how-it-works)
 *   Start up a [KUBE](quick-start#starting-a-kube)
 *   [Deploy your app to a KUBE](quick-start#deploying-your-app-to-a-kube)
 
-:::apidoc[@dxos/config.Kube]
-:::
