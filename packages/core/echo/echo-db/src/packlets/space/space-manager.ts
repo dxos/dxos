@@ -38,18 +38,16 @@ export interface SigningContext {
   profile?: ProfileDocument;
 }
 
-export type PresenceProvider = () => Presence;
-
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
-  presenceProvider: PresenceProvider;
 };
 
 export type ConstructSpaceParams = {
   metadata: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
   dataPipelineControllerProvider: () => DataPipelineController;
+  presence: Presence;
 };
 
 /**
@@ -59,13 +57,11 @@ export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
-  private readonly _presenceProvider: PresenceProvider;
 
-  constructor({ feedStore, networkManager, presenceProvider }: SpaceManagerParams) {
+  constructor({ feedStore, networkManager }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
-    this._presenceProvider = presenceProvider;
   }
 
   // TODO(burdon): Remove.
@@ -81,7 +77,7 @@ export class SpaceManager {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  async constructSpace({ metadata, swarmIdentity, dataPipelineControllerProvider }: ConstructSpaceParams) {
+  async constructSpace({ metadata, swarmIdentity, dataPipelineControllerProvider, presence }: ConstructSpaceParams) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
@@ -95,7 +91,7 @@ export class SpaceManager {
       topic: spaceKey,
       swarmIdentity,
       networkManager: this._networkManager,
-      presence: this._presenceProvider()
+      presence
     });
 
     const space = new Space({
