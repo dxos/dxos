@@ -8,8 +8,9 @@ import { Context } from '@dxos/context';
 import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { TrustedKeySetAuthVerifier } from '../identity';
 import { ComplexSet } from '@dxos/util';
+
+import { TrustedKeySetAuthVerifier } from '../identity';
 
 const AUTH_TIMEOUT = 30000;
 
@@ -29,8 +30,8 @@ export class DataSpace implements ISpace {
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(_inner.spaceState.members.keys())),
       update: _inner.stateUpdate,
-      authTimeout: AUTH_TIMEOUT,
-    })
+      authTimeout: AUTH_TIMEOUT
+    });
   }
 
   get key() {

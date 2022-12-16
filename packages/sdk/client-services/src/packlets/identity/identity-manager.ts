@@ -164,9 +164,7 @@ export class IdentityManager {
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
         peerKey: identityRecord.deviceKey,
-        credentialProvider: createAuthProvider(
-          createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)
-        ),
+        credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier)
       }
     });

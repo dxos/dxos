@@ -14,7 +14,6 @@ import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { AuthProvider, AuthVerifier } from './auth';
 import { DataPipelineController } from './data-pipeline-controller';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
