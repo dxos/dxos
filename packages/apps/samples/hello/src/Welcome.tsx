@@ -37,17 +37,17 @@ export const Welcome = ({ name }: { name: string }) => {
 
         <ul>
           <li>
-            <a href='https://docs.dxos.org/guide/echo/react' target='_blank'>
+            <a href='https://docs.dxos.org/guide/echo/react' target='_blank' rel='noreferrer'>
               Using ECHO with React
             </a>
           </li>
           <li>
-            <a href='https://docs.dxos.org/guide/kube/dx-yml-file' target='_blank'>
+            <a href='https://docs.dxos.org/guide/kube/dx-yml-file' target='_blank' rel='noreferrer'>
               Deploying to KUBE
             </a>
           </li>
           <li>
-            <a href='https://docs.dxos.org' target='_blank'>
+            <a href='https://docs.dxos.org' target='_blank' rel='noreferrer'>
               DXOS Documentation
             </a>
           </li>

@@ -11,34 +11,22 @@
       "node"
     ]
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
   "include": [
     "src"
   ],
+  "exclude": [
+    "vite.config.ts",
+    "*.t.ts"
+  ],
   "references": [
     {
-      "path": "../../../common/react-ui"
-    },
-    {
-      "path": "../../../devtools/cli"
+      "path": "./tsconfig.node.json"
     },
     {
       "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/config"
-    },
-    {
-      "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../sdk/react-uikit"
-    },
-    {
-      "path": "../../patterns/react-appkit"
     }
   ]
 }
