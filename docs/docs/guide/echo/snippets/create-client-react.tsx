@@ -2,16 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { createRoot } from 'react';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { ClientProvider, useClient } from '@dxos/react-client';
 
-const App = () => {
+const Component = () => {
   const client = useClient();
   return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
 };
 
-createRoot(document.body).render(
+const App = () => (
   <ClientProvider>
-    <App />
+    <Component />
   </ClientProvider>
 );
+
+createRoot(document.body).render(<App />);

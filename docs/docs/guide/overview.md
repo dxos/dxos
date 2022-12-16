@@ -37,7 +37,7 @@ Specific documents or rows of data are referred to as `items`. `Items` always be
 Every item behaves according to a consistency model which describes rules for conflict resolution. ECHO provides at least two specific model types and can be extended with custom models.
 
 *   [`ObjectModel`](../api/@dxos/client/classes/ObjectModel) is a document record with keys and values, where last write wins on any given key.
-*   \[`TextModel`])(../api/@dxos/text-model/classes/TextModel) is for collaborative rich text editing on a "large string" or rich text model.
+*   [`TextModel`](../api/@dxos/text-model/classes/TextModel) is for collaborative rich text editing on a "large string" or rich text model.
 
 Continue to [ECHO Installation and usage](echo/installation).
 

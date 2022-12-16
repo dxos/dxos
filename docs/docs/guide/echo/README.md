@@ -34,10 +34,10 @@ Every item behaves according to a consistency model which describes the rules fo
 
 ## How to use ECHO
 
-- [Install](installation) the npm module
-- Create a [Client](configuration)
-- Join or create a [Space](spaces)
-- [Query items](queries)
-- [Create items](mutations#creating-items)
-- [Mutate items](mutations#mutating-data)
-- Set up user identity with [HALO](../halo)
+*   [Install](installation) the npm module
+*   Create a [Client](configuration)
+*   Join or create a [Space](spaces)
+*   [Query items](queries)
+*   [Create items](mutations#creating-items)
+*   [Mutate items](mutations#mutating-data)
+*   Set up user identity with [HALO](../halo)

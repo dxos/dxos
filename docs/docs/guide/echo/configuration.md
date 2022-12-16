@@ -4,6 +4,7 @@ label: Configuration
 ---
 
 # Configuration
+
 ## Creating a `Client` instance
 
 Having [installed the client](./installation), create an instance:
@@ -14,10 +15,10 @@ import { Client } from '@dxos/client';
 // create a client
 const client = new Client();
 ```
+
 If using React, you may pass an instance of `Client` to `<ClientProvider/>`, or it will create one for you otherwise. See [usage with React](react).
 
 Before manipulating data, the client needs to create or join a [space](spaces).
-
 
 ## Ways of configuring `Client`
 
