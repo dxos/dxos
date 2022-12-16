@@ -21,6 +21,12 @@ import { TypedMessage } from '@dxos/protocols';
 import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
+import { HaloAuthVerifier } from './authenticator';
+
+/**
+ * Timeout for the device to be added to the trusted set during auth.
+ */
+const AUTH_TIMEOUT = 30000;
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -33,10 +39,11 @@ export type IdentityParams = {
  * Agent identity manager, which includes the agent's Halo space.
  */
 export class Identity {
-  private readonly _space: Space;
+  public readonly space: Space;
   private readonly _signer: Signer;
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
+  public readonly authVerifier: HaloAuthVerifier;
 
   public readonly identityKey: PublicKey;
   public readonly deviceKey: PublicKey;
@@ -44,7 +51,7 @@ export class Identity {
   public readonly stateUpdate = new Event();
 
   constructor({ space, signer, identityKey, deviceKey }: IdentityParams) {
-    this._space = space;
+    this.space = space;
     this._signer = signer;
 
     this.identityKey = identityKey;
@@ -54,11 +61,17 @@ export class Identity {
     this._profileStateMachine = new ProfileStateMachine(this.identityKey);
 
     // Process halo-specific credentials.
-    this._space.onCredentialProcessed.set(async (credential) => {
+    this.space.onCredentialProcessed.set(async (credential) => {
       // Save device keychain credential when processed by the space state machine.
       await this._deviceStateMachine.process(credential);
       await this._profileStateMachine.process(credential);
       this.stateUpdate.emit();
+    });
+
+    this.authVerifier = new HaloAuthVerifier({
+      trustedDevicesProvider: () => this.authorizedDeviceKeys,
+      update: this.stateUpdate,
+      authTimeout: AUTH_TIMEOUT,
     });
   }
 
@@ -68,11 +81,12 @@ export class Identity {
   }
 
   async open() {
-    await this._space.open();
+    await this.space.open();
   }
 
   async close() {
-    await this._space.close();
+    await this.authVerifier.close();
+    await this.space.close();
   }
 
   async ready() {
@@ -89,22 +103,22 @@ export class Identity {
    * @test-only
    */
   get controlPipeline() {
-    return this._space.controlPipeline;
+    return this.space.controlPipeline;
   }
 
   get haloSpaceKey() {
-    return this._space.key;
+    return this.space.key;
   }
 
   get haloGenesisFeedKey() {
-    return this._space.genesisFeedKey;
+    return this.space.genesisFeedKey;
   }
 
   getAdmissionCredentials(): HaloAdmissionCredentials {
     return {
       deviceKey: this.deviceKey,
-      controlFeedKey: this._space.controlFeedKey,
-      dataFeedKey: this._space.dataFeedKey
+      controlFeedKey: this.space.controlFeedKey,
+      dataFeedKey: this.space.dataFeedKey
     };
   }
 

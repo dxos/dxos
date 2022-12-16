@@ -11,7 +11,8 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
 
-import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
+import { createHaloAuthProvider, HaloAuthVerifier } from './authenticator';
+import { Event } from '@dxos/async';
 
 describe('identity/authenticator', () => {
   test('verifies credentials', async () => {
@@ -19,11 +20,15 @@ describe('identity/authenticator', () => {
     const deviceKey = await keyring.createKey();
     const signer = createCredentialSignerWithKey(keyring, deviceKey);
     const authProvider = createHaloAuthProvider(signer);
-    const authVerifier = createHaloAuthVerifier(() => new ComplexSet(PublicKey.hash, [deviceKey]));
+    const authVerifier = new HaloAuthVerifier({
+      trustedDevicesProvider: () => new ComplexSet(PublicKey.hash, [deviceKey]),
+      update: new Event(),
+      authTimeout: 10,
+    });
 
     const nonce = new Uint8Array([2, 1, 3, 7]);
     const credential = await authProvider(nonce);
     assert(credential);
-    expect(await authVerifier(nonce, credential)).toBeTruthy();
+    expect(await authVerifier.verifier(nonce, credential)).toBeTruthy();
   }).onlyEnvironments('nodejs');
 });

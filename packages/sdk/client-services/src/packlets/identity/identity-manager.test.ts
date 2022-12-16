@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { valueEncoding, MetadataStore, SpaceManager } from '@dxos/echo-db';
+import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -14,6 +14,7 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { describe, test, afterTest } from '@dxos/test';
 
 import { IdentityManager } from './identity-manager';
+import waitForExpect from 'wait-for-expect';
 
 describe('identity/identity-manager', () => {
   const setupPeer = async ({
@@ -112,5 +113,11 @@ describe('identity/identity-manager', () => {
     // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
     // This would mean that peer2 has replicated it's device credential chain from peer1 and is ready to issue credentials.
     await identity2.ready();
+
+    // Connection is authenticated.
+    expect(identity1.space.protocol.sessions.get(identity2.deviceKey)).to.exist;
+    expect(identity1.space.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+    expect(identity2.space.protocol.sessions.get(identity1.deviceKey)).to.exist;
+    expect(identity2.space.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
   });
 });
