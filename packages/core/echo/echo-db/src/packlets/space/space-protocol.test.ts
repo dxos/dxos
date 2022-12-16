@@ -8,6 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -32,8 +33,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
-      expect(protocol2.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
+      expect(peer1.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
+      expect(peer2.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
     }, 1_000);
   });
 
@@ -52,7 +53,12 @@ describe('space/space-protocol', () => {
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory
       }),
-      identityKey: PublicKey.random()
+      presence: new Presence({
+        localPeerId: peerId1,
+        announceInterval: 100,
+        offlineTimeout: 1_000,
+        identityKey: PublicKey.random()
+      })
     });
 
     const protocol2 = new SpaceProtocol({
@@ -66,7 +72,12 @@ describe('space/space-protocol', () => {
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory
       }),
-      identityKey: PublicKey.random()
+      presence: new Presence({
+        localPeerId: peerId2,
+        announceInterval: 100,
+        offlineTimeout: 1_000,
+        identityKey: PublicKey.random()
+      })
     });
 
     await protocol1.start();

@@ -11,6 +11,7 @@ import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } 
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
@@ -88,6 +89,7 @@ export class TestAgent {
 
   public readonly keyring: Keyring;
   public readonly feedStore: FeedStore<FeedMessage>;
+  public readonly presence: Presence;
 
   constructor(
     private readonly _networkManagerProvider: NetworkManagerProvider,
@@ -97,6 +99,12 @@ export class TestAgent {
   ) {
     this.keyring = this._feedBuilder.keyring;
     this.feedStore = this._feedBuilder.createFeedStore();
+    this.presence = new Presence({
+      localPeerId: this.deviceKey,
+      announceInterval: 30,
+      offlineTimeout: 200,
+      identityKey: this.identityKey
+    });
   }
 
   async close() {
@@ -162,7 +170,7 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: this._networkManagerProvider(),
-      identityKey: this.identityKey
+      presence: this.presence
     });
   }
 }

@@ -36,7 +36,7 @@ export type SpaceProtocolOptions = {
   topic: PublicKey; // TODO(burdon): Rename?
   swarmIdentity: SwarmIdentity;
   networkManager: NetworkManager;
-  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
+  presence: Presence;
 };
 
 /**
@@ -45,7 +45,7 @@ export type SpaceProtocolOptions = {
 export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
-  public readonly presence: Presence;
+  private readonly _presence: Presence;
 
   private readonly _topic: PublicKey;
 
@@ -58,16 +58,10 @@ export class SpaceProtocol {
     return this._sessions;
   }
 
-  constructor({ topic, swarmIdentity, networkManager, identityKey }: SpaceProtocolOptions) {
+  constructor({ topic, swarmIdentity, networkManager, presence }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = swarmIdentity;
-
-    this.presence = new Presence({
-      localPeerId: this._swarmIdentity.peerKey,
-      announceInterval: 1_000,
-      offlineTimeout: 30_000,
-      identityKey
-    });
+    this._presence = presence;
 
     this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
   }
@@ -113,7 +107,7 @@ export class SpaceProtocol {
       await this._connection.close();
       log('stopped');
     }
-    await this.presence.destroy();
+    await this._presence.destroy();
   }
 
   private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
@@ -121,7 +115,7 @@ export class SpaceProtocol {
       const session = new SpaceProtocolSession({
         wireParams,
         swarmIdentity: this._swarmIdentity,
-        presence: this.presence
+        presence: this._presence
       });
       this._sessions.set(wireParams.remotePeerId, session);
 
