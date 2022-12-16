@@ -27,11 +27,13 @@ KUBE instances form and propagate the MESH peer-to-peer networks of DXOS. Some o
 To install KUBE:
 
 ```bash file=../snippets/install-kube.sh
+sudo bash -c "$(curl -fsSL https://install-kube.dxos.org)"
 ```
 
 Alternatively, you might want to install latest `dev` version of the kube
 
 ```bash file=../snippets/install-kube-dev.sh
+sudo ch=dev bash -c "$(curl -fsSL https://install-kube.dxos.org)"
 ```
 
 After that, `kube` becomes available:
@@ -41,6 +43,7 @@ sudo kube start
 ```
 
 Once it's running it will report status
+
 ```bash
 kube status
 ```

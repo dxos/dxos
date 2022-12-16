@@ -8,6 +8,10 @@ Config utilities
 pnpm i @dxos/config
 ```
 
+## Documentation
+
+- [📚 API Reference](https://docs.dxos.org/api/@dxos/config)
+
 ## DXOS Resources
 
 - [Website](https://dxos.org)

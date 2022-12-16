@@ -9,12 +9,11 @@ prev: why
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.<br/> Learn more about our [mission](why).
 
-In this guide:
-
-- [Templates](#creating-apps-with-dx-cli) for creating local-first apps
-- [Using the ECHO database](#using-the-echo-database) for real-time, offline-first consensus
-- [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally
-- [Deploying apps to KUBE](#deploying-your-app-to-a-kube)
+Contents:
+*   [Templates](#creating-apps-with-dx-cli) for creating local-first apps
+*   [Using the ECHO database](#using-the-echo-database) for real-time, offline-first consensus
+*   [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally
+*   [Deploying apps to KUBE](#deploying-your-app-to-a-kube)
 
 ## Creating apps with `dx` CLI
 
@@ -64,14 +63,14 @@ const space = await client.echo.createSpace();
 
 Now you can manipulate items in the space and they will replicate with all members of the space in a peer-to-peer fashion.
 
-```ts file=./echo/snippets/write-items.ts#L9-
+```ts file=./echo/snippets/write-items.ts#L5-
 // decide on a type for your items
 const type = 'yourdomain:type/some-type-identifier';
 
 // get a list of all spaces
 const { value: spaces } = client.echo.querySpaces();
 
-// create a regular ObjectModel item
+// create an item
 const item = await spaces[0].database.createItem({
   type,
   model: ObjectModel
@@ -106,17 +105,18 @@ createRoot(document.body).render(
 
 Read more:
 
-- [ECHO configuration](echo/configuration)
-- [ECHO with React](echo/react)
-- [Client](../api/@dxos/client/classes/Client.md) API Documentation
+*   [ECHO configuration](echo/configuration)
+*   [ECHO with React](echo/react)
+*   [Client](../api/@dxos/client/classes/Client.md) API Documentation
 
 ## Starting a KUBE
 
 [KUBE](/docs/kube/overview) hosts and serves applications and provides supporting services like peer network discovery.
 
 Install KUBE:
+
 ```bash file=./snippets/install-kube.sh
-sudo ch=dev bash -c "$(curl -fsSL https://install-kube.dxos.org)"
+sudo bash -c "$(curl -fsSL https://install-kube.dxos.org)"
 ```
 
 Then:
@@ -132,15 +132,18 @@ Once KUBE is running, you're ready to deploy to it.
 
 To deploy to your local KUBE:
 
-- Ensure a [KUBE](#starting-a-kube) is running
-- Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
-- Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
+*   Ensure a [KUBE](#starting-a-kube) is running
+*   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
+*   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
 
 If you're using the DXOS application template:
+
 ```bash
 pnpm run deploy
 ```
+
 To deploy any static app with a `dx.yml` file:
+
 ```bash
 dx app publish
 ```
@@ -153,10 +156,11 @@ Your app will now always be available on your machine until it or KUBE is stoppe
 
 :::note
 Coming soon:
-- `tunnelling`: ability to expose apps on your KUBE to the public internet
-- `console`: a management console for the apps running on your KUBE
+
+*   `tunnelling`: ability to expose apps on your KUBE to the public internet
+*   `console`: a management console for the apps running on your KUBE
 :::
 
 Read more:
 
-- The [`dx.yml` file schema](kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
+*   The [`dx.yml` file schema](kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
