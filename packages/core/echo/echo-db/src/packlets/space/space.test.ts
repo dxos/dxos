@@ -18,6 +18,7 @@ const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
 describe('space/space', () => {
   test('crates a database with object model', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
     const agent = await builder.createPeer();
     const [space, db] = await agent.createSpace();
 
@@ -68,6 +69,7 @@ describe('space/space', () => {
 
   test('two spaces replicating', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
 
     //
     // Agent 1

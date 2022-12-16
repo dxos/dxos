@@ -8,6 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -17,13 +18,16 @@ import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } fro
 describe('space/space-protocol', () => {
   test('two peers discover each other via presence', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
-    const protocol1 = peer1.createSpaceProtocol(topic);
+    const presence1 = peer1.createPresence();
+    const protocol1 = peer1.createSpaceProtocol(topic, presence1);
 
     const peer2 = await builder.createPeer();
-    const protocol2 = peer2.createSpaceProtocol(topic);
+    const presence2 = peer2.createPresence();
+    const protocol2 = peer2.createSpaceProtocol(topic, presence2);
 
     await protocol1.start();
     afterTest(() => protocol1.stop());
@@ -32,8 +36,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
-      expect(protocol2.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
+      expect(presence1.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
+      expect(presence2.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
     }, 1_000);
   });
 
@@ -43,7 +47,7 @@ describe('space/space-protocol', () => {
 
     const protocol1 = new SpaceProtocol({
       topic,
-      identity: {
+      swarmIdentity: {
         peerKey: peerId1,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: async () => false // Reject everyone.
@@ -51,12 +55,18 @@ describe('space/space-protocol', () => {
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory
+      }),
+      presence: new Presence({
+        localPeerId: peerId1,
+        announceInterval: 100,
+        offlineTimeout: 1_000,
+        identityKey: PublicKey.random()
       })
     });
 
     const protocol2 = new SpaceProtocol({
       topic,
-      identity: {
+      swarmIdentity: {
         peerKey: peerId2,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
@@ -64,6 +74,12 @@ describe('space/space-protocol', () => {
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory
+      }),
+      presence: new Presence({
+        localPeerId: peerId2,
+        announceInterval: 100,
+        offlineTimeout: 1_000,
+        identityKey: PublicKey.random()
       })
     });
 
@@ -80,6 +96,8 @@ describe('space/space-protocol', () => {
 
   test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
+
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
