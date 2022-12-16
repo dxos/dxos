@@ -30,7 +30,7 @@ A client object can also be passed in to Client provider:
 
 ```tsx file=./snippets/create-client-react-with-client.tsx#L5-
 import React from 'react';
-
+import { createRoot } from 'react-dom/client';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
@@ -46,6 +46,8 @@ const App = () => {
     </ClientProvider>
   );
 };
+
+createRoot(document.body).render(<App />);
 ```
 
 Alternatively, a config function may be supplied instead of a client, and a client will be generated internally. The fallback element will be displayed while the client is being initialized.
