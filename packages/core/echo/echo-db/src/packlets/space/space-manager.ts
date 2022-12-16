@@ -12,8 +12,8 @@ import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { ComplexMap } from '@dxos/util';
 import { Presence } from '@dxos/teleport-extension-presence';
+import { ComplexMap } from '@dxos/util';
 
 import { AuthProvider, AuthVerifier } from './auth';
 import { DataPipelineController } from './data-pipeline-controller';
