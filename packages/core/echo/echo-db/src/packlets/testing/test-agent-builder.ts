@@ -163,12 +163,16 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: this._networkManagerProvider(),
-      presence: new Presence({
-        localPeerId: this.deviceKey,
-        announceInterval: 30,
-        offlineTimeout: 200,
-        identityKey: this.identityKey
-      })
+      presence: this._createPresence()
+    });
+  }
+
+  _createPresence() {
+    return new Presence({
+      localPeerId: this.deviceKey,
+      announceInterval: 30,
+      offlineTimeout: 200,
+      identityKey: this.identityKey
     });
   }
 }
