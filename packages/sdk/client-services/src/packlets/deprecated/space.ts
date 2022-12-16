@@ -139,9 +139,20 @@ export class SpaceServiceImpl implements SpaceService {
           })
         );
 
+        subscriptions.add(
+          this.serviceContext.presence!.updated.on(() => {
+            onUpdate();
+          })
+        );
+
+        subscriptions.add(
+          this.serviceContext.presence!.updated.on(() => {
+            onUpdate();
+          })
+        );
+
         this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
           subscriptions.add(space.stateUpdate.on(onUpdate));
-          subscriptions.add(space.protocol.presence.updated.on(onUpdate));
         });
 
         onUpdate();
