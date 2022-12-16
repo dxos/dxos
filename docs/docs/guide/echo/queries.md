@@ -1,9 +1,8 @@
 ---
 order: 5
-label: Queries
 ---
 
-# Querying data
+# Reading data
 
 Once access is obtained to a space, select items to retrieve them.
 

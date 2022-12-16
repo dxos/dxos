@@ -3,9 +3,9 @@ order: 10
 description: Using ECHO with React
 ---
 
-# Usage with React
+# Using ECHO with React
 
-Create a `Client` and use it with `ClientProvider` to allow nested components to use `useClient` and the other hooks available in `@dxos/react-client`.
+Create a `ClientProvider` to allow nested components to `useClient` as well as use the other hooks in `@dxos/react-client`.
 
 ```tsx file=./snippets/create-client-react.tsx#L5-
 import React, { createRoot } from 'react';
@@ -21,6 +21,10 @@ createRoot(document.body).render(
     <App />
   </ClientProvider>
 );
+```
+
+A client object can also be passed in to Client provider:
+```tsx file=./snippets/create-client-react-with-client.tsx#L5-
 ```
 
 Alternatively, a config function may be supplied instead of a client, and a client will be generated internally. The fallback element will be displayed while the client is being initialized.

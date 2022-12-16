@@ -9,8 +9,6 @@ prev: why
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.<br/> Learn more about our [mission](why).
 
-Contents:
-
 *   [Templates](#creating-apps-with-dx-cli) for creating local-first apps
 *   [Using the ECHO database](#using-the-echo-database) for real-time, offline-first consensus
 *   [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally

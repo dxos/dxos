@@ -4,8 +4,7 @@ label: Configuration
 ---
 
 # Configuration
-
-## Creating a client instance
+## Creating a `Client` instance
 
 Having [installed the client](./installation), create an instance:
 
@@ -15,30 +14,12 @@ import { Client } from '@dxos/client';
 // create a client
 const client = new Client();
 ```
+If using React, you may pass an instance of `Client` to `<ClientProvider/>`, or it will create one for you otherwise. See [usage with React](react).
 
-Continue to manipulating data with [spaces](spaces) or read on about further ways to configure the client.
+Before manipulating data, the client needs to create or join a [space](spaces).
 
-## Usage with React
 
-Use `ClientProvider` to supply the `client` instance via `ReactContext` to any nested `useClient()` hooks.
-
-```tsx file=./snippets/create-client-react.tsx#L5-
-import React, { createRoot } from 'react';
-import { ClientProvider, useClient } from '@dxos/react-client';
-
-const App = () => {
-  const client = useClient();
-  return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
-};
-
-createRoot(document.body).render(
-  <ClientProvider>
-    <App />
-  </ClientProvider>
-);
-```
-
-### Options
+## Ways of configuring `Client`
 
 The client can be given a custom configuration via the config property of it's constructor's options.
 
@@ -62,7 +43,7 @@ const client = new Client({
 
 See the API documentaion for [Config](/api/@dxos/client/classes/Config).
 
-#### Loading defaults from a file
+### Loading defaults from a file
 
 In a Node environment, you can use `@dxos/config` to load from a `config/default.yml` file in your project.
 
@@ -75,7 +56,7 @@ const client = new Client({
 });
 ```
 
-#### Receiving config from a KUBE
+### Receiving config from a KUBE
 
 If your app is being hosted on a KUBE, use `Dynamics` to receive more specific configuration from that KUBE. With this mechanism, KUBE can serve apps in ways that redirect them to different signaling servers or `HALO` identity vaults.
 
