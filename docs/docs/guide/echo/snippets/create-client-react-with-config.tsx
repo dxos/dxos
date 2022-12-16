@@ -3,10 +3,10 @@
 //
 
 import React from 'react';
-
+import { createRoot } from 'react-dom/client';
+import { ClientProvider } from '@dxos/react-client';
 import { Config } from '@dxos/client';
 import { Dynamics, Defaults } from '@dxos/config';
-import { ClientProvider } from '@dxos/react-client';
 
 const App = () => {
   return (
@@ -14,7 +14,10 @@ const App = () => {
       config={async () => new Config(Defaults(), await Dynamics())}
       fallback={<div>Loading</div>}
     >
-      {/* Your components can useClient() here  */}
+      {/* Your components here  */}
     </ClientProvider>
   );
 };
+
+createRoot(document.body).render(<App />);
+
