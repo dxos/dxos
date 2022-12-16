@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.20](https://github.com/dxos/dxos/compare/v0.1.19...v0.1.20) (2022-12-16)
+
+
+### Features
+
+* **devtools:** Add Members Panel ([#2147](https://github.com/dxos/dxos/issues/2147)) ([150915c](https://github.com/dxos/dxos/commit/150915c727ee94b7aae489a059b069bcb81b303c))
+
+
+### Bug Fixes
+
+* fix usage of null items in tasks-app ([#2159](https://github.com/dxos/dxos/issues/2159)) ([af04235](https://github.com/dxos/dxos/commit/af0423568e2034d8a855ae818c5e5ac36e2be100))
+
 ## [0.1.19](https://github.com/dxos/dxos/compare/v0.1.18...v0.1.19) (2022-12-16)
 
 
