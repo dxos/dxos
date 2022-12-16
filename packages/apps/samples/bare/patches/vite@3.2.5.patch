@@ -1,0 +1,13 @@
+diff --git a/dist/node/chunks/dep-5605cfa4.js b/dist/node/chunks/dep-5605cfa4.js
+index a43270cdd48462597a50bfdfb68c54b99070f6c5..05163620cfbbf794238a4be72db615ba35fb32b0 100644
+--- a/dist/node/chunks/dep-5605cfa4.js
++++ b/dist/node/chunks/dep-5605cfa4.js
+@@ -34196,7 +34196,7 @@ function tryResolveBrowserMapping(id, importer, options, isFilePath, externalize
+         const mapId = isFilePath ? './' + slash$1(path$o.relative(pkg.dir, id)) : id;
+         const browserMappedPath = mapWithBrowserField(mapId, pkg.data.browser);
+         if (browserMappedPath) {
+-            const fsPath = path$o.join(pkg.dir, browserMappedPath);
++            const fsPath = bareImportRE.test(browserMappedPath) ? path$n.join(pkg.dir, '../' + browserMappedPath) : path$n.join(pkg.dir, browserMappedPath);
+             if ((res = tryFsResolve(fsPath, options))) {
+                 isDebug$4 &&
+                     debug$c(`[browser mapped] ${picocolors.exports.cyan(id)} -> ${picocolors.exports.dim(res)}`);
