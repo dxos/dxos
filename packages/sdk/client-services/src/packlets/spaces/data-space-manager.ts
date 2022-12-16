@@ -17,6 +17,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
 import { DataSpace } from './data-space';
@@ -92,6 +93,12 @@ export class DataSpaceManager {
   }
 
   private async _constructSpace(metadata: SpaceMetadata) {
+    const presence = new Presence({
+      localPeerId: this._signingContext.deviceKey,
+      announceInterval: 1_000,
+      offlineTimeout: 30_000,
+      identityKey: this._signingContext.identityKey
+    });
     const space: Space = await this._spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
@@ -99,9 +106,10 @@ export class DataSpaceManager {
         credentialProvider: this._signingContext.credentialProvider,
         credentialAuthenticator: this._signingContext.credentialAuthenticator
       },
-      dataPipelineControllerProvider: () => dataSpace.dataPipelineController
+      dataPipelineControllerProvider: () => dataSpace.dataPipelineController,
+      presence
     });
-    const dataSpace = new DataSpace(space, this._modelFactory, this._signingContext.identityKey);
+    const dataSpace = new DataSpace(space, this._modelFactory, this._signingContext.identityKey, presence);
     await space.open();
     this._dataServiceSubscriptions.registerSpace(space.key, dataSpace.database.createDataServiceHost());
     this._spaces.set(metadata.key, dataSpace);

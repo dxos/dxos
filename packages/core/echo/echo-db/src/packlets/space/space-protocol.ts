@@ -34,8 +34,9 @@ export interface SwarmIdentity {
 
 export type SpaceProtocolOptions = {
   topic: PublicKey; // TODO(burdon): Rename?
-  identity: SwarmIdentity;
+  swarmIdentity: SwarmIdentity;
   networkManager: NetworkManager;
+  presence: Presence;
 };
 
 /**
@@ -44,7 +45,7 @@ export type SpaceProtocolOptions = {
 export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
-  public readonly presence: Presence;
+  private readonly _presence: Presence;
 
   private readonly _topic: PublicKey;
 
@@ -57,15 +58,10 @@ export class SpaceProtocol {
     return this._sessions;
   }
 
-  constructor({ topic, identity, networkManager }: SpaceProtocolOptions) {
+  constructor({ topic, swarmIdentity, networkManager, presence }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
-    this._swarmIdentity = identity;
-
-    this.presence = new Presence({
-      localPeerId: this._swarmIdentity.peerKey,
-      announceInterval: 1_000,
-      offlineTimeout: 30_000
-    });
+    this._swarmIdentity = swarmIdentity;
+    this._presence = presence;
 
     this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
   }
@@ -109,9 +105,9 @@ export class SpaceProtocol {
     if (this._connection) {
       log('stopping...');
       await this._connection.close();
+      await this._presence.destroy();
       log('stopped');
     }
-    await this.presence.destroy();
   }
 
   private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
@@ -119,7 +115,7 @@ export class SpaceProtocol {
       const session = new SpaceProtocolSession({
         wireParams,
         swarmIdentity: this._swarmIdentity,
-        presence: this.presence
+        presence: this._presence
       });
       this._sessions.set(wireParams.remotePeerId, session);
 

@@ -11,6 +11,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { deferFunction } from '@dxos/util';
 
 import { Identity } from '../identity';
@@ -19,6 +20,7 @@ import { createHaloAuthProvider } from './authenticator';
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
   swarmIdentity: SwarmIdentity;
+  identityKey: PublicKey;
 }
 
 export type JoinIdentityParams = {
@@ -168,7 +170,8 @@ export class IdentityManager {
           createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)
         ),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier)
-      }
+      },
+      identityKey: identityRecord.identityKey
     });
     const identity: Identity = new Identity({
       space,
@@ -181,7 +184,7 @@ export class IdentityManager {
     return identity;
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
+  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey }: ConstructSpaceParams) {
     return this._spaceManager.constructSpace({
       metadata: {
         key: spaceRecord.spaceKey,
@@ -190,7 +193,13 @@ export class IdentityManager {
         dataFeedKey: spaceRecord.writeDataFeedKey
       },
       dataPipelineControllerProvider: () => new NoopDataPipelineController(),
-      swarmIdentity
+      swarmIdentity,
+      presence: new Presence({
+        localPeerId: swarmIdentity.peerKey,
+        announceInterval: 1_000,
+        offlineTimeout: 30_000,
+        identityKey
+      })
     });
   }
 }

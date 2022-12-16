@@ -11,6 +11,7 @@ import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } 
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
@@ -100,7 +101,7 @@ export class TestAgent {
   }
 
   async close() {
-    return Promise.all(this.spaces.map((space) => space.close()));
+    return Promise.all([...this.spaces.map((space) => space.close())]);
   }
 
   get spaces() {
@@ -153,15 +154,25 @@ export class TestAgent {
     return [space, dataPipelineController];
   }
 
-  createSpaceProtocol(topic: PublicKey) {
+  createSpaceProtocol(topic: PublicKey, presence?: Presence) {
     return new SpaceProtocol({
       topic,
-      identity: {
+      swarmIdentity: {
         peerKey: this.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
-      networkManager: this._networkManagerProvider()
+      networkManager: this._networkManagerProvider(),
+      presence: presence ?? this.createPresence()
+    });
+  }
+
+  createPresence() {
+    return new Presence({
+      localPeerId: this.deviceKey,
+      announceInterval: 30,
+      offlineTimeout: 200,
+      identityKey: this.identityKey
     });
   }
 }
