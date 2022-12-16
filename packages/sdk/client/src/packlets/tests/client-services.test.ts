@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { ISpace } from '@dxos/echo-db';
 import { log } from '@dxos/log';
@@ -173,7 +173,7 @@ describe('Client services', () => {
     });
   });
 
-  test.only('synchronizes data between two spaces after competing invitation', async () => {
+  test('synchronizes data between two spaces after completing invitation', async () => {
     const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
@@ -241,29 +241,29 @@ describe('Client services', () => {
 
     const space2 = await trigger.wait();
 
-    // for (const space of [space1, space2]) {
-    await space1.queryMembers().waitFor((members) => members.length === 2);
-    await waitForExpect(() => {
-      expect(space1.queryMembers().value).to.deep.equal([
-        {
-          identityKey: client1.halo.profile!.identityKey,
-          profile: {
+    for (const space of [space1, space2]) {
+      await space.queryMembers().waitFor((members) => members.length === 2);
+      await waitForExpect(() => {
+        expect(space.queryMembers().value).to.deep.equal([
+          {
             identityKey: client1.halo.profile!.identityKey,
-            displayName: 'Peer 1'
+            profile: {
+              identityKey: client1.halo.profile!.identityKey,
+              displayName: 'Peer 1'
+            },
+            presenceState: SpaceMember.PresenceState.ONLINE
           },
-          presenceState: SpaceMember.PresenceState.ONLINE
-        },
-        {
-          identityKey: client2.halo.profile!.identityKey,
-          profile: {
+          {
             identityKey: client2.halo.profile!.identityKey,
-            displayName: 'Peer 2'
-          },
-          presenceState: SpaceMember.PresenceState.ONLINE
-        }
-      ]);
-    }, 5_000);
-    // }
+            profile: {
+              identityKey: client2.halo.profile!.identityKey,
+              displayName: 'Peer 2'
+            },
+            presenceState: SpaceMember.PresenceState.ONLINE
+          }
+        ]);
+      }, 3_000);
+    }
 
     await syncItems(space1, space2);
   });
