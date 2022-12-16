@@ -89,7 +89,6 @@ export class TestAgent {
 
   public readonly keyring: Keyring;
   public readonly feedStore: FeedStore<FeedMessage>;
-  public readonly presence: Presence;
 
   constructor(
     private readonly _networkManagerProvider: NetworkManagerProvider,
@@ -99,12 +98,6 @@ export class TestAgent {
   ) {
     this.keyring = this._feedBuilder.keyring;
     this.feedStore = this._feedBuilder.createFeedStore();
-    this.presence = new Presence({
-      localPeerId: this.deviceKey,
-      announceInterval: 30,
-      offlineTimeout: 200,
-      identityKey: this.identityKey
-    });
   }
 
   async close() {
@@ -122,8 +115,7 @@ export class TestAgent {
   createSpaceManager() {
     return new SpaceManager({
       feedStore: this._feedBuilder.createFeedStore(),
-      networkManager: this._networkManagerProvider(),
-      presenceProvider: () => this.presence
+      networkManager: this._networkManagerProvider()
     });
   }
 
@@ -171,7 +163,12 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: this._networkManagerProvider(),
-      presence: this.presence
+      presence: new Presence({
+        localPeerId: this.deviceKey,
+        announceInterval: 30,
+        offlineTimeout: 200,
+        identityKey: this.identityKey
+      })
     });
   }
 }

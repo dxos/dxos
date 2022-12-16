@@ -105,6 +105,7 @@ export class SpaceProtocol {
     if (this._connection) {
       log('stopping...');
       await this._connection.close();
+      await this._presence.destroy();
       log('stopped');
     }
   }
