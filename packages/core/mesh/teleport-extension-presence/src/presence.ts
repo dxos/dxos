@@ -9,7 +9,6 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
-import { Teleport } from '@dxos/teleport';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { PresenceExtension } from './presence-extension';
@@ -62,11 +61,7 @@ export class Presence {
     );
   }
 
-  createExtension({ teleport }: { teleport: Teleport }): PresenceExtension {
-    assert(
-      teleport.localPeerId.equals(this._params.localPeerId),
-      'Teleport local peer id does not match presence local peer id.'
-    );
+  createExtension({ remotePeerId }: { remotePeerId: PublicKey }): PresenceExtension {
     const extension = new PresenceExtension({
       onAnnounce: async (peerState) => {
         if (this._receivedMessages.has(peerState.messageId)) {
@@ -82,19 +77,18 @@ export class Presence {
         if (err) {
           log.catch(err);
         }
-        if (this._connections.has(teleport.remotePeerId)) {
-          this._connections.delete(teleport.remotePeerId);
+        if (this._connections.has(remotePeerId)) {
+          this._connections.delete(remotePeerId);
         }
         scheduleTask(this._ctx, async () => {
           await this._sendAnnounces();
         });
       }
     });
-    this._connections.set(teleport.remotePeerId, extension);
+    this._connections.set(remotePeerId, extension);
     scheduleTask(this._ctx, async () => {
       await this._sendAnnounces();
     });
-    teleport.addExtension('dxos.mesh.teleport.presence', extension);
 
     return extension;
   }
