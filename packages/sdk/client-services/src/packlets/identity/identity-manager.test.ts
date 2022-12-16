@@ -44,8 +44,7 @@ describe('identity/identity-manager', () => {
     });
     const spaceManager = new SpaceManager({
       feedStore,
-      networkManager,
-      presenceProvider: () => identityManager.presence
+      networkManager
     });
     const identityManager = new IdentityManager(metadataStore, keyring, spaceManager);
 
