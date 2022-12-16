@@ -173,6 +173,13 @@ export class IdentityManager {
       identityKey: identityRecord.identityKey
     });
 
+    this._presence = new Presence({
+      localPeerId: identityRecord.deviceKey,
+      announceInterval: 1_000,
+      offlineTimeout: 30_000,
+      identityKey: identityRecord.identityKey
+    });
+
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {

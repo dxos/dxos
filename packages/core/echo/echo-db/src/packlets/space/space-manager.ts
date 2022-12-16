@@ -13,6 +13,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
+import { Presence } from '@dxos/teleport-extension-presence';
 
 import { AuthProvider, AuthVerifier } from './auth';
 import { DataPipelineController } from './data-pipeline-controller';
@@ -37,9 +38,12 @@ export interface SigningContext {
   profile?: ProfileDocument;
 }
 
+export type PresenceProvider = () => Presence;
+
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
+  presenceProvider: PresenceProvider;
 };
 
 export type ConstructSpaceParams = {
@@ -55,11 +59,13 @@ export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
+  private readonly _presenceProvider: PresenceProvider;
 
-  constructor({ feedStore, networkManager }: SpaceManagerParams) {
+  constructor({ feedStore, networkManager, presenceProvider }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
+    this._presenceProvider = presenceProvider;
   }
 
   // TODO(burdon): Remove.
@@ -87,8 +93,9 @@ export class SpaceManager {
     const spaceKey = metadata.key;
     const protocol = new SpaceProtocol({
       topic: spaceKey,
-      identity: swarmIdentity,
-      networkManager: this._networkManager
+      swarmIdentity,
+      networkManager: this._networkManager,
+      presence: this._presenceProvider()
     });
 
     const space = new Space({

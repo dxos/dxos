@@ -122,7 +122,8 @@ export class TestAgent {
   createSpaceManager() {
     return new SpaceManager({
       feedStore: this._feedBuilder.createFeedStore(),
-      networkManager: this._networkManagerProvider()
+      networkManager: this._networkManagerProvider(),
+      presenceProvider: () => this.presence
     });
   }
 

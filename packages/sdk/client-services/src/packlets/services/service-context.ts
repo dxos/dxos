@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import {
@@ -64,7 +66,11 @@ export class ServiceContext {
     });
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this.networkManager
+      networkManager: this.networkManager,
+      presenceProvider: () => {
+        assert(this.presence, 'Presence not initialized');
+        return this.presence;
+      }
     });
     this.identityManager = new IdentityManager(
       this.metadataStore,
