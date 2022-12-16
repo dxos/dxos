@@ -10,6 +10,7 @@ import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { ISpace } from '@dxos/echo-db';
 import { log } from '@dxos/log';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -172,7 +173,7 @@ describe('Client services', () => {
     });
   });
 
-  test('synchronizes data between two spaces after competing invitation', async () => {
+  test('synchronizes data between two spaces after completing invitation', async () => {
     const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
@@ -242,22 +243,26 @@ describe('Client services', () => {
 
     for (const space of [space1, space2]) {
       await space.queryMembers().waitFor((members) => members.length === 2);
-      expect(space.queryMembers().value).to.deep.equal([
-        {
-          identityKey: client1.halo.profile!.identityKey,
-          profile: {
+      await waitForExpect(() => {
+        expect(space.queryMembers().value).to.deep.equal([
+          {
             identityKey: client1.halo.profile!.identityKey,
-            displayName: 'Peer 1'
-          }
-        },
-        {
-          identityKey: client2.halo.profile!.identityKey,
-          profile: {
+            profile: {
+              identityKey: client1.halo.profile!.identityKey,
+              displayName: 'Peer 1'
+            },
+            presenceState: SpaceMember.PresenceState.ONLINE
+          },
+          {
             identityKey: client2.halo.profile!.identityKey,
-            displayName: 'Peer 2'
+            profile: {
+              identityKey: client2.halo.profile!.identityKey,
+              displayName: 'Peer 2'
+            },
+            presenceState: SpaceMember.PresenceState.ONLINE
           }
-        }
-      ]);
+        ]);
+      }, 3_000);
     }
 
     await syncItems(space1, space2);

@@ -25,6 +25,11 @@ export type PresenceParams = {
    * Should be greater than announceInterval.
    */
   offlineTimeout: number;
+
+  /**
+   * Identity key of the local peer.
+   */
+  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
 };
 
 /**
@@ -72,6 +77,13 @@ export class Presence {
         scheduleTask(this._ctx, async () => {
           await this._propagateAnnounce(peerState);
         });
+        scheduleTask(
+          this._ctx,
+          () => {
+            this.updated.emit();
+          },
+          this._params.offlineTimeout + 10 // Trigger the update so that the consumer gets notified when the peer is getting removed from the online set
+        );
       },
       onClose: async (err) => {
         if (err) {
@@ -119,7 +131,8 @@ export class Presence {
             peerId: this._params.localPeerId,
             connections: this._getConnections(),
             messageId: PublicKey.random(),
-            timestamp: new Date()
+            timestamp: new Date(),
+            identityKey: this._params.identityKey
           })
           .catch((err) => log.catch(err))
       )
