@@ -5,21 +5,16 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { CredentialGenerator } from '@dxos/credentials';
-import {
-  MetadataStore,
-  MOCK_AUTH_PROVIDER,
-  MOCK_AUTH_VERIFIER,
-  NoopDataPipelineController,
-  SpaceManager,
-  SwarmIdentity
-} from '@dxos/echo-db';
+import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
+import { MetadataStore, NoopDataPipelineController, SpaceManager, SwarmIdentity } from '@dxos/echo-db';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { deferFunction } from '@dxos/util';
 
 import { Identity } from '../identity';
+import { createHaloAuthProvider } from './authenticator';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
@@ -169,18 +164,21 @@ export class IdentityManager {
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
         peerKey: identityRecord.deviceKey,
-        credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER
+        credentialProvider: createHaloAuthProvider(
+          createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)
+        ),
+        credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier)
       }
     });
-
-    log('done', { identityKey: identityRecord.identityKey });
-    return new Identity({
+    const identity: Identity = new Identity({
       space,
       signer: this._keyring,
       identityKey: identityRecord.identityKey,
       deviceKey: identityRecord.deviceKey
     });
+    log('done', { identityKey: identityRecord.identityKey });
+
+    return identity;
   }
 
   private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
