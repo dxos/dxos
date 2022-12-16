@@ -201,7 +201,7 @@ export class SpaceProtocolSession implements WireProtocol {
     );
     this._teleport.addExtension(
       'dxos.mesh.teleport.presence',
-      await this._presence.createExtension({ remotePeerId: this._teleport.remotePeerId })
+      this._presence.createExtension({ remotePeerId: this._teleport.remotePeerId })
     );
     this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
