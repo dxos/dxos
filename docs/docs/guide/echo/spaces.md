@@ -15,7 +15,7 @@ There are several steps to establishing a space between peers:
 4.  Peer A decides on a secret PIN code
 5.  Finally, Peer B must provide the PIN code to Peer A over the connection just established to verify its security
 
-After a space with a peer is established, the peer's public key becomes "known" to the user's HALO and subsequent mutual spaces are easier to negotiate.
+After a space with a peer is established, the peer's public key becomes "known" to the user's [HALO](../halo) and subsequent mutual spaces are easier to negotiate.
 
 ## Creating spaces
 

@@ -166,6 +166,12 @@ Creates a new key.
 Returns: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: none
+### [randomSequence()]()
+
+
+Returns: <code>Generator&lt;[PublicKey](/api/@dxos/client/classes/PublicKey), any, unknown&gt;</code>
+
+Arguments: none
 ### [safeFrom(\[source\])]()
 
 

@@ -4,20 +4,20 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
-import { Config } from '@dxos/client';
-import { Dynamics, Defaults } from '@dxos/config';
+
+const client = new Client();
 
 const App = () => {
   return (
     <ClientProvider
-      config={async () => new Config(Defaults(), await Dynamics())}
+      client={client}
       fallback={<div>Loading</div>}
     >
-      {/* Your components here  */}
+      {/* ... */}
     </ClientProvider>
   );
 };
 
 createRoot(document.body).render(<App />);
-
