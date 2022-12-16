@@ -96,7 +96,7 @@ export default class Create extends BaseCommand {
 
       this.log('Creating app...');
 
-      //TODO: find a way to import this type from the real template
+      // TODO: find a way to import this type from the real template
       type AppTemplateInput = {
         name: string;
         react: boolean;
