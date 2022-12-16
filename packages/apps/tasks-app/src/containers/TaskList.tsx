@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Item, ObjectModel, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
-import { Button, getSize } from '@dxos/react-uikit';
+import { Button, getSize, Loading } from '@dxos/react-uikit';
 
 import { CheckboxItem } from '../components/CheckboxItem';
 import { Input } from '../components/Input';
@@ -30,6 +30,10 @@ export type TaskListItemProps = {
 
 export const TaskListItem = (props: TaskListItemProps) => {
   const { task } = props;
+  if (!task) {
+    return null;
+  }
+
   const text = task.model.get('title');
   const isChecked = task.model.get('checked');
 
@@ -64,9 +68,12 @@ export const TaskListItem = (props: TaskListItemProps) => {
 
 export const TaskList = (props: TaskListProps) => {
   const { taskList, space } = props;
-  const title = taskList.model.get('title');
+  if (!taskList) {
+    return <Loading label='Loading' />;
+  }
+  const title = taskList?.model.get('title') ?? '';
   const children = useSelection(taskList?.select().children().filter({ type: TASK_ITEM }));
-  const visible = children?.filter((child) => !child.model.get('deletedAt'));
+  const visible = children?.filter((child) => !child?.model.get('deletedAt'));
 
   const setTaskListTitle = async (taskList: TaskList, title: string) => {
     void taskList.model.set('title', title);
