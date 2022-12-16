@@ -16,7 +16,7 @@ export const Welcome = ({ name }: { name: string }) => {
           See <code>src/App.tsx</code> and <code>src/Welcome.tsx</code>
         </p>
         <p>
-          <a href='https://tailwindcss.com/docs' target='_blank'>
+          <a href='https://tailwindcss.com/docs' target='_blank' rel='noreferrer'>
             Tailwind
           </a>{' '}
           is available.
@@ -27,7 +27,7 @@ export const Welcome = ({ name }: { name: string }) => {
         </p>
         <p>
           When you are ready you can deploy this app to your{' '}
-          <a href='https://docs.dxos.org/guide/kube' target='_blank'>
+          <a href='https://docs.dxos.org/guide/kube' target='_blank' rel='noreferrer'>
             KUBE
           </a>
           .
