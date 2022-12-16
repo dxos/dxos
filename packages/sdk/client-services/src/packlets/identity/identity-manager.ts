@@ -12,14 +12,15 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Presence } from '@dxos/teleport-extension-presence';
-import { deferFunction } from '@dxos/util';
 
 import { Identity } from '../identity';
+import { deferFunction } from '@dxos/util';
 import { createHaloAuthProvider } from './authenticator';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
   swarmIdentity: SwarmIdentity;
+  identityKey: PublicKey;
 }
 
 export type JoinIdentityParams = {
@@ -37,7 +38,6 @@ export class IdentityManager {
   readonly stateUpdate = new Event();
 
   private _identity?: Identity;
-  private _presence?: Presence;
 
   // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
@@ -49,10 +49,6 @@ export class IdentityManager {
 
   get identity() {
     return this._identity;
-  }
-
-  get presence() {
-    return this._presence;
   }
 
   async open() {
@@ -69,7 +65,6 @@ export class IdentityManager {
 
   async close() {
     await this._identity?.close();
-    await this._presence?.destroy();
   }
 
   async createIdentity({ displayName }: CreateIdentityOptions = {}) {
@@ -167,13 +162,6 @@ export class IdentityManager {
     assert(!this._identity);
     log('constructing identity', { identityRecord });
 
-    this._presence = new Presence({
-      localPeerId: identityRecord.deviceKey,
-      announceInterval: 1_000,
-      offlineTimeout: 30_000,
-      identityKey: identityRecord.identityKey
-    });
-
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
@@ -196,7 +184,7 @@ export class IdentityManager {
     return identity;
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
+  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey }: ConstructSpaceParams) {
     return this._spaceManager.constructSpace({
       metadata: {
         key: spaceRecord.spaceKey,
@@ -205,7 +193,13 @@ export class IdentityManager {
         dataFeedKey: spaceRecord.writeDataFeedKey
       },
       dataPipelineControllerProvider: () => new NoopDataPipelineController(),
-      swarmIdentity
+      swarmIdentity,
+      presence: new Presence({
+        localPeerId: swarmIdentity.peerKey,
+        announceInterval: 1_000,
+        offlineTimeout: 30_000,
+        identityKey
+      })
     });
   }
 }

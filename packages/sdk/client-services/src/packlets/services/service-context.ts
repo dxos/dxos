@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import {
@@ -67,10 +65,6 @@ export class ServiceContext {
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
       networkManager: this.networkManager,
-      presenceProvider: () => {
-        assert(this.presence, 'Presence not initialized');
-        return this.presence;
-      }
     });
     this.identityManager = new IdentityManager(
       this.metadataStore,
@@ -81,10 +75,6 @@ export class ServiceContext {
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
     this.haloInvitations = new HaloInvitationsHandler(this.networkManager, this.identityManager);
-  }
-
-  get presence() {
-    return this.identityManager.presence;
   }
 
   async open() {

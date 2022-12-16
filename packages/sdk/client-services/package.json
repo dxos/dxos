@@ -8,7 +8,6 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "node:assert": "assert",
     "jsondown": false,
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
@@ -48,7 +47,6 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
-    "assert": "^2.0.0",
     "base-x": "~3.0.9",
     "jsondown": "^1.0.0",
     "level-js": "^5.0.2",
