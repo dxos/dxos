@@ -11,6 +11,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { deferFunction } from '@dxos/util';
 
 import { Identity } from '../identity';
@@ -19,7 +20,6 @@ import { createHaloAuthProvider } from './authenticator';
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
   swarmIdentity: SwarmIdentity;
-  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
 }
 
 export type JoinIdentityParams = {
@@ -37,6 +37,7 @@ export class IdentityManager {
   readonly stateUpdate = new Event();
 
   private _identity?: Identity;
+  private _presence?: Presence;
 
   // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
@@ -48,6 +49,10 @@ export class IdentityManager {
 
   get identity() {
     return this._identity;
+  }
+
+  get presence() {
+    return this._presence;
   }
 
   async open() {
@@ -160,6 +165,13 @@ export class IdentityManager {
   private async _constructIdentity(identityRecord: IdentityRecord) {
     assert(!this._identity);
     log('constructing identity', { identityRecord });
+
+    this._presence = new Presence({
+      localPeerId: identityRecord.deviceKey,
+      announceInterval: 1_000,
+      offlineTimeout: 30_000,
+      identityKey: identityRecord.identityKey
+    });
 
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
