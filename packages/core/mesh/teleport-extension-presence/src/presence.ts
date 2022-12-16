@@ -82,7 +82,7 @@ export class Presence {
           () => {
             this.updated.emit();
           },
-          this._params.offlineTimeout + 10 // 10 milliseconds over timeout to be sure that peer will be offline
+          this._params.offlineTimeout + 10 // Trigger the update so that the consumer gets notified when the peer is getting removed from the online set
         );
       },
       onClose: async (err) => {
