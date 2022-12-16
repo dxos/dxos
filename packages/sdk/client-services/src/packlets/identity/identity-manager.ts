@@ -69,6 +69,7 @@ export class IdentityManager {
 
   async close() {
     await this._identity?.close();
+    await this._presence?.destroy();
   }
 
   async createIdentity({ displayName }: CreateIdentityOptions = {}) {
@@ -165,13 +166,6 @@ export class IdentityManager {
   private async _constructIdentity(identityRecord: IdentityRecord) {
     assert(!this._identity);
     log('constructing identity', { identityRecord });
-
-    this._presence = new Presence({
-      localPeerId: identityRecord.deviceKey,
-      announceInterval: 1_000,
-      offlineTimeout: 30_000,
-      identityKey: identityRecord.identityKey
-    });
 
     this._presence = new Presence({
       localPeerId: identityRecord.deviceKey,
