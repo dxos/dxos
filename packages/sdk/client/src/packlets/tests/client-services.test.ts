@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { ISpace } from '@dxos/echo-db';
 import { log } from '@dxos/log';
