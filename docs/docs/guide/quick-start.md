@@ -1,7 +1,7 @@
 ---
 order: 1
 title: Quick start
-next: how-it-works
+next: overview
 prev: why
 ---
 
@@ -12,7 +12,7 @@ DXOS is the developer platform for **collaborative**, **offline-first**, **priva
 In this guide:
 
 - [Templates](#creating-apps-with-dx-cli) for creating local-first apps
-- [Using an ECHO database](#using-the-echo-database) for real-time, offline-first consensus
+- [Using the ECHO database](#using-the-echo-database) for real-time, offline-first consensus
 - [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally
 - [Deploying apps to KUBE](#deploying-your-app-to-a-kube)
 
@@ -130,7 +130,7 @@ Once KUBE is running, you're ready to deploy to it.
 
 ## Deploying your app to a KUBE
 
-To deploy to your local kube:
+To deploy to your local KUBE:
 
 - Ensure a [KUBE](#starting-a-kube) is running
 - Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
@@ -149,11 +149,11 @@ Your app will now be accessible in a browser `http://<app-name>.localhost`.
 
 If you started with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost).
 
-Your app will now always run on your machine until stopped.
+Your app will now always be available on your machine until it or KUBE is stopped.
 
 :::note
 Coming soon:
-- `tunneling`: ability to expose apps on your KUBE to the public internet
+- `tunnelling`: ability to expose apps on your KUBE to the public internet
 - `console`: a management console for the apps running on your KUBE
 :::
 
