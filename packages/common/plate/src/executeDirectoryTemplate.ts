@@ -14,7 +14,7 @@ import {
   TemplateResultMetadata
 } from './executeFileTemplate';
 import { File } from './file';
-import { includeExclude } from './util/includeExclude';
+import { filterIncludeExclude } from './util/filterIncludeExclude';
 import { logger } from './util/logger';
 import { runPromises } from './util/runPromises';
 import { inquire } from './util/zodInquire';
@@ -84,7 +84,7 @@ export const executeDirectoryTemplate = async <TInput>(
     templateDirectory,
     (exclude ?? []).map((x) => (x instanceof RegExp ? (entry) => x.test(entry) : x))
   );
-  const filteredFiles = includeExclude(allFiles, {
+  const filteredFiles = filterIncludeExclude(allFiles, {
     include,
     exclude,
     transform: (s) => s.replace(templateDirectory, '').replace(/^\//, '')
