@@ -27,6 +27,7 @@ module.exports = {
         include: [
           '@dxos/async',
           '@dxos/client',
+          '@dxos/client/testing',
           '@dxos/config',
           '@dxos/debug',
           '@dxos/react-appkit',
