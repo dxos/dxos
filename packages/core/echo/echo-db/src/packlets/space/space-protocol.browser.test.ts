@@ -22,6 +22,7 @@ const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 describe('space/space-protocol', () => {
   test.skip('two peers discover each other', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -37,13 +38,14 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
-      expect(protocol2.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
+      expect(peer1.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
+      expect(peer2.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
     });
   });
 
   test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -89,6 +91,7 @@ describe('space/space-protocol', () => {
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
     });
+    afterTest(async () => await builder.close());
 
     const keyring = new Keyring();
     const topic = await keyring.createKey();

@@ -108,7 +108,7 @@ export class TestAgent {
   }
 
   async close() {
-    return Promise.all(this.spaces.map((space) => space.close()));
+    return Promise.all([...this.spaces.map((space) => space.close()), this.presence.destroy()]);
   }
 
   get spaces() {

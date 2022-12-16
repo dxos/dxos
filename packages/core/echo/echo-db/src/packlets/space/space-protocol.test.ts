@@ -18,6 +18,7 @@ import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } fro
 describe('space/space-protocol', () => {
   test('two peers discover each other via presence', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -93,6 +94,8 @@ describe('space/space-protocol', () => {
 
   test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
+
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();

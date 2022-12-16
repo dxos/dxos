@@ -19,6 +19,7 @@ describe('space-manager', () => {
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
     });
+    afterTest(async () => await builder.close());
 
     const peer1 = await builder.createPeer();
     const spaceManager1 = peer1.createSpaceManager();
