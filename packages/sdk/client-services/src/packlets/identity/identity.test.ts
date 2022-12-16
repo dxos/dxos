@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { createCredentialSignerWithKey, CredentialGenerator, verifyCredential } from '@dxos/credentials';
+import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
@@ -23,7 +23,6 @@ import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
 
 describe('identity/identity', () => {
@@ -55,8 +54,8 @@ describe('identity/identity', () => {
       topic: spaceKey,
       identity: {
         peerKey: identityKey,
-        credentialProvider: createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
-        credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
