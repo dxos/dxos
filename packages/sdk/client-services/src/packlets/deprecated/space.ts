@@ -111,8 +111,9 @@ export class SpaceServiceImpl implements SpaceService {
               },
               presenceState:
                 this.serviceContext.identityManager.identity?.identityKey.equals(member.key) ||
-                space.protocol.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key))
-                  .length > 0
+                this.serviceContext.identityManager
+                  .presence!.getPeersOnline()
+                  .filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
                   ? SpaceMember.PresenceState.ONLINE
                   : SpaceMember.PresenceState.OFFLINE
             }))
