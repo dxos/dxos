@@ -111,9 +111,7 @@ export class SpaceServiceImpl implements SpaceService {
               },
               presenceState:
                 this.serviceContext.identityManager.identity?.identityKey.equals(member.key) ||
-                this.serviceContext
-                  .presence!.getPeersOnline()
-                  .filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+                space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
                   ? SpaceMember.PresenceState.ONLINE
                   : SpaceMember.PresenceState.OFFLINE
             }))
@@ -139,20 +137,9 @@ export class SpaceServiceImpl implements SpaceService {
           })
         );
 
-        subscriptions.add(
-          this.serviceContext.presence!.updated.on(() => {
-            onUpdate();
-          })
-        );
-
-        subscriptions.add(
-          this.serviceContext.presence!.updated.on(() => {
-            onUpdate();
-          })
-        );
-
         this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
           subscriptions.add(space.stateUpdate.on(onUpdate));
+          subscriptions.add(space.presence.updated.on(onUpdate));
         });
 
         onUpdate();
