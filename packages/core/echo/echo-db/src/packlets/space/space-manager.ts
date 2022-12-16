@@ -31,8 +31,6 @@ export interface AcceptSpaceOptions {
 export interface SigningContext {
   identityKey: PublicKey;
   deviceKey: PublicKey;
-  credentialProvider: AuthProvider;
-  credentialAuthenticator: AuthVerifier;
   credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
   profile?: ProfileDocument;
 }

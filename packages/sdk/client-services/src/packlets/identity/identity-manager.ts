@@ -14,7 +14,7 @@ import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto
 import { deferFunction } from '@dxos/util';
 
 import { Identity } from '../identity';
-import { createHaloAuthProvider } from './authenticator';
+import { createAuthProvider } from './authenticator';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
@@ -164,7 +164,7 @@ export class IdentityManager {
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
         peerKey: identityRecord.deviceKey,
-        credentialProvider: createHaloAuthProvider(
+        credentialProvider: createAuthProvider(
           createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey)
         ),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier)

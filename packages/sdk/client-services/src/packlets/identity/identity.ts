@@ -22,7 +22,7 @@ import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/c
 import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
 
-import { HaloAuthVerifier } from './authenticator';
+import { TrustedKeySetAuthVerifier } from './authenticator';
 
 /**
  * Timeout for the device to be added to the trusted set during auth.
@@ -44,7 +44,7 @@ export class Identity {
   private readonly _signer: Signer;
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
-  public readonly authVerifier: HaloAuthVerifier;
+  public readonly authVerifier: TrustedKeySetAuthVerifier;
 
   public readonly identityKey: PublicKey;
   public readonly deviceKey: PublicKey;
@@ -69,8 +69,8 @@ export class Identity {
       this.stateUpdate.emit();
     });
 
-    this.authVerifier = new HaloAuthVerifier({
-      trustedDevicesProvider: () => this.authorizedDeviceKeys,
+    this.authVerifier = new TrustedKeySetAuthVerifier({
+      trustedKeysProvider: () => this.authorizedDeviceKeys,
       update: this.stateUpdate,
       authTimeout: AUTH_TIMEOUT
     });

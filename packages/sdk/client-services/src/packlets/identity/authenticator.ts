@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ComplexSet } from '@dxos/util';
 
-export const createHaloAuthProvider =
+export const createAuthProvider =
   (signer: CredentialSigner): AuthProvider =>
   async (nonce) => {
     const credential = await signer.createCredential({
@@ -25,8 +25,9 @@ export const createHaloAuthProvider =
     return schema.getCodecForType('dxos.halo.credentials.Credential').encode(credential);
   };
 
-export type HaloAuthVerifierParams = {
-  trustedDevicesProvider: () => ComplexSet<PublicKey>;
+export type TrustedKeySetAuthVerifierParams = {
+  // TODO(dmaretskyi): Change to `isTrusted: (key) => bool`.
+  trustedKeysProvider: () => ComplexSet<PublicKey>;
   update: Event<void>;
   /**
    * Timeout to wait for the device key to be added to the trusted set.
@@ -35,20 +36,20 @@ export type HaloAuthVerifierParams = {
 };
 
 /**
- * Verifies credentials of another device of the same identity in the HALO space.
- * Will wait up to `authTimeout` for the device key to be added to the trusted set.
+ * Verifies credentials of another member in the space based on a set of trusted key.
+ * Will wait up to `authTimeout` for the key to be added to the trusted set.
  */
-export class HaloAuthVerifier {
+export class TrustedKeySetAuthVerifier {
   private _ctx = new Context();
 
-  constructor(private readonly _params: HaloAuthVerifierParams) {}
+  constructor(private readonly _params: TrustedKeySetAuthVerifierParams) {}
 
   async close() {
     await this._ctx.dispose();
   }
 
-  private _isTrustedDevice(deviceKey: PublicKey) {
-    const deviceSet = this._params.trustedDevicesProvider();
+  private _isTrustedKey(deviceKey: PublicKey) {
+    const deviceSet = this._params.trustedKeysProvider();
     return deviceSet.has(deviceKey);
   }
 
@@ -67,7 +68,7 @@ export class HaloAuthVerifier {
         return false;
       }
 
-      if (this._isTrustedDevice(credential.issuer)) {
+      if (this._isTrustedKey(credential.issuer)) {
         return true;
       }
 
@@ -76,7 +77,7 @@ export class HaloAuthVerifier {
         trigger.wake(false);
       });
       const clear = this._params.update.on(this._ctx, () => {
-        if (this._isTrustedDevice(credential.issuer)) {
+        if (this._isTrustedKey(credential.issuer)) {
           trigger.wake(true);
         }
       });

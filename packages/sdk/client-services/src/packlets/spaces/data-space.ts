@@ -8,10 +8,15 @@ import { Context } from '@dxos/context';
 import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
+import { TrustedKeySetAuthVerifier } from '../identity';
+import { ComplexSet } from '@dxos/util';
+
+const AUTH_TIMEOUT = 30000;
 
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;
+  public readonly authVerifier: TrustedKeySetAuthVerifier;
 
   constructor(
     private readonly _inner: Space,
@@ -21,6 +26,11 @@ export class DataSpace implements ISpace {
     this._dataPipelineController = new DataPipelineControllerImpl(_modelFactory, _memberKey, (feedKey) =>
       _inner.spaceState.feeds.get(feedKey)
     );
+    this.authVerifier = new TrustedKeySetAuthVerifier({
+      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(_inner.spaceState.members.keys())),
+      update: _inner.stateUpdate,
+      authTimeout: AUTH_TIMEOUT,
+    })
   }
 
   get key() {
@@ -54,6 +64,7 @@ export class DataSpace implements ISpace {
 
   async close() {
     await this._ctx.dispose();
+    await this.authVerifier.close();
     await this._inner.close();
   }
 }

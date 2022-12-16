@@ -17,7 +17,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, deferFunction } from '@dxos/util';
+import { createAuthProvider } from '../identity';
 
 import { DataSpace } from './data-space';
 
@@ -96,8 +97,8 @@ export class DataSpaceManager {
       metadata,
       swarmIdentity: {
         peerKey: this._signingContext.deviceKey,
-        credentialProvider: this._signingContext.credentialProvider,
-        credentialAuthenticator: this._signingContext.credentialAuthenticator
+        credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
+        credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier)
       },
       dataPipelineControllerProvider: () => dataSpace.dataPipelineController
     });
