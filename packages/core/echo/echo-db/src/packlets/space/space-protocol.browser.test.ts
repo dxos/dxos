@@ -37,8 +37,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.peers).toContainEqual(peer2.deviceKey);
-      expect(protocol2.peers).toContainEqual(peer1.deviceKey);
+      expect(protocol1.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
+      expect(protocol2.presence.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
     });
   });
 

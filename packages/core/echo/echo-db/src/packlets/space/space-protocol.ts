@@ -16,7 +16,8 @@ import {
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
-import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-extension-replicator';
+import { Presence } from '@dxos/teleport-extension-presence';
+import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
 import { AuthExtension, AuthProvider, AuthVerifier } from './auth';
@@ -43,9 +44,9 @@ export type SpaceProtocolOptions = {
 export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
+  public readonly presence: Presence;
 
-  private readonly _discoveryKey: PublicKey;
-  private readonly _peerId: PublicKey;
+  private readonly _topic: PublicKey;
 
   private _connection?: SwarmConnection;
 
@@ -56,17 +57,17 @@ export class SpaceProtocol {
     return this._sessions;
   }
 
-  // TODO(dmaretskyi): Remove once we set peerId = swarmIdentity.peerKey.
-  get peerId() {
-    return this._peerId;
-  }
-
   constructor({ topic, identity, networkManager }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = identity;
 
-    this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())));
-    this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())));
+    this.presence = new Presence({
+      localPeerId: this._swarmIdentity.peerKey,
+      announceInterval: 1_000,
+      offlineTimeout: 30_000
+    });
+
+    this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
@@ -95,10 +96,10 @@ export class SpaceProtocol {
     log('starting...');
     this._connection = await this._networkManager.joinSwarm({
       protocolProvider: this._createProtocolProvider(credentials),
-      peerId: this._peerId,
-      topic: this._discoveryKey,
+      peerId: this._swarmIdentity.peerKey,
+      topic: this._topic,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${this._discoveryKey}`
+      label: `Protocol swarm: ${this._topic}`
     });
 
     log('started');
@@ -110,11 +111,16 @@ export class SpaceProtocol {
       await this._connection.close();
       log('stopped');
     }
+    await this.presence.destroy();
   }
 
   private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
     return (wireParams) => {
-      const session = new SpaceProtocolSession({ wireParams, swarmIdentity: this._swarmIdentity });
+      const session = new SpaceProtocolSession({
+        wireParams,
+        swarmIdentity: this._swarmIdentity,
+        presence: this.presence
+      });
       this._sessions.set(wireParams.remotePeerId, session);
 
       for (const feed of this._feeds) {
@@ -124,15 +130,12 @@ export class SpaceProtocol {
       return session;
     };
   }
-
-  get peers() {
-    return [];
-  }
 }
 
 export type SpaceProtocolSessionParams = {
   wireParams: WireProtocolParams;
   swarmIdentity: SwarmIdentity;
+  presence: Presence;
 };
 
 export enum AuthStatus {
@@ -149,12 +152,13 @@ export class SpaceProtocolSession implements WireProtocol {
   @logInfo
   private readonly _wireParams: WireProtocolParams;
 
+  private readonly _presence: Presence;
   private readonly _swarmIdentity: SwarmIdentity;
 
   private readonly _teleport: Teleport;
 
   // TODO(dmaretskyi): Start with upload=false when switching it on the fly works.
-  public readonly replicator = new TeleportReplicatorExtension().setOptions({ upload: true });
+  public readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
 
   private _authStatus = AuthStatus.INITIAL;
 
@@ -164,9 +168,10 @@ export class SpaceProtocolSession implements WireProtocol {
   }
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.
-  constructor({ wireParams, swarmIdentity }: SpaceProtocolSessionParams) {
+  constructor({ wireParams, swarmIdentity, presence }: SpaceProtocolSessionParams) {
     this._wireParams = wireParams;
     this._swarmIdentity = swarmIdentity;
+    this._presence = presence;
 
     this._teleport = new Teleport(wireParams);
   }
@@ -177,7 +182,6 @@ export class SpaceProtocolSession implements WireProtocol {
 
   async initialize(): Promise<void> {
     await this._teleport.open();
-    this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
     this._teleport.addExtension(
       'dxos.mesh.teleport.auth',
       new AuthExtension({
@@ -195,6 +199,11 @@ export class SpaceProtocolSession implements WireProtocol {
         }
       })
     );
+    this._teleport.addExtension(
+      'dxos.mesh.teleport.presence',
+      this._presence.createExtension({ remotePeerId: this._teleport.remotePeerId })
+    );
+    this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
 
   async destroy(): Promise<void> {

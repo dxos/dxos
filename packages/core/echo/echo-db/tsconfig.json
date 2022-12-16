@@ -72,6 +72,9 @@
       "path": "../../mesh/teleport"
     },
     {
+      "path": "../../mesh/teleport-extension-presence"
+    },
+    {
       "path": "../../mesh/teleport-extension-replicator"
     },
     {
