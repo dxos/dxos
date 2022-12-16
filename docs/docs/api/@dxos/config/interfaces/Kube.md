@@ -4,16 +4,15 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [endpoints]()
-Type: <code>[Endpoints](/api/@dxos/config/interfaces/Endpoints)</code>
+### [alias]()
+Type: <code>string[]</code>
+### [autoupdate]()
+Type: <code>[Autoupdate](/api/@dxos/config/interfaces/Autoupdate)</code>
 
 Options:
   - proto3_optional = true
-### [publicUrl]()
+### [confhost]()
 Type: <code>string</code>
-
-Options:
-  - proto3_optional = true</code>
 
 Options:
   - proto3_optional = true

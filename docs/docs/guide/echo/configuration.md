@@ -25,6 +25,7 @@ Before manipulating data, the client needs to create or join a [space](spaces).
 The client can be given a custom configuration via the config property of it's constructor's options.
 
 ### Custom signaling server
+
 For example, here's how to set a custom signaling server:
 
 ```ts file=./snippets/create-with-signal-server.ts#L5-
@@ -44,6 +45,7 @@ const client = new Client({
 ```
 
 ### Custom HALO source
+
 Here's how to set a custom [HALO](../halo) source. By default the client will use `https://halo.dxos.org`, but if there was a version of HALO deployed to a local KUBE, the `remoteSource` configuration value can be used to point a client to it:
 
 ```ts file=./snippets/create-with-custom-vault.ts#L5-
