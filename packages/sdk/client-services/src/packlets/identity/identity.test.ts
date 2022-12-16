@@ -55,8 +55,8 @@ describe('identity/identity', () => {
       topic: spaceKey,
       swarmIdentity: {
         peerKey: deviceKey,
-        credentialProvider: createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
-        credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
