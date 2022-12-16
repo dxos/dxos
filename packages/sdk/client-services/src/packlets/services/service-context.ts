@@ -77,6 +77,10 @@ export class ServiceContext {
     this.haloInvitations = new HaloInvitationsHandler(this.networkManager, this.identityManager);
   }
 
+  get presence() {
+    return this.identityManager.presence;
+  }
+
   async open() {
     log('opening...');
     await this.spaceManager.open();
