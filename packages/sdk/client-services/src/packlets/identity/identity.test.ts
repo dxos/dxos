@@ -21,6 +21,7 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Identity } from './identity';
@@ -53,15 +54,20 @@ describe('identity/identity', () => {
     const protocol = new SpaceProtocol({
       topic: spaceKey,
       swarmIdentity: {
-        peerKey: identityKey,
-        credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER
+        peerKey: deviceKey,
+        credentialProvider: createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
+        credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory
       }),
-      identityKey
+      presence: new Presence({
+        localPeerId: deviceKey,
+        announceInterval: 30,
+        offlineTimeout: 200,
+        identityKey
+      })
     });
 
     const space: Space = new Space({
@@ -169,7 +175,12 @@ describe('identity/identity', () => {
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
         }),
-        identityKey
+        presence: new Presence({
+          localPeerId: deviceKey,
+          announceInterval: 30,
+          offlineTimeout: 200,
+          identityKey
+        })
       });
 
       const space = new Space({
@@ -251,7 +262,12 @@ describe('identity/identity', () => {
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
         }),
-        identityKey
+        presence: new Presence({
+          localPeerId: deviceKey,
+          announceInterval: 30,
+          offlineTimeout: 200,
+          identityKey
+        })
       });
 
       const space = new Space({

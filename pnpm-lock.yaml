@@ -3327,6 +3327,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/teleport': workspace:*
+      '@dxos/teleport-extension-presence': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -3361,6 +3362,7 @@ importers:
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/teleport': link:../../core/mesh/teleport
+      '@dxos/teleport-extension-presence': link:../../core/mesh/teleport-extension-presence
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
