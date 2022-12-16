@@ -24,9 +24,9 @@ export const Welcome = ({ name }: { name: string }) => {
         <h2>Learn more:</h2>
         
         <ul>
-          <li><a href="https://docs.dxos.org/guide/echo/react" target="_blank">Using ECHO with React</a></li>
-          <li><a href="https://docs.dxos.org/guide/kube/dx-yml-file" target="_blank">Deploying to KUBE</a></li>
-          <li><a href="https://docs.dxos.org" target="_blank">DXOS Documentation</a></li>
+          <li><a href="https://docs.dxos.org/guide/echo/react" target="_blank" rel="noreferrer">Using ECHO with React</a></li>
+          <li><a href="https://docs.dxos.org/guide/kube/dx-yml-file" target="_blank" rel="noreferrer">Deploying to KUBE</a></li>
+          <li><a href="https://docs.dxos.org" target="_blank" rel="noreferrer">DXOS Documentation</a></li>
         </ul>
         
       </div>

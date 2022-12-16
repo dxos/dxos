@@ -7,7 +7,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/samples/hello/**/*.{ts,js}?(x)"
+          "packages/apps/samples/hello/**/*.{ts,js,tsx,jsx}"
         ]
       },
       "outputs": [
