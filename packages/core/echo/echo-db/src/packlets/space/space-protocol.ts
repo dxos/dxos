@@ -43,8 +43,8 @@ export type SpaceProtocolOptions = {
  */
 export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
-  public readonly presence: Presence;
   private readonly _swarmIdentity: SwarmIdentity;
+  public readonly presence: Presence;
 
   private readonly _topic: PublicKey;
 
