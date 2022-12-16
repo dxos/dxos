@@ -14,7 +14,8 @@ filter:
   # - peer:debug
   # - connection:debug
   # - test:debug
-  - client-services:debug
+  - auth:debug
+  - space:debug
   # - framer:debug
   # - feed-wrapper:debug
   # - service-host:debug

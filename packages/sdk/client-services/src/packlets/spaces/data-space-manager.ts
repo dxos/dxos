@@ -18,6 +18,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ComplexMap, deferFunction } from '@dxos/util';
+import { assert } from 'console';
 import { createAuthProvider } from '../identity';
 
 import { DataSpace } from './data-space';
@@ -79,6 +80,8 @@ export class DataSpaceManager {
 
   // TODO(burdon): Rename join space.
   async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
+    assert(!this._spaces.has(opts.spaceKey), 'Space already exists.');
+    
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,

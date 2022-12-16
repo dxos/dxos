@@ -56,6 +56,7 @@ export class TrustedKeySetAuthVerifier {
   get verifier(): AuthVerifier {
     return async (nonce, auth) => {
       const credential = schema.getCodecForType('dxos.halo.credentials.Credential').decode(auth);
+      log('authenticating...', { credential })
 
       const result = await verifyCredential(credential);
       if (result.kind === 'fail') {
@@ -69,6 +70,7 @@ export class TrustedKeySetAuthVerifier {
       }
 
       if (this._isTrustedKey(credential.issuer)) {
+        log('key is not currently in trusted set, waiting...', { key: credential.issuer } )
         return true;
       }
 
@@ -78,12 +80,14 @@ export class TrustedKeySetAuthVerifier {
       });
       const clear = this._params.update.on(this._ctx, () => {
         if (this._isTrustedKey(credential.issuer)) {
+          log('auth success', { key: credential.issuer })
           trigger.wake(true);
+        } else {
+          log('key is not currently in trusted set, waiting...', { key: credential.issuer } )
         }
       });
       try {
-        await trigger.wait({ timeout: this._params.authTimeout });
-        return true;
+        return await trigger.wait({ timeout: this._params.authTimeout });
       } catch {
         return false;
       } finally {
