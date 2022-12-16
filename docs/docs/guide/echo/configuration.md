@@ -5,7 +5,7 @@ label: Configuration
 
 # Configuration
 
-## Creating a client instance
+## Creating a `Client` instance
 
 Having [installed the client](./installation), create an instance:
 
@@ -16,32 +16,15 @@ import { Client } from '@dxos/client';
 const client = new Client();
 ```
 
-Continue to manipulating data with [spaces](spaces) or read on about further ways to configure the client.
+If using React, you may pass an instance of `Client` to `<ClientProvider/>`, or it will create one for you otherwise. See [usage with React](react).
 
-## Usage with React
+Before manipulating data, the client needs to create or join a [space](spaces).
 
-Use `ClientProvider` to supply the `client` instance via `ReactContext` to any nested `useClient()` hooks.
-
-```tsx file=./snippets/create-client-react.tsx#L5-
-import React from 'react';
-
-import { Client } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
-
-const client = new Client();
-
-const App = () => {
-  return (
-    <ClientProvider client={client}>
-      {/* Your components can useClient() here  */}
-    </ClientProvider>
-  );
-};
-```
-
-### Options
+## Ways of configuring `Client`
 
 The client can be given a custom configuration via the config property of it's constructor's options.
+
+### Custom signaling server
 
 For example, here's how to set a custom signaling server:
 
@@ -61,9 +44,27 @@ const client = new Client({
 });
 ```
 
+### Custom HALO source
+
+Here's how to set a custom [HALO](../halo) source. By default the client will use `https://halo.dxos.org`, but if there was a version of HALO deployed to a local KUBE, the `remoteSource` configuration value can be used to point a client to it:
+
+```ts file=./snippets/create-with-custom-vault.ts#L5-
+import { Client, Config } from '@dxos/client';
+
+const client = new Client({
+  config: new Config({
+    runtime: {
+      client: {
+        remoteSource: 'http://halo.localhost/vault.html'
+      }
+    }
+  })
+});
+```
+
 See the API documentaion for [Config](/api/@dxos/client/classes/Config).
 
-#### Loading defaults from a file
+### Loading defaults from a file
 
 In a Node environment, you can use `@dxos/config` to load from a `config/default.yml` file in your project.
 
@@ -76,7 +77,7 @@ const client = new Client({
 });
 ```
 
-#### Receiving config from a KUBE
+### Receiving config from a KUBE
 
 If your app is being hosted on a KUBE, use `Dynamics` to receive more specific configuration from that KUBE. With this mechanism, KUBE can serve apps in ways that redirect them to different signaling servers or `HALO` identity vaults.
 

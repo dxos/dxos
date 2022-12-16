@@ -1,16 +1,12 @@
-# @dxos/config
+# @dxos/text-model
 
-Config utilities
+ECHO text model.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/config
+pnpm i @dxos/text-model
 ```
-
-## Documentation
-
-- [📚 API Reference](https://docs.dxos.org/api/@dxos/config)
 
 ## DXOS Resources
 

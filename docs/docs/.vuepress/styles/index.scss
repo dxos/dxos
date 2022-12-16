@@ -2,6 +2,10 @@
 @import './tailwind-colors.scss';
 @import './palette.scss';
 
+.page {
+  transition: none;
+}
+
 html[data-theme=light] {
   th, td {
     border-color: $zinc-200;
@@ -136,3 +140,4 @@ html[data-theme=light] .home.project .hero {
 html[data-theme=dark] .custom-container.note {
   background-color: darken($zinc-800, 3%);
 }
+

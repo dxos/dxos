@@ -4,7 +4,7 @@
 
 import minimatch from 'minimatch';
 
-export const includeExclude = <T>(
+export const filterIncludeExclude = <T>(
   collection: T[],
   options?: { include?: (string | RegExp)[]; exclude?: (string | RegExp)[]; transform?: (element: T) => string }
 ): T[] => {
