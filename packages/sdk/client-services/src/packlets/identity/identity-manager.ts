@@ -12,9 +12,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Presence } from '@dxos/teleport-extension-presence';
+import { deferFunction } from '@dxos/util';
 
 import { Identity } from '../identity';
-import { deferFunction } from '@dxos/util';
 import { createHaloAuthProvider } from './authenticator';
 
 interface ConstructSpaceParams {

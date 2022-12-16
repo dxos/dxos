@@ -64,7 +64,7 @@ export class ServiceContext {
     });
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this.networkManager,
+      networkManager: this.networkManager
     });
     this.identityManager = new IdentityManager(
       this.metadataStore,
