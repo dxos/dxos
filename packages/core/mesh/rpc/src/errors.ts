@@ -75,7 +75,7 @@ export const decodeError = (err: ErrorResponse, rpcMethod: string): Error => {
     default:
       error = new SerializedRpcError(err.name ?? 'Error', err.message ?? 'Unknown Error');
   }
-  error.stack = err.stack ?? '' + `\n    at RPC call: ${rpcMethod} \n` + preprocessStack(error.stack!);
+  error.stack = (err.stack ?? '') + `\n    at RPC call: ${rpcMethod} \n` + preprocessStack(error.stack!);
 
   return error;
 };
