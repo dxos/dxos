@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-
+import { createRoot } from 'react-dom/client';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
@@ -19,3 +19,5 @@ const App = () => {
     </ClientProvider>
   );
 };
+
+createRoot(document.body).render(<App />);

@@ -8,19 +8,22 @@ description: Using ECHO with React
 Create a `ClientProvider` to allow nested components to `useClient` as well as use the other hooks in `@dxos/react-client`.
 
 ```tsx file=./snippets/create-client-react.tsx#L5-
-import React, { createRoot } from 'react';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { ClientProvider, useClient } from '@dxos/react-client';
 
-const App = () => {
+const Component = () => {
   const client = useClient();
   return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
 };
 
-createRoot(document.body).render(
+const App = () => (
   <ClientProvider>
-    <App />
+    <Component />
   </ClientProvider>
 );
+
+createRoot(document.body).render(<App />);
 ```
 
 A client object can also be passed in to Client provider:
@@ -49,10 +52,10 @@ Alternatively, a config function may be supplied instead of a client, and a clie
 
 ```tsx file=./snippets/create-client-react-with-config.tsx#L5-
 import React from 'react';
-
+import { createRoot } from 'react-dom/client';
+import { ClientProvider } from '@dxos/react-client';
 import { Config } from '@dxos/client';
 import { Dynamics, Defaults } from '@dxos/config';
-import { ClientProvider } from '@dxos/react-client';
 
 const App = () => {
   return (
@@ -60,10 +63,13 @@ const App = () => {
       config={async () => new Config(Defaults(), await Dynamics())}
       fallback={<div>Loading</div>}
     >
-      {/* Your components can useClient() here  */}
+      {/* Your components here  */}
     </ClientProvider>
   );
 };
+
+createRoot(document.body).render(<App />);
+
 ```
 
 ## React Hooks
