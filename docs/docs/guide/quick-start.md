@@ -10,6 +10,7 @@ prev: why
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.<br/> Learn more about our [mission](why).
 
 Contents:
+
 *   [Templates](#creating-apps-with-dx-cli) for creating local-first apps
 *   [Using the ECHO database](#using-the-echo-database) for real-time, offline-first consensus
 *   [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally
@@ -64,13 +65,17 @@ const space = await client.echo.createSpace();
 Now you can manipulate items in the space and they will replicate with all members of the space in a peer-to-peer fashion.
 
 ```ts file=./echo/snippets/write-items.ts#L5-
+import { Client, ObjectModel } from '@dxos/client';
+
+const client = new Client();
+
 // decide on a type for your items
 const type = 'yourdomain:type/some-type-identifier';
 
 // get a list of all spaces
 const { value: spaces } = client.echo.querySpaces();
 
-// create an item
+// create a regular ObjectModel item
 const item = await spaces[0].database.createItem({
   type,
   model: ObjectModel
@@ -111,7 +116,7 @@ Read more:
 
 ## Starting a KUBE
 
-[KUBE](/docs/kube/overview) hosts and serves applications and provides supporting services like peer network discovery.
+[KUBE](kube/overview) hosts and serves applications and provides supporting services like peer network discovery.
 
 Install KUBE:
 
@@ -126,7 +131,7 @@ sudo kube start # start the service in the background
 kube status # verify it's running
 ```
 
-Once KUBE is running, you're ready to deploy to it.
+**Once KUBE is running, you're ready to deploy to it.**
 
 ## Deploying your app to a KUBE
 
@@ -136,7 +141,7 @@ To deploy to your local KUBE:
 *   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
 *   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
 
-If you're using the DXOS application template:
+If you're using the DXOS application template (from `dx app create`):
 
 ```bash
 pnpm run deploy
@@ -152,7 +157,7 @@ Your app will now be accessible in a browser `http://<app-name>.localhost`.
 
 If you started with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost).
 
-Your app will now always be available on your machine until it or KUBE is stopped.
+**Your app will now always be available on your machine until it or KUBE is stopped.**
 
 :::note
 Coming soon:
@@ -163,4 +168,5 @@ Coming soon:
 
 Read more:
 
-*   The [`dx.yml` file schema](kube/dx-yml-file). One is provided for you if you're using a DXOS [template](cli/templates) or [sample](samples).
+*   [`dx.yml` file schema](kube/dx-yml-file)
+*   DXOS [templates](cli/templates) and [sample](samples).
