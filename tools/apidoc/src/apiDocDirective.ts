@@ -61,7 +61,6 @@ export namespace Remark {
           );
           return tree;
         }
-        console.log(symbol);
         const content = stringifier.stringify(symbol, {
           subset: node.attributes?.class,
           level: node?.attributes?.level ? Number(node?.attributes?.level) : undefined,

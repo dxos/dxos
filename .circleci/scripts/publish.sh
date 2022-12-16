@@ -15,6 +15,7 @@ if [ $1 = "production" ]; then
 
   $ROOT/packages/devtools/cli/bin/run app publish \
     --config=$DX_CONFIG \
+    --accessToken=$KUBE_ACCESS_TOKEN \
     --version=$VERSION \
     --skipExisting \
     --verbose
@@ -24,5 +25,6 @@ else
 
   $ROOT/packages/devtools/cli/bin/run app publish \
     --config=$DX_CONFIG \
+    --accessToken=$KUBE_ACCESS_TOKEN \
     --verbose
 fi

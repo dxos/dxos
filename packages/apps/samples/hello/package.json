@@ -23,7 +23,9 @@
     "@dxos/react-uikit": "workspace:*",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0",
+    "sass": "^1.56.2"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

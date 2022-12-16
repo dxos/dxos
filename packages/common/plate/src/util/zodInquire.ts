@@ -109,7 +109,7 @@ export const getQuestions = async <TShape extends InquirableZodType = Inquirable
   };
   extractFromType(shape);
   return Object.values(questions).map((r) => {
-    r.askAnswered = true;
+    // r.askAnswered = true;
     return r;
   });
 };
