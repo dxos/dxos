@@ -52,17 +52,23 @@ describe("WarpDatabase", () => {
   test.skip('object refs', async () => {
     const warpDb = await createTestDb();
 
-    const task = new WarpObject();
-    task.title = 'Test title';
+    const task = new WarpObject({
+      title: 'Fix bugs',
+    });
     warpDb.save(task);
-    task.description = 'Test description';
+    const john = new WarpObject({
+      name: 'John Doe',
+    });
+    task.assignee = john;
 
-    expect(task.title).toEqual('Test title');
-    expect(task.description).toEqual('Test description');
+    expect(task.title).toEqual('Fix bugs');
+    expect(task.assignee).toEqual(john);
 
     await sleep(5);
 
-    expect(task.title).toEqual('Test title');
-    expect(task.description).toEqual('Test description');
+    expect(task.title).toEqual('Fix bugs');
+    expect(task.assignee instanceof WarpObject).toBeTruthy();
+    expect(task.assignee).toEqual(john);
+    expect(task.assignee.name).toEqual('John Doe');
   })
 })
