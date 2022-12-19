@@ -31,6 +31,9 @@ import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-ha
 
 const MAX_OTP_ATTEMPTS = 3;
 
+// TODO(burdon): Replace triggers with callbacks.
+// TODO(burdon): Factor out credential creation (instead of inheritance).
+
 /**
  * Handles the life-cycle of Space invitations between peers.
  */
@@ -147,7 +150,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
             'dxos.halo.invitations',
             // TODO(burdon): Can multiple be created?
             new GuestSpaceInvitationExtension(
-              ctx,
+              ctx.derive(), // TODO(burdon): !!!
               this._spaceManager,
               this._signingContext,
               this._keyring,
@@ -257,6 +260,7 @@ class HostSpaceInvitationExtension extends RpcExtension<{}, { SpaceHostService: 
             }
 
             log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
+            // TODO(burdon): Extract credential creation.
             // TODO(burdon): Check if already admitted.
             const credentials = await createAdmissionCredentials(
               this._signingContext.credentialSigner,
