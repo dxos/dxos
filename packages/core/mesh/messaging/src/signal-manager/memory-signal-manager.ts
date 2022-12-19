@@ -122,5 +122,7 @@ export class MemorySignalManager implements SignalManager {
     this._context.connections.set(peerId, this);
   }
 
-  async destroy() {}
+  async open() {}
+
+  async close() {}
 }

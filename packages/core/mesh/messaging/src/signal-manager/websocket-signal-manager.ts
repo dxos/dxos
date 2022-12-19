@@ -14,7 +14,9 @@ import { ComplexMap } from '@dxos/util';
 import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
 
-// TODO: Make class re-entrant.
+/**
+ * Manages connection to multiple Signal Servers over WebSocket
+ */
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
@@ -26,7 +28,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   private _reconciling?: boolean = false;
   private _reconcileTimeoutId?: NodeJS.Timeout;
-  private _destroyed = false;
+  private _closed = false;
 
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
@@ -78,7 +80,7 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   private _scheduleReconcile() {
-    if (this._destroyed) {
+    if (this._closed) {
       return;
     }
 
@@ -100,7 +102,7 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   private _reconcileLater() {
-    if (this._destroyed) {
+    if (this._closed) {
       return;
     }
 
@@ -181,11 +183,18 @@ export class WebsocketSignalManager implements SignalManager {
     );
   }
 
-  async destroy() {
-    this._destroyed = true;
+  async open() {
+    await Promise.all(Array.from(this._servers.values()).map((server) => server.open()));
+    this._closed = false;
+    this._scheduleReconcile();
+  }
+
+  async close() {
+    this._closed = true;
     if (this._reconcileTimeoutId) {
       clearTimeout(this._reconcileTimeoutId);
     }
     await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
+    this._topicsJoinedPerSignal.clear();
   }
 }

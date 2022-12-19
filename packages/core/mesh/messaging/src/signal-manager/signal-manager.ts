@@ -20,6 +20,6 @@ export interface SignalManager extends SignalMethods {
 
   getStatus(): SignalStatus[];
 
-  // TODO(burdon): Open/close.
-  destroy(): Promise<void>;
+  open(): Promise<void>;
+  close(): Promise<void>;
 }

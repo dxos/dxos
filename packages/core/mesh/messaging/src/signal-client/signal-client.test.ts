@@ -19,7 +19,7 @@ const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   value: Buffer.from('1')
 };
 
-describe.only('SignalClient', () => {
+describe('SignalClient', () => {
   let broker1: TestBroker;
 
   let broker2: TestBroker;
@@ -136,7 +136,7 @@ describe.only('SignalClient', () => {
     // close and reopen first client
     //
 
-    client1.close();
+    await client1.close();
     client1.open();
     await client1.join({ topic, peerId: peer1 });
     await client2.sendMessage(message);
