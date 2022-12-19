@@ -4,7 +4,7 @@
 
 import { expect, mockFn } from 'earljs';
 
-import { sleep, Event } from '@dxos/async';
+import { sleep, Event, Trigger } from '@dxos/async';
 import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
