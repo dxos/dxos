@@ -7,11 +7,15 @@ import { OrderedList } from '@dxos/object-model';
 import { unproxy } from './common';
 import { EchoObject } from './object';
 
+/**
+ *
+ */
 export class OrderedArray<T extends EchoObject> implements Array<T> {
+  private readonly _uninitialized?: T[] = [];
+
   private _object?: EchoObject;
   private _property?: string;
   private _orderedList?: OrderedList;
-  private _uninitialized?: T[] = [];
 
   [unproxy]: OrderedArray<T> = this;
 

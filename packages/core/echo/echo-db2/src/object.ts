@@ -13,6 +13,9 @@ import { OrderedArray } from './ordered-array';
 const isValidKey = (key: string | symbol) =>
   !(typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof');
 
+/**
+ *
+ */
 export class EchoObject {
   public _id!: string; // TODO(burdon): Symbol?
   public _item?: Item<ObjectModel>;

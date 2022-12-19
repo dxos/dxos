@@ -6,13 +6,13 @@ import assert from 'node:assert';
 
 import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-//
-// Copyright 2022 DXOS.org
-//
 
 import { unproxy } from './common';
 import { EchoObject } from './object';
 
+/**
+ *
+ */
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
