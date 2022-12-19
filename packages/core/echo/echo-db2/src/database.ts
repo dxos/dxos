@@ -8,6 +8,15 @@ export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
   constructor(private readonly _echo: Database) {
+    this._echo.update.on(() => {
+      for(const item of this._echo.select({}).exec().entities) {
+        if(!this._objects.has(item.id)) {
+          const obj = new EchoObject();
+          this._objects.set(item.id, obj);
+          obj[unproxy]._bind(item, this);
+        }
+      }
+    })
   }
 
   async save(obj: EchoObject) {
@@ -22,7 +31,9 @@ export class EchoDatabase {
       type: 'warp:dynamic',
     }) as Item<ObjectModel>;
     assert(item.id === obj[unproxy]._id);
-    obj[unproxy]._bind(item, this);
+    if(!obj[unproxy]._isBound) {
+      obj[unproxy]._bind(item, this);
+    }
   }
 
   getById(id: string) {
