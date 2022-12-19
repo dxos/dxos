@@ -20,13 +20,11 @@ describe("EchoDatabase", () => {
 
     const obj = new EchoObject();
     obj.title = 'Test title';
-    warpDb.save(obj);
     obj.description = 'Test description';
-
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
-
-    await sleep(10);
+    
+    await warpDb.save(obj);
 
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
@@ -39,12 +37,10 @@ describe("EchoDatabase", () => {
       title: 'Test title',
       description: 'Test description'
     });
-    warpDb.save(obj);
-
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
 
-    await sleep(10);
+    await warpDb.save(obj);
 
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
@@ -56,16 +52,14 @@ describe("EchoDatabase", () => {
     const task = new EchoObject({
       title: 'Fix bugs',
     });
-    warpDb.save(task);
     const john = new EchoObject({
       name: 'John Doe',
     });
     task.assignee = john;
-
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee).toEqual(john);
 
-    await sleep(10);
+    await warpDb.save(task)
 
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee instanceof EchoObject).toBeTruthy();
@@ -79,8 +73,7 @@ describe("EchoDatabase", () => {
     const task = new EchoObject({
       title: 'Fix bugs',
     });
-    warpDb.save(task);
-    await sleep(10);
+    await warpDb.save(task);
 
     task.details = {
       priority: 'low',
