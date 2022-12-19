@@ -13,10 +13,22 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/node-std"
+    },
+    {
       "path": "../echo-db"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../object-model"
     }
   ]
 }
