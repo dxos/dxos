@@ -78,6 +78,7 @@ describe("EchoDatabase", () => {
     const task = new EchoObject({
       title: 'Fix bugs',
     });
+    warpDb.save(task);
     await sleep(10);
 
     task.details = {

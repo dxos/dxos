@@ -114,7 +114,7 @@ export class EchoObject {
           return Reflect.get(target, property, receiver);
         }
 
-        this._get(`${prop}.${String(property)}`);
+        return this._get(`${prop}.${String(property)}`);
       },
       set: (target, property, value, receiver) => {
         if(isBlacklistedKey(property)) {
