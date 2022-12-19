@@ -81,7 +81,7 @@ export class AuthenticatingInvitationProvider
   constructor(
     private readonly _actions: AuthenticatingInvitationProviderActions
   ) {
-    super(() => this._actions.onCancel());
+    super({ onCancel: () => this._actions.onCancel() });
   }
 
   async authenticate(authenticationCode: string): Promise<void> {

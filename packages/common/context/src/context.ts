@@ -98,7 +98,7 @@ export class Context {
     }
   }
 
-  derive({ onError }: CreateContextParams): Context {
+  derive({ onError }: CreateContextParams = {}): Context {
     const newCtx = new Context({
       onError: async (error) => {
         if (!onError) {
@@ -112,6 +112,7 @@ export class Context {
         }
       }
     });
+
     this.onDispose(() => newCtx.dispose());
     return newCtx;
   }
