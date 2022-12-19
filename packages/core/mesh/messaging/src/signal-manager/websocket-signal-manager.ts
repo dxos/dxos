@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap } from '@dxos/util';
 
-import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
+import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
 
 // TODO: Make class re-entrant.

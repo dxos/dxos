@@ -23,6 +23,9 @@ export interface MessengerOptions {
   timeout?: number;
 }
 
+/**
+ * Reliable messenger that works trough Signal Servers network.
+ */
 export class Messenger {
   private readonly _signalManager: SignalManager;
   // { peerId, payloadType } => listeners set

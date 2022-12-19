@@ -63,7 +63,7 @@ describe('SignalRPCClient', () => {
     });
     expect(received.author).toEqual(peerId2.asUint8Array());
     stream1.close();
-  }).timeout(10000);
+  }).timeout(2_000);
 
   test('join', async () => {
     const client1 = await setupClient();
@@ -95,5 +95,7 @@ describe('SignalRPCClient', () => {
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
     stream1.close();
     stream2.close();
-  }).timeout(10000);
+  }).timeout(2_000);
+
+  test('Send message after re-entrance', async () => {});
 });

@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap } from '@dxos/util';
 
-import { Message, SignalMethods } from './signal-methods';
+import { Message, SignalMethods } from '../signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 
 const DEFAULT_RECONNECT_TIMEOUT = 1000;

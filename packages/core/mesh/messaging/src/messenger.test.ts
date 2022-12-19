@@ -12,8 +12,8 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { Messenger } from './messenger';
+import { WebsocketSignalManager } from './signal-manager';
 import { Message } from './signal-methods';
-import { WebsocketSignalManager } from './websocket-signal-manager';
 
 const PAYLOAD_1: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',

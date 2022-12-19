@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { CommandTrace, SignalStatus } from './signal-client';
+import { CommandTrace, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
 
 /**
