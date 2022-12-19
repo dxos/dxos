@@ -1371,6 +1371,26 @@ importers:
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
 
+  packages/core/echo/echo-db2:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/object-model': workspace:*
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/echo-db': link:../echo-db
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/model-factory': link:../model-factory
+      '@dxos/node-std': link:../../../common/node-std
+      '@dxos/object-model': link:../object-model
+
   packages/core/echo/messenger-model:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
@@ -1479,26 +1499,6 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@types/faker': 5.5.9
       faker: 5.5.3
-
-  packages/core/echo/warp:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/model-factory': workspace:*
-      '@dxos/node-std': workspace:*
-      '@dxos/object-model': workspace:*
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/echo-db': link:../echo-db
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/log': link:../../../common/log
-      '@dxos/model-factory': link:../model-factory
-      '@dxos/node-std': link:../../../common/node-std
-      '@dxos/object-model': link:../object-model
 
   packages/core/halo/credentials:
     specifiers:
@@ -13495,7 +13495,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.18.6_@babel+core@7.19.3
       magic-string: 0.26.7
       react-refresh: 0.14.0
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -33973,7 +33973,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
