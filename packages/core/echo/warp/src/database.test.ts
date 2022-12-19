@@ -71,4 +71,20 @@ describe("EchoDatabase", () => {
     expect(task.assignee).toStrictEqual(john);
     expect(task.assignee.name).toEqual('John Doe');
   })
+
+  test('nested props', async () => {
+    const warpDb = await createTestDb();
+
+    const task = new EchoObject({
+      title: 'Fix bugs',
+    });
+    await sleep(10);
+
+    task.details = {
+      priority: 'low',
+    }
+    task.details.deadline = '2021-01-01';
+    expect(task.details.priority).toEqual('low');
+    expect(task.details.deadline).toEqual('2021-01-01');
+  });
 })
