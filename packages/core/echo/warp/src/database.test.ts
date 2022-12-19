@@ -25,7 +25,7 @@ describe("EchoDatabase", () => {
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
 
-    await sleep(5);
+    await sleep(10);
 
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
@@ -43,7 +43,7 @@ describe("EchoDatabase", () => {
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
 
-    await sleep(5);
+    await sleep(10);
 
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
@@ -64,11 +64,11 @@ describe("EchoDatabase", () => {
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee).toEqual(john);
 
-    await sleep(5);
+    await sleep(10);
 
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee instanceof EchoObject).toBeTruthy();
-    expect(task.assignee).toEqual(john);
+    expect(task.assignee).toStrictEqual(john);
     expect(task.assignee.name).toEqual('John Doe');
   })
 })

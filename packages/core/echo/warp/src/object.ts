@@ -6,6 +6,9 @@ import { EchoDatabase } from "./database";
 
 export const unproxy = Symbol('unproxy');
 
+const isBlacklistedKey = (key: string | symbol) =>
+  typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof';
+
 export class EchoObject {
   public _id!: string;
   private _item?: Item<ObjectModel>;
@@ -20,6 +23,10 @@ export class EchoObject {
 
     return new Proxy(this, {
       get: (target, property, receiver) => {
+        if(isBlacklistedKey(property)) {
+          return Reflect.get(target, property, receiver);
+        }
+        
         switch(property) {
           case unproxy:
             return this;
@@ -30,6 +37,10 @@ export class EchoObject {
         } 
       },
       set: (target, property, value, receiver) => {
+        if(isBlacklistedKey(property)) {
+          return Reflect.set(target, property, value, receiver);
+        }
+        
         switch(property) {
           case 'id':
             throw new Error('Cannot set id');
@@ -51,6 +62,7 @@ export class EchoObject {
     if(!this._item) {
       return this._uninitialized![key];
     } else {
+      
       return this._getModelProp(key);
     }
   }
@@ -70,6 +82,8 @@ export class EchoObject {
     switch(type) {
       case 'ref':
         return this._database!.getById(value);
+      case 'object':
+        return this._createSubObject(prop);
       default:
         return value;
     }
@@ -81,9 +95,36 @@ export class EchoObject {
       this._item!.model.set(`${prop}$type`, 'ref');
       this._item!.model.set(prop, value[unproxy]._id);
       this._database!.save(value);
+    } else if(typeof value === 'object' && value !== null) {
+      this._item!.model.set(`${prop}$type`, 'object');
+      const sub = this._createSubObject(prop);
+      for(const [subKey, subValue] of Object.entries(value)) {
+        sub[subKey] = subValue;
+      }
     } else {
+      this._item!.model.set(`${prop}$type`, 'primitive');
       this._item!.model.set(prop, value);
     }
+  }
+
+  private _createSubObject(prop: string): any {
+    return new Proxy({}, {
+      get: (target, property, receiver) => {
+        if(isBlacklistedKey(property)) {
+          return Reflect.get(target, property, receiver);
+        }
+
+        this._get(`${prop}.${String(property)}`);
+      },
+      set: (target, property, value, receiver) => {
+        if(isBlacklistedKey(property)) {
+          return Reflect.set(target, property, value, receiver);
+        }
+
+        this._set(`${prop}.${String(property)}`, value);
+        return true;
+      }
+    })
   }
 
   /**
