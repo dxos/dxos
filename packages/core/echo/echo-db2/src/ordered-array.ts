@@ -2,6 +2,7 @@ import { OrderedList } from "@dxos/object-model";
 import { unproxy } from "./common";
 import { EchoObject } from "./object";
 
+const EMPTY = 'empty item last to make the list work';
 export class OrderedArray<T extends EchoObject> implements Array<T> {
   private _object?: EchoObject;
   private _property?: string;
@@ -19,15 +20,15 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
 
     return new Proxy(this, {
       get: (target, property, receiver) => {
-        if(typeof property === 'number') {
-          return this._get(property)
+        if(isIndex(property)) {
+          return this._get(+property)
         } else {
           return Reflect.get(target, property, receiver)
         }
       },
       set: (target, property, value, receiver) => {
-        if(typeof property === 'number') {
-          this._set(property, value)
+        if(isIndex(property)) {
+          this._set(+property, value)
           return true
         } else {
           return Reflect.set(target, property, value, receiver)
@@ -40,7 +41,7 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
     if(!this._orderedList) {
       return this._uninitialized!.length;
     } else {
-      return this._orderedList.values.length;
+      return Math.max(this._orderedList.values.length - 1, 0); // account empty item
     }
   }
   toString(): string {
@@ -156,7 +157,7 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
     if(!this._orderedList) {
       return this._uninitialized![Symbol.iterator]();
     } else {
-      return this._orderedList.values.map(id => this._object!._database!.getById(id) as T).values();
+      return this._orderedList.values.slice(0, -1).map(id => this._object!._database!.getById(id) as T).values();
     }
   }
   [Symbol.unscopables](): { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; } {
@@ -168,13 +169,7 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
       this._uninitialized!.push(...items);
     } else {
       for(const item of items) {
-        console.log("pushing", item[unproxy]._id)
-        if(this._orderedList!.values.length === 0) {
-          this._orderedList!.init([item[unproxy]._id]);
-        } else {
-          this._orderedList!.insert(this._orderedList.values.at(-1)!, item[unproxy]._id);
-        }
-        console.log(this._orderedList)
+        this._setModel(this.length, item);
       }
     }
     return this.length;
@@ -185,6 +180,9 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
     this._property = property;
     this._orderedList = new OrderedList(this._object!._item!.model, this._property!);
     this._orderedList.refresh()
+    for(const item of this._uninitialized!) {
+      this.push(item);
+    }
     return this
   } 
 
@@ -209,13 +207,31 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
     if(!id) {
       return undefined;
     }
+
     return this._object!._database!.getById(id) as T | undefined;
   }
 
   private _setModel(index: number, value: T) {
-    const prev = this._orderedList?.values[index - 1]!; // TODO(dmaretskyi): bug here.
-    this._orderedList!.insert(value[unproxy]._id, prev);
+    this._object!._database!.save(value);
+    
+    if(this._orderedList!.values.length === 0) {
+      this._orderedList!.init([value[unproxy]._id, EMPTY]);
+    } else {
+      const prev = this._orderedList?.values[index - 1];
+      if(prev) {
+        this._orderedList!.insert(prev, value[unproxy]._id);
+      } else {
+        const next = this._orderedList?.values[index + 1];
+        if(!next) {
+          throw new Error('BUG')
+        }
+        this._orderedList!.remove([this._orderedList?.values[index]!]);
+        this._orderedList!.insert(value[unproxy]._id, next);
+      }
+    }
   }
+}
 
-
+function isIndex(property: string | symbol): property is string {
+  return typeof property === 'string' && parseInt(property).toString() === property;
 }

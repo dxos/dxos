@@ -105,8 +105,11 @@ describe("EchoDatabase", () => {
     expect(task.subtasks[0].title).toEqual('Subtask 1');
     expect(task.subtasks[1].title).toEqual('Subtask 2');
     expect(task.subtasks[2].title).toEqual('Subtask 3');
-
     const titles = task.subtasks.map((subtask: EchoObject) => subtask.title);
     expect(titles).toEqual(['Subtask 1', 'Subtask 2', 'Subtask 3']);
+
+    task.subtasks[0] = new EchoObject({ title: 'New subtask 1' });
+    expect(task.subtasks.map((subtask: EchoObject) => subtask.title))
+      .toEqual(['New subtask 1', 'Subtask 2', 'Subtask 3']);
   })
 })
