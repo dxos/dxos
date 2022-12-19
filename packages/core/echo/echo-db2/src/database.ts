@@ -7,13 +7,14 @@ import { EchoObject } from "./object";
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
-  constructor(private readonly _echo: Database) {}
+  constructor(private readonly _echo: Database) {
+  }
 
   async save(obj: EchoObject) {
-    if(obj[unproxy]._isImported) {
+    if(obj[unproxy]._isBound) {
       return;
     }
-    obj[unproxy]._isImported = true;
+    obj[unproxy]._isBound = true;
     this._objects.set(obj[unproxy]._id, obj);
 
     const item = await this._echo.createItem({

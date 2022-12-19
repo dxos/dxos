@@ -16,7 +16,7 @@ export class EchoObject {
   public _database?: EchoDatabase;
   private _uninitialized?: Record<keyof any, any> = {};
 
-  public _isImported = false;
+  public _isBound = false;
 
   [unproxy]: EchoObject = this;
 
