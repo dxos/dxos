@@ -27,6 +27,7 @@
     "devtools-mesh": "packages/devtools/devtools-mesh",
     "docs": "docs",
     "echo-db": "packages/core/echo/echo-db",
+    "echo-db2": "packages/core/echo/warp",
     "errors": "packages/sdk/errors",
     "esbuild": "tools/executors/esbuild",
     "esbuild-plugins": "packages/common/esbuild-plugins",

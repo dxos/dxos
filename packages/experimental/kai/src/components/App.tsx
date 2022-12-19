@@ -2,71 +2,55 @@
 // Copyright 2022 DXOS.org
 //
 
-import { css } from '@emotion/css';
-import React from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 
-import { Add as AddIcon, Share as ShareIcon } from '@mui/icons-material';
+import { fromHost, Client, PublicKey } from '@dxos/client';
+import { EchoDatabase } from '@dxos/echo-db2';
+import { ClientProvider, useSpace } from '@dxos/react-client';
 
-import { useTestItems } from '../hooks';
-import { Actions } from './Actions';
-import { ItemCard } from './ItemCard';
-import { Searchbar } from './Searchbar';
-
-// TODO(burdon): Storybook for App.
-
-const styles = css`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  justify-content: center;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  background-color: #f5f5f5;
-  > div {
-    display: flex;
-    flex-direction: column;
-    width: 800px;
-    overflow: hidden;
-
-    .header {
-      margin-top: 8px;
-    }
-
-    .items {
-      overflow-y: scroll;
-    }
+const List: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
+  const space = useSpace(spaceKey);
+  const db = useMemo(() => space && new EchoDatabase(space.database), [space]);
+  if (!space) {
+    return null;
   }
-`;
 
-const actions = [
-  { icon: <AddIcon />, name: 'Copy' },
-  { icon: <ShareIcon />, name: 'Share' }
-];
+  console.log(':::', db);
 
-/**
- * @constructor
- */
+  return <pre>{space.key.truncate()}</pre>;
+};
+
 export const App = () => {
-  const items = useTestItems(10);
+  const [client, setClient] = useState<Client | undefined>(undefined);
+  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(undefined);
+  useEffect(() => {
+    setTimeout(async () => {
+      const client = new Client({
+        services: fromHost()
+      });
+
+      await client.initialize();
+      // TODO(burdon): Hangs if profile not created.
+      await client.halo.createProfile();
+      const space = await client.echo.createSpace();
+
+      setClient(client);
+      setSpaceKey(space.key);
+    });
+  }, []);
+
+  if (!client || !spaceKey) {
+    return null;
+  }
 
   return (
-    <div className={styles}>
-      <div>
-        <div className='header'>
-          <Searchbar />
-        </div>
-        <div className='items'>
-          {items.map((item) => (
-            <ItemCard key={item.id} item={item} />
-          ))}
-        </div>
+    <div>
+      <ClientProvider client={client}>
         <div>
-          <Actions actions={actions} />
+          <h1>Kai</h1>
+          <List spaceKey={spaceKey} />
         </div>
-      </div>
+      </ClientProvider>
     </div>
   );
 };

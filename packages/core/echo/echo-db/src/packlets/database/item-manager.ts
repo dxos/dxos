@@ -100,6 +100,7 @@ export class ItemManager {
   @timed(5_000)
   async createItem(
     modelType: ModelType,
+    itemId: ItemID = createId(),
     itemType?: ItemType,
     parentId?: ItemID,
     initProps?: any // TODO(burdon): Remove/change to array of mutations.
@@ -123,7 +124,6 @@ export class ItemManager {
     // Pending until constructed (after genesis block is read from stream).
     const [waitForCreation, callback] = trigger<Entity<any>>();
 
-    const itemId = createId();
     this._pendingItems.set(itemId, callback);
 
     // Write Item Genesis block.

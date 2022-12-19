@@ -17,7 +17,7 @@ import {
   DataServiceSubscriptions
 } from '../database';
 
-export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
+export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<EchoEnvelope>();
   const backend = new DatabaseBackendHost(feed, undefined, { snapshots: true });
 

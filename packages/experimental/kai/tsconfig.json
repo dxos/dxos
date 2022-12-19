@@ -17,13 +17,25 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
+      "path": "../../apps/patterns/react-list"
     },
     {
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/react-ui"
+    },
+    {
+      "path": "../../core/echo/warp"
     },
     {
       "path": "../../sdk/client"
@@ -33,6 +45,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-uikit"
     },
     {
       "path": "../client-testing"

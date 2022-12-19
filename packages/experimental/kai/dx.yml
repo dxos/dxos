@@ -2,12 +2,12 @@ version: 1
 
 package:
   modules:
-    - name: halo
+    - name: kai
       type: dxos:type/app
-      displayName: HALO
-      description: Self-sovereign identity management.
+      displayName: kai
+      description: Kai Demo.
       build:
-        command: pnpm -w nx bundle halo-app
+        command: pnpm -w nx bundle kai-app
 
 runtime:
   client:
