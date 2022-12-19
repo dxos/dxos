@@ -97,6 +97,7 @@
     "util": "packages/common/util",
     "wallet-extension": "packages/deprecated/wallet/wallet-extension",
     "wallet-playground": "packages/deprecated/wallet/wallet-playground",
+    "warp": "packages/core/echo/warp",
     "x": "tools/x"
   }
 }

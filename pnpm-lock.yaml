@@ -1480,6 +1480,14 @@ importers:
       '@types/faker': 5.5.9
       faker: 5.5.3
 
+  packages/core/echo/warp:
+    specifiers:
+      '@dxos/echo-db': workspace:*
+      '@dxos/log': workspace:*
+    dependencies:
+      '@dxos/echo-db': link:../echo-db
+      '@dxos/log': link:../../../common/log
+
   packages/core/halo/credentials:
     specifiers:
       '@dxos/async': workspace:*
@@ -6822,7 +6830,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.19.4
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
       '@types/react': 18.0.21
       react: 18.2.0
 
@@ -6926,6 +6934,7 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       react-is: 18.2.0
       react-transition-group: 4.4.5_biqbaboplfbrettd7655fr4n2y
+    dev: false
 
   /@mui/private-theming/5.10.9_iapumuv4e6jcjznwuxpf4tt22e:
     resolution: {integrity: sha512-BN7/CnsVPVyBaQpDTij4uV2xGYHHHhOgpdxeYLlIu+TqnsVM7wUeF+37kXvHovxM6xmL5qoaVUD98gDC0IZnHg==}
@@ -6982,6 +6991,7 @@ packages:
       csstype: 3.1.1
       prop-types: 15.8.1
       react: 18.2.0
+    dev: false
 
   /@mui/system/5.10.9_h33l6npc22g7vcra72cibfsrvm:
     resolution: {integrity: sha512-B6fFC0sK06hNmqY7fAUfwShQv594+u/DT1YEFHPtK4laouTu7V4vSGQWi1WJT9Bjs9Db5D1bRDJ+Yy+tc3QOYA==}
@@ -7038,6 +7048,7 @@ packages:
       csstype: 3.1.1
       prop-types: 15.8.1
       react: 18.2.0
+    dev: false
 
   /@mui/types/7.2.0_@types+react@18.0.21:
     resolution: {integrity: sha512-lGXtFKe5lp3UxTBGqKI1l7G8sE2xBik8qCfrLHD5olwP/YU0/ReWoWT7Lp1//ri32dK39oPMrJN8TgbkCSbsNA==}

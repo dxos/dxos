@@ -208,6 +208,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/warp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/halo/credentials/package.json",
           "jsonpath": "$.version"
         },

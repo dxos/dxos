@@ -1,0 +1,22 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test",
+      "@dxos/typings"
+    ]
+  },
+  "exclude": [],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../echo-db"
+    }
+  ]
+}

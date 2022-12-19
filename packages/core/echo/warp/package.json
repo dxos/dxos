@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/warp",
+  "version": "0.1.18",
+  "description": "ECHO database.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/log": "workspace:*"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}
