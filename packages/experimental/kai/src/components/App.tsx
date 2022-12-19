@@ -5,7 +5,7 @@
 import React, { FC, useEffect, useMemo, useState } from 'react';
 
 import { fromHost, Client, PublicKey } from '@dxos/client';
-import { EchoDatabase } from '@dxos/echo-db2';
+import { EchoDatabase, EchoObject } from '@dxos/echo-db2';
 import { ClientProvider, useSpace } from '@dxos/react-client';
 
 const List: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
@@ -15,9 +15,25 @@ const List: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
     return null;
   }
 
-  console.log(':::', db);
+  // TODO(burdon): Not updated.
+  const handleCreate = async () => {
+    const obj = new EchoObject();
+    await db?.save(obj);
+  };
 
-  return <pre>{space.key.truncate()}</pre>;
+  console.log('Objects', db?.objects);
+
+  return (
+    <div>
+      <pre>{space.key.truncate()}</pre>
+      <div>
+        {db?.objects.map((object: EchoObject) => (
+          <div key={object._id}>{object._id}</div>
+        ))}
+      </div>
+      <button onClick={handleCreate}>Create</button>
+    </div>
+  );
 };
 
 export const App = () => {

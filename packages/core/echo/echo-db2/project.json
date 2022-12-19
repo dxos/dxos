@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/core/echo/warp/src",
+  "sourceRoot": "packages/core/echo/echo-db2/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/core/echo/warp/src/index.ts",
-        "outputPath": "packages/core/echo/warp/dist/types",
-        "tsConfig": "packages/core/echo/warp/tsconfig.json"
+        "main": "packages/core/echo/echo-db2/src/index.ts",
+        "outputPath": "packages/core/echo/echo-db2/dist/types",
+        "tsConfig": "packages/core/echo/echo-db2/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,11 +17,11 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/core/echo/warp/src/index.ts",
-          "packages/core/echo/warp/src/testing.ts"
+          "packages/core/echo/echo-db2/src/index.ts",
+          "packages/core/echo/echo-db2/src/testing.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/core/echo/warp/dist/lib"
+        "outputPath": "packages/core/echo/echo-db2/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -32,7 +32,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/echo/warp/src/packlets/**/*.{ts,js}"
+          "packages/core/echo/echo-db2/src/packlets/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -42,16 +42,15 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/warp",
+        "coveragePath": "coverage/packages/core/echo/echo-db2",
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/echo/warp",
-        "resultsPath": "test-results/packages/core/echo/warp",
-        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "outputPath": "tmp/mocha/packages/core/echo/echo-db2",
+        "resultsPath": "test-results/packages/core/echo/echo-db2",
         "testPatterns": [
-          "packages/core/echo/warp/src/**/*.test.{ts,js}"
+          "packages/core/echo/echo-db2/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/core/echo/warp/src/**/*"
+          "packages/core/echo/echo-db2/src/**/*"
         ]
       },
       "outputs": [

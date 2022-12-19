@@ -33,7 +33,10 @@ export default defineConfig({
     include: [
       '@dxos/client',
       '@dxos/config',
+      '@dxos/echo',
+      '@dxos/echo-db2',
       '@dxos/log',
+      '@dxos/protocols',
       '@dxos/react-appkit',
       '@dxos/react-client',
       '@dxos/react-list',

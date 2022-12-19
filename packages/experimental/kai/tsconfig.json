@@ -35,7 +35,10 @@
       "path": "../../common/react-ui"
     },
     {
-      "path": "../../core/echo/warp"
+      "path": "../../core/echo/echo-db2"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/client"

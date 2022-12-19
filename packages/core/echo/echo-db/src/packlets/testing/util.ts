@@ -33,7 +33,6 @@ export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   );
 
   const database = new Database(modelFactory, backend, PublicKey.random());
-
   await database.initialize();
   return database;
 };
