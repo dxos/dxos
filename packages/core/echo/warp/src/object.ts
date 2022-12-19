@@ -2,20 +2,23 @@ import { todo } from "@dxos/debug";
 import { Item } from "@dxos/echo-db";
 import { PublicKey } from "@dxos/keys";
 import { ObjectModel } from "@dxos/object-model";
+import { unproxy } from "./common";
 import { EchoDatabase } from "./database";
+import { OrderedArray } from "./ordered-array";
 
-export const unproxy = Symbol('unproxy');
 
 const isBlacklistedKey = (key: string | symbol) =>
   typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof';
 
 export class EchoObject {
   public _id!: string;
-  private _item?: Item<ObjectModel>;
-  private _database?: EchoDatabase;
+  public _item?: Item<ObjectModel>;
+  public _database?: EchoDatabase;
   private _uninitialized?: Record<keyof any, any> = {};
 
   public _isImported = false;
+
+  [unproxy]: EchoObject = this;
 
   constructor(initialProps?: Record<keyof any, any>) {
     this._id = PublicKey.random().toHex();
@@ -28,8 +31,6 @@ export class EchoObject {
         }
         
         switch(property) {
-          case unproxy:
-            return this;
           case 'id':
             return this._id;
           default:
@@ -48,12 +49,9 @@ export class EchoObject {
             this._set(property as string, value);
             return true;
         }
-        
       }
     });
   }
-
-  [unproxy]: EchoObject = this;
 
   // Allow to access arbitrary properties via dot notation.
   [key: string]: any;
@@ -84,6 +82,8 @@ export class EchoObject {
         return this._database!.getById(value);
       case 'object':
         return this._createSubObject(prop);
+      case 'array':
+        return new OrderedArray()._bind(this[unproxy], prop);
       default:
         return value;
     }
@@ -95,6 +95,9 @@ export class EchoObject {
       this._item!.model.set(`${prop}$type`, 'ref');
       this._item!.model.set(prop, value[unproxy]._id);
       this._database!.save(value);
+    } else if(value instanceof OrderedArray) {
+      this._item!.model.set(`${prop}$type`, 'array');
+      value._bind(this[unproxy], prop);
     } else if(typeof value === 'object' && value !== null) {
       this._item!.model.set(`${prop}$type`, 'object');
       const sub = this._createSubObject(prop);
@@ -130,7 +133,7 @@ export class EchoObject {
   /**
    * @internal
    */
-  _import(item: Item<ObjectModel>, database: EchoDatabase) {
+  _bind(item: Item<ObjectModel>, database: EchoDatabase) {
     this._item = item;
     this._database = database;
 

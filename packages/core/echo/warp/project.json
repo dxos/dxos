@@ -46,7 +46,6 @@
         "forceExit": true,
         "outputPath": "tmp/mocha/packages/core/echo/warp",
         "resultsPath": "test-results/packages/core/echo/warp",
-        "setup": "packages/core/mesh/signal/testing/setup.js",
         "testPatterns": [
           "packages/core/echo/warp/src/**/*.test.{ts,js}"
         ],

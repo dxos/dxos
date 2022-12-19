@@ -50,7 +50,10 @@ export class OrderedList {
   refresh() {
     this._values = [];
     const properties = this._model.get(this._property) ?? {};
+    console.log({ properties })
     for (const [left, right] of Object.entries(properties)) {
+
+      console.log({ left, right })
       const i = this._values.findIndex((value) => value === left);
       const j = this._values.findIndex((value) => value === right);
       if (i === -1 && j === -1) {
