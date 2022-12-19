@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-db-2",
+  "name": "@dxos/echo-db2",
   "version": "0.1.18",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
@@ -28,7 +28,9 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/object-model": "workspace:*"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "wait-for-expect": "^3.0.2"
+  },
   "publishConfig": {
     "access": "public"
   },
