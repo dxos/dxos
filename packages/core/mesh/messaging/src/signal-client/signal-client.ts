@@ -99,16 +99,12 @@ export class SignalClient implements SignalMethods {
    */
   constructor(
     private readonly _host: string,
-    private readonly _onMessage: ({
-      author,
-      recipient,
-      payload
-    }: {
-      author: PublicKey;
-      recipient: PublicKey;
-      payload: Any;
-    }) => Promise<void>
+    private readonly _onMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
   ) {
+    this.open();
+  }
+
+  open() {
     this._setState(SignalState.CONNECTING);
     this._createClient();
   }
