@@ -7,7 +7,9 @@ export class WarpObject {
   private _item?: Item<ObjectModel>;
   private _uninitialized?: Record<keyof any, any> = {};
 
-  constructor() {
+  constructor(initialProps?: Record<keyof any, any>) {
+    Object.assign(this._uninitialized!, initialProps);
+
     return new Proxy(this, {
       get: (target, property, receiver) => {
         if(property === unproxy) {
