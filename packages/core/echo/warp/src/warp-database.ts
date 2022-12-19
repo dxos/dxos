@@ -13,7 +13,7 @@ export class WarpDatabase {
       return;
     }
     obj[unproxy]._isImported = true;
-    
+    this._objects.set(obj[unproxy]._id, obj);
 
     setTimeout(async () => {
       const item = await this._echo.createItem({
@@ -26,6 +26,6 @@ export class WarpDatabase {
   }
 
   getById(id: string) {
-
+    return this._objects.get(id);
   }
 }

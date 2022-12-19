@@ -42,7 +42,7 @@ export class WarpObject {
     });
   }
 
-  [unproxy]!: WarpObject;
+  [unproxy]: WarpObject = this;
 
   // Allow to access arbitrary properties via dot notation.
   [key: string]: any;
@@ -69,7 +69,7 @@ export class WarpObject {
 
     switch(type) {
       case 'ref':
-        todo()
+        return this._database!.getById(value);
       default:
         return value;
     }
@@ -77,7 +77,13 @@ export class WarpObject {
   }
 
   private _setModelProp(prop: string, value: any): any {
-    this._item!.model.set(prop, value);
+    if(value instanceof WarpObject) {
+      this._item!.model.set(`${prop}$type`, 'ref');
+      this._item!.model.set(prop, value[unproxy]._id);
+      this._database!.save(value);
+    } else {
+      this._item!.model.set(prop, value);
+    }
   }
 
   /**
@@ -88,7 +94,7 @@ export class WarpObject {
     this._database = database;
 
     for(const [key, value] of Object.entries(this._uninitialized!)) {
-      this._item.model.set(key, value);
+      this._setModelProp(key, value);
     }
 
     this._uninitialized = undefined;

@@ -49,7 +49,7 @@ describe("WarpDatabase", () => {
     expect(obj.description).toEqual('Test description');
   })
 
-  test.skip('object refs', async () => {
+  test('object refs', async () => {
     const warpDb = await createTestDb();
 
     const task = new WarpObject({
