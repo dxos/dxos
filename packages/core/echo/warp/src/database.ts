@@ -1,14 +1,14 @@
 import { Database, Item } from "@dxos/echo-db";
 import { ObjectModel } from "@dxos/object-model";
 import assert from "node:assert";
-import { unproxy, WarpObject } from "./warp-object";
+import { unproxy, EchoObject } from "./object";
 
-export class WarpDatabase {
-  private readonly _objects = new Map<string, WarpObject>();
+export class EchoDatabase {
+  private readonly _objects = new Map<string, EchoObject>();
 
   constructor(private readonly _echo: Database) {}
 
-  save(obj: WarpObject) {
+  save(obj: EchoObject) {
     if(obj[unproxy]._isImported) {
       return;
     }

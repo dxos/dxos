@@ -2,14 +2,14 @@ import { todo } from "@dxos/debug";
 import { Item } from "@dxos/echo-db";
 import { PublicKey } from "@dxos/keys";
 import { ObjectModel } from "@dxos/object-model";
-import { WarpDatabase } from "./warp-database";
+import { EchoDatabase } from "./database";
 
 export const unproxy = Symbol('unproxy');
 
-export class WarpObject {
+export class EchoObject {
   public _id!: string;
   private _item?: Item<ObjectModel>;
-  private _database?: WarpDatabase;
+  private _database?: EchoDatabase;
   private _uninitialized?: Record<keyof any, any> = {};
 
   public _isImported = false;
@@ -42,7 +42,7 @@ export class WarpObject {
     });
   }
 
-  [unproxy]: WarpObject = this;
+  [unproxy]: EchoObject = this;
 
   // Allow to access arbitrary properties via dot notation.
   [key: string]: any;
@@ -77,7 +77,7 @@ export class WarpObject {
   }
 
   private _setModelProp(prop: string, value: any): any {
-    if(value instanceof WarpObject) {
+    if(value instanceof EchoObject) {
       this._item!.model.set(`${prop}$type`, 'ref');
       this._item!.model.set(prop, value[unproxy]._id);
       this._database!.save(value);
@@ -89,7 +89,7 @@ export class WarpObject {
   /**
    * @internal
    */
-  _import(item: Item<ObjectModel>, database: WarpDatabase) {
+  _import(item: Item<ObjectModel>, database: EchoDatabase) {
     this._item = item;
     this._database = database;
 
