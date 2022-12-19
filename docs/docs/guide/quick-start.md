@@ -14,6 +14,30 @@ DXOS is the developer platform for **collaborative**, **offline-first**, **priva
 *   [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally
 *   [Deploying apps to KUBE](#deploying-your-app-to-a-kube)
 
+<!-- :::showcase Test ::: -->
+
+::: code-tabs#showcase Test
+
+@tab pnpm
+
+```ts
+console.log('hello pnpm');
+```
+
+@tab yarn
+
+```ts
+console.log('hello yarn');
+```
+
+@tab:active npm
+
+```ts
+console.log('hello npm');
+```
+
+:::
+
 ## Creating apps with `dx` CLI
 
 The `dx` CLI offers a production-ready application template based on `vite` with `typescript`, `react`, `pwa`, and other opinions built in.

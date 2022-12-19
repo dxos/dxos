@@ -64,6 +64,7 @@ const config: UserConfig = defineUserConfig({
     ],
     plugins: {
       mdEnhance: {
+        codetabs: true,
         sub: true,
         sup: true,
         attrs: true
@@ -117,7 +118,7 @@ const config: UserConfig = defineUserConfig({
       },
       optimizeDeps: {
         force: true,
-        include: ['@dxos/telemetry']
+        include: ['@dxos/telemetry', '@dxos/react-client']
       },
       build: {
         commonjsOptions: {

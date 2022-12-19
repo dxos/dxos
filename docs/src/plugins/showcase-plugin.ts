@@ -30,6 +30,7 @@ const tsConfig = {
 
 export const showcasePlugin = async (): Promise<Plugin> => {
   const demoFileNames = await readdir(join(__dirname, '../demos'));
+  console.log({ demoFileNames });
   const demos = await Promise.all(
     demoFileNames.map(async (fileName) => {
       const name = fileName.split('.')[0];
@@ -66,7 +67,9 @@ export const showcasePlugin = async (): Promise<Plugin> => {
       return '</Showcase>\n';
     }
 
-    const demo = demos.find(({ name }) => name === tokens[idx + 2].content);
+    const demoName = tokens[idx].info.replace('showcase ', '').replace(' :::', '');
+    console.log({ demos, demoName });
+    const demo = demos.find(({ name }) => name === demoName);
     if (!demo) {
       throw new Error('Demo not found.');
     }

@@ -13,6 +13,9 @@
       "node"
     ]
   },
+  "exclude": [
+    "src/demos"
+  ],
   "include": [
     "src",
     "typings.d.ts",
