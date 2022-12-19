@@ -40,19 +40,43 @@ export class Messenger {
 
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
 
-  private readonly _subscriptions = new EventSubscriptions(); // TODO(burdon): Not released.
+  private readonly _subscriptions = new EventSubscriptions();
+  private _closed = false;
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
   constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
     this._signalManager = signalManager;
-    this._signalManager.onMessage.on(async (message) => {
-      log('received message', { from: message.author });
-      await this._handleMessage(message);
-    });
+    this._subscriptions.add(
+      this._signalManager.onMessage.on(async (message) => {
+        log('received message', { from: message.author });
+        await this._handleMessage(message);
+      })
+    );
 
     this._retryDelay = retryDelay;
     this._timeout = timeout;
+  }
+
+  open() {
+    if (!this._closed) {
+      return;
+    }
+    this._subscriptions.add(
+      this._signalManager.onMessage.on(async (message) => {
+        log('received message', { from: message.author });
+        await this._handleMessage(message);
+      })
+    );
+    this._closed = false;
+  }
+
+  close() {
+    if (this._closed) {
+      return;
+    }
+    this._closed = true;
+    this._subscriptions.clear();
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {

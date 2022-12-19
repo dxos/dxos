@@ -53,7 +53,7 @@ describe('Messenger', () => {
     const peerId = PublicKey.random();
 
     const signalManager = new WebsocketSignalManager([broker.url()]);
-    afterTest(() => signalManager.destroy());
+    afterTest(() => signalManager.close());
 
     const messenger = new Messenger({
       signalManager
@@ -259,7 +259,7 @@ describe('Messenger', () => {
           await trueSend(msg);
         }
       };
-      afterTest(() => signalManager.destroy());
+      afterTest(() => signalManager.close());
 
       const messenger = new Messenger({
         signalManager

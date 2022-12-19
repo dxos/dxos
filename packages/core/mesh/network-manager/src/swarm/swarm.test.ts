@@ -23,7 +23,7 @@ describe('Swarm', () => {
 
   beforeEach(() => {
     signalManager = new MemorySignalManager(context);
-    afterTest(() => signalManager.destroy());
+    afterTest(() => signalManager.close());
   });
 
   const setupSwarm = ({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) => {

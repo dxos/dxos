@@ -123,7 +123,7 @@ export class NetworkManager {
       });
     }
 
-    await this._signalManager.destroy();
+    await this._signalManager.close();
   }
 
   /**

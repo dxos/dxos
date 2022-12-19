@@ -184,12 +184,18 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   async open() {
+    if (!this._closed) {
+      return;
+    }
     await Promise.all(Array.from(this._servers.values()).map((server) => server.open()));
     this._closed = false;
     this._scheduleReconcile();
   }
 
   async close() {
+    if (this._closed) {
+      return;
+    }
     this._closed = true;
     if (this._reconcileTimeoutId) {
       clearTimeout(this._reconcileTimeoutId);
