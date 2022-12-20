@@ -1,16 +1,22 @@
-import { describe, test } from "@dxos/test";
-import { EchoObject } from "./object";
-import expect from 'expect'
-import { ModelFactory } from "@dxos/model-factory";
-import { ObjectModel } from "@dxos/object-model";
-import { createInMemoryDatabase } from '@dxos/echo-db/testing'
+//
+// Copyright 2022 DXOS.org
+//
 
-describe("WarpObject", () => {
+import expect from 'expect';
+
+import { createMemoryDatabase } from '@dxos/echo-db/testing';
+import { ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
+import { describe, test } from '@dxos/test';
+
+import { EchoObject } from './object';
+
+describe('WarpObject', () => {
   test('instance of', async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const database = await createInMemoryDatabase(modelFactory);
+    const database = await createMemoryDatabase(modelFactory);
 
     const obj = new EchoObject();
     expect(obj instanceof EchoObject).toBeTruthy();
-  })
-})
+  });
+});

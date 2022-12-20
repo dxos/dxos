@@ -38,14 +38,16 @@ describe('PresenceExtension', () => {
       peerId: peer1.peerId,
       connections: [peer2.peerId],
       timestamp: new Date(),
-      messageId: PublicKey.random()
+      messageId: PublicKey.random(),
+      identityKey: PublicKey.random()
     });
 
     await extension2.sendAnnounce({
       peerId: peer2.peerId,
       connections: [peer1.peerId],
       timestamp: new Date(),
-      messageId: PublicKey.random()
+      messageId: PublicKey.random(),
+      identityKey: PublicKey.random()
     });
 
     expect((await trigger1.wait({ timeout: 50 })).peerId).toEqual(peer2.peerId);

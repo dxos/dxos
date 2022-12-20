@@ -8,6 +8,7 @@ import { Context } from '@dxos/context';
 import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
+import { Presence } from '@dxos/teleport-extension-presence';
 
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
@@ -16,7 +17,8 @@ export class DataSpace implements ISpace {
   constructor(
     private readonly _inner: Space,
     private readonly _modelFactory: ModelFactory,
-    private readonly _memberKey: PublicKey
+    private readonly _memberKey: PublicKey,
+    private readonly _presence: Presence
   ) {
     this._dataPipelineController = new DataPipelineControllerImpl(_modelFactory, _memberKey, (feedKey) =>
       _inner.spaceState.feeds.get(feedKey)
@@ -48,6 +50,10 @@ export class DataSpace implements ISpace {
     return this._inner.stateUpdate;
   }
 
+  get presence() {
+    return this._presence;
+  }
+
   async open() {
     await this._inner.open();
   }
@@ -55,5 +61,6 @@ export class DataSpace implements ISpace {
   async close() {
     await this._ctx.dispose();
     await this._inner.close();
+    await this._presence.destroy();
   }
 }
