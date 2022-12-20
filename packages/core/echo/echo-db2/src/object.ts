@@ -8,7 +8,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { unproxy } from './common';
 import { EchoDatabase } from './database';
-import { OrderedArray } from './ordered-array';
+import { OrderedSet } from './ordered-array';
 import { EchoSchemaType } from './schema';
 
 const isValidKey = (key: string | symbol) =>
@@ -113,7 +113,7 @@ export class EchoObjectBase {
       case 'object':
         return this._createSubObject(prop);
       case 'array':
-        return new OrderedArray()._bind(this[unproxy], prop);
+        return new OrderedSet()._bind(this[unproxy], prop);
       default:
         return value;
     }
@@ -124,7 +124,7 @@ export class EchoObjectBase {
       this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
       this._item!.model.set(prop, value[unproxy]._id);
       this._database!.save(value);
-    } else if (value instanceof OrderedArray) {
+    } else if (value instanceof OrderedSet) {
       this._item!.model.set(`${prop}$type`, 'array');
       value._bind(this[unproxy], prop);
     } else if (typeof value === 'object' && value !== null) {
