@@ -67,6 +67,9 @@ export class EchoDatabase {
     return this._objects.get(id);
   }
 
+  /**
+   * @deprecated
+   */
   subscribe(traverseCb: (touch: (obj: EchoObject) => any) => void, callback: () => void): () => void {
     const touched = new Set<string>();
     const retouch = () => {
@@ -90,6 +93,7 @@ export class EchoDatabase {
     let selectedIds = new Set<string>();
 
     const unsub = this._echo.update.on((changedEntities) => {
+      console.log('changedEntities', changedEntities.map((entity) => entity.id))
       if (changedEntities.some((entity) => selectedIds.has(entity.id))) {
         onUpdate();
       }
