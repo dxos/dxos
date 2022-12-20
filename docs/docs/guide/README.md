@@ -29,4 +29,3 @@ Read more about [how it works](how-it-works)
 *   Build an app with [@dxos/cli](quick-start#creating-apps)
 *   Start up a [KUBE](quick-start#starting-a-kube)
 *   [Deploy your app to a KUBE](quick-start#deploying-your-app-to-a-kube)
-
