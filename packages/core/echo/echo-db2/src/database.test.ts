@@ -110,8 +110,9 @@ describe('EchoDatabase', () => {
     ]);
   });
 
-  test('subscribe', async () => {
+  test.skip('subscribe', async () => {
     const db = await createTestDb();
+
     const task = new EchoObject({
       project: new EchoObject({ name: 'DXOS' })
     });

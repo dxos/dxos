@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+
 import assert from 'node:assert';
 
 import { Database, Item } from '@dxos/echo-db';
@@ -11,11 +12,14 @@ import { unproxy } from './common';
 import { EchoObject } from './object';
 import { traverse } from './traverse';
 
-type Selector = {};
+export type SelectionFn = never; // TODO(dmaretskyi): .
+export type Selection = EchoObject | SelectionFn | Selection[];
 
 interface SelectionHandle {
-  unsubscribe(): void;
+  updateSelection: (selection: Selection) => void;
+  unsubscribe: () => void;
 }
+
 
 /**
  *
@@ -44,14 +48,6 @@ export class EchoDatabase {
     return this._objects.get(id);
   }
 
-  /**
-   *
-   */
-  select(selector: Selector): SelectionHandle {
-    return {
-      unsubscribe() {}
-    };
-  }
 
   async save(obj: EchoObject): Promise<EchoObject> {
     if (obj[unproxy]._isBound) {
@@ -91,5 +87,34 @@ export class EchoDatabase {
         callback();
       }
     });
+  }
+
+  selection(onUpdate: () => void): SelectionHandle {
+    let selectedIds = new Set<string>();
+
+    const unsub = this._echo.update.on((changedEntities) => {
+      if(changedEntities.some((entity) => selectedIds.has(entity.id))) {
+        onUpdate();
+      }
+    })
+
+    return {
+      updateSelection: (selection: Selection) => {
+        selectedIds = new Set(getIdsFromSelection(selection));
+      },
+      unsubscribe: () => {
+        unsub();
+      }
+    }
+  }
+}
+
+function getIdsFromSelection(selection: Selection): string[] {
+  if(selection instanceof EchoObject) {
+    return [selection[unproxy]._id];
+  } else if(typeof selection === 'function') {
+    return [];
+  } else {
+    return selection.flatMap(getIdsFromSelection);
   }
 }
