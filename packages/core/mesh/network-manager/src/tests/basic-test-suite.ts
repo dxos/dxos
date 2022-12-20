@@ -85,7 +85,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     expect(topics).to.have.length(numSwarms);
   });
 
-  test('joins multiple swarms concurrently', async () => {
+  test.only('joins multiple swarms concurrently', async () => {
     const createSwarm = async () => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
@@ -99,6 +99,38 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     const test1 = await createSwarm();
     const test2 = await createSwarm();
+
+    await Promise.all([
+      test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
+      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId)
+    ]);
+  });
+
+  test.skip('test connection after going offline and back online', async () => {
+    const createSwarm = async () => {
+      const topicA = PublicKey.random();
+      const peer1a = testBuilder.createPeer();
+      const peer2a = testBuilder.createPeer();
+
+      const swarm1a = await peer1a.createSwarm(topicA).join();
+      const swarm2a = await peer2a.createSwarm(topicA).join();
+
+      return { swarm1a, swarm2a, peer1a, peer2a };
+    };
+
+    const test1 = await createSwarm();
+    const test2 = await createSwarm();
+
+    await Promise.all([
+      test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
+      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId)
+    ]);
+
+    //
+    // Go offline and back online
+    //
+    await test1.peer1a.goOffline();
+    await test1.peer1a.goOnline();
 
     await Promise.all([
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
