@@ -82,7 +82,7 @@ export class WebsocketSignalManager implements SignalManager {
     }
 
     await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
-    this._topicsJoinedPerSignal.clear();
+    [...this._topicsJoinedPerSignal.values()].map((value) => value.clear());
   }
 
   getStatus(): SignalStatus[] {
