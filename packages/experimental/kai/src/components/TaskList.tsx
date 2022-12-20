@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import { Plus } from 'phosphor-react';
+import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { db, EchoDatabase, id } from '@dxos/echo-db2';
@@ -15,7 +15,8 @@ import { Card } from './Card';
 
 export const createTask = async (db: EchoDatabase) => {
   const contacts = db.query(Contact.filter()).getObjects();
-  const contact = contacts[Math.floor(Math.random() * contacts.length)];
+  const contact =
+    faker.datatype.boolean() && contacts.length ? contacts[Math.floor(Math.random() * contacts.length)] : undefined;
 
   return await db.save(
     new Task({
@@ -34,17 +35,13 @@ export const TaskList: FC<{}> = () => {
   };
 
   const Menubar = () => (
-    <div className='flex p-2 bg-green-400'>
-      <h2>Tasks</h2>
-      <div className='flex-1' />
-      <button className='mr-2' onClick={handleCreate}>
-        <Plus className={getSize(5)} />
-      </button>
-    </div>
+    <button className='mr-2' onClick={handleCreate}>
+      <PlusCircle className={getSize(6)} />
+    </button>
   );
 
   return (
-    <Card menubar={<Menubar />}>
+    <Card title='Tasks' color='bg-teal-400' menubar={<Menubar />}>
       <>
         {tasks.map((task) => (
           <TaskItem key={id(task)} task={task} />
@@ -58,7 +55,7 @@ export const TaskItem: FC<{ task: Task }> = ({ task }) => {
   useSelection(db(task), [task, task.assignee]);
 
   return (
-    <div className='flex flex-col bg-white'>
+    <div className='flex flex-col m-1 bg-white'>
       <div className='flex'>
         <input
           type='checkbox'

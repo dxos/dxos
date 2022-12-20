@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import { Plus, User } from 'phosphor-react';
+import { PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { db, id } from '@dxos/echo-db2';
@@ -21,29 +21,27 @@ export const ContactList: FC<{}> = () => {
     await db.save(
       new Contact({
         name: faker.name.findName(),
-        email: faker.internet.email(),
-        username: '@' + faker.internet.userName(),
-        address: {
-          city: faker.address.city(),
-          state: faker.address.stateAbbr(),
-          zip: faker.address.zipCode()
-        }
+        email: faker.datatype.boolean() ? faker.internet.email() : undefined,
+        username: faker.datatype.boolean() ? '@' + faker.internet.userName() : undefined,
+        address: faker.datatype.boolean()
+          ? {
+              city: faker.address.city(),
+              state: faker.address.stateAbbr(),
+              zip: faker.address.zipCode()
+            }
+          : undefined
       })
     );
   };
 
   const Menubar = () => (
-    <div className='flex p-2 bg-orange-400'>
-      <h2>Contacts</h2>
-      <div className='flex-1' />
-      <button className='mr-2' onClick={handleCreate}>
-        <Plus className={getSize(5)} />
-      </button>
-    </div>
+    <button className='mr-2' onClick={handleCreate}>
+      <PlusCircle className={getSize(6)} />
+    </button>
   );
 
   return (
-    <Card menubar={<Menubar />}>
+    <Card title='Contacts' color='bg-blue-400' menubar={<Menubar />}>
       <>
         {contacts.map((contact) => (
           <Person key={id(contact)} person={contact} />
@@ -59,14 +57,14 @@ export const Person: FC<{ person: Contact }> = ({ person }) => {
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
-    <div className='flex flex-col p-2 bg-white'>
+    <div className='flex flex-col m-3 bg-white'>
       <div className='flex items-center'>
         <User className='mr-3' />
         <input className='w-full outline-0' value={person.name} onChange={(e) => (person.name = e.target.value)} />
       </div>
-      <div className='flex ml-7 text-sm text-blue-800'>{person.username}</div>
-      <div className='flex ml-7 text-sm text-blue-800'>{person.email}</div>
-      <div className='flex ml-7 text-sm text-blue-800'>{address(person.address)}</div>
+      {person.username && <div className='flex ml-7 text-sm text-green-800'>{person.username}</div>}
+      {person.email && <div className='flex ml-7 text-sm text-green-800'>{person.email}</div>}
+      {person.address && <div className='flex ml-7 text-sm text-gray-800'>{address(person.address)}</div>}
     </div>
   );
 };

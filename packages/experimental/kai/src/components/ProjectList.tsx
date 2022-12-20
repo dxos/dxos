@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import { Plus } from 'phosphor-react';
+import { Plus, PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { db, id } from '@dxos/echo-db2';
@@ -27,17 +27,13 @@ export const ProjectList: FC<{}> = () => {
   };
 
   const Menubar = () => (
-    <div className='flex p-2 bg-sky-400'>
-      <h2>Projects</h2>
-      <div className='flex-1' />
-      <button className='mr-2' onClick={handleCreate}>
-        <Plus className={getSize(5)} />
-      </button>
-    </div>
+    <button className='mr-2' onClick={handleCreate}>
+      <PlusCircle className={getSize(6)} />
+    </button>
   );
 
   return (
-    <Card menubar={<Menubar />}>
+    <Card title='Projects' menubar={<Menubar />}>
       <>
         {projects.map((project) => (
           <ProjectItem key={id(project)} project={project} />
@@ -62,8 +58,8 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
           value={project.title}
           onChange={(e) => (project.title = e.target.value)}
         />
-        <button className='mr-2' onClick={handleCreate}>
-          <Plus className={getSize(5)} />
+        <button className='mr-2 text-gray-500' onClick={handleCreate}>
+          <Plus className={getSize(6)} />
         </button>
       </div>
 

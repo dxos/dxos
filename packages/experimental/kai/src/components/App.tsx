@@ -43,14 +43,14 @@ export const App = () => {
     <ClientProvider client={client}>
       <DatabaseContext.Provider value={{ database }}>
         <div className='full-screen'>
-          <div className='flex flex-1 p-3'>
-            <div className='flex flex-1 m-2'>
+          <div className='flex flex-1 p-4'>
+            <div className='flex flex-1 m-4'>
               <ProjectList />
             </div>
-            <div className='flex flex-1 m-2'>
+            <div className='flex flex-1 m-4'>
               <TaskList />
             </div>
-            <div className='flex flex-1 m-2'>
+            <div className='flex flex-1 m-4'>
               <ContactList />
             </div>
           </div>
