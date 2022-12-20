@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
@@ -53,6 +54,11 @@ export type SwarmOptions = {
   label?: string;
 };
 
+export enum ConnectionStatus {
+  OFFLINE = 0,
+  ONLINE = 1
+}
+
 export type NetworkManagerOptions = {
   transportFactory: TransportFactory;
   signalManager: SignalManager;
@@ -71,6 +77,7 @@ export class NetworkManager {
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
+  private _connectionStatus = ConnectionStatus.ONLINE;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -101,6 +108,10 @@ export class NetworkManager {
   // TODO(burdon): Remove access (Devtools only).
   get signalManager() {
     return this._signalManager;
+  }
+
+  get connectionStatus() {
+    return this._connectionStatus;
   }
 
   // TODO(burdon): Reconcile with "discovery_key".
@@ -188,5 +199,9 @@ export class NetworkManager {
 
     await this.topicsUpdated.emit();
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
+  }
+
+  async setConnectionStatus(status: ConnectionStatus) {
+    todo();
   }
 }
