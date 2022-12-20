@@ -3,7 +3,6 @@
 //
 
 import { expect, mockFn } from 'earljs';
-import waitForExpect from 'wait-for-expect';
 
 import { asyncTimeout, latch } from '@dxos/async';
 import { TaggedType } from '@dxos/codec-protobuf';
@@ -11,8 +10,6 @@ import { TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
-import { Messenger } from './messenger';
-import { WebsocketSignalManager } from './signal-manager';
 import { Message } from './signal-methods';
 import { TestBuilder } from './testing';
 
