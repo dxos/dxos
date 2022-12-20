@@ -3,6 +3,7 @@ import { ObjectModel } from "@dxos/object-model";
 import assert from "node:assert";
 import { unproxy } from "./common";
 import { EchoObject } from "./object";
+import { traverse } from "./traverse";
 
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
@@ -38,5 +39,24 @@ export class EchoDatabase {
 
   getById(id: string) {
     return this._objects.get(id);
+  }
+
+  subscribe(traverseCb: (touch: (obj: EchoObject) => any) => void, callback: () => void): () => void {
+    const touched = new Set<string>();
+    const retouch = () => {
+      touched.clear();
+      console.log('retouch');
+      traverse(traverseCb, (obj) => {
+        console.log('touched', obj[unproxy]._id);
+        touched.add(obj[unproxy]._id);
+      });
+    }
+    retouch();
+    return this._echo.update.on((changedEntities) => {
+      if(changedEntities.some((entity) => touched.has(entity.id))) {
+        retouch();
+        callback();
+      }
+    })
   }
 }

@@ -7,6 +7,7 @@ import { createInMemoryDatabase } from '@dxos/echo-db/testing'
 import { EchoDatabase } from "./database";
 import { sleep } from "@dxos/async";
 import { OrderedArray } from "./ordered-array";
+import waitForExpect from 'wait-for-expect'
 
 const createTestDb = async () => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
@@ -104,5 +105,39 @@ describe("EchoDatabase", () => {
     task.subtasks[0] = new EchoObject({ title: 'New subtask 1' });
     expect(task.subtasks.map((subtask: EchoObject) => subtask.title))
       .toEqual(['New subtask 1', 'Subtask 2', 'Subtask 3']);
+  })
+
+  test('subscribe', async () => {
+    const warpDb = await createTestDb();
+
+    const task = new EchoObject({
+      project: new EchoObject({ name: 'DXOS' }),
+    });
+    await warpDb.save(task);
+
+    let counter = 0;
+    const expectCount = (count: number) => waitForExpect(() => {
+      expect(counter).toEqual(count);
+    });
+
+    const unsub = warpDb.subscribe(
+      touch => touch(task).assignee,
+      () => counter++
+    );
+
+    task.title = 'Test title';
+    await expectCount(1);
+
+    task.assignee = new EchoObject({ name: 'John' });
+    await expectCount(2);
+
+    task.assignee.name = 'Jake';
+    await expectCount(3);
+
+    task.project.name = 'Braneframe'
+    await sleep(10);
+    await expectCount(3);
+
+    unsub();
   })
 })
