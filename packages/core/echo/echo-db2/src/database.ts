@@ -13,9 +13,16 @@ import { traverse } from './traverse';
 
 export type SelectionFn = never; // TODO(dmaretskyi): ?
 export type Selection = EchoObject | SelectionFn | Selection[];
+export type Predicate = { [key: string]: any };
+export type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
+export type Selector = Predicate;
 
+/**
+ *
+ */
 interface SelectionHandle {
   update: (selection: Selection) => void;
+  subscribed: boolean;
   unsubscribe: () => void;
 }
 
@@ -60,9 +67,7 @@ export class EchoDatabase {
 
     const item = (await this._echo.createItem({ id: obj[unproxy]._id })) as Item<ObjectModel>;
     assert(item.id === obj[unproxy]._id);
-    if (!obj[unproxy]._isBound) {
-      obj[unproxy]._bind(item, this);
-    }
+    obj[unproxy]._bind(item, this);
 
     return obj;
   }
@@ -90,26 +95,36 @@ export class EchoDatabase {
     });
   }
 
-  selection(onUpdate: () => void): SelectionHandle {
-    let selectedIds = new Set<string>();
+  /**
+   *
+   */
+  query(selection: Selector): Selector {
+    return {};
+  }
 
+  /**
+   *
+   */
+  createSubscription(onUpdate: () => void): SelectionHandle {
+    let selectedIds = new Set<string>();
+    let subscribed = true;
     const unsubscribe = this._echo.update.on((changedEntities) => {
-      // TODO(burdon): Remove prettier for infra code.
-      // prettier-ignore
-      console.log('updated', changedEntities.map((entity) => entity.id));
+      subscribed = false;
       if (changedEntities.some((entity) => selectedIds.has(entity.id))) {
         onUpdate();
       }
     });
 
-    return {
+    const handle = {
       update: (selection: Selection) => {
         selectedIds = new Set(getIdsFromSelection(selection));
+        return handle;
       },
-      unsubscribe: () => {
-        unsubscribe();
-      }
+      subscribed,
+      unsubscribe
     };
+
+    return handle;
   }
 }
 

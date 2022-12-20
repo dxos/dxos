@@ -4,16 +4,21 @@
 
 import React, { FC, useMemo } from 'react';
 
-import { PublicKey } from '@dxos/client';
+import { PublicKey, Space } from '@dxos/client';
 import { EchoDatabase, EchoObject } from '@dxos/echo-db2';
 import { useSpace } from '@dxos/react-client';
 
-import { id, flush, useObjects } from '../hooks';
+import { id, save, useObjects } from '../hooks';
+
+const useDatabase = (space?: Space): EchoDatabase | undefined => {
+  // TODO(burdon): Use state.
+  return useMemo(() => space && new EchoDatabase(space.database), [space]);
+};
 
 export const TaskList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
   const space = useSpace(spaceKey);
-  const db = useMemo(() => space && new EchoDatabase(space.database), [space]);
-  const tasks = useObjects(db?.select({ type: 'task' }));
+  const db = useDatabase(space);
+  const tasks = useObjects(db?.query({ type: 'task' }));
   if (!space) {
     return null;
   }
@@ -23,7 +28,7 @@ export const TaskList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
   const handleCreate = async () => {
     const obj = new EchoObject();
     obj.title = `Title-${Math.random()}`;
-    await flush(obj);
+    await save(obj);
   };
 
   return (

@@ -2,23 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { EchoDatabase, EchoObject } from '@dxos/echo-db2';
+import { unproxy, EchoObject, Selector } from '@dxos/echo-db2';
 
-export const db = (object: EchoObject) => object._database;
-export const id = (object: EchoObject) => object._id;
-export const flush = (object: EchoObject) => db(object)!.save(object);
-
-export type Predicate = { [key: string]: any };
-export type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
-export type Selector = Predicate;
-export type Selection = {};
+export const id = (object: EchoObject) => object[unproxy]._id;
+export const db = (object: EchoObject) => object[unproxy]._database;
+export const save = (object: EchoObject) => db(object)!.save(object);
 
 /**
  * Query for objects.
  */
-export const useObjects = (selector: Selector): EchoObject[] => {
+export const useObjects = (selector?: Selector): EchoObject[] => {
   const [objects, setObjects] = useState<EchoObject[]>([]);
 
   return objects;
@@ -27,4 +22,28 @@ export const useObjects = (selector: Selector): EchoObject[] => {
 /**
  * Create reactive selection.
  */
-export const useSelection = (): Selection => ({});
+// TODO(burdon): Consider useSyncExternalStore.
+export const useSelection = (db: EchoObject, selection: Selection): Selection => {
+  const [, forceUpdate] = useState({});
+  const [handle, setHandle] = useState(() =>
+    db.createSubscription(() => {
+      forceUpdate({});
+    })
+  );
+
+  useEffect(() => {
+    if (!handle) {
+      setHandle(
+        db.createSubscription(() => {
+          forceUpdate({});
+        })
+      );
+      handle.update(selection);
+    }
+
+    return () => handle.unsubscribe();
+  }, []);
+
+  handle.update(selection);
+  return handle;
+};
