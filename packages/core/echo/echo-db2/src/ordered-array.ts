@@ -5,7 +5,7 @@
 import { OrderedList } from '@dxos/object-model';
 
 import { unproxy } from './common';
-import { EchoObject } from './object';
+import { EchoObject, EchoObjectBase } from './object';
 
 // TODO(burdon): Remove.
 const EMPTY = 'empty item last to make the list work';
@@ -13,14 +13,14 @@ const EMPTY = 'empty item last to make the list work';
 /**
  *
  */
-export class OrderedArray<T extends EchoObject> implements Array<T> {
+export class OrderedSet<T extends EchoObjectBase> implements Array<T> {
   private readonly _uninitialized?: T[] = [];
 
   private _object?: EchoObject;
   private _property?: string;
   private _orderedList?: OrderedList;
 
-  [unproxy]: OrderedArray<T> = this;
+  [unproxy]: OrderedSet<T> = this;
 
   static get [Symbol.species]() {
     return Array;

@@ -11,6 +11,7 @@ import { ClientProvider } from '@dxos/react-client';
 
 import { ContactList } from './ContactList';
 import { TaskList } from './TaskList';
+import { ProjectList } from './ProjectList';
 
 export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
@@ -43,7 +44,7 @@ export const App = () => {
       <DatabaseContext.Provider value={{ database }}>
         <div className='flex p-3'>
           <div className='flex-1'>
-            <TaskList />
+            <ProjectList />
           </div>
           <div className='flex-1'>
             <TaskList />

@@ -7,6 +7,9 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "scripts": {
+    "codegen": "echo-schema-gen src/proto/tasks.proto src/proto/tasks.ts"
+  },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",

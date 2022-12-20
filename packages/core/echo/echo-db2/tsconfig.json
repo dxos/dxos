@@ -2,6 +2,7 @@
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/types",
+    "stripInternal": true,
     "types": [
       "@dxos/test",
       "@dxos/typings"

@@ -13,7 +13,7 @@ import { describe, test } from '@dxos/test';
 
 import { EchoDatabase } from './database';
 import { EchoObject } from './object';
-import { OrderedArray } from './ordered-array';
+import { OrderedSet } from './ordered-array';
 
 const createDatabase = async () => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
@@ -89,7 +89,7 @@ describe('EchoDatabase', () => {
     const task = new EchoObject({ title: 'Main task' });
     await db.save(task);
 
-    task.subtasks = new OrderedArray();
+    task.subtasks = new OrderedSet();
     task.subtasks.push(new EchoObject({ title: 'Subtask 1' }));
     task.subtasks.push(new EchoObject({ title: 'Subtask 2' }));
     task.subtasks.push(new EchoObject({ title: 'Subtask 3' }));

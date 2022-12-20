@@ -7,7 +7,7 @@
  */
 export const validateKey = (key: string) => {
   const parts = key.split('.');
-  const valid = parts.every((part: string) => part.match(/^[$\w]+$/));
+  const valid = parts.every((part: string) => part.match(/^[$@\w]+$/));
   if (!valid) {
     throw new Error(`Invalid key: ${key}`);
   }

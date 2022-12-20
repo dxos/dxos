@@ -4,10 +4,9 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
-import { unproxy, EchoObject, EchoDatabase, Filter, Selection, SelectionHandle } from '@dxos/echo-db2';
+import { unproxy, EchoObject, EchoDatabase, Filter, Selection, SelectionHandle, TypeFilter } from '@dxos/echo-db2';
 
 // TODO(burdon): Move to echo-db2.
-export const id = (object: EchoObject) => object[unproxy]._id;
 
 export const DatabaseContext = createContext<{ database?: EchoDatabase }>({});
 
@@ -16,10 +15,15 @@ export const useDatabase = (): EchoDatabase => {
   return database!;
 };
 
+type UseObjects = {
+  <T extends EchoObject> (db: EchoDatabase, filter?: TypeFilter<T>): T[]
+  (db: EchoDatabase, filter?: Filter): EchoObject[]
+}
+
 /**
  * Query for objects.
  */
-export const useObjects = (db: EchoDatabase, filter?: Filter): EchoObject[] => {
+export const useObjects: UseObjects = (db: EchoDatabase, filter?: Filter): EchoObject[] => {
   const query = useMemo(() => db.query(filter ?? {}), [...Object.entries(filter ?? {}).flat()]);
 
   return useSyncExternalStore(

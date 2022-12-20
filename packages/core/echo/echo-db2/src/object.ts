@@ -8,28 +8,60 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { unproxy } from './common';
 import { EchoDatabase } from './database';
-import { OrderedArray } from './ordered-array';
+import { OrderedSet } from './ordered-array';
+import { EchoSchemaType } from './schema';
 
 const isValidKey = (key: string | symbol) =>
-  !(typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof');
+  !(typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof' || key === 'toString');
+
+export const id = (object: EchoObjectBase) => object[unproxy]._id;
 
 /**
  *
  */
 // TODO(burdon): Support immutable objects.
-export class EchoObject {
+export class EchoObjectBase {
+  /**
+   * @internal
+   */
   public _id!: string; // TODO(burdon): Symbol?
+  /**
+   * @internal
+   */
   public _item?: Item<ObjectModel>;
+
+  /**
+   * @internal
+   */
   public _database?: EchoDatabase;
+
+  /**
+   * @internal
+   */
   public _isBound = false;
 
   private _uninitialized?: Record<keyof any, any> = {};
 
   [unproxy]: EchoObject = this;
 
-  constructor(initialProps?: Record<keyof any, any>) {
+  get [Symbol.toStringTag]() {
+    return this[unproxy]?._schemaType?.name ?? 'EchoObject'
+  }
+
+  constructor(
+    initialProps?: Record<keyof any, any>,
+    private readonly _schemaType?: EchoSchemaType
+  ) {
     this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
+
+    if (this._schemaType) {
+      for (const field of this._schemaType.fields) {
+        if (field.isOrderedSet && !this._uninitialized![field.name]) {
+          this._uninitialized![field.name] = new OrderedSet();
+        }
+      }
+    }
 
     return new Proxy(this, {
       get: (target, property, receiver) => {
@@ -37,12 +69,7 @@ export class EchoObject {
           return Reflect.get(target, property, receiver);
         }
 
-        switch (property) {
-          case 'id': // TODO(burdon): Remove.
-            return this._id;
-          default:
-            return this._get(property as string);
-        }
+        return this._get(property as string);
       },
 
       set: (target, property, value, receiver) => {
@@ -50,22 +77,11 @@ export class EchoObject {
           return Reflect.set(target, property, value, receiver);
         }
 
-        switch (property) {
-          case 'id': // TODO(burdon): Remove.
-            throw new Error('Cannot set id');
-          default: {
-            this._set(property as string, value);
-            return true;
-          }
-        }
+        this._set(property as string, value);
+        return true;
       }
     });
   }
-
-  /**
-   * Supports access arbitrary properties via dot notation.
-   */
-  [key: string]: any;
 
   private _get(key: string) {
     if (!this._item) {
@@ -93,18 +109,18 @@ export class EchoObject {
       case 'object':
         return this._createSubObject(prop);
       case 'array':
-        return new OrderedArray()._bind(this[unproxy], prop);
+        return new OrderedSet()._bind(this[unproxy], prop);
       default:
         return value;
     }
   }
 
   private _setModelProp(prop: string, value: any): any {
-    if (value instanceof EchoObject) {
+    if (value instanceof EchoObjectBase) {
       void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
       void this._item!.model.set(prop, value[unproxy]._id);
       void this._database!.save(value);
-    } else if (value instanceof OrderedArray) {
+    } else if (value instanceof OrderedSet) {
       void this._item!.model.set(`${prop}$type`, 'array');
       value._bind(this[unproxy], prop);
     } else if (typeof value === 'object' && value !== null) {
@@ -156,4 +172,9 @@ export class EchoObject {
 
     this._uninitialized = undefined;
   }
+}
+
+export class EchoObject extends EchoObjectBase {
+  // Allow to access arbitrary properties via dot notation.
+  [key: string]: any;
 }

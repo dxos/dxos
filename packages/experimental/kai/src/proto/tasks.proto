@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package kai.example.tasks;
+
+message Project {
+  option (object) = true;
+
+  string title = 1;
+  repeated Task tasks = 3;
+}
+
+message Task {
+  option (object) = true;
+
+  string id = 1;
+  string title = 2;
+  int32 count = 3;
+  bool completed = 4;
+  Contact assignee = 5;
+}
+
+message Person {
+  option (object) = true;
+
+  string id = 1;
+  string name = 2;
+}
+
+message Contact {
+  option (object) = true;
+  
+  string name = 1;
+  string id = 2;
+  string email = 3;
+}

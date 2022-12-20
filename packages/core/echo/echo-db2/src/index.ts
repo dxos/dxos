@@ -5,3 +5,5 @@
 export * from './common';
 export * from './database';
 export * from './object';
+export * from './schema';
+export * from './ordered-array';

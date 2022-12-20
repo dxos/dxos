@@ -5,18 +5,18 @@
 import faker from 'faker';
 import React, { FC } from 'react';
 
-import { EchoDatabase, EchoObject } from '@dxos/echo-db2';
+import { EchoDatabase, id } from '@dxos/echo-db2';
 
-import { id, useDatabase, useObjects, useSelection } from '../hooks';
+import { useDatabase, useObjects, useSelection } from '../hooks';
+import { Contact } from '../proto/tasks';
 
 export const ContactList: FC<{}> = () => {
   const db = useDatabase();
-  const contacts = useObjects(db, { type: 'person' });
+  const contacts = useObjects(db, Contact.filter());
 
   const handleCreate = async () => {
     await db.save(
-      new EchoObject({
-        type: 'person',
+      new Contact({
         name: faker.name.findName()
       })
     );
@@ -33,7 +33,7 @@ export const ContactList: FC<{}> = () => {
       </div>
 
       <div>
-        {contacts?.map((contact: EchoObject) => (
+        {contacts.map((contact) => (
           <Person key={id(contact)} person={contact} db={db} />
         ))}
       </div>
@@ -41,7 +41,7 @@ export const ContactList: FC<{}> = () => {
   );
 };
 
-export const Person: FC<{ person: EchoObject; db: EchoDatabase }> = ({ person, db }) => {
+export const Person: FC<{ person: Contact; db: EchoDatabase }> = ({ person, db }) => {
   useSelection(db, person);
 
   return (
