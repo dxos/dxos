@@ -106,6 +106,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   });
 
+  // TODO(mykola): Remove .skip
   test.skip('test connection after going offline and back online', async () => {
     const createSwarm = async () => {
       const topicA = PublicKey.random();
