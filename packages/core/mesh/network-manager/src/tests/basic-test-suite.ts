@@ -25,9 +25,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
   test('joins swarm, sends messages, and cleanly exits', async () => {
     const peer1 = testBuilder.createPeer();
-    afterTest(() => peer1.close());
     const peer2 = testBuilder.createPeer();
-    afterTest(() => peer2.close());
     await openAndCloseAfterTest([peer1, peer2]);
 
     const topic = PublicKey.random();
@@ -53,9 +51,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   // TODO(burdon): Fails when trying to reconnect to same topic.
   test('joins swarm multiple times', async () => {
     const peer1 = testBuilder.createPeer();
-    afterTest(() => peer1.close());
     const peer2 = testBuilder.createPeer();
-    afterTest(() => peer2.close());
     await openAndCloseAfterTest([peer1, peer2]);
 
     const topic1 = PublicKey.random();
@@ -83,9 +79,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     // TODO(burdon): N peers.
     // TODO(burdon): Merge with test below.
     const peer1 = testBuilder.createPeer();
-    afterTest(() => peer1.close());
     const peer2 = testBuilder.createPeer();
-    afterTest(() => peer2.close());
     await openAndCloseAfterTest([peer1, peer2]);
 
     const numSwarms = 5;
@@ -93,14 +87,12 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     expect(topics).to.have.length(numSwarms);
   });
 
-  // TODO(mykola): broken.
   test.skip('joins multiple swarms concurrently', async () => {
     const createSwarm = async () => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
-      afterTest(() => peer1a.close());
       const peer2a = testBuilder.createPeer();
-      afterTest(() => peer2a.close());
+      await openAndCloseAfterTest([peer1a, peer2a]);
 
       const swarm1a = await peer1a.createSwarm(topicA).join();
       const swarm2a = await peer2a.createSwarm(topicA).join();
@@ -118,36 +110,30 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   });
 
   // TODO(mykola): Remove .skip
-  test.skip('test connection after going offline and back online', async () => {
-    const createSwarm = async () => {
-      const topicA = PublicKey.random();
-      const peer1a = testBuilder.createPeer();
-      const peer2a = testBuilder.createPeer();
+  test.only('going offline and back online', async () => {
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
+    await openAndCloseAfterTest([peer1, peer2]);
 
-      const swarm1a = await peer1a.createSwarm(topicA).join();
-      const swarm2a = await peer2a.createSwarm(topicA).join();
+    const topic1 = PublicKey.random();
 
-      return { swarm1a, swarm2a, peer1a, peer2a };
-    };
-
-    const test1 = await createSwarm();
-    const test2 = await createSwarm();
-
-    await Promise.all([
-      test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
-      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId)
-    ]);
+    {
+      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
+      await exchangeMessages(swarm1, swarm2);
+    }
 
     //
-    // Go offline and back online
+    // Going offline and back online
     //
-    await test1.peer1a.goOffline();
-    await test1.peer1a.goOnline();
 
-    await Promise.all([
-      test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
-      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId)
-    ]);
+    await peer1.goOffline();
+    await peer1.goOnline();
+
+    {
+      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
+      await exchangeMessages(swarm1, swarm2);
+      await leaveSwarm([peer1, peer2], topic1);
+    }
   });
 
   // TODO(mykola): broken.
@@ -162,6 +148,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
         await Promise.all(
           range(peersPerTopic).map(async () => {
             const peer = testBuilder.createPeer();
+            await openAndCloseAfterTest([peer]);
             const swarm = await peer.createSwarm(topic).join();
             await swarm.protocol.connected.waitForCondition(
               () => swarm.protocol.connections.size === peersPerTopic - 1
