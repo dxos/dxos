@@ -61,22 +61,78 @@ export class WebsocketSignalManager implements SignalManager {
     }
   }
 
+  async open() {
+    if (!this._closed) {
+      return;
+    }
+
+    await Promise.all(Array.from(this._servers.values()).map((server) => server.open()));
+    this._closed = false;
+    this._scheduleReconcile();
+  }
+
+  async close() {
+    if (this._closed) {
+      return;
+    }
+    this._closed = true;
+
+    if (this._reconcileTimeoutId) {
+      clearTimeout(this._reconcileTimeoutId);
+    }
+
+    await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
+    this._topicsJoinedPerSignal.clear();
+  }
+
   getStatus(): SignalStatus[] {
     return Array.from(this._servers.values()).map((server) => server.getStatus());
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
     log(`Join ${topic} ${peerId}`);
+    assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
+    assert(!this._closed, 'Closed');
+
     this._topicsJoined.set(topic, peerId);
     this._scheduleReconcile();
   }
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
     log('leaving', { topic, peerId });
+    assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
+    assert(!this._closed, 'Closed');
+
     this._topicsJoined.delete(topic);
     this._scheduleReconcile();
+  }
+
+  async sendMessage({
+    author,
+    recipient,
+    payload
+  }: {
+    author: PublicKey;
+    recipient: PublicKey;
+    payload: Any;
+  }): Promise<void> {
+    log(`Signal ${recipient}`);
+    assert(!this._closed, 'Closed');
+
+    await Promise.all(
+      [...this._servers.values()].map((server: SignalClient) =>
+        server.sendMessage({ author, recipient, payload }).catch((err) => log(err))
+      )
+    );
+  }
+
+  async subscribeMessages(peerId: PublicKey): Promise<void> {
+    log(`Subscribed for message stream peerId=${peerId}`);
+    assert(!this._closed, 'Closed');
+
+    await Promise.all(
+      [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
+    );
   }
 
   private _scheduleReconcile() {
@@ -157,50 +213,5 @@ export class WebsocketSignalManager implements SignalManager {
     }
     log('Done reconciling..');
     this._reconciling = false;
-  }
-
-  async sendMessage({
-    author,
-    recipient,
-    payload
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }): Promise<void> {
-    log(`Signal ${recipient}`);
-    await Promise.all(
-      [...this._servers.values()].map((server: SignalClient) =>
-        server.sendMessage({ author, recipient, payload }).catch((err) => log(err))
-      )
-    );
-  }
-
-  async subscribeMessages(peerId: PublicKey): Promise<void> {
-    log(`Subscribed for message stream peerId=${peerId}`);
-    await Promise.all(
-      [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
-    );
-  }
-
-  async open() {
-    if (!this._closed) {
-      return;
-    }
-    await Promise.all(Array.from(this._servers.values()).map((server) => server.open()));
-    this._closed = false;
-    this._scheduleReconcile();
-  }
-
-  async close() {
-    if (this._closed) {
-      return;
-    }
-    this._closed = true;
-    if (this._reconcileTimeoutId) {
-      clearTimeout(this._reconcileTimeoutId);
-    }
-    await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
-    this._topicsJoinedPerSignal.clear();
   }
 }

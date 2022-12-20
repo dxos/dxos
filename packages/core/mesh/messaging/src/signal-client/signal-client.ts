@@ -105,12 +105,20 @@ export class SignalClient implements SignalMethods {
   }
 
   open() {
+    if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
+      return;
+    }
+
     this._setState(SignalState.CONNECTING);
     this._createClient();
   }
 
   async close() {
     log('closing...');
+    if ([SignalState.CLOSED].includes(this._state)) {
+      return;
+    }
+
     this._subscriptions.clear();
 
     if (this._reconnectIntervalId !== undefined) {
@@ -135,6 +143,7 @@ export class SignalClient implements SignalMethods {
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     log('joining', { topic, peerId });
+    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     await this.subscribeMessages(peerId);
     await this._subscribeSwarmEvents(topic, peerId);
@@ -142,6 +151,7 @@ export class SignalClient implements SignalMethods {
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     log('leaving', { topic, peerId });
+    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     this._swarmStreams.get(topic)?.close();
     this._swarmStreams.delete(topic);
@@ -151,10 +161,13 @@ export class SignalClient implements SignalMethods {
   }
 
   async sendMessage(msg: Message): Promise<void> {
+    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
     await this._client.sendMessage(msg);
   }
 
   async subscribeMessages(peerId: PublicKey): Promise<void> {
+    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+
     // Do nothing if already subscribed.
     if (this._messageStreams.has(peerId)) {
       return;
