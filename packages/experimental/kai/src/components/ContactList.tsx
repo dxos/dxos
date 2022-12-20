@@ -5,7 +5,7 @@
 import faker from 'faker';
 import React, { FC } from 'react';
 
-import { EchoDatabase, id } from '@dxos/echo-db2';
+import { db, id } from '@dxos/echo-db2';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';
 import { Contact } from '../proto/tasks';
@@ -27,22 +27,22 @@ export const ContactList: FC<{}> = () => {
       <div className='flex'>
         <h2 className='p-2'>Contacts</h2>
         <div className='flex-1' />
-        <button className='mr-2' onClick={handleCreate}>
-          Create
+        <button className='mr-2 rounded-full' onClick={handleCreate}>
+          Create Contact
         </button>
       </div>
 
       <div>
         {contacts.map((contact) => (
-          <Person key={id(contact)} person={contact} db={db} />
+          <Person key={id(contact)} person={contact} />
         ))}
       </div>
     </div>
   );
 };
 
-export const Person: FC<{ person: Contact; db: EchoDatabase }> = ({ person, db }) => {
-  useSelection(db, person);
+export const Person: FC<{ person: Contact }> = ({ person }) => {
+  useSelection(db(person), person);
 
   return (
     <div>

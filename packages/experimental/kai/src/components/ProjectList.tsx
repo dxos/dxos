@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import faker from 'faker';
 import React, { FC } from 'react';
 
-import { EchoDatabase, id } from '@dxos/echo-db2';
+import { db, id } from '@dxos/echo-db2';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';
-import { Contact, Project, Task } from '../proto/tasks';
-import { TaskItem } from './TaskList';
+import { Project } from '../proto/tasks';
+import { createTask, TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
   const db = useDatabase();
@@ -17,7 +18,7 @@ export const ProjectList: FC<{}> = () => {
   const handleCreate = async () => {
     await db.save(
       new Project({
-        title: `Project-${Math.random()}`
+        title: faker.commerce.product()
       })
     );
   };
@@ -28,46 +29,44 @@ export const ProjectList: FC<{}> = () => {
         <h2 className='p-2'>Projects</h2>
         <div className='flex-1' />
         <button className='mr-2 rounded-full' onClick={handleCreate}>
-          Create
+          Create Project
         </button>
       </div>
 
       <div>
         {projects.map((project) => (
-          <ProjectItem key={id(project)} project={project} db={db} />
+          <ProjectItem key={id(project)} project={project} />
         ))}
       </div>
     </div>
   );
 };
 
-export const ProjectItem: FC<{ project: Project; db: EchoDatabase }> = ({ project, db }) => {
-  useSelection(db, project);
+export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
+  useSelection(db(project), project);
 
   const handleCreate = async () => {
-    const contacts = db.query(Contact.filter()).getObjects();
-    const contact = contacts[Math.floor(Math.random() * contacts.length)];
-
-    project.tasks.push(
-      new Task({
-        title: `Title-${Math.random()}`,
-        assignee: contact
-      })
-    );
+    project.tasks.push(await createTask(db(project)));
   };
 
   return (
     <div>
       <div>
-        <h2>
-          <input value={project.title} onChange={(e) => (project.title = e.target.value)} />
-        </h2>
-        <button onClick={handleCreate}>Create task</button>
+        <input
+          className='w-full p-1 outline-0'
+          value={project.title}
+          onChange={(e) => (project.title = e.target.value)}
+        />
+        <div className='p-2'>
+          <button className='mr-2 rounded-full' onClick={handleCreate}>
+            Create Task
+          </button>
+        </div>
       </div>
 
       <div>
         {project.tasks.map((task) => (
-          <TaskItem key={id(task)} task={task} db={db} />
+          <TaskItem key={id(task)} task={task} />
         ))}
       </div>
     </div>

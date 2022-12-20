@@ -12,9 +12,16 @@ import { OrderedSet } from './ordered-array';
 import { EchoSchemaType } from './schema';
 
 const isValidKey = (key: string | symbol) =>
-  !(typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof' || key === 'toString');
+  !(
+    typeof key === 'symbol' ||
+    key.startsWith('@@__') ||
+    key === 'constructor' ||
+    key === '$$typeof' ||
+    key === 'toString'
+  );
 
 export const id = (object: EchoObjectBase) => object[unproxy]._id;
+export const db = (object: EchoObjectBase) => object[unproxy]._database!;
 
 /**
  *
@@ -45,13 +52,10 @@ export class EchoObjectBase {
   [unproxy]: EchoObject = this;
 
   get [Symbol.toStringTag]() {
-    return this[unproxy]?._schemaType?.name ?? 'EchoObject'
+    return this[unproxy]?._schemaType?.name ?? 'EchoObject';
   }
 
-  constructor(
-    initialProps?: Record<keyof any, any>,
-    private readonly _schemaType?: EchoSchemaType
-  ) {
+  constructor(initialProps?: Record<keyof any, any>, private readonly _schemaType?: EchoSchemaType) {
     this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
 

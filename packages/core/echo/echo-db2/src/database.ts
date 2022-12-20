@@ -9,8 +9,8 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { unproxy } from './common';
 import { EchoObject, EchoObjectBase } from './object';
-import { traverse } from './traverse';
 import { TypeFilter } from './schema';
+import { traverse } from './traverse';
 
 export type Filter = Record<string, any>;
 export type Query<T extends EchoObject = EchoObject> = {
@@ -64,7 +64,7 @@ export class EchoDatabase {
    * Flush mutations.
    */
   // TODO(burdon): Batches?
-  async save(obj: EchoObjectBase): Promise<EchoObject> {
+  async save<T extends EchoObjectBase>(obj: T): Promise<T> {
     if (obj[unproxy]._isBound) {
       return obj;
     }
@@ -75,15 +75,14 @@ export class EchoDatabase {
     const item = (await this._echo.createItem({ id: obj[unproxy]._id })) as Item<ObjectModel>;
     assert(item.id === obj[unproxy]._id);
     obj[unproxy]._bind(item, this);
-
     return obj;
   }
 
   /**
    *
    */
-  query<T extends EchoObject>(filter: TypeFilter<T>): Query<T>
-  query(filter: Filter): Query
+  query<T extends EchoObject>(filter: TypeFilter<T>): Query<T>;
+  query(filter: Filter): Query;
   query(filter: Filter): Query {
     // TODO(burdon): Test separately.
     const match = (obj: EchoObject) => Object.entries(filter).every(([key, value]) => obj[key] === value);
