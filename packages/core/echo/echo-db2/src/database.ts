@@ -11,6 +11,12 @@ import { unproxy } from './common';
 import { EchoObject } from './object';
 import { traverse } from './traverse';
 
+export type Filter = Record<string, any>;
+export type Query = {
+  getObjects(): EchoObject[];
+  subscribe(callback: () => void): () => void;
+};
+
 export type SelectionFn = never; // TODO(dmaretskyi): ?
 export type Selection = EchoObject | SelectionFn | Selection[];
 export type Predicate = { [key: string]: any };
@@ -20,7 +26,7 @@ export type Selector = Predicate;
 /**
  *
  */
-interface SelectionHandle {
+export interface SelectionHandle {
   update: (selection: Selection) => void;
   subscribed: boolean;
   unsubscribe: () => void;
@@ -72,6 +78,57 @@ export class EchoDatabase {
     return obj;
   }
 
+  query(filter: Filter): Query {
+    const match = (obj: EchoObject) => Object.entries(filter).every(([key, value]) => obj[key] === value);
+
+    let cache: EchoObject[] | undefined;
+
+    return {
+      getObjects: () => {
+        if (!cache) {
+          cache = Array.from(this.objects.values()).filter((obj) => match(obj));
+        }
+        return cache;
+      },
+      subscribe: (callback: () => void) => {
+        return this._echo.update.on((changedEntities) => {
+          if (changedEntities.some((entity) => this._objects.has(entity.id) && match(this._objects.get(entity.id)!))) {
+            cache = undefined;
+            callback();
+          }
+        });
+      }
+    };
+  }
+
+  /**
+   *
+   */
+  createSubscription(onUpdate: () => void): SelectionHandle {
+    let selectedIds = new Set<string>();
+    let subscribed = true;
+    const unsubscribe = this._echo.update.on((changedEntities) => {
+      subscribed = false;
+      console.log('db update');
+      if (changedEntities.some((entity) => selectedIds.has(entity.id))) {
+        console.log('sub update');
+        onUpdate();
+      }
+    });
+
+    const handle = {
+      update: (selection: Selection) => {
+        selectedIds = new Set(getIdsFromSelection(selection));
+        console.log('subscription update', [...selectedIds]);
+        return handle;
+      },
+      subscribed,
+      unsubscribe
+    };
+
+    return handle;
+  }
+
   /**
    * @deprecated
    */
@@ -93,38 +150,6 @@ export class EchoDatabase {
         callback();
       }
     });
-  }
-
-  /**
-   *
-   */
-  query(selection: Selector): Selector {
-    return {};
-  }
-
-  /**
-   *
-   */
-  createSubscription(onUpdate: () => void): SelectionHandle {
-    let selectedIds = new Set<string>();
-    let subscribed = true;
-    const unsubscribe = this._echo.update.on((changedEntities) => {
-      subscribed = false;
-      if (changedEntities.some((entity) => selectedIds.has(entity.id))) {
-        onUpdate();
-      }
-    });
-
-    const handle = {
-      update: (selection: Selection) => {
-        selectedIds = new Set(getIdsFromSelection(selection));
-        return handle;
-      },
-      subscribed,
-      unsubscribe
-    };
-
-    return handle;
   }
 }
 

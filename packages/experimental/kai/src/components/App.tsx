@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { fromHost, Client, PublicKey } from '@dxos/client';
+import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider } from '@dxos/react-client';
 
 import { TaskList } from './TaskList';
@@ -12,6 +13,7 @@ import { TaskList } from './TaskList';
 export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
   const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(undefined);
+  const [database, setDatabase] = useState<EchoDatabase | undefined>(undefined);
   useEffect(() => {
     setTimeout(async () => {
       const client = new Client({
@@ -25,10 +27,11 @@ export const App = () => {
 
       setClient(client);
       setSpaceKey(space.key);
+      setDatabase(new EchoDatabase(space.database));
     });
   }, []);
 
-  if (!client || !spaceKey) {
+  if (!client || !spaceKey || !database) {
     return null;
   }
 
@@ -37,7 +40,7 @@ export const App = () => {
       <ClientProvider client={client}>
         <div>
           <h1>Kai</h1>
-          <TaskList spaceKey={spaceKey} />
+          <TaskList database={database} spaceKey={spaceKey} />
         </div>
       </ClientProvider>
     </div>

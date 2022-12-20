@@ -148,9 +148,7 @@ describe('EchoDatabase', () => {
     await db.save(task);
 
     let counter = 0;
-    const selection = db.createSubscription(() => {
-      counter++;
-    });
+    const selection = db.createSubscription(() => { counter++; });
     selection.update([task]);
 
     task.title = 'Test title';
@@ -164,5 +162,27 @@ describe('EchoDatabase', () => {
 
     task.assignee.name = 'Jim';
     await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(3));
+  });
+
+  test('query', async () => {
+    const db = await createTestDb();
+
+    let counter = 0;
+    const query = db.query({ category: 'eng' });
+    query.subscribe(() => { ++counter; });
+    expect(query.getObjects()).toEqual([]);
+
+    const task1 = new EchoObject({ category: 'eng', title: 'Task 1' });
+    await db.save(task1);
+    expect(query.getObjects()).toEqual([task1]);
+    await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(1));
+
+    const task2 = new EchoObject({ category: 'legal', title: 'Task 2' });
+    await db.save(task2);
+    expect(query.getObjects()).toEqual([task1]);
+
+    task2.category = 'eng';
+    expect(query.getObjects()).toEqual([task1, task2]);
+    await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(2));
   });
 });
