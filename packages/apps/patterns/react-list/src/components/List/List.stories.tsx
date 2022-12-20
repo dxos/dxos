@@ -72,28 +72,29 @@ Default.decorators = [
 
       await Promise.all(
         clients.slice(1).map(async (client) => {
-          const observable1 = await space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-          log('invitation created');
-
-          const observable2 = await client.echo.acceptInvitation(observable1.invitation!);
-          log('invitation accepted');
-
           const success1 = new Trigger<Invitation>();
+          const success2 = new Trigger<Invitation>();
+
+          const observable1 = space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+          log('invitation created');
           observable1.subscribe({
+            onConnecting: (invitation) => {
+              const observable2 = client.echo.acceptInvitation(invitation);
+              log('invitation accepted');
+
+              observable2.subscribe({
+                onSuccess: (invitation: Invitation) => {
+                  success2.wake(invitation);
+                  log('invitation success2');
+                },
+                onError: (err: Error) => raise(err)
+              });
+            },
             onSuccess: (invitation) => {
               success1.wake(invitation);
               log('invitation success1');
             },
             onError: (err) => raise(err)
-          });
-
-          const success2 = new Trigger<Invitation>();
-          observable2.subscribe({
-            onSuccess: (invitation: Invitation) => {
-              success2.wake(invitation);
-              log('invitation success2');
-            },
-            onError: (err: Error) => raise(err)
           });
 
           await Promise.all([success1.wait(), success2.wait()]);

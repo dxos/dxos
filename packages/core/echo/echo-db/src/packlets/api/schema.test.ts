@@ -9,7 +9,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Database } from '../database';
-import { createInMemoryDatabase } from '../testing';
+import { createMemoryDatabase } from '../testing';
 import { Schema, TYPE_SCHEMA } from './schema';
 
 const SCHEMA = 'example:type/schema/organization';
@@ -27,7 +27,7 @@ const createTestSchema = async (database: Database) => {
 describe('Schema', () => {
   const setupDatabase = async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const backend = await createInMemoryDatabase(modelFactory);
+    const backend = await createMemoryDatabase(modelFactory);
     afterTest(() => backend.destroy());
     return backend;
   };
