@@ -122,14 +122,14 @@ export class EchoObject {
       {},
       {
         get: (target, property, receiver) => {
-          if (isValidKey(property)) {
+          if (!isValidKey(property)) {
             return Reflect.get(target, property, receiver);
           }
 
           return this._get(`${prop}.${String(property)}`);
         },
         set: (target, property, value, receiver) => {
-          if (isValidKey(property)) {
+          if (!isValidKey(property)) {
             return Reflect.set(target, property, value, receiver);
           }
 

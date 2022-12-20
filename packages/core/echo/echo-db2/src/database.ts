@@ -56,9 +56,7 @@ export class EchoDatabase {
 
     const item = (await this._echo.createItem({ id: obj[unproxy]._id })) as Item<ObjectModel>;
     assert(item.id === obj[unproxy]._id);
-    if (!obj[unproxy]._isBound) {
-      obj[unproxy]._bind(item, this);
-    }
+    obj[unproxy]._bind(item, this);
 
     return obj;
   }
