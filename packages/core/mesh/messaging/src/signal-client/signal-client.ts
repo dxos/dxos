@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, EventSubscriptions, synchronized } from '@dxos/async';
+import { Event, EventSubscriptions, Trigger, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -79,6 +79,7 @@ export class SignalClient implements SignalMethods {
   private _reconnectIntervalId?: NodeJS.Timeout;
 
   private _client!: SignalRPCClient;
+  private readonly _clientReady = new Trigger();
 
   private _subscriptions = new EventSubscriptions();
 
@@ -127,6 +128,7 @@ export class SignalClient implements SignalMethods {
       clearTimeout(this._reconnectIntervalId);
     }
 
+    this._clientReady.reset();
     await this._client.close();
     this._setState(SignalState.CLOSED);
     log('closed');
@@ -145,6 +147,7 @@ export class SignalClient implements SignalMethods {
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     log('joining', { topic, peerId });
+    await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     await this.subscribeMessages(peerId);
@@ -162,11 +165,13 @@ export class SignalClient implements SignalMethods {
   }
 
   async sendMessage(msg: Message): Promise<void> {
+    await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
     await this._client.sendMessage(msg);
   }
 
   async subscribeMessages(peerId: PublicKey): Promise<void> {
+    await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Do nothing if already subscribed.
@@ -221,6 +226,7 @@ export class SignalClient implements SignalMethods {
         this._lastError = undefined;
         this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
         this._setState(SignalState.CONNECTED);
+        this._clientReady.wake();
       })
     );
 

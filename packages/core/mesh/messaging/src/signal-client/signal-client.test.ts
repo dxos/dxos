@@ -126,11 +126,14 @@ describe('SignalClient', () => {
     await client1.join({ topic, peerId: peer1 });
     await client2.join({ topic, peerId: peer2 });
 
-    await client2.sendMessage(message);
-    await received.waitFor((msg) => {
-      expect(msg).toEqual(message);
-      return true;
-    });
+    {
+      const promise = received.waitFor((msg) => {
+        expect(msg).toEqual(message);
+        return true;
+      });
+      await client2.sendMessage(message);
+      await promise;
+    }
 
     //
     // close and reopen first client
@@ -139,11 +142,15 @@ describe('SignalClient', () => {
     await client1.close();
     client1.open();
     await client1.join({ topic, peerId: peer1 });
-    await client2.sendMessage(message);
-    await received.waitFor((msg) => {
-      expect(msg).toEqual(message);
-      return true;
-    });
+
+    {
+      const promise = received.waitFor((msg) => {
+        expect(msg).toEqual(message);
+        return true;
+      });
+      await client2.sendMessage(message);
+      await promise;
+    }
   });
 
   test
