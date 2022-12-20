@@ -9,7 +9,7 @@ import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
@@ -20,11 +20,14 @@ import { SignalManager } from './signal-manager';
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
-  /** Topics joined: topic => peer_id */
+  /** Topics joined: topic => peerId */
   private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>((topic) => topic.toHex());
 
-  /** host => topic => peer_id */
+  /** host => topic => peerId */
   private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
+
+  /** peerId[] */
+  private readonly _subscribedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _reconciling?: boolean = false;
   private _reconcileTimeoutId?: NodeJS.Timeout;
@@ -66,7 +69,12 @@ export class WebsocketSignalManager implements SignalManager {
       return;
     }
 
-    await Promise.all(Array.from(this._servers.values()).map((server) => server.open()));
+    await Promise.all([...this._servers.values()].map((server) => server.open()));
+    await Promise.all(
+      [...this._servers.values()].map((server) =>
+        Promise.all([...this._subscribedMessages.values()].map((peerId) => server.subscribeMessages(peerId)))
+      )
+    );
     this._closed = false;
     this._scheduleReconcile();
   }
@@ -103,6 +111,7 @@ export class WebsocketSignalManager implements SignalManager {
     assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
     assert(!this._closed, 'Closed');
 
+    this._subscribedMessages.delete(peerId);
     this._topicsJoined.delete(topic);
     this._scheduleReconcile();
   }
@@ -129,6 +138,7 @@ export class WebsocketSignalManager implements SignalManager {
   async subscribeMessages(peerId: PublicKey): Promise<void> {
     log(`Subscribed for message stream peerId=${peerId}`);
     assert(!this._closed, 'Closed');
+    this._subscribedMessages.add(peerId);
 
     await Promise.all(
       [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
