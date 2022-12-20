@@ -5,17 +5,17 @@
 import React, { FC } from 'react';
 
 import { PublicKey } from '@dxos/client';
-import { EchoDatabase, EchoObject, id } from '@dxos/echo-db2';
+import { EchoDatabase, id } from '@dxos/echo-db2';
 
 import { useObjects, useSelection } from '../hooks';
+import { Contact } from '../proto/tasks';
 
 export const ContactList: FC<{ database: EchoDatabase; spaceKey: PublicKey }> = ({ spaceKey, database: db }) => {
-  const contacts = useObjects(db, { type: 'person' });
+  const contacts = useObjects(db, Contact.filter());
 
   const handleCreate = async () => {
     await db.save(
-      new EchoObject({
-        type: 'person',
+      new Contact({
         name: ['dima', 'rich', 'zhenya', 'mykola'][Math.floor(Math.random() * 4)]
       })
     );
@@ -29,7 +29,7 @@ export const ContactList: FC<{ database: EchoDatabase; spaceKey: PublicKey }> = 
       </div>
 
       <div>
-        {contacts?.map((contact: EchoObject) => (
+        {contacts.map((contact) => (
           <Person key={id(contact)} person={contact} db={db} />
         ))}
       </div>
@@ -37,7 +37,7 @@ export const ContactList: FC<{ database: EchoDatabase; spaceKey: PublicKey }> = 
   );
 };
 
-export const Person: FC<{ person: EchoObject; db: EchoDatabase }> = ({ person, db }) => {
+export const Person: FC<{ person: Contact; db: EchoDatabase }> = ({ person, db }) => {
   useSelection(db, person);
 
   return (

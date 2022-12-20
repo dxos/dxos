@@ -9,6 +9,7 @@ message Task {
   string title = 2;
   int32 count = 3;
   bool completed = 4;
+  Contact assignee = 5;
 }
 
 message Person {
@@ -16,12 +17,12 @@ message Person {
 
   string id = 1;
   string name = 2;
-  Contact contact = 3;
 }
 
 message Contact {
   option (object) = true;
   
-  string id = 1;
-  string email = 2;
+  string name = 1;
+  string id = 2;
+  string email = 3;
 }

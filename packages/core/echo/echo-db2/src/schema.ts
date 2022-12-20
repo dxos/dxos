@@ -1,5 +1,6 @@
 import * as pb from 'protobufjs'
 import { Filter } from './database';
+import { EchoObject } from './object';
 
 export class EchoSchema {
   constructor(
@@ -36,4 +37,4 @@ export class EchoSchemaType {
   }
 }
 
-export type TypeFilter<T> = Filter
+export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter

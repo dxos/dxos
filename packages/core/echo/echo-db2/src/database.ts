@@ -8,12 +8,13 @@ import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 import { unproxy } from './common';
-import { EchoObject } from './object';
+import { EchoObject, EchoObjectBase } from './object';
 import { traverse } from './traverse';
+import { TypeFilter } from './schema';
 
 export type Filter = Record<string, any>;
-export type Query = {
-  getObjects(): EchoObject[];
+export type Query<T extends EchoObject = EchoObject> = {
+  getObjects(): T[];
   subscribe(callback: () => void): () => void;
 };
 
@@ -63,7 +64,7 @@ export class EchoDatabase {
    * Flush mutations.
    */
   // TODO(burdon): Batches?
-  async save(obj: EchoObject): Promise<EchoObject> {
+  async save(obj: EchoObjectBase): Promise<EchoObject> {
     if (obj[unproxy]._isBound) {
       return obj;
     }
@@ -78,6 +79,8 @@ export class EchoDatabase {
     return obj;
   }
 
+  query<T extends EchoObject>(filter: TypeFilter<T>): Query<T>
+  query(filter: Filter): Query
   query(filter: Filter): Query {
     const match = (obj: EchoObject) => Object.entries(filter).every(([key, value]) => obj[key] === value);
 
@@ -155,7 +158,7 @@ export class EchoDatabase {
 }
 
 const getIdsFromSelection = (selection: Selection): string[] => {
-  if (selection instanceof EchoObject) {
+  if (selection instanceof EchoObjectBase) {
     return [selection[unproxy]._id];
   } else if (typeof selection === 'function') {
     return []; // TODO(burdon): Traverse function?

@@ -1,23 +1,24 @@
 
 import { EchoSchema, EchoObjectBase, TypeFilter } from "@dxos/echo-db2";
 
-const schemaJson = "{\"nested\":{\"kai\":{\"nested\":{\"example\":{\"nested\":{\"tasks\":{\"nested\":{\"Task\":{\"options\":{\"(object)\":true},\"fields\":{\"id\":{\"type\":\"string\",\"id\":1},\"title\":{\"type\":\"string\",\"id\":2},\"count\":{\"type\":\"int32\",\"id\":3},\"completed\":{\"type\":\"bool\",\"id\":4}}},\"Person\":{\"options\":{\"(object)\":true},\"fields\":{\"id\":{\"type\":\"string\",\"id\":1},\"name\":{\"type\":\"string\",\"id\":2},\"contact\":{\"type\":\"Contact\",\"id\":3}}},\"Contact\":{\"options\":{\"(object)\":true},\"fields\":{\"id\":{\"type\":\"string\",\"id\":1},\"email\":{\"type\":\"string\",\"id\":2}}}}}}}}}}}"
+const schemaJson = "{\"nested\":{\"kai\":{\"nested\":{\"example\":{\"nested\":{\"tasks\":{\"nested\":{\"Task\":{\"options\":{\"(object)\":true},\"fields\":{\"id\":{\"type\":\"string\",\"id\":1},\"title\":{\"type\":\"string\",\"id\":2},\"count\":{\"type\":\"int32\",\"id\":3},\"completed\":{\"type\":\"bool\",\"id\":4},\"assignee\":{\"type\":\"Contact\",\"id\":5}}},\"Person\":{\"options\":{\"(object)\":true},\"fields\":{\"id\":{\"type\":\"string\",\"id\":1},\"name\":{\"type\":\"string\",\"id\":2}}},\"Contact\":{\"options\":{\"(object)\":true},\"fields\":{\"name\":{\"type\":\"string\",\"id\":1},\"id\":{\"type\":\"string\",\"id\":2},\"email\":{\"type\":\"string\",\"id\":3}}}}}}}}}}}"
 export const schema = EchoSchema.fromJson(schemaJson);
 
     export class Task extends EchoObjectBase {
       static readonly type = schema.getType('kai.example.tasks.Task');
 
-      static filter(opts?: { title?: string,count?: number,completed?: boolean }): TypeFilter<Task> {
+      static filter(opts?: { title?: string,count?: number,completed?: boolean,assignee?: Contact }): TypeFilter<Task> {
         return Task.type.createFilter(opts);
       }
 
-      constructor(opts?: { title?: string,count?: number,completed?: boolean }) {
-        super(opts, Task.type);
+      constructor(opts?: { title?: string,count?: number,completed?: boolean,assignee?: Contact }) {
+        super({ ...opts, '@type': Task.type.name }, Task.type);
       }
     
       declare title: string;
 declare count: number;
 declare completed: boolean;
+declare assignee: Contact;
     }
     schema.registerPrototype(Task);
   
@@ -25,16 +26,15 @@ declare completed: boolean;
     export class Person extends EchoObjectBase {
       static readonly type = schema.getType('kai.example.tasks.Person');
 
-      static filter(opts?: { name?: string,contact?: Contact }): TypeFilter<Person> {
+      static filter(opts?: { name?: string }): TypeFilter<Person> {
         return Person.type.createFilter(opts);
       }
 
-      constructor(opts?: { name?: string,contact?: Contact }) {
-        super(opts, Person.type);
+      constructor(opts?: { name?: string }) {
+        super({ ...opts, '@type': Person.type.name }, Person.type);
       }
     
       declare name: string;
-declare contact: Contact;
     }
     schema.registerPrototype(Person);
   
@@ -42,15 +42,16 @@ declare contact: Contact;
     export class Contact extends EchoObjectBase {
       static readonly type = schema.getType('kai.example.tasks.Contact');
 
-      static filter(opts?: { email?: string }): TypeFilter<Contact> {
+      static filter(opts?: { name?: string,email?: string }): TypeFilter<Contact> {
         return Contact.type.createFilter(opts);
       }
 
-      constructor(opts?: { email?: string }) {
-        super(opts, Contact.type);
+      constructor(opts?: { name?: string,email?: string }) {
+        super({ ...opts, '@type': Contact.type.name }, Contact.type);
       }
     
-      declare email: string;
+      declare name: string;
+declare email: string;
     }
     schema.registerPrototype(Contact);
   

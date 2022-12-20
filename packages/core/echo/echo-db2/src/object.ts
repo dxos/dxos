@@ -12,7 +12,7 @@ import { OrderedArray } from './ordered-array';
 import { EchoSchemaType } from './schema';
 
 const isValidKey = (key: string | symbol) =>
-  !(typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof');
+  !(typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof' || key === 'toString');
 
 export const id = (object: EchoObjectBase) => object[unproxy]._id;
 
@@ -43,7 +43,14 @@ export class EchoObjectBase {
 
   [unproxy]: EchoObject = this;
 
-  constructor(initialProps?: Record<keyof any, any>, schemaType?: EchoSchemaType) {
+  get [Symbol.toStringTag]() {
+    return this[unproxy]?._schemaType?.name ?? 'EchoObject'
+  }
+
+  constructor(
+    initialProps?: Record<keyof any, any>,
+    private readonly _schemaType?: EchoSchemaType
+  ) {
     this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
 
@@ -113,7 +120,7 @@ export class EchoObjectBase {
   }
 
   private _setModelProp(prop: string, value: any): any {
-    if (value instanceof EchoObject) {
+    if (value instanceof EchoObjectBase) {
       this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
       this._item!.model.set(prop, value[unproxy]._id);
       this._database!.save(value);
