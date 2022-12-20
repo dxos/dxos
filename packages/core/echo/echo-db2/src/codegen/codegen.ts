@@ -80,12 +80,12 @@ export function codegenClass(type: pb.Type) {
     export class ${name} extends EchoObjectBase {
       static readonly type = schema.getType('${fullName}');
 
-      static filter(opts?: { ${initializer} }) {
+      static filter(opts?: { ${initializer} }): TypeFilter<${name}> {
         return ${name}.type.createFilter(opts);
       }
 
       constructor(opts?: { ${initializer} }) {
-        super(opts, ${name}.type);
+        super({ ...opts, '@type': ${name}.type.name }, ${name}.type);
       }
     
       ${fields}
