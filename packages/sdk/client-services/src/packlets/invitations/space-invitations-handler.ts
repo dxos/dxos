@@ -86,7 +86,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
     let authenticationCode: string;
     let authenticationRetry = 0;
-    
+
     // Called for every connecting peer.
     const createExtension = (): HostSpaceInvitationExtension => {
       const complete = new Trigger<PublicKey>();
@@ -126,7 +126,10 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
         requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
           try {
             // Check authenticated.
-            if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING && invitation.type !== Invitation.Type.MULTIUSE_TESTING) {
+            if (
+              invitation.type !== Invitation.Type.INTERACTIVE_TESTING &&
+              invitation.type !== Invitation.Type.MULTIUSE_TESTING
+            ) {
               if (invitation.authenticationCode === undefined || invitation.authenticationCode !== authenticationCode) {
                 throw new Error(`invalid authentication code: ${authenticationCode}`);
               }
@@ -177,7 +180,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
                 observable.callback.onError(err);
               }
             } finally {
-              if(type !== Invitation.Type.MULTIUSE_TESTING) {
+              if (type !== Invitation.Type.MULTIUSE_TESTING) {
                 await sleep(ON_CLOSE_DELAY);
                 await ctx.dispose();
               }
