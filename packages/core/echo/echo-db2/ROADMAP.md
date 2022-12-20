@@ -7,7 +7,8 @@
 - [x] Selection.
 - [ ] Unify query/selection.
 - [ ] References (e.g., Task => Person).
-- [ ] Cards demo (multi peer).
+- [ ] ECHO pipeline instantiate EchoObject.
+- [ ] Cards demo (multi-peer).
 
 ## Stage 2
 

@@ -2,17 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
-import { Space } from '@dxos/client';
 import { unproxy, EchoObject, EchoDatabase, Filter, Selection, SelectionHandle } from '@dxos/echo-db2';
 
 // TODO(burdon): Move to echo-db2.
 export const id = (object: EchoObject) => object[unproxy]._id;
 
-export const useDatabase = (space?: Space): EchoDatabase | undefined => {
-  // TODO(burdon): Use state.
-  return useMemo(() => space && new EchoDatabase(space.database), [space]);
+export const DatabaseContext = createContext<{ database?: EchoDatabase }>({});
+
+export const useDatabase = (): EchoDatabase => {
+  const { database } = useContext(DatabaseContext);
+  return database!;
 };
 
 /**

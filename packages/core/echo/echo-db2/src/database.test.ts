@@ -15,7 +15,7 @@ import { EchoDatabase } from './database';
 import { EchoObject } from './object';
 import { OrderedArray } from './ordered-array';
 
-const createTestDb = async () => {
+const createDatabase = async () => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const database = await createMemoryDatabase(modelFactory);
   return new EchoDatabase(database);
@@ -23,7 +23,7 @@ const createTestDb = async () => {
 
 describe('EchoDatabase', () => {
   test('get/set properties', async () => {
-    const db = await createTestDb();
+    const db = await createDatabase();
 
     const obj = new EchoObject();
     obj.title = 'Test title';
@@ -38,7 +38,7 @@ describe('EchoDatabase', () => {
   });
 
   test('initializer', async () => {
-    const db = await createTestDb();
+    const db = await createDatabase();
 
     const obj = new EchoObject({
       title: 'Test title',
@@ -54,12 +54,12 @@ describe('EchoDatabase', () => {
   });
 
   test('object refs', async () => {
-    const db = await createTestDb();
+    const db = await createDatabase();
 
     const task = new EchoObject({ title: 'Fix bugs' });
     const john = new EchoObject({ name: 'John Doe' });
-
     task.assignee = john;
+
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee).toEqual(john);
 
@@ -72,7 +72,7 @@ describe('EchoDatabase', () => {
   });
 
   test('nested props', async () => {
-    const db = await createTestDb();
+    const db = await createDatabase();
 
     const task = new EchoObject({ title: 'Fix bugs' });
     await db.save(task);
@@ -84,7 +84,7 @@ describe('EchoDatabase', () => {
   });
 
   test('ordered arrays', async () => {
-    const db = await createTestDb();
+    const db = await createDatabase();
 
     const task = new EchoObject({ title: 'Main task' });
     await db.save(task);
@@ -110,13 +110,13 @@ describe('EchoDatabase', () => {
     ]);
   });
 
+  // TODO(burdon): Remove (deprecated).
   test.skip('subscribe', async () => {
-    const db = await createTestDb();
+    const db = await createDatabase();
 
     const task = new EchoObject({
       project: new EchoObject({ name: 'DXOS' })
     });
-
     await db.save(task);
 
     let counter = 0;
@@ -128,10 +128,10 @@ describe('EchoDatabase', () => {
     task.title = 'Test title';
     await waitForExpect(() => expect(counter).toEqual(1));
 
-    task.assignee = new EchoObject({ name: 'John' });
+    task.assignee = new EchoObject({ name: 'user-1' });
     await waitForExpect(() => expect(counter).toEqual(2));
 
-    task.assignee.name = 'Jake';
+    task.assignee.name = 'user-2';
     await waitForExpect(() => expect(counter).toEqual(3));
 
     task.project.name = 'Braneframe';
@@ -142,7 +142,7 @@ describe('EchoDatabase', () => {
   });
 
   test('select', async () => {
-    const db = await createTestDb();
+    const db = await createDatabase();
 
     const task = new EchoObject();
     await db.save(task);
@@ -156,18 +156,18 @@ describe('EchoDatabase', () => {
     task.title = 'Test title';
     await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(1));
 
-    task.assignee = new EchoObject({ name: 'John' });
+    task.assignee = new EchoObject({ name: 'user-1' });
     await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(2));
 
-    task.assignee.name = 'Jake';
+    task.assignee.name = 'user-2';
     selection.update([task, task.assignee]);
 
-    task.assignee.name = 'Jim';
+    task.assignee.name = 'user-3';
     await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(3));
   });
 
   test.skip('query', async () => {
-    const db = await createTestDb();
+    const db = await createDatabase();
 
     let counter = 0;
     const query = db.query({ category: 'eng' });

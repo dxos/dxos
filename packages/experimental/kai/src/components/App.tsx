@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { DatabaseContext } from 'packages/experimental/kai/src/hooks';
 import React, { useEffect, useState } from 'react';
 
 import { fromHost, Client, PublicKey } from '@dxos/client';
@@ -36,25 +37,22 @@ export const App = () => {
     return null;
   }
 
-  // TODO(burdon): Tailwind.
+  // TODO(burdon): Context for database.
   return (
-    <div>
-      <ClientProvider client={client}>
-        <div>
-          <h1>Kai</h1>
-          <div style={{ display: 'flex', flexDirection: 'row' }}>
-            <div style={{ flex: 1 }}>
-              <TaskList database={database} spaceKey={spaceKey} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <TaskList database={database} spaceKey={spaceKey} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <ContactList database={database} spaceKey={spaceKey} />
-            </div>
+    <ClientProvider client={client}>
+      <DatabaseContext.Provider value={{ database }}>
+        <div className='flex p-3'>
+          <div className='flex-1'>
+            <TaskList />
+          </div>
+          <div className='flex-1'>
+            <TaskList />
+          </div>
+          <div className='flex-1'>
+            <ContactList />
           </div>
         </div>
-      </ClientProvider>
-    </div>
+      </DatabaseContext.Provider>
+    </ClientProvider>
   );
 };

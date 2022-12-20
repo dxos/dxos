@@ -2691,6 +2691,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
+      tailwindcss: ^3.1.8
       vite: 3.2.5
       vite-plugin-pwa: ^0.12.4
     dependencies:
@@ -2716,6 +2717,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       faker: 5.5.3
+      tailwindcss: 3.1.8
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       vite-plugin-pwa: 0.12.8_vite@3.2.5
 
@@ -11830,7 +11832,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       deepmerge: 4.2.2
@@ -11843,7 +11845,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@styled-system/color': 5.1.2
       '@styled-system/should-forward-prop': 5.1.5
       '@styled-system/space': 5.1.2
@@ -11858,7 +11860,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       '@theme-ui/parse-props': 0.14.7_gyryel6m34lsxtsejhafetjriq
       deepmerge: 4.2.2
@@ -11870,7 +11872,7 @@ packages:
     peerDependencies:
       '@emotion/react': ^11
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       csstype: 3.1.1
     dev: true
 
@@ -11881,7 +11883,7 @@ packages:
       '@mdx-js/react': ^1 || ^2
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -11894,7 +11896,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       react: 18.2.0
     dev: true
@@ -11905,7 +11907,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/color-modes': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -33979,7 +33981,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
