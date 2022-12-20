@@ -89,7 +89,9 @@ export class SignalClient implements SignalMethods {
     swarmEvent: SwarmEvent;
   }>();
 
-  private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>((key) => key.toHex());
+  private readonly _swarmStreams = new ComplexMap<{ topic: PublicKey; peerId: PublicKey }, Stream<SwarmEvent>>(
+    ({ topic, peerId }) => topic.toHex() + peerId.toHex()
+  );
 
   private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>((key) => key.toHex());
 
@@ -146,18 +148,18 @@ export class SignalClient implements SignalMethods {
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     await this.subscribeMessages(peerId);
-    await this._subscribeSwarmEvents(topic, peerId);
+    await this._subscribeSwarmEvents({ topic, peerId });
   }
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     log('leaving', { topic, peerId });
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
-    this._swarmStreams.get(topic)?.close();
-    this._swarmStreams.delete(topic);
+    this._swarmStreams.get({ topic, peerId })?.close();
+    this._swarmStreams.delete({ topic, peerId });
 
-    this._messageStreams.get(topic)?.close();
-    this._messageStreams.delete(topic);
+    this._messageStreams.get(peerId)?.close();
+    this._messageStreams.delete(peerId);
   }
 
   async sendMessage(msg: Message): Promise<void> {
@@ -283,9 +285,10 @@ export class SignalClient implements SignalMethods {
   }
 
   @synchronized
-  private async _subscribeSwarmEvents(topic: PublicKey, peerId: PublicKey): Promise<void> {
-    assert(!this._swarmStreams.has(topic), 'Already subscribed to swarm events.');
+  private async _subscribeSwarmEvents({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+    assert(!this._swarmStreams.has({ topic, peerId }), 'Already subscribed to swarm events.');
     const swarmStream = await this._client.join({ topic, peerId });
+
     // Subscribing to swarm events.
     // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
     swarmStream.subscribe((swarmEvent: SwarmEvent) => {
@@ -293,11 +296,11 @@ export class SignalClient implements SignalMethods {
     });
 
     // Saving swarm stream.
-    this._swarmStreams.set(topic, swarmStream);
+    this._swarmStreams.set({ topic, peerId }, swarmStream);
 
     this._subscriptions.add(() => {
       swarmStream.close();
-      this._swarmStreams.delete(topic);
+      this._swarmStreams.delete({ topic, peerId });
     });
   }
 }

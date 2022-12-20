@@ -41,21 +41,16 @@ export class Messenger {
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
 
   private readonly _subscriptions = new EventSubscriptions();
-  private _closed = false;
+  private _closed = true;
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
   constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
     this._signalManager = signalManager;
-    this._subscriptions.add(
-      this._signalManager.onMessage.on(async (message) => {
-        log('received message', { from: message.author });
-        await this._handleMessage(message);
-      })
-    );
-
     this._retryDelay = retryDelay;
     this._timeout = timeout;
+
+    this.open();
   }
 
   open() {
@@ -80,6 +75,8 @@ export class Messenger {
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
+    assert(!this._closed, 'Closed');
+
     const reliablePayload: ReliablePayload = {
       messageId: PublicKey.random(),
       payload
@@ -131,6 +128,8 @@ export class Messenger {
     payloadType?: string;
     onMessage: OnMessage;
   }): Promise<ListeningHandle> {
+    assert(!this._closed, 'Closed');
+
     await this._signalManager.subscribeMessages(peerId);
     let listeners: Set<OnMessage> | undefined;
 
