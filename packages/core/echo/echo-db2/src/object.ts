@@ -13,14 +13,29 @@ import { OrderedArray } from './ordered-array';
 const isValidKey = (key: string | symbol) =>
   !(typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof');
 
+export const id = (object: EchoObjectBase) => object[unproxy]._id;
+
 /**
  *
  */
-export class EchoObject {
+export class EchoObjectBase {
+  /**
+   * @internal
+   */
   public _id!: string; // TODO(burdon): Symbol?
+  /**
+   * @internal
+   */
   public _item?: Item<ObjectModel>;
+
+  /**
+   * @internal
+   */
   public _database?: EchoDatabase;
 
+  /**
+   * @internal
+   */
   public _isBound = false;
 
   private _uninitialized?: Record<keyof any, any> = {};
@@ -62,7 +77,6 @@ export class EchoObject {
     });
   }
 
-  // Allow to access arbitrary properties via dot notation.
   [key: string]: any;
 
   private _get(key: string) {
@@ -153,4 +167,9 @@ export class EchoObject {
 
     this._uninitialized = undefined;
   }
+}
+
+export class EchoObject extends EchoObjectBase {
+  // Allow to access arbitrary properties via dot notation.
+  [key: string]: any;
 }

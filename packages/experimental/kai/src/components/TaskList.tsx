@@ -5,9 +5,9 @@
 import React, { FC } from 'react';
 
 import { PublicKey } from '@dxos/client';
-import { EchoDatabase, EchoObject } from '@dxos/echo-db2';
+import { EchoDatabase, EchoObject, id } from '@dxos/echo-db2';
 
-import { id, useObjects, useSelection } from '../hooks';
+import { useObjects, useSelection } from '../hooks';
 
 // declare const TestTask: any;
 

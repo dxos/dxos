@@ -8,7 +8,6 @@ import { Space } from '@dxos/client';
 import { unproxy, EchoObject, EchoDatabase, Filter, Selection, SelectionHandle } from '@dxos/echo-db2';
 
 // TODO(burdon): Move to echo-db2.
-export const id = (object: EchoObject) => object[unproxy]._id;
 
 export const useDatabase = (space?: Space): EchoDatabase | undefined => {
   // TODO(burdon): Use state.
