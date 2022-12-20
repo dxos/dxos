@@ -130,7 +130,7 @@ export class Swarm {
   }
 
   async setTopology(topology: Topology) {
-    assert(this._offline, 'Swarm is offline');
+    assert(!this._offline, 'Swarm is offline');
     if (topology === this._topology) {
       return;
     }
@@ -147,7 +147,7 @@ export class Swarm {
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
-    assert(this._offline, 'Swarm is offline');
+    assert(!this._offline, 'Swarm is offline');
     if (this._ctx.disposed) {
       log.warn('ignored for destroyed swarm');
       return;
@@ -175,7 +175,7 @@ export class Swarm {
 
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { message });
-    assert(this._offline, 'Swarm is offline');
+    assert(!this._offline, 'Swarm is offline');
     if (this._ctx.disposed) {
       log.info('ignored for destroyed swarm');
       return { accept: false };
@@ -200,7 +200,7 @@ export class Swarm {
 
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { message });
-    assert(this._offline, 'Swarm is offline');
+    assert(!this._offline, 'Swarm is offline');
     if (this._ctx.disposed) {
       log.info('ignored for destroyed swarm');
       return;
