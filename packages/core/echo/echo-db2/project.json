@@ -17,6 +17,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
+          "packages/core/echo/echo-db2/src/codegen/main.ts",
           "packages/core/echo/echo-db2/src/index.ts",
           "packages/core/echo/echo-db2/src/testing.ts"
         ],

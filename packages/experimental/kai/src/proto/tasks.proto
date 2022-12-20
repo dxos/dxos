@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package kai.example.tasks;
+
+message Task {
+  option (object) = true;
+
+  string id = 1;
+  string title = 2;
+  int32 count = 3;
+  bool completed = 4;
+}
+
+message Person {
+  option (object) = true;
+
+  string id = 1;
+  string name = 2;
+  Contact contact = 3;
+}
+
+message Contact {
+  option (object) = true;
+  
+  string id = 1;
+  string email = 2;
+}

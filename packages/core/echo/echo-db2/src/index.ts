@@ -5,3 +5,4 @@
 export * from './common';
 export * from './database';
 export * from './object';
+export * from './schema';

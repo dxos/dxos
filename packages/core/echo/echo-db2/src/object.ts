@@ -9,6 +9,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { unproxy } from './common';
 import { EchoDatabase } from './database';
 import { OrderedArray } from './ordered-array';
+import { EchoSchemaType } from './schema';
 
 const isValidKey = (key: string | symbol) =>
   !(typeof key === 'symbol' || key.startsWith('@@__') || key === 'constructor' || key === '$$typeof');
@@ -42,7 +43,7 @@ export class EchoObjectBase {
 
   [unproxy]: EchoObject = this;
 
-  constructor(initialProps?: Record<keyof any, any>) {
+  constructor(initialProps?: Record<keyof any, any>, schemaType?: EchoSchemaType) {
     this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
 
