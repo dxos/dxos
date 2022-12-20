@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
@@ -202,6 +201,26 @@ export class NetworkManager {
   }
 
   async setConnectionStatus(status: ConnectionStatus) {
-    todo();
+    switch (status) {
+      case this._connectionStatus: {
+        break;
+      }
+      case ConnectionStatus.OFFLINE: {
+        this._connectionStatus = status;
+        // go offline
+        await this._signalManager.close();
+        this._messenger.close();
+        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
+        break;
+      }
+      case ConnectionStatus.ONLINE: {
+        this._connectionStatus = status;
+        // go online
+        await this._signalManager.open();
+        this._messenger.open();
+        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
+        break;
+      }
+    }
   }
 }

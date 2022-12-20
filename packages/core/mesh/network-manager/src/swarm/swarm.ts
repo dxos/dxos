@@ -34,6 +34,7 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
  */
 export class Swarm {
   private readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
+  private _offline = false;
 
   private readonly _swarmMessenger: MessageRouter;
 
@@ -129,6 +130,7 @@ export class Swarm {
   }
 
   async setTopology(topology: Topology) {
+    assert(this._offline, 'Swarm is offline');
     if (topology === this._topology) {
       return;
     }
@@ -141,6 +143,89 @@ export class Swarm {
     this._topology = topology;
     this._topology.init(this._getSwarmController());
     this._topology.update();
+  }
+
+  onSwarmEvent(swarmEvent: SwarmEvent) {
+    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
+    assert(this._offline, 'Swarm is offline');
+    if (this._ctx.disposed) {
+      log.warn('ignored for destroyed swarm');
+      return;
+    }
+
+    if (swarmEvent.peerAvailable) {
+      const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
+      log('new peer', { peerId });
+      if (!peerId.equals(this._ownPeerId)) {
+        const peer = this._getOrCreatePeer(peerId);
+        peer.advertizing = true;
+      }
+    } else if (swarmEvent.peerLeft) {
+      const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
+      if (peer) {
+        peer.advertizing = false;
+        if (!peer.connection) {
+          void this._destroyPeer(peer.id);
+        }
+      }
+    }
+
+    this._topology.update();
+  }
+
+  async onOffer(message: OfferMessage): Promise<Answer> {
+    log('offer', { message });
+    assert(this._offline, 'Swarm is offline');
+    if (this._ctx.disposed) {
+      log.info('ignored for destroyed swarm');
+      return { accept: false };
+    }
+
+    // Id of the peer offering us the connection.
+    assert(message.author);
+    if (!message.recipient?.equals(this._ownPeerId)) {
+      log('rejecting offer with incorrect peerId', { message });
+      return { accept: false };
+    }
+    if (!message.topic?.equals(this._topic)) {
+      log('rejecting offer with incorrect topic', { message });
+      return { accept: false };
+    }
+
+    const peer = this._getOrCreatePeer(message.author);
+    const answer = await peer.onOffer(message);
+    this._topology.update();
+    return answer;
+  }
+
+  async onSignal(message: SignalMessage): Promise<void> {
+    log('signal', { message });
+    assert(this._offline, 'Swarm is offline');
+    if (this._ctx.disposed) {
+      log.info('ignored for destroyed swarm');
+      return;
+    }
+    assert(
+      message.recipient?.equals(this._ownPeerId),
+      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`
+    );
+    assert(message.topic?.equals(this._topic));
+    assert(message.author);
+
+    const peer = this._getOrCreatePeer(message.author);
+    await peer.onSignal(message);
+  }
+
+  // For debug purposes
+  async goOffline() {
+    await Promise.all([...this._peers.keys()].map((peerId) => this._closeConnection(peerId)));
+    this._offline = true;
+  }
+
+  // For debug purposes
+  async goOnline() {
+    await Promise.all([...this._peers.keys()].map((peerId) => this._initiateConnection(peerId)));
+    this._offline = false;
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
@@ -193,74 +278,6 @@ export class Swarm {
     assert(this._peers.has(peerId));
     await this._peers.get(peerId)!.destroy();
     this._peers.delete(peerId);
-  }
-
-  onSwarmEvent(swarmEvent: SwarmEvent) {
-    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
-    if (this._ctx.disposed) {
-      log.warn('ignored for destroyed swarm');
-      return;
-    }
-
-    if (swarmEvent.peerAvailable) {
-      const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
-      log('new peer', { peerId });
-      if (!peerId.equals(this._ownPeerId)) {
-        const peer = this._getOrCreatePeer(peerId);
-        peer.advertizing = true;
-      }
-    } else if (swarmEvent.peerLeft) {
-      const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
-      if (peer) {
-        peer.advertizing = false;
-        if (!peer.connection) {
-          void this._destroyPeer(peer.id);
-        }
-      }
-    }
-
-    this._topology.update();
-  }
-
-  async onOffer(message: OfferMessage): Promise<Answer> {
-    log('offer', { message });
-    if (this._ctx.disposed) {
-      log.info('ignored for destroyed swarm');
-      return { accept: false };
-    }
-
-    // Id of the peer offering us the connection.
-    assert(message.author);
-    if (!message.recipient?.equals(this._ownPeerId)) {
-      log('rejecting offer with incorrect peerId', { message });
-      return { accept: false };
-    }
-    if (!message.topic?.equals(this._topic)) {
-      log('rejecting offer with incorrect topic', { message });
-      return { accept: false };
-    }
-
-    const peer = this._getOrCreatePeer(message.author);
-    const answer = await peer.onOffer(message);
-    this._topology.update();
-    return answer;
-  }
-
-  async onSignal(message: SignalMessage): Promise<void> {
-    log('signal', { message });
-    if (this._ctx.disposed) {
-      log.info('ignored for destroyed swarm');
-      return;
-    }
-    assert(
-      message.recipient?.equals(this._ownPeerId),
-      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`
-    );
-    assert(message.topic?.equals(this._topic));
-    assert(message.author);
-
-    const peer = this._getOrCreatePeer(message.author);
-    await peer.onSignal(message);
   }
 
   private _getSwarmController(): SwarmController {
