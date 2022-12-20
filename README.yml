@@ -1,4 +1,5 @@
 name: DXOS
+install: false
 description: |
   A decentralized alternative to the commercial cloud for privacy preserving software. Learn more about the [the mission](https://docs.dxos.org/guide/why)
 badges:

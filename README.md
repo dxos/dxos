@@ -12,12 +12,6 @@
 
 A decentralized alternative to the commercial cloud for privacy preserving software. Learn more about the [the mission](https://docs.dxos.org/guide/why)
 
-## Installation
-
-```bash
-pnpm install --save @dxos/client
-```
-
 ## Demo
 
 Shown below are two sessions of an application using the ECHO database to replicate state peer-to-peer in real-time.

@@ -2,8 +2,6 @@
 
 We welcome all your input! Our [mission](https://docs.dxos.org/guide/why) is to enable developers to build a fully decentralized alternative to the existing Cloud, and we believe the path ahead involves all kinds of developers from far and wide collaborating here. Thank you for being here and contributing.
 
-## We Develop with Github
-We use github to host code, to track issues and feature requests, as well as accept pull requests. We Use [Github Flow](https://guides.github.com/introduction/flow/index.html), So All Code Changes Happen Through Pull Requests.
 ## Submitting Issues
 We love your input. Please submit an issue for any of these reasons:
 - Reporting a reproducible bug
