@@ -1588,7 +1588,6 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/context': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -1606,7 +1605,6 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/context': link:../../../common/context
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
