@@ -2,6 +2,13 @@ syntax = "proto3";
 
 package kai.example.tasks;
 
+message Project {
+  option (object) = true;
+
+  string title = 1;
+  repeated Task tasks = 3;
+}
+
 message Task {
   option (object) = true;
 

@@ -8,7 +8,7 @@ const root = new pb.Root();
 root.loadSync(argv[2]);
 
 let content = `
-import { EchoSchema, EchoObjectBase, TypeFilter } from "@dxos/echo-db2";
+import { EchoSchema, EchoObjectBase, TypeFilter, OrderedSet } from "@dxos/echo-db2";
 
 `
 

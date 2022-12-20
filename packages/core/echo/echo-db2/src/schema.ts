@@ -21,9 +21,17 @@ export class EchoSchema {
 }
 
 export class EchoSchemaType {
+  public readonly fields: EchoSchemaField[] = [];
+
   constructor(
     private readonly _type: pb.Type,
-  ) {}
+  ) {
+    _type.fieldsArray.forEach(field => field.resolve());
+    this.fields = _type.fieldsArray.map(field => ({
+      name: field.name,
+      isOrderedSet: field.repeated && field.resolvedType !== null,
+    }));
+  }
 
   get name() {
     return this._type.fullName.slice(1);
@@ -35,6 +43,11 @@ export class EchoSchemaType {
       '@type': this.name,
     }
   }
+}
+
+export type EchoSchemaField = {
+  name: string;
+  isOrderedSet?: boolean;
 }
 
 export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter

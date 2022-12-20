@@ -56,7 +56,11 @@ function codegenType(field: pb.Field): string {
 
   field.resolve();
   if(field.repeated) {
-    return `WarpList<${scalar()}>`;
+    if(field.resolvedType) {
+      return `OrderedSet<${scalar()}>`;
+    } else {
+      return `Set<${scalar()}>`;
+    }
   } else {
     return scalar();
   }

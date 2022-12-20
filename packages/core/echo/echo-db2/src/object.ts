@@ -54,6 +54,15 @@ export class EchoObjectBase {
     this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
 
+    if(this._schemaType) {
+      for(const field of this._schemaType.fields) {
+        if(field.isOrderedSet && !this._uninitialized![field.name]) {
+          this._uninitialized![field.name] = new OrderedSet();
+        }
+      }
+    }
+
+
     return new Proxy(this, {
       get: (target, property, receiver) => {
         if (!isValidKey(property)) {
@@ -84,8 +93,6 @@ export class EchoObjectBase {
       }
     });
   }
-
-  [key: string]: any;
 
   private _get(key: string) {
     if (!this._item) {
