@@ -11,6 +11,13 @@ import { unproxy } from './common';
 import { EchoObject } from './object';
 import { traverse } from './traverse';
 
+export type Filter = Record<string, any>
+export type Query = {
+  getObjects(): EchoObject[]
+  subscribe(callback: () => void): () => void
+}
+
+
 export type SelectionFn = never; // TODO(dmaretskyi): ?
 export type Selection = EchoObject | SelectionFn | Selection[];
 
@@ -63,6 +70,23 @@ export class EchoDatabase {
 
   getById(id: string) {
     return this._objects.get(id);
+  }
+
+  query(filter: Filter): Query {
+    const match = (obj: EchoObject) => Object.entries(filter).every(([key, value]) => obj[key] === value);
+
+    return {
+      getObjects: () => {
+        return Array.from(this.objects.values()).filter(obj => match(obj))
+      },
+      subscribe: (callback: () => void) => {
+        return this._echo.update.on((changedEntities) => {
+          if (changedEntities.some((entity) => this._objects.has(entity.id) && match(this._objects.get(entity.id)!))) {
+            callback();
+          }
+        })
+      }
+    }
   }
 
   /**
