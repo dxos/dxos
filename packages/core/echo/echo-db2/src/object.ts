@@ -46,7 +46,7 @@ export class EchoObject {
       },
 
       set: (target, property, value, receiver) => {
-        if (isValidKey(property)) {
+        if (!isValidKey(property)) {
           return Reflect.set(target, property, value, receiver);
         }
 
