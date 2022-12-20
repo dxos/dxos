@@ -86,8 +86,13 @@ export class TestPeer {
     );
   }
 
+  async open() {
+    await this.signalManager.open();
+    this.messenger.open();
+  }
+
   async close() {
-    await this.signalManager.close();
     this.messenger.close();
+    await this.signalManager.close();
   }
 }

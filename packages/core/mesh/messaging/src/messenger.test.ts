@@ -221,6 +221,40 @@ describe('Messenger', () => {
     }
   });
 
+  test('re-entrant message', async () => {
+    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    afterTest(() => builder.close());
+    const peer1 = builder.createPeer();
+    const peer2 = builder.createPeer();
+
+    const message: Message = {
+      author: peer1.peerId,
+      recipient: peer2.peerId,
+      payload: PAYLOAD_1
+    };
+
+    {
+      const receivePromise = peer2.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+      await asyncTimeout(receivePromise, 1_000);
+    }
+
+    {
+      //
+      // Close and reopen peer1
+      //
+
+      await peer2.close();
+      await peer2.open();
+    }
+
+    {
+      const receivePromise = peer2.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+      await asyncTimeout(receivePromise, 1_000);
+    }
+  });
+
   describe('Reliability', () => {
     test('message with non reliable connection', async () => {
       // Simulate unreliable connection.
