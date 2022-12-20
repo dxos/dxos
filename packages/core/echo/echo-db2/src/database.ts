@@ -10,6 +10,12 @@ import { ObjectModel } from '@dxos/object-model';
 import { unproxy } from './common';
 import { EchoObject } from './object';
 
+type Selector = {};
+
+interface SelectionHandle {
+  unsubscribe(): void;
+}
+
 /**
  *
  */
@@ -25,6 +31,15 @@ export class EchoDatabase {
   getObjectById(id: string) {
     // TODO(burdon): Type?
     return this._objects.get(id);
+  }
+
+  /**
+   *
+   */
+  select(selector: Selector): SelectionHandle {
+    return {
+      unsubscribe() {}
+    };
   }
 
   async save(obj: EchoObject) {
