@@ -57,7 +57,7 @@ export type CommandTrace = {
  * Establishes a websocket connection to signal server and provides RPC methods.
  */
 export class SignalClient implements SignalMethods {
-  private _state = SignalState.CONNECTING;
+  private _state = SignalState.CLOSED;
 
   private _lastError?: Error;
 
@@ -153,7 +153,6 @@ export class SignalClient implements SignalMethods {
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     log('leaving', { topic, peerId });
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
