@@ -16,11 +16,11 @@ const isValidKey = (key: string | symbol) =>
 /**
  *
  */
+// TODO(burdon): Support immutable objects.
 export class EchoObject {
   public _id!: string; // TODO(burdon): Symbol?
   public _item?: Item<ObjectModel>;
   public _database?: EchoDatabase;
-
   public _isBound = false;
 
   private _uninitialized?: Record<keyof any, any> = {};
@@ -38,7 +38,7 @@ export class EchoObject {
         }
 
         switch (property) {
-          case 'id':
+          case 'id': // TODO(burdon): Remove.
             return this._id;
           default:
             return this._get(property as string);
@@ -51,7 +51,7 @@ export class EchoObject {
         }
 
         switch (property) {
-          case 'id':
+          case 'id': // TODO(burdon): Remove.
             throw new Error('Cannot set id');
           default: {
             this._set(property as string, value);
@@ -62,7 +62,9 @@ export class EchoObject {
     });
   }
 
-  // Allow to access arbitrary properties via dot notation.
+  /**
+   * Supports access arbitrary properties via dot notation.
+   */
   [key: string]: any;
 
   private _get(key: string) {
@@ -99,21 +101,21 @@ export class EchoObject {
 
   private _setModelProp(prop: string, value: any): any {
     if (value instanceof EchoObject) {
-      this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
-      this._item!.model.set(prop, value[unproxy]._id);
-      this._database!.save(value);
+      void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
+      void this._item!.model.set(prop, value[unproxy]._id);
+      void this._database!.save(value);
     } else if (value instanceof OrderedArray) {
-      this._item!.model.set(`${prop}$type`, 'array');
+      void this._item!.model.set(`${prop}$type`, 'array');
       value._bind(this[unproxy], prop);
     } else if (typeof value === 'object' && value !== null) {
-      this._item!.model.set(`${prop}$type`, 'object');
+      void this._item!.model.set(`${prop}$type`, 'object');
       const sub = this._createSubObject(prop);
       for (const [subKey, subValue] of Object.entries(value)) {
         sub[subKey] = subValue;
       }
     } else {
-      this._item!.model.set(`${prop}$type`, 'primitive');
-      this._item!.model.set(prop, value);
+      void this._item!.model.set(`${prop}$type`, 'primitive');
+      void this._item!.model.set(prop, value);
     }
   }
 
@@ -128,6 +130,7 @@ export class EchoObject {
 
           return this._get(`${prop}.${String(property)}`);
         },
+
         set: (target, property, value, receiver) => {
           if (!isValidKey(property)) {
             return Reflect.set(target, property, value, receiver);

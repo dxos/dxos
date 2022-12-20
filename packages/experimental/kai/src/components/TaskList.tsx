@@ -50,7 +50,7 @@ export const Task: FC<{ task: EchoObject; db: EchoDatabase }> = ({ task, db }) =
 
   return (
     <div style={{ display: 'flex' }}>
-      <input type='checkbox' checked={task.complete} onChange={(e) => (task.complete = !task.complete)} />
+      <input type='checkbox' value={task.complete} onChange={(e) => (task.complete = !task.complete)} />
       <input value={task.title} onChange={(e) => (task.title = e.target.value)} />
       <div>{task.assignee.name}</div>
     </div>

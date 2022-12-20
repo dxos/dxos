@@ -19,9 +19,9 @@ export type Query = {
 
 export type SelectionFn = never; // TODO(dmaretskyi): ?
 export type Selection = EchoObject | SelectionFn | Selection[];
-export type Predicate = { [key: string]: any };
-export type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
-export type Selector = Predicate;
+// export type Predicate = { [key: string]: any };
+// export type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
+// export type Selector = Predicate;
 
 /**
  *
@@ -78,7 +78,11 @@ export class EchoDatabase {
     return obj;
   }
 
+  /**
+   *
+   */
   query(filter: Filter): Query {
+    // TODO(burdon): Test separately.
     const match = (obj: EchoObject) => Object.entries(filter).every(([key, value]) => obj[key] === value);
 
     let cache: EchoObject[] | undefined;
@@ -91,6 +95,7 @@ export class EchoDatabase {
         }
         return cache;
       },
+
       subscribe: (callback: () => void) => {
         return this._echo.update.on((changedEntities) => {
           if (changedEntities.some((entity) => this._objects.has(entity.id) && match(this._objects.get(entity.id)!))) {
@@ -108,11 +113,10 @@ export class EchoDatabase {
   createSubscription(onUpdate: () => void): SelectionHandle {
     let selectedIds = new Set<string>();
     let subscribed = true;
+
     const unsubscribe = this._echo.update.on((changedEntities) => {
       subscribed = false;
-      // console.log('db update');
       if (changedEntities.some((entity) => selectedIds.has(entity.id))) {
-        // console.log('sub update');
         onUpdate();
       }
     });
@@ -120,7 +124,6 @@ export class EchoDatabase {
     const handle = {
       update: (selection: Selection) => {
         selectedIds = new Set(getIdsFromSelection(selection));
-        // console.log('subscription update', [...selectedIds]);
         return handle;
       },
       subscribed,
@@ -133,13 +136,12 @@ export class EchoDatabase {
   /**
    * @deprecated
    */
+  // TODO(burdon): Remove.
   subscribe(traverseCb: (touch: (obj: EchoObject) => any) => void, callback: () => void): () => void {
     const touched = new Set<string>();
     const retouch = () => {
       touched.clear();
-      // console.log('retouch');
       traverse(traverseCb, (obj) => {
-        // console.log('touched', obj[unproxy]._id);
         touched.add(obj[unproxy]._id);
       });
     };
@@ -154,6 +156,7 @@ export class EchoDatabase {
   }
 }
 
+// TODO(burdon): Document.
 const getIdsFromSelection = (selection: Selection): string[] => {
   if (selection instanceof EchoObject) {
     return [selection[unproxy]._id];

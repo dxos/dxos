@@ -11,7 +11,8 @@ import { describe, test } from '@dxos/test';
 
 import { EchoObject } from './object';
 
-describe('WarpObject', () => {
+// TODO(burdon): Implement.
+describe('EchoObject', () => {
   test('instance of', async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const database = await createMemoryDatabase(modelFactory);

@@ -7,10 +7,12 @@ import { OrderedList } from '@dxos/object-model';
 import { unproxy } from './common';
 import { EchoObject } from './object';
 
+// TODO(burdon): Remove.
+const EMPTY = 'empty item last to make the list work';
+
 /**
  *
  */
-const EMPTY = 'empty item last to make the list work';
 export class OrderedArray<T extends EchoObject> implements Array<T> {
   private readonly _uninitialized?: T[] = [];
 
@@ -214,7 +216,10 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
     if (!this._orderedList) {
       return this._uninitialized![Symbol.iterator]();
     } else {
-      return this._orderedList.values.slice(0, -1).map((id) => this._object!._database!.getObjectById(id) as T).values();
+      return this._orderedList.values
+        .slice(0, -1)
+        .map((id) => this._object!._database!.getObjectById(id) as T)
+        .values();
     }
   }
 
@@ -234,7 +239,7 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
     if (!this._orderedList) {
       this._uninitialized!.push(...items);
     } else {
-      for(const item of items) {
+      for (const item of items) {
         this._setModel(this.length, item);
       }
     }
@@ -246,7 +251,7 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
     this._property = property;
     this._orderedList = new OrderedList(this._object!._item!.model, this._property!);
     this._orderedList.refresh();
-    for(const item of this._uninitialized!) {
+    for (const item of this._uninitialized!) {
       this.push(item);
     }
     return this;
@@ -280,16 +285,16 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
   private _setModel(index: number, value: T) {
     this._object!._database!.save(value);
 
-    if(this._orderedList!.values.length === 0) {
+    if (this._orderedList!.values.length === 0) {
       this._orderedList!.init([value[unproxy]._id, EMPTY]);
     } else {
       const prev = this._orderedList?.values[index - 1];
-      if(prev) {
+      if (prev) {
         this._orderedList!.insert(prev, value[unproxy]._id);
       } else {
         const next = this._orderedList?.values[index + 1];
-        if(!next) {
-          throw new Error('BUG')
+        if (!next) {
+          throw new Error('BUG');
         }
         this._orderedList!.remove([this._orderedList?.values[index]!]);
         this._orderedList!.insert(value[unproxy]._id, next);
@@ -298,6 +303,5 @@ export class OrderedArray<T extends EchoObject> implements Array<T> {
   }
 }
 
-function isIndex(property: string | symbol): property is string {
-  return typeof property === 'string' && parseInt(property).toString() === property;
-}
+const isIndex = (property: string | symbol): property is string =>
+  typeof property === 'string' && parseInt(property).toString() === property;
