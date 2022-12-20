@@ -141,6 +141,8 @@ message Invitation {
     INTERACTIVE_TESTING = 1;
     /// Guest's identity key is known; invitation can be accepted by any valid peer.
     OFFLINE = 2;
+    /// Multiple-use invitation with OTP.
+    MULTIUSE_TESTING = 3;
   }
 
   enum State {

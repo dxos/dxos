@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import assert from 'node:assert';
 
-import { asyncChain, Trigger } from '@dxos/async';
+import { asyncChain, latch, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
@@ -14,6 +14,7 @@ import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItems } from '../testing';
+import { range } from '@dxos/util';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
@@ -62,7 +63,7 @@ describe('services/space-invitations-handler', () => {
       onConnecting: async (invitation1: Invitation) => {
         const observable2 = guest.spaceInvitations!.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnecting: async () => {},
+          onConnecting: async () => { },
           onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
@@ -129,14 +130,14 @@ describe('services/space-invitations-handler', () => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
             connecting2.wake(invitation2);
           },
-          onConnected: async (invitation2: Invitation) => {},
-          onSuccess: () => {},
+          onConnected: async (invitation2: Invitation) => { },
+          onSuccess: () => { },
           onCancelled: () => raise(new Error()),
           onTimeout: (err: Error) => raise(new Error(err.message)),
           onError: (err: Error) => raise(new Error(err.message))
         });
       },
-      onConnected: async (invitation1: Invitation) => {},
+      onConnected: async (invitation1: Invitation) => { },
       onCancelled: () => {
         cancelled.wake();
       },
@@ -156,5 +157,45 @@ describe('services/space-invitations-handler', () => {
 
     await cancelled.wait();
     await space1.close();
+  });
+
+  test.only('test multi-use invitation', async () => {
+    const GUEST_COUNT = 3;
+    const [host, ...guests] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(GUEST_COUNT + 1));
+
+    const hostSpace = await host.dataSpaceManager!.createSpace();
+    const swarmKey = PublicKey.random();
+    const hostObservable = await host.spaceInvitations!.createInvitation(hostSpace, { swarmKey, type: Invitation.Type.MULTIUSE_TESTING });
+
+    const [done, count] = latch({ count: GUEST_COUNT });
+    hostObservable.subscribe({
+      onConnecting: async (invitation2: Invitation) => { },
+      onConnected: async (invitation2: Invitation) => { },
+      onSuccess: () => {
+        count();
+      },
+      onCancelled: () => raise(new Error()),
+      onTimeout: (err: Error) => raise(new Error(err.message)),
+      onError: (err: Error) => raise(new Error(err.message))
+    });
+
+    await Promise.all(range(GUEST_COUNT).map(async (idx) => {
+      const observable = await guests[idx].spaceInvitations!.acceptInvitation({ swarmKey: swarmKey, type: Invitation.Type.MULTIUSE_TESTING });
+      const success = new Trigger();
+      observable.subscribe({
+        onConnecting: async (invitation2: Invitation) => { },
+        onConnected: async (invitation2: Invitation) => { },
+        onSuccess: () => {
+          success.wake();
+        },
+        onCancelled: () => raise(new Error()),
+        onTimeout: (err: Error) => raise(new Error(err.message)),
+        onError: (err: Error) => raise(new Error(err.message))
+      });
+      await success.wait({ timeout: 300 });
+    }))
+    await done()
+
+    await hostSpace.close();
   });
 });
