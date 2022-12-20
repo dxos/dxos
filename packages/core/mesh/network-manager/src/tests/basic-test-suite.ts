@@ -117,10 +117,8 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     const topic1 = PublicKey.random();
 
-    {
-      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
-      await exchangeMessages(swarm1, swarm2);
-    }
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
+    await exchangeMessages(swarm1, swarm2);
 
     //
     // Going offline and back online
@@ -129,11 +127,8 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await peer1.goOffline();
     await peer1.goOnline();
 
-    {
-      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
-      await exchangeMessages(swarm1, swarm2);
-      await leaveSwarm([peer1, peer2], topic1);
-    }
+    await exchangeMessages(swarm1, swarm2);
+    await leaveSwarm([peer1, peer2], topic1);
   });
 
   // TODO(mykola): broken.
