@@ -38,9 +38,6 @@
       "path": "../../core/echo/echo-db2"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../sdk/client"
     },
     {

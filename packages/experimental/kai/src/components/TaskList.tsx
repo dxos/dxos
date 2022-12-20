@@ -9,41 +9,50 @@ import { EchoDatabase, EchoObject } from '@dxos/echo-db2';
 
 import { id, useObjects, useSelection } from '../hooks';
 
+// declare const TestTask: any;
+
 export const TaskList: FC<{ database: EchoDatabase; spaceKey: PublicKey }> = ({ spaceKey, database: db }) => {
-  const tasks = useObjects(db, { type: 'kai:task' });
+  // const tasks = useObjects(db, TestTask.filter({ completed: true }));
+  const tasks = useObjects(db, { type: 'task' });
 
   const handleCreate = async () => {
+    const contacts = db.query({ type: 'person' }).getObjects();
+    const contact = contacts.length && contacts[Math.floor(Math.random() * contacts.length)];
+
     await db.save(
       new EchoObject({
-        type: 'kai:task',
-        title: `Title-${Math.random()}`
+        // '@type': 'dxos.example.kai.TestTask',
+        type: 'task',
+        title: `Title-${Math.random()}`,
+        assignee: contact
       })
     );
   };
 
   return (
     <div>
-      <pre>{spaceKey.truncate()}</pre>
+      <div>
+        <h2>Tasks</h2>
+        <button onClick={handleCreate}>Create</button>
+      </div>
 
-      <h2>Tasks</h2>
       <div>
         {tasks?.map((task: EchoObject) => (
           <Task key={id(task)} task={task} db={db} />
         ))}
       </div>
-
-      <button onClick={handleCreate}>Create</button>
     </div>
   );
 };
 
 export const Task: FC<{ task: EchoObject; db: EchoDatabase }> = ({ task, db }) => {
-  useSelection(db, task);
+  useSelection(db, [task, task.assignee]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'row' }}>
-      <input type='checkbox' checked={task.complete} onChange={(e) => (task.complete = !!e.target.value)} />
+    <div style={{ display: 'flex' }}>
+      <input type='checkbox' checked={task.complete} onChange={(e) => (task.complete = !task.complete)} />
       <input value={task.title} onChange={(e) => (task.title = e.target.value)} />
+      <div>{task.assignee.name}</div>
     </div>
   );
 };

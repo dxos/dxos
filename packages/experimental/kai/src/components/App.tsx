@@ -8,6 +8,7 @@ import { fromHost, Client, PublicKey } from '@dxos/client';
 import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider } from '@dxos/react-client';
 
+import { ContactList } from './ContactList';
 import { TaskList } from './TaskList';
 
 export const App = () => {
@@ -35,12 +36,23 @@ export const App = () => {
     return null;
   }
 
+  // TODO(burdon): Tailwind.
   return (
     <div>
       <ClientProvider client={client}>
         <div>
           <h1>Kai</h1>
-          <TaskList database={database} spaceKey={spaceKey} />
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <div style={{ flex: 1 }}>
+              <TaskList database={database} spaceKey={spaceKey} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <TaskList database={database} spaceKey={spaceKey} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <ContactList database={database} spaceKey={spaceKey} />
+            </div>
+          </div>
         </div>
       </ClientProvider>
     </div>

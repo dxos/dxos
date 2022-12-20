@@ -83,6 +83,7 @@ export class EchoDatabase {
 
     let cache: EchoObject[] | undefined;
 
+    // TODO(burdon): Replace with getter.
     return {
       getObjects: () => {
         if (!cache) {
@@ -109,9 +110,9 @@ export class EchoDatabase {
     let subscribed = true;
     const unsubscribe = this._echo.update.on((changedEntities) => {
       subscribed = false;
-      console.log('db update');
+      // console.log('db update');
       if (changedEntities.some((entity) => selectedIds.has(entity.id))) {
-        console.log('sub update');
+        // console.log('sub update');
         onUpdate();
       }
     });
@@ -119,7 +120,7 @@ export class EchoDatabase {
     const handle = {
       update: (selection: Selection) => {
         selectedIds = new Set(getIdsFromSelection(selection));
-        console.log('subscription update', [...selectedIds]);
+        // console.log('subscription update', [...selectedIds]);
         return handle;
       },
       subscribed,
@@ -136,9 +137,9 @@ export class EchoDatabase {
     const touched = new Set<string>();
     const retouch = () => {
       touched.clear();
-      console.log('retouch');
+      // console.log('retouch');
       traverse(traverseCb, (obj) => {
-        console.log('touched', obj[unproxy]._id);
+        // console.log('touched', obj[unproxy]._id);
         touched.add(obj[unproxy]._id);
       });
     };
@@ -158,6 +159,8 @@ const getIdsFromSelection = (selection: Selection): string[] => {
     return [selection[unproxy]._id];
   } else if (typeof selection === 'function') {
     return []; // TODO(burdon): Traverse function?
+  } else if (!selection) {
+    return [];
   } else {
     return selection.flatMap(getIdsFromSelection);
   }
