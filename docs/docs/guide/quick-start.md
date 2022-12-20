@@ -14,28 +14,18 @@ DXOS is the developer platform for **collaborative**, **offline-first**, **priva
 *   [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally
 *   [Deploying apps to KUBE](#deploying-your-app-to-a-kube)
 
-<!-- :::showcase Test ::: -->
+:::showcase[demo=Test#L5-L13]
+```tsx
+import React from 'react';
 
-::: code-tabs#showcase Test
+import { useClient } from '@dxos/react-client';
 
-@tab pnpm
+const Test = () => {
+  const client = useClient();
 
-```ts
-console.log('hello pnpm');
+  return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
+};
 ```
-
-@tab yarn
-
-```ts
-console.log('hello yarn');
-```
-
-@tab:active npm
-
-```ts
-console.log('hello npm');
-```
-
 :::
 
 ## Creating apps with `dx` CLI

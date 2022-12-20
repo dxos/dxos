@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { ClientProvider, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 
 const Test = () => {
   const client = useClient();
@@ -12,10 +12,4 @@ const Test = () => {
   return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
 };
 
-const App = () => (
-  <ClientProvider>
-    <Test />
-  </ClientProvider>
-);
-
-export default App;
+export default Test;

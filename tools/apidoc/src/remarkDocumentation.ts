@@ -29,6 +29,7 @@ export const remarkDocumentation = async (config: Config) => {
         .use(remarkFrontmatter)
         .use(remarkDirective)
         .use(Remark.apiDocGenerateDirective)
+        .use([Remark.showcaseGenerateDirective])
         .use([codeImport])
         .use([remarkPrettier])
         .use([remarkStringify])

@@ -28,6 +28,9 @@ const tsConfig = {
   jsx: ts.JsxEmit.Preserve
 };
 
+/**
+ * @deprecated Use @dxos/apidoc showcase directive.
+ */
 export const showcasePlugin = async (): Promise<Plugin> => {
   const demoFileNames = await readdir(join(__dirname, '../demos'));
   console.log({ demoFileNames });
