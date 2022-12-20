@@ -54,19 +54,16 @@ describe('EchoDatabase', () => {
   });
 
   test('object refs', async () => {
-    const warpDb = await createTestDb();
+    const db = await createTestDb();
 
-    const task = new EchoObject({
-      title: 'Fix bugs'
-    });
-    const john = new EchoObject({
-      name: 'John Doe'
-    });
+    const task = new EchoObject({ title: 'Fix bugs' });
+    const john = new EchoObject({ name: 'John Doe' });
+
     task.assignee = john;
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee).toEqual(john);
 
-    await warpDb.save(task);
+    await db.save(task);
 
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee instanceof EchoObject).toBeTruthy();
@@ -75,26 +72,22 @@ describe('EchoDatabase', () => {
   });
 
   test('nested props', async () => {
-    const warpDb = await createTestDb();
+    const db = await createTestDb();
 
-    const task = new EchoObject({
-      title: 'Fix bugs'
-    });
-    await warpDb.save(task);
+    const task = new EchoObject({ title: 'Fix bugs' });
+    await db.save(task);
 
-    task.details = {
-      priority: 'low'
-    };
+    task.details = { priority: 'low' };
     task.details.deadline = '2021-01-01';
     expect(task.details.priority).toEqual('low');
     expect(task.details.deadline).toEqual('2021-01-01');
   });
 
   test('ordered arrays', async () => {
-    const warpDb = await createTestDb();
+    const db = await createTestDb();
 
     const task = new EchoObject({ title: 'Main task' });
-    await warpDb.save(task);
+    await db.save(task);
 
     task.subtasks = new OrderedArray();
     task.subtasks.push(new EchoObject({ title: 'Subtask 1' }));
@@ -105,6 +98,7 @@ describe('EchoDatabase', () => {
     expect(task.subtasks[0].title).toEqual('Subtask 1');
     expect(task.subtasks[1].title).toEqual('Subtask 2');
     expect(task.subtasks[2].title).toEqual('Subtask 3');
+
     const titles = task.subtasks.map((subtask: EchoObject) => subtask.title);
     expect(titles).toEqual(['Subtask 1', 'Subtask 2', 'Subtask 3']);
 
