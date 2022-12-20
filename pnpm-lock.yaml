@@ -2690,6 +2690,7 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       faker: ^5.5.3
+      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
@@ -2708,6 +2709,7 @@ importers:
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../sdk/react-uikit
+      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y

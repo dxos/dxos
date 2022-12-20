@@ -1,4 +1,10 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 syntax = "proto3";
+
+// TODO(burdon): Rename file and package.
 
 package kai.example.tasks;
 
@@ -19,16 +25,25 @@ message Task {
   Contact assignee = 5;
 }
 
+message Address {
+  string city = 1;
+  string state = 2;
+  string zip = 3;
+}
+
 message Person {
   option (object) = true;
 
   string id = 1;
   string name = 2;
+  string username = 3;
+  string email = 4;
+  Address address = 5;
 }
 
 message Contact {
   option (object) = true;
-  
+
   string name = 1;
   string id = 2;
   string email = 3;

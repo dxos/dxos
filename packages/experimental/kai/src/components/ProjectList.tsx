@@ -3,12 +3,15 @@
 //
 
 import faker from 'faker';
+import { Plus } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { db, id } from '@dxos/echo-db2';
+import { getSize } from '@dxos/react-ui';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';
 import { Project } from '../proto/tasks';
+import { Card } from './Card';
 import { createTask, TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
@@ -18,27 +21,29 @@ export const ProjectList: FC<{}> = () => {
   const handleCreate = async () => {
     await db.save(
       new Project({
-        title: faker.commerce.product()
+        title: faker.commerce.productAdjective() + ' ' + faker.commerce.product()
       })
     );
   };
 
-  return (
-    <div className='flex-1 m-1 border-2 border-sky-500'>
-      <div className='flex'>
-        <h2 className='p-2'>Projects</h2>
-        <div className='flex-1' />
-        <button className='mr-2 rounded-full' onClick={handleCreate}>
-          Create Project
-        </button>
-      </div>
+  const Menubar = () => (
+    <div className='flex p-2 bg-sky-400'>
+      <h2>Projects</h2>
+      <div className='flex-1' />
+      <button className='mr-2' onClick={handleCreate}>
+        <Plus className={getSize(5)} />
+      </button>
+    </div>
+  );
 
-      <div>
+  return (
+    <Card menubar={<Menubar />}>
+      <>
         {projects.map((project) => (
           <ProjectItem key={id(project)} project={project} />
         ))}
-      </div>
-    </div>
+      </>
+    </Card>
   );
 };
 
@@ -50,18 +55,16 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
   };
 
   return (
-    <div>
-      <div>
+    <div className='p-2 bg-white'>
+      <div className='flex'>
         <input
           className='w-full p-1 outline-0'
           value={project.title}
           onChange={(e) => (project.title = e.target.value)}
         />
-        <div className='p-2'>
-          <button className='mr-2 rounded-full' onClick={handleCreate}>
-            Create Task
-          </button>
-        </div>
+        <button className='mr-2' onClick={handleCreate}>
+          <Plus className={getSize(5)} />
+        </button>
       </div>
 
       <div>

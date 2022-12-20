@@ -10,8 +10,8 @@ import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider } from '@dxos/react-client';
 
 import { ContactList } from './ContactList';
-import { TaskList } from './TaskList';
 import { ProjectList } from './ProjectList';
+import { TaskList } from './TaskList';
 
 export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
@@ -42,15 +42,17 @@ export const App = () => {
   return (
     <ClientProvider client={client}>
       <DatabaseContext.Provider value={{ database }}>
-        <div className='flex p-3'>
-          <div className='flex-1'>
-            <ProjectList />
-          </div>
-          <div className='flex-1'>
-            <TaskList />
-          </div>
-          <div className='flex-1'>
-            <ContactList />
+        <div className='full-screen'>
+          <div className='flex flex-1 p-3'>
+            <div className='flex flex-1 m-2'>
+              <ProjectList />
+            </div>
+            <div className='flex flex-1 m-2'>
+              <TaskList />
+            </div>
+            <div className='flex flex-1 m-2'>
+              <ContactList />
+            </div>
           </div>
         </div>
       </DatabaseContext.Provider>
