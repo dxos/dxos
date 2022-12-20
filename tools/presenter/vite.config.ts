@@ -13,7 +13,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { ConfigPlugin } from '@dxos/config/dist/plugin/node/vite-plugin.cjs';
 
 // @ts-ignore
 import { remarkDirectiveTest, remarkPluginLayout } from './src';
