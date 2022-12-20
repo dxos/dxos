@@ -107,7 +107,7 @@ describe("EchoDatabase", () => {
       .toEqual(['New subtask 1', 'Subtask 2', 'Subtask 3']);
   })
 
-  test('subscribe', async () => {
+  test.skip('subscribe', async () => {
     const warpDb = await createTestDb();
 
     const task = new EchoObject({
@@ -139,5 +139,9 @@ describe("EchoDatabase", () => {
     await expectCount(3);
 
     unsub();
+  })
+
+  test('selection', async () => {
+
   })
 })
