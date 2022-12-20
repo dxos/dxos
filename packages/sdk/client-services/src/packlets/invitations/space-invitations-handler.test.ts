@@ -159,7 +159,7 @@ describe('services/space-invitations-handler', () => {
     await space1.close();
   });
 
-  test.only('test multi-use invitation', async () => {
+  test('test multi-use invitation', async () => {
     const GUEST_COUNT = 3;
     const [host, ...guests] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(
       createPeers(GUEST_COUNT + 1)
