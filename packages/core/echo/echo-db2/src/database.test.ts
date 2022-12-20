@@ -148,28 +148,30 @@ describe('EchoDatabase', () => {
     await db.save(task);
 
     let counter = 0;
-    const selection = db.selection(() => { console.log(counter++) });
-    selection.updateSelection([task]);
+    const selection = db.selection(() => {
+      console.log(counter++);
+    });
+    selection.update([task]);
 
     task.title = 'Test title';
     await waitForExpect(() => expect(counter).toEqual(1));
-    await sleep(10)
+    await sleep(10);
     await waitForExpect(() => expect(counter).toEqual(1));
 
     task.assignee = new EchoObject({ name: 'John' });
     await waitForExpect(() => expect(counter).toEqual(2));
-    await sleep(10)
+    await sleep(10);
     await waitForExpect(() => expect(counter).toEqual(2));
 
     task.assignee.name = 'Jake';
     await sleep(10);
     await waitForExpect(() => expect(counter).toEqual(2));
 
-    selection.updateSelection([task, task.assignee]);
+    selection.update([task, task.assignee]);
 
     task.assignee.name = 'Jim';
     await waitForExpect(() => expect(counter).toEqual(3));
-    await sleep(10)
+    await sleep(10);
     await waitForExpect(() => expect(counter).toEqual(3));
-  })
+  });
 });

@@ -2,14 +2,29 @@
 // Copyright 2022 DXOS.org
 //
 
-import { EchoObject } from '@dxos/echo-db2';
+import { useState } from 'react';
 
+import { EchoDatabase, EchoObject } from '@dxos/echo-db2';
+
+export const db = (object: EchoObject) => object._database;
 export const id = (object: EchoObject) => object._id;
+export const flush = (object: EchoObject) => db(object)!.save(object);
 
-type Predicate = { [key: string]: any };
-// type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
-type Selector = Predicate;
+export type Predicate = { [key: string]: any };
+export type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
+export type Selector = Predicate;
+export type Selection = {};
 
-export const useObjects = (selector: Selector): EchoObject[] => [];
+/**
+ * Query for objects.
+ */
+export const useObjects = (selector: Selector): EchoObject[] => {
+  const [objects, setObjects] = useState<EchoObject[]>([]);
 
-export const useSelection = () => {};
+  return objects;
+};
+
+/**
+ * Create reactive selection.
+ */
+export const useSelection = (): Selection => ({});

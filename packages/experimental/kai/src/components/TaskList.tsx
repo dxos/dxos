@@ -8,25 +8,22 @@ import { PublicKey } from '@dxos/client';
 import { EchoDatabase, EchoObject } from '@dxos/echo-db2';
 import { useSpace } from '@dxos/react-client';
 
-import { id } from '../hooks';
+import { id, flush, useObjects } from '../hooks';
 
 export const TaskList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
   const space = useSpace(spaceKey);
   const db = useMemo(() => space && new EchoDatabase(space.database), [space]);
-  const tasks: EchoObject[] = []; // useObjects(db?.select({ type: 'task' }));
+  const tasks = useObjects(db?.select({ type: 'task' }));
   if (!space) {
     return null;
   }
 
-  // useSelection(tasks.map((task) => task.assignee));
+  console.log(tasks);
 
-  // console.log(tasks);
-
-  // TODO(burdon): Not updated.
   const handleCreate = async () => {
     const obj = new EchoObject();
     obj.title = `Title-${Math.random()}`;
-    await db?.save(obj);
+    await flush(obj);
   };
 
   return (

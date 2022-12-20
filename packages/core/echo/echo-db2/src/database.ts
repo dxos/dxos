@@ -15,7 +15,7 @@ export type SelectionFn = never; // TODO(dmaretskyi): ?
 export type Selection = EchoObject | SelectionFn | Selection[];
 
 interface SelectionHandle {
-  updateSelection: (selection: Selection) => void;
+  update: (selection: Selection) => void;
   unsubscribe: () => void;
 }
 
@@ -27,11 +27,11 @@ export class EchoDatabase {
 
   constructor(private readonly _echo: Database) {
     this._echo.update.on(() => {
-      for (const item of this._echo.select({}).exec().entities) {
-        if (!this._objects.has(item.id)) {
+      for (const object of this._echo.select({}).exec().entities) {
+        if (!this._objects.has(object.id)) {
           const obj = new EchoObject();
-          this._objects.set(item.id, obj);
-          obj[unproxy]._bind(item, this);
+          this._objects.set(object.id, obj);
+          obj[unproxy]._bind(object, this);
         }
       }
     });
@@ -46,6 +46,10 @@ export class EchoDatabase {
     return this._objects.get(id);
   }
 
+  /**
+   * Flush mutations.
+   */
+  // TODO(burdon): Batches?
   async save(obj: EchoObject): Promise<EchoObject> {
     if (obj[unproxy]._isBound) {
       return obj;
@@ -63,10 +67,6 @@ export class EchoDatabase {
     return obj;
   }
 
-  getById(id: string) {
-    return this._objects.get(id);
-  }
-
   /**
    * @deprecated
    */
@@ -80,6 +80,7 @@ export class EchoDatabase {
         touched.add(obj[unproxy]._id);
       });
     };
+
     retouch();
     return this._echo.update.on((changedEntities) => {
       if (changedEntities.some((entity) => touched.has(entity.id))) {
@@ -92,19 +93,21 @@ export class EchoDatabase {
   selection(onUpdate: () => void): SelectionHandle {
     let selectedIds = new Set<string>();
 
-    const unsub = this._echo.update.on((changedEntities) => {
-      console.log('changedEntities', changedEntities.map((entity) => entity.id))
+    const unsubscribe = this._echo.update.on((changedEntities) => {
+      // TODO(burdon): Remove prettier for infra code.
+      // prettier-ignore
+      console.log('updated', changedEntities.map((entity) => entity.id));
       if (changedEntities.some((entity) => selectedIds.has(entity.id))) {
         onUpdate();
       }
     });
 
     return {
-      updateSelection: (selection: Selection) => {
+      update: (selection: Selection) => {
         selectedIds = new Set(getIdsFromSelection(selection));
       },
       unsubscribe: () => {
-        unsub();
+        unsubscribe();
       }
     };
   }
@@ -114,7 +117,7 @@ const getIdsFromSelection = (selection: Selection): string[] => {
   if (selection instanceof EchoObject) {
     return [selection[unproxy]._id];
   } else if (typeof selection === 'function') {
-    return [];
+    return []; // TODO(burdon): Traverse function?
   } else {
     return selection.flatMap(getIdsFromSelection);
   }
