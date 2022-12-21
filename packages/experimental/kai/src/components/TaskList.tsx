@@ -4,14 +4,14 @@
 
 import faker from 'faker';
 import { PlusCircle } from 'phosphor-react';
-import React, { FC } from 'react';
+import React, { FC, KeyboardEvent } from 'react';
 
 import { EchoDatabase, id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';
 import { Contact, Task } from '../proto/tasks';
-import { Card } from './Card';
+import { Card, Table } from './Card';
 
 export const createTask = async (db: EchoDatabase) => {
   const contacts = db.query(Contact.filter()).getObjects();
@@ -42,46 +42,47 @@ export const TaskList: FC<{}> = () => {
 
   return (
     <Card title='Tasks' color='bg-teal-400' menubar={<Menubar />}>
-      <>
+      <div className='p-3'>
         {tasks.map((task) => (
-          <TaskItem key={id(task)} task={task} />
+          <TaskItem key={id(task)} task={task} onCreateTask={handleCreate} />
         ))}
-      </>
+      </div>
     </Card>
   );
 };
 
-export const TaskItem: FC<{ task: Task }> = ({ task }) => {
+export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, onCreateTask }) => {
   useSelection([task, task.assignee]);
 
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      onCreateTask?.();
+    }
+  };
+
   return (
-    <div className='flex ml-4 m-2 bg-white'>
-      <table>
-        <tbody>
-          <tr>
-            <td>
-              <div className='flex mr-2'>
-                <input type='checkbox' checked={!!task.completed} onChange={() => (task.completed = !task.completed)} />
-              </div>
-            </td>
-            <td>
-              <div>
-                <input
-                  className='w-full outline-0'
-                  value={task.title}
-                  onChange={(e) => (task.title = e.target.value)}
-                />
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>
-              <div className='flex text-sm text-blue-800'>{task.assignee?.name}</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <Table
+      sidebar={
+        <input
+          type='checkbox'
+          spellCheck={false}
+          checked={!!task.completed}
+          onChange={() => (task.completed = !task.completed)}
+        />
+      }
+      header={
+        <input
+          className='w-full outline-0'
+          spellCheck={false}
+          value={task.title}
+          onKeyDown={handleKeyDown}
+          onChange={(event) => (task.title = event.target.value)}
+        />
+      }
+    >
+      <div className='text-sm text-blue-800'>
+        <div>{task.assignee?.name}</div>
+      </div>
+    </Table>
   );
 };

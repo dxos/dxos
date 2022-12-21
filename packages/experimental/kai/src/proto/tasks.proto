@@ -12,6 +12,7 @@ message Project {
   option (object) = true;
 
   string title = 1;
+  repeated Contact team = 2;
   repeated Task tasks = 3;
 }
 
@@ -31,7 +32,7 @@ message Address {
   string zip = 3;
 }
 
-message Person {
+message Contact {
   option (object) = true;
 
   string id = 1;
@@ -39,12 +40,4 @@ message Person {
   string username = 3;
   string email = 4;
   Address address = 5;
-}
-
-message Contact {
-  option (object) = true;
-
-  string name = 1;
-  string id = 2;
-  string email = 3;
 }

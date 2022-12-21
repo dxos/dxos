@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import { Plus, PlusCircle } from 'phosphor-react';
+import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-db2';
@@ -11,7 +11,7 @@ import { getSize } from '@dxos/react-ui';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';
 import { Project } from '../proto/tasks';
-import { Card } from './Card';
+import { Card, Table } from './Card';
 import { createTask, TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
@@ -47,31 +47,54 @@ export const ProjectList: FC<{}> = () => {
 
 export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
   const db = useDatabase();
-
   useSelection(project);
 
   const handleCreate = async () => {
-    project.tasks.push(await createTask(db));
+    const task = await createTask(db);
+    project.tasks.push(task);
+    if (task.assignee) {
+      project.team.push(task.assignee);
+    }
   };
 
   return (
-    <div className='flex flex-col bg-white'>
-      <div className='flex p-2 pb-0'>
+    <div className='flex flex-col'>
+      <div className='flex p-2 pb-0 items-center'>
+        <div className='pl-2 pr-1'>
+          <Archive className={getSize(6)} />
+        </div>
         <input
-          className='w-full p-1 outline-0'
+          className='w-full p-1 text-lg outline-0'
+          spellCheck={false}
           value={project.title}
-          onChange={(e) => (project.title = e.target.value)}
+          onChange={(event) => (project.title = event.target.value)}
         />
         <button className='mr-2 text-gray-500' onClick={handleCreate}>
           <Plus className={getSize(6)} />
         </button>
       </div>
 
-      <div>
-        {project.tasks?.map((task) => (
-          <TaskItem key={id(task)} task={task} />
-        ))}
-      </div>
+      {project.tasks?.length > 0 && (
+        <div>
+          <h2 className='pl-3 pt-1 text-xs'>Tasks</h2>
+          <div className='p-3 pt-1'>
+            {project.tasks?.map((task) => (
+              <TaskItem key={id(task)} task={task} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {project.team?.length > 0 && (
+        <div>
+          <h2 className='pl-3 text-xs'>Team</h2>
+          <div className='p-3 pt-1'>
+            {project.team?.map((contact) => (
+              <Table key={id(contact)} sidebar={<User />} header={<div>{contact.name}</div>} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

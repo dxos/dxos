@@ -22,6 +22,8 @@ export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
   const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(undefined);
   const [database, setDatabase] = useState<EchoDatabase | undefined>(undefined);
+
+  // TODO(burdon): Factor out invitations for testing.
   useEffect(() => {
     setTimeout(async () => {
       const client = new Client({
@@ -43,13 +45,12 @@ export const App = () => {
       } catch {}
 
       console.log('spaceKey', spaceKey);
-
       const createInvitationHost = (space: Space) => {
-        const hostObs = space.createInvitation({
+        const hostObservable = space.createInvitation({
           swarmKey: spaceKeyToSwarmKey(space.key),
           type: Invitation.Type.MULTIUSE_TESTING
         });
-        hostObs.subscribe({
+        hostObservable.subscribe({
           onConnecting: () => {
             console.log('connecting');
           },
@@ -85,6 +86,7 @@ export const App = () => {
           timeout: 2000, // TODO(dmaretskyi): Doesn't work.
           invitationId: PublicKey.random().toHex() // TODO(dmaretskyi): Why is this required?
         });
+
         observable.subscribe({
           onSuccess: async (invitation) => {
             const space = client.echo.getSpace(spaceKey!)!;
@@ -103,6 +105,7 @@ export const App = () => {
           }
         });
 
+        // TODO(burdon): Remove timeout.
         try {
           if (await complete.wait({ timeout: 10_000 })) {
             return;
@@ -116,6 +119,7 @@ export const App = () => {
       const space = await client.echo.createSpace();
       createInvitationHost(space);
       location.hash = space.key.toHex();
+
       setClient(client);
       setSpaceKey(space.key);
       setDatabase(new EchoDatabase(space.database));
@@ -126,20 +130,24 @@ export const App = () => {
     return null;
   }
 
+  const colWidth = 360;
+
   // TODO(burdon): Context for database.
   return (
     <ClientProvider client={client}>
       <DatabaseContext.Provider value={{ database }}>
         <div className='full-screen'>
-          <div className='flex flex-1 p-4'>
-            <div className='flex flex-1 m-4'>
-              <ProjectList />
-            </div>
-            <div className='flex flex-1 m-4'>
-              <TaskList />
-            </div>
-            <div className='flex flex-1 m-4'>
-              <ContactList />
+          <div className='flex flex-1 overflow-x-scroll'>
+            <div className='flex p-4'>
+              <div className='flex m-4' style={{ width: colWidth }}>
+                <ProjectList />
+              </div>
+              <div className='flex m-4' style={{ width: colWidth }}>
+                <TaskList />
+              </div>
+              <div className='flex m-4' style={{ width: colWidth }}>
+                <ContactList />
+              </div>
             </div>
           </div>
         </div>

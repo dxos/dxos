@@ -12,3 +12,13 @@ The word kai (貝) is the Japanese word for shell.
 - https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Installable_PWAs
 - https://developer.mozilla.org/en-US/docs/Web/Manifest
 - https://web.dev/how-to-use-local-https
+
+## UX
+
+- https://tailwindcss.com/docs/utility-first
+- https://play.tailwindcss.com
+- https://phosphoricons.com
+
+## Data
+
+- https://fakerjs.dev/api

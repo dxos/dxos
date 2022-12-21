@@ -11,7 +11,7 @@ import { getSize } from '@dxos/react-ui';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';
 import { Address, Contact } from '../proto/tasks';
-import { Card } from './Card';
+import { Card, Table } from './Card';
 
 export const ContactList: FC<{}> = () => {
   const db = useDatabase();
@@ -44,7 +44,7 @@ export const ContactList: FC<{}> = () => {
     <Card title='Contacts' color='bg-blue-400' menubar={<Menubar />}>
       <>
         {contacts.map((contact) => (
-          <div key={id(contact)} className='border-b'>
+          <div key={id(contact)} className='p-3 border-b'>
             <Person person={contact} />
           </div>
         ))}
@@ -59,14 +59,20 @@ export const Person: FC<{ person: Contact }> = ({ person }) => {
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
-    <div className='flex flex-col m-3 bg-white'>
-      <div className='flex items-center'>
-        <User className='mr-3' />
-        <input className='w-full outline-0' value={person.name} onChange={(e) => (person.name = e.target.value)} />
-      </div>
-      {person.username && <div className='flex ml-7 text-sm text-green-800'>{person.username}</div>}
-      {person.email && <div className='flex ml-7 text-sm text-green-800'>{person.email}</div>}
-      {person.address && <div className='flex ml-7 text-sm text-gray-800'>{address(person.address)}</div>}
-    </div>
+    <Table
+      sidebar={<User className={getSize(5)} />}
+      header={
+        <input
+          className='w-full outline-0'
+          spellCheck={false}
+          value={person.name}
+          onChange={(e) => (person.name = e.target.value)}
+        />
+      }
+    >
+      {person.username && <div className='flex text-sm text-green-800'>{person.username}</div>}
+      {person.email && <div className='flex text-sm text-green-800'>{person.email}</div>}
+      {person.address && <div className='flex text-sm text-gray-800'>{address(person.address)}</div>}
+    </Table>
   );
 };
