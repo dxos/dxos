@@ -111,7 +111,6 @@ export class WebsocketSignalManager implements SignalManager {
     assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
     assert(!this._closed, 'Closed');
 
-    this._subscribedMessages.delete(peerId);
     this._topicsJoined.delete(topic);
     this._scheduleReconcile();
   }
@@ -144,9 +143,11 @@ export class WebsocketSignalManager implements SignalManager {
       [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
     );
 
+    // TODO(mykola): on multiple subscription everybody will receive same unsubscribe handle.
     return {
       unsubscribe: async () => {
         await Promise.all(unsubscribeHandles.map((handle) => handle.unsubscribe()));
+        this._subscribedMessages.delete(peerId);
       }
     };
   }
