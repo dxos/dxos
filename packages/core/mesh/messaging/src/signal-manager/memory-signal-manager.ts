@@ -117,9 +117,16 @@ export class MemorySignalManager implements SignalManager {
     this._context.connections.get(recipient)!.onMessage.emit({ author, recipient, payload });
   }
 
-  async subscribeMessages(peerId: PublicKey): Promise<void> {
+  async subscribeMessages(peerId: PublicKey) {
     log('subscribing', { peerId });
     this._context.connections.set(peerId, this);
+
+    return {
+      unsubscribe: async () => {
+        log('unsubscribing', { peerId });
+        this._context.connections.delete(peerId);
+      }
+    };
   }
 
   async open() {}
