@@ -37,6 +37,11 @@ Examples of ways to start up different workloads in dev mode:
 | `pnpm nx serve-with-halo composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
 | `pnpm nx serve docs` | Runs the `docs` vuepress app in dev mode |
 
+## Adding new dependencies
+
+Currently you must manually edit the individual `package.json` files to add packages. When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.
+
+Once the required changes have been made, re-run `pnpm i`.
 
 ## Tasks in `nx` targets
 Each package has a `project.json` which describes the "targets" or runnable actions/scripts that package can perform. There are also dependencies and caching information expressed such that performing any action will appropriately perform actions it depends on in the right order, cache-reading where possible.
@@ -113,3 +118,27 @@ finally
 pnpm i
 ``` 
 to regenerate the `pnpm-lock.yaml` on the new `HEAD`.
+
+### Tools aliases
+
+```bash
+alias px="pnpm -w nx"
+```
+### Custom aliases
+Custom shell aliases can be included in your shell config:
+```bash
+source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
+```
+
+### Storybook
+```
+Cannot GET /` when running 'pnpm run storybook'
+```
+
+Solution:
+
+```bash
+pnpm run storybook --no-manager-cache
+```
+
+[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
