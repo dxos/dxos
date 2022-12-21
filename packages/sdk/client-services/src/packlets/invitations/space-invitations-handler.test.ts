@@ -179,7 +179,7 @@ describe('services/space-invitations-handler', () => {
       onSuccess: () => {
         count();
       },
-      onCancelled: () => raise(new Error()),
+      onCancelled: () => {},
       onTimeout: (err: Error) => raise(new Error(err.message)),
       onError: (err: Error) => raise(new Error(err.message))
     });
@@ -205,7 +205,8 @@ describe('services/space-invitations-handler', () => {
       })
     );
     await done();
-
+    
+    await hostObservable.cancel()
     await hostSpace.close();
   });
 });
