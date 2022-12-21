@@ -44,7 +44,7 @@ export const ContactList: FC<{}> = () => {
     <Card title='Contacts' color='bg-blue-400' menubar={<Menubar />}>
       <>
         {contacts.map((contact) => (
-          <div key={id(contact)} className='p-3 border-b'>
+          <div key={id(contact)} className='p-2 pl-3 border-b'>
             <Person person={contact} />
           </div>
         ))}

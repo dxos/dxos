@@ -16,8 +16,6 @@ import { ContactList } from './ContactList';
 import { ProjectList } from './ProjectList';
 import { TaskList } from './TaskList';
 
-const spaceKeyToSwarmKey = (spaceKey: PublicKey) => PublicKey.from(sha256(spaceKey.toHex()));
-
 export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
   const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(undefined);
@@ -37,17 +35,23 @@ export const App = () => {
       }
 
       let spaceKey: PublicKey | undefined;
+      let swarmKey: PublicKey | undefined;
       try {
         const locationHash = location.hash;
         if (locationHash) {
-          spaceKey = PublicKey.from(locationHash.slice(1));
+          const [spaceKeyHex, swarmKeyHex] = locationHash.slice(1).split(':');
+          spaceKey = PublicKey.from(spaceKeyHex);
+          if(swarmKeyHex) {
+            swarmKey = PublicKey.from(swarmKeyHex);
+          }
         }
       } catch {}
 
       console.log('spaceKey', spaceKey);
-      const createInvitationHost = (space: Space) => {
+      const initWithSpace = (space: Space) => {
+        const swarmKey = PublicKey.random();
         const hostObservable = space.createInvitation({
-          swarmKey: spaceKeyToSwarmKey(space.key),
+          swarmKey,
           type: Invitation.Type.MULTIUSE_TESTING
         });
         hostObservable.subscribe({
@@ -64,24 +68,16 @@ export const App = () => {
             console.error(error);
           }
         });
+        location.hash = `${space.key.toHex()}:${swarmKey.toHex()}`;
+        setClient(client);
+        setSpaceKey(space.key);
+        setDatabase(new EchoDatabase(space.database));
       };
 
-      if (spaceKey) {
-        {
-          const space = client.echo.getSpace(spaceKey);
-          if (space) {
-            createInvitationHost(space);
-            location.hash = space.key.toHex();
-            setClient(client);
-            setSpaceKey(space.key);
-            setDatabase(new EchoDatabase(space.database));
-            return;
-          }
-        }
-
+      const join = async (swarmKey: PublicKey): Promise<boolean> => {
         const complete = new Trigger<boolean>();
         const observable = client.echo.acceptInvitation({
-          swarmKey: spaceKeyToSwarmKey(spaceKey),
+          swarmKey,
           type: Invitation.Type.MULTIUSE_TESTING,
           timeout: 2000, // TODO(dmaretskyi): Doesn't work.
           invitationId: PublicKey.random().toHex() // TODO(dmaretskyi): Why is this required?
@@ -90,9 +86,7 @@ export const App = () => {
         observable.subscribe({
           onSuccess: async (invitation) => {
             const space = client.echo.getSpace(spaceKey!)!;
-            setClient(client);
-            setSpaceKey(space.key);
-            setDatabase(new EchoDatabase(space.database));
+            initWithSpace(space);
             complete.wake(true);
           },
           onTimeout: () => {
@@ -107,22 +101,33 @@ export const App = () => {
 
         // TODO(burdon): Remove timeout.
         try {
-          if (await complete.wait({ timeout: 10_000 })) {
-            return;
-          }
+          return await complete.wait({ timeout: 10_000 })
         } catch {
           console.error('timeout');
           void observable.cancel();
+          return false;
+        }
+      }
+
+      if (spaceKey) {
+        {
+          const space = client.echo.getSpace(spaceKey);
+          if (space) {
+            initWithSpace(space);
+            return;
+          }
+        }
+
+        if(swarmKey) {
+          const success = await join(swarmKey);
+          if(success) {
+            return;
+          }
         }
       }
 
       const space = await client.echo.createSpace();
-      createInvitationHost(space);
-      location.hash = space.key.toHex();
-
-      setClient(client);
-      setSpaceKey(space.key);
-      setDatabase(new EchoDatabase(space.database));
+      initWithSpace(space);
     });
   }, []);
 
