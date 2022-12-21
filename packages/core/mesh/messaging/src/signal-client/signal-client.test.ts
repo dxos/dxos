@@ -4,7 +4,7 @@
 
 import { expect, mockFn } from 'earljs';
 
-import { sleep, Event, Trigger } from '@dxos/async';
+import { sleep, Event, Trigger, asyncTimeout } from '@dxos/async';
 import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
@@ -102,6 +102,51 @@ describe('SignalClient', () => {
 
     expect(await received.wait()).toEqual(message);
   }).timeout(500);
+
+  test('unsubscribe from messages', async () => {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
+
+    const received = new Event<any>();
+    const client1 = new SignalClient(broker1.url(), async (msg) => {
+      received.emit(msg);
+    });
+    afterTest(() => client1.close());
+
+    const client2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    afterTest(() => client2.close());
+
+    const unsubscribeHandle = await client1.subscribeMessages(peer1);
+    await client2.subscribeMessages(peer2);
+
+    const message = {
+      author: peer2,
+      recipient: peer1,
+      payload: PAYLOAD
+    };
+
+    {
+      const promise = received.waitFor((msg) => {
+        expect(msg).toEqual(message);
+        return true;
+      });
+      await client2.sendMessage(message);
+      await promise;
+    }
+
+    // unsubscribing.
+    unsubscribeHandle.unsubscribe();
+
+    {
+      const promise = received.waitFor((msg) => {
+        expect(msg).toEqual(message);
+        return true;
+      });
+      await client2.sendMessage(message);
+      await expect(asyncTimeout(promise, 200)).toBeRejected();
+    }
+  });
 
   test('signal after re-entrance', async () => {
     const topic = PublicKey.random();
