@@ -36,7 +36,9 @@ export const ProjectList: FC<{}> = () => {
     <Card title='Projects' menubar={<Menubar />}>
       <>
         {projects.map((project) => (
-          <ProjectItem key={id(project)} project={project} />
+          <div key={id(project)} className='border-b'>
+            <ProjectItem project={project} />
+          </div>
         ))}
       </>
     </Card>
@@ -51,8 +53,8 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
   };
 
   return (
-    <div className='p-2 bg-white'>
-      <div className='flex'>
+    <div className='flex flex-col bg-white'>
+      <div className='flex p-2 pb-0'>
         <input
           className='w-full p-1 outline-0'
           value={project.title}

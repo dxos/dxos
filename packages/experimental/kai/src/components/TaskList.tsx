@@ -55,20 +55,33 @@ export const TaskItem: FC<{ task: Task }> = ({ task }) => {
   useSelection(db(task), [task, task.assignee]);
 
   return (
-    <div className='flex flex-col m-1 bg-white'>
-      <div className='flex'>
-        <input
-          type='checkbox'
-          className='m-2'
-          checked={!!task.completed}
-          onChange={() => (task.completed = !task.completed)}
-        />
-        <input className='w-full outline-0' value={task.title} onChange={(e) => (task.title = e.target.value)} />
-      </div>
-
-      <div>
-        <div className='flex ml-8 mb-2 text-sm text-blue-800'>{task.assignee?.name}</div>
-      </div>
+    <div className='flex ml-4 m-2 bg-white'>
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <div className='flex mr-2'>
+                <input type='checkbox' checked={!!task.completed} onChange={() => (task.completed = !task.completed)} />
+              </div>
+            </td>
+            <td>
+              <div>
+                <input
+                  className='w-full outline-0'
+                  value={task.title}
+                  onChange={(e) => (task.title = e.target.value)}
+                />
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <div className='flex text-sm text-blue-800'>{task.assignee?.name}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 };
