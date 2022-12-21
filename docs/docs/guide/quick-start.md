@@ -7,13 +7,13 @@ prev: why
 
 # Quick start
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.<br/> Learn more about our [mission](why).
+DXOS is for building **collaborative**, **offline-first**, **privacy-preserving** software.<br/> Learn more about our [mission](why).
 
 *   [Templates](#creating-apps-with-dx-cli) for creating local-first apps
 *   [Using the ECHO database](#using-the-echo-database) for real-time, offline-first consensus
 *   [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally
 *   [Deploying apps to KUBE](#deploying-your-app-to-a-kube)
-
+*   [Sample code](#read-more)
 ## Creating apps with `dx` CLI
 
 The `dx` CLI offers a production-ready application template based on `vite` with `typescript`, `react`, `pwa`, and other opinions built in.
@@ -167,7 +167,7 @@ Coming soon:
 *   `console`: a management console for the apps running on your KUBE
 :::
 
-Read more:
+## Read more
 
+*   DXOS [templates](cli/templates) and [sample code](samples).
 *   [`dx.yml` file schema](kube/dx-yml-file)
-*   DXOS [templates](cli/templates) and [sample](samples).
