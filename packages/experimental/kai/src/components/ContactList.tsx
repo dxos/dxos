@@ -6,7 +6,7 @@ import faker from 'faker';
 import { PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { db, id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';

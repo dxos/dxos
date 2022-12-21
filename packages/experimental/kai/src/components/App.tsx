@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DatabaseContext } from '../hooks';
 import React, { useEffect, useState } from 'react';
 
+import { Trigger } from '@dxos/async';
 import { fromHost, Client, PublicKey, Invitation, Config, Space } from '@dxos/client';
-import { Dynamics, Defaults } from '@dxos/config'
+import { Dynamics, Defaults } from '@dxos/config';
+import { sha256 } from '@dxos/crypto';
 import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider } from '@dxos/react-client';
 
+import { DatabaseContext } from '../hooks';
 import { ContactList } from './ContactList';
 import { ProjectList } from './ProjectList';
 import { TaskList } from './TaskList';
-import { sha256 } from '@dxos/crypto';
-import { Trigger } from '@dxos/async'
 
 const spaceKeyToSwarmKey = (spaceKey: PublicKey) => PublicKey.from(sha256(spaceKey.toHex()));
 
@@ -36,34 +36,34 @@ export const App = () => {
 
       let spaceKey: PublicKey | undefined;
       try {
-        const locationHash = location.hash
+        const locationHash = location.hash;
         if (locationHash) {
           spaceKey = PublicKey.from(locationHash.slice(1));
         }
-      } catch { }
+      } catch {}
 
-      console.log('spaceKey', spaceKey)
+      console.log('spaceKey', spaceKey);
 
-      function createInvitationHost(space: Space) {
+      const createInvitationHost = (space: Space) => {
         const hostObs = space.createInvitation({
           swarmKey: spaceKeyToSwarmKey(space.key),
-          type: Invitation.Type.MULTIUSE_TESTING,
-        })
+          type: Invitation.Type.MULTIUSE_TESTING
+        });
         hostObs.subscribe({
           onConnecting: () => {
-            console.log('connecting')
+            console.log('connecting');
           },
           onConnected: () => {
-            console.log('connected')
+            console.log('connected');
           },
           onSuccess: (invitation) => {
-            console.log('success')
+            console.log('success');
           },
           onError: (error) => {
-            console.error(error)
+            console.error(error);
           }
-        })
-      }
+        });
+      };
 
       if (spaceKey) {
         {
@@ -78,40 +78,38 @@ export const App = () => {
           }
         }
 
-
-        const complete = new Trigger<boolean>()
+        const complete = new Trigger<boolean>();
         const observable = client.echo.acceptInvitation({
           swarmKey: spaceKeyToSwarmKey(spaceKey),
           type: Invitation.Type.MULTIUSE_TESTING,
           timeout: 2000, // TODO(dmaretskyi): Doesn't work.
-          invitationId: PublicKey.random().toHex(), // TODO(dmaretskyi): Why is this required?
-        })
+          invitationId: PublicKey.random().toHex() // TODO(dmaretskyi): Why is this required?
+        });
         observable.subscribe({
           onSuccess: async (invitation) => {
             const space = client.echo.getSpace(spaceKey!)!;
             setClient(client);
             setSpaceKey(space.key);
             setDatabase(new EchoDatabase(space.database));
-            complete.wake(true)
-
+            complete.wake(true);
           },
           onTimeout: () => {
-            console.error('timeout')
-            complete.wake(false)
+            console.error('timeout');
+            complete.wake(false);
           },
           onError: (error) => {
-            console.error(error)
-            complete.wake(false)
+            console.error(error);
+            complete.wake(false);
           }
-        })
+        });
 
         try {
           if (await complete.wait({ timeout: 10_000 })) {
-            return
+            return;
           }
         } catch {
-          console.error('timeout')
-          observable.cancel();
+          console.error('timeout');
+          void observable.cancel();
         }
       }
 
@@ -121,7 +119,7 @@ export const App = () => {
       setClient(client);
       setSpaceKey(space.key);
       setDatabase(new EchoDatabase(space.database));
-    })
+    });
   }, []);
 
   if (!client || !spaceKey || !database) {
