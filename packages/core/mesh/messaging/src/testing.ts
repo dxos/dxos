@@ -92,7 +92,7 @@ export class TestPeer {
   }
 
   async close() {
-    this.messenger.close();
+    await this.messenger.close();
     await this.signalManager.close();
   }
 }

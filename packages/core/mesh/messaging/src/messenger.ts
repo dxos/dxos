@@ -69,12 +69,12 @@ export class Messenger {
     this._closed = false;
   }
 
-  close() {
+  async close() {
     if (this._closed) {
       return;
     }
     this._closed = true;
-    this._ctx.dispose();
+    await this._ctx.dispose();
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {

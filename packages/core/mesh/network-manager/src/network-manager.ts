@@ -123,6 +123,7 @@ export class NetworkManager {
       });
     }
 
+    await this._messenger.close();
     await this._signalManager.close();
   }
 
