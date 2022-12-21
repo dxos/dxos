@@ -1,32 +1,35 @@
-import * as pb from "protobufjs";
-import * as ts from "typescript";
+//
+// Copyright 2022 DXOS.org
+//
 
-const f = ts.factory;
+// TODO(burdon): Factor out.
 
-export function codegenSchema(
-  schema: pb.Root
-) {
-  return `const schemaJson = ${JSON.stringify(JSON.stringify(schema.toJSON()))}\n`;
-}
+import * as pb from 'protobufjs';
+// import * as ts from 'typescript';
 
-export function *iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
-  for(const type of ns.nestedArray) {
-    if(type instanceof pb.Type) {
+// const f = ts.factory;
+
+export const codegenSchema = (schema: pb.Root) =>
+  `const schemaJson = ${JSON.stringify(JSON.stringify(schema.toJSON()))}\n`;
+
+export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
+  for (const type of ns.nestedArray) {
+    if (type instanceof pb.Type) {
       yield type;
-    } 
+    }
 
-    if(type instanceof pb.Type || type instanceof pb.Namespace) {
+    if (type instanceof pb.Type || type instanceof pb.Namespace) {
       yield* iterTypes(type);
     }
   }
 }
 
-function codegenType(field: pb.Field): string {
-  function scalar() {
-    if(field.resolvedType) {
+const codegenType = (field: pb.Field): string => {
+  const scalar = () => {
+    if (field.resolvedType) {
       return field.resolvedType.name;
     } else {
-      switch(field.type) {
+      switch (field.type) {
         case 'string':
           return 'string';
         case 'bytes':
@@ -49,14 +52,14 @@ function codegenType(field: pb.Field): string {
         case 'sfixed64':
           return 'bigint';
         default:
-          throw new Error(`Unknown field type: ${field.type}`);
+          throw new Error(`Invalid field type: ${field.type}`);
       }
     }
-  }
+  };
 
   field.resolve();
-  if(field.repeated) {
-    if(field.resolvedType) {
+  if (field.repeated) {
+    if (field.resolvedType) {
       return `OrderedSet<${scalar()}>`;
     } else {
       return `Set<${scalar()}>`;
@@ -64,21 +67,21 @@ function codegenType(field: pb.Field): string {
   } else {
     return scalar();
   }
-}
+};
 
-export function codegenClass(type: pb.Type) {
+export const codegenClass = (type: pb.Type) => {
   const name = type.name;
   const fullName = type.fullName.slice(1);
 
   const initializer = type.fieldsArray
-    .filter(field => field.name !== 'id')
-    .map(field => `${field.name}?: ${codegenType(field)}`)
-    .join(',')
+    .filter((field) => field.name !== 'id')
+    .map((field) => `${field.name}?: ${codegenType(field)}`)
+    .join(',');
 
   const fields = type.fieldsArray
-    .filter(field => field.name !== 'id')
-    .map(field => `declare ${field.name}: ${codegenType(field)};`)
-    .join('\n')
+    .filter((field) => field.name !== 'id')
+    .map((field) => `declare ${field.name}: ${codegenType(field)};`)
+    .join('\n');
 
   return `
     export class ${name} extends EchoObjectBase {
@@ -95,5 +98,5 @@ export function codegenClass(type: pb.Type) {
       ${fields}
     }
     schema.registerPrototype(${name});
-  `
-}
+  `;
+};

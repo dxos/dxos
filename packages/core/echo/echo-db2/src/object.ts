@@ -22,10 +22,10 @@ const isValidKey = (key: string | symbol) =>
 
 export const id = (object: EchoObjectBase) => object[unproxy]._id;
 
-
 /**
  * @deprecated Not safe. Maybe return undefined for freshly created objects.
  */
+// TODO(burdon): Remove.
 export const db = (object: EchoObjectBase) => object[unproxy]._database!;
 
 /**
@@ -38,6 +38,7 @@ export class EchoObjectBase {
    * Maybe not be present for freshly created objects.
    */
   public _id!: string; // TODO(burdon): Symbol?
+
   /**
    * @internal
    * Maybe not be present for freshly created objects.
@@ -115,13 +116,12 @@ export class EchoObjectBase {
     let type = this._item!.model.get(`${prop}$type`);
     const value = this._item!.model.get(prop);
 
-    if(!type && this._schemaType) {
-      const field = this._schemaType.fields.find(field => field.name === prop);
-      if(field?.isOrderedSet) {
+    if (!type && this._schemaType) {
+      const field = this._schemaType.fields.find((field) => field.name === prop);
+      if (field?.isOrderedSet) {
         type = 'array';
       }
     }
-      
 
     switch (type) {
       case 'ref':
