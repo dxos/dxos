@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, Trigger, synchronized } from '@dxos/async';
+import { Event, Trigger, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -77,8 +77,6 @@ export class SignalClient implements SignalMethods {
    */
   private _lastStateChange = Date.now();
 
-  private _reconnectIntervalId?: NodeJS.Timeout;
-
   private _client!: SignalRPCClient;
   private readonly _clientReady = new Trigger();
 
@@ -125,10 +123,6 @@ export class SignalClient implements SignalMethods {
     }
 
     await this._ctx.dispose();
-
-    if (this._reconnectIntervalId !== undefined) {
-      clearTimeout(this._reconnectIntervalId);
-    }
 
     this._clientReady.reset();
     await this._client.close();
@@ -285,7 +279,7 @@ export class SignalClient implements SignalMethods {
 
   private _reconnect() {
     log(`reconnecting in ${this._reconnectAfter}ms`);
-    if (this._reconnectIntervalId !== undefined) {
+    if (this._state === SignalState.RE_CONNECTING) {
       console.error('Signal api already reconnecting.');
       return;
     }
@@ -293,18 +287,20 @@ export class SignalClient implements SignalMethods {
       return;
     }
 
-    this._reconnectIntervalId = setTimeout(async () => {
-      this._reconnectIntervalId = undefined;
+    this._setState(SignalState.RE_CONNECTING);
+    this._ctx.dispose().catch((err) => log.catch(err));
+    this._initContext();
 
-      await this._ctx.dispose();
-      this._initContext();
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        // Close client if it wasn't already closed.
+        this._client.close().catch(() => {});
 
-      // Close client if it wasn't already closed.
-      this._client.close().catch(() => {});
-
-      this._setState(SignalState.RE_CONNECTING);
-      this._createClient();
-    }, this._reconnectAfter);
+        this._createClient();
+      },
+      this._reconnectAfter
+    );
   }
 
   @synchronized
