@@ -152,7 +152,6 @@ export class SignalClient implements SignalMethods {
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
-    await this.subscribeMessages(peerId);
     await this._subscribeSwarmEvents({ topic, peerId });
   }
 
@@ -161,9 +160,6 @@ export class SignalClient implements SignalMethods {
 
     this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
-
-    this._messageStreams.get(peerId)?.close();
-    this._messageStreams.delete(peerId);
   }
 
   async sendMessage(msg: Message): Promise<void> {

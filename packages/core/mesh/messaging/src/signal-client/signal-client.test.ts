@@ -35,7 +35,6 @@ describe('SignalClient', () => {
   });
 
   test('message between 2 clients', async () => {
-    const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const received = new Trigger<any>();
@@ -46,8 +45,8 @@ describe('SignalClient', () => {
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
     afterTest(() => api2.close());
 
-    await api1.join({ topic, peerId: peer1 });
-    await api2.join({ topic, peerId: peer2 });
+    await api1.subscribeMessages(peer1);
+    await api2.subscribeMessages(peer2);
 
     const message = {
       author: peer2,
@@ -82,7 +81,6 @@ describe('SignalClient', () => {
   }).timeout(500);
 
   test('signal to self', async () => {
-    const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const received = new Trigger<any>();
@@ -91,7 +89,7 @@ describe('SignalClient', () => {
     });
     afterTest(() => api1.close());
 
-    await api1.join({ topic, peerId: peer1 });
+    await api1.subscribeMessages(peer1);
 
     const message = {
       author: peer2,
@@ -104,7 +102,6 @@ describe('SignalClient', () => {
   }).timeout(500);
 
   test('unsubscribe from messages', async () => {
-    const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
 
@@ -149,7 +146,6 @@ describe('SignalClient', () => {
   });
 
   test('signal after re-entrance', async () => {
-    const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
 
@@ -168,8 +164,8 @@ describe('SignalClient', () => {
       payload: PAYLOAD
     };
 
-    await client1.join({ topic, peerId: peer1 });
-    await client2.join({ topic, peerId: peer2 });
+    await client1.subscribeMessages(peer1);
+    await client2.subscribeMessages(peer2);
 
     {
       const promise = received.waitFor((msg) => {
@@ -186,7 +182,7 @@ describe('SignalClient', () => {
 
     await client1.close();
     client1.open();
-    await client1.join({ topic, peerId: peer1 });
+    await client1.subscribeMessages(peer1);
 
     {
       const promise = received.waitFor((msg) => {
