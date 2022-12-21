@@ -283,21 +283,26 @@ export class OrderedSet<T extends EchoObjectBase> implements Array<T> {
   }
 
   private _setModel(index: number, value: T) {
-    this._object!._database!.save(value);
+    void this._object!._database!.save(value);
 
     if (this._orderedList!.values.length === 0) {
-      this._orderedList!.init([value[unproxy]._id, EMPTY]);
+      void this._orderedList!.init([value[unproxy]._id, EMPTY]);
     } else {
       const prev = this._orderedList?.values[index - 1];
       if (prev) {
-        this._orderedList!.insert(prev, value[unproxy]._id);
+        void this._orderedList!.insert(prev, value[unproxy]._id);
       } else {
         const next = this._orderedList?.values[index + 1];
         if (!next) {
           throw new Error('BUG');
         }
-        this._orderedList!.remove([this._orderedList?.values[index]!]);
-        this._orderedList!.insert(value[unproxy]._id, next);
+
+        const item = this._orderedList?.values[index];
+        if (item) {
+          void this._orderedList!.remove([item]);
+        }
+
+        void this._orderedList!.insert(value[unproxy]._id, next);
       }
     }
   }

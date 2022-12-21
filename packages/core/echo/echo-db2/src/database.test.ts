@@ -134,6 +134,7 @@ describe('EchoDatabase', () => {
     await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(3));
   });
 
+  // TODO(burdon): ?
   test.skip('query', async () => {
     const db = await createDatabase();
 

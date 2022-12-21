@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 import { Trigger } from '@dxos/async';
 import { fromHost, Client, PublicKey, Invitation, Config, Space } from '@dxos/client';
 import { Dynamics, Defaults } from '@dxos/config';
-import { sha256 } from '@dxos/crypto';
 import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider } from '@dxos/react-client';
 
@@ -41,7 +40,7 @@ export const App = () => {
         if (locationHash) {
           const [spaceKeyHex, swarmKeyHex] = locationHash.slice(1).split(':');
           spaceKey = PublicKey.from(spaceKeyHex);
-          if(swarmKeyHex) {
+          if (swarmKeyHex) {
             swarmKey = PublicKey.from(swarmKeyHex);
           }
         }
@@ -101,13 +100,13 @@ export const App = () => {
 
         // TODO(burdon): Remove timeout.
         try {
-          return await complete.wait({ timeout: 10_000 })
+          return await complete.wait({ timeout: 10_000 });
         } catch {
           console.error('timeout');
           void observable.cancel();
           return false;
         }
-      }
+      };
 
       if (spaceKey) {
         {
@@ -118,9 +117,9 @@ export const App = () => {
           }
         }
 
-        if(swarmKey) {
+        if (swarmKey) {
           const success = await join(swarmKey);
-          if(success) {
+          if (success) {
             return;
           }
         }
