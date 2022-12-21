@@ -174,6 +174,7 @@ export class SignalClient implements SignalMethods {
 
     // Do nothing if already subscribed.
     if (this._messageStreams.has(peerId)) {
+      // TODO(mykola): on multiple subscription for same peerId everybody will receive same unsubscribe handle.
       return {
         unsubscribe: async () => {
           this._messageStreams.get(peerId)!.close();

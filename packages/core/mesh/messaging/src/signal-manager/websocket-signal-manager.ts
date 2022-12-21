@@ -143,7 +143,7 @@ export class WebsocketSignalManager implements SignalManager {
       [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
     );
 
-    // TODO(mykola): on multiple subscription everybody will receive same unsubscribe handle.
+    // TODO(mykola): on multiple subscription for same peerId everybody will receive same unsubscribe handle.
     return {
       unsubscribe: async () => {
         await Promise.all(unsubscribeHandles.map((handle) => handle.unsubscribe()));
