@@ -6,7 +6,7 @@ import faker from 'faker';
 import { Plus, PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { db, id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';
@@ -16,7 +16,7 @@ import { createTask, TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
   const db = useDatabase();
-  const projects = useObjects(db, Project.filter());
+  const projects = useObjects(Project.filter());
 
   const handleCreate = async () => {
     await db.save(
@@ -46,10 +46,12 @@ export const ProjectList: FC<{}> = () => {
 };
 
 export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
-  useSelection(db(project), project);
+  const db = useDatabase();
+
+  useSelection(project);
 
   const handleCreate = async () => {
-    project.tasks.push(await createTask(db(project)));
+    project.tasks.push(await createTask(db));
   };
 
   return (
@@ -66,7 +68,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
       </div>
 
       <div>
-        {project.tasks.map((task) => (
+        {project.tasks?.map((task) => (
           <TaskItem key={id(task)} task={task} />
         ))}
       </div>

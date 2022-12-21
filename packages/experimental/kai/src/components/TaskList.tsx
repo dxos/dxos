@@ -6,7 +6,7 @@ import faker from 'faker';
 import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { db, EchoDatabase, id } from '@dxos/echo-db2';
+import { EchoDatabase, id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
 
 import { useDatabase, useObjects, useSelection } from '../hooks';
@@ -28,7 +28,7 @@ export const createTask = async (db: EchoDatabase) => {
 
 export const TaskList: FC<{}> = () => {
   const db = useDatabase();
-  const tasks = useObjects(db, Task.filter());
+  const tasks = useObjects(Task.filter());
 
   const handleCreate = async () => {
     await createTask(db);
@@ -52,7 +52,7 @@ export const TaskList: FC<{}> = () => {
 };
 
 export const TaskItem: FC<{ task: Task }> = ({ task }) => {
-  useSelection(db(task), [task, task.assignee]);
+  useSelection([task, task.assignee]);
 
   return (
     <div className='flex ml-4 m-2 bg-white'>
