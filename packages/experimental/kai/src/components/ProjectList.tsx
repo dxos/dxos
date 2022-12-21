@@ -16,7 +16,7 @@ import { createTask, TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
   const db = useDatabase();
-  const projects = useObjects(db, Project.filter());
+  const projects = useObjects(Project.filter());
 
   const handleCreate = async () => {
     await db.save(
@@ -44,10 +44,12 @@ export const ProjectList: FC<{}> = () => {
 };
 
 export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
+  const db = useDatabase();
+
   useSelection(project);
 
   const handleCreate = async () => {
-    project.tasks.push(await createTask(db(project)));
+    project.tasks.push(await createTask(db));
   };
 
   return (
