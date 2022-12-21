@@ -14,7 +14,6 @@ badges:
   # - '![Contributors](https://img.shields.io/github/contributors/dxos/dxos)'
   
 banner: '![DXOS](./docs/docs/assets/images/github-repo-banner.png)'
-install: pnpm install --save @dxos/client
 quickStartUrl: https://docs.dxos.org/guide/quick-start
 guideUrl: https://docs.dxos.org/guide
 apiReferenceUrl: https://docs.dxos.org/api
@@ -23,3 +22,4 @@ demo: |
 
   ![ECHO](https://user-images.githubusercontent.com/3523355/158708286-f9a8c5f1-83ed-4bac-ab9e-65ddb6861fe3.gif)
 coverageDiagram: '![Coverage](https://codecov.io/gh/dxos/dxos/branch/main/graphs/tree.svg?token=CLO9PHX2PQ)'
+repoGuideUrl: 'https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md'
