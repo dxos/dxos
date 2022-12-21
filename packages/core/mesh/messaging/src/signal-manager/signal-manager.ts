@@ -6,8 +6,8 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { CommandTrace, SignalStatus } from './signal-client';
-import { Message, SignalMethods } from './signal-methods';
+import { CommandTrace, SignalStatus } from '../signal-client';
+import { Message, SignalMethods } from '../signal-methods';
 
 /**
  *
@@ -20,6 +20,6 @@ export interface SignalManager extends SignalMethods {
 
   getStatus(): SignalStatus[];
 
-  // TODO(burdon): Open/close.
-  destroy(): Promise<void>;
+  open(): Promise<void>;
+  close(): Promise<void>;
 }
