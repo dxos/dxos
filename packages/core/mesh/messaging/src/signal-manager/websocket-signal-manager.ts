@@ -135,14 +135,20 @@ export class WebsocketSignalManager implements SignalManager {
     );
   }
 
-  async subscribeMessages(peerId: PublicKey): Promise<void> {
+  async subscribeMessages(peerId: PublicKey) {
     log(`Subscribed for message stream peerId=${peerId}`);
     assert(!this._closed, 'Closed');
     this._subscribedMessages.add(peerId);
 
-    await Promise.all(
+    const unsubscribeHandles = await Promise.all(
       [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
     );
+
+    return {
+      unsubscribe: async () => {
+        await Promise.all(unsubscribeHandles.map((handle) => handle.unsubscribe()));
+      }
+    };
   }
 
   private _scheduleReconcile() {
