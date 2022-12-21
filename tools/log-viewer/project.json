@@ -1,0 +1,6 @@
+{
+  "sourceRoot": "tools/log-viewer/src",
+  "projectType": "library",
+  "targets": {
+  }
+}

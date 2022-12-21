@@ -3809,6 +3809,12 @@ importers:
       '@types/node': 18.11.9
       typescript: 4.8.4
 
+  tools/log-viewer:
+    specifiers:
+      electron: ~18.0.4
+    devDependencies:
+      electron: 18.0.4
+
   tools/presenter:
     specifiers:
       '@dxos/assets': workspace:*

@@ -1,0 +1,12 @@
+{
+  "name": "@dxos/log-viewer",
+  "version": "0.0.1",
+  "description": "Desktop application for viewing DXOS logs.",
+  "main": "src/main.ts",
+  "scripts": {
+    "start": "electron -r @swc-node/register ."
+  },
+  "devDependencies": {
+    "electron": "~18.0.4"
+  }
+}
