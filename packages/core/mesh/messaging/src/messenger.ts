@@ -4,8 +4,8 @@
 
 import assert from 'node:assert';
 
-import { EventSubscriptions } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -40,7 +40,7 @@ export class Messenger {
 
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
 
-  private readonly _subscriptions = new EventSubscriptions();
+  private _ctx!: Context;
   private _closed = true;
   private readonly _retryDelay: number;
   private readonly _timeout: number;
@@ -57,7 +57,10 @@ export class Messenger {
     if (!this._closed) {
       return;
     }
-    this._subscriptions.add(
+    this._ctx = new Context({
+      onError: (err) => log.catch(err)
+    });
+    this._ctx.onDispose(
       this._signalManager.onMessage.on(async (message) => {
         log('received message', { from: message.author });
         await this._handleMessage(message);
@@ -71,7 +74,7 @@ export class Messenger {
       return;
     }
     this._closed = true;
-    this._subscriptions.clear();
+    this._ctx.dispose();
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
@@ -107,7 +110,7 @@ export class Messenger {
       clearTimeout(timeout);
     });
 
-    this._subscriptions.add(() => {
+    this._ctx.onDispose(() => {
       cancelRetry();
       clearTimeout(timeout);
     });
