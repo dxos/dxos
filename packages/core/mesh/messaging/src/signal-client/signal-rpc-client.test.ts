@@ -7,9 +7,10 @@ import { expect } from 'earljs';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { schema } from '@dxos/protocols';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createTestBroker, TestBroker } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test } from '@dxos/test';
+import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
@@ -26,6 +27,7 @@ describe('SignalRPCClient', () => {
 
   const setupClient = async () => {
     const client = new SignalRPCClient(broker.url());
+    afterTest(async () => await client.close());
     return client;
   };
 
@@ -37,18 +39,12 @@ describe('SignalRPCClient', () => {
     const peerId2 = PublicKey.random();
 
     const stream1 = await client1.receiveMessages(peerId1);
-    const message: Any = {
-      type_url: 'test',
-      value: Uint8Array.from([1, 2, 3])
+    const payload: Any = {
+      type_url: 'example.testing.data.TestPayload',
+      value: schema.getCodecForType('example.testing.data.TestPayload').encode({ data: 'Some payload' })
     };
 
-    await client2.sendMessage({
-      author: peerId2,
-      recipient: peerId1,
-      payload: message
-    });
-
-    const received: SignalMessage = await new Promise((resolve) => {
+    const received: Promise<SignalMessage> = new Promise((resolve) => {
       stream1.subscribe(
         (message) => {
           resolve(message);
@@ -61,9 +57,17 @@ describe('SignalRPCClient', () => {
         }
       );
     });
-    expect(received.author).toEqual(peerId2.asUint8Array());
+
+    await client2.sendMessage({
+      author: peerId2,
+      recipient: peerId1,
+      payload
+    });
+
+    expect((await received).author).toEqual(peerId2.asUint8Array());
+    expect((await received).payload).toBeAnObjectWith(payload);
     stream1.close();
-  }).timeout(10000);
+  }).timeout(2_000);
 
   test('join', async () => {
     const client1 = await setupClient();
@@ -77,8 +81,7 @@ describe('SignalRPCClient', () => {
     const promise = new Promise<SwarmEvent>((resolve) => {
       stream1.subscribe(
         (event: SwarmEvent) => {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-          if (peerId2.equals(event.peerAvailable?.peer!)) {
+          if (event.peerAvailable && peerId2.equals(event.peerAvailable.peer!)) {
             resolve(event);
           }
         },
@@ -95,5 +98,5 @@ describe('SignalRPCClient', () => {
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
     stream1.close();
     stream2.close();
-  }).timeout(10000);
+  }).timeout(2_000);
 });

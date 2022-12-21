@@ -4,29 +4,36 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, DeferredTask, synchronized, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
+import { CommandTrace, SignalClient, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
 
-// TODO: Make class re-entrant.
+/**
+ * Manages connection to multiple Signal Servers over WebSocket
+ */
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
-  /** Topics joined: topic => peer_id */
+  /** Topics joined: topic => peerId */
   private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>((topic) => topic.toHex());
 
-  /** host => topic => peer_id */
+  /** host => topic => peerId */
   private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
-  private _reconciling?: boolean = false;
-  private _reconcileTimeoutId?: NodeJS.Timeout;
-  private _destroyed = false;
+  /** peerId[] */
+  private readonly _subscribedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
+
+  private _ctx!: Context;
+  private _reconcileTask?: DeferredTask;
+  private _reconcilingLater = false;
+  private _closed = false;
 
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
@@ -57,62 +64,135 @@ export class WebsocketSignalManager implements SignalManager {
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));
       this._topicsJoinedPerSignal.set(host, new ComplexMap(PublicKey.hash));
     }
+
+    this._initContext();
+  }
+
+  async open() {
+    if (!this._closed) {
+      return;
+    }
+
+    this._initContext();
+
+    await Promise.all([...this._servers.values()].map((server) => server.open()));
+    await Promise.all(
+      [...this._servers.values()].map((server) =>
+        Promise.all([...this._subscribedMessages.values()].map((peerId) => server.subscribeMessages(peerId)))
+      )
+    );
+    this._closed = false;
+    this._scheduleReconcile();
+  }
+
+  async close() {
+    if (this._closed) {
+      return;
+    }
+    this._closed = true;
+
+    await this._ctx.dispose();
+
+    await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
+    [...this._topicsJoinedPerSignal.values()].map((value) => value.clear());
   }
 
   getStatus(): SignalStatus[] {
     return Array.from(this._servers.values()).map((server) => server.getStatus());
   }
 
+  @synchronized
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
     log(`Join ${topic} ${peerId}`);
+    assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
+    assert(!this._closed, 'Closed');
+
     this._topicsJoined.set(topic, peerId);
     this._scheduleReconcile();
   }
 
+  @synchronized
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
     log('leaving', { topic, peerId });
+    assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
+    assert(!this._closed, 'Closed');
+
     this._topicsJoined.delete(topic);
     this._scheduleReconcile();
   }
 
-  private _scheduleReconcile() {
-    if (this._destroyed) {
-      return;
-    }
+  async sendMessage({
+    author,
+    recipient,
+    payload
+  }: {
+    author: PublicKey;
+    recipient: PublicKey;
+    payload: Any;
+  }): Promise<void> {
+    log(`Signal ${recipient}`);
+    assert(!this._closed, 'Closed');
 
-    if (!this._reconciling) {
-      this._reconciling = true;
-      this._reconcileJoinedTopics().then(
-        () => {
-          this._reconciling = false;
-        },
-        (err) => {
-          this._reconciling = false;
-          log.error(`Error while reconciling: ${err}`);
-          this._reconcileLater();
-        }
-      );
-    } else {
-      this._reconcileLater();
-    }
+    await Promise.all(
+      [...this._servers.values()].map((server: SignalClient) =>
+        server.sendMessage({ author, recipient, payload }).catch((err) => log(err))
+      )
+    );
   }
 
-  private _reconcileLater() {
-    if (this._destroyed) {
-      return;
-    }
+  async subscribeMessages(peerId: PublicKey) {
+    log(`Subscribed for message stream peerId=${peerId}`);
+    assert(!this._closed, 'Closed');
+    this._subscribedMessages.add(peerId);
 
-    if (!this._reconcileTimeoutId) {
-      this._reconcileTimeoutId = setTimeout(async () => this._scheduleReconcile(), 3000);
-    }
+    const unsubscribeHandles = await Promise.all(
+      [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
+    );
+
+    // TODO(mykola): on multiple subscription for same peerId, everybody will receive same unsubscribe handle.
+    return {
+      unsubscribe: async () => {
+        await Promise.all(unsubscribeHandles.map((handle) => handle.unsubscribe()));
+        this._subscribedMessages.delete(peerId);
+      }
+    };
+  }
+
+  private _initContext() {
+    this._ctx = new Context({
+      onError: (err) => log.catch(err)
+    });
   }
 
   @synchronized
+  private _scheduleReconcile() {
+    if (this._closed) {
+      return;
+    }
+
+    if (!this._reconcileTask) {
+      this._reconcileTask = new DeferredTask(this._ctx, async () => {
+        await this._reconcileJoinedTopics();
+        this._reconcileTask = undefined;
+      });
+    } else if (!this._reconcilingLater) {
+      this._reconcilingLater = true;
+      scheduleTask(
+        this._ctx,
+        () => {
+          this._scheduleReconcile();
+          this._reconcilingLater = false;
+        },
+        3_000
+      );
+    }
+
+    this._reconcileTask.schedule();
+  }
+
   private async _reconcileJoinedTopics() {
-    // TODO(mykola): Handle reconnects to SS. Maybe move map of joined topics to signal-client.
     log('Reconciling..');
+    // TODO(mykola): Handle reconnects to SS. Maybe move map of joined topics to signal-client.
     for (const [host, server] of this._servers) {
       const actualJoinedTopics = this._topicsJoinedPerSignal.get(host)!;
 
@@ -154,38 +234,5 @@ export class WebsocketSignalManager implements SignalManager {
       }
     }
     log('Done reconciling..');
-    this._reconciling = false;
-  }
-
-  async sendMessage({
-    author,
-    recipient,
-    payload
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }): Promise<void> {
-    log(`Signal ${recipient}`);
-    await Promise.all(
-      [...this._servers.values()].map((server: SignalClient) =>
-        server.sendMessage({ author, recipient, payload }).catch((err) => log(err))
-      )
-    );
-  }
-
-  async subscribeMessages(peerId: PublicKey): Promise<void> {
-    log(`Subscribed for message stream peerId=${peerId}`);
-    await Promise.all(
-      [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
-    );
-  }
-
-  async destroy() {
-    this._destroyed = true;
-    if (this._reconcileTimeoutId) {
-      clearTimeout(this._reconcileTimeoutId);
-    }
-    await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
   }
 }

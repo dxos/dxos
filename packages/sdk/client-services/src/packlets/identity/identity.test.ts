@@ -21,6 +21,7 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Identity } from './identity';
@@ -52,14 +53,20 @@ describe('identity/identity', () => {
 
     const protocol = new SpaceProtocol({
       topic: spaceKey,
-      identity: {
-        peerKey: identityKey,
+      swarmIdentity: {
+        peerKey: deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory
+      }),
+      presence: new Presence({
+        localPeerId: deviceKey,
+        announceInterval: 30,
+        offlineTimeout: 200,
+        identityKey
       })
     });
 
@@ -123,6 +130,7 @@ describe('identity/identity', () => {
     const signalContext = new MemorySignalManagerContext();
 
     let spaceKey: PublicKey;
+    let identityKey: PublicKey;
     let genesisFeedKey: PublicKey;
     let identity1: Identity;
     let identity2: Identity;
@@ -132,7 +140,7 @@ describe('identity/identity', () => {
     //
     {
       const keyring = new Keyring();
-      const identityKey = await keyring.createKey();
+      identityKey = await keyring.createKey();
       const deviceKey = await keyring.createKey();
       spaceKey = await keyring.createKey();
 
@@ -158,7 +166,7 @@ describe('identity/identity', () => {
 
       const protocol = new SpaceProtocol({
         topic: spaceKey,
-        identity: {
+        swarmIdentity: {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
@@ -166,6 +174,12 @@ describe('identity/identity', () => {
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
+        }),
+        presence: new Presence({
+          localPeerId: deviceKey,
+          announceInterval: 30,
+          offlineTimeout: 200,
+          identityKey
         })
       });
 
@@ -239,7 +253,7 @@ describe('identity/identity', () => {
 
       const protocol = new SpaceProtocol({
         topic: spaceKey,
-        identity: {
+        swarmIdentity: {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
@@ -247,6 +261,12 @@ describe('identity/identity', () => {
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
+        }),
+        presence: new Presence({
+          localPeerId: deviceKey,
+          announceInterval: 30,
+          offlineTimeout: 200,
+          identityKey
         })
       });
 

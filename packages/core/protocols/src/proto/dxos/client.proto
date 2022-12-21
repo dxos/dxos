@@ -183,8 +183,14 @@ message SpaceDetails {
 // TODO(burdon): Reconcile with dxos.halo.credentials.SpaceMember.
 // TODO(burdon): Reconcile with Profile.
 message SpaceMember {
+  enum PresenceState {
+    OFFLINE = 0;
+    ONLINE = 1;
+  }
+
   dxos.keys.PublicKey identity_key = 1;
   optional Profile profile = 2;
+  PresenceState presence_state = 3;
 }
 
 message SubscribeSpaceResponse {

@@ -86,6 +86,9 @@
       "path": "../../core/mesh/teleport"
     },
     {
+      "path": "../../core/mesh/teleport-extension-presence"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

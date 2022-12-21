@@ -7,6 +7,7 @@ filter:
   - warn
   - info
   # - debug
+  - space-invitations-handler.ts:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug
@@ -16,6 +17,7 @@ filter:
   # - test:debug
   - auth:debug
   - space:debug
+  # - client-services:debug
   # - framer:debug
   # - feed-wrapper:debug
   # - service-host:debug

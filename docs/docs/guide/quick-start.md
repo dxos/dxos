@@ -16,7 +16,7 @@ DXOS is the developer platform for **collaborative**, **offline-first**, **priva
 
 ## Creating apps with `dx` CLI
 
-The `dx` cli offers a production-ready application template based on `vite` with `typescript`, `react`, `pwa`, and other opinions built in.
+The `dx` CLI offers a production-ready application template based on `vite` with `typescript`, `react`, `pwa`, and other opinions built in.
 
 Install:
 

@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.1.20](https://github.com/dxos/dxos/compare/v0.1.19...v0.1.20) (2022-12-16)
+
+
+### Features
+
+* **devtools:** Add Members Panel ([#2147](https://github.com/dxos/dxos/issues/2147)) ([150915c](https://github.com/dxos/dxos/commit/150915c727ee94b7aae489a059b069bcb81b303c))
+
+
+### Bug Fixes
+
+* fix usage of null items in tasks-app ([#2159](https://github.com/dxos/dxos/issues/2159)) ([af04235](https://github.com/dxos/dxos/commit/af0423568e2034d8a855ae818c5e5ac36e2be100))
+
+## [0.1.19](https://github.com/dxos/dxos/compare/v0.1.18...v0.1.19) (2022-12-16)
+
+
+### Features
+
+* Auth extension ([#2112](https://github.com/dxos/dxos/issues/2112)) ([621ff00](https://github.com/dxos/dxos/commit/621ff00f50bac35a5d02b786e9634a91c1e3f2b6))
+* **cli:** add staging config ([#2119](https://github.com/dxos/dxos/issues/2119)) ([ce013cc](https://github.com/dxos/dxos/commit/ce013ccd5c3bed306fe09cf3a72037b859f89e3c))
+* Enable auth for HALO spaces ([#2156](https://github.com/dxos/dxos/issues/2156)) ([54991d7](https://github.com/dxos/dxos/commit/54991d71f3c6c7dd02ad8b5ba1cc5f933b6bf2a8))
+* **presence:** Integration into ClientServices ([#2146](https://github.com/dxos/dxos/issues/2146)) ([419d470](https://github.com/dxos/dxos/commit/419d4708376d4098a03b478d6622572b84c0262f))
+* Refactor database & space management ([#2151](https://github.com/dxos/dxos/issues/2151)) ([363e987](https://github.com/dxos/dxos/commit/363e987bf89f29b6bfd160f051371a1760725152))
+* **space-protocol:** Integrate Teleport Presence ([#2095](https://github.com/dxos/dxos/issues/2095)) ([838e8ac](https://github.com/dxos/dxos/commit/838e8aca5f3faed0a47e112d03df8ae7372b1d06))
+
+
+### Bug Fixes
+
+* **cli:** better logging on app publish ([#2145](https://github.com/dxos/dxos/issues/2145)) ([cb5f900](https://github.com/dxos/dxos/commit/cb5f900260423aaa4db929dc4b148b0b42cff7b0))
+* **cli:** Update default config ([#2117](https://github.com/dxos/dxos/issues/2117)) ([f18afb1](https://github.com/dxos/dxos/commit/f18afb13e6575260318eb240346337155ff0ef96))
+* more review feedback ([#2155](https://github.com/dxos/dxos/issues/2155)) ([4425ea4](https://github.com/dxos/dxos/commit/4425ea4933b6a52866be7ae2bf07e0dcb2ef8aa8))
+* review feedback 1 ([#2154](https://github.com/dxos/dxos/issues/2154)) ([6a8546e](https://github.com/dxos/dxos/commit/6a8546ecf0f20b81284720d28743235406a37eb7))
+
 ## [0.1.18](https://github.com/dxos/dxos/compare/v0.1.17...v0.1.18) (2022-12-14)
 
 
