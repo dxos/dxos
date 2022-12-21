@@ -4,8 +4,8 @@
 
 import assert from 'node:assert';
 
-import { EventSubscriptions } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -23,6 +23,9 @@ export interface MessengerOptions {
   timeout?: number;
 }
 
+/**
+ * Reliable messenger that works trough signal network.
+ */
 export class Messenger {
   private readonly _signalManager: SignalManager;
   // { peerId, payloadType } => listeners set
@@ -37,22 +40,46 @@ export class Messenger {
 
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
 
-  private readonly _subscriptions = new EventSubscriptions(); // TODO(burdon): Not released.
+  private _ctx!: Context;
+  private _closed = true;
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
   constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
     this._signalManager = signalManager;
-    this._signalManager.onMessage.on(async (message) => {
-      log('received message', { from: message.author });
-      await this._handleMessage(message);
-    });
-
     this._retryDelay = retryDelay;
     this._timeout = timeout;
+
+    this.open();
+  }
+
+  open() {
+    if (!this._closed) {
+      return;
+    }
+    this._ctx = new Context({
+      onError: (err) => log.catch(err)
+    });
+    this._ctx.onDispose(
+      this._signalManager.onMessage.on(async (message) => {
+        log('received message', { from: message.author });
+        await this._handleMessage(message);
+      })
+    );
+    this._closed = false;
+  }
+
+  async close() {
+    if (this._closed) {
+      return;
+    }
+    this._closed = true;
+    await this._ctx.dispose();
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
+    assert(!this._closed, 'Closed');
+
     const reliablePayload: ReliablePayload = {
       messageId: PublicKey.random(),
       payload
@@ -83,7 +110,7 @@ export class Messenger {
       clearTimeout(timeout);
     });
 
-    this._subscriptions.add(() => {
+    this._ctx.onDispose(() => {
       cancelRetry();
       clearTimeout(timeout);
     });
@@ -104,6 +131,8 @@ export class Messenger {
     payloadType?: string;
     onMessage: OnMessage;
   }): Promise<ListeningHandle> {
+    assert(!this._closed, 'Closed');
+
     await this._signalManager.subscribeMessages(peerId);
     let listeners: Set<OnMessage> | undefined;
 

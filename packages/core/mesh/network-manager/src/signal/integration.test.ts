@@ -65,6 +65,8 @@ describe('Signal Integration Test', () => {
 
     await peerNetworking1.signalManager.join({ topic, peerId: peer1 });
     await peerNetworking2.signalManager.join({ topic, peerId: peer2 });
+    await peerNetworking1.signalManager.subscribeMessages(peer1);
+    await peerNetworking2.signalManager.subscribeMessages(peer2);
 
     await promise1;
     await promise2;
