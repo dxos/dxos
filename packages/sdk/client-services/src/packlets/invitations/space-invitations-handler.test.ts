@@ -205,8 +205,8 @@ describe('services/space-invitations-handler', () => {
       })
     );
     await done();
-    
-    await hostObservable.cancel()
+
+    await hostObservable.cancel();
     await hostSpace.close();
   });
 });
