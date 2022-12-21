@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, Trigger, scheduleTaskInterval, synchronized } from '@dxos/async';
+import { Event, Trigger, scheduleTask, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -291,7 +291,7 @@ export class SignalClient implements SignalMethods {
     this._ctx.dispose().catch((err) => log.catch(err));
     this._initContext();
 
-    scheduleTaskInterval(
+    scheduleTask(
       this._ctx,
       async () => {
         // Close client if it wasn't already closed.
