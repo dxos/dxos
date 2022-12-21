@@ -15,6 +15,8 @@ import { apiSidebar, telemetryPlugin } from './src';
 
 const env = (value?: string) => (value ? `'${value}'` : undefined);
 
+const DXOS_DEPS = ['@dxos/client', '@dxos/react-client', '@dxos/telemetry'];
+
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
@@ -75,7 +77,9 @@ const config: UserConfig = defineUserConfig({
   plugins: [
     // Config: https://vuepress.github.io/reference/plugin/register-components.html
     registerComponentsPlugin({
-      componentsDir: resolve(__dirname, './src/components')
+      components: {
+        Showcase: resolve(__dirname, './src/components/Showcase.vue')
+      }
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin(),
@@ -90,7 +94,11 @@ const config: UserConfig = defineUserConfig({
       },
       optimizeDeps: {
         force: true,
-        include: ['@dxos/client', '@dxos/react-client', '@dxos/telemetry']
+        include: DXOS_DEPS
+      },
+      // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
+      ssr: {
+        external: DXOS_DEPS
       },
       build: {
         commonjsOptions: {
