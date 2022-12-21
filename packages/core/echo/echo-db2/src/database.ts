@@ -31,6 +31,7 @@ export interface SelectionHandle {
   update: (selection: Selection) => void;
   subscribed: boolean;
   unsubscribe: () => void;
+  selectedIds: Set<string>
 }
 
 /**
@@ -44,8 +45,10 @@ export class EchoDatabase {
       for (const object of this._echo.select({}).exec().entities) {
         if (!this._objects.has(object.id)) {
           const obj = new EchoObject();
+          obj[unproxy]._id = object.id;
           this._objects.set(object.id, obj);
           obj[unproxy]._bind(object, this);
+          obj[unproxy]._isBound = true;
         }
       }
     });
@@ -113,22 +116,22 @@ export class EchoDatabase {
    *
    */
   createSubscription(onUpdate: () => void): SelectionHandle {
-    let selectedIds = new Set<string>();
     let subscribed = true;
 
     const unsubscribe = this._echo.update.on((changedEntities) => {
       subscribed = false;
-      if (changedEntities.some((entity) => selectedIds.has(entity.id))) {
+      if (changedEntities.some((entity) => handle.selectedIds.has(entity.id))) {
         onUpdate();
       }
     });
 
     const handle = {
       update: (selection: Selection) => {
-        selectedIds = new Set(getIdsFromSelection(selection));
+        handle.selectedIds = new Set(getIdsFromSelection(selection));
         return handle;
       },
       subscribed,
+      selectedIds: new Set<string>(),
       unsubscribe
     };
 
