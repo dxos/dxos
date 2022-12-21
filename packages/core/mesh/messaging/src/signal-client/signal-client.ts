@@ -4,8 +4,9 @@
 
 import assert from 'node:assert';
 
-import { Event, EventSubscriptions, Trigger, synchronized } from '@dxos/async';
+import { Event, Trigger, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
@@ -81,7 +82,7 @@ export class SignalClient implements SignalMethods {
   private _client!: SignalRPCClient;
   private readonly _clientReady = new Trigger();
 
-  private _subscriptions = new EventSubscriptions();
+  private _ctx!: Context;
 
   readonly statusChanged = new Event<SignalStatus>();
   readonly commandTrace = new Event<CommandTrace>();
@@ -112,6 +113,7 @@ export class SignalClient implements SignalMethods {
       return;
     }
 
+    this._initContext();
     this._setState(SignalState.CONNECTING);
     this._createClient();
   }
@@ -122,7 +124,7 @@ export class SignalClient implements SignalMethods {
       return;
     }
 
-    this._subscriptions.clear();
+    this._ctx.dispose();
 
     if (this._reconnectIntervalId !== undefined) {
       clearTimeout(this._reconnectIntervalId);
@@ -194,7 +196,7 @@ export class SignalClient implements SignalMethods {
       this._messageStreams.set(peerId, messageStream);
     }
 
-    this._subscriptions.add(() => {
+    this._ctx.onDispose(() => {
       messageStream.close();
       this._messageStreams.delete(peerId);
     });
@@ -205,6 +207,12 @@ export class SignalClient implements SignalMethods {
     this._lastStateChange = Date.now();
     log('signal state changed', { status: this.getStatus() });
     this.statusChanged.emit(this.getStatus());
+  }
+
+  private _initContext() {
+    this._ctx = new Context({
+      onError: (err) => log.catch(err)
+    });
   }
 
   private _createClient() {
@@ -221,7 +229,7 @@ export class SignalClient implements SignalMethods {
       this._reconnect();
     }
 
-    this._subscriptions.add(
+    this._ctx.onDispose(
       this._client.connected.on(() => {
         this._lastError = undefined;
         this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
@@ -230,7 +238,7 @@ export class SignalClient implements SignalMethods {
       })
     );
 
-    this._subscriptions.add(
+    this._ctx.onDispose(
       this._client.error.on((error) => {
         log('socket error', { error });
         if (this._state === SignalState.CLOSED) {
@@ -248,7 +256,7 @@ export class SignalClient implements SignalMethods {
       })
     );
 
-    this._subscriptions.add(
+    this._ctx.onDispose(
       this._client.disconnected.on(() => {
         log('socket disconnected');
         // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
@@ -279,7 +287,8 @@ export class SignalClient implements SignalMethods {
     this._reconnectIntervalId = setTimeout(() => {
       this._reconnectIntervalId = undefined;
 
-      this._subscriptions.clear();
+      this._ctx.dispose();
+      this._initContext();
 
       // Close client if it wasn't already closed.
       this._client.close().catch(() => {});
@@ -303,7 +312,7 @@ export class SignalClient implements SignalMethods {
     // Saving swarm stream.
     this._swarmStreams.set({ topic, peerId }, swarmStream);
 
-    this._subscriptions.add(() => {
+    this._ctx.onDispose(() => {
       swarmStream.close();
       this._swarmStreams.delete({ topic, peerId });
     });
