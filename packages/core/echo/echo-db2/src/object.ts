@@ -21,6 +21,11 @@ const isValidKey = (key: string | symbol) =>
   );
 
 export const id = (object: EchoObjectBase) => object[unproxy]._id;
+
+
+/**
+ * @deprecated Not safe. Maybe return undefined for freshly created objects.
+ */
 export const db = (object: EchoObjectBase) => object[unproxy]._database!;
 
 /**
@@ -30,15 +35,18 @@ export const db = (object: EchoObjectBase) => object[unproxy]._database!;
 export class EchoObjectBase {
   /**
    * @internal
+   * Maybe not be present for freshly created objects.
    */
   public _id!: string; // TODO(burdon): Symbol?
   /**
    * @internal
+   * Maybe not be present for freshly created objects.
    */
   public _item?: Item<ObjectModel>;
 
   /**
    * @internal
+   * Maybe not be present for freshly created objects.
    */
   public _database?: EchoDatabase;
 
