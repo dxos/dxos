@@ -3,9 +3,8 @@
 //
 
 import { expect, mockFn } from 'earljs';
-import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
+import { sleep, Event, Trigger, asyncTimeout } from '@dxos/async';
 import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
@@ -36,18 +35,18 @@ describe('SignalClient', () => {
   });
 
   test('message between 2 clients', async () => {
-    const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock1 =
-      mockFn<(message: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>>().resolvesTo();
-    const api1 = new SignalClient(broker1.url(), signalMock1);
+    const received = new Trigger<any>();
+    const api1 = new SignalClient(broker1.url(), async (msg) => {
+      received.wake(msg);
+    });
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
     afterTest(() => api2.close());
 
-    await api1.join({ topic, peerId: peer1 });
-    await api2.join({ topic, peerId: peer2 });
+    await api1.subscribeMessages(peer1);
+    await api2.subscribeMessages(peer2);
 
     const message = {
       author: peer2,
@@ -55,9 +54,7 @@ describe('SignalClient', () => {
       payload: PAYLOAD
     };
     await api2.sendMessage(message);
-    await waitForExpect(() => {
-      expect(signalMock1).toHaveBeenCalledWith([message]);
-    }, 4_000);
+    expect(await received.wait()).toEqual(message);
   }).timeout(500);
 
   test('join', async () => {
@@ -84,15 +81,15 @@ describe('SignalClient', () => {
   }).timeout(500);
 
   test('signal to self', async () => {
-    const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock =
-      mockFn<(message: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>>().resolvesTo();
-    const api1 = new SignalClient(broker1.url(), signalMock);
+    const received = new Trigger<any>();
+    const api1 = new SignalClient(broker1.url(), async (msg) => {
+      received.wake(msg);
+    });
     afterTest(() => api1.close());
 
-    await api1.join({ topic, peerId: peer1 });
+    await api1.subscribeMessages(peer1);
 
     const message = {
       author: peer2,
@@ -101,10 +98,101 @@ describe('SignalClient', () => {
     };
     await api1.sendMessage(message);
 
-    await waitForExpect(() => {
-      expect(signalMock).toHaveBeenCalledWith([message]);
-    }, 4_000);
+    expect(await received.wait()).toEqual(message);
   }).timeout(500);
+
+  test('unsubscribe from messages', async () => {
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
+
+    const received = new Event<any>();
+    const client1 = new SignalClient(broker1.url(), async (msg) => {
+      received.emit(msg);
+    });
+    afterTest(() => client1.close());
+
+    const client2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    afterTest(() => client2.close());
+
+    const unsubscribeHandle = await client1.subscribeMessages(peer1);
+    await client2.subscribeMessages(peer2);
+
+    const message = {
+      author: peer2,
+      recipient: peer1,
+      payload: PAYLOAD
+    };
+
+    {
+      const promise = received.waitFor((msg) => {
+        expect(msg).toEqual(message);
+        return true;
+      });
+      await client2.sendMessage(message);
+      await promise;
+    }
+
+    // unsubscribing.
+    await unsubscribeHandle.unsubscribe();
+
+    {
+      const promise = received.waitFor((msg) => {
+        expect(msg).toEqual(message);
+        return true;
+      });
+      await client2.sendMessage(message);
+      await expect(asyncTimeout(promise, 200)).toBeRejected();
+    }
+  });
+
+  test('signal after re-entrance', async () => {
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
+
+    const received = new Event<any>();
+    const client1 = new SignalClient(broker1.url(), async (msg) => {
+      received.emit(msg);
+    });
+    afterTest(() => client1.close());
+
+    const client2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    afterTest(() => client2.close());
+
+    const message = {
+      author: peer2,
+      recipient: peer1,
+      payload: PAYLOAD
+    };
+
+    await client1.subscribeMessages(peer1);
+    await client2.subscribeMessages(peer2);
+
+    {
+      const promise = received.waitFor((msg) => {
+        expect(msg).toEqual(message);
+        return true;
+      });
+      await client2.sendMessage(message);
+      await promise;
+    }
+
+    //
+    // close and reopen first client
+    //
+
+    await client1.close();
+    client1.open();
+    await client1.subscribeMessages(peer1);
+
+    {
+      const promise = received.waitFor((msg) => {
+        expect(msg).toEqual(message);
+        return true;
+      });
+      await client2.sendMessage(message);
+      await promise;
+    }
+  });
 
   test
     .skip('join across multiple signal servers', async () => {
@@ -162,9 +250,9 @@ describe('SignalClient', () => {
       };
       await api1.sendMessage(message);
 
-      await waitForExpect(() => {
-        expect(signalMock).toHaveBeenCalledWith([message]);
-      }, 4_000);
+      // await waitForExpect(() => {
+      // expect(signalMock).toHaveBeenCalledWith([message]);
+      // }, 4_000);
     })
     .timeout(5_000);
 });
