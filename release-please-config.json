@@ -473,6 +473,11 @@
         },
         {
           "type": "json",
+          "path": "tools/log-viewer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/presenter/package.json",
           "jsonpath": "$.version"
         },

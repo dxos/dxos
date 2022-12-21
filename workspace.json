@@ -47,6 +47,7 @@
     "kodama": "packages/experimental/kodama",
     "log": "packages/common/log",
     "log-hook": "tools/log-hook",
+    "log-viewer": "tools/log-viewer",
     "messaging": "packages/core/mesh/messaging",
     "messenger-model": "packages/core/echo/messenger-model",
     "metagraph": "packages/experimental/metagraph",

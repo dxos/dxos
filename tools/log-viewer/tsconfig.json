@@ -23,5 +23,10 @@
   },
   "include": [
     "src"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/log"
+    }
   ]
 }

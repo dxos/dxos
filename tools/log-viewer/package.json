@@ -2,9 +2,22 @@
   "name": "@dxos/log-viewer",
   "version": "0.0.1",
   "description": "Desktop application for viewing DXOS logs.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "main": "src/main.ts",
   "scripts": {
     "start": "electron -r @swc-node/register ."
+  },
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@types/styled-components": "^5.1.26",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "styled-components": "^5.3.6"
   },
   "devDependencies": {
     "electron": "~18.0.4"
