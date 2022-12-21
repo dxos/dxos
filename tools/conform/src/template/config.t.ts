@@ -23,6 +23,7 @@ export type Input = {
   conductUrl: string;
   issuesUrl: string;
   prGuideUrl: string;
+  repoGuideUrl: string;
   contributionGuideUrl: string;
   blogUrl: string;
   eventsUrl: string;

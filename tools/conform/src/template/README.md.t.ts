@@ -36,7 +36,8 @@ export default defineTemplate<Input>(({ input }) => {
     eventsUrl,
     discordUrl,
     demo,
-    stackOverflowTag = 'dxos'
+    stackOverflowTag = 'dxos',
+    repoGuideUrl
   } = input;
 
   const section = (header: string, content: string, emitFlag?: any) => {
@@ -58,18 +59,20 @@ export default defineTemplate<Input>(({ input }) => {
   ${section('Demo', demo)}
   ${section(
     'Documentation',
-    text`
-    ${quickStartUrl && `- [⚡️ Quick Start](${quickStartUrl})`}
-    ${guideUrl && `- [📖 Developer Guide](${guideUrl})`}
-    ${
+    [
+      quickStartUrl && `- [⚡️ Quick Start](${quickStartUrl})`,
+      guideUrl && `- [📖 Developer Guide](${guideUrl})`,
       apiReferenceUrl &&
-      `- [📚 API Reference](${
-        typeof apiReferenceUrl === 'boolean' ? `https://docs.dxos.org/api/${name}` : apiReferenceUrl
-      })`
-    }
-    ${dependencyDiagramUrl && `- [🧩 Dependency Diagram](${dependencyDiagramUrl})`}
-    ${codeCoverageUrl && `- [👖 Code coverage report](${codeCoverageUrl})`}`,
-    quickStartUrl || guideUrl || apiReferenceUrl || dependencyDiagramUrl || codeCoverageUrl
+        `- [📚 API Reference](${
+          typeof apiReferenceUrl === 'boolean' ? `https://docs.dxos.org/api/${name}` : apiReferenceUrl
+        })`,
+      dependencyDiagramUrl && `- [🧩 Dependency Diagram](${dependencyDiagramUrl})`,
+      codeCoverageUrl && `- [👖 Code coverage report](${codeCoverageUrl})`,
+      repoGuideUrl && `- [🔧 Repository Guide](${repoGuideUrl})`
+    ]
+      .filter(Boolean)
+      .join('\n'),
+    quickStartUrl || guideUrl || apiReferenceUrl || dependencyDiagramUrl || codeCoverageUrl || guideUrl
   )}
   ${section('Storybooks', storybooks?.join('\n\n') + '\n', !!storybooks?.length)}
   ## DXOS Resources
@@ -88,7 +91,11 @@ export default defineTemplate<Input>(({ input }) => {
     .join('\n')}
   
   ## Contributions
-  Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](${conductUrl}), the [issue guide](${issuesUrl}), and the [PR contribution guide](${prGuideUrl}). If you would like to contribute to the design and implementation of DXOS, please [start with the contributor's guide](${contributionGuideUrl}).
+  Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](${conductUrl}), the [issue guide](${issuesUrl}), and the [PR contribution guide](${prGuideUrl}).${
+    repoGuideUrl
+      ? ` To learn about how to set up for development and contribution to DXOS, see the [Repository Guide](${repoGuideUrl})`
+      : ''
+  }
 
   License: [MIT](./LICENSE) Copyright 2022 © DXOS
   `;
