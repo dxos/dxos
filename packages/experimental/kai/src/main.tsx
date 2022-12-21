@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client';
 // import '@dxosTheme';
 import './style.css';
 
-import { App } from './components';
+import { App } from './containers';
 
 (() => {
   createRoot(document.getElementById('root')!).render(<App />);

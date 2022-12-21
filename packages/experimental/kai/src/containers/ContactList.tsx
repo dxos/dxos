@@ -9,9 +9,9 @@ import React, { FC } from 'react';
 import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
+import { Card, Input, Table } from '../components';
 import { useDatabase, useObjects, useSelection } from '../hooks';
-import { Address, Contact } from '../proto/tasks';
-import { Card, Table } from './Card';
+import { Address, Contact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
   const db = useDatabase();
@@ -62,11 +62,11 @@ export const Person: FC<{ person: Contact }> = ({ person }) => {
     <Table
       sidebar={<User className={getSize(5)} />}
       header={
-        <input
+        <Input
           className='w-full outline-0'
           spellCheck={false}
           value={person.name}
-          onChange={(e) => (person.name = e.target.value)}
+          onChange={(value) => (person.name = value)}
         />
       }
     >

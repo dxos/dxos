@@ -4,14 +4,14 @@
 
 import faker from 'faker';
 import { PlusCircle } from 'phosphor-react';
-import React, { FC, KeyboardEvent } from 'react';
+import React, { FC } from 'react';
 
 import { EchoDatabase, id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
 
+import { Card, Input, Table } from '../components';
 import { useDatabase, useObjects, useSelection } from '../hooks';
-import { Contact, Task } from '../proto/tasks';
-import { Card, Table } from './Card';
+import { Contact, Task } from '../proto';
 
 export const createTask = async (db: EchoDatabase) => {
   const contacts = db.query(Contact.filter()).getObjects();
@@ -54,11 +54,12 @@ export const TaskList: FC<{}> = () => {
 export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, onCreateTask }) => {
   useSelection([task, task.assignee]);
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      onCreateTask?.();
-    }
-  };
+  // TODO(burdon): Insert item on enter and focus new item.
+  // const handleKeyDown = (event: KeyboardEvent) => {
+  //   if (event.key === 'Enter') {
+  //     onCreateTask?.();
+  //   }
+  // };
 
   return (
     <Table
@@ -71,12 +72,12 @@ export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, 
         />
       }
       header={
-        <input
+        <Input
           className='w-full outline-0'
           spellCheck={false}
           value={task.title}
-          onKeyDown={handleKeyDown}
-          onChange={(event) => (task.title = event.target.value)}
+          // onKeyDown={handleKeyDown}
+          onChange={(value) => (task.title = value)}
         />
       }
     >

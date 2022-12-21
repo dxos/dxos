@@ -26,6 +26,7 @@ message Task {
   Contact assignee = 5;
 }
 
+// TODO(burdon): Not generated.
 message Address {
   string city = 1;
   string state = 2;

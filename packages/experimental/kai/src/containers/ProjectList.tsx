@@ -9,9 +9,9 @@ import React, { FC } from 'react';
 import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
+import { Card, Input, Table } from '../components';
 import { useDatabase, useObjects, useSelection } from '../hooks';
-import { Project } from '../proto/tasks';
-import { Card, Table } from './Card';
+import { Project } from '../proto';
 import { createTask, TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
@@ -63,11 +63,11 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
         <div className='pl-2 pr-1'>
           <Archive className={getSize(6)} />
         </div>
-        <input
+        <Input
           className='w-full p-1 text-lg outline-0'
           spellCheck={false}
           value={project.title}
-          onChange={(event) => (project.title = event.target.value)}
+          onChange={(value) => (project.title = value)}
         />
         <button className='mr-2 text-gray-500' onClick={handleCreate}>
           <Plus className={getSize(6)} />
