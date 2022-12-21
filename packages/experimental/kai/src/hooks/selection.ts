@@ -2,13 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { Context, createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 import { EchoObject, EchoDatabase, Filter, Selection, SelectionHandle, TypeFilter } from '@dxos/echo-db2';
 
 // TODO(burdon): Move to echo-db2.
 
-export const DatabaseContext = createContext<{ database?: EchoDatabase }>({});
+export type DatabaseContextType = { database?: EchoDatabase };
+
+export const DatabaseContext: Context<DatabaseContextType> = createContext<DatabaseContextType>({});
 
 export const useDatabase = (): EchoDatabase => {
   const { database } = useContext(DatabaseContext);

@@ -47,7 +47,7 @@ export const ProjectList: FC<{}> = () => {
 
 export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
   const db = useDatabase();
-  useSelection(project);
+  useSelection([project, ...(project.tasks ?? []), ...(project.team ?? [])]);
 
   const handleCreate = async () => {
     const task = await createTask(db);

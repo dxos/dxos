@@ -5,7 +5,6 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
 import { createMemoryDatabase } from '@dxos/echo-db/testing';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -108,37 +107,6 @@ describe('EchoDatabase', () => {
       'Subtask 2',
       'Subtask 3'
     ]);
-  });
-
-  // TODO(burdon): Remove (deprecated).
-  test.skip('subscribe', async () => {
-    const db = await createDatabase();
-
-    const task = new EchoObject({
-      project: new EchoObject({ name: 'DXOS' })
-    });
-    await db.save(task);
-
-    let counter = 0;
-    const unsubscribe = db.subscribe(
-      (touch) => touch(task).assignee,
-      () => counter++
-    );
-
-    task.title = 'Test title';
-    await waitForExpect(() => expect(counter).toEqual(1));
-
-    task.assignee = new EchoObject({ name: 'user-1' });
-    await waitForExpect(() => expect(counter).toEqual(2));
-
-    task.assignee.name = 'user-2';
-    await waitForExpect(() => expect(counter).toEqual(3));
-
-    task.project.name = 'Braneframe';
-    await sleep(10);
-    await waitForExpect(() => expect(counter).toEqual(3));
-
-    unsubscribe();
   });
 
   test('select', async () => {

@@ -2,16 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-// TODO(burdon): Factor out.
-
 import * as pb from 'protobufjs';
-// import * as ts from 'typescript';
-
-// const f = ts.factory;
 
 export const codegenSchema = (schema: pb.Root) =>
-  `const schemaJson = ${JSON.stringify(JSON.stringify(schema.toJSON()))}\n`;
+  `const schemaJson = ${JSON.stringify(JSON.stringify(schema.toJSON()))};`;
 
+/**
+ * Iterate type definitions.
+ */
 export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
   for (const type of ns.nestedArray) {
     if (type instanceof pb.Type) {
@@ -24,6 +22,9 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
   }
 }
 
+/**
+ * Field type definition.
+ */
 const codegenType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
@@ -69,34 +70,37 @@ const codegenType = (field: pb.Field): string => {
   }
 };
 
-export const codegenClass = (type: pb.Type) => {
+/**
+ * Generate class definition.
+ */
+export const codegenObjectClass = (type: pb.Type) => {
   const name = type.name;
   const fullName = type.fullName.slice(1);
+  const initializer = type.fieldsArray.map((field) => `${field.name}?: ${codegenType(field)}`).join(',');
+  const fields = type.fieldsArray.map((field) => `declare ${field.name}: ${codegenType(field)};`);
 
-  const initializer = type.fieldsArray
-    .filter((field) => field.name !== 'id')
-    .map((field) => `${field.name}?: ${codegenType(field)}`)
-    .join(',');
+  const content = [
+    `export class ${name} extends EchoObjectBase {`,
+    `  static readonly type = schema.getType('${fullName}');`,
+    `  static filter(opts?: { ${initializer} }): TypeFilter<${name}> {`,
+    `    return ${name}.type.createFilter(opts);`,
+    '  }',
+    `  constructor(opts?: { ${initializer} }) {`,
+    `    super({ ...opts, '@type': ${name}.type.name }, ${name}.type);`,
+    '  }',
+    '',
+    ...fields.map((field) => `  ${field}`),
+    '}',
+    '',
+    `schema.registerPrototype(${name});`
+  ];
 
-  const fields = type.fieldsArray
-    .filter((field) => field.name !== 'id')
-    .map((field) => `declare ${field.name}: ${codegenType(field)};`)
-    .join('\n');
+  return content.join('\n');
+};
 
-  return `
-    export class ${name} extends EchoObjectBase {
-      static readonly type = schema.getType('${fullName}');
-
-      static filter(opts?: { ${initializer} }): TypeFilter<${name}> {
-        return ${name}.type.createFilter(opts);
-      }
-
-      constructor(opts?: { ${initializer} }) {
-        super({ ...opts, '@type': ${name}.type.name }, ${name}.type);
-      }
-    
-      ${fields}
-    }
-    schema.registerPrototype(${name});
-  `;
+export const codegenPlainInterface = (type: pb.Type) => {
+  const name = type.name;
+  const fields = type.fieldsArray.map((field) => `${field.name}: ${codegenType(field)};`);
+  const content = [`export interface ${name} {`, ...fields.map((field) => `  ${field}`), '}'];
+  return content.join('\n');
 };

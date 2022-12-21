@@ -2,33 +2,37 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Factor out.
+
 import { writeFileSync } from 'node:fs';
 import { argv } from 'node:process';
 import * as pb from 'protobufjs';
 
-import { codegenClass, codegenSchema, iterTypes } from './codegen';
-
-const root = new pb.Root();
-
-root.loadSync(argv[2]);
+import { codegenObjectClass, codegenPlainInterface, codegenSchema, iterTypes } from './codegen';
 
 const packageName = '@dxos/echo-db2';
+const types = ['EchoSchema', 'EchoObjectBase', 'TypeFilter', 'OrderedSet'];
 
-let content = `
-import { EchoSchema, EchoObjectBase, TypeFilter, OrderedSet } from "${packageName}";
+const gen = () => {
+  const root = new pb.Root();
+  root.loadSync(argv[2]);
 
-`;
+  // TODO(burdon): Use plate or format code after generation.
+  const content = [];
+  content.push(`import { ${types.join(', ')} } from "${packageName}";\n`);
+  content.push(codegenSchema(root) + '\n');
+  content.push('export const schema = EchoSchema.fromJson(schemaJson);\n');
+  for (const type of iterTypes(root)) {
+    if (type.options?.['(object)'] !== true) {
+      content.push(codegenPlainInterface(type));
+    } else {
+      content.push(codegenObjectClass(type));
+    }
 
-content += codegenSchema(root);
-content += 'export const schema = EchoSchema.fromJson(schemaJson);\n';
-
-for (const type of iterTypes(root)) {
-  if (type.options?.['(object)'] !== true) {
-    continue;
+    content.push('');
   }
 
-  content += codegenClass(type);
-  content += '\n';
-}
+  writeFileSync(argv[3], content.join('\n'));
+};
 
-writeFileSync(argv[3], content);
+gen();

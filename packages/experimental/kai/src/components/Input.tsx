@@ -33,5 +33,13 @@ export const Input: FC<InputProps> = ({ className, value: initialValue, onChange
     }
   };
 
-  return <input className={className} value={value} onChange={handleChange} onBlur={() => handleUpdate(value)} />;
+  return (
+    <input
+      spellCheck={true}
+      className={className}
+      value={value}
+      onChange={handleChange}
+      onBlur={() => handleUpdate(value)}
+    />
+  );
 };

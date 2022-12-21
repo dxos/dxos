@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-export const Table: FC<{ sidebar: ReactNode; header: ReactNode; children: ReactNode }> = ({
+export const Table: FC<{ sidebar: ReactNode; header: ReactNode; children?: ReactNode }> = ({
   sidebar,
   header,
   children
