@@ -10,7 +10,7 @@ export type LogViewerProps = {
 }
 
 export const LogViewer = ({ logFile }: LogViewerProps) => {
-  const [filter, setFilter] = useState('warn')
+  const [filter, setFilter] = useState('debug')
   const [entries] = useState(readFileSync(logFile, { encoding: 'utf-8' }).split('\n').filter(line => line.length > 0).map(line => JSON.parse(line)))
 
   const filteredEntries = useMemo(() => entries.filter(entry => shouldLog({ filters: parseFilter(filter) } as any, entry.level, entry.meta.path)), [filter])
