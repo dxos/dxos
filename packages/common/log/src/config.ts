@@ -62,6 +62,6 @@ export type LogOptions = {
 export interface LogConfig {
   options: LogOptions;
   filters?: LogFilter[];
-  processor: LogProcessor;
+  processors: LogProcessor[];
   prefix?: string;
 }
