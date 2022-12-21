@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 import assert from 'node:assert';
 
-import { asyncChain, Trigger } from '@dxos/async';
+import { asyncChain, latch, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItems } from '../testing';
@@ -156,5 +157,56 @@ describe('services/space-invitations-handler', () => {
 
     await cancelled.wait();
     await space1.close();
+  });
+
+  test('test multi-use invitation', async () => {
+    const GUEST_COUNT = 3;
+    const [host, ...guests] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(
+      createPeers(GUEST_COUNT + 1)
+    );
+
+    const hostSpace = await host.dataSpaceManager!.createSpace();
+    const swarmKey = PublicKey.random();
+    const hostObservable = await host.spaceInvitations!.createInvitation(hostSpace, {
+      swarmKey,
+      type: Invitation.Type.MULTIUSE_TESTING
+    });
+
+    const [done, count] = latch({ count: GUEST_COUNT });
+    hostObservable.subscribe({
+      onConnecting: async (invitation2: Invitation) => {},
+      onConnected: async (invitation2: Invitation) => {},
+      onSuccess: () => {
+        count();
+      },
+      onCancelled: () => {},
+      onTimeout: (err: Error) => raise(new Error(err.message)),
+      onError: (err: Error) => raise(new Error(err.message))
+    });
+
+    await Promise.all(
+      range(GUEST_COUNT).map(async (idx) => {
+        const observable = await guests[idx].spaceInvitations!.acceptInvitation({
+          swarmKey,
+          type: Invitation.Type.MULTIUSE_TESTING
+        });
+        const success = new Trigger();
+        observable.subscribe({
+          onConnecting: async (invitation2: Invitation) => {},
+          onConnected: async (invitation2: Invitation) => {},
+          onSuccess: () => {
+            success.wake();
+          },
+          onCancelled: () => raise(new Error()),
+          onTimeout: (err: Error) => raise(new Error(err.message)),
+          onError: (err: Error) => raise(new Error(err.message))
+        });
+        await success.wait({ timeout: 300 });
+      })
+    );
+    await done();
+
+    await hostObservable.cancel();
+    await hostSpace.close();
   });
 });
