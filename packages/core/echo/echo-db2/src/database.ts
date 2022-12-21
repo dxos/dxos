@@ -10,7 +10,6 @@ import { ObjectModel } from '@dxos/object-model';
 import { unproxy } from './common';
 import { EchoObject, EchoObjectBase } from './object';
 import { TypeFilter } from './schema';
-import { traverse } from './traverse';
 
 export type Filter = Record<string, any>;
 export type Query<T extends EchoObject = EchoObject> = {
@@ -31,7 +30,7 @@ export interface SelectionHandle {
   update: (selection: Selection) => void;
   subscribed: boolean;
   unsubscribe: () => void;
-  selectedIds: Set<string>
+  selectedIds: Set<string>;
 }
 
 /**
@@ -136,28 +135,6 @@ export class EchoDatabase {
     };
 
     return handle;
-  }
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  subscribe(traverseCb: (touch: (obj: EchoObject) => any) => void, callback: () => void): () => void {
-    const touched = new Set<string>();
-    const retouch = () => {
-      touched.clear();
-      traverse(traverseCb, (obj) => {
-        touched.add(obj[unproxy]._id);
-      });
-    };
-
-    retouch();
-    return this._echo.update.on((changedEntities) => {
-      if (changedEntities.some((entity) => touched.has(entity.id))) {
-        retouch();
-        callback();
-      }
-    });
   }
 }
 
