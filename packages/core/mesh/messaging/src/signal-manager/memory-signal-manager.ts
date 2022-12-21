@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { CommandTrace, SignalStatus } from './signal-client';
+import { CommandTrace, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
 
 /**
@@ -117,10 +117,19 @@ export class MemorySignalManager implements SignalManager {
     this._context.connections.get(recipient)!.onMessage.emit({ author, recipient, payload });
   }
 
-  async subscribeMessages(peerId: PublicKey): Promise<void> {
+  async subscribeMessages(peerId: PublicKey) {
     log('subscribing', { peerId });
     this._context.connections.set(peerId, this);
+
+    return {
+      unsubscribe: async () => {
+        log('unsubscribing', { peerId });
+        this._context.connections.delete(peerId);
+      }
+    };
   }
 
-  async destroy() {}
+  async open() {}
+
+  async close() {}
 }

@@ -22,7 +22,7 @@ importers:
   .:
     specifiers:
       '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/beast': workspace:*
       '@dxos/conform': workspace:^0.1.0
       '@dxos/esbuild': workspace:*
@@ -325,7 +325,7 @@ importers:
 
   packages/apps/halo-app:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
@@ -499,7 +499,7 @@ importers:
 
   packages/apps/patterns/react-list:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -756,7 +756,7 @@ importers:
 
   packages/bots/bender-bot:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
@@ -807,7 +807,7 @@ importers:
 
   packages/common/codec-protobuf:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/context': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
@@ -915,12 +915,12 @@ importers:
 
   packages/common/feed-store:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/benchmark-suite': ^1.0.0-beta.1
       '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
@@ -962,9 +962,9 @@ importers:
 
   packages/common/hypercore:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1297,7 +1297,7 @@ importers:
 
   packages/common/util:
     specifiers:
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/node-std': workspace:*
@@ -1310,11 +1310,11 @@ importers:
 
   packages/core/echo/echo-db:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/hypercore': workspace:*
@@ -1373,7 +1373,7 @@ importers:
 
   packages/core/echo/echo-db2:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/keys': workspace:*
@@ -1408,7 +1408,7 @@ importers:
 
   packages/core/echo/model-factory:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
@@ -1439,7 +1439,7 @@ importers:
 
   packages/core/echo/object-model:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
@@ -1507,9 +1507,9 @@ importers:
 
   packages/core/halo/credentials:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keyring': workspace:*
@@ -1582,9 +1582,9 @@ importers:
 
   packages/core/halo/keyring:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1611,8 +1611,9 @@ importers:
 
   packages/core/mesh/messaging:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -1621,6 +1622,7 @@ importers:
       '@dxos/signal': workspace:*
       '@dxos/util': workspace:*
       '@types/node': ^18.11.9
+      assert: ^2.0.0
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
       typescript: ^4.8.4
@@ -1629,12 +1631,14 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/context': link:../../../common/context
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
       '@dxos/util': link:../../../common/util
+      assert: 2.0.0
       isomorphic-ws: 4.0.1_ws@7.5.9
       ws: 7.5.9
     devDependencies:
@@ -1646,11 +1650,11 @@ importers:
 
   packages/core/mesh/network-manager:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1707,7 +1711,7 @@ importers:
 
   packages/core/mesh/rpc:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
@@ -1742,7 +1746,7 @@ importers:
 
   packages/core/mesh/signal:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -1765,7 +1769,7 @@ importers:
 
   packages/core/mesh/teleport:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
@@ -1802,7 +1806,7 @@ importers:
 
   packages/core/mesh/teleport-extension-presence:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/context': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1827,7 +1831,7 @@ importers:
 
   packages/core/mesh/teleport-extension-replicator:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
@@ -1885,7 +1889,7 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@babel/plugin-transform-runtime': ^7.11.5
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
@@ -1964,7 +1968,7 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@babel/plugin-transform-runtime': ^7.11.5
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
@@ -2049,7 +2053,7 @@ importers:
 
   packages/deprecated/wallet/wallet-extension:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -2149,7 +2153,7 @@ importers:
 
   packages/devtools/cli:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
@@ -2248,7 +2252,7 @@ importers:
   packages/devtools/devtools:
     specifiers:
       '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
@@ -2348,7 +2352,7 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@babel/runtime': ^7.9.6
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
@@ -2491,7 +2495,7 @@ importers:
   packages/e2e/rpc-tunnel-e2e:
     specifiers:
       '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -2537,7 +2541,7 @@ importers:
 
   packages/experimental/client-testing:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
@@ -2673,11 +2677,11 @@ importers:
   packages/experimental/kai:
     specifiers:
       '@babel/core': ^7.18.13
-      '@dxos/async': workspace:^0.1.20
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:^0.1.20
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/echo-db2': workspace:*
       '@dxos/log': workspace:*
@@ -2734,7 +2738,7 @@ importers:
   packages/experimental/kitchen-sink:
     specifiers:
       '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
@@ -2842,7 +2846,7 @@ importers:
 
   packages/experimental/kodama:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -2921,7 +2925,7 @@ importers:
 
   packages/experimental/metagraph:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/errors': workspace:*
@@ -2944,7 +2948,7 @@ importers:
       '@dnd-kit/modifiers': ^6.0.0
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/debug': workspace:*
@@ -3006,7 +3010,7 @@ importers:
   packages/experimental/react-echo-graph:
     specifiers:
       '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
@@ -3120,7 +3124,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/node-std': workspace:*
@@ -3294,11 +3298,11 @@ importers:
 
   packages/sdk/client:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/errors': workspace:*
@@ -3347,12 +3351,12 @@ importers:
 
   packages/sdk/client-services:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
+      '@dxos/crypto': ''
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/errors': workspace:*
@@ -3466,7 +3470,7 @@ importers:
 
   packages/sdk/react-client:
     specifiers:
-      '@dxos/async': workspace:*
+      '@dxos/async': ''
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -33991,7 +33995,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

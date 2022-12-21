@@ -3,6 +3,7 @@
 //
 
 import WebSocket from 'isomorphic-ws';
+import assert from 'node:assert';
 
 import { Trigger, Event } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
@@ -17,8 +18,8 @@ interface Services {
 }
 
 export class SignalRPCClient {
-  private readonly _socket: WebSocket;
-  private readonly _rpc: ProtoRpcPeer<Services>;
+  private _socket?: WebSocket;
+  private _rpc?: ProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
 
   readonly connected = new Event();
@@ -30,31 +31,6 @@ export class SignalRPCClient {
     private readonly _url: string
   ) {
     this._socket = new WebSocket(this._url);
-    this._socket.onopen = async () => {
-      try {
-        await this._rpc.open();
-        log(`RPC open ${this._url}`);
-        this.connected.emit();
-        this._connectTrigger.wake();
-      } catch (err: any) {
-        this.error.emit(err);
-      }
-    };
-
-    this._socket.onclose = async () => {
-      log(`Disconnected ${this._url}`);
-      this.disconnected.emit();
-      try {
-        await this._rpc.close();
-      } catch (err: any) {
-        this.error.emit(err);
-      }
-    };
-
-    this._socket.onerror = (event: WebSocket.ErrorEvent) => {
-      log.error(event.message, { url: this._url });
-      this.error.emit(event.error ?? new Error(event.message));
-    };
 
     this._rpc = createProtoRpcPeer({
       requested: {
@@ -63,10 +39,10 @@ export class SignalRPCClient {
       noHandshake: true,
       port: {
         send: (msg) => {
-          this._socket.send(msg);
+          this._socket!.send(msg);
         },
         subscribe: (cb) => {
-          this._socket.onmessage = async (msg: WebSocket.MessageEvent) => {
+          this._socket!.onmessage = async (msg: WebSocket.MessageEvent) => {
             if (typeof Blob !== 'undefined' && msg.data instanceof Blob) {
               cb(Buffer.from(await msg.data.arrayBuffer()));
             } else {
@@ -79,11 +55,43 @@ export class SignalRPCClient {
         preserveAny: true
       }
     });
+
+    this._socket.onopen = async () => {
+      try {
+        await this._rpc!.open();
+        log(`RPC open ${this._url}`);
+        this.connected.emit();
+        this._connectTrigger.wake();
+      } catch (err: any) {
+        this.error.emit(err);
+      }
+    };
+
+    this._socket.onclose = async () => {
+      log(`Disconnected ${this._url}`);
+      this.disconnected.emit();
+      await this.close();
+    };
+
+    this._socket.onerror = (event: WebSocket.ErrorEvent) => {
+      log.error(event.message, { url: this._url });
+      this.error.emit(event.error ?? new Error(event.message));
+    };
+  }
+
+  async close() {
+    try {
+      await this._rpc?.close();
+    } catch (err) {
+      log.catch(err);
+    }
+    this._socket?.close();
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('join', { topic, peerId });
     await this._connectTrigger.wait();
+    assert(this._rpc, 'Rpc is not initialized');
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array()
@@ -93,7 +101,9 @@ export class SignalRPCClient {
   }
 
   async receiveMessages(peerId: PublicKey): Promise<Stream<SignalMessage>> {
+    log('receiveMessages', { peerId });
     await this._connectTrigger.wait();
+    assert(this._rpc, 'Rpc is not initialized');
     const messageStream = this._rpc.rpc.Signal.receiveMessages({
       peer: peerId.asUint8Array()
     });
@@ -104,18 +114,11 @@ export class SignalRPCClient {
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
     log('sendMessage', { author, recipient, payload });
     await this._connectTrigger.wait();
+    assert(this._rpc, 'Rpc is not initialized');
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
       payload
     });
-  }
-
-  async close() {
-    try {
-      await this._rpc.close();
-    } finally {
-      this._socket.close();
-    }
   }
 }

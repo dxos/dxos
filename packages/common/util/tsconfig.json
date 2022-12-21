@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../crypto"
-    },
-    {
       "path": "../debug"
     },
     {
