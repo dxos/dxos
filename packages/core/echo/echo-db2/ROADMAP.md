@@ -9,17 +9,15 @@
 - [ ] References (e.g., Task => Person).
 - [ ] ECHO pipeline instantiate EchoObject.
 - [ ] Cards demo (multi-peer).
+- [ ] Stringify (tree hierarchy).
+- [ ] Object.keys.
 
 ## Stage 2
 
 - [ ] Schema generated types.
 - [ ] CRM/recruiting demo.
 - [ ] Sets/Ordered list.
-- [ ] Object.keys.
 - [ ] Type-safe queries.
 - [ ] Materialized links (outside of object/schema)
 - [ ] Immutable objects.
-
-## Stage 3
-
 - [ ] Batch/transactions.

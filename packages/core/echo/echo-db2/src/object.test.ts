@@ -4,21 +4,12 @@
 
 import expect from 'expect';
 
-import { Database } from '@dxos/echo-db';
-import { createMemoryDatabase } from '@dxos/echo-db/testing';
-import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
 
 import { EchoObject } from './object';
 
-// TODO(burdon): Implement.
 describe('EchoObject', () => {
   test('instance of', async () => {
-    const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const database = await createMemoryDatabase(modelFactory);
-    expect(database instanceof Database).toBeTruthy();
-
     const obj = new EchoObject();
     expect(obj instanceof EchoObject).toBeTruthy();
   });
