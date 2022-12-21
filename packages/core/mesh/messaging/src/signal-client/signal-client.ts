@@ -124,7 +124,7 @@ export class SignalClient implements SignalMethods {
       return;
     }
 
-    this._ctx.dispose();
+    await this._ctx.dispose();
 
     if (this._reconnectIntervalId !== undefined) {
       clearTimeout(this._reconnectIntervalId);
@@ -296,7 +296,7 @@ export class SignalClient implements SignalMethods {
     this._reconnectIntervalId = setTimeout(() => {
       this._reconnectIntervalId = undefined;
 
-      this._ctx.dispose();
+      await this._ctx.dispose();
       this._initContext();
 
       // Close client if it wasn't already closed.

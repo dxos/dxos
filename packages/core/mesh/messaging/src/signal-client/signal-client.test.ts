@@ -133,7 +133,7 @@ describe('SignalClient', () => {
     }
 
     // unsubscribing.
-    unsubscribeHandle.unsubscribe();
+    await unsubscribeHandle.unsubscribe();
 
     {
       const promise = received.waitFor((msg) => {
