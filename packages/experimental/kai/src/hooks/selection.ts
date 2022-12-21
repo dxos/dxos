@@ -16,14 +16,15 @@ export const useDatabase = (): EchoDatabase => {
 };
 
 type UseObjects = {
-  <T extends EchoObject> (db: EchoDatabase, filter?: TypeFilter<T>): T[]
-  (db: EchoDatabase, filter?: Filter): EchoObject[]
+  <T extends EchoObject> (filter?: TypeFilter<T>): T[]
+  (filter?: Filter): EchoObject[]
 }
 
 /**
  * Query for objects.
  */
-export const useObjects: UseObjects = (db: EchoDatabase, filter?: Filter): EchoObject[] => {
+export const useObjects: UseObjects = (filter?: Filter): EchoObject[] => {
+  const db = useDatabase()
   const query = useMemo(() => db.query(filter ?? {}), [...Object.entries(filter ?? {}).flat()]);
 
   return useSyncExternalStore(
@@ -36,7 +37,9 @@ export const useObjects: UseObjects = (db: EchoDatabase, filter?: Filter): EchoO
  * Create reactive selection.
  */
 // TODO(burdon): Consider useSyncExternalStore.
-export const useSelection = (db: EchoDatabase, selection: Selection): SelectionHandle => {
+export const useSelection = (selection: Selection): SelectionHandle => {
+  const db = useDatabase()
+
   const [, forceUpdate] = useState({});
   const [handle, setHandle] = useState<SelectionHandle>(() =>
     db.createSubscription(() => {

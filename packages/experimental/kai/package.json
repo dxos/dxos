@@ -11,8 +11,10 @@
     "codegen": "echo-schema-gen src/proto/tasks.proto src/proto/tasks.ts"
   },
   "dependencies": {
+    "@dxos/async": "workspace:^0.1.20",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/crypto": "workspace:^0.1.20",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db2": "workspace:*",
     "@dxos/log": "workspace:*",

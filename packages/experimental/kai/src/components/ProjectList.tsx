@@ -44,7 +44,7 @@ export const ProjectList: FC<{}> = () => {
 };
 
 export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
-  useSelection(db(project), project);
+  useSelection(project);
 
   const handleCreate = async () => {
     project.tasks.push(await createTask(db(project)));
@@ -64,7 +64,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
       </div>
 
       <div>
-        {project.tasks.map((task) => (
+        {project.tasks?.map((task) => (
           <TaskItem key={id(task)} task={task} />
         ))}
       </div>

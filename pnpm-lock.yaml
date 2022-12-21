@@ -2673,9 +2673,11 @@ importers:
   packages/experimental/kai:
     specifiers:
       '@babel/core': ^7.18.13
+      '@dxos/async': workspace:^0.1.20
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:^0.1.20
       '@dxos/debug': workspace:*
       '@dxos/echo-db2': workspace:*
       '@dxos/log': workspace:*
@@ -2699,8 +2701,10 @@ importers:
       vite: 3.2.5
       vite-plugin-pwa: ^0.12.4
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db2': link:../../core/echo/echo-db2
       '@dxos/log': link:../../common/log

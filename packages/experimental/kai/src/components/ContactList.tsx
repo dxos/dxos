@@ -15,7 +15,7 @@ import { Card } from './Card';
 
 export const ContactList: FC<{}> = () => {
   const db = useDatabase();
-  const contacts = useObjects(db, Contact.filter());
+  const contacts = useObjects(Contact.filter());
 
   const handleCreate = async () => {
     await db.save(
@@ -52,7 +52,7 @@ export const ContactList: FC<{}> = () => {
 };
 
 export const Person: FC<{ person: Contact }> = ({ person }) => {
-  useSelection(db(person), person);
+  useSelection(person);
 
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 

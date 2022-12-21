@@ -28,7 +28,7 @@ export const createTask = async (db: EchoDatabase) => {
 
 export const TaskList: FC<{}> = () => {
   const db = useDatabase();
-  const tasks = useObjects(db, Task.filter());
+  const tasks = useObjects(Task.filter());
 
   const handleCreate = async () => {
     await createTask(db);
@@ -52,7 +52,7 @@ export const TaskList: FC<{}> = () => {
 };
 
 export const TaskItem: FC<{ task: Task }> = ({ task }) => {
-  useSelection(db(task), [task, task.assignee]);
+  useSelection([task, task.assignee]);
 
   return (
     <div className='flex flex-col m-1 bg-white'>
