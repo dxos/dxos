@@ -112,8 +112,16 @@ export class EchoObjectBase {
   }
 
   private _getModelProp(prop: string): any {
-    const type = this._item!.model.get(`${prop}$type`);
+    let type = this._item!.model.get(`${prop}$type`);
     const value = this._item!.model.get(prop);
+
+    if(!type && this._schemaType) {
+      const field = this._schemaType.fields.find(field => field.name === prop);
+      if(field?.isOrderedSet) {
+        type = 'array';
+      }
+    }
+      
 
     switch (type) {
       case 'ref':
