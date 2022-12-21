@@ -24,7 +24,7 @@ export interface MessengerOptions {
 }
 
 /**
- * Reliable messenger that works trough Signal Servers network.
+ * Reliable messenger that works trough signal network.
  */
 export class Messenger {
   private readonly _signalManager: SignalManager;
