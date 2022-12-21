@@ -168,14 +168,14 @@ export class SignalClient implements SignalMethods {
     await this._client.sendMessage(msg);
   }
 
-  async subscribeMessages(peerId: PublicKey): Promise<{ unsubscribe: () => void }> {
+  async subscribeMessages(peerId: PublicKey) {
     await this._clientReady.wait();
     assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Do nothing if already subscribed.
     if (this._messageStreams.has(peerId)) {
       return {
-        unsubscribe: () => {
+        unsubscribe: async () => {
           this._messageStreams.get(peerId)!.close();
           this._messageStreams.delete(peerId);
         }
@@ -203,7 +203,7 @@ export class SignalClient implements SignalMethods {
     });
 
     return {
-      unsubscribe: () => {
+      unsubscribe: async () => {
         messageStream.close();
         this._messageStreams.delete(peerId);
       }
