@@ -293,7 +293,7 @@ export class SignalClient implements SignalMethods {
       return;
     }
 
-    this._reconnectIntervalId = setTimeout(() => {
+    this._reconnectIntervalId = setTimeout(async () => {
       this._reconnectIntervalId = undefined;
 
       await this._ctx.dispose();
