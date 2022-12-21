@@ -12,15 +12,9 @@
 
 A decentralized alternative to the commercial cloud for privacy preserving software. Learn more about the [the mission](https://docs.dxos.org/guide/why)
 
-## Installation
-
-```bash
-pnpm install --save @dxos/client
-```
-
 ## Demo
 
-Shown below are two sessions of an application using the ECHO database to replicate state peer-to-peer in real-time.
+Shown below are two sessions of an application using ECHO to replicate state peer-to-peer in real-time.
 
 ![ECHO](https://user-images.githubusercontent.com/3523355/158708286-f9a8c5f1-83ed-4bac-ab9e-65ddb6861fe3.gif)
 
@@ -29,6 +23,7 @@ Shown below are two sessions of an application using the ECHO database to replic
 - [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
 - [📖 Developer Guide](https://docs.dxos.org/guide)
 - [📚 API Reference](https://docs.dxos.org/api)
+- [🔧 Repository Guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md)
 
 ## DXOS Resources
 
@@ -39,6 +34,6 @@ Shown below are two sessions of an application using the ECHO database to replic
 
 ## Contributions
 
-Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs). If you would like to contribute to the design and implementation of DXOS, please [start with the contributor's guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
+Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs). To learn about how to set up for development and contribution to DXOS, see the [Repository Guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md)
 
 License: [MIT](./LICENSE) Copyright 2022 © DXOS
