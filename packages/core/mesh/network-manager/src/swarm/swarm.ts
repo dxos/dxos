@@ -223,7 +223,7 @@ export class Swarm {
   // For debug purposes
   async goOnline() {
     this._ctx = new Context();
-    await Promise.all([...this._peers.keys()].map((peerId) => this._initiateConnection(peerId)));
+    // Connections will be reopened by topology.update() on this.onSwarmEvent() calls
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {

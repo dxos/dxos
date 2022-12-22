@@ -217,8 +217,8 @@ export class NetworkManager {
         this._connectionStatus = status;
         // go online
         this._messenger.open();
-        await this._signalManager.open();
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
+        await this._signalManager.open();
         break;
       }
     }
