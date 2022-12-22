@@ -16,7 +16,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",

@@ -14,6 +14,13 @@
         "{options.outputFile}"
       ]
     },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "configFile": "packages/experimental/kai/vite.config.ts",
+        "outputPath": "packages/experimental/kai/out/halo"
+      }
+    },
     "test": {
       "executor": "@dxos/test:run",
       "options": {

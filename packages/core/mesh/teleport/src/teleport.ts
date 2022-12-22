@@ -243,7 +243,7 @@ class ControlExtension implements TeleportExtension {
         }
       },
       port: extensionContext.createPort('rpc', {
-        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+        contentType: 'application/x-protobuf; messagType="dxos.rpc.Message"'
       })
     });
 

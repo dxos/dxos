@@ -12,7 +12,7 @@ otherwise needs no configuration.
 ### 1. Add the Vite plugin
 
 Add `@dxos/react-ui` to the project’s dev dependencies, then extend the
-project’s Vite config to use it, e.g.:
+project’s Vite config (`vite.config.ts`) to use it, e.g.:
 
 ```ts
 // ...

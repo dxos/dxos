@@ -32,7 +32,6 @@
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@dxos/async": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@types/node": "^18.11.9",
     "earljs": "~0.1.10",

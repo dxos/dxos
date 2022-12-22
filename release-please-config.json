@@ -188,6 +188,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-db2/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/messenger-model/package.json",
           "jsonpath": "$.version"
         },
