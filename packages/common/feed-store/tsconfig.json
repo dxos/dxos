@@ -16,6 +16,9 @@
       "path": "../../core/halo/keyring"
     },
     {
+      "path": "../async"
+    },
+    {
       "path": "../codec-protobuf"
     },
     {

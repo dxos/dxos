@@ -10,7 +10,7 @@
   "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "debug": "^4.3.3",
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0"

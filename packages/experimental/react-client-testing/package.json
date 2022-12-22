@@ -22,7 +22,7 @@
     "@dnd-kit/modifiers": "^6.0.0",
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
     "@dxos/debug": "workspace:*",

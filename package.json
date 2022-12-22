@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "@dxos/beast": "workspace:*",
     "@dxos/esbuild": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",

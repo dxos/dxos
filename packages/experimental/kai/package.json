@@ -11,7 +11,7 @@
     "codegen": "echo-schema-gen src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "",
