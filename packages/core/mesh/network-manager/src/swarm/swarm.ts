@@ -146,9 +146,8 @@ export class Swarm {
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
-    assert(!this._ctx.disposed, 'Swarm is offline');
     if (this._ctx.disposed) {
-      log.warn('ignored for destroyed swarm');
+      log.warn('ignored for offline swarm');
       return;
     }
 
@@ -224,7 +223,7 @@ export class Swarm {
   // For debug purposes
   async goOnline() {
     this._ctx = new Context();
-    // await Promise.all([...this._peers.keys()].map((peerId) => this._initiateConnection(peerId)));
+    await Promise.all([...this._peers.keys()].map((peerId) => this._initiateConnection(peerId)));
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
