@@ -24,7 +24,7 @@
     "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js"
   },
   "dependencies": {
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "",
