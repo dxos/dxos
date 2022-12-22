@@ -126,6 +126,11 @@ export class NetworkManager {
     return this._swarms.get(topic);
   }
 
+  async open() {
+    await this._messenger.open();
+    await this._signalManager.open();
+  }
+
   async close() {
     for (const topic of this._swarms.keys()) {
       await this.leaveSwarm(topic).catch((err) => {

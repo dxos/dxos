@@ -155,7 +155,7 @@ export class MemorySignalManager implements SignalManager {
       return;
     }
 
-    if (!this._context.connections.get(recipient)?._closed) {
+    if (!this._context.connections.get(recipient)?._ctx.disposed) {
       this._context.connections.get(recipient)!.onMessage.emit({ author, recipient, payload });
     }
   }
