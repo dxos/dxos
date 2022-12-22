@@ -53,7 +53,7 @@ export type SwarmOptions = {
   label?: string;
 };
 
-export enum ConnectionStatus {
+export enum NetworkMode {
   OFFLINE = 0,
   ONLINE = 1
 }
@@ -76,7 +76,7 @@ export class NetworkManager {
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
-  private _connectionStatus = ConnectionStatus.ONLINE;
+  private _connectionStatus = NetworkMode.ONLINE;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -200,12 +200,12 @@ export class NetworkManager {
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 
-  async setConnectionStatus(status: ConnectionStatus) {
+  async setNetworkMade(status: NetworkMode) {
     switch (status) {
       case this._connectionStatus: {
         break;
       }
-      case ConnectionStatus.OFFLINE: {
+      case NetworkMode.OFFLINE: {
         this._connectionStatus = status;
         // go offline
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
@@ -213,7 +213,7 @@ export class NetworkManager {
         await this._signalManager.close();
         break;
       }
-      case ConnectionStatus.ONLINE: {
+      case NetworkMode.ONLINE: {
         this._connectionStatus = status;
         // go online
         this._messenger.open();

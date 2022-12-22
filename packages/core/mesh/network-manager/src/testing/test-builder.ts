@@ -8,7 +8,7 @@ import { schema } from '@dxos/protocols';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionStatus, NetworkManager } from '../network-manager';
+import { NetworkMode, NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
   MemoryTransportFactory,
@@ -149,11 +149,11 @@ export class TestPeer {
   }
 
   async goOffline() {
-    await this._networkManager.setConnectionStatus(ConnectionStatus.OFFLINE);
+    await this._networkManager.setNetworkMade(NetworkMode.OFFLINE);
   }
 
   async goOnline() {
-    await this._networkManager.setConnectionStatus(ConnectionStatus.ONLINE);
+    await this._networkManager.setNetworkMade(NetworkMode.ONLINE);
   }
 }
 
