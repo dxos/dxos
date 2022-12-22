@@ -55,7 +55,6 @@ export class MemorySignalManager implements SignalManager {
   );
 
   private _ctx!: Context;
-  _closed = false;
 
   // prettier-ignore
   constructor(
@@ -67,7 +66,6 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async open() {
-    this._closed = false;
     this._ctx = new Context();
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
@@ -87,8 +85,6 @@ export class MemorySignalManager implements SignalManager {
 
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
-
-    this._closed = true;
   }
 
   getStatus(): SignalStatus[] {
@@ -96,7 +92,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    assert(!this._closed, 'Closed');
+    assert(!this._ctx.disposed, 'Closed');
 
     this._joinedSwarms.add({ topic, peerId });
 
@@ -132,7 +128,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    assert(!this._closed, 'Closed');
+    assert(!this._ctx.disposed, 'Closed');
 
     this._joinedSwarms.delete({ topic, peerId });
 
@@ -153,7 +149,7 @@ export class MemorySignalManager implements SignalManager {
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
     assert(recipient);
-    assert(!this._closed, 'Closed');
+    assert(!this._ctx.disposed, 'Closed');
     if (!this._context.connections.has(recipient)) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
