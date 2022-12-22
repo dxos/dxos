@@ -173,7 +173,6 @@ export class Swarm {
 
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { message });
-    assert(!this._ctx.disposed, 'Swarm is offline');
     if (this._ctx.disposed) {
       log.info('ignored for destroyed swarm');
       return { accept: false };
