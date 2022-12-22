@@ -73,8 +73,6 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async close() {
-    this._ctx.dispose();
-
     // save copy of joined swarms.
     const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
       ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
@@ -85,6 +83,8 @@ export class MemorySignalManager implements SignalManager {
 
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
+
+    this._ctx.dispose();
   }
 
   getStatus(): SignalStatus[] {
