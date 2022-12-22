@@ -34,7 +34,6 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
  */
 export class Swarm {
   private readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
-  private _offline = false;
 
   private readonly _swarmMessenger: MessageRouter;
 
@@ -130,7 +129,7 @@ export class Swarm {
   }
 
   async setTopology(topology: Topology) {
-    assert(!this._offline, 'Swarm is offline');
+    assert(!this._ctx.disposed, 'Swarm is offline');
     if (topology === this._topology) {
       return;
     }
@@ -147,7 +146,7 @@ export class Swarm {
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
-    assert(!this._offline, 'Swarm is offline');
+    assert(!this._ctx.disposed, 'Swarm is offline');
     if (this._ctx.disposed) {
       log.warn('ignored for destroyed swarm');
       return;
@@ -175,7 +174,7 @@ export class Swarm {
 
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { message });
-    assert(!this._offline, 'Swarm is offline');
+    assert(!this._ctx.disposed, 'Swarm is offline');
     if (this._ctx.disposed) {
       log.info('ignored for destroyed swarm');
       return { accept: false };
@@ -200,7 +199,7 @@ export class Swarm {
 
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { message });
-    assert(!this._offline, 'Swarm is offline');
+    assert(!this._ctx.disposed, 'Swarm is offline');
     if (this._ctx.disposed) {
       log.info('ignored for destroyed swarm');
       return;
@@ -220,13 +219,11 @@ export class Swarm {
   async goOffline() {
     await this._ctx.dispose();
     await Promise.all([...this._peers.keys()].map((peerId) => this._closeConnection(peerId)));
-    this._offline = true;
   }
 
   // For debug purposes
   async goOnline() {
     this._ctx = new Context();
-    this._offline = false;
     // await Promise.all([...this._peers.keys()].map((peerId) => this._initiateConnection(peerId)));
   }
 
@@ -325,7 +322,7 @@ export class Swarm {
    * Creates a connection then sends message over signal network.
    */
   private async _initiateConnection(remoteId: PublicKey) {
-    if (this._offline) {
+    if (this._ctx.disposed) {
       log.warn('Ignoring "initiate connection" for offline swarms');
       return;
     }
