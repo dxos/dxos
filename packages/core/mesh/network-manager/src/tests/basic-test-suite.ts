@@ -110,8 +110,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   });
 
-  // TODO(mykola): Remove .skip
-  test.only('going offline and back online', async () => {
+  test('going offline and back online', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
