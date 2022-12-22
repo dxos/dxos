@@ -25,7 +25,7 @@
     "test:watch": "supervisor -w src -e ts,tsx -x yarn test:app"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

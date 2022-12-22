@@ -24,10 +24,10 @@
     "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/crypto": "workspace:*",
+    "@dxos/crypto": "",
     "@dxos/debug": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/keys": "workspace:*",

@@ -12,7 +12,7 @@ import { validateKey } from './util';
 
 describe('ObjectModel', () => {
   test('checks valid keys', () => {
-    const valid = ['x', 'foo', 'foo_bar', 'foo.bar'];
+    const valid = ['x', 'foo', 'foo_bar', 'foo.bar', '@type', '$type', 'foo$bar'];
     for (const key of valid) {
       expect(validateKey(key)).toEqual(key);
     }

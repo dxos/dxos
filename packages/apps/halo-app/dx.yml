@@ -23,6 +23,4 @@ runtime:
         username: dxos
         credential: dxos
     dxns:
-      # TODO(burdon): Replace once KUBE deployed with endpoint.
-      # server: https://kube.dxos.org/.well-known/dx/registry
       server: https://kube.dxos.org/.well-known/dx/registry

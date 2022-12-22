@@ -11,9 +11,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/async"
-    },
-    {
       "path": "../../../common/codec-protobuf"
     },
     {

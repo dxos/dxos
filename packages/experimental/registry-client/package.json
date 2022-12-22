@@ -25,7 +25,7 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/crypto": "workspace:*",
+    "@dxos/crypto": "",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",

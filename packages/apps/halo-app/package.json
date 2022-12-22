@@ -9,7 +9,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/keys": "workspace:*",

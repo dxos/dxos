@@ -20,12 +20,12 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
+    "@dxos/crypto": "",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/errors": "workspace:*",

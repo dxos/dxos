@@ -37,7 +37,7 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@babel/plugin-transform-runtime": "^7.11.5",
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",

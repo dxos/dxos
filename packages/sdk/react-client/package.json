@@ -12,7 +12,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.9.6",
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
