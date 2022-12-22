@@ -19,7 +19,7 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/feed-store": "workspace:*",
