@@ -174,7 +174,7 @@ export class Swarm {
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { message });
     if (this._ctx.disposed) {
-      log.info('ignored for destroyed swarm');
+      log.info('ignored for offline swarm');
       return { accept: false };
     }
 
@@ -197,9 +197,8 @@ export class Swarm {
 
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { message });
-    assert(!this._ctx.disposed, 'Swarm is offline');
     if (this._ctx.disposed) {
-      log.info('ignored for destroyed swarm');
+      log.info('ignored for offline swarm');
       return;
     }
     assert(
@@ -321,7 +320,7 @@ export class Swarm {
    */
   private async _initiateConnection(remoteId: PublicKey) {
     if (this._ctx.disposed) {
-      log.warn('Ignoring "initiate connection" for offline swarms');
+      log.warn('ignored for offline swarm');
       return;
     }
     // It is likely that the other peer will also try to connect to us at the same time.
