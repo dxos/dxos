@@ -15,7 +15,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",

@@ -14,6 +14,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/codec-protobuf"
     },
     {

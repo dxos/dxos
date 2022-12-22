@@ -17,7 +17,7 @@
     "book": "esbuild-server book"
   },
   "dependencies": {
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/react-async": "workspace:*",
