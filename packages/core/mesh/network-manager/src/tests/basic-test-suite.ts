@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { afterTest, test } from '@dxos/test';
