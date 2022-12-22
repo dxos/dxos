@@ -84,7 +84,7 @@ export class MemorySignalManager implements SignalManager {
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
 
-    this._ctx.dispose();
+    await this._ctx.dispose();
   }
 
   getStatus(): SignalStatus[] {
