@@ -22,7 +22,6 @@ module.exports = {
         force: true,
         include: [
           '@dxos/async',
-          '@dxos/bot-factory-client',
           '@dxos/client',
           '@dxos/codec-protobuf',
           '@dxos/config',

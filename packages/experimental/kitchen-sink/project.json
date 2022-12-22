@@ -13,7 +13,7 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
+    "e2e.skipped": {
       "executor": "@dxos/playwright:playwright",
       "options": {
         "config": "packages/experimental/kitchen-sink/playwright/config.ts",

@@ -9,10 +9,10 @@ const config: PlaywrightTestConfig = {
     headless: process.env.HEADLESS !== 'false'
   },
   webServer: {
-    command: 'pnpm run dev',
+    command: 'pnpm -w nx serve rpc-tunnel-e2e',
     port: 5173,
-    timeout: 30000,
-    reuseExistingServer: true
+    timeout: 30_000,
+    reuseExistingServer: !process.env.CI
   }
 };
 

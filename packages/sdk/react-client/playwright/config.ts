@@ -9,9 +9,10 @@ const config: PlaywrightTestConfig = {
     headless: process.env.HEADLESS !== 'false'
   },
   webServer: {
-    command: 'npm run book',
-    port: 8080,
-    timeout: 300 * 1000,
+    // TODO(wittjosiah): Remove NODE_OPTIONS once storybook is upgraded.
+    command: 'NODE_OPTIONS="--openssl-legacy-provider" pnpm -w nx storybook react-client',
+    url: 'http://localhost:9009/iframe.html',
+    timeout: 300_000,
     reuseExistingServer: !process.env.CI
   }
 };

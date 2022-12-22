@@ -19,7 +19,7 @@ onconnect = async (event) => {
 };
 
 const setup = async (muxer: PortMuxer, channel: string, client: TestClient) => {
-  const port = muxer.createPort({ channel });
+  const port = muxer.createWorkerPort({ channel });
 
   const server = createProtoRpcPeer({
     exposed: {

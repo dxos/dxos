@@ -6,14 +6,13 @@ import { test, expect } from '@playwright/test';
 import waitForExpect from 'wait-for-expect';
 
 test.describe('Smoke test', () => {
-  // TODO(wittjosiah): Renable once singleton client has stable hosted location.
-  test('placeholder to ensure exit success when no tests run', () => {});
-  test.skip('Renders tutorial from descriptor', async ({ page }) => {
-    await page.goto('#/__story/stories-client-stories-tsx/Primary');
+  // NOTE: This test depends on connecting to the default production deployed HALO vault.
+  test('Renders remote client info', async ({ page }) => {
+    await page.goto('http://localhost:9009/iframe.html?id=react-client-clientcontext--primary&viewMode=story');
 
     await waitForExpect(async () => {
       const isVisible = await page.isVisible(':has-text("initialized")');
       expect(isVisible).toBeTruthy();
-    });
+    }, 15_000); // It takes the storybook a minute to boot up.
   });
 });
