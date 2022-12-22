@@ -20,7 +20,7 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

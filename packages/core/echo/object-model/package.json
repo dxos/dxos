@@ -17,7 +17,7 @@
     "dist"
   ],
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",

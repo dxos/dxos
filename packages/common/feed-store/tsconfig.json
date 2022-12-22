@@ -16,16 +16,10 @@
       "path": "../../core/halo/keyring"
     },
     {
-      "path": "../async"
-    },
-    {
       "path": "../codec-protobuf"
     },
     {
       "path": "../context"
-    },
-    {
-      "path": "../crypto"
     },
     {
       "path": "../debug"

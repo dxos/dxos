@@ -7,12 +7,11 @@ import React, { ChangeEvent, KeyboardEvent, FC, useState, useEffect } from 'reac
 import * as ReactClientModule from '@dxos/react-client';
 
 // NOTE: Due to ESM.
-const { useClient, useSpaces } = ReactClientModule as any;
+const { useSpaces } = ReactClientModule as any;
 
 const ITEM_TYPE = 'demo/task';
 
 export const List: FC<{}> = () => {
-  const client = useClient();
   const spaces = useSpaces();
   const [text, setText] = useState<string>('');
   const [items, setItems] = useState<any[]>([]);

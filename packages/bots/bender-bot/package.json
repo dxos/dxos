@@ -20,7 +20,7 @@
     "bundle": "node -r @swc-node/register -e 'require(\"./src/build-bot\").buildBot({ entryPoint: \"./src/main.ts\", outfile: \"dist/bundle.js\" })'"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",

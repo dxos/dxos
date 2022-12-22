@@ -18,7 +18,7 @@
     "dist"
   ],
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/async": "",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/errors": "workspace:*",

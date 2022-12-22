@@ -9,7 +9,7 @@ import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
+import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemFilterDeleted } from './selection';
@@ -21,7 +21,7 @@ const LINK_EMPLOYEE = 'example:link/employee';
 describe('Database', () => {
   describe('remote', () => {
     const setupBackend = async (modelFactory: ModelFactory) => {
-      const backend = await createInMemoryDatabase(modelFactory);
+      const backend = await createMemoryDatabase(modelFactory);
       afterTest(() => backend.destroy());
       return backend;
     };

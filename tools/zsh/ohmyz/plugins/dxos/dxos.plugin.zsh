@@ -60,7 +60,7 @@ function pre () {
     git clean -xdf
   fi;
 
-  pnpm i
+  pnpm i --no-frozen-lockfile
   pa build
   pa test
   pa lint

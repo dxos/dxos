@@ -12,13 +12,7 @@
   ],
   "references": [
     {
-      "path": "../async"
-    },
-    {
       "path": "../codec-protobuf"
-    },
-    {
-      "path": "../crypto"
     },
     {
       "path": "../debug"
