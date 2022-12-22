@@ -18,7 +18,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@dxos/async": "",
+    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -32,7 +32,6 @@
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@dxos/async": "",
     "@dxos/signal": "workspace:*",
     "@types/node": "^18.11.9",
     "earljs": "~0.1.10",
