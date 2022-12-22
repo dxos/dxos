@@ -218,14 +218,16 @@ export class Swarm {
 
   // For debug purposes
   async goOffline() {
+    await this._ctx.dispose();
     await Promise.all([...this._peers.keys()].map((peerId) => this._closeConnection(peerId)));
     this._offline = true;
   }
 
   // For debug purposes
   async goOnline() {
-    await Promise.all([...this._peers.keys()].map((peerId) => this._initiateConnection(peerId)));
+    this._ctx = new Context();
     this._offline = false;
+    // await Promise.all([...this._peers.keys()].map((peerId) => this._initiateConnection(peerId)));
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
@@ -323,6 +325,10 @@ export class Swarm {
    * Creates a connection then sends message over signal network.
    */
   private async _initiateConnection(remoteId: PublicKey) {
+    if (this._offline) {
+      log.warn('Ignoring "initiate connection" for offline swarms');
+      return;
+    }
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     if (remoteId.toHex() < this._ownPeerId.toHex()) {

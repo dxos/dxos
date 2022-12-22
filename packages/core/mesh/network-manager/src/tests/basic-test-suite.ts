@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { afterTest, test } from '@dxos/test';
@@ -123,7 +124,6 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     //
     // Going offline and back online
     //
-
     await peer1.goOffline();
     await peer1.goOnline();
 
