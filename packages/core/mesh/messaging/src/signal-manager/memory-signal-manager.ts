@@ -61,38 +61,32 @@ export class MemorySignalManager implements SignalManager {
   constructor(
     private readonly _context: MemorySignalManagerContext
   ) {
-    this._ctx = new Context({
-      onError: (err) => log.catch(err)
-    });
+    this._ctx = new Context();
 
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
   }
 
   async open() {
-    this._ctx = new Context({
-      onError: (err) => log.catch(err)
-    });
-
+    this._closed = false;
+    this._ctx = new Context();
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
-
-    this._closed = false;
   }
 
   async close() {
     this._ctx.dispose();
 
     // save copy of joined swarms.
-    const joinedSwarmsCopy = Object.assign(
-      Object.create(Object.getPrototypeOf(this._joinedSwarms)),
-      this._joinedSwarms
+    const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
+      ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
+      [...this._joinedSwarms.values()]
     );
 
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(value)));
 
     // assign joined swarms back because .leave() deletes it.
-    this._joinedSwarms = Object.assign(Object.create(Object.getPrototypeOf(joinedSwarmsCopy)), joinedSwarmsCopy);
+    this._joinedSwarms = joinedSwarmsCopy;
 
     this._closed = true;
   }
