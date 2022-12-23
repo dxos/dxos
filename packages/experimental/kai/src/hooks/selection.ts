@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Context, createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { Context, createContext, useContext, useEffect, useMemo, useReducer, useState, useSyncExternalStore } from 'react';
 
 import { EchoObject, EchoDatabase, Filter, Selection, SelectionHandle, TypeFilter } from '@dxos/echo-db2';
 
@@ -65,3 +65,26 @@ export const useSelection = (selection: Selection): SelectionHandle => {
   handle.update(selection);
   return handle;
 };
+
+export const makeReactive = <P>(comp: React.FC<P>): React.FC<P> => props => {
+  const db = useDatabase();
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
+  const [handle] = useState(() => db.createSubscription(() => {
+    forceUpdate();
+  }));
+  const accessObserver = db.createAccessObserver();
+
+  useEffect(() => {
+    if (!handle.subscribed) {
+      console.error('bug: subscription lost') // TODO(dmaretskyi): Fix this.
+    }
+
+    return () => handle.unsubscribe();
+  }, []);
+
+  try {
+    return comp(props);
+  } finally {
+    handle.update([...accessObserver.accessed]);
+  }
+}

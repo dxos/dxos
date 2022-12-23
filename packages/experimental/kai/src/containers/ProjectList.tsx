@@ -10,7 +10,7 @@ import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useDatabase, useObjects, useSelection } from '../hooks';
+import { makeReactive, useDatabase, useObjects, useSelection } from '../hooks';
 import { Project } from '../proto';
 import { createTask, TaskItem } from './TaskList';
 
@@ -45,9 +45,8 @@ export const ProjectList: FC<{}> = () => {
   );
 };
 
-export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
+export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
   const db = useDatabase();
-  useSelection([project, ...(project.tasks ?? []), ...(project.team ?? [])]);
 
   const handleCreate = async () => {
     const task = await createTask(db);
@@ -96,5 +95,5 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+});

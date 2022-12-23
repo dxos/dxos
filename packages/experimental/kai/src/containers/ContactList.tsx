@@ -10,7 +10,7 @@ import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useDatabase, useObjects, useSelection } from '../hooks';
+import { makeReactive, useDatabase, useObjects, useSelection } from '../hooks';
 import { Address, Contact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
@@ -53,9 +53,7 @@ export const ContactList: FC<{}> = () => {
   );
 };
 
-export const Person: FC<{ person: Contact }> = ({ person }) => {
-  useSelection(person);
-
+export const Person = makeReactive<{ person: Contact }>(({ person }) => {
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
@@ -75,4 +73,4 @@ export const Person: FC<{ person: Contact }> = ({ person }) => {
       {person.address && <div className='flex text-sm text-gray-800'>{address(person.address)}</div>}
     </Table>
   );
-};
+});

@@ -10,7 +10,7 @@ import { EchoDatabase, id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useDatabase, useObjects, useSelection } from '../hooks';
+import { makeReactive, useDatabase, useObjects, useSelection } from '../hooks';
 import { Contact, Task } from '../proto';
 
 export const createTask = async (db: EchoDatabase) => {
@@ -51,9 +51,7 @@ export const TaskList: FC<{}> = () => {
   );
 };
 
-export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, onCreateTask }) => {
-  useSelection([task, task.assignee]);
-
+export const TaskItem = makeReactive<{ task: Task; onCreateTask?: () => void }>(({ task, onCreateTask }) => {
   // TODO(burdon): Insert item on enter and focus new item.
   // const handleKeyDown = (event: KeyboardEvent) => {
   //   if (event.key === 'Enter') {
@@ -86,4 +84,4 @@ export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, 
       </div>
     </Table>
   );
-};
+});

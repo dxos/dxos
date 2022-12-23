@@ -39,6 +39,8 @@ export interface SelectionHandle {
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
+  private readonly _accessObserverStack: AccessObserver[] = [];
+
   constructor(private readonly _echo: Database) {
     this._echo.update.on(() => {
       for (const object of this._echo.select({}).exec().entities) {
@@ -136,6 +138,21 @@ export class EchoDatabase {
 
     return handle;
   }
+
+  createAccessObserver(): AccessObserver {
+    const observer = new AccessObserver(() => {
+      this._accessObserverStack.splice(this._accessObserverStack.indexOf(observer), 1);
+    });
+    this._accessObserverStack.push(observer);
+    return observer;
+  }
+
+  /**
+   * @internal
+   */
+  _logObjectAccess(obj: EchoObject) {
+    this._accessObserverStack.at(-1)?.accessed.add(obj);
+  }
 }
 
 // TODO(burdon): Document.
@@ -150,3 +167,14 @@ const getIdsFromSelection = (selection: Selection): string[] => {
     return selection.flatMap(getIdsFromSelection);
   }
 };
+
+/**
+ * Observes object access.
+ */
+export class AccessObserver {
+  accessed: Set<EchoObjectBase> = new Set();
+
+  constructor(
+    public pop: () => void
+  ) {}
+}
