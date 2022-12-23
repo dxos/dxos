@@ -76,7 +76,10 @@ export class NetworkManager {
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
+
   private _networkMode = NetworkMode.ONLINE;
+  private readonly _networkModeChanged = new Event<NetworkMode>();
+
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -206,10 +209,11 @@ export class NetworkManager {
   }
 
   async setNetworkMode(status: NetworkMode) {
+    if (status === this._networkMode) {
+      return;
+    }
+
     switch (status) {
-      case this._networkMode: {
-        break;
-      }
       case NetworkMode.OFFLINE: {
         this._networkMode = status;
         // go offline
@@ -227,5 +231,6 @@ export class NetworkManager {
         break;
       }
     }
+    this._networkModeChanged.emit(this._networkMode);
   }
 }
