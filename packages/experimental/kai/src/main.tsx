@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Routes.
-// TODO(burdon): Invitations (auto and user-initiated).
-// TODO(burdon): Useful task list.
+// TODO(burdon): Sharing/Routes.
+// TODO(burdon): Responsive Masonry (web/desktop/mobile). Multiple browsers.
+
+// TODO(burdon): Editable task list.
 // TODO(burdon): Cards (see kitchen sink).
-// TODO(burdon): Masonry (web/desktop/mobile).
-// TODO(burdon): Electron app.
 // TODO(burdon): Virtual table.
+// TODO(burdon): Electron app.
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';

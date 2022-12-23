@@ -2,20 +2,42 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bug, ShareNetwork } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
+import { HashRouter, useNavigate, useParams, useRoutes } from 'react-router-dom';
 
 import { Client, fromHost } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider } from '@dxos/react-client';
-import { getSize } from '@dxos/react-ui';
 
 import { DatabaseContext } from '../hooks';
-import { ContactList } from './ContactList';
-import { ProjectGraph } from './ProjectGraph';
-import { ProjectList } from './ProjectList';
-import { TaskList } from './TaskList';
+import { Main } from './Main';
+
+const Join = () => {
+  const navigate = useNavigate();
+  const { invitation } = useParams();
+
+  console.log(invitation);
+
+  useEffect(() => {
+    navigate('/');
+  }, []);
+
+  return null;
+};
+
+const Routes = () => {
+  return useRoutes([
+    {
+      path: '/',
+      element: <Main />
+    },
+    {
+      path: '/join/:invitation',
+      element: <Join />
+    }
+  ]);
+};
 
 export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
@@ -39,7 +61,6 @@ export const App = () => {
       setClient(client);
 
       const space = await client.echo.createSpace();
-      // setSpaceKey(space.key);
       setDatabase(new EchoDatabase(space.database));
     });
   }, []);
@@ -136,67 +157,16 @@ export const App = () => {
   }, []);
   */
 
-  // if (!client || !spaceKey || !database) {
   if (!client || !database) {
     return null;
   }
 
-  const columnWidth = 300;
-  const sidebarWidth = 250;
-
-  const Sidebar = () => {
-    return (
-      <div className='flex flex-1 flex-col bg-slate-700 text-white'>
-        <div className='flex p-3 mb-2'>
-          <div className='flex flex-1'>
-            <Bug className={getSize(8)} />
-            <div className='flex-1'></div>
-            <div className='p-1'>
-              <button>
-                <ShareNetwork className={getSize(6)} />
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className='p-2 pl-4 bg-slate-600'>A</div>
-        <div className='p-2 pl-4'>B</div>
-        <div className='p-2 pl-4'>C</div>
-      </div>
-    );
-  };
-
   return (
     <ClientProvider client={client}>
       <DatabaseContext.Provider value={{ database }}>
-        <div className='full-screen'>
-          <div className='flex' style={{ width: sidebarWidth }}>
-            <Sidebar />
-          </div>
-          <div className='flex flex-1 overflow-x-scroll'>
-            <div className='flex m-2'>
-              <div className='flex m-2' style={{ width: columnWidth }}>
-                <ProjectList />
-              </div>
-
-              <div className='flex m-2' style={{ width: columnWidth }}>
-                <ContactList />
-              </div>
-
-              <div className='flex flex-col m-2' style={{ width: columnWidth }}>
-                <div className='flex flex-1 flex-shrink-0 mb-4 overflow-hidden'>
-                  <TaskList />
-                </div>
-                <div className='flex flex-1 flex-shrink-0 overflow-hidden'>
-                  <TaskList completed={true} readonly />
-                </div>
-              </div>
-
-              <div className='flex flex-1 m-2' style={{ width: (columnWidth * 3) / 2 }}>
-                <ProjectGraph />
-              </div>
-            </div>
-          </div>
-        </div>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
       </DatabaseContext.Provider>
     </ClientProvider>
   );
