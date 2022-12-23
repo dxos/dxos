@@ -229,7 +229,6 @@ export class Swarm {
         return this._initiateConnection(peerId);
       })
     );
-    // Connections will be reopened by topology.update() on this.onSwarmEvent() calls
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
