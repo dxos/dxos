@@ -177,18 +177,21 @@ export const App = () => {
               <div className='flex m-2' style={{ width: columnWidth }}>
                 <ProjectList />
               </div>
+
               <div className='flex m-2' style={{ width: columnWidth }}>
                 <ContactList />
               </div>
-              <div className='flex flex-col' style={{ width: columnWidth }}>
-                <div className='flex flex-1 m-2'>
+
+              <div className='flex flex-col m-2' style={{ width: columnWidth }}>
+                <div className='flex flex-1 flex-shrink-0 mb-4 overflow-hidden'>
                   <TaskList />
                 </div>
-                <div className='flex flex-1 m-2'>
+                <div className='flex flex-1 flex-shrink-0 overflow-hidden'>
                   <TaskList completed={true} readonly />
                 </div>
               </div>
-              <div className='flex m-2' style={{ width: columnWidth * 2 }}>
+
+              <div className='flex flex-1 m-2' style={{ width: (columnWidth * 3) / 2 }}>
                 <ProjectGraph />
               </div>
             </div>
