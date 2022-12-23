@@ -37,7 +37,6 @@ export const StatusIndicator = ({ status }: { status: boolean }) => {
           <Button
             onClick={async () => {
               const newMode = networkMode.mode === 0 ? 1 : 0;
-              console.log('Setting network mode:', newMode);
               await client.setNetworkMode(newMode);
             }}
           >
