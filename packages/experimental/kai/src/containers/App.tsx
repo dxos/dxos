@@ -2,30 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Bug, ShareNetwork } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
 
-import { Trigger } from '@dxos/async';
-import { fromHost, Client, Config, Invitation, PublicKey, Space } from '@dxos/client';
-import { Dynamics, Defaults } from '@dxos/config';
+import { Client, fromHost } from '@dxos/client';
+import { Config } from '@dxos/config';
 import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider } from '@dxos/react-client';
+import { getSize } from '@dxos/react-ui';
 
-import { Card, Graph } from '../components';
 import { DatabaseContext } from '../hooks';
 import { ContactList } from './ContactList';
+import { ProjectGraph } from './ProjectGraph';
 import { ProjectList } from './ProjectList';
 import { TaskList } from './TaskList';
 
 export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
-  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(undefined);
+  // const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(undefined);
   const [database, setDatabase] = useState<EchoDatabase | undefined>(undefined);
 
   // TODO(burdon): Factor out invitations for testing.
   useEffect(() => {
     setTimeout(async () => {
       const client = new Client({
-        services: fromHost(new Config(await Dynamics(), Defaults()))
+        // services: fromHost(new Config(await Dynamics(), Defaults()))
+        services: fromHost(new Config())
       });
 
       await client.initialize();
@@ -34,6 +36,15 @@ export const App = () => {
         await client.halo.createProfile();
       }
 
+      setClient(client);
+
+      const space = await client.echo.createSpace();
+      // setSpaceKey(space.key);
+      setDatabase(new EchoDatabase(space.database));
+    });
+  }, []);
+
+  /*
       let spaceKey: PublicKey | undefined;
       let swarmKey: PublicKey | undefined;
       try {
@@ -123,34 +134,63 @@ export const App = () => {
       initWithSpace(space);
     });
   }, []);
+  */
 
-  if (!client || !spaceKey || !database) {
+  // if (!client || !spaceKey || !database) {
+  if (!client || !database) {
     return null;
   }
 
-  const minWidth = 300;
+  const columnWidth = 300;
+  const sidebarWidth = 250;
+
+  const Sidebar = () => {
+    return (
+      <div className='flex flex-1 flex-col bg-slate-700 text-white'>
+        <div className='flex p-3 mb-2'>
+          <div className='flex flex-1'>
+            <Bug className={getSize(8)} />
+            <div className='flex-1'></div>
+            <div className='p-1'>
+              <button>
+                <ShareNetwork className={getSize(6)} />
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className='p-2 pl-4 bg-slate-600'>A</div>
+        <div className='p-2 pl-4'>B</div>
+        <div className='p-2 pl-4'>C</div>
+      </div>
+    );
+  };
 
   return (
     <ClientProvider client={client}>
       <DatabaseContext.Provider value={{ database }}>
         <div className='full-screen'>
+          <div className='flex' style={{ width: sidebarWidth }}>
+            <Sidebar />
+          </div>
           <div className='flex flex-1 overflow-x-scroll'>
-            <div className='flex flex-1 m-2' style={{ width: minWidth }}>
-              <ProjectList />
-            </div>
-            <div className='flex flex-1 m-2 ml-0' style={{ width: minWidth }}>
-              <TaskList />
-            </div>
-            <div className='flex flex-1 m-2 ml-0' style={{ width: minWidth }}>
-              <ContactList />
-            </div>
-            <div className='flex flex-1 m-2 ml-0' style={{ width: minWidth }}>
-              <Card title='Graph' className='bg-amber-500'>
-                <Graph />
-              </Card>
-            </div>
-            <div className='flex flex-1 m-2 ml-0' style={{ width: minWidth }}>
-              <TaskList completed={true} />
+            <div className='flex m-2'>
+              <div className='flex m-2' style={{ width: columnWidth }}>
+                <ProjectList />
+              </div>
+              <div className='flex m-2' style={{ width: columnWidth }}>
+                <ContactList />
+              </div>
+              <div className='flex flex-col' style={{ width: columnWidth }}>
+                <div className='flex flex-1 m-2'>
+                  <TaskList />
+                </div>
+                <div className='flex flex-1 m-2'>
+                  <TaskList completed={true} readonly />
+                </div>
+              </div>
+              <div className='flex m-2' style={{ width: columnWidth * 2 }}>
+                <ProjectGraph />
+              </div>
             </div>
           </div>
         </div>

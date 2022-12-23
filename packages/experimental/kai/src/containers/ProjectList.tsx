@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
 import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
@@ -11,19 +10,15 @@ import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
 import { useDatabase, useObjects, useSelection } from '../hooks';
-import { Project } from '../proto';
-import { createTask, TaskItem } from './TaskList';
+import { createProject, createTask, Project } from '../proto';
+import { TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
   const db = useDatabase();
   const projects = useObjects(Project.filter());
 
   const handleCreate = async () => {
-    await db.save(
-      new Project({
-        title: faker.commerce.productAdjective() + ' ' + faker.commerce.product()
-      })
-    );
+    await createProject(db);
   };
 
   const Menubar = () => (

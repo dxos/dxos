@@ -6,7 +6,7 @@ import { Context, createContext, useContext, useEffect, useMemo, useState, useSy
 
 import { EchoObject, EchoDatabase, Filter, Selection, SelectionHandle, TypeFilter } from '@dxos/echo-db2';
 
-// TODO(burdon): Move to echo-db2.
+// TODO(burdon): Factor out (react-client).
 
 export type DatabaseContextType = { database?: EchoDatabase };
 

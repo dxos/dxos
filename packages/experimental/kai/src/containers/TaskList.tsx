@@ -2,31 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
 import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { EchoDatabase, id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
 import { useDatabase, useObjects, useSelection } from '../hooks';
-import { Contact, Task } from '../proto';
+import { createTask, Task } from '../proto';
 
-export const createTask = async (db: EchoDatabase) => {
-  const contacts = db.query(Contact.filter()).getObjects();
-  const contact =
-    faker.datatype.boolean() && contacts.length ? contacts[Math.floor(Math.random() * contacts.length)] : undefined;
-
-  return await db.save(
-    new Task({
-      title: faker.lorem.sentence(2),
-      assignee: contact
-    })
-  );
-};
-
-export const TaskList: FC<{ completed?: boolean }> = ({ completed = undefined }) => {
+export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
+  completed = undefined,
+  readonly = false
+}) => {
   const db = useDatabase();
   const tasks = useObjects(Task.filter({ completed }));
 
@@ -41,7 +30,7 @@ export const TaskList: FC<{ completed?: boolean }> = ({ completed = undefined })
   );
 
   return (
-    <Card title='Tasks' className='bg-teal-400' menubar={<Menubar />}>
+    <Card title='Tasks' className='bg-teal-400' menubar={!readonly && <Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
           <TaskItem key={id(task)} task={task} onCreateTask={handleCreate} />

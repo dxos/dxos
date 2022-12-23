@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "codegen": "echo-schema-gen src/proto/schema.proto --out src/proto/gen/schema.ts"
+    "codegen": "echo-schema-gen src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
