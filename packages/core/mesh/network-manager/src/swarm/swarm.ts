@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, sleep } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -171,6 +171,7 @@ export class Swarm {
     this._topology.update();
   }
 
+  @synchronized
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { message });
     if (this._ctx.disposed) {
@@ -219,16 +220,17 @@ export class Swarm {
   }
 
   // For debug purposes
+  @synchronized
   async goOnline() {
-    this._ctx = new Context();
     await Promise.all(
       [...this._peers.entries()].map(([peerId, peer]) => {
-        if (peer.connection || peer.advertizing || peer.initiating) {
+        if (peer.connection || peer.initiating) {
           return undefined;
         }
         return this._initiateConnection(peerId);
       })
     );
+    this._ctx = new Context();
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
@@ -326,10 +328,6 @@ export class Swarm {
    * Creates a connection then sends message over signal network.
    */
   private async _initiateConnection(remoteId: PublicKey) {
-    if (this._ctx.disposed) {
-      log.warn('ignored for offline swarm');
-      return;
-    }
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     if (remoteId.toHex() < this._ownPeerId.toHex()) {
