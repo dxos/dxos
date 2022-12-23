@@ -78,8 +78,6 @@ export class NetworkManager {
   private readonly _signalConnection: SignalConnection;
 
   private _networkMode = NetworkMode.ONLINE;
-  public readonly networkModeChanged = new Event<NetworkMode>();
-
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -231,6 +229,5 @@ export class NetworkManager {
         break;
       }
     }
-    this.networkModeChanged.emit(this._networkMode);
   }
 }
