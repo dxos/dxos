@@ -12,7 +12,7 @@ import { inspectObject } from '@dxos/debug';
 import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
 import { Status } from '@dxos/protocols/proto/dxos/client';
-import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
+import { GetNetworkModeResponse, NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
@@ -116,6 +116,13 @@ export class Client {
   get echo(): EchoProxy {
     assert(this._initialized, 'Client not initialized.');
     return this._echo;
+  }
+
+  /**
+   * Returns the current Network Mode of the Client.
+   */
+  get networkMode(): Promise<GetNetworkModeResponse> {
+    return this._services.services.NetworkService.getNetworkMode();
   }
 
   /**
