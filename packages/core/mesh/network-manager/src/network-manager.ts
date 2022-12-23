@@ -205,7 +205,7 @@ export class NetworkManager {
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 
-  async setNetworkMade(status: NetworkMode) {
+  async setNetworkMode(status: NetworkMode) {
     switch (status) {
       case this._networkMode: {
         break;
