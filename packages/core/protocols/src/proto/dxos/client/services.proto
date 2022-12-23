@@ -232,6 +232,6 @@ message SetNetworkModeRequest {
 }
 
 service NetworkService {
-  rpc getNetworkMode(google.protobuf.Empty) returns (stream GetNetworkModeResponse);
+  rpc getNetworkMode(google.protobuf.Empty) returns (GetNetworkModeResponse);
   rpc SetNetworkMode(SetNetworkModeRequest) returns (google.protobuf.Empty);
 }
