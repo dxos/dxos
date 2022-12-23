@@ -14,7 +14,7 @@ export const StatusIndicator = ({ status }: { status: boolean }) => {
   const client = useClient();
   const networkMode = useNetworkMode();
   return (
-    <>
+    <div role='none' className={mx('fixed bottom-4 right-4')}>
       <div role='none' className={mx('fixed bottom-4 right-4', valenceColorText('success'))}>
         {status && (
           <span className='flex h-3 w-3'>
@@ -30,7 +30,6 @@ export const StatusIndicator = ({ status }: { status: boolean }) => {
           </Tooltip>
         )}
       </div>
-
       {networkMode && (
         <>
           {' '}
@@ -46,6 +45,6 @@ export const StatusIndicator = ({ status }: { status: boolean }) => {
           </Button>
         </>
       )}
-    </>
+    </div>
   );
 };
