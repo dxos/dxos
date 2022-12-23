@@ -15,10 +15,10 @@ export class NetworkServiceImpl implements NetworkService {
 
   getNetworkMode() {
     return new Stream<GetNetworkModeResponse>(({ next }) => {
+      next({ mode: this.networkManager.networkMode });
       const unsubscribe = this.networkManager.networkModeChanged.on((mode) => {
         next({ mode });
       });
-      next({ mode: this.networkManager.networkMode });
 
       return unsubscribe;
     });
