@@ -119,6 +119,13 @@ export class Client {
   }
 
   /**
+   * Returns the current network mode.
+   */
+  get networkMode() {
+    return await this._services.services.NetworkService.getNetworkMode();
+  }
+
+  /**
    * Initializes internal resources in an idempotent way.
    * Required before using the Client instance.
    */
