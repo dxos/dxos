@@ -223,7 +223,7 @@ export class Swarm {
     this._ctx = new Context();
     await Promise.all(
       [...this._peers.entries()].map(([peerId, peer]) => {
-        if (peer.connection || peer.advertizing) {
+        if (peer.connection || peer.advertizing || peer.initiating) {
           return undefined;
         }
         return this._initiateConnection(peerId);
