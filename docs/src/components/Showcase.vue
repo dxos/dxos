@@ -8,8 +8,6 @@
       />
     </ClientOnly>
   </Suspense>
-  <!-- TODO(wittjosiah): Add link to CodeSandbox for editing. -->
-  <div :id="demo" className="showcase-preview"></div>
 </template>
 
 <script lang='ts'>
@@ -25,5 +23,5 @@
         required: true
       }
     }
-});
+  });
 </script>

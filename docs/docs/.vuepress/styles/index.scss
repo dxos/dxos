@@ -22,13 +22,6 @@ html[data-theme=dark] tr:nth-child(2n) {
   background-color: transparent;
 }
 
-// TODO(wittjosiah): Can the plugin add this?
-.showcase-preview {
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
-  padding: 1em;
-}
-
 .home.project .feature:hover {
   transform: none;
   box-shadow: none;
