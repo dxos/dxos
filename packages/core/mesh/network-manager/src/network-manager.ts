@@ -76,7 +76,7 @@ export class NetworkManager {
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
-  private _connectionStatus = NetworkMode.ONLINE;
+  private _networkMode = NetworkMode.ONLINE;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -109,8 +109,8 @@ export class NetworkManager {
     return this._signalManager;
   }
 
-  get connectionStatus() {
-    return this._connectionStatus;
+  get networkMode() {
+    return this._networkMode;
   }
 
   // TODO(burdon): Reconcile with "discovery_key".
@@ -207,11 +207,11 @@ export class NetworkManager {
 
   async setNetworkMade(status: NetworkMode) {
     switch (status) {
-      case this._connectionStatus: {
+      case this._networkMode: {
         break;
       }
       case NetworkMode.OFFLINE: {
-        this._connectionStatus = status;
+        this._networkMode = status;
         // go offline
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
         await this._messenger.close();
@@ -219,7 +219,7 @@ export class NetworkManager {
         break;
       }
       case NetworkMode.ONLINE: {
-        this._connectionStatus = status;
+        this._networkMode = status;
         // go online
         this._messenger.open();
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
