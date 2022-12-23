@@ -78,7 +78,7 @@ export class NetworkManager {
   private readonly _signalConnection: SignalConnection;
 
   private _networkMode = NetworkMode.ONLINE;
-  private readonly _networkModeChanged = new Event<NetworkMode>();
+  public readonly networkModeChanged = new Event<NetworkMode>();
 
   private readonly _connectionLog?: ConnectionLog;
 
