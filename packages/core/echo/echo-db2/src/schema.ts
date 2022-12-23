@@ -7,6 +7,17 @@ import * as pb from 'protobufjs';
 import { Filter } from './database';
 import { EchoObject } from './object';
 
+export type EchoSchemaField = {
+  name: string;
+  isOrderedSet?: boolean;
+};
+
+// TODO(burdon): __phantom?
+export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
+
+/**
+ *
+ */
 export class EchoSchema {
   constructor(private readonly _root: pb.Root) {}
 
@@ -18,9 +29,13 @@ export class EchoSchema {
     return new EchoSchemaType(this._root.lookupType(name));
   }
 
+  // TODO(burdon): ?
   registerPrototype(proto: any) {}
 }
 
+/**
+ *
+ */
 export class EchoSchemaType {
   public readonly fields: EchoSchemaField[] = [];
 
@@ -38,15 +53,16 @@ export class EchoSchemaType {
 
   createFilter(opts?: any): TypeFilter<any> {
     return {
-      ...opts,
+      ...strip(opts),
       '@type': this.name
     };
   }
 }
 
-export type EchoSchemaField = {
-  name: string;
-  isOrderedSet?: boolean;
-};
+const strip = (obj: any): any => {
+  if (typeof obj === 'object') {
+    Object.keys(obj).forEach((key) => obj[key] === undefined && delete obj[key]);
+  }
 
-export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
+  return obj;
+};

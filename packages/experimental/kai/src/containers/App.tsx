@@ -5,11 +5,12 @@
 import React, { useEffect, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { fromHost, Client, PublicKey, Invitation, Config, Space } from '@dxos/client';
+import { fromHost, Client, Config, Invitation, PublicKey, Space } from '@dxos/client';
 import { Dynamics, Defaults } from '@dxos/config';
 import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider } from '@dxos/react-client';
 
+import { Card, Graph } from '../components';
 import { DatabaseContext } from '../hooks';
 import { ContactList } from './ContactList';
 import { ProjectList } from './ProjectList';
@@ -46,7 +47,6 @@ export const App = () => {
         }
       } catch {}
 
-      console.log('spaceKey', spaceKey);
       const initWithSpace = (space: Space) => {
         const swarmKey = PublicKey.random();
         const hostObservable = space.createInvitation({
@@ -54,15 +54,9 @@ export const App = () => {
           type: Invitation.Type.MULTIUSE_TESTING
         });
         hostObservable.subscribe({
-          onConnecting: () => {
-            console.log('connecting');
-          },
-          onConnected: () => {
-            console.log('connected');
-          },
-          onSuccess: (invitation) => {
-            console.log('success');
-          },
+          onConnecting: () => {},
+          onConnected: () => {},
+          onSuccess: (invitation) => {},
           onError: (error) => {
             console.error(error);
           }
@@ -134,24 +128,29 @@ export const App = () => {
     return null;
   }
 
-  const colWidth = 360;
+  const minWidth = 300;
 
-  // TODO(burdon): Context for database.
   return (
     <ClientProvider client={client}>
       <DatabaseContext.Provider value={{ database }}>
         <div className='full-screen'>
           <div className='flex flex-1 overflow-x-scroll'>
-            <div className='flex p-4'>
-              <div className='flex m-4' style={{ width: colWidth }}>
-                <ProjectList />
-              </div>
-              <div className='flex m-4' style={{ width: colWidth }}>
-                <TaskList />
-              </div>
-              <div className='flex m-4' style={{ width: colWidth }}>
-                <ContactList />
-              </div>
+            <div className='flex flex-1 m-2' style={{ width: minWidth }}>
+              <ProjectList />
+            </div>
+            <div className='flex flex-1 m-2 ml-0' style={{ width: minWidth }}>
+              <TaskList />
+            </div>
+            <div className='flex flex-1 m-2 ml-0' style={{ width: minWidth }}>
+              <ContactList />
+            </div>
+            <div className='flex flex-1 m-2 ml-0' style={{ width: minWidth }}>
+              <Card title='Graph' className='bg-amber-500'>
+                <Graph />
+              </Card>
+            </div>
+            <div className='flex flex-1 m-2 ml-0' style={{ width: minWidth }}>
+              <TaskList completed={true} />
             </div>
           </div>
         </div>

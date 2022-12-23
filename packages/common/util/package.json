@@ -21,7 +21,7 @@
     "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/crypto": ""
+    "@dxos/crypto": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

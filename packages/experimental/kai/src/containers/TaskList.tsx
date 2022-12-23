@@ -26,9 +26,9 @@ export const createTask = async (db: EchoDatabase) => {
   );
 };
 
-export const TaskList: FC<{}> = () => {
+export const TaskList: FC<{ completed?: boolean }> = ({ completed = undefined }) => {
   const db = useDatabase();
-  const tasks = useObjects(Task.filter());
+  const tasks = useObjects(Task.filter({ completed }));
 
   const handleCreate = async () => {
     await createTask(db);
@@ -41,7 +41,7 @@ export const TaskList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Tasks' color='bg-teal-400' menubar={<Menubar />}>
+    <Card title='Tasks' className='bg-teal-400' menubar={<Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
           <TaskItem key={id(task)} task={task} onCreateTask={handleCreate} />

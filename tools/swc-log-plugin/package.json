@@ -1,14 +1,12 @@
 {
   "name": "@dxos/swc-log-plugin",
   "version": "0.1.20",
-  "description": "",
   "keywords": [
     "swc-plugin"
   ],
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "ISC",
-  "author": "",
   "main": "./target/wasm32-wasi/release/swc_log_plugin.wasm",
   "files": []
 }

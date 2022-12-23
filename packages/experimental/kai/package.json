@@ -8,15 +8,17 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "codegen": "echo-schema-gen src/proto/schema.proto src/proto/gen/schema.ts"
+    "codegen": "echo-schema-gen src/proto/schema.proto --out src/proto/gen/schema.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/crypto": "",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db2": "workspace:*",
+    "@dxos/gem-core": "workspace:*",
+    "@dxos/gem-spore": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",

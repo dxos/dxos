@@ -76,7 +76,7 @@ const codegenType = (field: pb.Field): string => {
 export const codegenObjectClass = (type: pb.Type) => {
   const name = type.name;
   const fullName = type.fullName.slice(1);
-  const initializer = type.fieldsArray.map((field) => `${field.name}?: ${codegenType(field)}`).join(',');
+  const initializer = type.fieldsArray.map((field) => `${field.name}?: ${codegenType(field)}`).join(', ');
   const fields = type.fieldsArray.map((field) => `declare ${field.name}: ${codegenType(field)};`);
 
   const content = [
@@ -85,6 +85,7 @@ export const codegenObjectClass = (type: pb.Type) => {
     `  static filter(opts?: { ${initializer} }): TypeFilter<${name}> {`,
     `    return ${name}.type.createFilter(opts);`,
     '  }',
+    '',
     `  constructor(opts?: { ${initializer} }) {`,
     `    super({ ...opts, '@type': ${name}.type.name }, ${name}.type);`,
     '  }',
