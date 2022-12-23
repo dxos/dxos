@@ -119,13 +119,6 @@ export class Client {
   }
 
   /**
-   * Returns the current Network Mode of the Client.
-   */
-  get networkMode(): Promise<GetNetworkModeResponse> {
-    return this._services.services.NetworkService.getNetworkMode();
-  }
-
-  /**
    * Initializes internal resources in an idempotent way.
    * Required before using the Client instance.
    */
