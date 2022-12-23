@@ -5,10 +5,11 @@
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
+import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
-import { NetworkMode, NetworkManager } from '../network-manager';
+import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
   MemoryTransportFactory,
