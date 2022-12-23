@@ -176,7 +176,7 @@ export class Client {
   }
 
   /**
-   * Set network mode. This is method to go offline/online mode.
+   * Set network mode. This is method to go to offline/online mode.
    */
   async setNetworkMode(mode: NetworkMode) {
     return this._services.services?.NetworkService.setNetworkMode({ mode });
