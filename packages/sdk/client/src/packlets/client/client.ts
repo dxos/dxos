@@ -122,7 +122,7 @@ export class Client {
    * Returns the current network mode.
    */
   get networkMode() {
-    return await this._services.services.NetworkService.getNetworkMode();
+    return this._services.services.NetworkService.getNetworkMode();
   }
 
   /**
