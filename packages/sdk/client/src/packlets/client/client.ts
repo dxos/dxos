@@ -12,7 +12,7 @@ import { inspectObject } from '@dxos/debug';
 import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
 import { Status } from '@dxos/protocols/proto/dxos/client';
-import { GetNetworkModeResponse, NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
+import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
