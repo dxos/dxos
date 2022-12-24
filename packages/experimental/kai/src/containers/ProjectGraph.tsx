@@ -4,7 +4,7 @@
 
 import React, { FC, useMemo } from 'react';
 
-import { SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
+import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { convertTreeToGraph, createTree, Graph as GemGraph, Markers, TestGraphModel } from '@dxos/gem-spore';
 
 import { Card } from '../components';
@@ -23,6 +23,7 @@ export const ProjectGraph: FC<{}> = () => {
       <SVGContextProvider>
         <SVG>
           <Markers />
+          <Grid />
           <Zoom extent={[1, 4]}>
             <GemGraph model={model} drag arrows />
           </Zoom>

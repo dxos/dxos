@@ -3,7 +3,17 @@
 //
 
 import clsx from 'clsx';
-import { Bug, Planet, ShareNetwork, PlusCircle, Smiley, SmileyBlank, Trash, UserCircle } from 'phosphor-react';
+import {
+  AirplaneInFlight,
+  AirplaneTakeoff,
+  Bug,
+  Planet,
+  ShareNetwork,
+  PlusCircle,
+  Smiley,
+  SmileyBlank,
+  UserCircle
+} from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { Link, useHref, useNavigate, useParams } from 'react-router-dom';
@@ -47,6 +57,7 @@ export const Sidebar = () => {
   const spaces = useSpaces();
   const { space } = useSpace();
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
+  const [airplaneMode, setAirplaneMode] = useState(false);
 
   useEffect(() => {
     const swarmKey = PublicKey.random();
@@ -82,8 +93,8 @@ export const Sidebar = () => {
     navigate(`/${space.key.truncate()}`);
   };
 
-  const handleReset = () => {
-    console.log('reset');
+  const handleAirplaneMode = () => {
+    setAirplaneMode((mode) => !mode);
   };
 
   return (
@@ -98,7 +109,7 @@ export const Sidebar = () => {
         </div>
       </div>
 
-      <div className='flex flex-1 flex-col overflow-y-scroll cursor-pointer'>
+      <div className='flex flex-1 flex-col overflow-y-scroll'>
         {spaces.map((space) => (
           <div
             key={space.key.toHex()}
@@ -112,13 +123,15 @@ export const Sidebar = () => {
             >
               <Planet className={getSize(6)} />
             </div>
-            <div className='flex flex-1 font-mono text-slate-300'>
+            <div className='flex flex-1 font-mono text-slate-300 cursor-pointer'>
               <Link to={`/${space.key.truncate()}`}>{space.key.truncate()}</Link>
             </div>
             {space.key.truncate() === currentSpaceKey && (
               <div className='flex items-center'>
                 <CopyToClipboard text={window.origin + '/' + url}>
-                  <ShareNetwork className={clsx(getSize(5), 'cursor-pointer')} />
+                  <button>
+                    <ShareNetwork className={clsx(getSize(5), 'cursor-pointer')} />
+                  </button>
                 </CopyToClipboard>
               </div>
             )}
@@ -131,8 +144,8 @@ export const Sidebar = () => {
       </div>
 
       <div className='flex flex-shrink-0 p-3 mt-2'>
-        <button title='Reset store.' onClick={handleReset}>
-          <Trash className={getSize(6)} />
+        <button title='Reset store.' onClick={handleAirplaneMode}>
+          {airplaneMode ? <AirplaneTakeoff className={getSize(6)} /> : <AirplaneInFlight className={getSize(6)} />}
         </button>
       </div>
     </div>
