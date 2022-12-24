@@ -109,7 +109,7 @@ export class SpaceServiceImpl implements SpaceService {
                 identityKey: member.key,
                 displayName: member.assertion.profile?.displayName ?? humanize(member.key)
               },
-              presenceState:
+              presence:
                 this.serviceContext.identityManager.identity?.identityKey.equals(member.key) ||
                 space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
                   ? SpaceMember.PresenceState.ONLINE

@@ -251,7 +251,7 @@ describe('Client services', () => {
               identityKey: client1.halo.profile!.identityKey,
               displayName: 'Peer 1'
             },
-            presenceState: SpaceMember.PresenceState.ONLINE
+            presence: SpaceMember.PresenceState.ONLINE
           },
           {
             identityKey: client2.halo.profile!.identityKey,
@@ -259,7 +259,7 @@ describe('Client services', () => {
               identityKey: client2.halo.profile!.identityKey,
               displayName: 'Peer 2'
             },
-            presenceState: SpaceMember.PresenceState.ONLINE
+            presence: SpaceMember.PresenceState.ONLINE
           }
         ]);
       }, 3_000);

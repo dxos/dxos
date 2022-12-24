@@ -10,7 +10,7 @@ import { PublicKeyLike } from '@dxos/keys';
 import { useClient } from '../client';
 
 /**
- * Get a specific Space.
+ * Get a specific Space via its key.
  * Requires ClientContext to be set via ClientProvider.
  */
 export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
@@ -24,7 +24,7 @@ export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
  */
 export const useSpaces = () => {
   const client = useClient();
-  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [spaces, setSpaces] = useState<Space[]>(client.echo.querySpaces().value);
 
   useEffect(() => {
     const result = client.echo.querySpaces();

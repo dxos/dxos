@@ -130,7 +130,6 @@ export class NetworkManager {
   /**
    * Join the swarm.
    */
-  // TODO(burdon): Join/Open? Swarm abstraction?
   async joinSwarm({
     topic,
     peerId,

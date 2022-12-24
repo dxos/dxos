@@ -16,7 +16,10 @@ import { TestNode } from './types';
 export class TestGraphModel implements GraphModel<TestNode> {
   public readonly updated = new EventEmitter<GraphData<TestNode>>();
 
-  constructor(private readonly _graph: GraphData<TestNode> = emptyGraph) {}
+  // prettier-ignore
+  constructor(
+    private readonly _graph: GraphData<TestNode> = emptyGraph
+  ) {}
 
   get graph() {
     return this._graph;

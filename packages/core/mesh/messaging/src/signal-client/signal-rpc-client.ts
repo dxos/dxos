@@ -74,7 +74,7 @@ export class SignalRPCClient {
     };
 
     this._socket.onerror = (event: WebSocket.ErrorEvent) => {
-      log.error(event.message, { url: this._url });
+      log.error(event.message ?? 'Socket error', { url: this._url });
       this.error.emit(event.error ?? new Error(event.message));
     };
   }

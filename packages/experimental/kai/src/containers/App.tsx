@@ -2,160 +2,195 @@
 // Copyright 2022 DXOS.org
 //
 
+import clsx from 'clsx';
+import { Bug } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
+import { HashRouter, useNavigate, useParams, useRoutes } from 'react-router-dom';
 
 import { Trigger } from '@dxos/async';
-import { fromHost, Client, PublicKey, Invitation, Config, Space } from '@dxos/client';
-import { Dynamics, Defaults } from '@dxos/config';
+import { Client, Invitation, fromHost, PublicKey, Space, InvitationEncoder } from '@dxos/client';
+import { Config, Defaults } from '@dxos/config';
 import { EchoDatabase } from '@dxos/echo-db2';
-import { ClientProvider } from '@dxos/react-client';
+import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 
-import { DatabaseContext } from '../hooks';
-import { ContactList } from './ContactList';
-import { ProjectList } from './ProjectList';
-import { TaskList } from './TaskList';
+import { SpaceContext, SpaceContextType } from '../hooks';
+import { Main } from './Main';
 
+/**
+ * Selects or creates an initial space.
+ */
+const Init = () => {
+  const navigate = useNavigate();
+  const client = useClient();
+  const spaces = useSpaces();
+  const [init, setInit] = useState(false);
+
+  useEffect(() => {
+    if (init) {
+      return;
+    }
+
+    if (spaces.length) {
+      navigate('/' + spaces[0].key.truncate());
+    } else {
+      setInit(true); // Make idempotent.
+      setTimeout(async () => {
+        const space = await client.echo.createSpace();
+        navigate('/' + space.key.truncate());
+      });
+    }
+  }, [spaces, init]);
+
+  return null;
+};
+
+/**
+ * Join space via invitation URL.
+ */
+const Join = () => {
+  const client = useClient();
+  const navigate = useNavigate();
+  const { invitation: invitationCode } = useParams();
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let invitation: Invitation;
+    try {
+      invitation = InvitationEncoder.decode(invitationCode!);
+    } catch (err: any) {
+      setError(true);
+      return;
+    }
+
+    const complete = new Trigger<Space | null>();
+    const observable = client.echo.acceptInvitation({
+      invitationId: PublicKey.random().toHex(), // TODO(dmaretskyi): Why is this required?
+      swarmKey: invitation.swarmKey,
+      type: Invitation.Type.MULTIUSE_TESTING,
+      timeout: 2000 // TODO(dmaretskyi): Doesn't work.
+    });
+
+    // TODO(burdon): Error page.
+    const unsubscribe = observable.subscribe({
+      onSuccess: async () => {
+        // TODO(burdon): Space key missing from returned invitation.
+        navigate(`/${invitation.spaceKey!.truncate()}`);
+      },
+      onTimeout: () => {
+        console.error('timeout');
+        complete.wake(null);
+      },
+      onError: (error) => {
+        console.error(error);
+        complete.wake(null);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      void observable.cancel();
+    };
+  }, [invitationCode]);
+
+  return (
+    <div className='full-screen'>
+      <div className='flex flex-1 items-center'>
+        <div className='flex flex-1 flex-col items-center'>
+          <Bug style={{ width: 160, height: 160 }} className={clsx(error ? 'text-red-500' : 'text-gray-400')} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Home page with current space.
+ */
+const SpacePage = () => {
+  const navigate = useNavigate();
+  const { spaceKey: currentSpaceKey } = useParams();
+  const spaces = useSpaces();
+  const [context, setContext] = useState<SpaceContextType | undefined>();
+
+  useEffect(() => {
+    if (!spaces.length) {
+      navigate('/');
+      return;
+    }
+
+    const space = spaces.find((space) => space.key.truncate() === currentSpaceKey);
+    if (space) {
+      const database = new EchoDatabase(space.database);
+      setContext({ space, database });
+    } else {
+      navigate('/');
+    }
+  }, [spaces, currentSpaceKey]);
+
+  if (!context) {
+    return null;
+  }
+
+  return (
+    <SpaceContext.Provider value={context}>
+      <Main />
+    </SpaceContext.Provider>
+  );
+};
+
+/**
+ * Main app routes.
+ */
+const Routes = () => {
+  return useRoutes([
+    {
+      path: '/',
+      element: <Init />
+    },
+    {
+      path: '/join/:invitation',
+      element: <Join />
+    },
+    {
+      path: '/:spaceKey',
+      element: <SpacePage />
+    }
+  ]);
+};
+
+/**
+ * Main app container with routes.
+ */
 export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
-  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(undefined);
-  const [database, setDatabase] = useState<EchoDatabase | undefined>(undefined);
 
-  // TODO(burdon): Factor out invitations for testing.
+  // Auto-create client and profile.
   useEffect(() => {
     setTimeout(async () => {
+      const config = new Config(Defaults());
       const client = new Client({
-        services: fromHost(new Config(await Dynamics(), Defaults()))
+        services: fromHost(config)
       });
 
       await client.initialize();
-      // TODO(burdon): Hangs if profile not created.
+      // TODO(burdon): Hangs (no error) if profile not created?
       if (!client.halo.profile) {
         await client.halo.createProfile();
       }
 
-      let spaceKey: PublicKey | undefined;
-      let swarmKey: PublicKey | undefined;
-      try {
-        const locationHash = location.hash;
-        if (locationHash) {
-          const [spaceKeyHex, swarmKeyHex] = locationHash.slice(1).split(':');
-          spaceKey = PublicKey.from(spaceKeyHex);
-          if (swarmKeyHex) {
-            swarmKey = PublicKey.from(swarmKeyHex);
-          }
-        }
-      } catch {}
-
-      console.log('spaceKey', spaceKey);
-      const initWithSpace = (space: Space) => {
-        const swarmKey = PublicKey.random();
-        const hostObservable = space.createInvitation({
-          swarmKey,
-          type: Invitation.Type.MULTIUSE_TESTING
-        });
-        hostObservable.subscribe({
-          onConnecting: () => {
-            console.log('connecting');
-          },
-          onConnected: () => {
-            console.log('connected');
-          },
-          onSuccess: (invitation) => {
-            console.log('success');
-          },
-          onError: (error) => {
-            console.error(error);
-          }
-        });
-        location.hash = `${space.key.toHex()}:${swarmKey.toHex()}`;
-        setClient(client);
-        setSpaceKey(space.key);
-        setDatabase(new EchoDatabase(space.database));
-      };
-
-      const join = async (swarmKey: PublicKey): Promise<boolean> => {
-        const complete = new Trigger<boolean>();
-        const observable = client.echo.acceptInvitation({
-          swarmKey,
-          type: Invitation.Type.MULTIUSE_TESTING,
-          timeout: 2000, // TODO(dmaretskyi): Doesn't work.
-          invitationId: PublicKey.random().toHex() // TODO(dmaretskyi): Why is this required?
-        });
-
-        observable.subscribe({
-          onSuccess: async (invitation) => {
-            const space = client.echo.getSpace(spaceKey!)!;
-            initWithSpace(space);
-            complete.wake(true);
-          },
-          onTimeout: () => {
-            console.error('timeout');
-            complete.wake(false);
-          },
-          onError: (error) => {
-            console.error(error);
-            complete.wake(false);
-          }
-        });
-
-        // TODO(burdon): Remove timeout.
-        try {
-          return await complete.wait({ timeout: 10_000 });
-        } catch {
-          console.error('timeout');
-          void observable.cancel();
-          return false;
-        }
-      };
-
-      if (spaceKey) {
-        {
-          const space = client.echo.getSpace(spaceKey);
-          if (space) {
-            initWithSpace(space);
-            return;
-          }
-        }
-
-        if (swarmKey) {
-          const success = await join(swarmKey);
-          if (success) {
-            return;
-          }
-        }
-      }
-
-      const space = await client.echo.createSpace();
-      initWithSpace(space);
+      setClient(client);
     });
   }, []);
 
-  if (!client || !spaceKey || !database) {
+  if (!client) {
     return null;
   }
 
-  const colWidth = 360;
-
-  // TODO(burdon): Context for database.
   return (
     <ClientProvider client={client}>
-      <DatabaseContext.Provider value={{ database }}>
-        <div className='full-screen'>
-          <div className='flex flex-1 overflow-x-scroll'>
-            <div className='flex p-4'>
-              <div className='flex m-4' style={{ width: colWidth }}>
-                <ProjectList />
-              </div>
-              <div className='flex m-4' style={{ width: colWidth }}>
-                <TaskList />
-              </div>
-              <div className='flex m-4' style={{ width: colWidth }}>
-                <ContactList />
-              </div>
-            </div>
-          </div>
-        </div>
-      </DatabaseContext.Provider>
+      <HashRouter>
+        <Routes />
+      </HashRouter>
     </ClientProvider>
   );
 };

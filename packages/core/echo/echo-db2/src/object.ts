@@ -195,6 +195,6 @@ export class EchoObjectBase {
 }
 
 export class EchoObject extends EchoObjectBase {
-  // Allow to access arbitrary properties via dot notation.
+  // Allow access to arbitrary properties via dot notation.
   [key: string]: any;
 }

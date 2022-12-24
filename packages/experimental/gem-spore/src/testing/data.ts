@@ -53,7 +53,7 @@ export const createTree = ({ depth = 2, chidren = 3 } = {}): TestNode => {
  * Converts a tree into a graph.
  * @param root
  */
-export const convertTreeToGraph = (root: TestNode) => {
+export const convertTreeToGraph = (root: TestNode): GraphData<TestNode> => {
   const traverse = (node: TestNode, graph: GraphData<TestNode>) => {
     const { children, ...rest } = node;
     graph.nodes.push(rest);
@@ -76,7 +76,7 @@ export const convertTreeToGraph = (root: TestNode) => {
  * @param numNodes
  * @param numLinks
  */
-export const createGraph = (numNodes = 0, numLinks = 0) => {
+export const createGraph = (numNodes = 0, numLinks = 0): GraphData<TestNode> => {
   const nodes = createNodes(numNodes);
   const links = new Map();
 
@@ -105,6 +105,5 @@ export const createGraph = (numNodes = 0, numLinks = 0) => {
  */
 export const deleteNodes = (graph: GraphData<TestNode>, ids: string[]) => {
   graph.nodes = graph.nodes.filter(({ id }) => ids.indexOf(id) === -1);
-
   graph.links = graph.links.filter(({ source, target }) => ids.indexOf(source) === -1 && ids.indexOf(target) === -1);
 };
