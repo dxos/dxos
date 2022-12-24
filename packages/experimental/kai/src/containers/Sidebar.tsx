@@ -3,7 +3,7 @@
 //
 
 import clsx from 'clsx';
-import { AirplaneInFlight, AirplaneTakeoff, Bug, PlusCircle } from 'phosphor-react';
+import { AirplaneInFlight, AirplaneTakeoff, Bug, PlusCircle, Gear } from 'phosphor-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -50,7 +50,10 @@ export const Sidebar = () => {
       </div>
 
       <div className='flex flex-shrink-0 p-3 mt-2'>
-        <button title='Reset store.' onClick={handleAirplaneMode}>
+        <button className='mr-2'>
+          <Gear className={getSize(6)} />
+        </button>
+        <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
           {airplaneMode ? <AirplaneTakeoff className={getSize(6)} /> : <AirplaneInFlight className={getSize(6)} />}
         </button>
       </div>
