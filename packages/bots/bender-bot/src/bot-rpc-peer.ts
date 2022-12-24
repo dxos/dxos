@@ -44,9 +44,9 @@ export class BotRPCPeer {
       }
     };
 
-    this._socket.onerror = (e: WebSocket.ErrorEvent) => {
-      log(`Signal socket error ${this._url} ${e.message}`);
-      this.error.emit(e.error ?? new Error(e.message));
+    this._socket.onerror = (event: WebSocket.ErrorEvent) => {
+      log(`Signal socket error ${this._url} ${event.message}`);
+      this.error.emit(event.error ?? new Error(event.message));
     };
 
     this._rpc = createProtoRpcPeer({

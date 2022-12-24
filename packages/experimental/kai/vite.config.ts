@@ -35,6 +35,7 @@ export default defineConfig({
       '@dxos/config',
       '@dxos/echo',
       '@dxos/echo-db2',
+      '@dxos/keys',
       '@dxos/log',
       '@dxos/protocols',
       '@dxos/react-appkit',

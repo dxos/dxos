@@ -2688,6 +2688,7 @@ importers:
       '@dxos/gem-spore': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -2722,6 +2723,7 @@ importers:
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
@@ -33915,7 +33917,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

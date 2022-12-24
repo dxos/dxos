@@ -5,8 +5,9 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter, useNavigate, useParams, useRoutes } from 'react-router-dom';
 
-import { Client, fromHost } from '@dxos/client';
-import { Config } from '@dxos/config';
+import { Trigger } from '@dxos/async';
+import { Client, Invitation, fromHost, PublicKey, Space, InvitationEncoder } from '@dxos/client';
+import { Config, Defaults } from '@dxos/config';
 import { EchoDatabase } from '@dxos/echo-db2';
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 
@@ -14,7 +15,7 @@ import { SpaceContext, SpaceContextType } from '../hooks';
 import { Main } from './Main';
 
 /**
- *
+ * Selects or creates an initial space.
  */
 const Init = () => {
   const navigate = useNavigate();
@@ -42,22 +43,52 @@ const Init = () => {
 };
 
 /**
- *
+ * Join space via invitation URL.
  */
 const Join = () => {
+  const client = useClient();
   const navigate = useNavigate();
-  const { invitation } = useParams();
+  const { invitation: invitationCode } = useParams();
   useEffect(() => {
-    navigate('/');
-  }, []);
+    const invitation = InvitationEncoder.decode(invitationCode!);
+
+    const complete = new Trigger<Space | null>();
+    const observable = client.echo.acceptInvitation({
+      invitationId: PublicKey.random().toHex(), // TODO(dmaretskyi): Why is this required?
+      swarmKey: invitation.swarmKey,
+      type: Invitation.Type.MULTIUSE_TESTING,
+      timeout: 2000 // TODO(dmaretskyi): Doesn't work.
+    });
+
+    // TODO(burdon): Error page.
+    const unsubscribe = observable.subscribe({
+      onSuccess: async () => {
+        // TODO(burdon): Space key missing from returned invitation.
+        navigate(`/${invitation.spaceKey!.truncate()}`);
+      },
+      onTimeout: () => {
+        console.error('timeout');
+        complete.wake(null);
+      },
+      onError: (error) => {
+        console.error(error);
+        complete.wake(null);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      void observable.cancel();
+    };
+  }, [invitationCode]);
 
   return null;
 };
 
 /**
- *
+ * Home page with current space.
  */
-const Home = () => {
+const SpacePage = () => {
   const navigate = useNavigate();
   const { spaceKey: currentSpaceKey } = useParams();
   const spaces = useSpaces();
@@ -90,7 +121,7 @@ const Home = () => {
 };
 
 /**
- *
+ * Main app routes.
  */
 const Routes = () => {
   return useRoutes([
@@ -99,32 +130,32 @@ const Routes = () => {
       element: <Init />
     },
     {
-      path: '/:spaceKey',
-      element: <Home />
-    },
-    {
       path: '/join/:invitation',
       element: <Join />
+    },
+    {
+      path: '/:spaceKey',
+      element: <SpacePage />
     }
   ]);
 };
 
 /**
- *
+ * Main app container with routes.
  */
 export const App = () => {
   const [client, setClient] = useState<Client | undefined>(undefined);
-  const x = useState<DatabaseContextState>();
 
+  // Auto-create client and profile.
   useEffect(() => {
     setTimeout(async () => {
+      const config = new Config(Defaults());
       const client = new Client({
-        // services: fromHost(new Config(await Dynamics(), Defaults()))
-        services: fromHost(new Config())
+        services: fromHost(config)
       });
 
       await client.initialize();
-      // TODO(burdon): Hangs if profile not created.
+      // TODO(burdon): Hangs (no error) if profile not created?
       if (!client.halo.profile) {
         await client.halo.createProfile();
       }
@@ -145,93 +176,3 @@ export const App = () => {
     </ClientProvider>
   );
 };
-
-/*
-  let spaceKey: PublicKey | undefined;
-  let swarmKey: PublicKey | undefined;
-  try {
-    const locationHash = location.hash;
-    if (locationHash) {
-      const [spaceKeyHex, swarmKeyHex] = locationHash.slice(1).split(':');
-      spaceKey = PublicKey.from(spaceKeyHex);
-      if (swarmKeyHex) {
-        swarmKey = PublicKey.from(swarmKeyHex);
-      }
-    }
-  } catch {}
-
-  const initWithSpace = (space: Space) => {
-    const swarmKey = PublicKey.random();
-    const hostObservable = space.createInvitation({
-      swarmKey,
-      type: Invitation.Type.MULTIUSE_TESTING
-    });
-    hostObservable.subscribe({
-      onConnecting: () => {},
-      onConnected: () => {},
-      onSuccess: (invitation) => {},
-      onError: (error) => {
-        console.error(error);
-      }
-    });
-    location.hash = `${space.key.toHex()}:${swarmKey.toHex()}`;
-    setClient(client);
-    setSpaceKey(space.key);
-    setDatabase(new EchoDatabase(space.database));
-  };
-
-  const join = async (swarmKey: PublicKey): Promise<boolean> => {
-    const complete = new Trigger<boolean>();
-    const observable = client.echo.acceptInvitation({
-      swarmKey,
-      type: Invitation.Type.MULTIUSE_TESTING,
-      timeout: 2000, // TODO(dmaretskyi): Doesn't work.
-      invitationId: PublicKey.random().toHex() // TODO(dmaretskyi): Why is this required?
-    });
-
-    observable.subscribe({
-      onSuccess: async (invitation) => {
-        const space = client.echo.getSpace(spaceKey!)!;
-        initWithSpace(space);
-        complete.wake(true);
-      },
-      onTimeout: () => {
-        console.error('timeout');
-        complete.wake(false);
-      },
-      onError: (error) => {
-        console.error(error);
-        complete.wake(false);
-      }
-    });
-
-    // TODO(burdon): Remove timeout.
-    try {
-      return await complete.wait({ timeout: 10_000 });
-    } catch {
-      console.error('timeout');
-      void observable.cancel();
-      return false;
-    }
-  };
-
-  if (spaceKey) {
-    {
-      const space = client.echo.getSpace(spaceKey);
-      if (space) {
-        initWithSpace(space);
-        return;
-      }
-    }
-
-    if (swarmKey) {
-      const success = await join(swarmKey);
-      if (success) {
-        return;
-      }
-    }
-  }
-
-  const space = await client.echo.createSpace();
-  initWithSpace(space);
-*/
