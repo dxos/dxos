@@ -22,6 +22,10 @@
     overflow: hidden;
     background-color: #DDD;
   }
+
+  button {
+    cursor: pointer;
+  }
 }
 
 .full-screen {

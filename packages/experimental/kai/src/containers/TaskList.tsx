@@ -9,14 +9,14 @@ import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useDatabase, useObjects, useSelection } from '../hooks';
+import { useObjects, useSelection, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   completed = undefined,
   readonly = false
 }) => {
-  const db = useDatabase();
+  const { database: db } = useSpace();
   const tasks = useObjects(Task.filter({ completed }));
 
   const handleCreate = async () => {

@@ -7,6 +7,7 @@
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "ISC",
+  "author": "info@dxos.org",
   "main": "./target/wasm32-wasi/release/swc_log_plugin.wasm",
   "files": []
 }

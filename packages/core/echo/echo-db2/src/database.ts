@@ -40,18 +40,21 @@ export interface SelectionHandle {
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
-  constructor(private readonly _echo: Database) {
-    this._echo.update.on(() => {
-      for (const object of this._echo.select({}).exec().entities) {
-        if (!this._objects.has(object.id)) {
-          const obj = new EchoObject();
-          obj[unproxy]._id = object.id;
-          this._objects.set(object.id, obj);
-          obj[unproxy]._bind(object, this);
-          obj[unproxy]._isBound = true;
-        }
+  update() {
+    for (const object of this._echo.select({}).exec().entities) {
+      if (!this._objects.has(object.id)) {
+        const obj = new EchoObject();
+        obj[unproxy]._id = object.id;
+        this._objects.set(object.id, obj);
+        obj[unproxy]._bind(object, this);
+        obj[unproxy]._isBound = true;
       }
-    });
+    }
+  }
+
+  constructor(private readonly _echo: Database) {
+    this._echo.update.on(() => this.update());
+    this.update();
   }
 
   get objects() {

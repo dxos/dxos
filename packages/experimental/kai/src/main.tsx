@@ -7,8 +7,11 @@
 
 // TODO(burdon): Editable task list.
 // TODO(burdon): Cards (see kitchen sink).
+//  - https://cruip.com/demos/mosaic/?ref=highscore
 // TODO(burdon): Virtual table.
 // TODO(burdon): Electron app.
+
+// TODO(burdon): Super app (Wechat/Twitter) for IPFS: https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';

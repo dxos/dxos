@@ -9,12 +9,12 @@ import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useDatabase, useObjects, useSelection } from '../hooks';
+import { useObjects, useSelection, useSpace } from '../hooks';
 import { createProject, createTask, Project } from '../proto';
 import { TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
-  const db = useDatabase();
+  const { database: db } = useSpace();
   const projects = useObjects(Project.filter());
 
   const handleCreate = async () => {
@@ -41,7 +41,7 @@ export const ProjectList: FC<{}> = () => {
 };
 
 export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
-  const db = useDatabase();
+  const { database: db } = useSpace();
   useSelection([project, ...(project.tasks ?? []), ...(project.team ?? [])]);
 
   const handleCreate = async () => {

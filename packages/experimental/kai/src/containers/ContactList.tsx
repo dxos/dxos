@@ -9,11 +9,11 @@ import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useDatabase, useObjects, useSelection } from '../hooks';
+import { useObjects, useSelection, useSpace } from '../hooks';
 import { Address, Contact, createContact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
-  const db = useDatabase();
+  const { database: db } = useSpace();
   const contacts = useObjects(Contact.filter());
 
   const handleCreate = async () => {
