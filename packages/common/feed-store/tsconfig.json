@@ -25,6 +25,9 @@
       "path": "../context"
     },
     {
+      "path": "../crypto"
+    },
+    {
       "path": "../debug"
     },
     {

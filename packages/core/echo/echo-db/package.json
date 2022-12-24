@@ -23,7 +23,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
