@@ -37,3 +37,11 @@
   display: flex;
   overflow: hidden;
 }
+
+.logo {
+  transform: rotate(300deg);
+  transition: transform 750ms ease-in-out;
+}
+.logo:hover {
+  transform: rotate(-300deg);
+}

@@ -3,17 +3,42 @@
 //
 
 import clsx from 'clsx';
-import { Bug, ShareNetwork, PlusCircle, Trash } from 'phosphor-react';
-import React, { useEffect, useState } from 'react';
+import { Bug, Planet, ShareNetwork, PlusCircle, Smiley, SmileyBlank, Trash, UserCircle } from 'phosphor-react';
+import React, { FC, useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { Link, useHref, useNavigate, useParams } from 'react-router-dom';
 
-import { Invitation, CancellableInvitationObservable, InvitationEncoder } from '@dxos/client';
+import { Invitation, CancellableInvitationObservable, InvitationEncoder, SpaceMember } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useClient, useSpaces } from '@dxos/react-client';
+import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { useSpace } from '../hooks';
+
+export const Members: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
+  const client = useClient();
+  const members = useMembers(spaceKey);
+  members.sort((a) => (a.identityKey.equals(client.halo.profile!.identityKey) ? -1 : 1));
+
+  return (
+    <div className='flex flex-1 flex-col'>
+      {members.map((member) => (
+        <div key={member.identityKey.toHex()} className='flex mb-1 items-center'>
+          <div className='mr-3'>
+            {member.identityKey.equals(client.halo.profile!.identityKey) ? (
+              <UserCircle className={clsx(getSize(6), 'text-orange-500')} />
+            ) : member.presenceState === SpaceMember.PresenceState.ONLINE ? (
+              <Smiley className={clsx(getSize(6), 'text-green-500')} />
+            ) : (
+              <SmileyBlank className={clsx(getSize(6), 'text-slate-500')} />
+            )}
+          </div>
+          <div className='font-mono text-slate-300'>{member.identityKey.truncate()}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export const Sidebar = () => {
   const { spaceKey: currentSpaceKey } = useParams();
@@ -62,10 +87,10 @@ export const Sidebar = () => {
   };
 
   return (
-    <div className='flex flex-1 flex-col bg-slate-700 text-white'>
-      <div className='flex p-3 mb-2'>
+    <div className='flex flex-1 flex-col overflow-hidden bg-slate-700 text-white'>
+      <div className='flex flex-shrink-0 p-3 mb-2'>
         <div className='flex flex-1 items-center'>
-          <Bug className={getSize(8)} style={{ transform: 'rotate(300deg)' }} />
+          <Bug className={clsx('logo', getSize(8))} />
           <div className='flex-1'></div>
           <button className='flex' onClick={handleCreateSpace}>
             <PlusCircle className={getSize(6)} />
@@ -73,13 +98,21 @@ export const Sidebar = () => {
         </div>
       </div>
 
-      <div className='flex flex-1 flex-col font-mono cursor-pointer'>
+      <div className='flex flex-1 flex-col overflow-y-scroll cursor-pointer'>
         {spaces.map((space) => (
           <div
             key={space.key.toHex()}
-            className={clsx('flex p-2 pl-4 pr-4', space.key.truncate() === currentSpaceKey && 'bg-slate-600')}
+            className={clsx(
+              'flex p-2 pl-3 pr-4 items-center',
+              space.key.truncate() === currentSpaceKey && 'bg-slate-600'
+            )}
           >
-            <div className='flex flex-1'>
+            <div
+              className={clsx('mr-3', space.key.truncate() === currentSpaceKey ? 'text-orange-500' : 'text-slate-500')}
+            >
+              <Planet className={getSize(6)} />
+            </div>
+            <div className='flex flex-1 font-mono text-slate-300'>
               <Link to={`/${space.key.truncate()}`}>{space.key.truncate()}</Link>
             </div>
             {space.key.truncate() === currentSpaceKey && (
@@ -93,7 +126,11 @@ export const Sidebar = () => {
         ))}
       </div>
 
-      <div className='flex p-3 mt-2'>
+      <div className='flex flex-shrink-0 p-3 mt-6'>
+        <Members spaceKey={space.key} />
+      </div>
+
+      <div className='flex flex-shrink-0 p-3 mt-2'>
         <button title='Reset store.' onClick={handleReset}>
           <Trash className={getSize(6)} />
         </button>
