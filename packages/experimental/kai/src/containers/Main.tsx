@@ -29,32 +29,30 @@ export const Main = () => {
       </div>
 
       <div className='flex flex-1 flex-col p-2'>
-        <div className='flex grid grid-cols-5 grid-flow-col gap-4 overflow-y-scroll'>
+        <div className='flex grid grid-cols-5 grid-flow-row gap-4 overflow-y-scroll'>
           <div className='flex flex-shrink-0 col-span-2' style={props}>
             <ProjectList />
           </div>
 
           <div className='flex flex-shrink-0' style={props}>
-            <TaskList title='Complete Tasks' completed={true} readonly />
-          </div>
-
-          <div className='flex flex-shrink-0 col-span-2' style={props}>
-            <ContactList />
-          </div>
-
-          <div className='flex flex-shrink-0' style={props}>
-            <TaskList />
+            <TaskList title='Completed Tasks' completed={true} readonly />
           </div>
 
           <div className='flex flex-shrink-0 col-span-2 row-span-2' style={props}>
             <ProjectGraph />
           </div>
 
-          {false && (
-            <div className='flex flex-shrink-0' style={props}>
-              <Game />
-            </div>
-          )}
+          <div className='flex flex-shrink-0' style={props}>
+            <TaskList />
+          </div>
+
+          <div className='flex flex-shrink-0 col-span-2' style={props}>
+            <ContactList />
+          </div>
+
+          <div className='flex flex-shrink-0 col-span-3' style={props}>
+            <Game />
+          </div>
         </div>
       </div>
     </div>

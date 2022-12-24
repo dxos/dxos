@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import clsx from 'clsx';
+import { Bug } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
 import { HashRouter, useNavigate, useParams, useRoutes } from 'react-router-dom';
 
@@ -49,8 +51,16 @@ const Join = () => {
   const client = useClient();
   const navigate = useNavigate();
   const { invitation: invitationCode } = useParams();
+  const [error, setError] = useState(false);
+
   useEffect(() => {
-    const invitation = InvitationEncoder.decode(invitationCode!);
+    let invitation: Invitation;
+    try {
+      invitation = InvitationEncoder.decode(invitationCode!);
+    } catch (err: any) {
+      setError(true);
+      return;
+    }
 
     const complete = new Trigger<Space | null>();
     const observable = client.echo.acceptInvitation({
@@ -82,7 +92,15 @@ const Join = () => {
     };
   }, [invitationCode]);
 
-  return null;
+  return (
+    <div className='full-screen'>
+      <div className='flex flex-1 items-center'>
+        <div className='flex flex-1 flex-col items-center'>
+          <Bug style={{ width: 160, height: 160 }} className={clsx(error ? 'text-red-500' : 'text-gray-400')} />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 /**
