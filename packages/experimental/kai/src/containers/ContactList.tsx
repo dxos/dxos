@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
 import { PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
@@ -10,28 +9,15 @@ import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useDatabase, useObjects, useSelection } from '../hooks';
-import { Address, Contact } from '../proto';
+import { useObjects, useSelection, useSpace } from '../hooks';
+import { Address, Contact, createContact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
-  const db = useDatabase();
+  const { database: db } = useSpace();
   const contacts = useObjects(Contact.filter());
 
   const handleCreate = async () => {
-    await db.save(
-      new Contact({
-        name: faker.name.findName(),
-        email: faker.datatype.boolean() ? faker.internet.email() : undefined,
-        username: faker.datatype.boolean() ? '@' + faker.internet.userName() : undefined,
-        address: faker.datatype.boolean()
-          ? {
-              city: faker.address.city(),
-              state: faker.address.stateAbbr(),
-              zip: faker.address.zipCode()
-            }
-          : undefined
-      })
-    );
+    return createContact(db);
   };
 
   const Menubar = () => (
@@ -41,7 +27,7 @@ export const ContactList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Contacts' color='bg-blue-400' menubar={<Menubar />}>
+    <Card title='Contacts' className='bg-blue-400' menubar={<Menubar />}>
       <>
         {contacts.map((contact) => (
           <div key={id(contact)} className='p-2 pl-3 border-b'>

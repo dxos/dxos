@@ -22,6 +22,16 @@
     overflow: hidden;
     background-color: #DDD;
   }
+
+  button {
+    cursor: pointer;
+  }
+  button:hover {
+    opacity: 0.8;
+  }
+  button:active {
+    opacity: 0.5;
+  }
 }
 
 .full-screen {
@@ -32,4 +42,12 @@
   bottom: 0;
   display: flex;
   overflow: hidden;
+}
+
+.logo {
+  transform: rotate(300deg);
+  transition: transform 750ms ease-in-out;
+}
+.logo:hover {
+  transform: rotate(-300deg);
 }

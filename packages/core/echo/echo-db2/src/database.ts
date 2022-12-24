@@ -8,10 +8,11 @@ import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 import { unproxy } from './common';
-import { EchoObject, EchoObjectBase } from './object';
+import { EchoObject, EchoObjectBase, id } from './object';
 import { TypeFilter } from './schema';
 
 export type Filter = Record<string, any>;
+
 export type Query<T extends EchoObject = EchoObject> = {
   getObjects(): T[];
   subscribe(callback: () => void): () => void;
@@ -39,18 +40,21 @@ export interface SelectionHandle {
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
-  constructor(private readonly _echo: Database) {
-    this._echo.update.on(() => {
-      for (const object of this._echo.select({}).exec().entities) {
-        if (!this._objects.has(object.id)) {
-          const obj = new EchoObject();
-          obj[unproxy]._id = object.id;
-          this._objects.set(object.id, obj);
-          obj[unproxy]._bind(object, this);
-          obj[unproxy]._isBound = true;
-        }
+  update() {
+    for (const object of this._echo.select({}).exec().entities) {
+      if (!this._objects.has(object.id)) {
+        const obj = new EchoObject();
+        obj[unproxy]._id = object.id;
+        this._objects.set(object.id, obj);
+        obj[unproxy]._bind(object, this);
+        obj[unproxy]._isBound = true;
       }
-    });
+    }
+  }
+
+  constructor(private readonly _echo: Database) {
+    this._echo.update.on(() => this.update());
+    this.update();
   }
 
   get objects() {
@@ -86,23 +90,35 @@ export class EchoDatabase {
   query<T extends EchoObject>(filter: TypeFilter<T>): Query<T>;
   query(filter: Filter): Query;
   query(filter: Filter): Query {
-    // TODO(burdon): Test separately.
-    const match = (obj: EchoObject) => Object.entries(filter).every(([key, value]) => obj[key] === value);
+    // TODO(burdon): Create separate test.
+    const matchObject = (object: EchoObject) => Object.entries(filter).every(([key, value]) => object[key] === value);
 
+    // Current result.
     let cache: EchoObject[] | undefined;
 
-    // TODO(burdon): Replace with getter.
     return {
       getObjects: () => {
         if (!cache) {
-          cache = Array.from(this.objects.values()).filter((obj) => match(obj));
+          // TODO(burdon): Sort.
+          cache = Array.from(this._objects.values()).filter((obj) => matchObject(obj));
         }
+
         return cache;
       },
 
       subscribe: (callback: () => void) => {
-        return this._echo.update.on((changedEntities) => {
-          if (changedEntities.some((entity) => this._objects.has(entity.id) && match(this._objects.get(entity.id)!))) {
+        return this._echo.update.on((updatedObjects) => {
+          const changed = updatedObjects.some((object) => {
+            if (this._objects.has(object.id)) {
+              const match = matchObject(this._objects.get(object.id)!);
+              const exists = cache?.find((obj) => id(obj) === object.id);
+              return (exists && !match) || (!exists && match);
+            } else {
+              return false;
+            }
+          });
+
+          if (changed) {
             cache = undefined;
             callback();
           }

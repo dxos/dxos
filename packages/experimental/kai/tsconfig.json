@@ -26,7 +26,13 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -39,6 +45,9 @@
     },
     {
       "path": "../../core/echo/echo-db2"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/client"
@@ -54,6 +63,12 @@
     },
     {
       "path": "../client-testing"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
     }
   ]
 }

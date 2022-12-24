@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out to separate package.
 
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { argv } from 'node:process';
 import * as pb from 'protobufjs';
 
@@ -13,9 +14,9 @@ import { codegenObjectClass, codegenPlainInterface, codegenSchema, iterTypes } f
 const packageName = '@dxos/echo-db2';
 const types = ['EchoSchema', 'EchoObjectBase', 'TypeFilter', 'OrderedSet'];
 
-const gen = () => {
+const gen = (source: string, out: string) => {
   const root = new pb.Root();
-  root.loadSync(argv[2]);
+  root.loadSync(source);
 
   // TODO(burdon): Use plate or format code after generation.
   const content = [];
@@ -32,7 +33,11 @@ const gen = () => {
     content.push('');
   }
 
-  writeFileSync(argv[3], content.join('\n'));
+  mkdirSync(path.dirname(out), { recursive: true });
+  writeFileSync(out, content.join('\n'));
 };
 
-gen();
+// TODO(burdon): Yargs
+const [, , source, out] = argv;
+
+gen(source, out);

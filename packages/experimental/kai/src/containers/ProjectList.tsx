@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
 import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
@@ -10,20 +9,16 @@ import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useDatabase, useObjects, useSelection } from '../hooks';
-import { Project } from '../proto';
-import { createTask, TaskItem } from './TaskList';
+import { useObjects, useSelection, useSpace } from '../hooks';
+import { createProject, createTask, Project } from '../proto';
+import { TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
-  const db = useDatabase();
+  const { database: db } = useSpace();
   const projects = useObjects(Project.filter());
 
   const handleCreate = async () => {
-    await db.save(
-      new Project({
-        title: faker.commerce.productAdjective() + ' ' + faker.commerce.product()
-      })
-    );
+    await createProject(db);
   };
 
   const Menubar = () => (
@@ -33,7 +28,7 @@ export const ProjectList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Projects' menubar={<Menubar />}>
+    <Card title='Projects' className='bg-cyan-400' menubar={<Menubar />}>
       <>
         {projects.map((project) => (
           <div key={id(project)} className='border-b'>
@@ -46,7 +41,7 @@ export const ProjectList: FC<{}> = () => {
 };
 
 export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
-  const db = useDatabase();
+  const { database: db } = useSpace();
   useSelection([project, ...(project.tasks ?? []), ...(project.team ?? [])]);
 
   const handleCreate = async () => {
