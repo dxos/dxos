@@ -12,9 +12,10 @@ import { Card, Input, Table } from '../components';
 import { useObjects, useSelection, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
-export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
+export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
   completed = undefined,
-  readonly = false
+  readonly = false,
+  title = 'Tasks'
 }) => {
   const { database: db } = useSpace();
   const tasks = useObjects(Task.filter({ completed }));
@@ -30,7 +31,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   );
 
   return (
-    <Card title='Tasks' className='bg-teal-400' menubar={!readonly && <Menubar />}>
+    <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
           <TaskItem key={id(task)} task={task} onCreateTask={handleCreate} />
