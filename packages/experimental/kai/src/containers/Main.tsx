@@ -11,34 +11,34 @@ import { Sidebar } from './Sidebar';
 import { TaskList } from './TaskList';
 
 export const Main = () => {
-  const columnWidth = 300;
-  const sidebarWidth = 200;
+  const columnWidth = 290;
+  const sidebarWidth = 230;
 
   return (
     <div className='full-screen'>
       <div className='flex' style={{ width: sidebarWidth }}>
         <Sidebar />
       </div>
-      <div className='flex flex-1 overflow-x-scroll'>
-        <div className='flex m-2'>
-          <div className='flex m-2' style={{ width: columnWidth }}>
+
+      <div className='flex flex-1 overflow-x-scroll p-3'>
+        <div className='grid grid-rows-2 grid-flow-col gap-3'>
+          <div className='flex' style={{ width: columnWidth * 2 }}>
             <ProjectList />
           </div>
 
-          <div className='flex m-2' style={{ width: columnWidth }}>
+          <div className='flex' style={{ width: columnWidth }}>
             <ContactList />
           </div>
 
-          <div className='flex flex-col m-2' style={{ width: columnWidth }}>
-            <div className='flex flex-1 flex-shrink-0 mb-4 overflow-hidden'>
-              <TaskList />
-            </div>
-            <div className='flex flex-1 flex-shrink-0 overflow-hidden'>
-              <TaskList completed={true} readonly />
-            </div>
+          <div className='flex' style={{ width: columnWidth }}>
+            <TaskList />
           </div>
 
-          <div className='flex flex-1 m-2' style={{ width: (columnWidth * 3) / 2 }}>
+          <div className='flex' style={{ width: columnWidth }}>
+            <TaskList completed={true} readonly />
+          </div>
+
+          <div className='flex row-span-2' style={{ width: columnWidth * 2 }}>
             <ProjectGraph />
           </div>
         </div>

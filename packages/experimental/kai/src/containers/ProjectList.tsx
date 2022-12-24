@@ -28,7 +28,7 @@ export const ProjectList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Projects' menubar={<Menubar />}>
+    <Card title='Projects' className='bg-cyan-400' menubar={<Menubar />}>
       <>
         {projects.map((project) => (
           <div key={id(project)} className='border-b'>

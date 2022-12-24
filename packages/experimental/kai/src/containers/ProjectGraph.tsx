@@ -19,7 +19,7 @@ export const ProjectGraph: FC<{}> = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
   return (
-    <Card title='Projects'>
+    <Card title='Projects' className='bg-orange-400'>
       <SVGContextProvider>
         <SVG>
           <Markers />
