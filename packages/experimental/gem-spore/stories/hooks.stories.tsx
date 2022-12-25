@@ -4,7 +4,6 @@
 
 import clsx from 'clsx';
 import * as d3 from 'd3';
-import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useMemo, useRef } from 'react';
 
@@ -27,9 +26,6 @@ import {
   linkerRenderer
 } from '../src';
 import { styles } from './helpers';
-
-debug.enable('');
-// debug.enable('gem:*');
 
 export default {
   title: 'gem-spore/hooks'
