@@ -3,7 +3,7 @@
 //
 
 import { PlusCircle } from 'phosphor-react';
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 
 import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
@@ -19,9 +19,15 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
 }) => {
   const { database: db } = useSpace();
   const tasks = useObjects(Task.filter({ completed }));
+  const [newTask, setNewTask] = useState<Task>(new Task());
 
   const handleCreate = async () => {
     await createTask(db);
+  };
+
+  const handleNewTask = async (task: Task) => {
+    await db.save(task);
+    setNewTask(new Task());
   };
 
   const Menubar = () => (
@@ -30,26 +36,28 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     </button>
   );
 
+  // TODO(burdon): Delete row.
+  // TODO(burdon): Split current task if pressing Enter in the middle.
+  // TODO(burdon): Delete key to potentially remove task.
+  // TODO(burdon): Tab to indent.
+  // TODO(burdon): Track index position; move up/down.
+  // TODO(burdon): Scroll into view.
+  // TODO(burdon): Highlight active row.
   return (
     <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
-          <TaskItem key={id(task)} task={task} onCreateTask={handleCreate} />
+          <TaskItem key={id(task)} task={task} />
         ))}
+
+        {!readonly && <TaskItem task={newTask} onEnter={handleNewTask} />}
       </div>
     </Card>
   );
 };
 
-export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, onCreateTask }) => {
+export const TaskItem: FC<{ task: Task; onEnter?: (task: Task) => void }> = ({ task, onEnter }) => {
   useSelection([task, task.assignee]);
-
-  // TODO(burdon): Insert item on enter and focus new item.
-  // const handleKeyDown = (event: KeyboardEvent) => {
-  //   if (event.key === 'Enter') {
-  //     onCreateTask?.();
-  //   }
-  // };
 
   return (
     <Table
@@ -66,8 +74,13 @@ export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, 
           className='w-full outline-0'
           spellCheck={false}
           value={task.title}
-          // onKeyDown={handleKeyDown}
-          onChange={(value) => (task.title = value)}
+          placeholder='Enter text'
+          onEnter={() => {
+            onEnter?.(task);
+          }}
+          onChange={(value) => {
+            task.title = value;
+          }}
         />
       }
     >

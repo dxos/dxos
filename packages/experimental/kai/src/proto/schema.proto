@@ -30,9 +30,9 @@ message Task {
 
   string id = 1;
   string title = 2;
-  int32 count = 3;
-  bool completed = 4;
-  Contact assignee = 5;
+  bool completed = 3;
+  Contact assignee = 4;
+  repeated Task sub_tasks = 5;
 }
 
 message Project {
