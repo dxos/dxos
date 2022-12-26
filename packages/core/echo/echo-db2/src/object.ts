@@ -17,7 +17,8 @@ const isValidKey = (key: string | symbol) =>
     key.startsWith('@@__') ||
     key === 'constructor' ||
     key === '$$typeof' ||
-    key === 'toString'
+    key === 'toString' ||
+    key === 'json'
   );
 
 export const id = (object: EchoObjectBase) => object[unproxy]._id;
@@ -27,9 +28,9 @@ export const id = (object: EchoObjectBase) => object[unproxy]._id;
  */
 export const db = (object: EchoObjectBase) => object[unproxy]._database!;
 
-// TODO(burdon): Move to base class.
 // TODO(burdon): Expose schema.
-export const json = (object: EchoObjectBase) => object[unproxy]._json();
+// TODO(burdon): Codegen should define function with getter access.
+export const json = (object: EchoObjectBase) => object[unproxy].json();
 
 /**
  *
@@ -63,10 +64,6 @@ export class EchoObjectBase {
 
   [unproxy]: EchoObject = this;
 
-  get [Symbol.toStringTag]() {
-    return this[unproxy]?._schemaType?.name ?? 'EchoObject';
-  }
-
   // prettier-ignore
   constructor(
     initialProps?: Record<keyof any, any>,
@@ -88,9 +85,34 @@ export class EchoObjectBase {
      * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
      */
     return new Proxy(this, {
+      ownKeys (target) {
+        return target._schemaType?.fields.map(({ name }) => name) ?? [];
+      },
+
+      /**
+       * Called for each property (e.g., called by Object.keys()).
+       * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/getOwnPropertyDescriptor
+       * See: https://javascript.info/proxy
+       */
+      getOwnPropertyDescriptor(target, property) {
+        // TODO(burdon): Return other properties?
+        return {
+          enumerable: true,
+          configurable: true
+        };
+      },
+
       get: (target, property, receiver) => {
         if (!isValidKey(property)) {
-          return Reflect.get(target, property, receiver);
+          switch (property) {
+            case 'json': {
+              return this.json.bind(this);
+            }
+
+            default: {
+              return Reflect.get(target, property, receiver);
+            }
+          }
         }
 
         return this._get(property as string);
@@ -107,10 +129,14 @@ export class EchoObjectBase {
     });
   }
 
+  get [Symbol.toStringTag]() {
+    return this[unproxy]?._schemaType?.name ?? 'EchoObject';
+  }
+
   /**
    * Convert to JSON object.
    */
-  _json() {
+  json() {
     return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
       // TODO(burdon): Detect cycles.
       // TODO(burdon): Handle ordered sets and other types (change field to type).
@@ -118,7 +144,7 @@ export class EchoObjectBase {
         const value = this._get(name);
         if (value !== undefined) {
           if (value instanceof EchoObjectBase) {
-            result[name] = value[unproxy]._json();
+            result[name] = value[unproxy].json();
           } else {
             result[name] = value;
           }
