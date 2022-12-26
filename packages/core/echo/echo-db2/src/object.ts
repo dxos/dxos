@@ -6,9 +6,9 @@ import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 
-import { unproxy } from './common';
 import { EchoDatabase } from './database';
-import { OrderedSet } from './ordered-array';
+import { unproxy } from './defs';
+import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 
 const isValidKey = (key: string | symbol) =>
@@ -18,15 +18,20 @@ const isValidKey = (key: string | symbol) =>
     key === 'constructor' ||
     key === '$$typeof' ||
     key === 'toString' ||
+    // TODO(burdon): Add 'id' (need to prohibit from schema fields).
     key === 'json'
   );
 
-export const id = (object: EchoObjectBase) => object[unproxy]._id;
+export const id = Symbol('id');
+export const db = Symbol('db');
 
 /**
  * @deprecated Not safe. Maybe return undefined for freshly created objects.
  */
-export const db = (object: EchoObjectBase) => object[unproxy]._database!;
+// export const db = (object: EchoObjectBase) => object[unproxy]._database!;
+
+// TODO(burdon): Replace with symbol.
+// export const id = (object: EchoObjectBase) => object[unproxy]._id;
 
 /**
  * Base class for objects.
@@ -62,6 +67,13 @@ export class EchoObjectBase {
    */
   public _isBound = false;
 
+  // ID accessor.
+  [id]: string = this._id;
+
+  // Database property.
+  [db]: EchoDatabase | undefined = this._database;
+
+  // Proxy object.
   [unproxy]: EchoObject = this;
 
   // prettier-ignore

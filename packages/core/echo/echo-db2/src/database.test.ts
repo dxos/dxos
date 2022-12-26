@@ -12,7 +12,7 @@ import { describe, test } from '@dxos/test';
 
 import { EchoDatabase } from './database';
 import { EchoObject } from './object';
-import { OrderedSet } from './ordered-array';
+import { OrderedSet } from './ordered-set';
 
 const createDatabase = async () => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel);

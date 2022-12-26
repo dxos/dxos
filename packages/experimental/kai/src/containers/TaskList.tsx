@@ -42,7 +42,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
-          <TaskItem key={id(task)} task={task} />
+          <TaskItem key={task[id]} task={task} />
         ))}
       </div>
     </Card>

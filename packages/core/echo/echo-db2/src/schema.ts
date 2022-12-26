@@ -4,16 +4,12 @@
 
 import * as pb from 'protobufjs';
 
-import { Filter } from './database';
-import { EchoObject } from './object';
+import { TypeFilter } from './database';
 
 export type EchoSchemaField = {
   name: string;
   isOrderedSet?: boolean;
 };
-
-// TODO(burdon): Document __phantom.
-export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
 
 /**
  * Wraps protocol generated type.

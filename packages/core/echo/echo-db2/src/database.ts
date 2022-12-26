@@ -5,28 +5,23 @@
 import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { unproxy } from './common';
+import { unproxy } from './defs';
 import { EchoObject, EchoObjectBase, id } from './object';
-import { TypeFilter } from './schema';
 
 export type Filter = Record<string, any>;
+
+// NOTE: `__phantom` property forces type.
+export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
+
+export type SelectionFn = never; // TODO(burdon): Document or remove.
+export type Selection = EchoObject | SelectionFn | Selection[];
 
 export type Query<T extends EchoObject = EchoObject> = {
   getObjects(): T[];
   subscribe(callback: () => void): () => void;
 };
 
-export type SelectionFn = never; // TODO(burdon): Document or remove.
-export type Selection = EchoObject | SelectionFn | Selection[];
-
-// export type Predicate = { [key: string]: any };
-// export type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
-// export type Selector = Predicate;
-
-/**
- *
- */
-export interface SelectionHandle {
+export interface SubscriptionHandle {
   update: (selection: Selection) => void;
   subscribed: boolean;
   unsubscribe: () => void;
@@ -34,7 +29,7 @@ export interface SelectionHandle {
 }
 
 /**
- *
+ * Database wrapper.
  */
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
@@ -110,7 +105,7 @@ export class EchoDatabase {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
               const match = matchObject(this._objects.get(object.id)!);
-              const exists = cache?.find((obj) => id(obj) === object.id);
+              const exists = cache?.find((obj) => obj[id] === object.id);
               return (exists && !match) || (!exists && match);
             } else {
               return false;
@@ -127,9 +122,10 @@ export class EchoDatabase {
   }
 
   /**
-   *
+   * Subscribe to database updates.
    */
-  createSubscription(onUpdate: () => void): SelectionHandle {
+  // TODO(burdon): Add filter?
+  createSubscription(onUpdate: () => void): SubscriptionHandle {
     let subscribed = true;
 
     const unsubscribe = this._echo.update.on((changedEntities) => {

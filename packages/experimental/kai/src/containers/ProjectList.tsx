@@ -31,7 +31,7 @@ export const ProjectList: FC<{}> = () => {
     <Card title='Projects' className='bg-cyan-400' menubar={<Menubar />}>
       <>
         {projects.map((project) => (
-          <div key={id(project)} className='border-b'>
+          <div key={project[id]} className='border-b'>
             <ProjectItem project={project} />
           </div>
         ))}
@@ -74,7 +74,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
           <h2 className='pl-3 pt-1 text-xs'>Tasks</h2>
           <div className='p-3 pt-1'>
             {project.tasks?.map((task) => (
-              <TaskItem key={id(task)} task={task} />
+              <TaskItem key={task[id]} task={task} />
             ))}
           </div>
         </div>
@@ -85,7 +85,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
           <h2 className='pl-3 text-xs'>Team</h2>
           <div className='p-3 pt-1'>
             {project.team?.map((contact) => (
-              <Table key={id(contact)} sidebar={<User />} header={<div>{contact.name}</div>} />
+              <Table key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
             ))}
           </div>
         </div>

@@ -4,16 +4,22 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
-import { EchoDatabase, EchoObject, Filter, Selection, SelectionHandle } from '@dxos/echo-db2';
+import { EchoDatabase, EchoObject, Filter, Selection, SubscriptionHandle, TypeFilter } from '@dxos/echo-db2';
 
 //
 // TODO(burdon): Factor out (react-client).
 //
 
+type ObjectStore = {
+  <T extends EchoObject>(db: EchoDatabase, filter?: TypeFilter<T>): T[];
+  (db: EchoDatabase, filter?: Filter): EchoObject[];
+};
+
 /**
- * Query for objects.
+ * Create subscription.
+ * https://beta.reactjs.org/reference/react/useSyncExternalStore
  */
-export const useQuery = (db: EchoDatabase, filter?: Filter): EchoObject[] => {
+export const useQuery: ObjectStore = (db: EchoDatabase, filter?: Filter) => {
   const query = useMemo(() => db.query(filter ?? {}), [db, ...Object.entries(filter ?? {}).flat()]);
 
   return useSyncExternalStore(
@@ -25,10 +31,10 @@ export const useQuery = (db: EchoDatabase, filter?: Filter): EchoObject[] => {
 /**
  * Create reactive selection.
  */
-export const useSubscription = (db: EchoDatabase, selection: Selection): SelectionHandle => {
+export const useSubscription = (db: EchoDatabase, selection: Selection): SubscriptionHandle => {
   const [, forceUpdate] = useState({});
 
-  const [handle, setHandle] = useState<SelectionHandle>(() =>
+  const [handle, setHandle] = useState<SubscriptionHandle>(() =>
     db.createSubscription(() => {
       forceUpdate({});
     })

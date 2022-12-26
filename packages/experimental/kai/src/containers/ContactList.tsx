@@ -14,7 +14,7 @@ import { Address, Contact, createContact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
   const { database: db } = useSpace();
-  const contacts = useQuery(db, Contact.filter());
+  const contacts: Contact[] = useQuery(db, Contact.filter());
 
   const handleCreate = async () => {
     return createContact(db);
@@ -30,7 +30,7 @@ export const ContactList: FC<{}> = () => {
     <Card title='Contacts' className='bg-blue-400' menubar={<Menubar />}>
       <>
         {contacts.map((contact) => (
-          <div key={id(contact)} className='p-2 pl-3 border-b'>
+          <div key={contact[id]} className='p-2 pl-3 border-b'>
             <Person person={contact} />
           </div>
         ))}
