@@ -9,6 +9,8 @@ import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
 
+// TODO(burdon): Need to trigger typegen before test.
+
 describe('schema', () => {
   test('keys', () => {
     const contact = new Contact();
