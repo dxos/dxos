@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// TODO(burdon): Factor out to separate package.
-
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { argv } from 'node:process';
@@ -12,6 +10,7 @@ import * as pb from 'protobufjs';
 import { codegenObjectClass, codegenPlainInterface, codegenSchema, iterTypes } from './codegen';
 
 const packageName = '@dxos/echo-db2';
+
 const types = ['EchoSchema', 'EchoObjectBase', 'TypeFilter', 'OrderedSet'];
 
 const gen = (source: string, out: string) => {

@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "codegen": "echo-schema-gen src/proto/schema.proto src/proto/gen/schema.ts"
+    "dxtype": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -28,6 +28,7 @@
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "clsx": "^1.1.1",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",

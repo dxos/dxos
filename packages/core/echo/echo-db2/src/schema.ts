@@ -12,34 +12,19 @@ export type EchoSchemaField = {
   isOrderedSet?: boolean;
 };
 
-// TODO(burdon): __phantom?
+// TODO(burdon): Document __phantom.
 export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
 
 /**
- *
- */
-export class EchoSchema {
-  constructor(private readonly _root: pb.Root) {}
-
-  static fromJson(json: string): EchoSchema {
-    return new EchoSchema(pb.Root.fromJSON(JSON.parse(json)));
-  }
-
-  getType(name: string): EchoSchemaType {
-    return new EchoSchemaType(this._root.lookupType(name));
-  }
-
-  // TODO(burdon): ?
-  registerPrototype(proto: any) {}
-}
-
-/**
- *
+ * Wraps protocol generated type.
  */
 export class EchoSchemaType {
   public readonly fields: EchoSchemaField[] = [];
 
-  constructor(private readonly _type: pb.Type) {
+  // prettier-ignore
+  constructor(
+    private readonly _type: pb.Type
+  ) {
     _type.fieldsArray.forEach((field) => field.resolve());
     this.fields = _type.fieldsArray.map((field) => ({
       name: field.name,
@@ -59,6 +44,28 @@ export class EchoSchemaType {
   }
 }
 
+/**
+ * Constructed via generated protobuf class.
+ */
+export class EchoSchema {
+  // prettier-ignore
+  constructor(
+    private readonly _root: pb.Root
+  ) {}
+
+  static fromJson(json: string): EchoSchema {
+    return new EchoSchema(pb.Root.fromJSON(JSON.parse(json)));
+  }
+
+  getType(name: string): EchoSchemaType {
+    return new EchoSchemaType(this._root.lookupType(name));
+  }
+
+  // TODO(burdon): Document.
+  registerPrototype(proto: any) {}
+}
+
+// TODO(burdon): Document.
 const strip = (obj: any): any => {
   if (typeof obj === 'object') {
     Object.keys(obj).forEach((key) => obj[key] === undefined && delete obj[key]);

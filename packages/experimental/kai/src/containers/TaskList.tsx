@@ -36,7 +36,9 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     </button>
   );
 
+  // TODO(burdon): Create tests for echo-db2 compiler; echo-schema; echo-protogen.
   // TODO(burdon): Delete row.
+  // TODO(burdon): Ordered list (linked list?)
   // TODO(burdon): Split current task if pressing Enter in the middle.
   // TODO(burdon): Delete key to potentially remove task.
   // TODO(burdon): Tab to indent.

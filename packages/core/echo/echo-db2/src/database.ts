@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
@@ -20,6 +18,7 @@ export type Query<T extends EchoObject = EchoObject> = {
 
 export type SelectionFn = never; // TODO(dmaretskyi): ?
 export type Selection = EchoObject | SelectionFn | Selection[];
+
 // export type Predicate = { [key: string]: any };
 // export type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
 // export type Selector = Predicate;
@@ -79,7 +78,6 @@ export class EchoDatabase {
     this._objects.set(obj[unproxy]._id, obj);
 
     const item = (await this._echo.createItem({ id: obj[unproxy]._id })) as Item<ObjectModel>;
-    assert(item.id === obj[unproxy]._id);
     obj[unproxy]._bind(item, this);
     return obj;
   }
