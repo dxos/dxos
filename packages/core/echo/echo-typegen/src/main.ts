@@ -10,6 +10,7 @@ import * as pb from 'protobufjs';
 import { SourceBuilder, generate } from './codegen';
 
 const main = (source: string, out: string) => {
+  console.log(`Reading: ${source}`);
   const root = new pb.Root();
   root.loadSync(source);
 
@@ -19,6 +20,7 @@ const main = (source: string, out: string) => {
 
   mkdirSync(path.dirname(out), { recursive: true });
   writeFileSync(out, builder.content);
+  console.log(`Output: ${out}`);
 };
 
 // TODO(burdon): Yargs
