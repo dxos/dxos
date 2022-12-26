@@ -4,7 +4,7 @@
 
 import faker from 'faker';
 
-import { EchoDatabase, json } from '@dxos/echo-db2';
+import { EchoDatabase } from '@dxos/echo-db2';
 
 import { Contact, Task } from '../proto';
 import { Project } from './gen/schema';
@@ -26,8 +26,6 @@ export const createTask = async (db: EchoDatabase) => {
     title: faker.lorem.sentence(2),
     assignee: contact
   });
-
-  console.log(':::', json(task));
 
   return await db.save(task);
 };

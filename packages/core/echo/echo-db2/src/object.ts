@@ -9,7 +9,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { unproxy } from './common';
 import { EchoDatabase } from './database';
 import { OrderedSet } from './ordered-array';
-import { EchoSchemaType } from './schema';
+import { EchoSchemaField, EchoSchemaType } from './schema';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -27,10 +27,6 @@ export const id = (object: EchoObjectBase) => object[unproxy]._id;
  * @deprecated Not safe. Maybe return undefined for freshly created objects.
  */
 export const db = (object: EchoObjectBase) => object[unproxy]._database!;
-
-// TODO(burdon): Expose schema.
-// TODO(burdon): Codegen should define function with getter access.
-export const json = (object: EchoObjectBase) => object[unproxy].json();
 
 /**
  *
@@ -185,7 +181,7 @@ export class EchoObjectBase {
      */
     return new Proxy(object, {
       ownKeys(target) {
-        return target._schemaType?.fields.map(({ name }) => name) ?? [];
+        return target._schemaType?.fields.map(({ name }: EchoSchemaField) => name) ?? [];
       },
 
       /**
