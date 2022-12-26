@@ -61,28 +61,6 @@ export class EchoObjectBase {
    */
   public _isBound = false;
 
-  /**
-   * Convert to JSON object.
-   */
-  _json() {
-    return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
-      // TODO(burdon): Detect cycles.
-      // TODO(burdon): Handle ordered sets and other types (change field to type).
-      if (!isOrderedSet) {
-        const value = this._get(name);
-        if (value !== undefined) {
-          if (value instanceof EchoObjectBase) {
-            result[name] = value[unproxy]._json();
-          } else {
-            result[name] = value;
-          }
-        }
-      }
-
-      return result;
-    }, {});
-  }
-
   [unproxy]: EchoObject = this;
 
   get [Symbol.toStringTag]() {
@@ -127,6 +105,28 @@ export class EchoObjectBase {
         return true;
       }
     });
+  }
+
+  /**
+   * Convert to JSON object.
+   */
+  _json() {
+    return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
+      // TODO(burdon): Detect cycles.
+      // TODO(burdon): Handle ordered sets and other types (change field to type).
+      if (!isOrderedSet) {
+        const value = this._get(name);
+        if (value !== undefined) {
+          if (value instanceof EchoObjectBase) {
+            result[name] = value[unproxy]._json();
+          } else {
+            result[name] = value;
+          }
+        }
+      }
+
+      return result;
+    }, {});
   }
 
   private _get(key: string) {
