@@ -20,7 +20,7 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../echo-db2"
+      "path": "../echo-schema"
     }
   ]
 }

@@ -5,7 +5,7 @@
 import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';

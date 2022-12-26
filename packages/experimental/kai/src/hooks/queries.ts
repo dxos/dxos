@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
-import { EchoDatabase, EchoObject, Filter, Selection, SubscriptionHandle, TypeFilter } from '@dxos/echo-db2';
+import { EchoDatabase, EchoObject, Filter, Selection, SubscriptionHandle, TypeFilter } from '@dxos/echo-schema';
 
 //
 // TODO(burdon): Factor out (react-client).

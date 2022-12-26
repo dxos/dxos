@@ -188,7 +188,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-db2/package.json",
+          "path": "packages/core/echo/echo-schema/package.json",
           "jsonpath": "$.version"
         },
         {

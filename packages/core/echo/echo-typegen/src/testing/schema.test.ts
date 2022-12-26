@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';

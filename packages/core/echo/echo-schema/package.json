@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-db2",
+  "name": "@dxos/echo-schema",
   "version": "0.1.18",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",

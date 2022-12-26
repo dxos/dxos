@@ -4,7 +4,7 @@
 
 import faker from 'faker';
 
-import { EchoDatabase } from '@dxos/echo-db2';
+import { EchoDatabase } from '@dxos/echo-schema';
 
 import { Contact, Task } from '../proto';
 import { Project } from './gen/schema';

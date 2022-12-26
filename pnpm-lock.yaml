@@ -1371,7 +1371,7 @@ importers:
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
 
-  packages/core/echo/echo-db2:
+  packages/core/echo/echo-schema:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
@@ -1398,7 +1398,7 @@ importers:
 
   packages/core/echo/echo-typegen:
     specifiers:
-      '@dxos/echo-db2': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@types/node': ^18.11.9
@@ -1411,7 +1411,7 @@ importers:
       '@dxos/node-std': link:../../../common/node-std
       protobufjs: 6.11.3
     devDependencies:
-      '@dxos/echo-db2': link:../echo-db2
+      '@dxos/echo-schema': link:../echo-schema
       '@types/node': 18.11.9
       ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
@@ -2704,7 +2704,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/echo-db2': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
@@ -2741,7 +2741,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-db2': link:../../core/echo/echo-db2
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore

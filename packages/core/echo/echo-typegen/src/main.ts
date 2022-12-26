@@ -9,7 +9,7 @@ import * as pb from 'protobufjs';
 
 import { codegenObjectClass, codegenPlainInterface, codegenSchema, iterTypes } from './codegen';
 
-const packageName = '@dxos/echo-db2';
+const packageName = '@dxos/echo-schema';
 
 const types = ['EchoSchema', 'EchoObjectBase', 'TypeFilter', 'OrderedSet'];
 
