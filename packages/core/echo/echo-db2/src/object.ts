@@ -29,9 +29,9 @@ export const id = (object: EchoObjectBase) => object[unproxy]._id;
 export const db = (object: EchoObjectBase) => object[unproxy]._database!;
 
 /**
- *
+ * Base class for objects.
  */
-// TODO(burdon): Support immutable objects.
+// TODO(burdon): Support immutable objects?
 export class EchoObjectBase {
   /**
    * Pending values before commited to model.
