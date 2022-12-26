@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 
 import { EchoDatabase } from './database';
-import { unproxy } from './defs';
+import { id, db, unproxy } from './defs';
 import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 
@@ -19,19 +19,8 @@ const isValidKey = (key: string | symbol) =>
     key === '$$typeof' ||
     key === 'toString' ||
     // TODO(burdon): Add 'id' (need to prohibit from schema fields).
-    key === 'json'
+    key === 'toJSON'
   );
-
-export const id = Symbol('id');
-export const db = Symbol('db');
-
-/**
- * @deprecated Not safe. Maybe return undefined for freshly created objects.
- */
-// export const db = (object: EchoObjectBase) => object[unproxy]._database!;
-
-// TODO(burdon): Replace with symbol.
-// export const id = (object: EchoObjectBase) => object[unproxy]._id;
 
 /**
  * Base class for objects.
@@ -101,9 +90,10 @@ export class EchoObjectBase {
   }
 
   /**
-   * Convert to JSON object.
+   * Convert to JSON object. Used by `JSON.stringify`.
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description
    */
-  json() {
+  toJSON() {
     return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
       // TODO(burdon): Detect cycles.
       // TODO(burdon): Handle ordered sets and other types (change field to type).
@@ -111,7 +101,7 @@ export class EchoObjectBase {
         const value = this._get(name);
         if (value !== undefined) {
           if (value instanceof EchoObjectBase) {
-            result[name] = value[unproxy].json();
+            result[name] = value[unproxy].toJSON();
           } else {
             result[name] = value;
           }
@@ -212,8 +202,8 @@ export class EchoObjectBase {
       get: (target, property, receiver) => {
         if (!isValidKey(property)) {
           switch (property) {
-            case 'json': {
-              return this.json.bind(this);
+            case 'toJSON': {
+              return this.toJSON.bind(this);
             }
 
             default: {
