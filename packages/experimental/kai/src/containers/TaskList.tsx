@@ -3,13 +3,13 @@
 //
 
 import { PlusCircle } from 'phosphor-react';
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 
 import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useObjects, useSelection, useSpace } from '../hooks';
+import { useObjects, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
@@ -30,7 +30,6 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     </button>
   );
 
-  // TODO(burdon): Create tests for echo-db2 compiler; echo-schema; echo-protogen.
   // TODO(burdon): Delete row.
   // TODO(burdon): Ordered list (linked list?)
   // TODO(burdon): Split current task if pressing Enter in the middle.
@@ -43,22 +42,29 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
-          <TaskItem key={id(task)} task={task} onCreateTask={handleCreate} />
+          <TaskItem key={id(task)} task={task} />
         ))}
       </div>
     </Card>
   );
 };
 
-export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, onCreateTask }) => {
-  useSelection([task, task.assignee]);
+/**
+ * Make reactive.
+ */
+const useMutation = () => {
+  const [, forceUpdate] = useState({});
+  return {
+    exec: (cb: () => void) => {
+      cb();
+      forceUpdate({});
+    }
+  };
+};
 
-  // TODO(burdon): Insert item on enter and focus new item.
-  // const handleKeyDown = (event: KeyboardEvent) => {
-  //   if (event.key === 'Enter') {
-  //     onCreateTask?.();
-  //   }
-  // };
+export const TaskItem: FC<{ task: Task }> = ({ task }) => {
+  // useSelection([task, task.assignee]);
+  const { exec } = useMutation();
 
   return (
     <Table
@@ -67,7 +73,7 @@ export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, 
           type='checkbox'
           spellCheck={false}
           checked={!!task.completed}
-          onChange={() => (task.completed = !task.completed)}
+          onChange={() => exec(() => (task.completed = !task.completed))}
         />
       }
       header={
@@ -75,8 +81,7 @@ export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, 
           className='w-full outline-0'
           spellCheck={false}
           value={task.title}
-          // onKeyDown={handleKeyDown}
-          onChange={(value) => (task.title = value)}
+          onChange={(value) => exec(() => (task.title = value))}
         />
       }
     >
