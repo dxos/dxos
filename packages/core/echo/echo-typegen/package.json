@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-schema",
+  "name": "@dxos/echo-typegen",
   "version": "0.1.18",
   "description": "ECHO schema generator.",
   "homepage": "https://dxos.org",

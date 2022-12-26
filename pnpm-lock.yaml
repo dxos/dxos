@@ -1396,7 +1396,7 @@ importers:
     devDependencies:
       wait-for-expect: 3.0.2
 
-  packages/core/echo/echo-schema:
+  packages/core/echo/echo-typegen:
     specifiers:
       '@dxos/echo-db2': workspace:*
       '@dxos/log': workspace:*
@@ -2705,7 +2705,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db2': workspace:*
-      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
       '@dxos/keys': workspace:*
@@ -2742,7 +2742,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db2': link:../../core/echo/echo-db2
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/keys': link:../../common/keys
@@ -33942,7 +33942,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

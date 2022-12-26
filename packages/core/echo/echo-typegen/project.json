@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/core/echo/echo-schema/src",
+  "sourceRoot": "packages/core/echo/echo-typegen/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/core/echo/echo-schema/src/index.ts",
-        "outputPath": "packages/core/echo/echo-schema/dist/types",
-        "tsConfig": "packages/core/echo/echo-schema/tsconfig.json"
+        "main": "packages/core/echo/echo-typegen/src/index.ts",
+        "outputPath": "packages/core/echo/echo-typegen/dist/types",
+        "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/core/echo/echo-schema/src/main.ts"
+          "packages/core/echo/echo-typegen/src/main.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/core/echo/echo-schema/dist/lib"
+        "outputPath": "packages/core/echo/echo-typegen/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/echo/echo-schema/src/**/*.{ts,js}"
+          "packages/core/echo/echo-typegen/src/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -41,15 +41,15 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/echo-schema",
+        "coveragePath": "coverage/packages/core/echo/echo-typegen",
         "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/echo/echo-schema",
-        "resultsPath": "test-results/packages/core/echo/echo-schema",
+        "outputPath": "tmp/mocha/packages/core/echo/echo-typegen",
+        "resultsPath": "test-results/packages/core/echo/echo-typegen",
         "testPatterns": [
-          "packages/core/echo/echo-schema/src/**/*.test.{ts,js}"
+          "packages/core/echo/echo-typegen/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/core/echo/echo-schema/src/**/*"
+          "packages/core/echo/echo-typegen/src/**/*"
         ]
       },
       "outputs": [

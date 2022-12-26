@@ -193,7 +193,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-schema/package.json",
+          "path": "packages/core/echo/echo-typegen/package.json",
           "jsonpath": "$.version"
         },
         {

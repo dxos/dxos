@@ -47,7 +47,7 @@
       "path": "../../core/echo/echo-db2"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-typegen"
     },
     {
       "path": "../../core/protocols"
