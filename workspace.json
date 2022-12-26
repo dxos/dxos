@@ -28,6 +28,7 @@
     "docs": "docs",
     "echo-db": "packages/core/echo/echo-db",
     "echo-db2": "packages/core/echo/echo-db2",
+    "echo-schema": "packages/core/echo/echo-schema",
     "errors": "packages/sdk/errors",
     "esbuild": "tools/executors/esbuild",
     "esbuild-plugins": "packages/common/esbuild-plugins",

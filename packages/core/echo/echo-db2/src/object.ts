@@ -25,14 +25,19 @@ export const id = (object: EchoObjectBase) => object[unproxy]._id;
 /**
  * @deprecated Not safe. Maybe return undefined for freshly created objects.
  */
-// TODO(burdon): Remove.
 export const db = (object: EchoObjectBase) => object[unproxy]._database!;
+
+// TODO(burdon): Move to base class.
+// TODO(burdon): Expose schema.
+export const json = (object: EchoObjectBase) => object[unproxy]._json();
 
 /**
  *
  */
 // TODO(burdon): Support immutable objects.
 export class EchoObjectBase {
+  private _uninitialized?: Record<keyof any, any> = {};
+
   /**
    * @internal
    * Maybe not be present for freshly created objects.
@@ -56,7 +61,27 @@ export class EchoObjectBase {
    */
   public _isBound = false;
 
-  private _uninitialized?: Record<keyof any, any> = {};
+  /**
+   * Convert to JSON object.
+   */
+  _json() {
+    return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
+      // TODO(burdon): Detect cycles.
+      // TODO(burdon): Handle ordered sets and other types (change field to type).
+      if (!isOrderedSet) {
+        const value = this._get(name);
+        if (value !== undefined) {
+          if (value instanceof EchoObjectBase) {
+            result[name] = value[unproxy]._json();
+          } else {
+            result[name] = value;
+          }
+        }
+      }
+
+      return result;
+    }, {});
+  }
 
   [unproxy]: EchoObject = this;
 
@@ -64,7 +89,11 @@ export class EchoObjectBase {
     return this[unproxy]?._schemaType?.name ?? 'EchoObject';
   }
 
-  constructor(initialProps?: Record<keyof any, any>, private readonly _schemaType?: EchoSchemaType) {
+  // prettier-ignore
+  constructor(
+    initialProps?: Record<keyof any, any>,
+    private readonly _schemaType?: EchoSchemaType
+  ) {
     this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
 
@@ -76,6 +105,10 @@ export class EchoObjectBase {
       }
     }
 
+    /**
+     * Constructor returns a proxy object.
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+     */
     return new Proxy(this, {
       get: (target, property, receiver) => {
         if (!isValidKey(property)) {
@@ -194,6 +227,9 @@ export class EchoObjectBase {
   }
 }
 
+/**
+ * Base class for generated types.
+ */
 export class EchoObject extends EchoObjectBase {
   // Allow access to arbitrary properties via dot notation.
   [key: string]: any;

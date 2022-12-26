@@ -4,9 +4,7 @@
 
 syntax = "proto3";
 
-// TODO(burdon): Rename file and package.
-
-package kai.example.tasks;
+package example.test;
 
 message Address {
   string city = 1;
@@ -31,12 +29,4 @@ message Task {
   Contact assignee = 3;
   Task previous = 4;
   repeated Task sub_tasks = 5;
-}
-
-message Project {
-  option (object) = true;
-
-  string title = 1;
-  repeated Contact team = 2;
-  repeated Task tasks = 3;
 }

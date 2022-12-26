@@ -1,0 +1,26 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "stripInternal": true,
+    "types": [
+      "@dxos/test",
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
+    },
+    {
+      "path": "../echo-db2"
+    }
+  ]
+}

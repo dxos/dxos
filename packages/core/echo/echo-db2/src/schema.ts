@@ -19,7 +19,10 @@ export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
  *
  */
 export class EchoSchema {
-  constructor(private readonly _root: pb.Root) {}
+  // prettier-ignore
+  constructor(
+    private readonly _root: pb.Root
+  ) {}
 
   static fromJson(json: string): EchoSchema {
     return new EchoSchema(pb.Root.fromJSON(JSON.parse(json)));
@@ -39,7 +42,10 @@ export class EchoSchema {
 export class EchoSchemaType {
   public readonly fields: EchoSchemaField[] = [];
 
-  constructor(private readonly _type: pb.Type) {
+  // prettier-ignore
+  constructor(
+    private readonly _type: pb.Type
+  ) {
     _type.fieldsArray.forEach((field) => field.resolve());
     this.fields = _type.fieldsArray.map((field) => ({
       name: field.name,
