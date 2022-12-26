@@ -16,7 +16,7 @@ export type Query<T extends EchoObject = EchoObject> = {
   subscribe(callback: () => void): () => void;
 };
 
-export type SelectionFn = never; // TODO(dmaretskyi): ?
+export type SelectionFn = never; // TODO(burdon): Document or remove.
 export type Selection = EchoObject | SelectionFn | Selection[];
 
 // export type Predicate = { [key: string]: any };
@@ -83,8 +83,9 @@ export class EchoDatabase {
   }
 
   /**
-   *
+   * Filter by type.
    */
+  // TODO(burdon): Additional filters?
   query<T extends EchoObject>(filter: TypeFilter<T>): Query<T>;
   query(filter: Filter): Query;
   query(filter: Filter): Query {

@@ -3,13 +3,13 @@
 //
 
 import { PlusCircle } from 'phosphor-react';
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-db2';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useObjects, useSpace } from '../hooks';
+import { useQuery, useSubscription, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
@@ -18,7 +18,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   title = 'Tasks'
 }) => {
   const { database: db } = useSpace();
-  const tasks = useObjects(Task.filter({ completed }));
+  const tasks = useQuery(db, Task.filter({ completed }));
 
   const handleCreate = async () => {
     await createTask(db);
@@ -49,22 +49,9 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   );
 };
 
-/**
- * Make reactive.
- */
-const useMutation = () => {
-  const [, forceUpdate] = useState({});
-  return {
-    exec: (cb: () => void) => {
-      cb();
-      forceUpdate({});
-    }
-  };
-};
-
 export const TaskItem: FC<{ task: Task }> = ({ task }) => {
-  // useSelection([task, task.assignee]);
-  const { exec } = useMutation();
+  const { database: db } = useSpace();
+  useSubscription(db, [task, task.assignee]);
 
   return (
     <Table
@@ -73,7 +60,7 @@ export const TaskItem: FC<{ task: Task }> = ({ task }) => {
           type='checkbox'
           spellCheck={false}
           checked={!!task.completed}
-          onChange={() => exec(() => (task.completed = !task.completed))}
+          onChange={() => (task.completed = !task.completed)}
         />
       }
       header={
@@ -81,7 +68,7 @@ export const TaskItem: FC<{ task: Task }> = ({ task }) => {
           className='w-full outline-0'
           spellCheck={false}
           value={task.title}
-          onChange={(value) => exec(() => (task.title = value))}
+          onChange={(value) => (task.title = value)}
         />
       }
     >
