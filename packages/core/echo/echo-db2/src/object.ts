@@ -37,23 +37,27 @@ export const json = (object: EchoObjectBase) => object[unproxy].json();
  */
 // TODO(burdon): Support immutable objects.
 export class EchoObjectBase {
+  /**
+   * Pending values before commited to model.
+   * @internal
+   */
   private _uninitialized?: Record<keyof any, any> = {};
 
   /**
-   * @internal
    * Maybe not be present for freshly created objects.
+   * @internal
    */
-  public _id!: string; // TODO(burdon): Symbol?
+  public _id!: string;
 
   /**
-   * @internal
    * Maybe not be present for freshly created objects.
+   * @internal
    */
   public _item?: Item<ObjectModel>;
 
   /**
-   * @internal
    * Maybe not be present for freshly created objects.
+   * @internal
    */
   public _database?: EchoDatabase;
 
@@ -80,55 +84,10 @@ export class EchoObjectBase {
       }
     }
 
-    /**
-     * Constructor returns a proxy object.
-     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
-     */
-    return new Proxy(this, {
-      ownKeys (target) {
-        return target._schemaType?.fields.map(({ name }) => name) ?? [];
-      },
-
-      /**
-       * Called for each property (e.g., called by Object.keys()).
-       * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/getOwnPropertyDescriptor
-       * See: https://javascript.info/proxy
-       */
-      getOwnPropertyDescriptor(target, property) {
-        // TODO(burdon): Return other properties?
-        return {
-          enumerable: true,
-          configurable: true
-        };
-      },
-
-      get: (target, property, receiver) => {
-        if (!isValidKey(property)) {
-          switch (property) {
-            case 'json': {
-              return this.json.bind(this);
-            }
-
-            default: {
-              return Reflect.get(target, property, receiver);
-            }
-          }
-        }
-
-        return this._get(property as string);
-      },
-
-      set: (target, property, value, receiver) => {
-        if (!isValidKey(property)) {
-          return Reflect.set(target, property, value, receiver);
-        }
-
-        this._set(property as string, value);
-        return true;
-      }
-    });
+    return this._createProxy(this);
   }
 
+  // TODO(burdon): Document.
   get [Symbol.toStringTag]() {
     return this[unproxy]?._schemaType?.name ?? 'EchoObject';
   }
@@ -186,7 +145,7 @@ export class EchoObjectBase {
       case 'ref':
         return this._database!.getObjectById(value);
       case 'object':
-        return this._createSubObject(prop);
+        return this._createProxy({}, prop);
       case 'array':
         return new OrderedSet()._bind(this[unproxy], prop);
       default:
@@ -204,7 +163,7 @@ export class EchoObjectBase {
       value._bind(this[unproxy], prop);
     } else if (typeof value === 'object' && value !== null) {
       void this._item!.model.set(`${prop}$type`, 'object');
-      const sub = this._createSubObject(prop);
+      const sub = this._createProxy({}, prop);
       for (const [subKey, subValue] of Object.entries(value)) {
         sub[subKey] = subValue;
       }
@@ -214,33 +173,65 @@ export class EchoObjectBase {
     }
   }
 
-  private _createSubObject(prop: string): any {
-    return new Proxy(
-      {},
-      {
-        get: (target, property, receiver) => {
-          if (!isValidKey(property)) {
-            return Reflect.get(target, property, receiver);
+  /**
+   * Create proxy for root or sub-object.
+   */
+  private _createProxy(object: any, parent?: string): any {
+    const getProperty = (property: string) => (parent ? `${parent}.${property}` : property);
+
+    /**
+     * Constructor returns a proxy object.
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+     */
+    return new Proxy(object, {
+      ownKeys(target) {
+        return target._schemaType?.fields.map(({ name }) => name) ?? [];
+      },
+
+      /**
+       * Called for each property (e.g., called by Object.keys()).
+       * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/getOwnPropertyDescriptor
+       * See: https://javascript.info/proxy
+       */
+      getOwnPropertyDescriptor(target, property) {
+        // TODO(burdon): Return other properties?
+        return {
+          enumerable: true,
+          configurable: true
+        };
+      },
+
+      get: (target, property, receiver) => {
+        if (!isValidKey(property)) {
+          switch (property) {
+            case 'json': {
+              return this.json.bind(this);
+            }
+
+            default: {
+              return Reflect.get(target, property, receiver);
+            }
           }
-
-          return this._get(`${prop}.${String(property)}`);
-        },
-
-        set: (target, property, value, receiver) => {
-          if (!isValidKey(property)) {
-            return Reflect.set(target, property, value, receiver);
-          }
-
-          this._set(`${prop}.${String(property)}`, value);
-          return true;
         }
+
+        return this._get(getProperty(property as string));
+      },
+
+      set: (target, property, value, receiver) => {
+        if (!isValidKey(property)) {
+          return Reflect.set(target, property, value, receiver);
+        }
+
+        this._set(getProperty(property as string), value);
+        return true;
       }
-    );
+    });
   }
 
   /**
    * @internal
    */
+  // TODO(burdon): Document.
   _bind(item: Item<ObjectModel>, database: EchoDatabase) {
     this._item = item;
     this._database = database;
@@ -257,6 +248,6 @@ export class EchoObjectBase {
  * Base class for generated types.
  */
 export class EchoObject extends EchoObjectBase {
-  // Allow access to arbitrary properties via dot notation.
+  // Property accessor.
   [key: string]: any;
 }
