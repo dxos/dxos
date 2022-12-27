@@ -6,6 +6,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
@@ -48,11 +49,42 @@ export class MemorySignalManager implements SignalManager {
     payload: Any;
   }>();
 
+  /**  Will be used to emit SwarmEvents on .open() and .close() */
+  private _joinedSwarms = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
+    ({ topic, peerId }) => topic.toHex() + peerId.toHex()
+  );
+
+  private _ctx!: Context;
+
   // prettier-ignore
   constructor(
     private readonly _context: MemorySignalManagerContext
   ) {
-    this._context.swarmEvent.on((data) => this.swarmEvent.emit(data));
+    this._ctx = new Context();
+
+    this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
+  }
+
+  async open() {
+    this._ctx = new Context();
+    this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
+
+    await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
+  }
+
+  async close() {
+    // save copy of joined swarms.
+    const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
+      ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
+      [...this._joinedSwarms.values()]
+    );
+
+    await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(value)));
+
+    // assign joined swarms back because .leave() deletes it.
+    this._joinedSwarms = joinedSwarmsCopy;
+
+    await this._ctx.dispose();
   }
 
   getStatus(): SignalStatus[] {
@@ -60,6 +92,10 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
+    assert(!this._ctx.disposed, 'Closed');
+
+    this._joinedSwarms.add({ topic, peerId });
+
     if (!this._context.swarms.has(topic)) {
       this._context.swarms.set(topic, new ComplexSet(PublicKey.hash));
     }
@@ -92,6 +128,10 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
+    assert(!this._ctx.disposed, 'Closed');
+
+    this._joinedSwarms.delete({ topic, peerId });
+
     if (!this._context.swarms.has(topic)) {
       this._context.swarms.set(topic, new ComplexSet(PublicKey.hash));
     }
@@ -109,12 +149,15 @@ export class MemorySignalManager implements SignalManager {
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
     assert(recipient);
+    assert(!this._ctx.disposed, 'Closed');
     if (!this._context.connections.has(recipient)) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
     }
 
-    this._context.connections.get(recipient)!.onMessage.emit({ author, recipient, payload });
+    if (!this._context.connections.get(recipient)?._ctx.disposed) {
+      this._context.connections.get(recipient)!.onMessage.emit({ author, recipient, payload });
+    }
   }
 
   async subscribeMessages(peerId: PublicKey) {
@@ -128,8 +171,4 @@ export class MemorySignalManager implements SignalManager {
       }
     };
   }
-
-  async open() {}
-
-  async close() {}
 }
