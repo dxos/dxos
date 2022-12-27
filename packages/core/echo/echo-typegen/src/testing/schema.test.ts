@@ -35,40 +35,37 @@ describe('schema', () => {
     expect(task1.assignee.name).to.eq('User 1');
     expect(task1.toJSON()).to.deep.eq({ title: 'Task 1', assignee: { name: 'User 1' } });
     expect(JSON.stringify(task1)).to.eq(JSON.stringify({ title: 'Task 1', assignee: { name: 'User 1' } }));
-
-    // Test recursion.
-    {
-      const task2 = new Task();
-      task2.title = 'Task 2';
-
-      contact.tasks.push(task1);
-      contact.tasks.push(task2);
-
-      expect(contact.toJSON()).to.deep.eq({
-        name: 'User 1',
-        tasks: [
-          {
-            title: 'Task 1',
-            assignee: {
-              name: 'User 1',
-              tasks: [
-                {
-                  title: 'Task 1'
-                },
-                {
-                  title: 'Task 2'
-                }
-              ]
-            }
-          },
-          {
-            title: 'Task 2'
-          }
-        ]
-      });
-    }
-
-    // TODO(burdon): Test sets.
-    // TODO(burdon): Implement Task.from to deserialize JSON string.
   });
+
+  test('json with recursion', () => {
+    const contact = new Contact({ name: 'User 1' });
+    contact.tasks.push(new Task({ title: 'Task 1', assignee: contact }));
+    contact.tasks.push(new Task({ title: 'Task 2', assignee: contact }));
+
+    expect(contact.toJSON()).to.deep.eq({
+      name: 'User 1',
+      tasks: [
+        {
+          title: 'Task 1',
+          assignee: {
+            name: 'User 1',
+            tasks: [
+              {
+                title: 'Task 1'
+              },
+              {
+                title: 'Task 2'
+              }
+            ]
+          }
+        },
+        {
+          title: 'Task 2'
+        }
+      ]
+    });
+  });
+
+  // TODO(burdon): Test sets.
+  // TODO(burdon): Implement Task.from to deserialize JSON string.
 });
