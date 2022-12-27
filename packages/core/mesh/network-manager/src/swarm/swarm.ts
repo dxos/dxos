@@ -19,7 +19,7 @@ import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { WireProtocolProvider } from '../wire-protocol';
-import { Connection } from './connection';
+import { Connection, ConnectionState } from './connection';
 import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
@@ -145,13 +145,13 @@ export class Swarm {
   }
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
-    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
-    if (this._ctx.disposed) {
-      log.warn('ignored for offline swarm');
-      return;
-    }
+    console.log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
     if (swarmEvent.peerAvailable) {
+      if (this._ctx.disposed) {
+        log.warn('ignored for offline swarm');
+        return;
+      }
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
       log('new peer', { peerId });
       if (!peerId.equals(this._ownPeerId)) {
@@ -162,7 +162,8 @@ export class Swarm {
       const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
       if (peer) {
         peer.advertizing = false;
-        if (!peer.connection) {
+        if (!peer.connection || peer.connection.state !== ConnectionState.CONNECTED) {
+          // Destroy peer only if there is no p2p-connection established
           void this._destroyPeer(peer.id);
         }
       }
