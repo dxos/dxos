@@ -145,7 +145,7 @@ export class Swarm {
   }
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
-    console.log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
+    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
     if (swarmEvent.peerAvailable) {
       if (this._ctx.disposed) {
