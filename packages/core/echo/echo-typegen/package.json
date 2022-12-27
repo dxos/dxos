@@ -14,6 +14,7 @@
     "src"
   ],
   "scripts": {
+    "build": "npm run dxtype && tsc",
     "dxtype": "ts-node ./src/main.ts src/testing/proto/test.proto src/testing/proto/gen/test.ts"
   },
   "dependencies": {

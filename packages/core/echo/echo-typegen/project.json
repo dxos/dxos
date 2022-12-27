@@ -3,11 +3,12 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "nx:run-script",
       "options": {
-        "main": "packages/core/echo/echo-typegen/src/index.ts",
-        "outputPath": "packages/core/echo/echo-typegen/dist/types",
-        "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
+        "script": "build",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
