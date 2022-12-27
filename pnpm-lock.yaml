@@ -1401,7 +1401,11 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      '@swc-node/register': ^1.5.4
+      '@swc/core': ^1.3.21
+      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
+      mocha: ^8.4.0
       protobufjs: ^6.9.0
       ts-node: 10.9.1
       typescript: ^4.8.4
@@ -1412,8 +1416,12 @@ importers:
       protobufjs: 6.11.3
     devDependencies:
       '@dxos/echo-schema': link:../echo-schema
+      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
+      '@swc/core': 1.3.21
+      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      mocha: 8.4.0
+      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
@@ -3801,6 +3809,8 @@ importers:
   tools/executors/protobuf-compiler:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protobuf-test': workspace:*
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
@@ -3818,6 +3828,8 @@ importers:
       ts-node: 10.9.1
       typescript: ^4.8.4
     dependencies:
+      '@dxos/log': link:../../../packages/common/log
+      '@dxos/node-std': link:../../../packages/common/node-std
       argparse: 2.0.1
       chalk: 4.1.2
       glob: 7.1.7
@@ -11854,7 +11866,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       deepmerge: 4.2.2
@@ -11867,7 +11879,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@styled-system/color': 5.1.2
       '@styled-system/should-forward-prop': 5.1.5
       '@styled-system/space': 5.1.2
@@ -11882,7 +11894,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       '@theme-ui/parse-props': 0.14.7_gyryel6m34lsxtsejhafetjriq
       deepmerge: 4.2.2
@@ -11894,7 +11906,7 @@ packages:
     peerDependencies:
       '@emotion/react': ^11
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       csstype: 3.1.1
     dev: true
 
@@ -11905,7 +11917,7 @@ packages:
       '@mdx-js/react': ^1 || ^2
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -11918,7 +11930,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       react: 18.2.0
     dev: true
@@ -11929,7 +11941,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/color-modes': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -33942,7 +33954,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
