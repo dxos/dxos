@@ -162,9 +162,9 @@ export class Swarm {
       const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
       if (peer) {
         peer.advertizing = false;
-        if (!peer.connection || peer.connection.state !== ConnectionState.CONNECTED) {
+        if (!peer.connection || peer.connection.state === ConnectionState.CLOSED) {
           // Destroy peer only if there is no p2p-connection established
-          void this._destroyPeer(peer.id);
+          void this._destroyPeer(peer.id).catch((err) => log.catch(err));
         }
       }
     }
