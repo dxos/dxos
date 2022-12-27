@@ -8,7 +8,7 @@ import { schema } from '@dxos/protocols';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
-import { NetworkManager } from '../network-manager';
+import { NetworkMode, NetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
   MemoryTransportFactory,
@@ -146,6 +146,14 @@ export class TestPeer {
     const swarm = new TestSwarmConnection(this, topic);
     this._swarms.set(topic, swarm);
     return swarm;
+  }
+
+  async goOffline() {
+    await this._networkManager.setNetworkMode(NetworkMode.OFFLINE);
+  }
+
+  async goOnline() {
+    await this._networkManager.setNetworkMode(NetworkMode.ONLINE);
   }
 }
 

@@ -77,6 +77,8 @@ export class WebsocketSignalManager implements SignalManager {
     this._initContext();
 
     await Promise.all([...this._servers.values()].map((server) => server.open()));
+    this._closed = false;
+
     await Promise.all(
       [...this._servers.values()].map((server) =>
         Promise.all([...this._subscribedMessages.values()].map((peerId) => server.subscribeMessages(peerId)))
