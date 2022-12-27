@@ -3,25 +3,26 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "options": {
-        "script": "build",
+        "main": "packages/core/echo/echo-typegen/src/main.ts",
+        "outputPath": "packages/core/echo/echo-typegen/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
       ]
     },
-    "compile": {
-      "executor": "@dxos/esbuild:build",
+    "prebuild": {
+      "executor": "nx:run-script",
       "options": {
-        "entryPoints": [
-          "packages/core/echo/echo-typegen/src/main.ts"
-        ],
-        "injectGlobals": true,
-        "outputPath": "packages/core/echo/echo-typegen/dist/lib"
+        "script": "prebuild",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -40,6 +41,9 @@
       ]
     },
     "test": {
+      "dependsOn": [
+        "^prebuild"
+      ],
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/echo/echo-typegen",
