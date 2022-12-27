@@ -14,19 +14,36 @@ import { useSpace } from '../hooks';
 import { MembersList } from './MembersList';
 import { SpaceList } from './SpaceList';
 
+enum NetworkMode {
+  OFFLINE = 0,
+  ONLINE = 1
+}
+
 export const Sidebar = () => {
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
-  const [airplaneMode, setAirplaneMode] = useState(false);
+  const [networkMode, setNetworkMode] = useState(NetworkMode.ONLINE);
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     navigate(`/${space.key.truncate()}`);
   };
 
-  const handleAirplaneMode = () => {
-    setAirplaneMode((mode) => !mode);
+  const handleAirplaneMode = async () => {
+    let newMode: NetworkMode;
+    switch (networkMode) {
+      case NetworkMode.OFFLINE: {
+        newMode = NetworkMode.ONLINE;
+        break;
+      }
+      case NetworkMode.ONLINE: {
+        newMode = NetworkMode.OFFLINE;
+        break;
+      }
+    }
+    await client.setNetworkMode(newMode);
+    setNetworkMode(newMode);
   };
 
   return (
@@ -54,7 +71,11 @@ export const Sidebar = () => {
           <Gear className={getSize(6)} />
         </button>
         <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
-          {airplaneMode ? <AirplaneTakeoff className={getSize(6)} /> : <AirplaneInFlight className={getSize(6)} />}
+          {networkMode === NetworkMode.ONLINE ? (
+            <AirplaneTakeoff className={getSize(6)} />
+          ) : (
+            <AirplaneInFlight className={getSize(6)} />
+          )}
         </button>
       </div>
     </div>
