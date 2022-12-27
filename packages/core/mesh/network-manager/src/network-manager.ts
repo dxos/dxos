@@ -8,6 +8,7 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
+import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
@@ -52,11 +53,6 @@ export type SwarmOptions = {
    */
   label?: string;
 };
-
-export enum NetworkMode {
-  OFFLINE = 0,
-  ONLINE = 1
-}
 
 export type NetworkManagerOptions = {
   transportFactory: TransportFactory;
