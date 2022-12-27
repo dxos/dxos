@@ -15,6 +15,7 @@ import { SpaceServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingService
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
+import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
@@ -105,6 +106,8 @@ export class ClientServicesHost implements ClientServicesProvider {
       SpacesService: new SpacesServiceImpl(),
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
+
+      NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
 
       // TODO(burdon): Move to new protobuf definitions.
       ProfileService: new ProfileServiceImpl(this._serviceContext),
