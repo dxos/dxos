@@ -5,6 +5,7 @@
 import * as pb from 'protobufjs';
 
 import { TypeFilter } from './database';
+import { strip } from './util';
 
 export type EchoSchemaField = {
   name: string;
@@ -60,12 +61,3 @@ export class EchoSchema {
   // TODO(burdon): Document.
   registerPrototype(proto: any) {}
 }
-
-// TODO(burdon): Document.
-const strip = (obj: any): any => {
-  if (typeof obj === 'object') {
-    Object.keys(obj).forEach((key) => obj[key] === undefined && delete obj[key]);
-  }
-
-  return obj;
-};

@@ -44,7 +44,6 @@ export class EchoDatabase {
   }
 
   getObjectById(id: string) {
-    // TODO(burdon): Type?
     return this._objects.get(id);
   }
 
