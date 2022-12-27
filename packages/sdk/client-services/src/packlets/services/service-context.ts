@@ -79,6 +79,7 @@ export class ServiceContext {
 
   async open() {
     log('opening...');
+    await this.networkManager.open();
     await this.spaceManager.open();
     await this.identityManager.open();
     if (this.identityManager.identity) {
