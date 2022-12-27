@@ -39,8 +39,11 @@ export class SourceBuilder {
 /**
  * Protobuf schema as JSON object.
  */
-export const createSchema = (schema: pb.NamespaceBase) =>
-  `const schemaJson = ${JSON.stringify(JSON.stringify(schema.toJSON()))};`;
+export const createSchema = (schema: pb.NamespaceBase) => {
+  const json = JSON.stringify(JSON.stringify(schema.toJSON()));
+  const str = json.replace(/\\"/g, '"').replace(/(^"|"$)/g, '');
+  return `const schemaJson = '${str}';`;
+};
 
 /**
  * Type definition generator.
@@ -111,7 +114,7 @@ export const createType = (field: pb.Field): string => {
 export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
   // prettier-ignore
   builder
-    .push(`import { ${types.join(', ')} } from "${packageName}";`).nl()
+    .push(`import { ${types.sort().join(', ')} } from '${packageName}';`).nl()
     .push(createSchema(root)).nl()
     .push('export const schema = EchoSchema.fromJson(schemaJson);').nl();
 
