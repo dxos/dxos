@@ -36,16 +36,6 @@
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/experimental/gem-spore/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": [
-        "packages/experimental/gem-spore/coverage"
-      ]
     }
   },
   "implictDependencies": [

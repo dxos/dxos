@@ -4,6 +4,8 @@
 
 import { expect } from 'chai';
 
+import { test } from '@dxos/test';
+
 import { FractionUtil } from './fraction';
 
 test('invalid', () => {
