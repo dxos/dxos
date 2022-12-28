@@ -52,7 +52,7 @@
     },
     "test": {
       "dependsOn": [
-        "build"
+        "prebuild"
       ],
       "executor": "@dxos/test:run",
       "options": {
