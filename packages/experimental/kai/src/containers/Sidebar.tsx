@@ -8,7 +8,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient, useNetworkMode } from '@dxos/react-client';
+import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { useSpace } from '../hooks';
@@ -19,7 +19,7 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
-  const networkMode = useNetworkMode();
+  const networkStatus = useNetworkStatus();
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -28,7 +28,7 @@ export const Sidebar = () => {
 
   const handleAirplaneMode = async () => {
     let newMode: NetworkMode | undefined;
-    switch (networkMode?.mode) {
+    switch (networkStatus?.mode) {
       case NetworkMode.OFFLINE: {
         newMode = NetworkMode.ONLINE;
         break;
@@ -41,7 +41,7 @@ export const Sidebar = () => {
     if (!newMode) {
       return;
     }
-    await client.setNetworkMode(newMode);
+    await client.mesh.changeNetworkStatus({ mode: newMode });
   };
 
   return (
@@ -69,7 +69,7 @@ export const Sidebar = () => {
           <Gear className={getSize(6)} />
         </button>
         <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
-          {networkMode?.mode === NetworkMode.ONLINE ? (
+          {networkStatus?.mode === NetworkMode.ONLINE ? (
             <AirplaneTakeoff className={getSize(6)} />
           ) : (
             <AirplaneInFlight className={getSize(6)} />
