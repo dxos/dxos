@@ -4,7 +4,7 @@
 
 import clsx from 'clsx';
 import { Bug } from 'phosphor-react';
-import React, { useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { HashRouter, useNavigate, useParams, useRoutes } from 'react-router-dom';
 
 import { Trigger } from '@dxos/async';
@@ -13,7 +13,7 @@ import { Config, Defaults } from '@dxos/config';
 import { EchoDatabase } from '@dxos/echo-schema';
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 
-import { SpaceContext, SpaceContextType } from '../hooks';
+import { OptionsContext, SpaceContext, SpaceContextType } from '../hooks';
 import { Main } from './Main';
 
 /**
@@ -161,7 +161,7 @@ const Routes = () => {
 /**
  * Main app container with routes.
  */
-export const App = () => {
+export const App: FC<{ debug?: boolean }> = ({ debug }) => {
   const [client, setClient] = useState<Client | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -188,9 +188,11 @@ export const App = () => {
 
   return (
     <ClientProvider client={client}>
-      <HashRouter>
-        <Routes />
-      </HashRouter>
+      <OptionsContext.Provider value={{ debug }}>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
+      </OptionsContext.Provider>
     </ClientProvider>
   );
 };

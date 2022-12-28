@@ -3,13 +3,14 @@
 //
 
 import { PlusCircle } from 'phosphor-react';
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSubscription, useSpace } from '../hooks';
+import { useQuery, useSubscription, useSpace, useOptions } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
@@ -19,15 +20,22 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
 }) => {
   const { database: db } = useSpace();
   const tasks = useQuery(db, Task.filter({ completed }));
-  const [newTask, setNewTask] = useState<Task>(new Task());
+  const [newTask, setNewTask] = useState<Task>();
+  useEffect(() => {
+    if (!readonly) {
+      setNewTask(new Task());
+    }
+  }, []);
 
   const handleCreate = async () => {
     await createTask(db);
   };
 
   const handleNewTask = async (task: Task) => {
-    await db.save(task);
-    setNewTask(new Task());
+    if (task.title.length) {
+      await db.save(task);
+      setNewTask(new Task());
+    }
   };
 
   const Menubar = () => (
@@ -51,7 +59,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
           <TaskItem key={task[id]} task={task} />
         ))}
 
-        {!readonly && <TaskItem task={newTask} onEnter={handleNewTask} />}
+        {newTask && <TaskItem task={newTask} onEnter={handleNewTask} />}
       </div>
     </Card>
   );
@@ -59,6 +67,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
 
 export const TaskItem: FC<{ task: Task; onEnter?: (task: Task) => void }> = ({ task, onEnter }) => {
   const { database: db } = useSpace();
+  const { debug } = useOptions();
   useSubscription(db, [task, task.assignee]);
 
   return (
@@ -80,11 +89,14 @@ export const TaskItem: FC<{ task: Task; onEnter?: (task: Task) => void }> = ({ t
           onEnter={() => {
             onEnter?.(task);
           }}
-          onChange={(value) => (task.title = value)}
+          onChange={(value) => {
+            task.title = value;
+          }}
         />
       }
     >
       <div className='text-sm text-blue-800'>
+        {debug && <div>{PublicKey.from(task[id]).truncate()}</div>}
         <div>{task.assignee?.name}</div>
       </div>
     </Table>

@@ -38,12 +38,13 @@ export class EchoObjectBase {
    * Maybe not be present for freshly created objects.
    * @internal
    */
-  public _id!: string;
+  public _id = PublicKey.random().toHex();
 
   /**
    * Maybe not be present for freshly created objects.
    * @internal
    */
+  // TODO(burdon): Maybe not?
   public _item?: Item<ObjectModel>;
 
   /**
@@ -71,7 +72,6 @@ export class EchoObjectBase {
     initialProps?: Record<keyof any, any>,
     private readonly _schemaType?: EchoSchemaType
   ) {
-    this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
 
     if (this._schemaType) {

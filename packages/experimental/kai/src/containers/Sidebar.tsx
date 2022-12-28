@@ -8,7 +8,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient, useNetworkMode } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { useSpace } from '../hooks';
@@ -19,7 +19,8 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
-  const networkMode = useNetworkMode();
+  // const networkMode = useNetworkMode();
+  const networkMode = undefined;
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();

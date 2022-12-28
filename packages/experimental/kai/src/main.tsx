@@ -24,5 +24,5 @@ import { App } from './containers';
 import './style.css';
 
 (() => {
-  createRoot(document.getElementById('root')!).render(<App />);
+  createRoot(document.getElementById('root')!).render(<App debug={true} />);
 })();
