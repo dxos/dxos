@@ -166,8 +166,8 @@ importers:
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
-      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
-      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
+      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
+      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       babel-loader: 8.2.5_wfdvla2jorjoj23kkavho2upde
       chai: 4.3.6
       chai-as-promised: 7.1.1_chai@4.3.6
@@ -320,7 +320,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_vite@3.2.5
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/apps/halo-app:
@@ -397,7 +397,7 @@ importers:
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
-      vite-plugin-pwa: 0.12.8_vite@3.2.5
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/apps/patterns/assets:
@@ -601,7 +601,7 @@ importers:
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4
-      vite-plugin-pwa: 0.12.8_vite@3.2.5
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       webpack: 5.74.0
       workbox-window: 6.5.4
 
@@ -670,7 +670,7 @@ importers:
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4
-      vite-plugin-pwa: 0.12.8_vite@3.2.5
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       webpack: 5.74.0
       workbox-window: 6.5.4
 
@@ -716,7 +716,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_vite@3.2.5
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/apps/todomvc:
@@ -1232,7 +1232,7 @@ importers:
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
       tailwind-merge: 1.8.0
-      tailwindcss: 3.1.8
+      tailwindcss: 3.1.8_postcss@8.4.18
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
     devDependencies:
@@ -2374,7 +2374,7 @@ importers:
       faker: 5.5.3
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_vite@3.2.5
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
@@ -2779,9 +2779,9 @@ importers:
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       faker: 5.5.3
       postcss: 8.4.18
-      tailwindcss: 3.1.8
+      tailwindcss: 3.1.8_postcss@8.4.18
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_vite@3.2.5
+      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       workbox-window: 6.5.4
 
   packages/experimental/kitchen-sink:
@@ -3208,13 +3208,13 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
       '@polkadot/api': 4.17.1
-      '@polkadot/keyring': 6.11.1
+      '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
       '@polkadot/metadata': 4.17.1
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/typegen': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       bn.js: 4.12.0
       faker: 5.5.3
       fs-extra: 8.1.0
@@ -3350,6 +3350,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -3375,6 +3376,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
@@ -3780,8 +3782,8 @@ importers:
       '@dxos/eslint-plugin-rules': link:../eslint-rules
       '@rushstack/eslint-plugin-packlets': 0.4.1_z4bbprzjrhnsfa24uvmcbu7f5q
       '@stayradiated/eslint-plugin-prefer-arrow-functions': 4.4.0_eslint@8.25.0
-      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
-      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
+      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
+      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       eslint-config-semistandard: 16.0.0_u7hi4tob5jexe3bxs45csc22mq
       eslint-config-standard: 17.0.0_qjhcey4ofknbrbveepk4bditci
       eslint-plugin-import: 2.26.0_3rwetfi6epq3x3lrbut2iai3km
@@ -3989,7 +3991,7 @@ importers:
       remark-parse-frontmatter: 1.0.3
       remark-unwrap-texts: 1.0.3
       rollup: 2.79.1
-      tailwindcss: 3.1.8
+      tailwindcss: 3.1.8_postcss@8.4.18
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
       typescript: 4.8.4
@@ -7474,7 +7476,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/devkit': 15.3.3_nx@15.3.3+typescript@4.8.4
-      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
+      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       chalk: 4.1.0
       confusing-browser-globals: 1.0.11
@@ -8085,7 +8087,7 @@ packages:
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@polkadot/x-rxjs': 6.11.1
     transitivePeerDependencies:
       - encoding
@@ -8098,14 +8100,14 @@ packages:
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/api-derive': 4.17.1
-      '@polkadot/keyring': 6.11.1
+      '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
       '@polkadot/metadata': 4.17.1
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/rpc-provider': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/types-known': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@polkadot/x-rxjs': 6.11.1
       eventemitter3: 4.0.7
     transitivePeerDependencies:
@@ -8113,13 +8115,16 @@ packages:
       - supports-color
     dev: false
 
-  /@polkadot/keyring/6.11.1:
+  /@polkadot/keyring/6.11.1_w5wqjwuvue5eixzgnjxqpuw26i:
     resolution: {integrity: sha512-rW8INl7pO6Dmaffd6Df1yAYCRWa2RmWQ0LGfJeA/M6seVIkI6J3opZqAd4q2Op+h9a7z4TESQGk8yggOEL+Csg==}
     engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@polkadot/util': 6.11.1
+      '@polkadot/util-crypto': 6.11.1
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
     dev: false
 
   /@polkadot/metadata/4.17.1:
@@ -8162,7 +8167,7 @@ packages:
       '@babel/runtime': 7.19.4
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@polkadot/x-fetch': 6.11.1
       '@polkadot/x-global': 6.11.1
       '@polkadot/x-ws': 6.11.1
@@ -8217,6 +8222,30 @@ packages:
   /@polkadot/util-crypto/6.11.1:
     resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
     engines: {node: '>=14.0.0'}
+    dependencies:
+      '@babel/runtime': 7.19.4
+      '@polkadot/networks': 6.11.1
+      '@polkadot/util': 6.11.1
+      '@polkadot/wasm-crypto': 4.6.1_7agzzbeuhezrwkh2zmxh2lt2xi
+      '@polkadot/x-randomvalues': 6.11.1
+      base-x: 3.0.9
+      base64-js: 1.5.1
+      blakejs: 1.2.1
+      bn.js: 4.12.0
+      create-hash: 1.2.0
+      elliptic: 6.5.4
+      hash.js: 1.1.7
+      js-sha3: 0.8.0
+      scryptsy: 2.1.0
+      tweetnacl: 1.0.3
+      xxhashjs: 0.2.2
+    dev: false
+
+  /@polkadot/util-crypto/6.11.1_@polkadot+util@6.11.1:
+    resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@polkadot/util': 6.11.1
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/networks': 6.11.1
@@ -11772,7 +11801,7 @@ packages:
     peerDependencies:
       tailwindcss: '>=2.0.0 || >=3.0.0 || >=3.0.0-alpha.1'
     dependencies:
-      tailwindcss: 3.1.8
+      tailwindcss: 3.1.8_postcss@8.4.18
     dev: true
 
   /@tailwindcss/forms/0.5.3_tailwindcss@3.1.8:
@@ -11781,7 +11810,7 @@ packages:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.1.8
+      tailwindcss: 3.1.8_postcss@8.4.18
     dev: false
 
   /@tailwindcss/typography/0.5.8_tailwindcss@3.1.8:
@@ -11793,7 +11822,7 @@ packages:
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.1.8
+      tailwindcss: 3.1.8_postcss@8.4.18
     dev: true
 
   /@tanstack/react-table/8.0.0-beta.3_biqbaboplfbrettd7655fr4n2y:
@@ -11866,7 +11895,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       deepmerge: 4.2.2
@@ -11879,7 +11908,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@styled-system/color': 5.1.2
       '@styled-system/should-forward-prop': 5.1.5
       '@styled-system/space': 5.1.2
@@ -11894,7 +11923,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       '@theme-ui/parse-props': 0.14.7_gyryel6m34lsxtsejhafetjriq
       deepmerge: 4.2.2
@@ -11906,7 +11935,7 @@ packages:
     peerDependencies:
       '@emotion/react': ^11
     dependencies:
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       csstype: 3.1.1
     dev: true
 
@@ -11917,7 +11946,7 @@ packages:
       '@mdx-js/react': ^1 || ^2
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -11930,7 +11959,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       react: 18.2.0
     dev: true
@@ -11941,7 +11970,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@theme-ui/color-modes': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -13269,17 +13298,18 @@ packages:
     resolution: {integrity: sha512-RRHc1+8Hc5mf/2lZKnom6kCnqcNS07s8keahniWTOva0KELF6RgDJmaEcvGEKUUJgN4UgessmEsWuidaOycIOw==}
     dev: true
 
-  /@typescript-eslint/eslint-plugin/5.45.0_usuh4uodfyzfr5qbbynfqnfnsy:
+  /@typescript-eslint/eslint-plugin/5.45.0_pi7zx7ojc4phxkdwiczrakx6sq:
     resolution: {integrity: sha512-CXXHNlf0oL+Yg021cxgOdMHNTXD17rHkq7iW6RFHoybdFgQBjU3yIXhhcPpGwr1CjZlo6ET8C6tzX5juQoXeGA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       '@typescript-eslint/parser': ^5.0.0
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
+      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@typescript-eslint/scope-manager': 5.45.0
       '@typescript-eslint/type-utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
@@ -13307,10 +13337,11 @@ packages:
       - typescript
     dev: false
 
-  /@typescript-eslint/parser/5.45.0_typescript@4.8.4:
+  /@typescript-eslint/parser/5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q:
     resolution: {integrity: sha512-brvs/WSM4fKUmF5Ot/gEve6qYiCMjm6w4HkHPfS6ZNmxTS0m0iNN4yOChImaCkqc1hRwFGqUyanMXuGal6oyyQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
@@ -13478,7 +13509,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.18.6_@babel+core@7.19.3
       magic-string: 0.26.7
       react-refresh: 0.14.0
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -19420,7 +19451,7 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
+      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       debug: 3.2.7
       eslint: 8.25.0
       eslint-import-resolver-node: 0.3.6
@@ -19460,7 +19491,7 @@ packages:
       '@typescript-eslint/parser':
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
+      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       array-includes: 3.1.5
       array.prototype.flat: 1.3.0
       debug: 2.6.9
@@ -19590,7 +19621,7 @@ packages:
       '@typescript-eslint/eslint-plugin':
         optional: true
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
+      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
       eslint: 8.25.0
       eslint-rule-composer: 0.3.0
     dev: false
@@ -32213,10 +32244,12 @@ packages:
     transitivePeerDependencies:
       - ts-node
 
-  /tailwindcss/3.1.8:
+  /tailwindcss/3.1.8_postcss@8.4.18:
     resolution: {integrity: sha512-YSneUCZSFDYMwk+TGq8qYFdCA3yfBRdBlS7txSq0LUmzyeqRe3a8fBQzbz9M3WS/iFT4BNf/nmw9mEzrnSaC0g==}
     engines: {node: '>=12.13.0'}
     hasBin: true
+    peerDependencies:
+      postcss: ^8.0.9
     dependencies:
       arg: 5.0.2
       chokidar: 3.5.3
@@ -33945,16 +33978,17 @@ packages:
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
     dev: true
 
-  /vite-plugin-pwa/0.12.8_vite@3.2.5:
+  /vite-plugin-pwa/0.12.8_v7patrztka3wxwjwwj7rxgk7ey:
     resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
+      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

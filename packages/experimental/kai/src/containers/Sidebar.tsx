@@ -69,7 +69,7 @@ export const Sidebar = () => {
           <Gear className={getSize(6)} />
         </button>
         <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
-          {networkMode.mode === NetworkMode.ONLINE ? (
+          {networkMode?.mode === NetworkMode.ONLINE ? (
             <AirplaneTakeoff className={getSize(6)} />
           ) : (
             <AirplaneInFlight className={getSize(6)} />
