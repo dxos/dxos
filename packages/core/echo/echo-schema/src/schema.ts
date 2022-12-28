@@ -46,19 +46,23 @@ export class EchoSchemaType {
  * Constructed via generated protobuf class.
  */
 export class EchoSchema {
+  static fromJson(json: string): EchoSchema {
+    return new EchoSchema(pb.Root.fromJSON(JSON.parse(json)));
+  }
+
   // prettier-ignore
   constructor(
     private readonly _root: pb.Root
-  ) {}
-
-  static fromJson(json: string): EchoSchema {
-    return new EchoSchema(pb.Root.fromJSON(JSON.parse(json)));
+  ) {
+    console.log(this._root);
   }
 
   getType(name: string): EchoSchemaType {
     return new EchoSchemaType(this._root.lookupType(name));
   }
 
-  // TODO(burdon): Document.
+  /**
+   * Called from generated code.
+   */
   registerPrototype(proto: any) {}
 }
