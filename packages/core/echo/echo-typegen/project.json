@@ -3,28 +3,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "dependsOn": [
-        "prebuild"
-      ],
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/core/echo/echo-typegen/src/main.ts",
+        "main": "packages/core/echo/echo-typegen/src/index.ts",
         "outputPath": "packages/core/echo/echo-typegen/dist/types",
         "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "compile": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/core/echo/echo/typegen/src/main.ts",
-        "outputPath": "packages/core/echo/echo/typegen/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/echo/echo/typegen/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -43,6 +26,9 @@
       ]
     },
     "prebuild": {
+      "dependsOn": [
+        "^build"
+      ],
       "executor": "nx:run-script",
       "options": {
         "script": "prebuild",
@@ -51,12 +37,12 @@
         ]
       },
       "outputs": [
-        "{options.outputPath}"
+        "packages/core/protocols/proto/echo/echo-typegen/test/proto/gen"
       ]
     },
     "test": {
       "dependsOn": [
-        "^compile",
+        "^build",
         "prebuild"
       ],
       "executor": "@dxos/test:run",
