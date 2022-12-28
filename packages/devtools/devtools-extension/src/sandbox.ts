@@ -5,14 +5,14 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
+import { ClientServices, ClientServicesProxy } from '@dxos/client-services';
 import { initializeDevtools } from '@dxos/devtools';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
 
 const log = debug('dxos:extension:sandbox');
 
-const clientReady = new Event<Client>();
+const clientReady = new Event<{ client: Client; services: ClientServices }>();
 
 const windowPort = (): RpcPort => ({
   send: async (message) =>
@@ -40,9 +40,10 @@ const windowPort = (): RpcPort => ({
 });
 
 const waitForRpc = async () =>
-  new Promise<void>((resolve) => {
+  new Promise<Config>((resolve) => {
     const handler = (event: MessageEvent) => {
       const message = event.data;
+      console.log('SANDBOX Received message from panel:', message);
       if (typeof message !== 'object' || message === null || message.source !== 'panel') {
         return;
       }
@@ -50,7 +51,7 @@ const waitForRpc = async () =>
       if (message.data === 'open-rpc') {
         log('Panel RPC port ready.');
         window.removeEventListener('message', handler);
-        resolve();
+        resolve(message);
       }
     };
 
@@ -70,29 +71,29 @@ const waitForRpc = async () =>
 const init = async () => {
   initializeDevtools(clientReady);
 
-  log('Initialize client RPC server starting...');
+  console.log('Initialize client RPC server starting...');
   const rpcPort = windowPort();
-  const client = new Client(
-    {
+  const servicesProvider = new ClientServicesProxy(rpcPort);
+
+  // TODO(mykola): Catch config from the panel.
+  await waitForRpc();
+
+  const client = new Client({
+    config: new Config({
       runtime: {
-        client: {
-          mode: Runtime.Client.Mode.REMOTE
-        },
-        // TODO(wittjosiah): Missing config in local client should fallback to remote client.
         services: {
           dxns: {
             server: 'wss://node1.devnet.dxos.network/dxns/ws'
           }
         }
       }
-    },
-    { rpcPort }
-  );
+    }),
+    services: servicesProvider
+  });
 
-  await waitForRpc();
   await client.initialize();
   log('Initialized client RPC server finished.');
-  clientReady.emit(client);
+  clientReady.emit({ client, services: servicesProvider.services });
 };
 
 void init();
