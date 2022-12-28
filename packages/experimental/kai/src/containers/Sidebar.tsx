@@ -4,7 +4,7 @@
 
 import clsx from 'clsx';
 import { AirplaneInFlight, AirplaneTakeoff, Bug, PlusCircle, Gear } from 'phosphor-react';
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
