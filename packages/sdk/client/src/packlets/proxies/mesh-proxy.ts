@@ -40,7 +40,7 @@ export class MeshProxy {
     });
   }
 
-  close() {
-    this._ctx?.dispose();
+  async close() {
+    await this._ctx?.dispose();
   }
 }
