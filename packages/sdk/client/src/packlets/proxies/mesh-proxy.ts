@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { ChangeNetworkStatusRequest, NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
  * Public API for MESH services.
@@ -26,6 +26,12 @@ export class MeshProxy {
     return this._networkStatus;
   }
 
+  toJSON() {
+    return {
+      networkStatus: this._networkStatus
+    };
+  }
+
   open() {
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
@@ -42,5 +48,12 @@ export class MeshProxy {
 
   async close() {
     await this._ctx?.dispose();
+  }
+
+  /**
+   * Set network mode. This is method to go to offline/online mode.
+   */
+  async changeNetworkStatus(request: ChangeNetworkStatusRequest) {
+    return this._serviceProvider.services.NetworkService.changeNetworkStatus(request);
   }
 }
