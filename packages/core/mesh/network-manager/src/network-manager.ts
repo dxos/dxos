@@ -227,6 +227,6 @@ export class NetworkManager {
         break;
       }
     }
-    this.networkModeChanged.emit(mode);
+    this.networkModeChanged.emit(this._networkMode);
   }
 }
