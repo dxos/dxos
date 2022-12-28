@@ -3,6 +3,9 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": [
+        "prebuild"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/echo/echo-typegen/src/index.ts",
@@ -26,9 +29,6 @@
       ]
     },
     "prebuild": {
-      "dependsOn": [
-        "^build"
-      ],
       "executor": "nx:run-script",
       "options": {
         "script": "prebuild",
@@ -37,13 +37,12 @@
         ]
       },
       "outputs": [
-        "packages/core/protocols/proto/echo/echo-typegen/test/proto/gen"
+        "packages/core/echo/echo-typegen/test/proto/gen"
       ]
     },
     "test": {
       "dependsOn": [
-        "^build",
-        "prebuild"
+        "build"
       ],
       "executor": "@dxos/test:run",
       "options": {
