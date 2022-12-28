@@ -5,11 +5,11 @@
 import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useObjects, useSelection, useSpace } from '../hooks';
+import { useQuery, useSubscription, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
@@ -18,7 +18,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   title = 'Tasks'
 }) => {
   const { database: db } = useSpace();
-  const tasks = useObjects(Task.filter({ completed }));
+  const tasks = useQuery(db, Task.filter({ completed }));
 
   const handleCreate = async () => {
     await createTask(db);
@@ -30,26 +30,28 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     </button>
   );
 
+  // TODO(burdon): Delete row.
+  // TODO(burdon): Ordered list (linked list?)
+  // TODO(burdon): Split current task if pressing Enter in the middle.
+  // TODO(burdon): Delete key to potentially remove task.
+  // TODO(burdon): Tab to indent.
+  // TODO(burdon): Track index position; move up/down.
+  // TODO(burdon): Scroll into view.
+  // TODO(burdon): Highlight active row.
   return (
     <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
-          <TaskItem key={id(task)} task={task} onCreateTask={handleCreate} />
+          <TaskItem key={task[id]} task={task} />
         ))}
       </div>
     </Card>
   );
 };
 
-export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, onCreateTask }) => {
-  useSelection([task, task.assignee]);
-
-  // TODO(burdon): Insert item on enter and focus new item.
-  // const handleKeyDown = (event: KeyboardEvent) => {
-  //   if (event.key === 'Enter') {
-  //     onCreateTask?.();
-  //   }
-  // };
+export const TaskItem: FC<{ task: Task }> = ({ task }) => {
+  const { database: db } = useSpace();
+  useSubscription(db, [task, task.assignee]);
 
   return (
     <Table
@@ -66,7 +68,6 @@ export const TaskItem: FC<{ task: Task; onCreateTask?: () => void }> = ({ task, 
           className='w-full outline-0'
           spellCheck={false}
           value={task.title}
-          // onKeyDown={handleKeyDown}
           onChange={(value) => (task.title = value)}
         />
       }

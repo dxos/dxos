@@ -34,7 +34,7 @@ export default defineConfig({
       '@dxos/client',
       '@dxos/config',
       '@dxos/echo',
-      '@dxos/echo-db2',
+      '@dxos/echo-schema',
       '@dxos/keys',
       '@dxos/log',
       '@dxos/protocols',

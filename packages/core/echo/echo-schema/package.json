@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-db2",
+  "name": "@dxos/echo-schema",
   "version": "0.1.18",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
@@ -7,17 +7,8 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
-  "bin": {
-    "echo-schema-gen": "bin.js"
-  },
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist",
     "src"
   ],
