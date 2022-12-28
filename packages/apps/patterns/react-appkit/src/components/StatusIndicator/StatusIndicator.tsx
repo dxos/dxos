@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkMode } from '@dxos/react-client';
 import { Tooltip, useTranslation, valenceColorText, mx } from '@dxos/react-components';
 
@@ -36,7 +37,7 @@ export const StatusIndicator = ({ status }: { status: boolean }) => {
           <span className='ml-2'>{networkMode.mode === 0 ? 'OFFLINE' : 'ONLINE'}</span>
           <Button
             onClick={async () => {
-              const newMode = networkMode.mode === 0 ? 1 : 0;
+              const newMode = networkMode.mode === NetworkMode.OFFLINE ? NetworkMode.ONLINE : NetworkMode.OFFLINE;
               await client.setNetworkMode(newMode);
             }}
           >
