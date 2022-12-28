@@ -51,6 +51,9 @@
       ]
     },
     "test": {
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/echo/echo-typegen",
