@@ -74,6 +74,8 @@ export class NetworkManager {
   private readonly _signalConnection: SignalConnection;
 
   private _networkMode = NetworkMode.ONLINE;
+  public readonly networkModeChanged = new Event<NetworkMode>();
+
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -202,14 +204,14 @@ export class NetworkManager {
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 
-  async setNetworkMode(status: NetworkMode) {
-    if (status === this._networkMode) {
+  async setNetworkMode(mode: NetworkMode) {
+    if (mode === this._networkMode) {
       return;
     }
 
-    switch (status) {
+    switch (mode) {
       case NetworkMode.OFFLINE: {
-        this._networkMode = status;
+        this._networkMode = mode;
         // go offline
         await this._messenger.close();
         await this._signalManager.close();
@@ -217,7 +219,7 @@ export class NetworkManager {
         break;
       }
       case NetworkMode.ONLINE: {
-        this._networkMode = status;
+        this._networkMode = mode;
         // go online
         this._messenger.open();
         await this._signalManager.open();
@@ -225,5 +227,6 @@ export class NetworkManager {
         break;
       }
     }
+    this.networkModeChanged.emit(mode);
   }
 }
