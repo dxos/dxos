@@ -3,12 +3,21 @@
 //
 import { defineTemplate } from '@dxos/plate';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
+import { IPackageJson } from "types-package-json";
+
 import config from './config.t';
+
+type Context = { depVersion: string };
+
+export const react = ({ depVersion } : Context): IPackageJson {
+
+}
 
 export const reactDeps = ({ depVersion }: { depVersion: string }) => ({
   '@dxos/react-client': depVersion,
   react: '^18.2.0',
-  'react-dom': '^18.2.0'
+  'react-dom': '^18.2.0',
+  'react-router-dom': '^6.3.0'
 });
 export const reactDevDeps = ({ depVersion }: { depVersion: string }) => ({
   '@types/react': '^18.0.21',
@@ -18,9 +27,7 @@ export const reactDevDeps = ({ depVersion }: { depVersion: string }) => ({
 export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
   '@dxos/react-components': depVersion,
   '@dxos/react-appkit': depVersion,
-  'phosphor-react': '^1.4.1',
-  'react-router-dom': '^6.3.0',
-  sass: '^1.56.2'
+  'phosphor-react': '^1.4.1'
 });
 export const pwaDevDeps = ({ depVersion }: { depVersion: string }) => ({
   'vite-plugin-pwa': '^0.14.1',
@@ -37,10 +44,15 @@ export const storybookDevDeps = ({ depVersion }: { depVersion: string }) => ({
   'require-from-string': '^2.0.2',
   'storybook-dark-mode': '^1.1.2'
 });
+export const tailwindDevDeps = () => ({
+  tailwindcss: '^3.2.4',
+  autoprefixer: '^10.4.13',
+  postcss: '^8.4.20'
+});
 
 export default defineTemplate(
   async ({ input }) => {
-    const { name, react, monorepo, pwa, storybook, dxosUi: useDxosUi } = input;
+    const { name, react, monorepo, pwa, storybook, dxosUi, tailwind } = input;
     const { version: dxosVersion, patchedDependencies } = await getDxosRepoInfo();
     const version = monorepo ? dxosVersion : '0.1.0';
     const depVersion = monorepo ? `workspace:*` : dxosVersion;
@@ -64,7 +76,7 @@ export default defineTemplate(
         '@dxos/client': depVersion,
         '@dxos/config': depVersion,
         ...(react ? reactDeps({ depVersion }) : {}),
-        ...(useDxosUi ? uiDeps({ depVersion }) : {})
+        ...(dxosUi ? uiDeps({ depVersion }) : {})
       },
       devDependencies: {
         '@types/node': '^18.11.9',
@@ -73,7 +85,8 @@ export default defineTemplate(
         vite: '4.0.4',
         ...(react ? reactDevDeps({ depVersion }) : {}),
         ...(pwa ? pwaDevDeps({ depVersion }) : {}),
-        ...(storybook ? storybookDevDeps({ depVersion }) : {})
+        ...(storybook ? storybookDevDeps({ depVersion }) : {}),
+        ...(tailwind ? tailwindDevDeps() : {})
       },
       ...(!monorepo
         ? {
@@ -88,72 +101,3 @@ export default defineTemplate(
   },
   { config }
 );
-
-// export type Input = {
-//   monorepo?: boolean
-//   name: string
-// }
-
-// {
-//   "name": "@dxos/bare-template",
-//   "version": "0.1.13",
-//   "private": true,
-//   "description": "Application template with only the essentials.",
-//   "homepage": "https://dxos.org",
-//   "bugs": "https://github.com/dxos/dxos/issues",
-//   "repository": "github:dxos/dxos",
-//   "license": "MIT",
-//   "author": "DXOS.org",
-//   "scripts": {
-//     "build": "tsc --noEmit && vite build",
-//     "deploy": "dx app publish",
-//     "preview": "vite preview",
-//     "serve": "vite"
-//   },
-//   "dependencies": {
-//     "@dxos/client": "workspace:*",
-//     "@dxos/config": "workspace:*"
-//   },
-//   "devDependencies": {
-//     "@dxos/cli": "workspace:*",
-//     "@dxos/vite-plugin": "workspace:*",
-//     "typescript": "^4.8.4",
-//     "vite": "3.0.9"
-//   }
-// }
-
-// const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
-//   "name": "${input.name}",
-//   "version": "${packageJson.version}",
-//   "private": true,
-//   "description": "Application template with only the essentials.",
-//   ${input.monorepo ? `
-//   "homepage": "https://dxos.org",
-//   "bugs": "https://github.com/dxos/dxos/issues",
-//   "repository": "github:dxos/dxos",
-//   "license": "MIT",
-//   "author": "DXOS.org",
-//   ` : ''}"scripts": {
-//     "build": "tsc --noEmit && vite build",
-//     "deploy": "dx app publish",
-//     "preview": "vite preview",
-//     "serve": "vite"
-//   },
-//   "dependencies": {
-//     "@dxos/client": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-//     "@dxos/config": "${input.monorepo ? 'workspace:*' : packageJson.version}"
-//   },
-//   "devDependencies": {
-//     "@dxos/cli": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-//     "@dxos/vite-plugin": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-//     "typescript": "^4.8.4",
-//     "vite": "3.0.9"
-//   }${input.monorepo ? '' : `,
-//   "pnpm": {
-//     "patchedDependencies": {
-//       "vite@3.0.9": "patches/vite@3.0.9.patch"
-//     }
-//   }`}
-// }`;
-
-// export default template;

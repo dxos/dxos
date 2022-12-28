@@ -115,6 +115,7 @@
     "syncpack": "^8.2.4",
     "ts-jest": "^28.0.0",
     "ts-node": "10.9.1",
+    "types-package-json": "^2.0.39",
     "typescript": "^4.8.4",
     "uuid": "^8.3.2",
     "vite": "4.0.4",

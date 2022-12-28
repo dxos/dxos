@@ -2,10 +2,11 @@ import { text, defineTemplate } from "@dxos/plate";
 import config from "../config.t";
 
 export default defineTemplate(({ input })=> {
-  const { dxosUi } = input;
-  return !dxosUi ? null : text`
+  const { tailwind } = input;
+  return !tailwind ? null : text`
   {
     "recommendations": [
+      "csstools.postcss",
       "bradlc.vscode-tailwindcss"
     ]
   }
