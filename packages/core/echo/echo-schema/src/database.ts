@@ -5,28 +5,23 @@
 import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { unproxy } from './common';
-import { EchoObject, EchoObjectBase, id } from './object';
-import { TypeFilter } from './schema';
+import { id, unproxy } from './defs';
+import { EchoObject, EchoObjectBase } from './object';
 
 export type Filter = Record<string, any>;
+
+// NOTE: `__phantom` property forces type.
+export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
+
+export type SelectionFn = never; // TODO(burdon): Document or remove.
+export type Selection = EchoObject | SelectionFn | Selection[];
 
 export type Query<T extends EchoObject = EchoObject> = {
   getObjects(): T[];
   subscribe(callback: () => void): () => void;
 };
 
-export type SelectionFn = never; // TODO(dmaretskyi): ?
-export type Selection = EchoObject | SelectionFn | Selection[];
-
-// export type Predicate = { [key: string]: any };
-// export type Anchor = EchoDatabase | EchoObject | EchoObject[] | undefined;
-// export type Selector = Predicate;
-
-/**
- *
- */
-export interface SelectionHandle {
+export interface SubscriptionHandle {
   update: (selection: Selection) => void;
   subscribed: boolean;
   unsubscribe: () => void;
@@ -34,26 +29,14 @@ export interface SelectionHandle {
 }
 
 /**
- *
+ * Database wrapper.
  */
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
-  update() {
-    for (const object of this._echo.select({}).exec().entities) {
-      if (!this._objects.has(object.id)) {
-        const obj = new EchoObject();
-        obj[unproxy]._id = object.id;
-        this._objects.set(object.id, obj);
-        obj[unproxy]._bind(object, this);
-        obj[unproxy]._isBound = true;
-      }
-    }
-  }
-
   constructor(private readonly _echo: Database) {
-    this._echo.update.on(() => this.update());
-    this.update();
+    this._echo.update.on(() => this._update());
+    this._update();
   }
 
   get objects() {
@@ -61,7 +44,6 @@ export class EchoDatabase {
   }
 
   getObjectById(id: string) {
-    // TODO(burdon): Type?
     return this._objects.get(id);
   }
 
@@ -83,8 +65,9 @@ export class EchoDatabase {
   }
 
   /**
-   *
+   * Filter by type.
    */
+  // TODO(burdon): Additional filters?
   query<T extends EchoObject>(filter: TypeFilter<T>): Query<T>;
   query(filter: Filter): Query;
   query(filter: Filter): Query {
@@ -109,7 +92,7 @@ export class EchoDatabase {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
               const match = matchObject(this._objects.get(object.id)!);
-              const exists = cache?.find((obj) => id(obj) === object.id);
+              const exists = cache?.find((obj) => obj[id] === object.id);
               return (exists && !match) || (!exists && match);
             } else {
               return false;
@@ -126,9 +109,10 @@ export class EchoDatabase {
   }
 
   /**
-   *
+   * Subscribe to database updates.
    */
-  createSubscription(onUpdate: () => void): SelectionHandle {
+  // TODO(burdon): Add filter?
+  createSubscription(onUpdate: () => void): SubscriptionHandle {
     let subscribed = true;
 
     const unsubscribe = this._echo.update.on((changedEntities) => {
@@ -149,6 +133,18 @@ export class EchoDatabase {
     };
 
     return handle;
+  }
+
+  private _update() {
+    for (const object of this._echo.select({}).exec().entities) {
+      if (!this._objects.has(object.id)) {
+        const obj = new EchoObject();
+        obj[unproxy]._id = object.id;
+        this._objects.set(object.id, obj);
+        obj[unproxy]._bind(object, this);
+        obj[unproxy]._isBound = true;
+      }
+    }
   }
 }
 

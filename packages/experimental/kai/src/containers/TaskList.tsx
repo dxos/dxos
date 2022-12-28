@@ -5,11 +5,11 @@
 import { PlusCircle } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
-import { id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useObjects, useSelection, useSpace } from '../hooks';
+import { useQuery, useSubscription, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
@@ -18,7 +18,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   title = 'Tasks'
 }) => {
   const { database: db } = useSpace();
-  const tasks = useObjects(Task.filter({ completed }));
+  const tasks = useQuery(db, Task.filter({ completed }));
   const [newTask, setNewTask] = useState<Task>(new Task());
 
   const handleCreate = async () => {
@@ -36,7 +36,6 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     </button>
   );
 
-  // TODO(burdon): Create tests for echo-db2 compiler; echo-schema; echo-protogen.
   // TODO(burdon): Delete row.
   // TODO(burdon): Ordered list (linked list?)
   // TODO(burdon): Split current task if pressing Enter in the middle.
@@ -49,7 +48,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
-          <TaskItem key={id(task)} task={task} />
+          <TaskItem key={task[id]} task={task} />
         ))}
 
         {!readonly && <TaskItem task={newTask} onEnter={handleNewTask} />}
@@ -59,7 +58,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
 };
 
 export const TaskItem: FC<{ task: Task; onEnter?: (task: Task) => void }> = ({ task, onEnter }) => {
-  useSelection([task, task.assignee]);
+  const { database: db } = useSpace();
+  useSubscription(db, [task, task.assignee]);
 
   return (
     <Table
@@ -80,9 +80,7 @@ export const TaskItem: FC<{ task: Task; onEnter?: (task: Task) => void }> = ({ t
           onEnter={() => {
             onEnter?.(task);
           }}
-          onChange={(value) => {
-            task.title = value;
-          }}
+          onChange={(value) => (task.title = value)}
         />
       }
     >

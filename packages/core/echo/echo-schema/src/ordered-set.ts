@@ -4,15 +4,16 @@
 
 import { OrderedList } from '@dxos/object-model';
 
-import { unproxy } from './common';
+import { unproxy } from './defs';
 import { EchoObject, EchoObjectBase } from './object';
 
-// TODO(burdon): Remove.
-const EMPTY = 'empty item last to make the list work';
+// TODO(burdon): Remove?
+const EMPTY = '__EMPTY__';
 
 /**
  *
  */
+// TODO(burdon): Mostly not implemented.
 export class OrderedSet<T extends EchoObjectBase> implements Array<T> {
   private readonly _uninitialized?: T[] = [];
 
@@ -37,6 +38,7 @@ export class OrderedSet<T extends EchoObjectBase> implements Array<T> {
           return Reflect.get(target, property, receiver);
         }
       },
+
       set: (target, property, value, receiver) => {
         if (isIndex(property)) {
           this._set(+property, value);
@@ -49,11 +51,12 @@ export class OrderedSet<T extends EchoObjectBase> implements Array<T> {
   }
 
   [n: number]: T;
+
   get length(): number {
     if (!this._orderedList) {
       return this._uninitialized!.length;
     } else {
-      return Math.max(this._orderedList.values.length - 1, 0); // account empty item
+      return Math.max(this._orderedList.values.length - 1, 0); // Account for empty item.
     }
   }
 
@@ -294,7 +297,7 @@ export class OrderedSet<T extends EchoObjectBase> implements Array<T> {
       } else {
         const next = this._orderedList?.values[index + 1];
         if (!next) {
-          throw new Error('BUG');
+          throw new Error();
         }
 
         const item = this._orderedList?.values[index];

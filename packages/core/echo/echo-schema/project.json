@@ -17,7 +17,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/core/echo/echo-schema/src/main.ts"
+          "packages/core/echo/echo-schema/src/index.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/core/echo/echo-schema/dist/lib"

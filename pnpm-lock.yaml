@@ -1371,7 +1371,7 @@ importers:
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
 
-  packages/core/echo/echo-db2:
+  packages/core/echo/echo-schema:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
@@ -1396,12 +1396,16 @@ importers:
     devDependencies:
       wait-for-expect: 3.0.2
 
-  packages/core/echo/echo-schema:
+  packages/core/echo/echo-typegen:
     specifiers:
-      '@dxos/echo-db2': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      '@swc-node/register': ^1.5.4
+      '@swc/core': ^1.3.21
+      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
+      mocha: ^8.4.0
       protobufjs: ^6.9.0
       ts-node: 10.9.1
       typescript: ^4.8.4
@@ -1411,9 +1415,13 @@ importers:
       '@dxos/node-std': link:../../../common/node-std
       protobufjs: 6.11.3
     devDependencies:
-      '@dxos/echo-db2': link:../echo-db2
+      '@dxos/echo-schema': link:../echo-schema
+      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
+      '@swc/core': 1.3.21
+      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      mocha: 8.4.0
+      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
@@ -2688,8 +2696,8 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/echo-db2': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
       '@dxos/keys': workspace:*
@@ -2725,8 +2733,8 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-db2': link:../../core/echo/echo-db2
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/keys': link:../../common/keys
@@ -3785,6 +3793,8 @@ importers:
   tools/executors/protobuf-compiler:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protobuf-test': workspace:*
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
@@ -3802,6 +3812,8 @@ importers:
       ts-node: 10.9.1
       typescript: ^4.8.4
     dependencies:
+      '@dxos/log': link:../../../packages/common/log
+      '@dxos/node-std': link:../../../packages/common/node-std
       argparse: 2.0.1
       chalk: 4.1.2
       glob: 7.1.7
@@ -33918,7 +33930,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

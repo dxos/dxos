@@ -4,16 +4,13 @@
 
 import * as pb from 'protobufjs';
 
-import { Filter } from './database';
-import { EchoObject } from './object';
+import { TypeFilter } from './database';
+import { strip } from './util';
 
 export type EchoSchemaField = {
   name: string;
   isOrderedSet?: boolean;
 };
-
-// TODO(burdon): Document __phantom.
-export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
 
 /**
  * Wraps protocol generated type.
@@ -64,12 +61,3 @@ export class EchoSchema {
   // TODO(burdon): Document.
   registerPrototype(proto: any) {}
 }
-
-// TODO(burdon): Document.
-const strip = (obj: any): any => {
-  if (typeof obj === 'object') {
-    Object.keys(obj).forEach((key) => obj[key] === undefined && delete obj[key]);
-  }
-
-  return obj;
-};

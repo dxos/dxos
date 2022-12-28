@@ -6,10 +6,11 @@ import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 
-import { unproxy } from './common';
 import { EchoDatabase } from './database';
-import { OrderedSet } from './ordered-array';
+import { id, db, unproxy } from './defs';
+import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
+import { strip } from './util';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -18,15 +19,9 @@ const isValidKey = (key: string | symbol) =>
     key === 'constructor' ||
     key === '$$typeof' ||
     key === 'toString' ||
-    key === 'json'
+    // TODO(burdon): Add 'id' (need to prohibit from schema fields).
+    key === 'toJSON'
   );
-
-export const id = (object: EchoObjectBase) => object[unproxy]._id;
-
-/**
- * @deprecated Not safe. Maybe return undefined for freshly created objects.
- */
-export const db = (object: EchoObjectBase) => object[unproxy]._database!;
 
 /**
  * Base class for objects.
@@ -62,6 +57,13 @@ export class EchoObjectBase {
    */
   public _isBound = false;
 
+  // ID accessor.
+  [id]: string = this._id;
+
+  // Database property.
+  [db]: EchoDatabase | undefined = this._database;
+
+  // Proxy object.
   [unproxy]: EchoObject = this;
 
   // prettier-ignore
@@ -89,17 +91,47 @@ export class EchoObjectBase {
   }
 
   /**
-   * Convert to JSON object.
+   * Convert to JSON object. Used by `JSON.stringify`.
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description
    */
-  json() {
+  toJSON() {
+    return this._json(new Set());
+  }
+
+  // TODO(burdon): Option to reference objects by ID, and/or specify depth.
+  _json(visited: Set<EchoObjectBase>) {
+    // TODO(burdon): Important: do breadth first recursion to stabilize cycle detection/depth.
     return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
-      // TODO(burdon): Detect cycles.
-      // TODO(burdon): Handle ordered sets and other types (change field to type).
-      if (!isOrderedSet) {
-        const value = this._get(name);
-        if (value !== undefined) {
+      const value = this._get(name);
+      if (value !== undefined) {
+        // TODO(burdon): Handle ordered sets and other types (change field to type).
+        if (isOrderedSet) {
+          // TODO(burdon): Check if undefined; otherwise don't add if length 0.
+          if (value.length) {
+            const values: any[] = [];
+            for (let i = 0; i < value.length; i++) {
+              const item = value[i];
+              if (item instanceof EchoObjectBase) {
+                if (!visited.has(item)) {
+                  visited.add(value);
+                  values.push(item[unproxy]._json(visited));
+                } else {
+                  values.push(strip({ id: item[id] })); // TODO(burdon): Undefined if not saved.
+                }
+              } else {
+                values.push(item);
+              }
+            }
+
+            result[name] = values;
+          }
+        } else {
           if (value instanceof EchoObjectBase) {
-            result[name] = value[unproxy].json();
+            // Detect cycles.
+            if (!visited.has(value)) {
+              visited.add(value);
+              result[name] = value[unproxy]._json(visited);
+            }
           } else {
             result[name] = value;
           }
@@ -200,8 +232,8 @@ export class EchoObjectBase {
       get: (target, property, receiver) => {
         if (!isValidKey(property)) {
           switch (property) {
-            case 'json': {
-              return this.json.bind(this);
+            case 'toJSON': {
+              return this.toJSON.bind(this);
             }
 
             default: {

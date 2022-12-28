@@ -5,14 +5,23 @@
     "stripInternal": true,
     "types": [
       "@dxos/test",
-      "@dxos/typings",
-      "node"
+      "@dxos/typings"
     ]
   },
+  "exclude": [],
   "include": [
     "src"
   ],
   "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/keys"
+    },
     {
       "path": "../../../common/log"
     },
@@ -20,7 +29,13 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../echo-db2"
+      "path": "../echo-db"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../object-model"
     }
   ]
 }
