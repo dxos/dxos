@@ -14,6 +14,22 @@
         "{options.outputFile}"
       ]
     },
+    "prebuild": {
+      "dependsOn": [
+        "^build",
+        "^compile"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {

@@ -4,7 +4,9 @@
 
 syntax = "proto3";
 
-package dxos.demo.kai;
+// TODO(burdon): Rename file and package.
+
+package kai.example.tasks;
 
 message Address {
   string city = 1;

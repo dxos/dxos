@@ -2,15 +2,30 @@
   "sourceRoot": "packages/core/echo/echo-typegen/src",
   "projectType": "library",
   "targets": {
-    "compile": {
+    "build": {
+      "dependsOn": [
+        "prebuild"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/core/protocols/src/main.ts",
-        "outputPath": "packages/core/protocols/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
+        "main": "packages/core/echo/echo-typegen/src/main.ts",
+        "outputPath": "packages/core/echo/echo-typegen/dist/types",
+        "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-typegen/src/main.ts"
         ],
-        "tsConfig": "packages/core/protocols/tsconfig.json"
+        "outputPath": "packages/core/echo/echo-typegen/dist",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -29,10 +44,6 @@
       ]
     },
     "prebuild": {
-      "dependsOn": [
-        "^build",
-        "^compile"
-      ],
       "executor": "nx:run-script",
       "options": {
         "script": "prebuild",
@@ -41,10 +52,13 @@
         ]
       },
       "outputs": [
-        "{options.outputPath}"
+        "packages/core/echo/echo-typegen/test/proto/gen"
       ]
     },
     "test": {
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/echo/echo-typegen",
@@ -54,7 +68,7 @@
           "packages/core/echo/echo-typegen/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/core/echo/echo-typegen/src/**/*"
+          "packages/core/echo/echo-typegen/**/*"
         ]
       },
       "outputs": [

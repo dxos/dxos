@@ -12,6 +12,7 @@ import { inspectObject } from '@dxos/debug';
 import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
 import { Status } from '@dxos/protocols/proto/dxos/client';
+import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
@@ -118,6 +119,13 @@ export class Client {
   }
 
   /**
+   * Returns the current network mode.
+   */
+  get networkMode() {
+    return this._services.services.NetworkService.getNetworkMode();
+  }
+
+  /**
    * Initializes internal resources in an idempotent way.
    * Required before using the Client instance.
    */
@@ -165,6 +173,13 @@ export class Client {
    */
   async getStatus(): Promise<Status> {
     return this._services.services?.SystemService.getStatus();
+  }
+
+  /**
+   * Set network mode. This is method to go to offline/online mode.
+   */
+  async setNetworkMode(mode: NetworkMode) {
+    return this._services.services?.NetworkService.setNetworkMode({ mode });
   }
 
   /**
