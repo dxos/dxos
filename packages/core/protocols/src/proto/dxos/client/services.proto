@@ -223,15 +223,16 @@ enum NetworkMode {
   ONLINE = 1;
 }
 
-message GetNetworkModeResponse {
+// TODO(mykola): Broden API.
+message NetworkStatus {
   NetworkMode mode = 1;
 }
 
-message SetNetworkModeRequest {
+message ChangeNetworkStatusRequest {
   NetworkMode mode = 1;
 }
 
 service NetworkService {
-  rpc getNetworkMode(google.protobuf.Empty) returns (GetNetworkModeResponse);
-  rpc SetNetworkMode(SetNetworkModeRequest) returns (google.protobuf.Empty);
+  rpc SubscribeNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+  rpc ChangeNetworkStatus(ChangeNetworkStatusRequest) returns (google.protobuf.Empty);
 }
