@@ -12,7 +12,7 @@ import { NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 /**
  * Public API for MESH services.
  */
-export class Mesh {
+export class MeshProxy {
   private _ctx?: Context;
   private _networkStatus?: NetworkStatus;
 
@@ -30,7 +30,7 @@ export class Mesh {
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     const networkStatusStream = this._serviceProvider.services.NetworkService.subscribeNetworkStatus();
-    networkStatusStream.subscribe((networkStatus) => {
+    networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
       this._networkStatus = networkStatus;
     });
 
