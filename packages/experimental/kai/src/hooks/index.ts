@@ -2,4 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './selection';
+export * from './context';
+export * from './queries';

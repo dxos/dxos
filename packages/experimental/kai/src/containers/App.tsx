@@ -10,7 +10,7 @@ import { HashRouter, useNavigate, useParams, useRoutes } from 'react-router-dom'
 import { Trigger } from '@dxos/async';
 import { Client, Invitation, fromHost, PublicKey, Space, InvitationEncoder } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
-import { EchoDatabase } from '@dxos/echo-db2';
+import { EchoDatabase } from '@dxos/echo-schema';
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 
 import { SpaceContext, SpaceContextType } from '../hooks';
