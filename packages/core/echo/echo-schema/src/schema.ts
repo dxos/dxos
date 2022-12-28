@@ -9,6 +9,7 @@ import { strip } from './util';
 
 export type EchoSchemaField = {
   name: string;
+  // TODO(burdon): Replace with enum for type.
   isOrderedSet?: boolean;
 };
 

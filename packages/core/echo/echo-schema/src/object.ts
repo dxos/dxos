@@ -29,26 +29,25 @@ const isValidKey = (key: string | symbol) =>
 // TODO(burdon): Support immutable objects?
 export class EchoObjectBase {
   /**
-   * Pending values before commited to model.
+   * Pending values before committed to model.
    * @internal
    */
   private _uninitialized?: Record<keyof any, any> = {};
 
   /**
-   * Maybe not be present for freshly created objects.
    * @internal
    */
   public _id = PublicKey.random().toHex();
 
   /**
-   * Maybe not be present for freshly created objects.
+   * Not present for freshly created objects.
    * @internal
    */
   // TODO(burdon): Maybe not?
   public _item?: Item<ObjectModel>;
 
   /**
-   * Maybe not be present for freshly created objects.
+   * Not present for freshly created objects.
    * @internal
    */
   public _database?: EchoDatabase;
@@ -56,15 +55,16 @@ export class EchoObjectBase {
   /**
    * @internal
    */
+  // TODO(burdon): Remove? Deduce from whether _database is set?
   public _isBound = false;
 
-  // ID accessor.
+  /** ID accessor. */
   [id]: string = this._id;
 
-  // Database property.
+  /** Database reference if bound. */
   [db]: EchoDatabase | undefined = this._database;
 
-  // Proxy object.
+  /** Proxy object. */
   [unproxy]: EchoObject = this;
 
   // prettier-ignore
@@ -85,7 +85,7 @@ export class EchoObjectBase {
     return this._createProxy(this);
   }
 
-  // TODO(burdon): Document.
+  /** Used by toString */
   get [Symbol.toStringTag]() {
     return this[unproxy]?._schemaType?.name ?? 'EchoObject';
   }
@@ -98,9 +98,8 @@ export class EchoObjectBase {
     return this._json(new Set());
   }
 
-  // TODO(burdon): Option to reference objects by ID, and/or specify depth.
+  // TODO(burdon): Option to serialize referenced objects vs. show id.
   _json(visited: Set<EchoObjectBase>) {
-    // TODO(burdon): Important: do breadth first recursion to stabilize cycle detection/depth.
     return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
       const value = this._get(name);
       if (value !== undefined) {
@@ -114,7 +113,8 @@ export class EchoObjectBase {
               if (item instanceof EchoObjectBase) {
                 if (!visited.has(item)) {
                   visited.add(value);
-                  values.push(item[unproxy]._json(visited));
+                  // values.push(item[unproxy]._json(visited));
+                  values.push({ id: item[id] });
                 } else {
                   values.push(strip({ id: item[id] })); // TODO(burdon): Undefined if not saved.
                 }
@@ -130,7 +130,8 @@ export class EchoObjectBase {
             // Detect cycles.
             if (!visited.has(value)) {
               visited.add(value);
-              result[name] = value[unproxy]._json(visited);
+              // result[name] = value[unproxy]._json(visited);
+              result[name] = { id: value[id] };
             }
           } else {
             result[name] = value;
