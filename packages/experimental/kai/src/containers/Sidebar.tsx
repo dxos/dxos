@@ -7,23 +7,19 @@ import { AirplaneInFlight, AirplaneTakeoff, Bug, PlusCircle, Gear } from 'phosph
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useClient } from '@dxos/react-client';
+import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
+import { useClient, useNetworkMode } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { useSpace } from '../hooks';
 import { MembersList } from './MembersList';
 import { SpaceList } from './SpaceList';
 
-enum NetworkMode {
-  OFFLINE = 0,
-  ONLINE = 1
-}
-
 export const Sidebar = () => {
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
-  const [networkMode, setNetworkMode] = useState(NetworkMode.ONLINE);
+  const networkMode = useNetworkMode();
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -31,8 +27,8 @@ export const Sidebar = () => {
   };
 
   const handleAirplaneMode = async () => {
-    let newMode: NetworkMode;
-    switch (networkMode) {
+    let newMode: NetworkMode | undefined;
+    switch (networkMode?.mode) {
       case NetworkMode.OFFLINE: {
         newMode = NetworkMode.ONLINE;
         break;
@@ -42,8 +38,10 @@ export const Sidebar = () => {
         break;
       }
     }
+    if (!newMode) {
+      return;
+    }
     await client.setNetworkMode(newMode);
-    setNetworkMode(newMode);
   };
 
   return (
@@ -71,7 +69,7 @@ export const Sidebar = () => {
           <Gear className={getSize(6)} />
         </button>
         <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
-          {networkMode === NetworkMode.ONLINE ? (
+          {networkMode.mode === NetworkMode.ONLINE ? (
             <AirplaneTakeoff className={getSize(6)} />
           ) : (
             <AirplaneInFlight className={getSize(6)} />
