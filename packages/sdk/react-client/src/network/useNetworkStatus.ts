@@ -2,20 +2,30 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { useAsyncEffect } from '@dxos/react-async';
 
 import { useClient } from '../client';
 
-export const useNetworkStatus = () => {
+export const useNetworkStatus = (): NetworkStatus => {
   const client = useClient();
-  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>();
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus[]>(client.mesh.getNetworkStatus().value);
 
-  useAsyncEffect(async () => {
-    setNetworkStatus(client.mesh.networkStatus);
-  }, [client.mesh.networkStatus]);
+  useEffect(() => {
+    const result = client.mesh.getNetworkStatus();
+    setNetworkStatus(result.value);
 
-  return networkStatus;
+    const unsubscribe = result.subscribe(() => {
+      setNetworkStatus(result.value);
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
+
+  return networkStatus[0];
 };
