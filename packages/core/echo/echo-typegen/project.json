@@ -16,6 +16,19 @@
         "{options.outputPath}"
       ]
     },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-typegen/src/main.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/echo/echo-typegen/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
