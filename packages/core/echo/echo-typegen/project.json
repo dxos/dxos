@@ -52,7 +52,8 @@
     },
     "test": {
       "dependsOn": [
-        "^prebuild"
+        "^compile",
+        "prebuild"
       ],
       "executor": "@dxos/test:run",
       "options": {
@@ -63,7 +64,7 @@
           "packages/core/echo/echo-typegen/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/core/echo/echo-typegen/src/**/*"
+          "packages/core/echo/echo-typegen/**/*"
         ]
       },
       "outputs": [
