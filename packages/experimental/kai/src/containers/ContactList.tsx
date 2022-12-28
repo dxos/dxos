@@ -5,16 +5,16 @@
 import { PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useObjects, useSelection, useSpace } from '../hooks';
+import { useQuery, useSubscription, useSpace } from '../hooks';
 import { Address, Contact, createContact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
   const { database: db } = useSpace();
-  const contacts = useObjects(Contact.filter());
+  const contacts: Contact[] = useQuery(db, Contact.filter());
 
   const handleCreate = async () => {
     return createContact(db);
@@ -30,7 +30,7 @@ export const ContactList: FC<{}> = () => {
     <Card title='Contacts' className='bg-blue-400' menubar={<Menubar />}>
       <>
         {contacts.map((contact) => (
-          <div key={id(contact)} className='p-2 pl-3 border-b'>
+          <div key={contact[id]} className='p-2 pl-3 border-b'>
             <Person person={contact} />
           </div>
         ))}
@@ -40,7 +40,8 @@ export const ContactList: FC<{}> = () => {
 };
 
 export const Person: FC<{ person: Contact }> = ({ person }) => {
-  useSelection(person);
+  const { database: db } = useSpace();
+  useSubscription(db, person);
 
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
