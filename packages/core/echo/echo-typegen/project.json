@@ -16,6 +16,20 @@
         "{options.outputPath}"
       ]
     },
+    "compile": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/echo/echo/typegen/src/main.ts",
+        "outputPath": "packages/core/echo/echo/typegen/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/core/echo/echo/typegen/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -42,7 +56,8 @@
     },
     "test": {
       "dependsOn": [
-        "build"
+        "^compile",
+        "prebuild"
       ],
       "executor": "@dxos/test:run",
       "options": {
