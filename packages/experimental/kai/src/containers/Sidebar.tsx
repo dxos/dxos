@@ -38,7 +38,7 @@ export const Sidebar = () => {
         break;
       }
     }
-    if (!newMode) {
+    if (newMode === undefined) {
       return;
     }
     await client.mesh.changeNetworkStatus({ mode: newMode });
