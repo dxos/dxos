@@ -2,15 +2,12 @@
   "sourceRoot": "packages/core/echo/echo-typegen/src",
   "projectType": "library",
   "targets": {
-    "compile": {
+    "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/core/protocols/src/main.ts",
-        "outputPath": "packages/core/protocols/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/protocols/tsconfig.json"
+        "main": "packages/core/echo/echo-typegen/src/main.ts",
+        "outputPath": "packages/core/echo/echo-typegen/dist/types",
+        "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
