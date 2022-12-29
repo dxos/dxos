@@ -44,7 +44,6 @@ export class MeshProxy {
 
     this._ctx.onDispose(() => {
       networkStatusStream.close();
-      this._networkStatus = { state: ConnectionState.OFFLINE };
     });
   }
 
