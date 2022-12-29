@@ -41,7 +41,6 @@ export class MeshProxy {
 
     const networkStatusStream = this._serviceProvider.services.NetworkService.subscribeToNetworkStatus();
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
-      console.log('networkStatusStream.subscribe', networkStatus);
       this._networkStatus = networkStatus;
       this._networkStatusUpdated.emit();
     });
