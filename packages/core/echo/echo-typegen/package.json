@@ -15,8 +15,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "ts-node ./src/main.ts ./test/proto/test.proto ./test/proto/gen/test.ts",
-    "test": "mocha -r @swc-node/register '**/*.test.ts'"
+    "prebuild": "ts-node ./src/main.ts ./test/proto/test.proto ./test/proto/gen/test.ts"
   },
   "dependencies": {
     "@dxos/log": "workspace:*",

@@ -15,10 +15,6 @@
       ]
     },
     "prebuild": {
-      "dependsOn": [
-        "^build",
-        "^compile"
-      ],
       "executor": "nx:run-script",
       "options": {
         "script": "prebuild",
