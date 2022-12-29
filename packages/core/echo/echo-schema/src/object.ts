@@ -59,12 +59,12 @@ export class EchoObjectBase {
 
   // ID accessor.
   get [id](): string {
-    return this._id;
+    return this[unproxy]._id;
   }
 
   // Database property.
   get [db](): EchoDatabase | undefined {
-    return this._database;
+    return this[unproxy]._database;
   }
 
   // Proxy object.
