@@ -31,19 +31,20 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
-      '@dxos/client',
       '@dxos/config',
-      '@dxos/echo',
-      '@dxos/echo-schema',
       '@dxos/keys',
       '@dxos/log',
       '@dxos/protocols',
       '@dxos/protocols/proto/dxos/client/services',
-      '@dxos/react-appkit',
-      '@dxos/react-client',
-      '@dxos/react-list',
-      '@dxos/react-ui',
-      '@dxos/react-uikit'
+      '@dxos/protocols/proto/dxos/halo/credentials',
+      '@dxos/protocols/proto/dxos/rpc',
+      '@dxos/protocols/proto/dxos/mesh/bridge',
+      '@dxos/protocols/proto/dxos/client',
+      '@dxos/protocols/proto/dxos/config',
+      '@dxos/protocols/proto/dxos/halo/keys',
+      '@dxos/protocols/proto/dxos/echo/feed',
+      '@dxos/protocols/proto/dxos/halo/invitations',
+      '@dxos/protocols/proto/dxos/echo/model/object'
     ]
   },
   build: {

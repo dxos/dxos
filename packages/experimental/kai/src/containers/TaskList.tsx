@@ -6,11 +6,11 @@ import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
+import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSpace } from '../hooks';
-import { makeReactive } from '../hooks/selection';
+import { useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
@@ -18,11 +18,11 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   readonly = false,
   title = 'Tasks'
 }) => {
-  const { database: db } = useSpace();
-  const tasks = useQuery(db, Task.filter({ completed }));
+  const { space } = useSpace();
+  const tasks = useQuery(space, Task.filter({ completed }));
 
   const handleCreate = async () => {
-    await createTask(db);
+    await createTask(space.db2);
   };
 
   const Menubar = () => (

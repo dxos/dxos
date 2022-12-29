@@ -6,18 +6,22 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { createMemoryDatabase } from '@dxos/echo-db/testing';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
 
 import { EchoDatabase } from './database';
+import { DatabaseRouter } from './database-router';
 import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
 
-const createDatabase = async () => {
+const createDatabase = async (router = new DatabaseRouter()) => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const database = await createMemoryDatabase(modelFactory);
-  return new EchoDatabase(database);
+  const db = new EchoDatabase(router, database);
+  router.register(PublicKey.random(), db);
+  return db;
 };
 
 describe('EchoDatabase', () => {
@@ -110,13 +114,14 @@ describe('EchoDatabase', () => {
   });
 
   test('select', async () => {
-    const db = await createDatabase();
+    const router = new DatabaseRouter();
+    const db = await createDatabase(router);
 
     const task = new EchoObject();
     await db.save(task);
 
     let counter = 0;
-    const selection = db.createSubscription(() => {
+    const selection = router.createSubscription(() => {
       counter++;
     });
     selection.update([task]);
