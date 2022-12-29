@@ -16,7 +16,7 @@ export class MeshProxy {
   private readonly _networkStatusUpdated = new Event<void>();
 
   private _ctx?: Context;
-  private _networkStatus?: NetworkStatus;
+  private _networkStatus: NetworkStatus = { state: ConnectionState.OFFLINE };
 
   // prettier-ignore
   constructor(
@@ -24,10 +24,7 @@ export class MeshProxy {
   ) {}
 
   getNetworkStatus() {
-    if (!this._networkStatus) {
-      throw new Error('Not open');
-    }
-    return new ResultSet<NetworkStatus>(this._networkStatusUpdated, () => [this._networkStatus!]);
+    return new ResultSet<NetworkStatus>(this._networkStatusUpdated, () => [this._networkStatus]);
   }
 
   toJSON() {
@@ -47,7 +44,7 @@ export class MeshProxy {
 
     this._ctx.onDispose(() => {
       networkStatusStream.close();
-      this._networkStatus = undefined;
+      this._networkStatus = { state: ConnectionState.OFFLINE };
     });
   }
 
