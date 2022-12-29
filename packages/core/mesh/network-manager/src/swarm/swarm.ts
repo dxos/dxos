@@ -218,21 +218,21 @@ export class Swarm {
   // For debug purposes
   async goOffline() {
     await this._ctx.dispose();
+    [...this._peers.values()].forEach((peer) => {
+      peer.advertizing = false;
+    });
     await Promise.all([...this._peers.keys()].map((peerId) => this._closeConnection(peerId)));
   }
 
   // For debug purposes
   @synchronized
   async goOnline() {
-    await Promise.all(
-      [...this._peers.entries()].map(([peerId, peer]) => {
-        if (peer.connection || peer.initiating) {
-          return undefined;
-        }
-        return this._initiateConnection(peerId);
-      })
-    );
     this._ctx = new Context();
+
+    [...this._peers.values()].forEach((peer) => {
+      peer.advertizing = true;
+    });
+    this._topology.update();
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
