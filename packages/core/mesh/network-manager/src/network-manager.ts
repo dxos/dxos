@@ -204,7 +204,7 @@ export class NetworkManager {
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 
-  async setState(state: ConnectionState) {
+  async setConnectionState(state: ConnectionState) {
     if (state === this._connectionState) {
       return;
     }
