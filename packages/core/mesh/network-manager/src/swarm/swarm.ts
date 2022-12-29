@@ -226,8 +226,12 @@ export class Swarm {
 
   // For debug purposes
   @synchronized
-  async goOnline() {
+  async goOnline(waitFor?: Promise<void>) {
     this._ctx = new Context();
+
+    if (waitFor) {
+      await waitFor;
+    }
 
     [...this._peers.values()].forEach((peer) => {
       peer.advertizing = true;
