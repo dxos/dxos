@@ -9,13 +9,13 @@ import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSpace } from '../hooks';
-import { makeReactive } from '../hooks/reactive';
+import { useSpace } from '../hooks';
 import { Address, Contact, createContact } from '../proto';
+import { makeReactive, useQuery } from '@dxos/react-client';
 
 export const ContactList: FC<{}> = () => {
   const { space } = useSpace();
-  const contacts: Contact[] = useQuery(space.db2, Contact.filter());
+  const contacts: Contact[] = useQuery(space, Contact.filter());
 
   const handleCreate = async () => {
     return createContact(space.db2);

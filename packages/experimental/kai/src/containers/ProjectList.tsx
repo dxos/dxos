@@ -9,13 +9,14 @@ import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { makeReactive, useQuery, useSpace } from '../hooks';
+import { useSpace } from '../hooks';
 import { createProject, createTask, Project } from '../proto';
 import { TaskItem } from './TaskList';
+import { makeReactive, useQuery } from '@dxos/react-client';
 
 export const ProjectList: FC<{}> = () => {
   const { space } = useSpace();
-  const projects = useQuery(space.db2, Project.filter());
+  const projects = useQuery(space, Project.filter());
 
   const handleCreate = async () => {
     await createProject(space.db2);

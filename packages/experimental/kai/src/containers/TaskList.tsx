@@ -9,9 +9,9 @@ import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSpace } from '../hooks';
-import { makeReactive } from '../hooks/reactive';
+import { useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
+import { makeReactive, useQuery } from '@dxos/react-client';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
   completed = undefined,
@@ -19,7 +19,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   title = 'Tasks'
 }) => {
   const { space } = useSpace();
-  const tasks = useQuery(space.db2, Task.filter({ completed }));
+  const tasks = useQuery(space, Task.filter({ completed }));
 
   const handleCreate = async () => {
     await createTask(space.db2);

@@ -1,6 +1,6 @@
 import { Selection, SubscriptionHandle } from "@dxos/echo-schema";
-import { useClient } from "@dxos/react-client";
 import { useEffect, useState } from "react";
+import { useClient } from "../client";
 
 /**
  * Create reactive selection.
