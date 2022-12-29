@@ -4,19 +4,19 @@
 
 import React, { useEffect, useReducer, useState } from 'react';
 
-import { useSpace } from './context';
+import { useClient } from '../client';
 
 export const makeReactive =
   <P>(comp: React.FC<P>): React.FC<P> =>
   (props) => {
-    const { database: db } = useSpace();
+    const client = useClient();
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
     const [handle] = useState(() =>
-      db.createSubscription(() => {
+      client.echo.dbRouter.createSubscription(() => {
         forceUpdate();
       })
     );
-    const accessObserver = db.createAccessObserver();
+    const accessObserver = client.echo.dbRouter.createAccessObserver();
 
     useEffect(() => {
       if (!handle.subscribed) {

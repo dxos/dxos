@@ -7,6 +7,9 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
@@ -21,6 +24,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/object-model": "workspace:*",
+    "@dxos/util": "workspace:*",
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {

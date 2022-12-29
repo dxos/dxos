@@ -29,6 +29,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../echo-db"
     },
     {
