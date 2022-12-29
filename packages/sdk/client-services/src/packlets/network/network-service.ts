@@ -4,7 +4,7 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { NetworkManager } from '@dxos/network-manager';
-import { NetworkService, NetworkStatus, ChangeNetworkStatusRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { NetworkService, NetworkStatus, SetNetworkOptionsRequest } from '@dxos/protocols/proto/dxos/client/services';
 
 export class NetworkServiceImpl implements NetworkService {
   constructor(private readonly networkManager: NetworkManager) {}
@@ -18,7 +18,7 @@ export class NetworkServiceImpl implements NetworkService {
     });
   }
 
-  async changeNetworkStatus(request: ChangeNetworkStatusRequest) {
+  async setNetworkOptions(request: SetNetworkOptionsRequest) {
     await this.networkManager.setMode(request.mode);
   }
 }

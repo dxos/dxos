@@ -228,11 +228,11 @@ message NetworkStatus {
   NetworkMode mode = 1;
 }
 
-message ChangeNetworkStatusRequest {
+message SetNetworkOptionsRequest {
   NetworkMode mode = 1;
 }
 
 service NetworkService {
   rpc SubscribeNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-  rpc ChangeNetworkStatus(ChangeNetworkStatusRequest) returns (google.protobuf.Empty);
+  rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
 }

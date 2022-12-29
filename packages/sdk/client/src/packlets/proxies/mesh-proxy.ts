@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { ChangeNetworkStatusRequest, NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SetNetworkOptionsRequest, NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ResultSet } from '../..';
 
@@ -59,7 +59,7 @@ export class MeshProxy {
   /**
    * Set network mode. This is method to go to offline/online mode.
    */
-  async changeNetworkStatus(request: ChangeNetworkStatusRequest) {
-    return this._serviceProvider.services.NetworkService.changeNetworkStatus(request);
+  async changeNetworkStatus(request: SetNetworkOptionsRequest) {
+    return this._serviceProvider.services.NetworkService.setNetworkOptions(request);
   }
 }
