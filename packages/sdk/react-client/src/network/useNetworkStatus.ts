@@ -13,14 +13,14 @@ import { useClient } from '../client';
  */
 export const useNetworkStatus = (): NetworkStatus => {
   const client = useClient();
-  const [networkStatus, setNetworkStatus] = useState<NetworkStatus[]>(client.mesh.getNetworkStatus().value);
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(client.mesh.getNetworkStatus().value[0]);
 
   useEffect(() => {
     const result = client.mesh.getNetworkStatus();
-    setNetworkStatus(result.value);
+    setNetworkStatus(result.value[0]);
 
     const unsubscribe = result.subscribe(() => {
-      setNetworkStatus(result.value);
+      setNetworkStatus(result.value[0]);
     });
 
     return () => {
@@ -30,5 +30,5 @@ export const useNetworkStatus = (): NetworkStatus => {
     };
   }, []);
 
-  return networkStatus[0];
+  return networkStatus;
 };
