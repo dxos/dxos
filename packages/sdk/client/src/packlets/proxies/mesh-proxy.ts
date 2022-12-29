@@ -7,7 +7,7 @@ import { ClientServicesProvider } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { ResultSet } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { SetNetworkOptionsRequest, NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
  * Public API for MESH services.
@@ -55,7 +55,11 @@ export class MeshProxy {
     await this._ctx?.dispose();
   }
 
-  async setNetworkOptions(request: SetNetworkOptionsRequest) {
-    return this._serviceProvider.services.NetworkService.setNetworkOptions(request);
+  async goOffline() {
+    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state: ConnectionState.OFFLINE });
+  }
+
+  async goOnline() {
+    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state: ConnectionState.ONLINE });
   }
 }

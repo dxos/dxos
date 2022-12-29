@@ -27,19 +27,15 @@ export const Sidebar = () => {
   };
 
   const handleAirplaneMode = async () => {
-    let newState: ConnectionState | undefined;
     switch (connectionState) {
       case ConnectionState.OFFLINE: {
-        newState = ConnectionState.ONLINE;
+        await client.mesh.goOnline();
         break;
       }
       case ConnectionState.ONLINE: {
-        newState = ConnectionState.OFFLINE;
+        await client.mesh.goOffline();
         break;
       }
-    }
-    if (newState !== undefined) {
-      await client.mesh.setNetworkOptions({ state: newState });
     }
   };
 
