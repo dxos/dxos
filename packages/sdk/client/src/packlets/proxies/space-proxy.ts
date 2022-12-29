@@ -12,7 +12,7 @@ import {
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
-import { EchoDatabase } from '@dxos/echo-schema';
+import { DatabaseRouter, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -109,6 +109,7 @@ export class SpaceProxy implements Space {
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _space: SpaceType,
+    databaseRouter: DatabaseRouter,
     memberKey: PublicKey // TODO(burdon): Change to identityKey (see optimistic mutations)?
   ) {
     // TODO(burdon): Don't shadow properties.
@@ -125,7 +126,8 @@ export class SpaceProxy implements Space {
       new DatabaseBackendProxy(this._clientServices.services.DataService, this._key),
       memberKey
     );
-    this._db2 = new EchoDatabase(this._database);
+    this._db2 = new EchoDatabase(databaseRouter, this._database);
+    databaseRouter.register(this._key, this._db2);
     // } else if (false) {
     //   // TODO(wittjosiah): Reconcile service provider host with interface.
     //   const space = (this._serviceProvider as any).echo.getSpace(this._key) ?? failUndefined();

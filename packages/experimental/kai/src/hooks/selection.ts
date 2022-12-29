@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { useClient } from '@dxos/react-client';
 import React, { useEffect, useReducer, useState } from 'react';
 
 import { useSpace } from './context';
@@ -9,15 +10,14 @@ import { useSpace } from './context';
 export const makeReactive =
   <P>(comp: React.FC<P>): React.FC<P> =>
   (props) => {
-    const { space } = useSpace();
-    const db = space.db2;
+    const client = useClient();
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
     const [handle] = useState(() =>
-      db.createSubscription(() => {
+      client.echo.dbRouter.createSubscription(() => {
         forceUpdate();
       })
     );
-    const accessObserver = db.createAccessObserver();
+    const accessObserver = client.echo.dbRouter.createAccessObserver();
 
     useEffect(() => {
       if (!handle.subscribed) {

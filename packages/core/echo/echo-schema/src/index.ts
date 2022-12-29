@@ -7,3 +7,4 @@ export * from './defs';
 export * from './object';
 export * from './ordered-set';
 export * from './schema';
+export * from './database-router';
