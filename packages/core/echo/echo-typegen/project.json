@@ -20,6 +20,7 @@
           "packages/core/echo/echo-typegen/src/main.ts"
         ],
         "outputPath": "packages/core/echo/echo-typegen/dist/lib",
+        "injectGlobals": true,
         "platforms": ["node"]
       },
       "outputs": [

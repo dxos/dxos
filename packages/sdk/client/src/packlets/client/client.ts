@@ -12,11 +12,10 @@ import { inspectObject } from '@dxos/debug';
 import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
 import { Status } from '@dxos/protocols/proto/dxos/client';
-import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
-import { EchoProxy, HaloProxy } from '../proxies';
+import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
 import { EXPECTED_CONFIG_VERSION } from './config';
 import { SpaceSerializer } from './serializer';
 import { fromIFrame } from './utils';
@@ -49,6 +48,7 @@ export class Client {
   private readonly _services: ClientServicesProvider;
   private readonly _halo: HaloProxy;
   private readonly _echo: EchoProxy;
+  private readonly _mesh: MeshProxy;
 
   private _initialized = false;
 
@@ -66,6 +66,7 @@ export class Client {
 
     this._halo = new HaloProxy(this._services);
     this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
+    this._mesh = new MeshProxy(this._services);
 
     // TODO(burdon): Reconcile with Config.sanitizer.
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
@@ -83,7 +84,8 @@ export class Client {
     return {
       initialized: this.initialized,
       echo: this.echo,
-      halo: this.halo
+      halo: this.halo,
+      mesh: this.mesh
     };
   }
 
@@ -118,11 +120,9 @@ export class Client {
     return this._echo;
   }
 
-  /**
-   * Returns the current network mode.
-   */
-  get networkMode() {
-    return this._services.services.NetworkService.getNetworkMode();
+  get mesh(): MeshProxy {
+    assert(this._initialized, 'Client not initialized.');
+    return this._mesh;
   }
 
   /**
@@ -146,6 +146,7 @@ export class Client {
 
     await this._halo.open();
     await this._echo.open();
+    await this._mesh.open();
 
     this._initialized = true;
   }
@@ -162,6 +163,7 @@ export class Client {
 
     await this._halo.close();
     await this._echo.close();
+    await this._mesh.close();
 
     await this._services.close();
 
@@ -173,13 +175,6 @@ export class Client {
    */
   async getStatus(): Promise<Status> {
     return this._services.services?.SystemService.getStatus();
-  }
-
-  /**
-   * Set network mode. This is method to go to offline/online mode.
-   */
-  async setNetworkMode(mode: NetworkMode) {
-    return this._services.services?.NetworkService.setNetworkMode({ mode });
   }
 
   /**
