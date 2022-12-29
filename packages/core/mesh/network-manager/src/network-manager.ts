@@ -8,6 +8,7 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
@@ -71,6 +72,10 @@ export class NetworkManager {
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
+
+  private _connectionState = ConnectionState.ONLINE;
+  public readonly connectionStateChanged = new Event<ConnectionState>();
+
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -103,6 +108,10 @@ export class NetworkManager {
     return this._signalManager;
   }
 
+  get connectionState() {
+    return this._connectionState;
+  }
+
   // TODO(burdon): Reconcile with "discovery_key".
   get topics() {
     return Array.from(this._swarms.keys());
@@ -114,6 +123,11 @@ export class NetworkManager {
 
   getSwarm(topic: PublicKey): Swarm | undefined {
     return this._swarms.get(topic);
+  }
+
+  async open() {
+    await this._messenger.open();
+    await this._signalManager.open();
   }
 
   async close() {
@@ -130,7 +144,6 @@ export class NetworkManager {
   /**
    * Join the swarm.
    */
-  // TODO(burdon): Join/Open? Swarm abstraction?
   async joinSwarm({
     topic,
     peerId,
@@ -189,5 +202,31 @@ export class NetworkManager {
 
     await this.topicsUpdated.emit();
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
+  }
+
+  async setState(state: ConnectionState) {
+    if (state === this._connectionState) {
+      return;
+    }
+
+    switch (state) {
+      case ConnectionState.OFFLINE: {
+        this._connectionState = state;
+        // go offline
+        await this._messenger.close();
+        await this._signalManager.close();
+        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
+        break;
+      }
+      case ConnectionState.ONLINE: {
+        this._connectionState = state;
+        // go online
+        this._messenger.open();
+        await this._signalManager.open();
+        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
+        break;
+      }
+    }
+    this.connectionStateChanged.emit(this._connectionState);
   }
 }

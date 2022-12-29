@@ -920,7 +920,7 @@ importers:
       '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
@@ -964,7 +964,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1297,7 +1297,7 @@ importers:
 
   packages/common/util:
     specifiers:
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/node-std': workspace:*
@@ -1314,7 +1314,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/hypercore': workspace:*
@@ -1371,7 +1371,7 @@ importers:
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
 
-  packages/core/echo/echo-db2:
+  packages/core/echo/echo-schema:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
@@ -1394,6 +1394,35 @@ importers:
       '@dxos/object-model': link:../object-model
       protobufjs: 6.11.3
     devDependencies:
+      wait-for-expect: 3.0.2
+
+  packages/core/echo/echo-typegen:
+    specifiers:
+      '@dxos/echo-schema': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@swc-node/register': ^1.5.4
+      '@swc/core': ^1.3.21
+      '@types/mocha': ^8.2.2
+      '@types/node': ^18.11.9
+      mocha: ^8.4.0
+      protobufjs: ^6.9.0
+      ts-node: 10.9.1
+      typescript: ^4.8.4
+      wait-for-expect: ^3.0.2
+    dependencies:
+      '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
+      protobufjs: 6.11.3
+    devDependencies:
+      '@dxos/echo-schema': link:../echo-schema
+      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
+      '@swc/core': 1.3.21
+      '@types/mocha': 8.2.3
+      '@types/node': 18.11.9
+      mocha: 8.4.0
+      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
+      typescript: 4.8.4
       wait-for-expect: 3.0.2
 
   packages/core/echo/messenger-model:
@@ -1509,7 +1538,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keyring': workspace:*
@@ -1584,7 +1613,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1654,7 +1683,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -2681,10 +2710,15 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/echo-db2': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/gem-core': workspace:*
+      '@dxos/gem-spore': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -2693,6 +2727,7 @@ importers:
       '@dxos/react-uikit': workspace:*
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
+      '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       clsx: ^1.1.1
@@ -2700,7 +2735,9 @@ importers:
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
+      react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
+      react-resize-detector: ^7.1.2
       react-router-dom: ^6.3.0
       tailwindcss: ^3.1.8
       vite: 3.2.5
@@ -2712,8 +2749,13 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-db2': link:../../core/echo/echo-db2
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/gem-core': link:../gem-core
+      '@dxos/gem-spore': link:../gem-spore
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
@@ -2723,13 +2765,16 @@ importers:
       clsx: 1.2.1
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
+      react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/client-testing': link:../client-testing
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
+      '@types/react-copy-to-clipboard': 5.0.4
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       faker: 5.5.3
@@ -3128,7 +3173,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/node-std': workspace:*
@@ -3305,8 +3350,9 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/errors': workspace:*
@@ -3330,6 +3376,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
@@ -3360,7 +3407,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
-      '@dxos/crypto': ''
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/errors': workspace:*
@@ -3764,6 +3811,8 @@ importers:
   tools/executors/protobuf-compiler:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protobuf-test': workspace:*
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
@@ -3781,6 +3830,8 @@ importers:
       ts-node: 10.9.1
       typescript: ^4.8.4
     dependencies:
+      '@dxos/log': link:../../../packages/common/log
+      '@dxos/node-std': link:../../../packages/common/node-std
       argparse: 2.0.1
       chalk: 4.1.2
       glob: 7.1.7
@@ -8084,7 +8135,7 @@ packages:
       '@polkadot/types': 4.17.1
       '@polkadot/types-known': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
     dev: false
 
   /@polkadot/networks/6.11.1:
@@ -8164,8 +8215,30 @@ packages:
       '@babel/runtime': 7.19.4
       '@polkadot/metadata': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@polkadot/x-rxjs': 6.11.1
+    dev: false
+
+  /@polkadot/util-crypto/6.11.1:
+    resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@babel/runtime': 7.19.4
+      '@polkadot/networks': 6.11.1
+      '@polkadot/util': 6.11.1
+      '@polkadot/wasm-crypto': 4.6.1_7agzzbeuhezrwkh2zmxh2lt2xi
+      '@polkadot/x-randomvalues': 6.11.1
+      base-x: 3.0.9
+      base64-js: 1.5.1
+      blakejs: 1.2.1
+      bn.js: 4.12.0
+      create-hash: 1.2.0
+      elliptic: 6.5.4
+      hash.js: 1.1.7
+      js-sha3: 0.8.0
+      scryptsy: 2.1.0
+      tweetnacl: 1.0.3
+      xxhashjs: 0.2.2
     dev: false
 
   /@polkadot/util-crypto/6.11.1_@polkadot+util@6.11.1:
@@ -13436,7 +13509,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.18.6_@babel+core@7.19.3
       magic-string: 0.26.7
       react-refresh: 0.14.0
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -33915,7 +33988,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

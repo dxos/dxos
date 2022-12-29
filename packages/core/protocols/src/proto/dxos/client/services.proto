@@ -217,3 +217,22 @@ service SpaceInvitationsService {
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
 }
+
+enum ConnectionState {
+  OFFLINE = 0;
+  ONLINE = 1;
+}
+
+// TODO(mykola): Broden API.
+message NetworkStatus {
+  ConnectionState state = 1;
+}
+
+message SetNetworkOptionsRequest {
+  ConnectionState state = 1;
+}
+
+service NetworkService {
+  rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+  rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
+}

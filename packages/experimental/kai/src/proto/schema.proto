@@ -8,7 +8,6 @@ syntax = "proto3";
 
 package kai.example.tasks;
 
-// TODO(burdon): Not generated.
 message Address {
   string city = 1;
   string state = 2;
@@ -18,21 +17,20 @@ message Address {
 message Contact {
   option (object) = true;
 
-  string id = 1;
-  string name = 2;
-  string username = 3;
-  string email = 4;
-  Address address = 5;
+  string name = 1;
+  string username = 2;
+  string email = 3;
+  Address address = 4;
 }
 
 message Task {
   option (object) = true;
 
-  string id = 1;
-  string title = 2;
-  int32 count = 3;
-  bool completed = 4;
-  Contact assignee = 5;
+  string title = 1;
+  bool completed = 2;
+  Contact assignee = 3;
+  Task previous = 4;
+  repeated Task sub_tasks = 5;
 }
 
 message Project {

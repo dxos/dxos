@@ -5,6 +5,7 @@
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
@@ -146,6 +147,14 @@ export class TestPeer {
     const swarm = new TestSwarmConnection(this, topic);
     this._swarms.set(topic, swarm);
     return swarm;
+  }
+
+  async goOffline() {
+    await this._networkManager.setState(ConnectionState.OFFLINE);
+  }
+
+  async goOnline() {
+    await this._networkManager.setState(ConnectionState.ONLINE);
   }
 }
 

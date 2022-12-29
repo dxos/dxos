@@ -2,33 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
 import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { EchoDatabase, id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { makeReactive, useDatabase, useObjects, useSelection } from '../hooks';
-import { Contact, Task } from '../proto';
+import { useQuery, useSpace } from '../hooks';
+import { createTask, Task } from '../proto';
+import { makeReactive } from '../hooks/selection';
 
-export const createTask = async (db: EchoDatabase) => {
-  const contacts = db.query(Contact.filter()).getObjects();
-  const contact =
-    faker.datatype.boolean() && contacts.length ? contacts[Math.floor(Math.random() * contacts.length)] : undefined;
-
-  return await db.save(
-    new Task({
-      title: faker.lorem.sentence(2),
-      assignee: contact
-    })
-  );
-};
-
-export const TaskList: FC<{}> = () => {
-  const db = useDatabase();
-  const tasks = useObjects(Task.filter());
+export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
+  completed = undefined,
+  readonly = false,
+  title = 'Tasks'
+}) => {
+  const { database: db } = useSpace();
+  const tasks = useQuery(db, Task.filter({ completed }));
 
   const handleCreate = async () => {
     await createTask(db);
@@ -40,25 +31,26 @@ export const TaskList: FC<{}> = () => {
     </button>
   );
 
+  // TODO(burdon): Delete row.
+  // TODO(burdon): Ordered list (linked list?)
+  // TODO(burdon): Split current task if pressing Enter in the middle.
+  // TODO(burdon): Delete key to potentially remove task.
+  // TODO(burdon): Tab to indent.
+  // TODO(burdon): Track index position; move up/down.
+  // TODO(burdon): Scroll into view.
+  // TODO(burdon): Highlight active row.
   return (
-    <Card title='Tasks' color='bg-teal-400' menubar={<Menubar />}>
+    <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
       <div className='p-3'>
         {tasks.map((task) => (
-          <TaskItem key={id(task)} task={task} onCreateTask={handleCreate} />
+          <TaskItem key={task[id]} task={task} />
         ))}
       </div>
     </Card>
   );
 };
 
-export const TaskItem = makeReactive<{ task: Task; onCreateTask?: () => void }>(({ task, onCreateTask }) => {
-  // TODO(burdon): Insert item on enter and focus new item.
-  // const handleKeyDown = (event: KeyboardEvent) => {
-  //   if (event.key === 'Enter') {
-  //     onCreateTask?.();
-  //   }
-  // };
-
+export const TaskItem = makeReactive<{ task: Task }>(({ task }) => {
   return (
     <Table
       sidebar={
@@ -74,7 +66,6 @@ export const TaskItem = makeReactive<{ task: Task; onCreateTask?: () => void }>(
           className='w-full outline-0'
           spellCheck={false}
           value={task.title}
-          // onKeyDown={handleKeyDown}
           onChange={(value) => (task.title = value)}
         />
       }

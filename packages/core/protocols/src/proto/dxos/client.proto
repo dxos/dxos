@@ -190,7 +190,7 @@ message SpaceMember {
 
   dxos.keys.PublicKey identity_key = 1;
   optional Profile profile = 2;
-  PresenceState presence_state = 3;
+  PresenceState presence = 3;
 }
 
 message SubscribeSpaceResponse {

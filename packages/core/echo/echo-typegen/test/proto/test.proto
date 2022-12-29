@@ -1,0 +1,33 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package example.test;
+
+message Address {
+  string city = 1;
+  string state = 2;
+  string zip = 3;
+}
+
+message Contact {
+  option (object) = true;
+
+  string name = 1;
+  string username = 2;
+  string email = 3;
+  Address address = 4;
+  repeated Task tasks = 5;
+}
+
+message Task {
+  option (object) = true;
+
+  string title = 1;
+  bool completed = 2;
+  Contact assignee = 3;
+  Task previous = 4;
+  repeated Task sub_tasks = 5;
+}

@@ -1,0 +1,79 @@
+{
+  "sourceRoot": "packages/core/echo/echo-typegen/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "dependsOn": [
+        "prebuild"
+      ],
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/echo/echo-typegen/src/index.ts",
+        "outputPath": "packages/core/echo/echo-typegen/dist/types",
+        "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-typegen/src/main.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/echo/echo-typegen/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/echo/echo-typegen/src/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "packages/core/echo/echo-typegen/test/proto/gen"
+      ]
+    },
+    "test": {
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/core/echo/echo-typegen",
+        "outputPath": "tmp/mocha/packages/core/echo/echo-typegen",
+        "resultsPath": "test-results/packages/core/echo/echo-typegen",
+        "testPatterns": [
+          "packages/core/echo/echo-typegen/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/echo/echo-typegen/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  }
+}

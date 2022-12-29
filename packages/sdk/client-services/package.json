@@ -25,7 +25,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/errors": "workspace:*",

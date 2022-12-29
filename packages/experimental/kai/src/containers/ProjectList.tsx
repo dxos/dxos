@@ -2,28 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
 import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { id } from '@dxos/echo-db2';
+import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
 import { makeReactive, useDatabase, useObjects, useSelection } from '../hooks';
 import { Project } from '../proto';
 import { createTask, TaskItem } from './TaskList';
+import { useQuery, useSubscription, useSpace } from '../hooks';
+import { createProject, createTask, Project } from '../proto';
+import { TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
-  const db = useDatabase();
-  const projects = useObjects(Project.filter());
+  const { database: db } = useSpace();
+  const projects = useQuery(db, Project.filter());
 
   const handleCreate = async () => {
-    await db.save(
-      new Project({
-        title: faker.commerce.productAdjective() + ' ' + faker.commerce.product()
-      })
-    );
+    await createProject(db);
   };
 
   const Menubar = () => (
@@ -33,10 +31,10 @@ export const ProjectList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Projects' menubar={<Menubar />}>
+    <Card title='Projects' className='bg-cyan-400' menubar={<Menubar />}>
       <>
         {projects.map((project) => (
-          <div key={id(project)} className='border-b'>
+          <div key={project[id]} className='border-b'>
             <ProjectItem project={project} />
           </div>
         ))}
@@ -78,7 +76,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           <h2 className='pl-3 pt-1 text-xs'>Tasks</h2>
           <div className='p-3 pt-1'>
             {project.tasks?.map((task) => (
-              <TaskItem key={id(task)} task={task} />
+              <TaskItem key={task[id]} task={task} />
             ))}
           </div>
         </div>
@@ -89,7 +87,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           <h2 className='pl-3 text-xs'>Team</h2>
           <div className='p-3 pt-1'>
             {project.team?.map((contact) => (
-              <Table key={id(contact)} sidebar={<User />} header={<div>{contact.name}</div>} />
+              <Table key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
             ))}
           </div>
         </div>

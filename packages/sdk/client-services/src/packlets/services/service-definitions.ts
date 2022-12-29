@@ -8,7 +8,8 @@ import {
   HaloInvitationsService,
   SpaceInvitationsService,
   SpacesService,
-  DevicesService
+  DevicesService,
+  NetworkService
 } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
@@ -24,6 +25,8 @@ export type ClientServices = {
 
   SpaceInvitationsService: SpaceInvitationsService;
   SpacesService: SpacesService;
+
+  NetworkService: NetworkService;
 
   // TODO(burdon): Deprecated.
   SpaceService: SpaceService;
@@ -53,6 +56,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   DevicesService: schema.getService('dxos.client.services.DevicesService'),
   SpaceInvitationsService: schema.getService('dxos.client.services.SpaceInvitationsService'),
   SpacesService: schema.getService('dxos.client.services.SpacesService'),
+  NetworkService: schema.getService('dxos.client.services.NetworkService'),
 
   // TODO(burdon): Deprecated.
   SpaceService: schema.getService('dxos.client.SpaceService'),

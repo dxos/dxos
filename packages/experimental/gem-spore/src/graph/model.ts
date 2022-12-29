@@ -9,8 +9,10 @@ import { emptyGraph, GraphData, GraphNode, GraphLink } from './types';
 /**
  * Graph accessor.
  */
+// TODO(burdon): Don't require base class for ID accessor.
 export interface GraphModel<T extends GraphNode> {
   get graph(): GraphData<T>;
+
   subscribe(callback: (graph: GraphData<T>) => void): () => void;
 }
 
@@ -58,6 +60,7 @@ export class GraphBuilder<T extends GraphNode> {
       if (source && link.source === id) {
         return true;
       }
+
       if (target && link.target === id) {
         return true;
       }
