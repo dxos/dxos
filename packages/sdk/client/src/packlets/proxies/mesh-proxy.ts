@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Event } from '@dxos/async';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Context } from '@dxos/context';
@@ -26,7 +24,9 @@ export class MeshProxy {
   ) {}
 
   getNetworkStatus() {
-    assert(this._networkStatus, 'NetworkStatus is not initialized.');
+    if (!this._networkStatus) {
+      throw new Error('Not open');
+    }
     return new ResultSet<NetworkStatus>(this._networkStatusUpdated, () => [this._networkStatus!]);
   }
 
