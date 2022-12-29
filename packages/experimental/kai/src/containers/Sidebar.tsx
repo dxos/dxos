@@ -38,10 +38,9 @@ export const Sidebar = () => {
         break;
       }
     }
-    if (newMode === undefined) {
-      return;
+    if (newMode !== undefined) {
+      await client.mesh.setNetworkOptions({ mode: newMode });
     }
-    await client.mesh.setNetworkOptions({ mode: newMode });
   };
 
   return (
