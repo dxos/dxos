@@ -35,8 +35,6 @@ export interface SubscriptionHandle {
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
-  private readonly _accessObserverStack: AccessObserver[] = [];
-
   constructor(
     private readonly _router: DatabaseRouter,
     /**
