@@ -39,7 +39,7 @@ export class MeshProxy {
   async open() {
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
-    const networkStatusStream = this._serviceProvider.services.NetworkService.subscribeNetworkStatus();
+    const networkStatusStream = this._serviceProvider.services.NetworkService.subscribeToNetworkStatus();
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
       console.log('networkStatusStream.subscribe', networkStatus);
       this._networkStatus = networkStatus;

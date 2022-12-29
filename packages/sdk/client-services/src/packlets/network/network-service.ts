@@ -9,7 +9,7 @@ import { NetworkService, NetworkStatus, SetNetworkOptionsRequest } from '@dxos/p
 export class NetworkServiceImpl implements NetworkService {
   constructor(private readonly networkManager: NetworkManager) {}
 
-  subscribeNetworkStatus() {
+  subscribeToNetworkStatus() {
     return new Stream<NetworkStatus>(({ next }) => {
       const unsubscribe = this.networkManager.networkModeChanged.on((mode) => next({ mode }));
       next({ mode: this.networkManager.networkMode });

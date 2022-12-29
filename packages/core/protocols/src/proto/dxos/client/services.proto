@@ -233,6 +233,6 @@ message SetNetworkOptionsRequest {
 }
 
 service NetworkService {
-  rpc SubscribeNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+  rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
   rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
 }
