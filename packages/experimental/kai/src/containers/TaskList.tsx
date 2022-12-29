@@ -9,7 +9,8 @@ import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSubscription, useSpace } from '../hooks';
+import { useQuery, useSpace } from '../hooks';
+import { makeReactive } from '../hooks/selection';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
@@ -49,10 +50,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   );
 };
 
-export const TaskItem: FC<{ task: Task }> = ({ task }) => {
-  const { database: db } = useSpace();
-  useSubscription(db, [task, task.assignee]);
-
+export const TaskItem = makeReactive<{ task: Task }>(({ task }) => {
   return (
     <Table
       sidebar={
@@ -77,4 +75,4 @@ export const TaskItem: FC<{ task: Task }> = ({ task }) => {
       </div>
     </Table>
   );
-};
+});
