@@ -7,17 +7,17 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Context } from '@dxos/context';
+import { ResultSet } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { SetNetworkOptionsRequest, NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
-
-import { ResultSet } from '../..';
 
 /**
  * Public API for MESH services.
  */
 export class MeshProxy {
-  private _ctx?: Context;
   private readonly _networkStatusUpdated = new Event<void>();
+
+  private _ctx?: Context;
   private _networkStatus?: NetworkStatus;
 
   // prettier-ignore
