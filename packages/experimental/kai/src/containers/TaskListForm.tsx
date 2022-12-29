@@ -7,6 +7,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { EchoDatabase, EchoObject } from '@dxos/echo-schema';
 
 import { useSpace } from '../hooks';
+import { Task } from '../proto';
 
 //
 // TODO(burdon): Soft delete.
@@ -18,28 +19,12 @@ import { useSpace } from '../hooks';
 
 /**
  * Mutation batch.
+ * Adds mutations to queue.
+ * Any uninitialized objects are initialized (replacing "save") when committed.
  */
 class Transaction {
   constructor(private readonly _database: EchoDatabase) {}
-
-  get db() {
-    return this._database;
-  }
-
-  /**
-   * Adds mutations to queue.
-   * Any uninitialized objects are initialized (replacing "save") when committed.
-   */
-  update(callback: () => void) {}
-
-  /**
-   * Commit clones to db.
-   */
   commit() {}
-
-  /**
-   * Dispose of clones.
-   */
   cancel() {}
 }
 
@@ -57,19 +42,17 @@ const useTransaction = (db: EchoDatabase): Transaction => {
 };
 
 /**
- * Clone objects.
+ * Clone objects scoped by transaction.
+ * Pass in existing items or database query.
  */
-// TODO(burdon): Ugly.
-const useObjects = (tx: Transaction, id: string): EchoObject[] => {
+const useObjects = (tx: Transaction, query: any): EchoObject[] => {
   return [{} as EchoObject];
 };
 
-export const TaskListForm: FC<{ taskId: string; onClose: () => void }> = ({ taskId, onClose }) => {
-  const { database: db } = useSpace();
-  const tx = useTransaction(db);
-
-  // TODO(burdon): Needs to be a scoped object.
-  const [task] = useObjects(tx, taskId);
+export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task: currentTask, onClose }) => {
+  const { database } = useSpace();
+  const tx = useTransaction(database);
+  const [task] = useObjects(tx, [currentTask]); // TODO(burdon): Ugly.
 
   const handleClose = (commit: boolean) => {
     if (commit) {
@@ -83,17 +66,8 @@ export const TaskListForm: FC<{ taskId: string; onClose: () => void }> = ({ task
 
   return (
     <div>
-      <input
-        type='checkbox'
-        checked={!!task.completed}
-        onChange={() => tx.update(() => (task.completed = !task.completed))}
-      />
-      <input
-        type='text'
-        value={task.title}
-        placeholder='Enter text'
-        onChange={(event) => tx.update(() => (task.title = event.target.value))}
-      />
+      <input type='checkbox' checked={!!task.completed} onChange={() => (task.completed = !task.completed)} />
+      <input type='text' value={task.title} onChange={(event) => (task.title = event.target.value)} />
       <div>
         <button onClick={() => handleClose(true)}>Save</button>
         <button onClick={() => handleClose(false)}>Cancel</button>
