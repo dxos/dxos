@@ -122,12 +122,14 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     //
     // Going offline and back online
     //
+    const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor((event) => !!event.swarmEvent.peerLeft);
     await peer1.goOffline();
+    await peerLeft;
     await peer1.goOnline();
 
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic1);
-  });
+  }).timeout(2_000);
 
   // TODO(mykola): broken.
   test.skip('many peers and connections', async () => {
