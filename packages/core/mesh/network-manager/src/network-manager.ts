@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
-import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
@@ -73,8 +73,8 @@ export class NetworkManager {
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
 
-  private _networkMode = NetworkMode.ONLINE;
-  public readonly networkModeChanged = new Event<NetworkMode>();
+  private _connectionState = ConnectionState.ONLINE;
+  public readonly connectionStateChanged = new Event<ConnectionState>();
 
   private readonly _connectionLog?: ConnectionLog;
 
@@ -108,8 +108,8 @@ export class NetworkManager {
     return this._signalManager;
   }
 
-  get networkMode() {
-    return this._networkMode;
+  get connectionState() {
+    return this._connectionState;
   }
 
   // TODO(burdon): Reconcile with "discovery_key".
@@ -204,22 +204,22 @@ export class NetworkManager {
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 
-  async setMode(mode: NetworkMode) {
-    if (mode === this._networkMode) {
+  async setState(state: ConnectionState) {
+    if (state === this._connectionState) {
       return;
     }
 
-    switch (mode) {
-      case NetworkMode.OFFLINE: {
-        this._networkMode = mode;
+    switch (state) {
+      case ConnectionState.OFFLINE: {
+        this._connectionState = state;
         // go offline
         await this._messenger.close();
         await this._signalManager.close();
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
         break;
       }
-      case NetworkMode.ONLINE: {
-        this._networkMode = mode;
+      case ConnectionState.ONLINE: {
+        this._connectionState = state;
         // go online
         this._messenger.open();
         await this._signalManager.open();
@@ -227,6 +227,6 @@ export class NetworkManager {
         break;
       }
     }
-    this.networkModeChanged.emit(this._networkMode);
+    this.connectionStateChanged.emit(this._connectionState);
   }
 }

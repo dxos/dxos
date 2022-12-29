@@ -218,18 +218,18 @@ service SpaceInvitationsService {
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
 }
 
-enum NetworkMode {
+enum ConnectionState {
   OFFLINE = 0;
   ONLINE = 1;
 }
 
 // TODO(mykola): Broden API.
 message NetworkStatus {
-  NetworkMode mode = 1;
+  ConnectionState state = 1;
 }
 
 message SetNetworkOptionsRequest {
-  NetworkMode mode = 1;
+  ConnectionState state = 1;
 }
 
 service NetworkService {

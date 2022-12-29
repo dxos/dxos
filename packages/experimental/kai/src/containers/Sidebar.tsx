@@ -7,7 +7,7 @@ import { AirplaneInFlight, AirplaneTakeoff, Bug, PlusCircle, Gear } from 'phosph
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
@@ -19,7 +19,7 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
-  const { mode: networkMode } = useNetworkStatus();
+  const { state: connectionState } = useNetworkStatus();
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -27,19 +27,19 @@ export const Sidebar = () => {
   };
 
   const handleAirplaneMode = async () => {
-    let newMode: NetworkMode | undefined;
-    switch (networkMode) {
-      case NetworkMode.OFFLINE: {
-        newMode = NetworkMode.ONLINE;
+    let newState: ConnectionState | undefined;
+    switch (connectionState) {
+      case ConnectionState.OFFLINE: {
+        newState = ConnectionState.ONLINE;
         break;
       }
-      case NetworkMode.ONLINE: {
-        newMode = NetworkMode.OFFLINE;
+      case ConnectionState.ONLINE: {
+        newState = ConnectionState.OFFLINE;
         break;
       }
     }
-    if (newMode !== undefined) {
-      await client.mesh.setNetworkOptions({ mode: newMode });
+    if (newState !== undefined) {
+      await client.mesh.setNetworkOptions({ state: newState });
     }
   };
 
@@ -68,7 +68,7 @@ export const Sidebar = () => {
           <Gear className={getSize(6)} />
         </button>
         <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
-          {networkMode === NetworkMode.ONLINE ? (
+          {connectionState === ConnectionState.ONLINE ? (
             <AirplaneTakeoff className={getSize(6)} />
           ) : (
             <AirplaneInFlight className={getSize(6)} />

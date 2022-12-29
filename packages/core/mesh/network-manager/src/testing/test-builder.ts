@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
-import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
@@ -150,11 +150,11 @@ export class TestPeer {
   }
 
   async goOffline() {
-    await this._networkManager.setMode(NetworkMode.OFFLINE);
+    await this._networkManager.setState(ConnectionState.OFFLINE);
   }
 
   async goOnline() {
-    await this._networkManager.setMode(NetworkMode.ONLINE);
+    await this._networkManager.setState(ConnectionState.ONLINE);
   }
 }
 

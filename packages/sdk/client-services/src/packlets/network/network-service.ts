@@ -11,14 +11,14 @@ export class NetworkServiceImpl implements NetworkService {
 
   subscribeToNetworkStatus() {
     return new Stream<NetworkStatus>(({ next }) => {
-      const unsubscribe = this.networkManager.networkModeChanged.on((mode) => next({ mode }));
-      next({ mode: this.networkManager.networkMode });
+      const unsubscribe = this.networkManager.connectionStateChanged.on((state) => next({ state }));
+      next({ state: this.networkManager.connectionState });
 
       return unsubscribe;
     });
   }
 
   async setNetworkOptions(request: SetNetworkOptionsRequest) {
-    await this.networkManager.setMode(request.mode);
+    await this.networkManager.setState(request.state);
   }
 }
