@@ -19,7 +19,7 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
-  const networkStatus = useNetworkStatus();
+  const { mode: networkMode } = useNetworkStatus();
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -28,7 +28,7 @@ export const Sidebar = () => {
 
   const handleAirplaneMode = async () => {
     let newMode: NetworkMode | undefined;
-    switch (networkStatus?.mode) {
+    switch (networkMode) {
       case NetworkMode.OFFLINE: {
         newMode = NetworkMode.ONLINE;
         break;
@@ -41,7 +41,7 @@ export const Sidebar = () => {
     if (newMode === undefined) {
       return;
     }
-    await client.mesh.changeNetworkStatus({ mode: newMode });
+    await client.mesh.setNetworkOptions({ mode: newMode });
   };
 
   return (
@@ -69,7 +69,7 @@ export const Sidebar = () => {
           <Gear className={getSize(6)} />
         </button>
         <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
-          {networkStatus?.mode === NetworkMode.ONLINE ? (
+          {networkMode === NetworkMode.ONLINE ? (
             <AirplaneTakeoff className={getSize(6)} />
           ) : (
             <AirplaneInFlight className={getSize(6)} />

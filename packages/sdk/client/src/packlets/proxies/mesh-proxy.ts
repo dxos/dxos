@@ -56,10 +56,7 @@ export class MeshProxy {
     return new ResultSet<NetworkStatus>(this._networkStatusUpdated, () => [this._networkStatus!]);
   }
 
-  /**
-   * Set network mode. This is method to go to offline/online mode.
-   */
-  async changeNetworkStatus(request: SetNetworkOptionsRequest) {
+  async setNetworkOptions(request: SetNetworkOptionsRequest) {
     return this._serviceProvider.services.NetworkService.setNetworkOptions(request);
   }
 }
