@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
-import { EchoDatabase } from '@dxos/echo-schema';
+import { EchoDatabase, EchoObject } from '@dxos/echo-schema';
 
 import { useSpace } from '../hooks';
-import { Task } from '../proto';
 
 //
 // TODO(burdon): Soft delete.
@@ -17,29 +16,60 @@ import { Task } from '../proto';
 // TODO(burdon): Text model (TextObject, DocumentObject); different decorator.
 //
 
-interface Transaction {
+/**
+ * Mutation batch.
+ */
+class Transaction {
+  constructor(private readonly _database: EchoDatabase) {}
+
+  get db() {
+    return this._database;
+  }
+
   /**
    * Adds mutations to queue.
    * Any uninitialized objects are initialized (replacing "save") when committed.
    */
-  update(callback: () => void): void;
-  commit(): void;
-  cancel(): void;
+  update(callback: () => void) {}
+
+  /**
+   * Commit clones to db.
+   */
+  commit() {}
+
+  /**
+   * Dispose of clones.
+   */
+  cancel() {}
 }
 
 /**
  * Creates implicit branch (cloned objects) to isolate changes to deps until tx is closed (via save/cancel).
  * Async changes to objects outside of scope are not visible.
  */
-const useTransaction = (db: EchoDatabase, deps: any[]): Transaction => ({
-  update: (callback) => callback(),
-  commit: () => {},
-  cancel: () => {}
-});
+const useTransaction = (db: EchoDatabase): Transaction => {
+  const [tx, setTx] = useState<Transaction>(new Transaction(db));
+  useEffect(() => {
+    setTx(new Transaction(db));
+  }, []);
 
-export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task, onClose }) => {
+  return tx;
+};
+
+/**
+ * Clone objects.
+ */
+// TODO(burdon): Ugly.
+const useObjects = (tx: Transaction, id: string): EchoObject[] => {
+  return [{} as EchoObject];
+};
+
+export const TaskListForm: FC<{ taskId: string; onClose: () => void }> = ({ taskId, onClose }) => {
   const { database: db } = useSpace();
-  const tx = useTransaction(db, [task]);
+  const tx = useTransaction(db);
+
+  // TODO(burdon): Needs to be a scoped object.
+  const [task] = useObjects(tx, taskId);
 
   const handleClose = (commit: boolean) => {
     if (commit) {
