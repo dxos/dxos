@@ -8,6 +8,9 @@
   "author": "info@dxos.org",
   "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
   "files": [
     "dist",
     "src"
