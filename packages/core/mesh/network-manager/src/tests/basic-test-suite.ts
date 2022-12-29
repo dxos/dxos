@@ -129,7 +129,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic1);
-  });
+  }).timeout(2_000);
 
   // TODO(mykola): broken.
   test.skip('many peers and connections', async () => {
