@@ -10,8 +10,8 @@ import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
 import { useQuery, useSpace } from '../hooks';
-import { createTask, Task } from '../proto';
 import { makeReactive } from '../hooks/selection';
+import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
   completed = undefined,

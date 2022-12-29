@@ -9,9 +9,9 @@ import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSubscription, useSpace } from '../hooks';
-import { Address, Contact, createContact } from '../proto';
+import { useQuery, useSpace } from '../hooks';
 import { makeReactive } from '../hooks/selection';
+import { Address, Contact, createContact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
   const { database: db } = useSpace();

@@ -58,10 +58,14 @@ export class EchoObjectBase {
   public _isBound = false;
 
   // ID accessor.
-  [id]: string = this._id;
+  get [id](): string {
+    return this._id;
+  }
 
   // Database property.
-  [db]: EchoDatabase | undefined = this._database;
+  get [db](): EchoDatabase | undefined {
+    return this._database;
+  }
 
   // Proxy object.
   [unproxy]: EchoObject = this;

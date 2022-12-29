@@ -151,7 +151,7 @@ export class EchoDatabase {
   _logObjectAccess(obj: EchoObject) {
     this._accessObserverStack.at(-1)?.accessed.add(obj);
   }
-  
+
   private _update() {
     for (const object of this._echo.select({}).exec().entities) {
       if (!this._objects.has(object.id)) {
@@ -184,7 +184,5 @@ const getIdsFromSelection = (selection: Selection): string[] => {
 export class AccessObserver {
   accessed: Set<EchoObjectBase> = new Set();
 
-  constructor(
-    public pop: () => void
-  ) {}
+  constructor(public pop: () => void) {}
 }
