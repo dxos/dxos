@@ -4,8 +4,8 @@
 
 import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { AccessObserver, DatabaseRouter } from './database-router';
 
+import { AccessObserver, DatabaseRouter } from './database-router';
 import { id, unproxy } from './defs';
 import { EchoObject, EchoObjectBase } from './object';
 
@@ -42,7 +42,7 @@ export class EchoDatabase {
     /**
      * @internal
      */
-    public readonly _echo: Database,
+    public readonly _echo: Database
   ) {
     this._echo.update.on(() => this._update());
     this._update();
@@ -140,17 +140,3 @@ export class EchoDatabase {
     }
   }
 }
-
-// TODO(burdon): Document.
-const getIdsFromSelection = (selection: Selection): string[] => {
-  if (selection instanceof EchoObjectBase) {
-    return [selection[unproxy]._id];
-  } else if (typeof selection === 'function') {
-    return []; // TODO(burdon): Traverse function?
-  } else if (!selection) {
-    return [];
-  } else {
-    return selection.flatMap(getIdsFromSelection);
-  }
-};
-

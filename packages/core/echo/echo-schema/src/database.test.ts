@@ -6,15 +6,15 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { createMemoryDatabase } from '@dxos/echo-db/testing';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
 
 import { EchoDatabase } from './database';
+import { DatabaseRouter } from './database-router';
 import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
-import { DatabaseRouter } from './database-router';
-import { PublicKey } from '@dxos/keys';
 
 const createDatabase = async (router = new DatabaseRouter()) => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel);

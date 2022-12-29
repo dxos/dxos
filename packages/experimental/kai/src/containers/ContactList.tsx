@@ -6,12 +6,12 @@ import { PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
+import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
 import { useSpace } from '../hooks';
 import { Address, Contact, createContact } from '../proto';
-import { makeReactive, useQuery } from '@dxos/react-client';
 
 export const ContactList: FC<{}> = () => {
   const { space } = useSpace();

@@ -14,6 +14,7 @@ import {
 } from '@dxos/client-services';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
+import { DatabaseRouter } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,7 +26,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy, SPACE_ITEM_TYPE } from './space-proxy';
-import { DatabaseRouter } from '@dxos/echo-schema';
 
 /**
  * TODO(burdon): Public API (move comments here).

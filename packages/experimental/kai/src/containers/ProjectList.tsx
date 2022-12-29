@@ -6,13 +6,13 @@ import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
+import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
 import { useSpace } from '../hooks';
 import { createProject, createTask, Project } from '../proto';
 import { TaskItem } from './TaskList';
-import { makeReactive, useQuery } from '@dxos/react-client';
 
 export const ProjectList: FC<{}> = () => {
   const { space } = useSpace();

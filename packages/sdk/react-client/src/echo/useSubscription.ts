@@ -1,6 +1,12 @@
-import { Selection, SubscriptionHandle } from "@dxos/echo-schema";
-import { useEffect, useState } from "react";
-import { useClient } from "../client";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { useEffect, useState } from 'react';
+
+import { Selection, SubscriptionHandle } from '@dxos/echo-schema';
+
+import { useClient } from '../client';
 
 /**
  * Create reactive selection.

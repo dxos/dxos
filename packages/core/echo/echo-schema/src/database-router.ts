@@ -1,24 +1,27 @@
-import { PublicKey } from "@dxos/keys";
-import { EchoDatabase, Selection, SubscriptionHandle } from "./database";
-import { EchoObject, EchoObjectBase } from "./object";
-import { ComplexMap } from "@dxos/util";
-import { Event } from "@dxos/async";
-import { Entity } from "@dxos/echo-db";
-import { unproxy } from "./defs";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { Event } from '@dxos/async';
+import { Entity } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
+import { ComplexMap } from '@dxos/util';
+
+import { EchoDatabase, Selection, SubscriptionHandle } from './database';
+import { unproxy } from './defs';
+import { EchoObject, EchoObjectBase } from './object';
 
 export class DatabaseRouter {
-
   private readonly _accessObserverStack: AccessObserver[] = [];
 
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
 
-  private readonly _update = new Event<{ spaceKey: PublicKey, changedEntities: Entity<any>[] }>();
+  private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Entity<any>[] }>();
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);
     database._echo.update.on((changedEntities) => this._update.emit({ spaceKey, changedEntities }));
   }
-
 
   /**
    * Subscribe to database updates.
@@ -83,5 +86,3 @@ const getIdsFromSelection = (selection: Selection): string[] => {
     return selection.flatMap(getIdsFromSelection);
   }
 };
-
-
