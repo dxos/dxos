@@ -146,6 +146,7 @@ export class EchoObjectBase {
     if (!this._item) {
       return this._uninitialized![key];
     } else {
+      this._database?._logObjectAccess(this);
       return this._getModelProp(key);
     }
   }
@@ -154,6 +155,7 @@ export class EchoObjectBase {
     if (!this._item) {
       this._uninitialized![key] = value;
     } else {
+      this._database?._logObjectAccess(this);
       this._setModelProp(key, value);
     }
   }
