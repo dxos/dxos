@@ -9,7 +9,7 @@ import { id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSubscription, useSpace } from '../hooks';
+import { makeReactive, useQuery, useSpace } from '../hooks';
 import { createProject, createTask, Project } from '../proto';
 import { TaskItem } from './TaskList';
 
@@ -40,9 +40,8 @@ export const ProjectList: FC<{}> = () => {
   );
 };
 
-export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
+export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
   const { database: db } = useSpace();
-  useSubscription(db, [project, ...(project.tasks ?? []), ...(project.team ?? [])]);
 
   const handleCreate = async () => {
     const task = await createTask(db);
@@ -92,4 +91,4 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
       )}
     </div>
   );
-};
+});
