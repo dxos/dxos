@@ -5,7 +5,7 @@
 import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { AccessObserver, DatabaseRouter } from './database-router';
+import { DatabaseRouter } from './database-router';
 import { id, unproxy } from './defs';
 import { EchoObject, EchoObjectBase } from './object';
 
