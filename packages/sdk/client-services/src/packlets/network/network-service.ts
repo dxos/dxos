@@ -19,6 +19,6 @@ export class NetworkServiceImpl implements NetworkService {
   }
 
   async changeNetworkStatus(request: ChangeNetworkStatusRequest) {
-    await this.networkManager.setNetworkMode(request.mode);
+    await this.networkManager.setMode(request.mode);
   }
 }

@@ -150,11 +150,11 @@ export class TestPeer {
   }
 
   async goOffline() {
-    await this._networkManager.setNetworkMode(NetworkMode.OFFLINE);
+    await this._networkManager.setMode(NetworkMode.OFFLINE);
   }
 
   async goOnline() {
-    await this._networkManager.setNetworkMode(NetworkMode.ONLINE);
+    await this._networkManager.setMode(NetworkMode.ONLINE);
   }
 }
 
