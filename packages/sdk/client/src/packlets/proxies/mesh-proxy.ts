@@ -51,11 +51,7 @@ export class MeshProxy {
     await this._ctx?.dispose();
   }
 
-  async goOffline() {
-    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state: ConnectionState.OFFLINE });
-  }
-
-  async goOnline() {
-    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state: ConnectionState.ONLINE });
+  async setConnectionState(state: ConnectionState) {
+    return this._serviceProvider.services.NetworkService.setNetworkOptions({ state });
   }
 }

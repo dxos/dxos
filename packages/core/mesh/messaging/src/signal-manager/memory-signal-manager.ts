@@ -66,6 +66,9 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async open() {
+    if (!this._ctx.disposed) {
+      return;
+    }
     this._ctx = new Context();
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
@@ -73,6 +76,9 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async close() {
+    if (this._ctx.disposed) {
+      return;
+    }
     // save copy of joined swarms.
     const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
       ({ topic, peerId }) => topic.toHex() + peerId.toHex(),

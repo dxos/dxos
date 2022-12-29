@@ -6,6 +6,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,6 +23,9 @@ export type WebRTCTransportProxyParams = {
 };
 
 export class WebRTCTransportProxy implements Transport {
+  private readonly _proxyId = PublicKey.random();
+  private readonly _ctx = new Context();
+
   readonly closed = new Event();
   private _closed = false;
   readonly connected = new Event();
@@ -29,7 +33,6 @@ export class WebRTCTransportProxy implements Transport {
   readonly errors = new ErrorStream();
 
   private _serviceStream!: Stream<BridgeEvent>;
-  private readonly _proxyId = PublicKey.random();
 
   // prettier-ignore
   constructor(
@@ -53,7 +56,7 @@ export class WebRTCTransportProxy implements Transport {
           }
         });
 
-        this._params.stream.on('data', async (data: Uint8Array) => {
+        const dataListener = async (data: Uint8Array) => {
           try {
             await this._params.bridgeService.sendData({
               proxyId: this._proxyId,
@@ -62,7 +65,9 @@ export class WebRTCTransportProxy implements Transport {
           } catch (err: any) {
             log.catch(err);
           }
-        });
+        };
+        this._params.stream.on('data', dataListener);
+        this._ctx.onDispose(() => { this._params.stream.off('data', dataListener); });
       },
       (error) => log.catch(error)
     );
@@ -105,6 +110,7 @@ export class WebRTCTransportProxy implements Transport {
 
   // TODO(burdon): Move open from constructor.
   async destroy(): Promise<void> {
+    await this._ctx.dispose();
     if (this._closed) {
       return;
     }
