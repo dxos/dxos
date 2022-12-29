@@ -43,7 +43,9 @@ export const StatusIndicator = ({ status }: { status: boolean }) => {
           <span className='ml-2'>{connectionState === ConnectionState.ONLINE ? 'ONLINE' : 'OFFLINE'}</span>
           <Button
             onClick={async () => {
-              connectionState === ConnectionState.ONLINE ? client.mesh.goOffline() : client.mesh.goOnline();
+              connectionState === ConnectionState.ONLINE
+                ? client.mesh.setConnectionState(ConnectionState.OFFLINE)
+                : client.mesh.setConnectionState(ConnectionState.ONLINE);
             }}
           >
             Toggle

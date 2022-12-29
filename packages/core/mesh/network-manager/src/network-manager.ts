@@ -221,12 +221,8 @@ export class NetworkManager {
       case ConnectionState.ONLINE: {
         this._connectionState = state;
         // go online
-        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
         this._messenger.open();
-<<<<<<< HEAD
-=======
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
->>>>>>> 88703ce59 (Change open order)
         await this._signalManager.open();
         break;
       }
