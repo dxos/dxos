@@ -4,16 +4,22 @@
 
 import React from 'react';
 
+<<<<<<< HEAD
 import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient, useNetworkMode } from '@dxos/react-client';
-import { Tooltip, useTranslation, valenceColorText, mx } from '@dxos/react-components';
+import { useClient, useNetworkStatus } from '@dxos/react-client';
+import { Tooltip, useTranslation, valenceColorText, mx, Button } from '@dxos/react-components';
+=======
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { useClient, useNetworkStatus } from '@dxos/react-client';
+import { Tooltip, useTranslation, valenceColorText, mx, Button } from '@dxos/react-components';
+>>>>>>> 508592f22 (Refactor status indicator)
 
 // TODO(burdon): Extend to show heartbeat, network status, etc.
 // TODO(burdon): Merge with ErrorBoundary indicator since overlaps.
 export const StatusIndicator = ({ status }: { status: boolean }) => {
   const { t } = useTranslation('appkit');
   const client = useClient();
-  const networkMode = useNetworkMode();
+  const { state: connectionState } = useNetworkStatus();
   return (
     <div role='none' className={mx('fixed bottom-4 right-4')}>
       <div role='none' className={mx('fixed bottom-4 right-4', valenceColorText('success'))}>
@@ -31,14 +37,13 @@ export const StatusIndicator = ({ status }: { status: boolean }) => {
           </Tooltip>
         )}
       </div>
-      {networkMode && (
+      {connectionState !== undefined && (
         <>
           {' '}
-          <span className='ml-2'>{networkMode.mode === 0 ? 'OFFLINE' : 'ONLINE'}</span>
+          <span className='ml-2'>{connectionState === ConnectionState.ONLINE ? 'ONLINE' : 'OFFLINE'}</span>
           <Button
             onClick={async () => {
-              const newMode = networkMode.mode === NetworkMode.OFFLINE ? NetworkMode.ONLINE : NetworkMode.OFFLINE;
-              await client.setNetworkMode(newMode);
+              connectionState === ConnectionState.ONLINE ? client.mesh.goOffline() : client.mesh.goOnline();
             }}
           >
             Toggle
