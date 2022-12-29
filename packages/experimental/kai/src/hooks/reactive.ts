@@ -5,7 +5,6 @@
 import { useClient } from '@dxos/react-client';
 import React, { useEffect, useReducer, useState } from 'react';
 
-import { useSpace } from './context';
 
 export const makeReactive =
   <P>(comp: React.FC<P>): React.FC<P> =>

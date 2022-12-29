@@ -10,7 +10,7 @@ import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
 import { useQuery, useSpace } from '../hooks';
-import { makeReactive } from '../hooks/selection';
+import { makeReactive } from '../hooks/reactive';
 import { Address, Contact, createContact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
