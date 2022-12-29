@@ -144,6 +144,7 @@ export class Swarm {
     this._topology.update();
   }
 
+  @synchronized
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
@@ -162,7 +163,7 @@ export class Swarm {
       const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
       if (peer) {
         peer.advertizing = false;
-        if (!peer.connection || peer.connection.state === ConnectionState.CLOSED) {
+        if (!peer.connection || peer.connection.state !== ConnectionState.CONNECTED) {
           // Destroy peer only if there is no p2p-connection established
           void this._destroyPeer(peer.id).catch((err) => log.catch(err));
         }
@@ -217,21 +218,21 @@ export class Swarm {
   // For debug purposes
   async goOffline() {
     await this._ctx.dispose();
+    [...this._peers.values()].forEach((peer) => {
+      peer.advertizing = false;
+    });
     await Promise.all([...this._peers.keys()].map((peerId) => this._closeConnection(peerId)));
   }
 
   // For debug purposes
   @synchronized
   async goOnline() {
-    await Promise.all(
-      [...this._peers.entries()].map(([peerId, peer]) => {
-        if (peer.connection || peer.initiating) {
-          return undefined;
-        }
-        return this._initiateConnection(peerId);
-      })
-    );
     this._ctx = new Context();
+
+    [...this._peers.values()].forEach((peer) => {
+      peer.advertizing = true;
+    });
+    this._topology.update();
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
