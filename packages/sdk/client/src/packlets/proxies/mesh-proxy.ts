@@ -22,7 +22,7 @@ export class MeshProxy {
 
   // prettier-ignore
   constructor(
-      private readonly _serviceProvider: ClientServicesProvider
+    private readonly _serviceProvider: ClientServicesProvider
   ) {}
 
   toJSON() {
