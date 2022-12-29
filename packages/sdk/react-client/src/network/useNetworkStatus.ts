@@ -8,6 +8,9 @@ import { NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { useClient } from '../client';
 
+/**
+ * Creates a network status subscription.
+ */
 export const useNetworkStatus = (): NetworkStatus => {
   const client = useClient();
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus[]>(client.mesh.getNetworkStatus().value);
