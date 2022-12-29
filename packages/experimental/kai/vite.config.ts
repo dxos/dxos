@@ -44,12 +44,7 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/halo/keys',
       '@dxos/protocols/proto/dxos/echo/feed',
       '@dxos/protocols/proto/dxos/halo/invitations',
-      '@dxos/protocols/proto/dxos/echo/model/object',
-      '@dxos/react-appkit',
-      '@dxos/react-client',
-      '@dxos/react-list',
-      '@dxos/react-ui',
-      '@dxos/react-uikit'
+      '@dxos/protocols/proto/dxos/echo/model/object'
     ]
   },
   build: {
