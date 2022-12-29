@@ -25,6 +25,11 @@ export class MeshProxy {
     private readonly _serviceProvider: ClientServicesProvider
   ) {}
 
+  getNetworkStatus() {
+    assert(this._networkStatus, 'NetworkStatus is not initialized.');
+    return new ResultSet<NetworkStatus>(this._networkStatusUpdated, () => [this._networkStatus!]);
+  }
+
   toJSON() {
     return {
       networkStatus: this._networkStatus
@@ -49,11 +54,6 @@ export class MeshProxy {
 
   async close() {
     await this._ctx?.dispose();
-  }
-
-  getNetworkStatus() {
-    assert(this._networkStatus, 'NetworkStatus is not initialized.');
-    return new ResultSet<NetworkStatus>(this._networkStatusUpdated, () => [this._networkStatus!]);
   }
 
   async setNetworkOptions(request: SetNetworkOptionsRequest) {
