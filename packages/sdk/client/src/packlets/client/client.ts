@@ -146,7 +146,7 @@ export class Client {
 
     await this._halo.open();
     await this._echo.open();
-    this._mesh.open();
+    await this._mesh.open();
 
     this._initialized = true;
   }
