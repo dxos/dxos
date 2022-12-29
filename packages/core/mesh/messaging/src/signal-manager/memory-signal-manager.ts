@@ -66,7 +66,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async open() {
-    if (this._ctx) {
+    if (!this._ctx.disposed) {
       return;
     }
     this._ctx = new Context();
@@ -76,7 +76,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async close() {
-    if (!this._ctx) {
+    if (this._ctx.disposed) {
       return;
     }
     // save copy of joined swarms.
