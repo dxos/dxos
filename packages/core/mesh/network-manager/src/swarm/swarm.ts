@@ -144,6 +144,7 @@ export class Swarm {
     this._topology.update();
   }
 
+  @synchronized
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
