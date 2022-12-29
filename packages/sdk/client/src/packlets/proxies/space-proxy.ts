@@ -12,6 +12,7 @@ import {
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
+import { EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -31,6 +32,11 @@ export interface Space extends ISpace {
 
   // TODO(burdon): Remove and move accessors to proxy.
   get database(): Database;
+
+  /**
+   * Next-gen database.
+   */
+  get db2(): EchoDatabase;
 
   get select(): Database['select'];
   get reduce(): Database['reduce'];
@@ -79,6 +85,7 @@ export interface Space extends ISpace {
 
 export class SpaceProxy implements Space {
   private readonly _database?: Database;
+  private readonly _db2?: EchoDatabase;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
   private readonly _invitations: CancellableInvitationObservable[] = [];
 
@@ -118,6 +125,7 @@ export class SpaceProxy implements Space {
       new DatabaseBackendProxy(this._clientServices.services.DataService, this._key),
       memberKey
     );
+    this._db2 = new EchoDatabase(this._database);
     // } else if (false) {
     //   // TODO(wittjosiah): Reconcile service provider host with interface.
     //   const space = (this._serviceProvider as any).echo.getSpace(this._key) ?? failUndefined();
@@ -146,6 +154,14 @@ export class SpaceProxy implements Space {
     }
 
     return this._database;
+  }
+
+  get db2(): EchoDatabase {
+    if (!this._db2) {
+      throw new ApiError('Space not open.');
+    }
+
+    return this._db2;
   }
 
   /**

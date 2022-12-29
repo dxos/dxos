@@ -14,11 +14,11 @@ import { createProject, createTask, Project } from '../proto';
 import { TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
-  const { database: db } = useSpace();
-  const projects = useQuery(db, Project.filter());
+  const { space } = useSpace();
+  const projects = useQuery(space.db2, Project.filter());
 
   const handleCreate = async () => {
-    await createProject(db);
+    await createProject(space.db2);
   };
 
   const Menubar = () => (
@@ -41,10 +41,10 @@ export const ProjectList: FC<{}> = () => {
 };
 
 export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
-  const { database: db } = useSpace();
+  const { space } = useSpace();
 
   const handleCreate = async () => {
-    const task = await createTask(db);
+    const task = await createTask(space.db2);
     project.tasks.push(task);
     if (task.assignee) {
       project.team.push(task.assignee);

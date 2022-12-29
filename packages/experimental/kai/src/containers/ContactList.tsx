@@ -14,11 +14,11 @@ import { makeReactive } from '../hooks/selection';
 import { Address, Contact, createContact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
-  const { database: db } = useSpace();
-  const contacts: Contact[] = useQuery(db, Contact.filter());
+  const { space } = useSpace();
+  const contacts: Contact[] = useQuery(space.db2, Contact.filter());
 
   const handleCreate = async () => {
-    return createContact(db);
+    return createContact(space.db2);
   };
 
   const Menubar = () => (

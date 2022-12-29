@@ -18,11 +18,11 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   readonly = false,
   title = 'Tasks'
 }) => {
-  const { database: db } = useSpace();
-  const tasks = useQuery(db, Task.filter({ completed }));
+  const { space } = useSpace();
+  const tasks = useQuery(space.db2, Task.filter({ completed }));
 
   const handleCreate = async () => {
-    await createTask(db);
+    await createTask(space.db2);
   };
 
   const Menubar = () => (

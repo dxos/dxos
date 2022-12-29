@@ -9,7 +9,8 @@ import { useSpace } from './context';
 export const makeReactive =
   <P>(comp: React.FC<P>): React.FC<P> =>
   (props) => {
-    const { database: db } = useSpace();
+    const { space } = useSpace();
+    const db = space.db2;
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
     const [handle] = useState(() =>
       db.createSubscription(() => {
