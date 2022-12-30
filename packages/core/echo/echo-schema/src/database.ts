@@ -19,7 +19,7 @@ export type Filter = Record<string, any>;
 export type TypeFilter<T extends Document> = { __phantom: T } & Filter;
 
 export type SelectionFn = never; // TODO(burdon): Document or remove.
-export type Selection = Document | SelectionFn | Selection[];
+export type Selection = EchoObject | SelectionFn | Selection[];
 
 export type Query<T extends Document = Document> = {
   getObjects(): T[];
