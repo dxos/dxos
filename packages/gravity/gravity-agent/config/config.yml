@@ -1,1 +1,38 @@
+runtime:
+  client:
+    storage:
+      persistent: false
+      # path: '/tmp/dx/gravity'
+  kube:
+    autoupdate:
+      enabled: true
+      interval: 21600
+    host: kube.local
+    https:
+      port: "443"
+    monitoring:
+      endpoint: localhost:4317
+      interval: 60
+    p2p:
+      port: "10000"
+    port: "9003"
+    telemetry: {}
+    trace: {}
+  services:
+    ice:
+    # - urls: stun:localhost:3478
+    # - credential: dxos
+    #   urls: turn:localhost:3478
+    #   username: dxos
+    - urls: stun:localhost:3478
+    - credential: dxos
+      urls: turn:localhost:3478
+      username: dxos
+    ipfs:
+      gateway: http://kube.local:9003/ipfs/gateway
+      server: http://kube.local:9003/ipfs/api
+    publisher:
+      server: ws://localhost:9003/.well-known/dx/deploy
+    signal:
+      server: ws://localhost:9003/.well-known/dx/signal
 version: 1
