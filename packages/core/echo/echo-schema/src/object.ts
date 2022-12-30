@@ -27,7 +27,7 @@ const isValidKey = (key: string | symbol) =>
  * Base class for objects.
  */
 // TODO(burdon): Support immutable objects?
-export class EchoObjectBase {
+export class DocumentBase {
   /**
    * Pending values before commited to model.
    * @internal
@@ -103,7 +103,7 @@ export class EchoObjectBase {
   }
 
   // TODO(burdon): Option to reference objects by ID, and/or specify depth.
-  _json(visited: Set<EchoObjectBase>) {
+  _json(visited: Set<DocumentBase>) {
     // TODO(burdon): Important: do breadth first recursion to stabilize cycle detection/depth.
     return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
       const value = this._get(name);
@@ -115,7 +115,7 @@ export class EchoObjectBase {
             const values: any[] = [];
             for (let i = 0; i < value.length; i++) {
               const item = value[i];
-              if (item instanceof EchoObjectBase) {
+              if (item instanceof DocumentBase) {
                 if (!visited.has(item)) {
                   visited.add(value);
                   values.push(item[unproxy]._json(visited));
@@ -130,7 +130,7 @@ export class EchoObjectBase {
             result[name] = values;
           }
         } else {
-          if (value instanceof EchoObjectBase) {
+          if (value instanceof DocumentBase) {
             // Detect cycles.
             if (!visited.has(value)) {
               visited.add(value);
@@ -188,7 +188,7 @@ export class EchoObjectBase {
   }
 
   private _setModelProp(prop: string, value: any): any {
-    if (value instanceof EchoObjectBase) {
+    if (value instanceof DocumentBase) {
       void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
       void this._item!.model.set(prop, value[unproxy]._id);
       void this._database!.save(value);
@@ -281,7 +281,7 @@ export class EchoObjectBase {
 /**
  * Base class for generated types.
  */
-export class EchoObject extends EchoObjectBase {
+export class EchoObject extends DocumentBase {
   // Property accessor.
   [key: string]: any;
 }

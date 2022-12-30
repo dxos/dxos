@@ -5,7 +5,7 @@
 import { OrderedList } from '@dxos/object-model';
 
 import { unproxy } from './defs';
-import { EchoObject, EchoObjectBase } from './object';
+import { EchoObject, DocumentBase } from './object';
 
 // TODO(burdon): Remove?
 const EMPTY = '__EMPTY__';
@@ -14,7 +14,7 @@ const EMPTY = '__EMPTY__';
  *
  */
 // TODO(burdon): Mostly not implemented.
-export class OrderedSet<T extends EchoObjectBase> implements Array<T> {
+export class OrderedSet<T extends DocumentBase> implements Array<T> {
   private readonly _uninitialized?: T[] = [];
 
   private _object?: EchoObject;

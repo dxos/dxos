@@ -7,7 +7,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { DatabaseRouter } from './database-router';
 import { id, unproxy } from './defs';
-import { EchoObject, EchoObjectBase } from './object';
+import { EchoObject, DocumentBase } from './object';
 
 export type Filter = Record<string, any>;
 
@@ -62,7 +62,7 @@ export class EchoDatabase {
    * Flush mutations.
    */
   // TODO(burdon): Batches?
-  async save<T extends EchoObjectBase>(obj: T): Promise<T> {
+  async save<T extends DocumentBase>(obj: T): Promise<T> {
     if (obj[unproxy]._isBound) {
       return obj;
     }
