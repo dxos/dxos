@@ -1,5 +1,5 @@
 import { Item } from '@dxos/echo-db';
-import { Model } from '@dxos/model-factory';
+import { Model, ModelConstructor } from '@dxos/model-factory';
 import { EchoDatabase } from './database';
 import { db, id, unproxy } from './defs';
 
@@ -11,24 +11,24 @@ export abstract class EchoObject<T extends Model = any> {
   /**
    * @internal
    */
-  public _id!: string;
+  _id!: string;
 
   /**
    * Maybe not be present for freshly created objects.
    * @internal
    */
-  public _database?: EchoDatabase;
+  _database?: EchoDatabase;
 
   /**
    * Maybe not be present for freshly created objects.
    * @internal
    */
-  public _item?: Item<T>;
+  _item?: Item<T>;
 
   /**
    * @internal
    */
-  public _isBound = false;
+  _isBound = false;
 
   // ID accessor.
   get [id](): string {
@@ -46,6 +46,17 @@ export abstract class EchoObject<T extends Model = any> {
   /**
    * @internal
    */
+  abstract _modelConstructor: ModelConstructor<T>;
+
+  /**
+   * Called after object is bound to database.
+   */
+  protected _onBind(): void {
+  }
+
+  /**
+   * @internal
+   */
   // TODO(burdon): Document.
   _bind(item: Item<T>, database: EchoDatabase) {
     this._item = item;
@@ -53,9 +64,4 @@ export abstract class EchoObject<T extends Model = any> {
 
     this._onBind();
   }
-
-  /**
-   * Called after object is bound to database.
-   */
-  protected abstract _onBind(): void;
 }

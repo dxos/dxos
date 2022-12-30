@@ -1381,6 +1381,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/object-model': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       protobufjs: ^6.9.0
       wait-for-expect: ^3.0.2
@@ -1393,6 +1394,7 @@ importers:
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/object-model': link:../object-model
+      '@dxos/text-model': link:../text-model
       '@dxos/util': link:../../../common/util
       protobufjs: 6.11.3
     devDependencies:

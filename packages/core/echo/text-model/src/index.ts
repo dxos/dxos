@@ -3,3 +3,4 @@
 //
 
 export * from './text-model';
+export type { Doc } from 'yjs';

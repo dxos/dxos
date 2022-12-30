@@ -4,10 +4,14 @@
 
 import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
+import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { id, unproxy } from './defs';
 import { Document, DocumentBase } from './document';
+import { EchoObject } from './object';
+import { TextObject } from './text-object';
+import { log } from '@dxos/log';
 
 export type Filter = Record<string, any>;
 
@@ -33,7 +37,7 @@ export interface SubscriptionHandle {
  * Database wrapper.
  */
 export class EchoDatabase {
-  private readonly _objects = new Map<string, Document>();
+  private readonly _objects = new Map<string, EchoObject>();
 
   constructor(
     private readonly _router: DatabaseRouter,
@@ -70,7 +74,10 @@ export class EchoDatabase {
     obj[unproxy]._isBound = true;
     this._objects.set(obj[unproxy]._id, obj);
 
-    const item = (await this._echo.createItem({ id: obj[unproxy]._id })) as Item<ObjectModel>;
+    const item = (await this._echo.createItem({
+      id: obj[unproxy]._id,
+      model: obj[unproxy]._modelConstructor,
+    })) as Item<any>;
     obj[unproxy]._bind(item, this);
     return obj;
   }
@@ -83,7 +90,7 @@ export class EchoDatabase {
   query(filter: Filter): Query;
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
-    const matchObject = (object: Document) => Object.entries(filter).every(([key, value]) => object[key] === value);
+    const matchObject = (object: EchoObject): object is Document => object instanceof Document && Object.entries(filter).every(([key, value]) => object[key] === value);
 
     // Current result.
     let cache: Document[] | undefined;
@@ -92,7 +99,7 @@ export class EchoDatabase {
       getObjects: () => {
         if (!cache) {
           // TODO(burdon): Sort.
-          cache = Array.from(this._objects.values()).filter((obj) => matchObject(obj));
+          cache = Array.from(this._objects.values()).filter(matchObject);
         }
 
         return cache;
@@ -129,12 +136,29 @@ export class EchoDatabase {
   private _update() {
     for (const object of this._echo.select({}).exec().entities) {
       if (!this._objects.has(object.id)) {
-        const obj = new Document();
+        const obj = this._createObjectInstance(object);
+        if (!obj) {
+          continue;
+        }
         obj[unproxy]._id = object.id;
         this._objects.set(object.id, obj);
         obj[unproxy]._bind(object, this);
         obj[unproxy]._isBound = true;
       }
+    }
+  }
+
+  /**
+   * Create object with a proper prototype representing the given item.
+   */
+  private _createObjectInstance(item: Item<any>): EchoObject | undefined {
+    if (item.model instanceof ObjectModel) {
+      return new Document(); // TODO(dmaretskyi): Schema types.
+    } else if (item.model instanceof TextModel) {
+      return new TextObject();
+    } else {
+      log.warn('Unknown model type', { model: item.model });
+      return undefined;
     }
   }
 }

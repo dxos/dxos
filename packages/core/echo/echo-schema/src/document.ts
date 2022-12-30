@@ -4,6 +4,7 @@
 
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
+import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
 import { EchoDatabase } from './database';
@@ -54,6 +55,8 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
     return this._createProxy(this);
   }
+
+  override _modelConstructor = ObjectModel;
 
   // TODO(burdon): Document.
   get [Symbol.toStringTag]() {
