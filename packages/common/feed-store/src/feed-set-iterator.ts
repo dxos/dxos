@@ -132,7 +132,6 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
         // Get the selected block from candidates.
         const idx = this._selector(blocks);
         if (idx === undefined) {
-          log.warn('Stalled', { blocks });
           // Timeout if all candidates are rejected.
           if (t === undefined) {
             t = setTimeout(() => {

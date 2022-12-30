@@ -24,6 +24,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/object-model": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "protobufjs": "^6.9.0"
   },
