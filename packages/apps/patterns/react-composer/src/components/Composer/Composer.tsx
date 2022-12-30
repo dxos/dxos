@@ -10,20 +10,24 @@ import React from 'react';
 
 import { Item } from '@dxos/client';
 import { useTranslation, mx } from '@dxos/react-uikit';
-import { TextModel } from '@dxos/text-model';
+import { TextModel, Doc } from '@dxos/text-model';
 
 export interface ComposerProps {
-  item: Item<TextModel>;
+  doc?: Doc;
+  /**
+   * @deprecated Use `doc` instead.
+   */
+  item?: Item<TextModel>;
   className?: string;
 }
 
-export const Composer = ({ item, className }: ComposerProps) => {
+export const Composer = ({ item, doc = item?.model?.doc, className }: ComposerProps) => {
   const { t } = useTranslation('appkit');
   const editor = useEditor(
     {
       extensions: [
         StarterKit.configure({ history: false }),
-        Collaboration.configure({ document: item?.model.doc, field: 'content' }),
+        Collaboration.configure({ document: doc, field: 'content' }),
         Placeholder.configure({
           placeholder: t('composer placeholder'),
           emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'
@@ -35,7 +39,7 @@ export const Composer = ({ item, className }: ComposerProps) => {
         }
       }
     },
-    [item, item?.model.doc]
+    [doc]
   );
 
   return <EditorContent editor={editor} />;

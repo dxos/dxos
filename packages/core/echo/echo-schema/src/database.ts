@@ -3,21 +3,25 @@
 //
 
 import { Database, Item } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 import { ObjectModel } from '@dxos/object-model';
+import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { id, unproxy } from './defs';
-import { EchoObject, EchoObjectBase } from './object';
+import { Document, DocumentBase } from './document';
+import { EchoObject } from './object';
+import { TextObject } from './text-object';
 
 export type Filter = Record<string, any>;
 
 // NOTE: `__phantom` property forces type.
-export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
+export type TypeFilter<T extends Document> = { __phantom: T } & Filter;
 
 export type SelectionFn = never; // TODO(burdon): Document or remove.
 export type Selection = EchoObject | SelectionFn | Selection[];
 
-export type Query<T extends EchoObject = EchoObject> = {
+export type Query<T extends Document = Document> = {
   getObjects(): T[];
   subscribe(callback: () => void): () => void;
 };
@@ -62,7 +66,7 @@ export class EchoDatabase {
    * Flush mutations.
    */
   // TODO(burdon): Batches?
-  async save<T extends EchoObjectBase>(obj: T): Promise<T> {
+  async save<T extends EchoObject>(obj: T): Promise<T> {
     if (obj[unproxy]._isBound) {
       return obj;
     }
@@ -70,7 +74,10 @@ export class EchoDatabase {
     obj[unproxy]._isBound = true;
     this._objects.set(obj[unproxy]._id, obj);
 
-    const item = (await this._echo.createItem({ id: obj[unproxy]._id })) as Item<ObjectModel>;
+    const item = (await this._echo.createItem({
+      id: obj[unproxy]._id,
+      model: obj[unproxy]._modelConstructor
+    })) as Item<any>;
     obj[unproxy]._bind(item, this);
     return obj;
   }
@@ -79,20 +86,21 @@ export class EchoDatabase {
    * Filter by type.
    */
   // TODO(burdon): Additional filters?
-  query<T extends EchoObject>(filter: TypeFilter<T>): Query<T>;
+  query<T extends Document>(filter: TypeFilter<T>): Query<T>;
   query(filter: Filter): Query;
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
-    const matchObject = (object: EchoObject) => Object.entries(filter).every(([key, value]) => object[key] === value);
+    const matchObject = (object: EchoObject): object is DocumentBase =>
+      object instanceof DocumentBase && Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
 
     // Current result.
-    let cache: EchoObject[] | undefined;
+    let cache: Document[] | undefined;
 
     return {
       getObjects: () => {
         if (!cache) {
           // TODO(burdon): Sort.
-          cache = Array.from(this._objects.values()).filter((obj) => matchObject(obj));
+          cache = Array.from(this._objects.values()).filter(matchObject);
         }
 
         return cache;
@@ -129,12 +137,29 @@ export class EchoDatabase {
   private _update() {
     for (const object of this._echo.select({}).exec().entities) {
       if (!this._objects.has(object.id)) {
-        const obj = new EchoObject();
+        const obj = this._createObjectInstance(object);
+        if (!obj) {
+          continue;
+        }
         obj[unproxy]._id = object.id;
         this._objects.set(object.id, obj);
         obj[unproxy]._bind(object, this);
         obj[unproxy]._isBound = true;
       }
+    }
+  }
+
+  /**
+   * Create object with a proper prototype representing the given item.
+   */
+  private _createObjectInstance(item: Item<any>): EchoObject | undefined {
+    if (item.model instanceof ObjectModel) {
+      return new Document(); // TODO(dmaretskyi): Schema types.
+    } else if (item.model instanceof TextModel) {
+      return new TextObject();
+    } else {
+      log.warn('Unknown model type', { model: item.model });
+      return undefined;
     }
   }
 }
