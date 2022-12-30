@@ -7,8 +7,7 @@ import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { makeReactive, useQuery } from '@dxos/react-client';
-import { Composer } from '@dxos/react-composer';
-import { getSize, mx } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
 import { useSpace } from '../hooks';
@@ -69,7 +68,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           <Plus className={getSize(6)} />
         </button>
       </div>
-
+      {/*
       {project.description?.doc && (
         <Composer
           doc={project.description?.doc}
@@ -77,7 +76,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
             'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[3em]'
           )}
         />
-      )}
+      )} */}
 
       {project.tasks?.length > 0 && (
         <div>
