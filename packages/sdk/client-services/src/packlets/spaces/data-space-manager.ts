@@ -3,14 +3,15 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
+import { Context } from '@dxos/context';
 import {
   AcceptSpaceOptions,
   DataServiceSubscriptions,
   MetadataStore,
   SigningContext,
   Space,
-  SpaceManager,
-  spaceGenesis
+  spaceGenesis,
+  SpaceManager
 } from '@dxos/echo-db';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -23,6 +24,8 @@ import { ComplexMap } from '@dxos/util';
 import { DataSpace } from './data-space';
 
 export class DataSpaceManager {
+  private readonly _ctx = new Context();
+
   public readonly updated = new Event();
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
@@ -46,12 +49,18 @@ export class DataSpaceManager {
     await this._metadataStore.load();
 
     for (const spaceMetadata of this._metadataStore.spaces) {
-      await this._constructSpace(spaceMetadata);
+      const space = await this._constructSpace(spaceMetadata);
+      if (spaceMetadata.latestTimeframe) {
+        log('waiting for latest timeframe', { spaceMetadata });
+        await space.dataPipelineController.waitUntilTimeframe(spaceMetadata.latestTimeframe);
+      }
     }
   }
 
   @synchronized
-  async close() {}
+  async close() {
+    await this._ctx.dispose();
+  }
 
   /**
    * Creates a new space writing the genesis credentials to the control feed.
@@ -110,6 +119,13 @@ export class DataSpaceManager {
       presence
     });
     const dataSpace = new DataSpace(space, this._modelFactory, this._signingContext.identityKey, presence);
+    dataSpace.dataPipelineController.onTimeframeReached.debounce(1000).on(this._ctx, async () => {
+      const latestTimeframe = dataSpace.dataPipelineController.pipelineState?.timeframe;
+      if (latestTimeframe) {
+        await this._metadataStore.setSpaceLatestTimeframe(metadata.key, latestTimeframe);
+      }
+    });
+
     await space.open();
     this._dataServiceSubscriptions.registerSpace(space.key, dataSpace.database.createDataServiceHost());
     this._spaces.set(metadata.key, dataSpace);

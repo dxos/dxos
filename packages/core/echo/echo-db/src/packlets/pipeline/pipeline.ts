@@ -19,6 +19,7 @@ import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } 
  * External state accessor.
  */
 export class PipelineState {
+  // TODO(dmaretskyi): Remove?.
   public readonly timeframeUpdate = this._timeframeClock.updateTimeframe;
 
   // prettier-ignore
