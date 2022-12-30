@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { describe, test } from '@dxos/test';
 
-import { Document } from './object';
+import { Document } from './document';
 
 describe('Document', () => {
   test('instance of', async () => {

@@ -9,7 +9,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase, Selection, SubscriptionHandle } from './database';
 import { unproxy } from './defs';
-import { Document, DocumentBase } from './object';
+import { Document, DocumentBase } from './document';
 
 export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];

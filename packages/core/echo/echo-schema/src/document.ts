@@ -8,6 +8,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { EchoDatabase } from './database';
 import { id, db, unproxy } from './defs';
+import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { strip } from './util';
@@ -27,54 +28,19 @@ const isValidKey = (key: string | symbol) =>
  * Base class for generated document types and dynamic objects.
  */
 // TODO(burdon): Support immutable objects?
-export class DocumentBase {
+export class DocumentBase extends EchoObject<ObjectModel> {
   /**
    * Pending values before commited to model.
    * @internal
    */
   private _uninitialized?: Record<keyof any, any> = {};
 
-  /**
-   * Maybe not be present for freshly created objects.
-   * @internal
-   */
-  public _id!: string;
-
-  /**
-   * Maybe not be present for freshly created objects.
-   * @internal
-   */
-  public _item?: Item<ObjectModel>;
-
-  /**
-   * Maybe not be present for freshly created objects.
-   * @internal
-   */
-  public _database?: EchoDatabase;
-
-  /**
-   * @internal
-   */
-  public _isBound = false;
-
-  // ID accessor.
-  get [id](): string {
-    return this[unproxy]._id;
-  }
-
-  // Database property.
-  get [db](): EchoDatabase | undefined {
-    return this[unproxy]._database;
-  }
-
-  // Proxy object.
-  [unproxy]: Document = this;
-
   // prettier-ignore
   constructor(
     initialProps?: Record<keyof any, any>,
     private readonly _schemaType?: EchoSchemaType
   ) {
+    super();
     this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
 
@@ -91,7 +57,7 @@ export class DocumentBase {
 
   // TODO(burdon): Document.
   get [Symbol.toStringTag]() {
-    return this[unproxy]?._schemaType?.name ?? 'EchoObject';
+    return this[unproxy]?._schemaType?.name ?? 'Document';
   }
 
   /**
@@ -262,18 +228,10 @@ export class DocumentBase {
     });
   }
 
-  /**
-   * @internal
-   */
-  // TODO(burdon): Document.
-  _bind(item: Item<ObjectModel>, database: EchoDatabase) {
-    this._item = item;
-    this._database = database;
-
+  protected override _onBind(): void {
     for (const [key, value] of Object.entries(this._uninitialized!)) {
       this._setModelProp(key, value);
     }
-
     this._uninitialized = undefined;
   }
 }

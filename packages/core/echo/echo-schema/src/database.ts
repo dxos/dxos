@@ -7,7 +7,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { DatabaseRouter } from './database-router';
 import { id, unproxy } from './defs';
-import { Document, DocumentBase } from './object';
+import { Document, DocumentBase } from './document';
 
 export type Filter = Record<string, any>;
 

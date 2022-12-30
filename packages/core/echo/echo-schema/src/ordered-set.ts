@@ -5,7 +5,7 @@
 import { OrderedList } from '@dxos/object-model';
 
 import { unproxy } from './defs';
-import { Document, DocumentBase } from './object';
+import { Document, DocumentBase } from './document';
 
 // TODO(burdon): Remove?
 const EMPTY = '__EMPTY__';

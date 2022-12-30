@@ -13,7 +13,7 @@ import { describe, test } from '@dxos/test';
 
 import { EchoDatabase } from './database';
 import { DatabaseRouter } from './database-router';
-import { Document } from './object';
+import { Document } from './document';
 import { OrderedSet } from './ordered-set';
 
 const createDatabase = async (router = new DatabaseRouter()) => {
