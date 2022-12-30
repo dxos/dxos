@@ -4,13 +4,15 @@
 
 import React, { FC, useEffect, useState } from 'react';
 
-import { EchoDatabase, EchoObject } from '@dxos/echo-schema';
+import { EchoDatabase } from '@dxos/echo-schema';
 
 import { useSpace } from '../hooks';
 import { Task } from '../proto';
 
 //
+// TODO(burdon): Ordered set.
 // TODO(burdon): Soft delete.
+// TODO(burdon): Materialized links (referential integrity).
 // TODO(burdon): Defer callback/render until timeframe.
 // TODO(burdon): DB internals.
 // TODO(burdon): Sync item creation.
@@ -24,6 +26,10 @@ import { Task } from '../proto';
  */
 class Transaction {
   constructor(private readonly _database: EchoDatabase) {}
+  wrap(object: any) {
+    return object;
+  }
+
   commit() {}
   cancel() {}
 }
@@ -41,18 +47,10 @@ const useTransaction = (db: EchoDatabase): Transaction => {
   return tx;
 };
 
-/**
- * Clone objects scoped by transaction.
- * Pass in existing items or database query.
- */
-const useObjects = (tx: Transaction, query: any): EchoObject[] => {
-  return [{} as EchoObject];
-};
-
 export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task: currentTask, onClose }) => {
   const { database } = useSpace();
   const tx = useTransaction(database);
-  const [task] = useObjects(tx, [currentTask]); // TODO(burdon): Ugly.
+  const task = tx.wrap(currentTask); // Projection.
 
   const handleClose = (commit: boolean) => {
     if (commit) {
