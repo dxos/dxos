@@ -1,4 +1,5 @@
 import { Item } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor } from '@dxos/model-factory';
 import { EchoDatabase } from './database';
 import { db, id, unproxy } from './defs';
@@ -47,6 +48,10 @@ export abstract class EchoObject<T extends Model = any> {
    * @internal
    */
   abstract _modelConstructor: ModelConstructor<T>;
+
+  constructor() {
+    this._id = PublicKey.random().toHex();
+  }
 
   /**
    * Called after object is bound to database.

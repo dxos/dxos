@@ -6,7 +6,7 @@ import * as pb from 'protobufjs';
 
 const packageName = '@dxos/echo-schema';
 
-const types = ['EchoSchema', 'DocumentBase', 'TypeFilter', 'OrderedSet'];
+const types = ['EchoSchema', 'DocumentBase', 'TypeFilter', 'OrderedSet', 'TextObject'];
 
 /**
  * Source builder and formatter.
@@ -66,6 +66,10 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
+      if(field.resolvedType.name === 'TextObject') {
+        return 'TextObject';
+      }
+
       return field.resolvedType.name;
     } else {
       switch (field.type) {
@@ -119,6 +123,10 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
     .push('export const schema = EchoSchema.fromJson(schemaJson);').nl();
 
   for (const type of iterTypes(root)) {
+    if(type.name === 'TextObject') {
+      continue;
+    }
+
     if (type.options?.['(object)'] !== true) {
       createPlainInterface(builder, type);
     } else {

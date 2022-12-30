@@ -6,10 +6,12 @@ export class TextObject extends EchoObject<TextModel> {
   override _modelConstructor = TextModel;
 
   get doc(): Doc | undefined {
+    this._database?._logObjectAccess(this);
     return this._item?.model?.doc;
   }
 
   get model(): TextModel | undefined {
+    this._database?._logObjectAccess(this);
     return this._item?.model;
   }
 }

@@ -42,7 +42,6 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     private readonly _schemaType?: EchoSchemaType
   ) {
     super();
-    this._id = PublicKey.random().toHex();
     Object.assign(this._uninitialized!, initialProps);
 
     if (this._schemaType) {
@@ -157,7 +156,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   }
 
   private _setModelProp(prop: string, value: any): any {
-    if (value instanceof DocumentBase) {
+    if (value instanceof EchoObject) {
       void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
       void this._item!.model.set(prop, value[unproxy]._id);
       void this._database!.save(value);

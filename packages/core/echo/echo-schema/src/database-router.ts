@@ -9,7 +9,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase, Selection, SubscriptionHandle } from './database';
 import { unproxy } from './defs';
-import { Document, DocumentBase } from './document';
+import { EchoObject } from './object';
 
 export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];
@@ -61,7 +61,7 @@ export class DatabaseRouter {
   /**
    * @internal
    */
-  _logObjectAccess(obj: Document) {
+  _logObjectAccess(obj: EchoObject) {
     this._accessObserverStack.at(-1)?.accessed.add(obj);
   }
 }
@@ -70,13 +70,13 @@ export class DatabaseRouter {
  * Observes object access.
  */
 export class AccessObserver {
-  accessed: Set<DocumentBase> = new Set();
+  accessed: Set<EchoObject> = new Set();
 
   constructor(public pop: () => void) {}
 }
 
 const getIdsFromSelection = (selection: Selection): string[] => {
-  if (selection instanceof DocumentBase) {
+  if (selection instanceof EchoObject) {
     return [selection[unproxy]._id];
   } else if (typeof selection === 'function') {
     return []; // TODO(burdon): Traverse function?

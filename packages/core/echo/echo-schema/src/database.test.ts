@@ -15,9 +15,11 @@ import { EchoDatabase } from './database';
 import { DatabaseRouter } from './database-router';
 import { Document } from './document';
 import { OrderedSet } from './ordered-set';
+import { TextObject } from './text-object';
+import { TextModel } from '@dxos/text-model';
 
 const createDatabase = async (router = new DatabaseRouter()) => {
-  const modelFactory = new ModelFactory().registerModel(ObjectModel);
+  const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TextModel);
   const database = await createMemoryDatabase(modelFactory);
   const db = new EchoDatabase(router, database);
   router.register(PublicKey.random(), db);
@@ -166,4 +168,37 @@ describe('EchoDatabase', () => {
       expect(counter).toBeGreaterThanOrEqual(2);
     });
   });
+
+  describe('text', () => {
+    test('works', async () => {
+      const db = await createDatabase();
+      const text = new TextObject();
+      await db.save(text);
+
+      expect(text.doc).toBeDefined();
+      expect(text.model).toBeDefined();
+      expect(text.model!.textContent).toEqual('');
+
+      text.model!.insert('Hello world', 0);
+      expect(text.model!.textContent).toEqual('Hello world');
+    })
+
+    test('as a prop', async () => {
+      const db = await createDatabase();
+      const task = new Document();
+      await db.save(task);
+
+      task.text = new TextObject();
+
+      // Populating the model is done asynchronously for now.
+      await waitForExpect(() => {
+        expect(task.text.doc).toBeDefined();
+        expect(task.text.model).toBeDefined();
+      })
+      expect(task.text.model!.textContent).toEqual('');
+
+      task.text.model!.insert('Hello world', 0);
+      expect(task.text.model!.textContent).toEqual('Hello world');
+    })
+  })
 });

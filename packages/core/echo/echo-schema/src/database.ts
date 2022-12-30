@@ -66,7 +66,7 @@ export class EchoDatabase {
    * Flush mutations.
    */
   // TODO(burdon): Batches?
-  async save<T extends DocumentBase>(obj: T): Promise<T> {
+  async save<T extends EchoObject>(obj: T): Promise<T> {
     if (obj[unproxy]._isBound) {
       return obj;
     }
@@ -90,7 +90,7 @@ export class EchoDatabase {
   query(filter: Filter): Query;
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
-    const matchObject = (object: EchoObject): object is Document => object instanceof Document && Object.entries(filter).every(([key, value]) => object[key] === value);
+    const matchObject = (object: EchoObject): object is DocumentBase => object instanceof DocumentBase && Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
 
     // Current result.
     let cache: Document[] | undefined;
@@ -129,7 +129,7 @@ export class EchoDatabase {
   /**
    * @internal
    */
-  _logObjectAccess(obj: Document) {
+  _logObjectAccess(obj: EchoObject) {
     this._router._logObjectAccess(obj);
   }
 

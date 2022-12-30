@@ -2726,6 +2726,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-composer': workspace:*
       '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
@@ -2763,6 +2764,7 @@ importers:
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../sdk/react-uikit
