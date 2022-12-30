@@ -89,7 +89,7 @@ export class Space {
     this._controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
-      feedProvider,
+      feedProvider
     });
 
     this._controlPipeline.setWriteFeed(controlFeed);

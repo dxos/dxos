@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Event, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
@@ -12,7 +14,6 @@ import { ModelFactory } from '@dxos/model-factory';
 import { TypedMessage } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
-import assert from 'node:assert';
 
 import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackendHost } from '../database';
@@ -90,7 +91,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   }
 
   private async _consumePipeline() {
-    assert(this._pipeline, 'Pipeline is not initialized.')
+    assert(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
       log('processing message', { msg });
@@ -122,7 +123,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   }
 
   async waitUntilTimeframe(timeframe: Timeframe) {
-    assert(this._pipeline, 'Pipeline is not initialized.')
+    assert(this._pipeline, 'Pipeline is not initialized.');
     await this._pipeline.state.waitUntilTimeframe(timeframe);
   }
 }

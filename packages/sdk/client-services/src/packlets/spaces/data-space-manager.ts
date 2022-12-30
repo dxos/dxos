@@ -9,7 +9,9 @@ import {
   DataServiceSubscriptions,
   MetadataStore,
   SigningContext,
-  Space, spaceGenesis, SpaceManager
+  Space,
+  spaceGenesis,
+  SpaceManager
 } from '@dxos/echo-db';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -48,8 +50,8 @@ export class DataSpaceManager {
 
     for (const spaceMetadata of this._metadataStore.spaces) {
       const space = await this._constructSpace(spaceMetadata);
-      if(spaceMetadata.latestTimeframe) {
-        log('waiting for latest timeframe', { spaceMetadata })
+      if (spaceMetadata.latestTimeframe) {
+        log('waiting for latest timeframe', { spaceMetadata });
         await space.dataPipelineController.waitUntilTimeframe(spaceMetadata.latestTimeframe);
       }
     }
@@ -119,8 +121,8 @@ export class DataSpaceManager {
     const dataSpace = new DataSpace(space, this._modelFactory, this._signingContext.identityKey, presence);
     dataSpace.dataPipelineController.onTimeframeReached.debounce(1000).on(this._ctx, async () => {
       const latestTimeframe = dataSpace.dataPipelineController.pipelineState?.timeframe;
-      if(latestTimeframe) {
-        await this._metadataStore.setSpaceLatestTimeframe(metadata.key, latestTimeframe)
+      if (latestTimeframe) {
+        await this._metadataStore.setSpaceLatestTimeframe(metadata.key, latestTimeframe);
       }
     });
 
