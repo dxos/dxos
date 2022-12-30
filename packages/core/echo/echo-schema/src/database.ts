@@ -7,17 +7,17 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { DatabaseRouter } from './database-router';
 import { id, unproxy } from './defs';
-import { EchoObject, DocumentBase } from './object';
+import { Document, DocumentBase } from './object';
 
 export type Filter = Record<string, any>;
 
 // NOTE: `__phantom` property forces type.
-export type TypeFilter<T extends EchoObject> = { __phantom: T } & Filter;
+export type TypeFilter<T extends Document> = { __phantom: T } & Filter;
 
 export type SelectionFn = never; // TODO(burdon): Document or remove.
-export type Selection = EchoObject | SelectionFn | Selection[];
+export type Selection = Document | SelectionFn | Selection[];
 
-export type Query<T extends EchoObject = EchoObject> = {
+export type Query<T extends Document = Document> = {
   getObjects(): T[];
   subscribe(callback: () => void): () => void;
 };
@@ -33,7 +33,7 @@ export interface SubscriptionHandle {
  * Database wrapper.
  */
 export class EchoDatabase {
-  private readonly _objects = new Map<string, EchoObject>();
+  private readonly _objects = new Map<string, Document>();
 
   constructor(
     private readonly _router: DatabaseRouter,
@@ -79,14 +79,14 @@ export class EchoDatabase {
    * Filter by type.
    */
   // TODO(burdon): Additional filters?
-  query<T extends EchoObject>(filter: TypeFilter<T>): Query<T>;
+  query<T extends Document>(filter: TypeFilter<T>): Query<T>;
   query(filter: Filter): Query;
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
-    const matchObject = (object: EchoObject) => Object.entries(filter).every(([key, value]) => object[key] === value);
+    const matchObject = (object: Document) => Object.entries(filter).every(([key, value]) => object[key] === value);
 
     // Current result.
-    let cache: EchoObject[] | undefined;
+    let cache: Document[] | undefined;
 
     return {
       getObjects: () => {
@@ -122,14 +122,14 @@ export class EchoDatabase {
   /**
    * @internal
    */
-  _logObjectAccess(obj: EchoObject) {
+  _logObjectAccess(obj: Document) {
     this._router._logObjectAccess(obj);
   }
 
   private _update() {
     for (const object of this._echo.select({}).exec().entities) {
       if (!this._objects.has(object.id)) {
-        const obj = new EchoObject();
+        const obj = new Document();
         obj[unproxy]._id = object.id;
         this._objects.set(object.id, obj);
         obj[unproxy]._bind(object, this);

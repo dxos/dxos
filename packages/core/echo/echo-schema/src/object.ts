@@ -24,7 +24,7 @@ const isValidKey = (key: string | symbol) =>
   );
 
 /**
- * Base class for objects.
+ * Base class for generated document types and dynamic objects.
  */
 // TODO(burdon): Support immutable objects?
 export class DocumentBase {
@@ -68,7 +68,7 @@ export class DocumentBase {
   }
 
   // Proxy object.
-  [unproxy]: EchoObject = this;
+  [unproxy]: Document = this;
 
   // prettier-ignore
   constructor(
@@ -279,9 +279,10 @@ export class DocumentBase {
 }
 
 /**
- * Base class for generated types.
+ * Documents with dynamic properties.
+ * Don't have a schema.
  */
-export class EchoObject extends DocumentBase {
+export class Document extends DocumentBase {
   // Property accessor.
   [key: string]: any;
 }

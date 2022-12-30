@@ -5,7 +5,7 @@
 import { OrderedList } from '@dxos/object-model';
 
 import { unproxy } from './defs';
-import { EchoObject, DocumentBase } from './object';
+import { Document, DocumentBase } from './object';
 
 // TODO(burdon): Remove?
 const EMPTY = '__EMPTY__';
@@ -17,7 +17,7 @@ const EMPTY = '__EMPTY__';
 export class OrderedSet<T extends DocumentBase> implements Array<T> {
   private readonly _uninitialized?: T[] = [];
 
-  private _object?: EchoObject;
+  private _object?: Document;
   private _property?: string;
   private _orderedList?: OrderedList;
 
@@ -249,7 +249,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     return this.length;
   }
 
-  _bind(object: EchoObject, property: string) {
+  _bind(object: Document, property: string) {
     this._object = object;
     this._property = property;
     this._orderedList = new OrderedList(this._object!._item!.model, this._property!);

@@ -6,11 +6,11 @@ import expect from 'expect';
 
 import { describe, test } from '@dxos/test';
 
-import { EchoObject } from './object';
+import { Document } from './object';
 
-describe('EchoObject', () => {
+describe('Document', () => {
   test('instance of', async () => {
-    const obj = new EchoObject();
-    expect(obj instanceof EchoObject).toBeTruthy();
+    const obj = new Document();
+    expect(obj instanceof Document).toBeTruthy();
   });
 });

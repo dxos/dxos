@@ -6,7 +6,7 @@ import * as pb from 'protobufjs';
 
 const packageName = '@dxos/echo-schema';
 
-const types = ['EchoSchema', 'EchoObjectBase', 'TypeFilter', 'OrderedSet'];
+const types = ['EchoSchema', 'DocumentBase', 'TypeFilter', 'OrderedSet'];
 
 /**
  * Source builder and formatter.
@@ -140,7 +140,7 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
 
   // prettier-ignore
   builder
-    .push(`export class ${name} extends EchoObjectBase {`)
+    .push(`export class ${name} extends DocumentBase {`)
     .push(`static readonly type = schema.getType('${fullName}');`, 1).nl()
 
     .push(`static filter(opts?: { ${initializer} }): TypeFilter<${name}> {`, 1)
