@@ -33,7 +33,6 @@ export type SpaceParams = {
   controlFeed: FeedWrapper<FeedMessage>;
   dataFeed: FeedWrapper<FeedMessage>;
   feedProvider: FeedProvider;
-  initialTimeframe?: Timeframe; // TODO(dmaretskyi): Remove.
   dataPipelineControllerProvider: () => DataPipelineController;
 };
 
@@ -77,7 +76,6 @@ export class Space {
     controlFeed,
     dataFeed,
     feedProvider,
-    initialTimeframe,
     dataPipelineControllerProvider
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
@@ -91,8 +89,7 @@ export class Space {
     this._controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
-      feedProvider,
-      initialTimeframe
+      feedProvider
     });
 
     this._controlPipeline.setWriteFeed(controlFeed);
