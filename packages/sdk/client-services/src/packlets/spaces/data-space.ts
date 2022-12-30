@@ -18,7 +18,7 @@ export class DataSpace implements ISpace {
     private readonly _inner: Space,
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
-    private readonly _presence: Presence
+    private readonly _presence: Presence,
   ) {
     this._dataPipelineController = new DataPipelineControllerImpl(_modelFactory, _memberKey, (feedKey) =>
       _inner.spaceState.feeds.get(feedKey)
