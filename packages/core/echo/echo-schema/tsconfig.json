@@ -39,6 +39,9 @@
     },
     {
       "path": "../object-model"
+    },
+    {
+      "path": "../text-model"
     }
   ]
 }

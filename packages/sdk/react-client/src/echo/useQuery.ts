@@ -5,11 +5,11 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { Space } from '@dxos/client';
-import { EchoObject, Filter, TypeFilter } from '@dxos/echo-schema';
+import { Document, DocumentBase, Filter, TypeFilter } from '@dxos/echo-schema';
 
 type UseQuery = {
-  <T extends EchoObject>(space: Space, filter?: TypeFilter<T>): T[];
-  (space: Space, filter?: Filter): EchoObject[];
+  <T extends DocumentBase>(space: Space, filter?: TypeFilter<T>): T[];
+  (space: Space, filter?: Filter): Document[];
 };
 
 /**
