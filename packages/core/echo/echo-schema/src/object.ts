@@ -1,6 +1,11 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor } from '@dxos/model-factory';
+
 import { EchoDatabase } from './database';
 import { db, id, unproxy } from './defs';
 
@@ -56,8 +61,7 @@ export abstract class EchoObject<T extends Model = any> {
   /**
    * Called after object is bound to database.
    */
-  protected _onBind(): void {
-  }
+  protected _onBind(): void {}
 
   /**
    * @internal

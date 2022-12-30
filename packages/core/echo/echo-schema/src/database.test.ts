@@ -10,13 +10,13 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
+import { TextModel } from '@dxos/text-model';
 
 import { EchoDatabase } from './database';
 import { DatabaseRouter } from './database-router';
 import { Document } from './document';
 import { OrderedSet } from './ordered-set';
 import { TextObject } from './text-object';
-import { TextModel } from '@dxos/text-model';
 
 const createDatabase = async (router = new DatabaseRouter()) => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TextModel);
@@ -181,7 +181,7 @@ describe('EchoDatabase', () => {
 
       text.model!.insert('Hello world', 0);
       expect(text.model!.textContent).toEqual('Hello world');
-    })
+    });
 
     test('as a prop', async () => {
       const db = await createDatabase();
@@ -194,11 +194,11 @@ describe('EchoDatabase', () => {
       await waitForExpect(() => {
         expect(task.text.doc).toBeDefined();
         expect(task.text.model).toBeDefined();
-      })
+      });
       expect(task.text.model!.textContent).toEqual('');
 
       task.text.model!.insert('Hello world', 0);
       expect(task.text.model!.textContent).toEqual('Hello world');
-    })
-  })
+    });
+  });
 });

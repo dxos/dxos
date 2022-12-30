@@ -2,13 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Item } from '@dxos/echo-db';
-import { PublicKey } from '@dxos/keys';
-import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { EchoDatabase } from './database';
-import { id, db, unproxy } from './defs';
+import { id, unproxy } from './defs';
 import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';

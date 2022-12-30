@@ -66,7 +66,7 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
 export const createType = (field: pb.Field): string => {
   const scalar = () => {
     if (field.resolvedType) {
-      if(field.resolvedType.name === 'TextObject') {
+      if (field.resolvedType.name === 'TextObject') {
         return 'TextObject';
       }
 
@@ -123,7 +123,7 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
     .push('export const schema = EchoSchema.fromJson(schemaJson);').nl();
 
   for (const type of iterTypes(root)) {
-    if(type.name === 'TextObject') {
+    if (type.name === 'TextObject') {
       continue;
     }
 

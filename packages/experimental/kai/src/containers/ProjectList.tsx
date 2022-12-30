@@ -7,13 +7,13 @@ import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { makeReactive, useQuery } from '@dxos/react-client';
+import { Composer } from '@dxos/react-composer';
 import { getSize, mx } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
 import { useSpace } from '../hooks';
 import { createProject, createTask, Project } from '../proto';
 import { TaskItem } from './TaskList';
-import { Composer } from '@dxos/react-composer';
 
 export const ProjectList: FC<{}> = () => {
   const { space } = useSpace();
@@ -53,10 +53,6 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
     }
   };
 
-  console.log({
-    doc: project.description?.doc
-  })
-
   return (
     <div className='flex flex-col'>
       <div className='flex p-2 pb-0 items-center'>
@@ -74,12 +70,14 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
         </button>
       </div>
 
-      {project.description?.doc && <Composer
+      {project.description?.doc && (
+        <Composer
           doc={project.description?.doc}
           className={mx(
-            'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[3em]',
+            'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[3em]'
           )}
-        />}
+        />
+      )}
 
       {project.tasks?.length > 0 && (
         <div>

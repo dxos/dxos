@@ -1,6 +1,10 @@
-import { EchoObject } from "./object";
-import { TextModel, type Doc } from '@dxos/text-model'
-import { ModelConstructor } from "@dxos/model-factory";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { TextModel, type Doc } from '@dxos/text-model';
+
+import { EchoObject } from './object';
 
 export class TextObject extends EchoObject<TextModel> {
   override _modelConstructor = TextModel;

@@ -3,6 +3,7 @@
 //
 
 import { Database, Item } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
@@ -11,7 +12,6 @@ import { id, unproxy } from './defs';
 import { Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
-import { log } from '@dxos/log';
 
 export type Filter = Record<string, any>;
 
@@ -76,7 +76,7 @@ export class EchoDatabase {
 
     const item = (await this._echo.createItem({
       id: obj[unproxy]._id,
-      model: obj[unproxy]._modelConstructor,
+      model: obj[unproxy]._modelConstructor
     })) as Item<any>;
     obj[unproxy]._bind(item, this);
     return obj;
@@ -90,7 +90,8 @@ export class EchoDatabase {
   query(filter: Filter): Query;
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
-    const matchObject = (object: EchoObject): object is DocumentBase => object instanceof DocumentBase && Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
+    const matchObject = (object: EchoObject): object is DocumentBase =>
+      object instanceof DocumentBase && Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
 
     // Current result.
     let cache: Document[] | undefined;

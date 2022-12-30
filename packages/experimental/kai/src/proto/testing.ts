@@ -12,7 +12,7 @@ import { Project } from './gen/schema';
 export const createProject = async (db: EchoDatabase) => {
   const project = new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
-    description: new TextObject(),
+    description: new TextObject()
   });
 
   return await db.save(project);
