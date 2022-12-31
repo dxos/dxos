@@ -34,13 +34,14 @@ export const Editor = makeReactive(() => {
           onChange={(value) => (projects[0].title = value)}
         />
       </div>
+
       {projects[0].description?.doc && (
-        <Composer
-          doc={projects[0].description?.doc}
-          className={mx(
-            'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]'
-          )}
-        />
+        <div className={'flex flex-1 overflow-y-scroll border-t editor-container'}>
+          <Composer
+            doc={projects[0].description?.doc}
+            className={mx('z-0 bg-white text-black w-full m-2 p-2 min-bs-[12em]')}
+          />
+        </div>
       )}
     </Card>
   );

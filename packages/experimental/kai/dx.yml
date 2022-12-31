@@ -13,7 +13,8 @@ runtime:
   client:
     remoteSource: /vault.html
     storage:
-      persistent: true
+#       persistent: true
+      persistent: false
 
   services:
     signal:

@@ -48,7 +48,6 @@ export const SpaceList = () => {
 
   // TODO(burdon): Constant re-render after connected: space updated?
   const url = useHref(observable ? `/join/${InvitationEncoder.encode(observable.invitation!)}` : '/');
-  console.log('URL', url);
 
   return (
     <div className='flex flex-col'>

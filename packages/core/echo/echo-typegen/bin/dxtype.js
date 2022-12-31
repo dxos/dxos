@@ -6,4 +6,4 @@
 
 // TODO(burdon): Integrate with CLI.
 
-require('../dist/node/main.cjs');
+require('../dist/lib/node/main.cjs');
