@@ -3,9 +3,10 @@
 //
 
 import clsx from 'clsx';
+import { views } from 'packages/experimental/kai/src/containers/views';
 import { Bug, PlusCircle, Gear, Robot, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
@@ -18,10 +19,15 @@ import { SpaceList } from './SpaceList';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
+  const { spaceKey: currentSpaceKey, view } = useParams();
   const client = useClient();
   const { space } = useSpace();
   const { state: connectionState } = useNetworkStatus();
   const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
+
+  const setView = (spaceKey: string, view: string) => {
+    navigate(`/${spaceKey}/${view}`);
+  };
 
   const handleSettings = () => {
     navigate('/settings');
@@ -59,6 +65,14 @@ export const Sidebar = () => {
             <PlusCircle className={getSize(6)} />
           </button>
         </div>
+      </div>
+
+      <div className='flex p-3 mb-2'>
+        {views.map(({ key, Icon }) => (
+          <button key={key} className='mr-2' onClick={() => setView(currentSpaceKey!, key)}>
+            <Icon className={clsx(getSize(6), view !== key && 'text-gray-500')} />
+          </button>
+        ))}
       </div>
 
       <div className='flex flex-1 flex-col overflow-y-scroll'>

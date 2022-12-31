@@ -14,6 +14,7 @@ import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 
 import { OptionsContext, SpaceContext, SpaceContextType } from '../hooks';
 import { Main } from './Main';
+import { views } from './views';
 
 /**
  * Selects or creates an initial space.
@@ -122,9 +123,15 @@ const Join = () => {
  */
 const SpacePage = () => {
   const navigate = useNavigate();
-  const { spaceKey: currentSpaceKey } = useParams();
+  const { spaceKey: currentSpaceKey, view } = useParams();
   const spaces = useSpaces();
   const [context, setContext] = useState<SpaceContextType | undefined>();
+
+  useEffect(() => {
+    if (!view || views.findIndex(({ key }) => key === view) === -1) {
+      navigate(`/${currentSpaceKey}/${views[0].key}`);
+    }
+  }, [view, currentSpaceKey]);
 
   useEffect(() => {
     if (!spaces.length) {
@@ -144,11 +151,7 @@ const SpacePage = () => {
     return null;
   }
 
-  return (
-    <SpaceContext.Provider value={context}>
-      <Main />
-    </SpaceContext.Provider>
-  );
+  return <SpaceContext.Provider value={context}>{view && <Main view={view} />}</SpaceContext.Provider>;
 };
 
 /**
@@ -170,6 +173,11 @@ const Routes = () => {
     },
     {
       path: '/:spaceKey',
+      element: <SpacePage />
+    },
+    // TODO(burdon): Merge with above?
+    {
+      path: '/:spaceKey/:view',
       element: <SpacePage />
     }
   ]);
