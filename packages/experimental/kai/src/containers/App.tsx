@@ -43,6 +43,21 @@ const Init = () => {
   return null;
 };
 
+// TODO(burdon): Colorize.
+const Settings = () => {
+  const client = useClient();
+
+  return (
+    <div className='full-screen'>
+      <div className='flex flex-1 drop-shadow-md justify-center'>
+        <div className='flex flex-1 bg-white p-4' style={{ width: 700, maxWidth: 700 }}>
+          <pre>{JSON.stringify(client.config.values, undefined, 2)};</pre>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /**
  * Join space via invitation URL.
  */
@@ -146,6 +161,10 @@ const Routes = () => {
       element: <Init />
     },
     {
+      path: '/settings',
+      element: <Settings />
+    },
+    {
       path: '/join/:invitation',
       element: <Join />
     },
@@ -159,7 +178,7 @@ const Routes = () => {
 /**
  * Main app container with routes.
  */
-export const App: FC<{ debug?: boolean }> = ({ debug }) => {
+export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
   const [client, setClient] = useState<Client | undefined>(undefined);
 
   // Auto-create client and profile.

@@ -19,7 +19,7 @@ export const ProjectList: FC<{}> = () => {
   const projects = useQuery(space, Project.filter());
 
   const handleCreate = async () => {
-    await createProject(space.db2);
+    await createProject(space.experimental.db);
   };
 
   const Menubar = () => (
@@ -45,7 +45,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
   const { space } = useSpace();
 
   const handleCreate = async () => {
-    const task = await createTask(space.db2);
+    const task = await createTask(space.experimental.db);
     project.tasks.push(task);
     if (task.assignee) {
       project.team.push(task.assignee);

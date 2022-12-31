@@ -29,12 +29,12 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   }, []);
 
   const handleCreate = async () => {
-    await createTask(space.db2);
+    await createTask(space.experimental.db);
   };
 
   const handleNewTask = async (task: Task) => {
     if (task.title.length) {
-      await space.db2.save(task);
+      await space.experimental.db.save(task);
       setNewTask(new Task());
     }
   };

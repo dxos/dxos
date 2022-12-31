@@ -18,7 +18,7 @@ export const ContactList: FC<{}> = () => {
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   const handleCreate = async () => {
-    return createContact(space.db2);
+    return createContact(space.experimental.db);
   };
 
   const Menubar = () => (

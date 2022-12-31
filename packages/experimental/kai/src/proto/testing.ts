@@ -9,6 +9,54 @@ import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 import { Contact, Task } from '../proto';
 import { Project } from './gen/schema';
 
+// TODO(burdon): Don't save inside utils.
+
+type MinMax = { min: number; max: number };
+
+type GeneratorOptions = {
+  projects: MinMax;
+  tasks: MinMax;
+  contacts: MinMax;
+};
+
+export class Generator {
+  constructor(
+    private readonly _db: EchoDatabase,
+    private readonly _options: GeneratorOptions = {
+      projects: { min: 1, max: 2 },
+      tasks: { min: 1, max: 8 },
+      contacts: { min: 3, max: 5 }
+    }
+  ) {}
+
+  async generate() {
+    await Promise.all(
+      Array.from({ length: faker.datatype.number(this._options.contacts) }).map(async () => {
+        return await createContact(this._db);
+      })
+    );
+
+    await Promise.all(
+      Array.from({ length: faker.datatype.number(this._options.projects) }).map(async () => {
+        const project = await createProject(this._db);
+
+        const tasks = await Promise.all(
+          Array.from({ length: faker.datatype.number(this._options.tasks) }).map(async () => {
+            // TODO(burdon): Fails add multiple.
+            // project.tasks.push(await createTask(this._db));
+            const task = await createTask(this._db);
+            task.completed = faker.datatype.boolean();
+            return task;
+          })
+        );
+
+        tasks.forEach((task: Task) => project.tasks.push(task));
+        return project;
+      })
+    );
+  }
+}
+
 export const createProject = async (db: EchoDatabase) => {
   const project = new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),

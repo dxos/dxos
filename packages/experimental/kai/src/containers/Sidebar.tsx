@@ -3,9 +3,8 @@
 //
 
 import clsx from 'clsx';
-import { MemberList } from 'packages/experimental/kai/src/containers/MemberList';
-import { AirplaneInFlight, AirplaneTakeoff, Bug, PlusCircle, Gear } from 'phosphor-react';
-import React from 'react';
+import { Bug, PlusCircle, Gear, Robot, WifiHigh, WifiSlash } from 'phosphor-react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
@@ -13,6 +12,8 @@ import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { useSpace } from '../hooks';
+import { Generator } from '../proto';
+import { MemberList } from './MemberList';
 import { SpaceList } from './SpaceList';
 
 export const Sidebar = () => {
@@ -20,13 +21,22 @@ export const Sidebar = () => {
   const client = useClient();
   const { space } = useSpace();
   const { state: connectionState } = useNetworkStatus();
+  const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
+
+  const handleSettings = () => {
+    navigate('/settings');
+  };
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     navigate(`/${space.key.truncate()}`);
   };
 
-  const handleAirplaneMode = async () => {
+  const handleGenerateData = async () => {
+    await generator?.generate();
+  };
+
+  const handleToggleConnection = async () => {
     switch (connectionState) {
       case ConnectionState.OFFLINE: {
         await client.mesh.setConnectionState(ConnectionState.ONLINE);
@@ -60,14 +70,17 @@ export const Sidebar = () => {
       </div>
 
       <div className='flex flex-shrink-0 p-3 mt-2'>
-        <button className='mr-2'>
+        <button className='mr-2' title='Settings' onClick={handleSettings}>
           <Gear className={getSize(6)} />
         </button>
-        <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
+        <button className='mr-2' title='Generate data' onClick={handleGenerateData}>
+          <Robot className={getSize(6)} />
+        </button>
+        <button className='mr-2' title='Toggle connection.' onClick={handleToggleConnection}>
           {connectionState === ConnectionState.ONLINE ? (
-            <AirplaneTakeoff className={getSize(6)} />
+            <WifiHigh className={getSize(6)} />
           ) : (
-            <AirplaneInFlight className={getSize(6)} />
+            <WifiSlash className={clsx(getSize(6), 'text-orange-500')} />
           )}
         </button>
       </div>
