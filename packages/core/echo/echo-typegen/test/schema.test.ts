@@ -56,4 +56,17 @@ describe('schema', () => {
       ]
     });
   });
+
+  test('ordered set', () => {
+    const task = new Task();
+    expect(task.subTasks).to.have.length(0);
+
+    task.subTasks.push(new Task());
+    task.subTasks.push(new Task());
+    expect(task.subTasks).to.have.length(2);
+
+    // TODO(burdon): Implement = [].
+    task.subTasks.splice(0, 2);
+    expect(task.subTasks.length).to.eq(0);
+  });
 });

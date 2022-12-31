@@ -51,6 +51,7 @@ export class Generator {
         );
 
         tasks.forEach((task: Task) => project.tasks.push(task));
+
         return project;
       })
     );

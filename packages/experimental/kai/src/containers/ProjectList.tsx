@@ -46,7 +46,10 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
 
   const handleCreate = async () => {
     const task = await createTask(space.experimental.db);
+    console.log(project.tasks.push);
     project.tasks.push(task);
+    // TODO(burdon): Can't set array.
+    // project.tasks = [task];
     if (task.assignee) {
       project.team.push(task.assignee);
     }
@@ -68,15 +71,6 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           <Plus className={getSize(6)} />
         </button>
       </div>
-      {/*
-      {project.description?.doc && (
-        <Composer
-          doc={project.description?.doc}
-          className={mx(
-            'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[3em]'
-          )}
-        />
-      )} */}
 
       {project.tasks?.length > 0 && (
         <div>

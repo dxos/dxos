@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor } from '@dxos/model-factory';
 
 import { EchoDatabase } from './database';
-import { db, id, unproxy } from './defs';
+import { db, id, proxy } from './defs';
 
 /**
  * Base class for all echo objects.
@@ -39,16 +39,16 @@ export abstract class EchoObject<T extends Model = any> {
 
   /** ID accessor. */
   get [id](): string {
-    return this[unproxy]._id;
+    return this[proxy]._id;
   }
 
   /** Database reference if bound. */
   get [db](): EchoDatabase | undefined {
-    return this[unproxy]._database;
+    return this[proxy]._database;
   }
 
-  /** Proxy object. */
-  [unproxy]: this = this;
+  /** Proxied object. */
+  [proxy]: this = this;
 
   /**
    * @internal

@@ -4,7 +4,7 @@
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { id, unproxy } from './defs';
+import { id, proxy } from './defs';
 import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -55,7 +55,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   // TODO(burdon): Document.
   get [Symbol.toStringTag]() {
-    return this[unproxy]?._schemaType?.name ?? 'Document';
+    return this[proxy]?._schemaType?.name ?? 'Document';
   }
 
   /**
@@ -84,7 +84,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
                 values.push(strip({ id: item[id] })); // TODO(burdon): Option to reify object.1
                 // } else {
                 //   visited.add(value);
-                //   values.push(item[unproxy]._json(visited));
+                //   values.push(item[object]._json(visited));
                 // }
               } else {
                 values.push(item);
@@ -100,7 +100,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
             result[name] = { id: value[id] };
             // } else {
             //   visited.add(value);
-            //   result[name] = value[unproxy]._json(visited);
+            //   result[name] = value[object]._json(visited);
             // }
           } else {
             result[name] = value;
@@ -147,7 +147,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       case 'object':
         return this._createProxy({}, prop);
       case 'array':
-        return new OrderedSet()._bind(this[unproxy], prop);
+        return new OrderedSet()._bind(this[proxy], prop);
       default:
         return value;
     }
@@ -156,11 +156,11 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   private _setModelProp(prop: string, value: any): any {
     if (value instanceof EchoObject) {
       void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
-      void this._item!.model.set(prop, value[unproxy]._id);
+      void this._item!.model.set(prop, value[proxy]._id);
       void this._database!.save(value);
     } else if (value instanceof OrderedSet) {
       void this._item!.model.set(`${prop}$type`, 'array');
-      value._bind(this[unproxy], prop);
+      value._bind(this[proxy], prop);
     } else if (typeof value === 'object' && value !== null) {
       void this._item!.model.set(`${prop}$type`, 'object');
       const sub = this._createProxy({}, prop);
