@@ -30,14 +30,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   [n: number]: T;
 
   [Symbol.iterator](): IterableIterator<T> {
-    if (this._orderedList) {
-      return this._orderedList.values
-        .slice(0, -1)
-        .map((id) => this._object!._database!.getObjectById(id) as T)
-        .values();
-    } else {
-      return this._uninitialized![Symbol.iterator]();
-    }
+    return this.values();
   }
 
   [Symbol.unscopables](): {
@@ -157,7 +150,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   forEach(callbackfn: (value: T, index: number, array: T[]) => void, thisArg?: any): void {
-    throw new Error('Method not implemented.');
+    Array.from(this[Symbol.iterator]()).forEach(callbackfn, thisArg);
   }
 
   map<U>(callbackfn: (value: T, index: number, array: T[]) => U, thisArg?: any): U[] {
@@ -223,7 +216,14 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   values(): IterableIterator<T> {
-    throw new Error('Method not implemented.');
+    if (this._orderedList) {
+      return this._orderedList.values
+        .slice(0, -1)
+        .map((id) => this._object!._database!.getObjectById(id) as T)
+        .values();
+    } else {
+      return this._uninitialized![Symbol.iterator]();
+    }
   }
 
   includes(searchElement: T, fromIndex?: number | undefined): boolean {

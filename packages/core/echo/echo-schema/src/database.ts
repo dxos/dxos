@@ -44,9 +44,9 @@ export class EchoDatabase {
     /**
      * @internal
      */
-    public readonly _echo: Database
+    public readonly _db: Database
   ) {
-    this._echo.update.on(() => this._update());
+    this._db.update.on(() => this._update());
     this._update();
   }
 
@@ -74,7 +74,7 @@ export class EchoDatabase {
     obj[proxy]._isBound = true;
     this._objects.set(obj[proxy]._id, obj);
 
-    const item = (await this._echo.createItem({
+    const item = (await this._db.createItem({
       id: obj[proxy]._id,
       model: obj[proxy]._modelConstructor
     })) as Item<any>;
@@ -108,7 +108,7 @@ export class EchoDatabase {
       },
 
       subscribe: (callback: () => void) => {
-        return this._echo.update.on((updatedObjects) => {
+        return this._db.update.on((updatedObjects) => {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
               const match = matchObject(this._objects.get(object.id)!);
@@ -136,7 +136,7 @@ export class EchoDatabase {
   }
 
   private _update() {
-    for (const object of this._echo.select({}).exec().entities) {
+    for (const object of this._db.select({}).exec().entities) {
       if (!this._objects.has(object.id)) {
         const obj = this._createObjectInstance(object);
         if (!obj) {

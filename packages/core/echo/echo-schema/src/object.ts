@@ -37,6 +37,18 @@ export abstract class EchoObject<T extends Model = any> {
   // TODO(burdon): Remove? Deduce from whether _database is set?
   _isBound = false;
 
+  /**
+   * @internal
+   */
+  abstract _modelConstructor: ModelConstructor<T>;
+
+  constructor() {
+    this._id = PublicKey.random().toHex();
+  }
+
+  /** Proxied object. */
+  [proxy]: this = this;
+
   /** ID accessor. */
   get [id](): string {
     return this[proxy]._id;
@@ -45,18 +57,6 @@ export abstract class EchoObject<T extends Model = any> {
   /** Database reference if bound. */
   get [db](): EchoDatabase | undefined {
     return this[proxy]._database;
-  }
-
-  /** Proxied object. */
-  [proxy]: this = this;
-
-  /**
-   * @internal
-   */
-  abstract _modelConstructor: ModelConstructor<T>;
-
-  constructor() {
-    this._id = PublicKey.random().toHex();
   }
 
   /**

@@ -130,6 +130,7 @@ export class SpaceProxy implements Space {
       new DatabaseBackendProxy(this._clientServices.services.DataService, this._key),
       memberKey
     );
+
     this._experimental = {
       db: new EchoDatabase(databaseRouter, this._database)
     };
