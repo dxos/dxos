@@ -71,20 +71,21 @@ message Runtime {
         FIREFOX = 3;
         NODE = 4;
 
-        // Only for key storage:
-
+        // Key storage only
         LEVELJS = 11;
         JSONDOWN = 12;
       }
 
-      optional bool persistent = 1;             // TODO(burdon): Replace with type.
-      optional StorageDriver key_storage = 3;   // TODO(burdon): Rename key_store.
-      optional StorageDriver storage_type = 2;  // TODO(burdon): Rename data_store.
-      optional string path = 4;                 // TODO(burdon): Rename data_path.
+      optional bool persistent = 1;               // TODO(burdon): Replace with type.
+      optional StorageDriver key_storage = 3;     // TODO(burdon): Rename key_store.
+      optional StorageDriver storage_type = 2;    // TODO(burdon): Rename data_store.
+      optional string path = 4;                   // TODO(burdon): Rename data_path.
     }
 
-    optional string debug = 1 [(env) = "DEBUG"];
+    optional string debug = 1 [(env) = "DEBUG"];  // TODO(burdon): Change to LOG.
     optional Storage storage = 2;
+
+    // TODO(burdon): Structure snapshot/epoch related props.
     optional bool enable_snapshots = 3;
 
     /// Milliseconds
@@ -140,6 +141,9 @@ message Runtime {
     optional string debug = 1;
   }
 
+  //
+  // KUBE
+  //
   message Kube {
     message Autoupdate {
       optional bool enabled = 1;

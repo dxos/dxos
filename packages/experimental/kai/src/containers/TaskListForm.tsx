@@ -9,16 +9,6 @@ import { EchoDatabase } from '@dxos/echo-schema';
 import { useSpace } from '../hooks';
 import { Task } from '../proto';
 
-//
-// TODO(burdon): Ordered set.
-// TODO(burdon): Soft delete.
-// TODO(burdon): Materialized links (referential integrity).
-// TODO(burdon): Defer callback/render until timeframe.
-// TODO(burdon): DB internals.
-// TODO(burdon): Sync item creation.
-// TODO(burdon): Text model (TextObject, DocumentObject); different decorator.
-//
-
 /**
  * Mutation batch.
  * Adds mutations to queue.
