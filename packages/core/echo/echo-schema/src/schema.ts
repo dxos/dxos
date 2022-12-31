@@ -53,9 +53,7 @@ export class EchoSchema {
   // prettier-ignore
   constructor(
     private readonly _root: pb.Root
-  ) {
-    console.log(this._root);
-  }
+  ) {}
 
   getType(name: string): EchoSchemaType {
     return new EchoSchemaType(this._root.lookupType(name));

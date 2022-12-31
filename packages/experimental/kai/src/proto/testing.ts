@@ -4,14 +4,15 @@
 
 import faker from 'faker';
 
-import { EchoDatabase } from '@dxos/echo-schema';
+import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 
 import { Contact, Task } from '../proto';
 import { Project } from './gen/schema';
 
 export const createProject = async (db: EchoDatabase) => {
   const project = new Project({
-    title: faker.commerce.productAdjective() + ' ' + faker.commerce.product()
+    title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
+    description: new TextObject()
   });
 
   return await db.save(project);

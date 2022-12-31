@@ -6,7 +6,7 @@ import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ContactList } from './ContactList';
-import { Game } from './Game';
+import { Editor } from './Editor';
 import { ProjectGraph } from './ProjectGraph';
 import { ProjectList } from './ProjectList';
 import { Sidebar } from './Sidebar';
@@ -50,8 +50,12 @@ export const Main = () => {
             <ContactList />
           </div>
 
-          <div className='flex flex-shrink-0 col-span-3' style={props}>
+          {/* <div className='flex flex-shrink-0 col-span-3' style={props}>
             <Game />
+          </div> */}
+
+          <div className='flex flex-shrink-0 col-span-5' style={props}>
+            <Editor />
           </div>
         </div>
       </div>

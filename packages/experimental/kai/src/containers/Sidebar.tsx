@@ -3,6 +3,7 @@
 //
 
 import clsx from 'clsx';
+import { MemberList } from 'packages/experimental/kai/src/containers/MemberList';
 import { AirplaneInFlight, AirplaneTakeoff, Bug, PlusCircle, Gear } from 'phosphor-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +13,6 @@ import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { useSpace } from '../hooks';
-import { MembersList } from './MembersList';
 import { SpaceList } from './SpaceList';
 
 export const Sidebar = () => {
@@ -56,7 +56,7 @@ export const Sidebar = () => {
       </div>
 
       <div className='flex flex-shrink-0 p-3 mt-6'>
-        <MembersList spaceKey={space.key} />
+        <MemberList spaceKey={space.key} />
       </div>
 
       <div className='flex flex-shrink-0 p-3 mt-2'>

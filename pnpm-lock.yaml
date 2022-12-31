@@ -1381,6 +1381,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/object-model': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       protobufjs: ^6.9.0
       wait-for-expect: ^3.0.2
@@ -1393,6 +1394,7 @@ importers:
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/object-model': link:../object-model
+      '@dxos/text-model': link:../text-model
       '@dxos/util': link:../../../common/util
       protobufjs: 6.11.3
     devDependencies:
@@ -2690,6 +2692,10 @@ importers:
   packages/experimental/kai:
     specifiers:
       '@babel/core': ^7.18.13
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
@@ -2706,6 +2712,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-composer': workspace:*
       '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
@@ -2728,6 +2735,10 @@ importers:
       vite-plugin-pwa: ^0.12.4
       workbox-window: ^6.5.4
     dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
@@ -2743,6 +2754,7 @@ importers:
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../sdk/react-uikit
@@ -5726,7 +5738,6 @@ packages:
     dependencies:
       react: 18.2.0
       tslib: 2.4.0
-    dev: true
 
   /@dnd-kit/core/6.0.5_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-3nL+Zy5cT+1XwsWdlXIvGIFvbuocMyB4NBxTN74DeBaBqeWdH9JsnKwQv7buZQgAHmAH+eIENfS1ginkvW6bCw==}
@@ -5739,7 +5750,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       tslib: 2.4.0
-    dev: true
 
   /@dnd-kit/modifiers/6.0.0_vvd3dzag27tc7rclyb2whqqnpe:
     resolution: {integrity: sha512-V3+JSo6/BTcgPRHiNUTSKgqVv/doKXg+T4Z0QvKiiXp+uIyJTUtPkQOBRQApUWi3ApBhnoWljyt/3xxY4fTd0Q==}
@@ -5751,7 +5761,6 @@ packages:
       tslib: 2.4.0
     transitivePeerDependencies:
       - react
-    dev: true
 
   /@dnd-kit/sortable/7.0.1_vvd3dzag27tc7rclyb2whqqnpe:
     resolution: {integrity: sha512-n77qAzJQtMMywu25sJzhz3gsHnDOUlEjTtnRl8A87rWIhnu32zuP+7zmFjwGgvqfXmRufqiHOSlH7JPC/tnJ8Q==}
@@ -5763,7 +5772,6 @@ packages:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       react: 18.2.0
       tslib: 2.4.0
-    dev: true
 
   /@dnd-kit/utilities/3.2.0_react@18.2.0:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
@@ -5772,7 +5780,6 @@ packages:
     dependencies:
       react: 18.2.0
       tslib: 2.4.0
-    dev: true
 
   /@dxos/benchmark-suite/1.0.0-beta.3:
     resolution: {integrity: sha512-rpHryqIC1sOSWcGLyqnhJdLWDQ2jtidm7K8G/LQr1Xp3ibHO7cRg0w9v1RnYUDgyCtgWh4AWyec5lazNMCpAzw==}
@@ -11851,7 +11858,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       deepmerge: 4.2.2
@@ -11864,7 +11871,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@styled-system/color': 5.1.2
       '@styled-system/should-forward-prop': 5.1.5
       '@styled-system/space': 5.1.2
@@ -11879,7 +11886,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       '@theme-ui/parse-props': 0.14.7_gyryel6m34lsxtsejhafetjriq
       deepmerge: 4.2.2
@@ -11891,7 +11898,7 @@ packages:
     peerDependencies:
       '@emotion/react': ^11
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       csstype: 3.1.1
     dev: true
 
@@ -11902,7 +11909,7 @@ packages:
       '@mdx-js/react': ^1 || ^2
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -11915,7 +11922,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       react: 18.2.0
     dev: true
@@ -11926,7 +11933,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/color-modes': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
