@@ -50,6 +50,7 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
   );
 };
 
+// TODO(burdon): Drag-and-drop implementation.
 const TasksView: FC<{ props: any }> = ({ props }) => {
   return (
     <div className='flex flex-1 justify-center'>

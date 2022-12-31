@@ -16,7 +16,7 @@ import { getSize } from '@dxos/react-ui';
 import { useSpace } from '../hooks';
 
 export const SpaceList = () => {
-  const { spaceKey: currentSpaceKey } = useParams();
+  const { spaceKey: currentSpaceKey, view } = useParams();
   const spaces = useSpaces();
   const { space } = useSpace();
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
@@ -65,7 +65,7 @@ export const SpaceList = () => {
             <Planet className={getSize(6)} />
           </div>
           <div className='flex flex-1 font-mono text-slate-300 cursor-pointer'>
-            <Link to={`/${space.key.truncate()}`}>{space.key.truncate()}</Link>
+            <Link to={`/${space.key.truncate()}/${view}`}>{space.key.truncate()}</Link>
           </div>
           {space.key.truncate() === currentSpaceKey && (
             <div className='flex items-center'>
