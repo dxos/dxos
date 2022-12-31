@@ -17,6 +17,9 @@ describe('schema', () => {
     const contact = new Contact();
     expect(contact[id]).not.to.be.undefined;
     expect(Object.keys(contact).length).to.eq(5);
+
+    // TODO(burdon): Test after saved with test database.
+    expect(contact[id]).to.be.a('string');
   });
 
   test('json', () => {

@@ -5,6 +5,7 @@
 import { Database, Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
+import { DatabaseRouter } from './database-router';
 import { id, unproxy } from './defs';
 import { EchoObject, EchoObjectBase } from './object';
 
@@ -34,13 +35,23 @@ export interface SubscriptionHandle {
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
-  constructor(private readonly _echo: Database) {
+  constructor(
+    private readonly _router: DatabaseRouter,
+    /**
+     * @internal
+     */
+    public readonly _echo: Database
+  ) {
     this._echo.update.on(() => this._update());
     this._update();
   }
 
   get objects() {
     return Array.from(this._objects.values());
+  }
+
+  get router() {
+    return this._router;
   }
 
   getObjectById(id: string) {
@@ -109,30 +120,10 @@ export class EchoDatabase {
   }
 
   /**
-   * Subscribe to database updates.
+   * @internal
    */
-  // TODO(burdon): Add filter?
-  createSubscription(onUpdate: () => void): SubscriptionHandle {
-    let subscribed = true;
-
-    const unsubscribe = this._echo.update.on((changedEntities) => {
-      subscribed = false;
-      if (changedEntities.some((entity) => handle.selectedIds.has(entity.id))) {
-        onUpdate();
-      }
-    });
-
-    const handle = {
-      update: (selection: Selection) => {
-        handle.selectedIds = new Set(getIdsFromSelection(selection));
-        return handle;
-      },
-      subscribed,
-      selectedIds: new Set<string>(),
-      unsubscribe
-    };
-
-    return handle;
+  _logObjectAccess(obj: EchoObject) {
+    this._router._logObjectAccess(obj);
   }
 
   private _update() {
@@ -147,16 +138,3 @@ export class EchoDatabase {
     }
   }
 }
-
-// TODO(burdon): Document.
-const getIdsFromSelection = (selection: Selection): string[] => {
-  if (selection instanceof EchoObjectBase) {
-    return [selection[unproxy]._id];
-  } else if (typeof selection === 'function') {
-    return []; // TODO(burdon): Traverse function?
-  } else if (!selection) {
-    return [];
-  } else {
-    return selection.flatMap(getIdsFromSelection);
-  }
-};

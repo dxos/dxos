@@ -222,21 +222,22 @@ service SpaceInvitationsService {
 // MESH
 //
 
-enum NetworkMode {
+enum ConnectionState {
   OFFLINE = 0;
   ONLINE = 1;
 }
 
-message GetNetworkModeResponse {
-  NetworkMode mode = 1;
+// TODO(mykola): Broden API.
+message NetworkStatus {
+  ConnectionState state = 1;
 }
 
-message SetNetworkModeRequest {
-  NetworkMode mode = 1;
+message SetNetworkOptionsRequest {
+  ConnectionState state = 1;
 }
 
 // TODO(burdon): Widen API (too heavy for single feature: e.g., status).
 service NetworkService {
-  rpc GetNetworkMode(google.protobuf.Empty) returns (GetNetworkModeResponse);
-  rpc SetNetworkMode(SetNetworkModeRequest) returns (google.protobuf.Empty);
+  rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+  rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
 }

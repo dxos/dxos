@@ -59,10 +59,14 @@ export class EchoObjectBase {
   public _isBound = false;
 
   /** ID accessor. */
-  [id]: string = this._id;
+  get [id](): string {
+    return this[unproxy]._id;
+  }
 
   /** Database reference if bound. */
-  [db]: EchoDatabase | undefined = this._database;
+  get [db](): EchoDatabase | undefined {
+    return this[unproxy]._database;
+  }
 
   /** Proxy object. */
   [unproxy]: EchoObject = this;
@@ -147,6 +151,7 @@ export class EchoObjectBase {
     if (!this._item) {
       return this._uninitialized![key];
     } else {
+      this._database?._logObjectAccess(this);
       return this._getModelProp(key);
     }
   }
@@ -155,6 +160,7 @@ export class EchoObjectBase {
     if (!this._item) {
       this._uninitialized![key] = value;
     } else {
+      this._database?._logObjectAccess(this);
       this._setModelProp(key, value);
     }
   }

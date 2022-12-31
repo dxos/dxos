@@ -8,9 +8,8 @@ import React, { FC, useEffect, useState } from 'react';
 import { HashRouter, useNavigate, useParams, useRoutes } from 'react-router-dom';
 
 import { Trigger } from '@dxos/async';
-import { Client, Invitation, fromHost, PublicKey, Space, InvitationEncoder } from '@dxos/client';
+import { Client, fromHost, Invitation, InvitationEncoder, PublicKey, Space } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
-import { EchoDatabase } from '@dxos/echo-schema';
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 
 import { OptionsContext, SpaceContext, SpaceContextType } from '../hooks';
@@ -120,8 +119,7 @@ const SpacePage = () => {
 
     const space = spaces.find((space) => space.key.truncate() === currentSpaceKey);
     if (space) {
-      const database = new EchoDatabase(space.database);
-      setContext({ space, database });
+      setContext({ space });
     } else {
       navigate('/');
     }

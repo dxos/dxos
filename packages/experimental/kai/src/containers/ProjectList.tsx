@@ -6,19 +6,20 @@ import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
+import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSubscription, useSpace } from '../hooks';
+import { useSpace } from '../hooks';
 import { createProject, createTask, Project } from '../proto';
 import { TaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
-  const { database: db } = useSpace();
-  const projects = useQuery(db, Project.filter());
+  const { space } = useSpace();
+  const projects = useQuery(space, Project.filter());
 
   const handleCreate = async () => {
-    await createProject(db);
+    await createProject(space.db2);
   };
 
   const Menubar = () => (
@@ -40,12 +41,11 @@ export const ProjectList: FC<{}> = () => {
   );
 };
 
-export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
-  const { database: db } = useSpace();
-  useSubscription(db, [project, ...(project.tasks ?? []), ...(project.team ?? [])]);
+export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
+  const { space } = useSpace();
 
   const handleCreate = async () => {
-    const task = await createTask(db);
+    const task = await createTask(space.db2);
     project.tasks.push(task);
     if (task.assignee) {
       project.team.push(task.assignee);
@@ -92,4 +92,4 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
       )}
     </div>
   );
-};
+});

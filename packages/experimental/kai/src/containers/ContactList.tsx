@@ -6,18 +6,19 @@ import { PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
+import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSubscription, useSpace } from '../hooks';
+import { useSpace } from '../hooks';
 import { Address, Contact, createContact } from '../proto';
 
 export const ContactList: FC<{}> = () => {
-  const { database: db } = useSpace();
-  const contacts: Contact[] = useQuery(db, Contact.filter());
+  const { space } = useSpace();
+  const contacts: Contact[] = useQuery(space, Contact.filter());
 
   const handleCreate = async () => {
-    return createContact(db);
+    return createContact(space.db2);
   };
 
   const Menubar = () => (
@@ -39,10 +40,7 @@ export const ContactList: FC<{}> = () => {
   );
 };
 
-export const Person: FC<{ person: Contact }> = ({ person }) => {
-  const { database: db } = useSpace();
-  useSubscription(db, person);
-
+export const Person = makeReactive<{ person: Contact }>(({ person }) => {
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
@@ -62,4 +60,4 @@ export const Person: FC<{ person: Contact }> = ({ person }) => {
       {person.address && <div className='flex text-sm text-gray-800'>{address(person.address)}</div>}
     </Table>
   );
-};
+});

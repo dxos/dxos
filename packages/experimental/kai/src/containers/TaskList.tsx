@@ -5,81 +5,22 @@
 import { PlusCircle } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
-import { EchoDatabase, id } from '@dxos/echo-schema';
+import { id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, Table } from '../components';
-import { useQuery, useSubscription, useSpace, useOptions } from '../hooks';
+import { useOptions, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
-
-//
-// TODO(burdon): Soft delete.
-// TODO(burdon): Defer callback/render until timeframe.
-// TODO(burdon): DB internals.
-// TODO(burdon): Sync item creation.
-// TODO(burdon): Text model (TextObject, DocumentObject); different decorator.
-//
-
-interface Transaction {
-  update(callback: () => void): void;
-  commit(): void;
-  cancel(): void;
-}
-
-const useTransaction = (db: EchoDatabase): Transaction => ({
-  update: (callback) => callback(),
-  commit: () => {},
-  cancel: () => {}
-});
-
-const TaskForm: FC<{ task: Task; onClose: () => void }> = ({ task, onClose }) => {
-  const { database: db } = useSpace();
-  const tx = useTransaction(db);
-
-  const handleClose = (commit: boolean) => {
-    if (commit) {
-      tx.commit();
-    } else {
-      tx.cancel();
-    }
-
-    onClose();
-  };
-
-  return (
-    <div>
-      <input
-        type='checkbox'
-        checked={!!task.completed}
-        onChange={() => tx.update(() => (task.completed = !task.completed))}
-      />
-      <input
-        type='text'
-        spellCheck={false}
-        value={task.title}
-        placeholder='Enter text'
-        onChange={(event) => tx.update(() => (task.title = event.target.value))}
-      />
-      <div>
-        <button onClick={() => handleClose(true)}>save</button>
-        <button onClick={() => handleClose(false)}>cancel</button>
-      </div>
-    </div>
-  );
-};
-
-//
-//
-//
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
   completed = undefined,
   readonly = false,
   title = 'Tasks'
 }) => {
-  const { database: db } = useSpace();
-  const tasks = useQuery(db, Task.filter({ completed }));
+  const { space } = useSpace();
+  const tasks = useQuery(space, Task.filter({ completed }));
   const [newTask, setNewTask] = useState<Task>();
   useEffect(() => {
     if (!readonly) {
@@ -88,12 +29,12 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   }, []);
 
   const handleCreate = async () => {
-    await createTask(db);
+    await createTask(space.db2);
   };
 
   const handleNewTask = async (task: Task) => {
     if (task.title.length) {
-      await db.save(task);
+      await space.db2.save(task);
       setNewTask(new Task());
     }
   };
@@ -125,10 +66,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   );
 };
 
-export const TaskItem: FC<{ task: Task; onEnter?: (task: Task) => void }> = ({ task, onEnter }) => {
-  const { database: db } = useSpace();
+export const TaskItem = makeReactive<{ task: Task; onEnter?: (task: Task) => void }>(({ task, onEnter }) => {
   const { debug } = useOptions();
-  useSubscription(db, [task, task.assignee]);
 
   return (
     <Table
@@ -161,4 +100,4 @@ export const TaskItem: FC<{ task: Task; onEnter?: (task: Task) => void }> = ({ t
       </div>
     </Table>
   );
-};
+});

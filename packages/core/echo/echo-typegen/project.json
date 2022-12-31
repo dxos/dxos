@@ -3,9 +3,6 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "dependsOn": [
-        "prebuild"
-      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/echo/echo-typegen/src/main.ts",
@@ -22,7 +19,8 @@
         "entryPoints": [
           "packages/core/echo/echo-typegen/src/main.ts"
         ],
-        "outputPath": "packages/core/echo/echo-typegen/dist",
+        "injectGlobals": true,
+        "outputPath": "packages/core/echo/echo-typegen/dist/lib",
         "platforms": [
           "node"
         ]
@@ -56,9 +54,6 @@
       ]
     },
     "test": {
-      "dependsOn": [
-        "build"
-      ],
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/echo/echo-typegen",
