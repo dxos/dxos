@@ -67,6 +67,6 @@ describe('schema', () => {
 
     // TODO(burdon): Implement = [].
     task.subTasks.splice(0, 2);
-    expect(task.subTasks.length).to.eq(0);
+    expect(task.subTasks).to.have.length(0);
   });
 });
