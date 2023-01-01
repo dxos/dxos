@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { OrderedList } from '@dxos/object-model';
 
 import { base } from './defs';
@@ -9,6 +11,9 @@ import { Document, DocumentBase } from './document';
 
 // TODO(burdon): Remove?
 const EMPTY = '__EMPTY__';
+
+const isIndex = (property: string | symbol): property is string =>
+  typeof property === 'string' && parseInt(property).toString() === property;
 
 /**
  *
@@ -75,7 +80,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     if (this._orderedList) {
       return Math.max(this._orderedList.values.length - 1, 0); // Account for empty item.
     } else {
-      return this._uninitialized!.length;
+      assert(this._uninitialized);
+      return this._uninitialized.length;
     }
   }
 
@@ -124,9 +130,10 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     if (this._orderedList) {
       throw new Error('Method not implemented.');
     } else {
+      assert(this._uninitialized);
       // TODO(burdon): Check param types.
-      this._uninitialized!.splice(start as number, deleteCount as number, ...(items as any[]));
-      return this._uninitialized!;
+      this._uninitialized.splice(start as number, deleteCount as number, ...(items as any[]));
+      return this._uninitialized;
     }
   }
 
@@ -225,7 +232,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
         .map((id) => this._object!._database!.getObjectById(id) as T)
         .values();
     } else {
-      return this._uninitialized![Symbol.iterator]();
+      assert(this._uninitialized);
+      return this._uninitialized[Symbol.iterator]();
     }
   }
 
@@ -254,7 +262,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
         this._setModel(this.length, item);
       }
     } else {
-      this._uninitialized!.push(...items);
+      assert(this._uninitialized);
+      this._uninitialized.push(...items);
     }
 
     return this.length;
@@ -269,7 +278,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     this._property = property;
     this._orderedList = new OrderedList(this._object!._item!.model, this._property!);
     this._orderedList.refresh();
-    for (const item of this._uninitialized!) {
+    assert(this._uninitialized);
+    for (const item of this._uninitialized) {
       this.push(item);
     }
 
@@ -280,7 +290,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     if (this._orderedList) {
       return this._getModel(index);
     } else {
-      return this._uninitialized![index];
+      assert(this._uninitialized);
+      return this._uninitialized[index];
     }
   }
 
@@ -288,7 +299,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     if (this._orderedList) {
       this._setModel(index, value);
     } else {
-      this._uninitialized![index] = value;
+      assert(this._uninitialized);
+      this._uninitialized[index] = value;
     }
   }
 
@@ -326,6 +338,3 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     }
   }
 }
-
-const isIndex = (property: string | symbol): property is string =>
-  typeof property === 'string' && parseInt(property).toString() === property;

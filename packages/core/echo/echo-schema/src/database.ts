@@ -2,13 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Database, Item } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { base, id } from './defs';
+import { base, db, id } from './defs';
 import { Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -67,10 +69,13 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
+    assert(obj[id]);
+    assert(obj[base]);
     if (obj[base]._isBound) {
       return obj;
     }
 
+    assert(!obj[db]);
     obj[base]._isBound = true;
     this._objects.set(obj[base]._id, obj);
 

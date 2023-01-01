@@ -71,7 +71,6 @@ export abstract class EchoObject<T extends Model = any> {
   _bind(item: Item<T>, database: EchoDatabase) {
     this._item = item;
     this._database = database;
-
     this._onBind();
   }
 }
