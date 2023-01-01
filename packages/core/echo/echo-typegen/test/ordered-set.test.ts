@@ -41,5 +41,6 @@ describe('ordered-set', () => {
 
     task.subTasks = new OrderedSet(tasks.reverse());
     expect(task.subTasks).to.have.length(3);
+    expect(task.subTasks[0]).to.eq(tasks[2]);
   });
 });
