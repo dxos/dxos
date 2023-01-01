@@ -35,7 +35,11 @@ describe('ordered-set', () => {
     const task = new Task();
     expect(task.subTasks).to.have.length(0);
 
-    task.subTasks = new OrderedSet([new Task(), new Task(), new Task()]);
+    const tasks = [new Task(), new Task(), new Task()];
+    tasks.forEach((task) => task.subTasks.push(task));
+    expect(task.subTasks).to.have.length(3);
+
+    task.subTasks = new OrderedSet(tasks);
     expect(task.subTasks).to.have.length(3);
   });
 });
