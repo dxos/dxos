@@ -21,7 +21,16 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../echo-db"
+    },
+    {
       "path": "../echo-schema"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../object-model"
     }
   ]
 }

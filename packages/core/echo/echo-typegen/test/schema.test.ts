@@ -12,9 +12,9 @@ import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
 
-// TODO(burdon): Test sets.
 // TODO(burdon): Implement Task.from to deserialize JSON string.
 
+// TODO(burdon): Factor out.
 const createDatabase = async () => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const database = await createMemoryDatabase(modelFactory);
