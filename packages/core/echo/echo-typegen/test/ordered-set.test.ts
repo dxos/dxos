@@ -39,7 +39,7 @@ describe('ordered-set', () => {
     tasks.forEach((task) => task.subTasks.push(task));
     expect(task.subTasks).to.have.length(3);
 
-    task.subTasks = new OrderedSet(tasks);
+    task.subTasks = new OrderedSet(tasks.reverse());
     expect(task.subTasks).to.have.length(3);
   });
 });
