@@ -4,7 +4,7 @@
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { id, proxy } from './defs';
+import { base, id } from './defs';
 import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -17,7 +17,6 @@ const isValidKey = (key: string | symbol) =>
     key === 'constructor' ||
     key === '$$typeof' ||
     key === 'toString' ||
-    // TODO(burdon): Add 'id' (need to prohibit from schema fields).
     key === 'toJSON'
   );
 
@@ -55,7 +54,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   // TODO(burdon): Document.
   get [Symbol.toStringTag]() {
-    return this[proxy]?._schemaType?.name ?? 'Document';
+    return this[base]?._schemaType?.name ?? 'Document';
   }
 
   /**
@@ -147,7 +146,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       case 'object':
         return this._createProxy({}, prop);
       case 'array':
-        return new OrderedSet()._bind(this[proxy], prop);
+        return new OrderedSet()._bind(this[base], prop);
       default:
         return value;
     }
@@ -156,11 +155,11 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   private _setModelProp(prop: string, value: any): any {
     if (value instanceof EchoObject) {
       void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
-      void this._item!.model.set(prop, value[proxy]._id);
+      void this._item!.model.set(prop, value[base]._id);
       void this._database!.save(value);
     } else if (value instanceof OrderedSet) {
       void this._item!.model.set(`${prop}$type`, 'array');
-      value._bind(this[proxy], prop);
+      value._bind(this[base], prop);
     } else if (typeof value === 'object' && value !== null) {
       void this._item!.model.set(`${prop}$type`, 'object');
       const sub = this._createProxy({}, prop);

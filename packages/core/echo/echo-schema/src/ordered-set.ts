@@ -4,7 +4,7 @@
 
 import { OrderedList } from '@dxos/object-model';
 
-import { proxy } from './defs';
+import { base } from './defs';
 import { Document, DocumentBase } from './document';
 
 // TODO(burdon): Remove?
@@ -25,7 +25,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   private _property?: string;
   private _orderedList?: OrderedList;
 
-  [proxy]: OrderedSet<T> = this;
+  [base]: OrderedSet<T> = this;
 
   [n: number]: T;
 
@@ -302,11 +302,11 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     void this._object!._database!.save(value);
 
     if (this._orderedList!.values.length === 0) {
-      void this._orderedList!.init([value[proxy]._id, EMPTY]);
+      void this._orderedList!.init([value[base]._id, EMPTY]);
     } else {
       const prev = this._orderedList?.values[index - 1];
       if (prev) {
-        void this._orderedList!.insert(prev, value[proxy]._id);
+        void this._orderedList!.insert(prev, value[base]._id);
       } else {
         const next = this._orderedList?.values[index + 1];
         if (!next) {
@@ -318,7 +318,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
           void this._orderedList!.remove([item]);
         }
 
-        void this._orderedList!.insert(value[proxy]._id, next);
+        void this._orderedList!.insert(value[base]._id, next);
       }
     }
   }

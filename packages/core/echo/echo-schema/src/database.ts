@@ -8,7 +8,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { id, proxy } from './defs';
+import { base, id } from './defs';
 import { Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -67,19 +67,19 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
-    if (obj[proxy]._isBound) {
+    if (obj[base]._isBound) {
       return obj;
     }
 
-    obj[proxy]._isBound = true;
-    this._objects.set(obj[proxy]._id, obj);
+    obj[base]._isBound = true;
+    this._objects.set(obj[base]._id, obj);
 
     const item = (await this._db.createItem({
-      id: obj[proxy]._id,
-      model: obj[proxy]._modelConstructor
+      id: obj[base]._id,
+      model: obj[base]._modelConstructor
     })) as Item<any>;
 
-    obj[proxy]._bind(item, this);
+    obj[base]._bind(item, this);
     return obj;
   }
 
@@ -143,10 +143,10 @@ export class EchoDatabase {
           continue;
         }
 
-        obj[proxy]._id = object.id;
+        obj[base]._id = object.id;
         this._objects.set(object.id, obj);
-        obj[proxy]._bind(object, this);
-        obj[proxy]._isBound = true;
+        obj[base]._bind(object, this);
+        obj[base]._isBound = true;
       }
     }
   }

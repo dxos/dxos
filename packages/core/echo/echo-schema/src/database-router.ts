@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase, Selection, SubscriptionHandle } from './database';
-import { proxy } from './defs';
+import { base } from './defs';
 import { EchoObject } from './object';
 
 export class DatabaseRouter {
@@ -77,7 +77,7 @@ export class AccessObserver {
 
 const getIdsFromSelection = (selection: Selection): string[] => {
   if (selection instanceof EchoObject) {
-    return [selection[proxy]._id];
+    return [selection[base]._id];
   } else if (typeof selection === 'function') {
     return []; // TODO(burdon): Traverse function?
   } else if (!selection) {

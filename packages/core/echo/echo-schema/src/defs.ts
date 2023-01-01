@@ -6,4 +6,4 @@ export const id = Symbol('id');
 
 export const db = Symbol('db');
 
-export const proxy = Symbol('proxy');
+export const base = Symbol('base');
