@@ -11,11 +11,12 @@ import { EchoDatabase, Selection, SubscriptionHandle } from './database';
 import { base } from './defs';
 import { EchoObject } from './object';
 
+/**
+ * Manages cross-space databases.
+ */
 export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];
-
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
-
   private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Entity<any>[] }>();
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
@@ -71,7 +72,6 @@ export class DatabaseRouter {
  */
 export class AccessObserver {
   accessed: Set<EchoObject> = new Set();
-
   constructor(public pop: () => void) {}
 }
 

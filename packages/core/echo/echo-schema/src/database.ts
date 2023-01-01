@@ -42,11 +42,11 @@ export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
   constructor(
-    private readonly _router: DatabaseRouter,
     /**
      * @internal
      */
-    public readonly _db: Database
+    public readonly _db: Database,
+    private readonly _router: DatabaseRouter
   ) {
     this._db.update.on(() => this._update());
     this._update();
@@ -69,7 +69,8 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
-    assert(obj[id]);
+    console.log((obj as any).title); // OK.
+    assert(obj[id]); // TODO(burdon): Undefined.
     assert(obj[base]);
     if (obj[base]._isBound) {
       return obj;
