@@ -46,9 +46,8 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
 
   const handleCreate = async () => {
     const task = await createTask(space.experimental.db);
-    console.log(project.tasks.push);
     project.tasks.push(task);
-    // TODO(burdon): Can't set array.
+    // TODO(burdon): Can't set array. new OrderedSet().
     // project.tasks = [task];
     if (task.assignee) {
       project.team.push(task.assignee);

@@ -16,7 +16,7 @@ export interface SanitizeContext {
  * @param context
  */
 export const sanitize = (type: Type, value: any, path: string, context: SanitizeContext) => {
-  if (value === undefined) {
+  if (!value) {
     return;
   }
 

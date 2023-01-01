@@ -192,7 +192,6 @@ export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
   // Auto-create client and profile.
   useEffect(() => {
     setTimeout(async () => {
-      console.log('>>>>>>>>>', Defaults());
       const config = new Config(Defaults());
       const client = new Client({
         services: fromHost(config)
