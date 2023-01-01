@@ -3,7 +3,6 @@
 //
 
 import clsx from 'clsx';
-import { views } from 'packages/experimental/kai/src/containers/views';
 import { Bug, PlusCircle, Gear, Robot, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -16,6 +15,7 @@ import { useSpace } from '../hooks';
 import { Generator } from '../proto';
 import { MemberList } from './MemberList';
 import { SpaceList } from './SpaceList';
+import { views } from './views';
 
 export const Sidebar = () => {
   const navigate = useNavigate();

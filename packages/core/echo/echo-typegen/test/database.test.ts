@@ -11,7 +11,7 @@ import { describe, test } from '@dxos/test';
 import { Task } from './proto';
 
 describe('database', () => {
-  test.skip('saving', async () => {
+  test.skip('saving', async () => { // TODO(burdon): Fix.
     const task = new Task({ title: 'test' });
     expect(task.title).to.eq('test');
     expect(task[id]).to.exist;
