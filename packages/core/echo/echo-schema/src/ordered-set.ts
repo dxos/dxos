@@ -23,6 +23,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
 
   private _object?: Document;
   private _property?: string;
+
+  // TODO(burdon): Rename/move OrderedList to this module as util (deprecate from object-model?)
   private _orderedList?: OrderedList;
 
   [base]: OrderedSet<T> = this;
@@ -48,6 +50,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   constructor(items: T[] = []) {
     this._uninitialized = [...items];
 
+    // Change type returned by `new`.
     return new Proxy(this, {
       get: (target, property, receiver) => {
         if (isIndex(property)) {
@@ -254,7 +257,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
       this._uninitialized!.push(...items);
     }
 
-    return this.length; // TODO(burdon): ???
+    return this.length;
   }
 
   //
