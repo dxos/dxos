@@ -12,7 +12,7 @@
  */
 @layer base {
   html {
-    font-family: Montserrat, ui-sans-serif;
+    font-family: Montserrat, ui-sans-serif, sans-serif;
     font-weight: 400;
     @apply text-gray-800;
   }

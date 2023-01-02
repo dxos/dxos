@@ -69,7 +69,6 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
-    console.log((obj as any).title); // OK.
     assert(obj[id]); // TODO(burdon): Undefined.
     assert(obj[base]);
     if (obj[base]._isBound) {

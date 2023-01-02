@@ -11,8 +11,8 @@ import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, TableRow } from '../components';
 import { useSpace } from '../hooks';
-import { createProject, createTask, Project } from '../proto';
-import { DraggableTaskItem } from './TaskList';
+import { Project, Task, createProject, createTask } from '../proto';
+import { DraggableTaskList } from './DraggableTaskList';
 
 export const ProjectList: FC<{}> = () => {
   const { space } = useSpace();
@@ -44,11 +44,9 @@ export const ProjectList: FC<{}> = () => {
 export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
   const { space } = useSpace();
 
-  const handleCreate = async () => {
+  const handleGenerateTask = async () => {
     const task = await createTask(space.experimental.db);
     project.tasks.push(task);
-    // TODO(burdon): Can't set array. new OrderedSet().
-    // project.tasks = [task];
     if (task.assignee) {
       project.team.push(task.assignee);
     }
@@ -57,7 +55,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
   return (
     <div className='flex flex-col'>
       <div className='flex p-2 pb-0 items-center'>
-        <div className='pl-2 pr-1'>
+        <div className='flex flex-shrink-0 justify-center w-8 mr-1'>
           <Archive className={getSize(6)} />
         </div>
         <Input
@@ -66,19 +64,21 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           value={project.title}
           onChange={(value) => (project.title = value)}
         />
-        <button className='mr-2 text-gray-500' onClick={handleCreate}>
+        <button className='mr-2 text-gray-500' onClick={handleGenerateTask}>
           <Plus className={getSize(6)} />
         </button>
       </div>
 
       {project.tasks?.length > 0 && (
         <div>
-          <h2 className='pl-3 pt-1 text-xs'>Tasks</h2>
-          <div className='p-3 pt-1'>
-            {project.tasks?.map((task) => (
-              <DraggableTaskItem key={task[id]} task={task} />
-            ))}
-          </div>
+          <h2 className='pl-3 pt-1 pb-1 text-xs'>Tasks</h2>
+          <DraggableTaskList
+            tasks={project.tasks}
+            onCreate={(task: Task) => {
+              project.tasks.push(task);
+            }}
+          />
+          <div className='p-3 pt-1'></div>
         </div>
       )}
 

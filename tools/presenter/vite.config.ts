@@ -102,7 +102,6 @@ export default defineConfig({
   // TODO(burdon): dxosPlugin, themePlugin (see halo-app).
   plugins: [
     ConfigPlugin(),
-
     ReactPlugin(),
 
     // https://mdxjs.com/packages/remark-mdx

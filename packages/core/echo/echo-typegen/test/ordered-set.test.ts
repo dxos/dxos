@@ -30,7 +30,8 @@ describe('ordered-set', () => {
     root.subTasks.forEach((task, i) => expect(task[id]).to.eq(ids[i]));
     expect(Array.from(root.subTasks.values())).to.have.length(5);
 
-    // TODO(burdon): Implement assignment = []?
+    // TODO(burdon): Implement assignment.
+    // root.subTasks = [];
     root.subTasks = new OrderedSet([new Task(), new Task(), new Task()]);
     expect(root.subTasks.length).to.eq(3);
   });
