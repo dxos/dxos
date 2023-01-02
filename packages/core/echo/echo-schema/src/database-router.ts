@@ -8,19 +8,20 @@ import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { EchoDatabase, Selection, SubscriptionHandle } from './database';
-import { unproxy } from './defs';
+import { base } from './defs';
 import { EchoObject } from './object';
 
+/**
+ * Manages cross-space databases.
+ */
 export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];
-
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
-
   private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Entity<any>[] }>();
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);
-    database._echo.update.on((changedEntities) => this._update.emit({ spaceKey, changedEntities }));
+    database._db.update.on((changedEntities) => this._update.emit({ spaceKey, changedEntities }));
   }
 
   /**
@@ -71,13 +72,12 @@ export class DatabaseRouter {
  */
 export class AccessObserver {
   accessed: Set<EchoObject> = new Set();
-
   constructor(public pop: () => void) {}
 }
 
 const getIdsFromSelection = (selection: Selection): string[] => {
   if (selection instanceof EchoObject) {
-    return [selection[unproxy]._id];
+    return [selection[base]._id];
   } else if (typeof selection === 'function') {
     return []; // TODO(burdon): Traverse function?
   } else if (!selection) {

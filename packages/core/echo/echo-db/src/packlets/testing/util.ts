@@ -48,7 +48,6 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
   const database = new Database(modelFactory, new DatabaseBackendProxy(dataService, spaceKey), PublicKey.random());
-
   await database.initialize();
   return database;
 };

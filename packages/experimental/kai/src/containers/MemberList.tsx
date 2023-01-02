@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { useClient, useMembers } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
-export const MembersList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
+export const MemberList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
   const client = useClient();
   const members = useMembers(spaceKey);
   members.sort((a) => (a.identityKey.equals(client.halo.profile!.identityKey) ? -1 : 1));

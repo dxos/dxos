@@ -23,6 +23,10 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
 
+interface Experimental {
+  get db(): EchoDatabase;
+}
+
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space extends ISpace {
   get key(): PublicKey;
@@ -36,7 +40,7 @@ export interface Space extends ISpace {
   /**
    * Next-gen database.
    */
-  get db2(): EchoDatabase;
+  get experimental(): Experimental;
 
   get select(): Database['select'];
   get reduce(): Database['reduce'];
@@ -85,7 +89,7 @@ export interface Space extends ISpace {
 
 export class SpaceProxy implements Space {
   private readonly _database?: Database;
-  private readonly _db2?: EchoDatabase;
+  private readonly _experimental?: Experimental;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
   private readonly _invitations: CancellableInvitationObservable[] = [];
 
@@ -126,8 +130,12 @@ export class SpaceProxy implements Space {
       new DatabaseBackendProxy(this._clientServices.services.DataService, this._key),
       memberKey
     );
-    this._db2 = new EchoDatabase(databaseRouter, this._database);
-    databaseRouter.register(this._key, this._db2);
+
+    this._experimental = {
+      db: new EchoDatabase(this._database, databaseRouter)
+    };
+
+    databaseRouter.register(this._key, this._experimental.db);
     // } else if (false) {
     //   // TODO(wittjosiah): Reconcile service provider host with interface.
     //   const space = (this._serviceProvider as any).echo.getSpace(this._key) ?? failUndefined();
@@ -158,12 +166,12 @@ export class SpaceProxy implements Space {
     return this._database;
   }
 
-  get db2(): EchoDatabase {
-    if (!this._db2) {
+  get experimental(): Experimental {
+    if (!this._experimental) {
       throw new ApiError('Space not open.');
     }
 
-    return this._db2;
+    return this._experimental;
   }
 
   /**

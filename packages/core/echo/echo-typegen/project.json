@@ -5,7 +5,7 @@
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/core/echo/echo-typegen/src/index.ts",
+        "main": "packages/core/echo/echo-typegen/src/main.ts",
         "outputPath": "packages/core/echo/echo-typegen/dist/types",
         "tsConfig": "packages/core/echo/echo-typegen/tsconfig.json"
       },

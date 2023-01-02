@@ -2,13 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Database, Item } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { id, unproxy } from './defs';
+import { base, db, id } from './defs';
 import { Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -40,13 +42,13 @@ export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
   constructor(
-    private readonly _router: DatabaseRouter,
     /**
      * @internal
      */
-    public readonly _echo: Database
+    public readonly _db: Database,
+    private readonly _router: DatabaseRouter
   ) {
-    this._echo.update.on(() => this._update());
+    this._db.update.on(() => this._update());
     this._update();
   }
 
@@ -67,18 +69,23 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
-    if (obj[unproxy]._isBound) {
+    console.log((obj as any).title); // OK.
+    assert(obj[id]); // TODO(burdon): Undefined.
+    assert(obj[base]);
+    if (obj[base]._isBound) {
       return obj;
     }
 
-    obj[unproxy]._isBound = true;
-    this._objects.set(obj[unproxy]._id, obj);
+    assert(!obj[db]);
+    obj[base]._isBound = true;
+    this._objects.set(obj[base]._id, obj);
 
-    const item = (await this._echo.createItem({
-      id: obj[unproxy]._id,
-      model: obj[unproxy]._modelConstructor
+    const item = (await this._db.createItem({
+      id: obj[base]._id,
+      model: obj[base]._modelConstructor
     })) as Item<any>;
-    obj[unproxy]._bind(item, this);
+
+    obj[base]._bind(item, this);
     return obj;
   }
 
@@ -107,7 +114,7 @@ export class EchoDatabase {
       },
 
       subscribe: (callback: () => void) => {
-        return this._echo.update.on((updatedObjects) => {
+        return this._db.update.on((updatedObjects) => {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
               const match = matchObject(this._objects.get(object.id)!);
@@ -135,16 +142,17 @@ export class EchoDatabase {
   }
 
   private _update() {
-    for (const object of this._echo.select({}).exec().entities) {
+    for (const object of this._db.select({}).exec().entities) {
       if (!this._objects.has(object.id)) {
         const obj = this._createObjectInstance(object);
         if (!obj) {
           continue;
         }
-        obj[unproxy]._id = object.id;
+
+        obj[base]._id = object.id;
         this._objects.set(object.id, obj);
-        obj[unproxy]._bind(object, this);
-        obj[unproxy]._isBound = true;
+        obj[base]._bind(object, this);
+        obj[base]._isBound = true;
       }
     }
   }

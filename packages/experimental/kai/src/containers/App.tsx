@@ -4,7 +4,7 @@
 
 import clsx from 'clsx';
 import { Bug } from 'phosphor-react';
-import React, { useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { HashRouter, useNavigate, useParams, useRoutes } from 'react-router-dom';
 
 import { Trigger } from '@dxos/async';
@@ -12,8 +12,9 @@ import { Client, fromHost, Invitation, InvitationEncoder, PublicKey, Space } fro
 import { Config, Defaults } from '@dxos/config';
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 
-import { SpaceContext, SpaceContextType } from '../hooks';
+import { OptionsContext, SpaceContext, SpaceContextType } from '../hooks';
 import { Main } from './Main';
+import { views } from './views';
 
 /**
  * Selects or creates an initial space.
@@ -41,6 +42,21 @@ const Init = () => {
   }, [spaces, init]);
 
   return null;
+};
+
+// TODO(burdon): Colorize.
+const Settings = () => {
+  const client = useClient();
+
+  return (
+    <div className='full-screen'>
+      <div className='flex flex-1 drop-shadow-md justify-center'>
+        <div className='flex flex-1 bg-white p-4' style={{ width: 700, maxWidth: 700 }}>
+          <pre>{JSON.stringify(client.config.values, undefined, 2)};</pre>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 /**
@@ -107,9 +123,15 @@ const Join = () => {
  */
 const SpacePage = () => {
   const navigate = useNavigate();
-  const { spaceKey: currentSpaceKey } = useParams();
+  const { spaceKey: currentSpaceKey, view } = useParams();
   const spaces = useSpaces();
   const [context, setContext] = useState<SpaceContextType | undefined>();
+
+  useEffect(() => {
+    if (!view || views.findIndex(({ key }) => key === view) === -1) {
+      navigate(`/${currentSpaceKey}/${views[0].key}`);
+    }
+  }, [view, currentSpaceKey]);
 
   useEffect(() => {
     if (!spaces.length) {
@@ -129,11 +151,7 @@ const SpacePage = () => {
     return null;
   }
 
-  return (
-    <SpaceContext.Provider value={context}>
-      <Main />
-    </SpaceContext.Provider>
-  );
+  return <SpaceContext.Provider value={context}>{view && <Main view={view} />}</SpaceContext.Provider>;
 };
 
 /**
@@ -146,11 +164,20 @@ const Routes = () => {
       element: <Init />
     },
     {
+      path: '/settings',
+      element: <Settings />
+    },
+    {
       path: '/join/:invitation',
       element: <Join />
     },
     {
       path: '/:spaceKey',
+      element: <SpacePage />
+    },
+    // TODO(burdon): Merge with above?
+    {
+      path: '/:spaceKey/:view',
       element: <SpacePage />
     }
   ]);
@@ -159,7 +186,7 @@ const Routes = () => {
 /**
  * Main app container with routes.
  */
-export const App = () => {
+export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
   const [client, setClient] = useState<Client | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -186,9 +213,11 @@ export const App = () => {
 
   return (
     <ClientProvider client={client}>
-      <HashRouter>
-        <Routes />
-      </HashRouter>
+      <OptionsContext.Provider value={{ debug }}>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
+      </OptionsContext.Provider>
     </ClientProvider>
   );
 };

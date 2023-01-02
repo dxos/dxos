@@ -21,7 +21,7 @@ export const Zoom = ({ extent, className = defaultGridStyles, children }: ZoomPr
   const zoom = useZoom({ extent });
 
   return (
-    <g ref={zoom.ref} className={className}>
+    <g ref={zoom.ref as any} className={className}>
       {children}
     </g>
   );

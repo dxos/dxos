@@ -4,7 +4,7 @@
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { id, unproxy } from './defs';
+import { base, id } from './defs';
 import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -17,7 +17,6 @@ const isValidKey = (key: string | symbol) =>
     key === 'constructor' ||
     key === '$$typeof' ||
     key === 'toString' ||
-    // TODO(burdon): Add 'id' (need to prohibit from schema fields).
     key === 'toJSON'
   );
 
@@ -55,7 +54,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   // TODO(burdon): Document.
   get [Symbol.toStringTag]() {
-    return this[unproxy]?._schemaType?.name ?? 'Document';
+    return this[base]?._schemaType?.name ?? 'Document';
   }
 
   /**
@@ -80,12 +79,12 @@ export class DocumentBase extends EchoObject<ObjectModel> {
             for (let i = 0; i < value.length; i++) {
               const item = value[i];
               if (item instanceof DocumentBase) {
-                if (!visited.has(item)) {
-                  visited.add(value);
-                  values.push(item[unproxy]._json(visited));
-                } else {
-                  values.push(strip({ id: item[id] })); // TODO(burdon): Undefined if not saved.
-                }
+                // if (visited.has(item)) {
+                values.push(strip({ id: item[id] })); // TODO(burdon): Option to reify object.1
+                // } else {
+                //   visited.add(value);
+                //   values.push(item[object]._json(visited));
+                // }
               } else {
                 values.push(item);
               }
@@ -96,10 +95,12 @@ export class DocumentBase extends EchoObject<ObjectModel> {
         } else {
           if (value instanceof DocumentBase) {
             // Detect cycles.
-            if (!visited.has(value)) {
-              visited.add(value);
-              result[name] = value[unproxy]._json(visited);
-            }
+            // if (!visited.has(value)) {
+            result[name] = { id: value[id] };
+            // } else {
+            //   visited.add(value);
+            //   result[name] = value[object]._json(visited);
+            // }
           } else {
             result[name] = value;
           }
@@ -145,7 +146,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       case 'object':
         return this._createProxy({}, prop);
       case 'array':
-        return new OrderedSet()._bind(this[unproxy], prop);
+        return new OrderedSet()._bind(this[base], prop);
       default:
         return value;
     }
@@ -154,11 +155,11 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   private _setModelProp(prop: string, value: any): any {
     if (value instanceof EchoObject) {
       void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
-      void this._item!.model.set(prop, value[unproxy]._id);
+      void this._item!.model.set(prop, value[base]._id);
       void this._database!.save(value);
     } else if (value instanceof OrderedSet) {
       void this._item!.model.set(`${prop}$type`, 'array');
-      value._bind(this[unproxy], prop);
+      value._bind(this[base], prop);
     } else if (typeof value === 'object' && value !== null) {
       void this._item!.model.set(`${prop}$type`, 'object');
       const sub = this._createProxy({}, prop);

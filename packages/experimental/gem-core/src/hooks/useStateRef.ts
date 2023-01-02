@@ -9,8 +9,10 @@ import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from
  * E.g., to use in callbacks where the state value is stale.
  * @param initialValue
  */
-export const useStateRef = <V>(initialValue?: V | (() => V)): [V, Dispatch<SetStateAction<V>>, RefObject<V>] => {
-  const [value, setValue] = useState<V>(initialValue);
+export const useStateRef = <V>(
+  initialValue?: V | (() => V)
+): [V | undefined, Dispatch<SetStateAction<V | undefined>>, RefObject<V | undefined>] => {
+  const [value, setValue] = useState<V | undefined>(initialValue);
   const ref = useRef<V>();
   useEffect(() => {
     ref.current = value;
@@ -41,7 +43,7 @@ export const useDynamicRef = <V>(initialValue: () => V, deps: any[]): RefObject<
  * State setters to force repaint.
  * @param deps
  */
-export const useTimestamp = (deps?): [number, () => void, number] => {
+export const useTimestamp = (deps?: any[]): [number, () => void, number?] => {
   const [{ timestamp, previous }, setTimestamp] = useState<{
     timestamp: number;
     previous?: number;

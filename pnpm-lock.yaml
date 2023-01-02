@@ -166,8 +166,8 @@ importers:
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       babel-loader: 8.2.5_wfdvla2jorjoj23kkavho2upde
       chai: 4.3.6
       chai-as-promised: 7.1.1_chai@4.3.6
@@ -320,7 +320,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/apps/halo-app:
@@ -397,7 +397,7 @@ importers:
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/apps/patterns/assets:
@@ -601,7 +601,7 @@ importers:
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       webpack: 5.74.0
       workbox-window: 6.5.4
 
@@ -670,7 +670,7 @@ importers:
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       webpack: 5.74.0
       workbox-window: 6.5.4
 
@@ -716,7 +716,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/apps/todomvc:
@@ -1232,7 +1232,7 @@ importers:
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
       tailwind-merge: 1.8.0
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
     devDependencies:
@@ -1402,14 +1402,16 @@ importers:
 
   packages/core/echo/echo-typegen:
     specifiers:
+      '@dxos/echo-db': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/object-model': workspace:*
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
       '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
-      mocha: ^8.4.0
       protobufjs: ^6.9.0
       ts-node: 10.9.1
       typescript: ^4.8.4
@@ -1419,12 +1421,14 @@ importers:
       '@dxos/node-std': link:../../../common/node-std
       protobufjs: 6.11.3
     devDependencies:
+      '@dxos/echo-db': link:../echo-db
       '@dxos/echo-schema': link:../echo-schema
+      '@dxos/model-factory': link:../model-factory
+      '@dxos/object-model': link:../object-model
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21
       '@types/mocha': 8.2.3
       '@types/node': 18.11.9
-      mocha: 8.4.0
       ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
       typescript: 4.8.4
       wait-for-expect: 3.0.2
@@ -2378,7 +2382,7 @@ importers:
       faker: 5.5.3
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
@@ -2622,37 +2626,31 @@ importers:
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
       '@types/d3': ^7.1.0
-      '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
-      '@types/jest': ^28.0.0
       '@types/lodash.defaultsdeep': ^4.6.6
       assert: ^2.0.0
       csstype: ^3.0.10
       d3: ^7.4.4
-      debug: ^4.3.3
       faker: ^5.5.3
       lodash.defaultsdeep: ^4.6.1
       react: ^18.2.0
       react-dom: ^18.2.0
-      use-resize-observer: ^9.0.0
+      react-resize-detector: ^7.1.2
     dependencies:
+      '@emotion/css': 11.10.0_@babel+core@7.19.3
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       assert: 2.0.0
       csstype: 3.1.1
       d3: 7.6.1
-      debug: 4.3.4
       lodash.defaultsdeep: 4.6.1
-      use-resize-observer: 9.0.2_biqbaboplfbrettd7655fr4n2y
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
       '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0
-      '@emotion/css': 11.10.0_@babel+core@7.19.3
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@types/d3': 7.4.0
-      '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/jest': 28.1.8
       '@types/lodash.defaultsdeep': 4.6.7
       faker: 5.5.3
       react: 18.2.0
@@ -2668,48 +2666,42 @@ importers:
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
       '@types/d3': ^7.1.0
-      '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
-      '@types/jest': ^28.0.0
       '@types/lodash': ^4.14.182
       clsx: ^1.1.1
-      csstype: ^3.0.10
       d3: ^7.4.4
       d3-force: ~3.0.0
-      debug: ^4.3.3
       faker: ^5.5.3
       immutability-helper: ^3.0.2
       react: ^18.2.0
       react-dom: ^18.2.0
-      use-resize-observer: ^9.0.0
     dependencies:
       '@dxos/gem-core': link:../gem-core
+      '@emotion/css': 11.10.0_@babel+core@7.19.3
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       clsx: 1.2.1
-      csstype: 3.1.1
       d3: 7.6.1
       d3-force: 3.0.0
-      debug: 4.3.4
       immutability-helper: 3.1.1
-      use-resize-observer: 9.0.2_biqbaboplfbrettd7655fr4n2y
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
       '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0
-      '@emotion/css': 11.10.0_@babel+core@7.19.3
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@types/d3': 7.4.0
-      '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/jest': 28.1.8
       '@types/lodash': 4.14.186
       faker: 5.5.3
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
 
   packages/experimental/kai:
     specifiers:
       '@babel/core': ^7.18.13
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
@@ -2749,6 +2741,10 @@ importers:
       vite-plugin-pwa: ^0.12.4
       workbox-window: ^6.5.4
     dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
@@ -2785,9 +2781,9 @@ importers:
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       faker: 5.5.3
       postcss: 8.4.18
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/experimental/kitchen-sink:
@@ -3214,13 +3210,13 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
       '@polkadot/api': 4.17.1
-      '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
+      '@polkadot/keyring': 6.11.1
       '@polkadot/metadata': 4.17.1
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/typegen': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       bn.js: 4.12.0
       faker: 5.5.3
       fs-extra: 8.1.0
@@ -3792,8 +3788,8 @@ importers:
       '@dxos/eslint-plugin-rules': link:../eslint-rules
       '@rushstack/eslint-plugin-packlets': 0.4.1_z4bbprzjrhnsfa24uvmcbu7f5q
       '@stayradiated/eslint-plugin-prefer-arrow-functions': 4.4.0_eslint@8.25.0
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       eslint-config-semistandard: 16.0.0_u7hi4tob5jexe3bxs45csc22mq
       eslint-config-standard: 17.0.0_qjhcey4ofknbrbveepk4bditci
       eslint-plugin-import: 2.26.0_3rwetfi6epq3x3lrbut2iai3km
@@ -3833,7 +3829,6 @@ importers:
       argparse: ^2.0.1
       chalk: ^4.1.0
       glob: ~7.1.6
-      mocha: ^8.4.0
       protobufjs: ^6.9.0
       read-pkg: ^5.2.0
       ts-morph: ^16.0.0
@@ -3857,7 +3852,6 @@ importers:
       '@types/glob': 7.1.4
       '@types/mocha': 8.2.3
       '@types/node': 18.11.9
-      mocha: 8.4.0
       ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
       typescript: 4.8.4
 
@@ -4001,7 +3995,7 @@ importers:
       remark-parse-frontmatter: 1.0.3
       remark-unwrap-texts: 1.0.3
       rollup: 2.79.1
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
       typescript: 4.8.4
@@ -4035,7 +4029,6 @@ importers:
       glob: ~7.1.6
       js-yaml: ^4.1.0
       mdast-util-to-markdown: ~1.3.0
-      mocha: ^8.4.0
       protocol-buffers-schema: ~3.6.0
       rehype-stringify: ~9.0.3
       remark: ~14.0.2
@@ -4082,7 +4075,6 @@ importers:
       '@types/protocol-buffers-schema': 3.4.1
       '@types/yargs': 16.0.4
       diff: 5.1.0
-      mocha: 8.4.0
       ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
@@ -5752,7 +5744,6 @@ packages:
     dependencies:
       react: 18.2.0
       tslib: 2.4.0
-    dev: true
 
   /@dnd-kit/core/6.0.5_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-3nL+Zy5cT+1XwsWdlXIvGIFvbuocMyB4NBxTN74DeBaBqeWdH9JsnKwQv7buZQgAHmAH+eIENfS1ginkvW6bCw==}
@@ -5765,7 +5756,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       tslib: 2.4.0
-    dev: true
 
   /@dnd-kit/modifiers/6.0.0_vvd3dzag27tc7rclyb2whqqnpe:
     resolution: {integrity: sha512-V3+JSo6/BTcgPRHiNUTSKgqVv/doKXg+T4Z0QvKiiXp+uIyJTUtPkQOBRQApUWi3ApBhnoWljyt/3xxY4fTd0Q==}
@@ -5777,7 +5767,6 @@ packages:
       tslib: 2.4.0
     transitivePeerDependencies:
       - react
-    dev: true
 
   /@dnd-kit/sortable/7.0.1_vvd3dzag27tc7rclyb2whqqnpe:
     resolution: {integrity: sha512-n77qAzJQtMMywu25sJzhz3gsHnDOUlEjTtnRl8A87rWIhnu32zuP+7zmFjwGgvqfXmRufqiHOSlH7JPC/tnJ8Q==}
@@ -5789,7 +5778,6 @@ packages:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       react: 18.2.0
       tslib: 2.4.0
-    dev: true
 
   /@dnd-kit/utilities/3.2.0_react@18.2.0:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
@@ -5798,7 +5786,6 @@ packages:
     dependencies:
       react: 18.2.0
       tslib: 2.4.0
-    dev: true
 
   /@dxos/benchmark-suite/1.0.0-beta.3:
     resolution: {integrity: sha512-rpHryqIC1sOSWcGLyqnhJdLWDQ2jtidm7K8G/LQr1Xp3ibHO7cRg0w9v1RnYUDgyCtgWh4AWyec5lazNMCpAzw==}
@@ -6025,7 +6012,6 @@ packages:
       '@emotion/weak-memoize': 0.3.0
       hoist-non-react-statics: 3.3.2
       react: 18.2.0
-    dev: true
 
   /@emotion/react/11.10.4_bjroym7kxlcs2vvwnej4p3gzwu:
     resolution: {integrity: sha512-j0AkMpr6BL8gldJZ6XQsQ8DnS9TxEQu1R+OGmDZiWjBAJtCcbt0tS3I/YffoqHXxH6MjgI7KdMbYKw3MEiU9eA==}
@@ -7486,7 +7472,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/devkit': 15.3.3_nx@15.3.3+typescript@4.8.4
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       chalk: 4.1.0
       confusing-browser-globals: 1.0.11
@@ -8097,7 +8083,7 @@ packages:
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@polkadot/x-rxjs': 6.11.1
     transitivePeerDependencies:
       - encoding
@@ -8110,14 +8096,14 @@ packages:
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/api-derive': 4.17.1
-      '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
+      '@polkadot/keyring': 6.11.1
       '@polkadot/metadata': 4.17.1
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/rpc-provider': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/types-known': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@polkadot/x-rxjs': 6.11.1
       eventemitter3: 4.0.7
     transitivePeerDependencies:
@@ -8125,16 +8111,13 @@ packages:
       - supports-color
     dev: false
 
-  /@polkadot/keyring/6.11.1_w5wqjwuvue5eixzgnjxqpuw26i:
+  /@polkadot/keyring/6.11.1:
     resolution: {integrity: sha512-rW8INl7pO6Dmaffd6Df1yAYCRWa2RmWQ0LGfJeA/M6seVIkI6J3opZqAd4q2Op+h9a7z4TESQGk8yggOEL+Csg==}
     engines: {node: '>=14.0.0'}
-    peerDependencies:
-      '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
     dev: false
 
   /@polkadot/metadata/4.17.1:
@@ -8177,7 +8160,7 @@ packages:
       '@babel/runtime': 7.19.4
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@polkadot/x-fetch': 6.11.1
       '@polkadot/x-global': 6.11.1
       '@polkadot/x-ws': 6.11.1
@@ -8232,30 +8215,6 @@ packages:
   /@polkadot/util-crypto/6.11.1:
     resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
     engines: {node: '>=14.0.0'}
-    dependencies:
-      '@babel/runtime': 7.19.4
-      '@polkadot/networks': 6.11.1
-      '@polkadot/util': 6.11.1
-      '@polkadot/wasm-crypto': 4.6.1_7agzzbeuhezrwkh2zmxh2lt2xi
-      '@polkadot/x-randomvalues': 6.11.1
-      base-x: 3.0.9
-      base64-js: 1.5.1
-      blakejs: 1.2.1
-      bn.js: 4.12.0
-      create-hash: 1.2.0
-      elliptic: 6.5.4
-      hash.js: 1.1.7
-      js-sha3: 0.8.0
-      scryptsy: 2.1.0
-      tweetnacl: 1.0.3
-      xxhashjs: 0.2.2
-    dev: false
-
-  /@polkadot/util-crypto/6.11.1_@polkadot+util@6.11.1:
-    resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      '@polkadot/util': 6.11.1
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/networks': 6.11.1
@@ -11811,7 +11770,7 @@ packages:
     peerDependencies:
       tailwindcss: '>=2.0.0 || >=3.0.0 || >=3.0.0-alpha.1'
     dependencies:
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
     dev: true
 
   /@tailwindcss/forms/0.5.3_tailwindcss@3.1.8:
@@ -11820,7 +11779,7 @@ packages:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
     dev: false
 
   /@tailwindcss/typography/0.5.8_tailwindcss@3.1.8:
@@ -11832,7 +11791,7 @@ packages:
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
     dev: true
 
   /@tanstack/react-table/8.0.0-beta.3_biqbaboplfbrettd7655fr4n2y:
@@ -12739,13 +12698,6 @@ packages:
       '@types/istanbul-lib-report': 3.0.0
     dev: true
 
-  /@types/jest/28.1.8:
-    resolution: {integrity: sha512-8TJkV++s7B6XqnDrzR1m/TT0A0h948Pnl/097veySPN67VRAgQ4gZ7n2KfJo2rVq6njQjdxU3GCCyDvAeuHoiw==}
-    dependencies:
-      expect: 28.1.3
-      pretty-format: 28.1.3
-    dev: true
-
   /@types/js-yaml/4.0.5:
     resolution: {integrity: sha512-FhpRzf927MNQdRZP0J5DLIdTXhjLYzeUTmLAu69mnVksLH9CJY3IuSeEgbKUki7GQZm0WqDkGzyxju2EZGD2wA==}
     dev: true
@@ -13308,18 +13260,17 @@ packages:
     resolution: {integrity: sha512-RRHc1+8Hc5mf/2lZKnom6kCnqcNS07s8keahniWTOva0KELF6RgDJmaEcvGEKUUJgN4UgessmEsWuidaOycIOw==}
     dev: true
 
-  /@typescript-eslint/eslint-plugin/5.45.0_pi7zx7ojc4phxkdwiczrakx6sq:
+  /@typescript-eslint/eslint-plugin/5.45.0_usuh4uodfyzfr5qbbynfqnfnsy:
     resolution: {integrity: sha512-CXXHNlf0oL+Yg021cxgOdMHNTXD17rHkq7iW6RFHoybdFgQBjU3yIXhhcPpGwr1CjZlo6ET8C6tzX5juQoXeGA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       '@typescript-eslint/parser': ^5.0.0
-      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       '@typescript-eslint/scope-manager': 5.45.0
       '@typescript-eslint/type-utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
@@ -13347,11 +13298,10 @@ packages:
       - typescript
     dev: false
 
-  /@typescript-eslint/parser/5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q:
+  /@typescript-eslint/parser/5.45.0_typescript@4.8.4:
     resolution: {integrity: sha512-brvs/WSM4fKUmF5Ot/gEve6qYiCMjm6w4HkHPfS6ZNmxTS0m0iNN4yOChImaCkqc1hRwFGqUyanMXuGal6oyyQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
@@ -19461,7 +19411,7 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       debug: 3.2.7
       eslint: 8.25.0
       eslint-import-resolver-node: 0.3.6
@@ -19501,7 +19451,7 @@ packages:
       '@typescript-eslint/parser':
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       array-includes: 3.1.5
       array.prototype.flat: 1.3.0
       debug: 2.6.9
@@ -19631,7 +19581,7 @@ packages:
       '@typescript-eslint/eslint-plugin':
         optional: true
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
       eslint: 8.25.0
       eslint-rule-composer: 0.3.0
     dev: false
@@ -32254,12 +32204,10 @@ packages:
     transitivePeerDependencies:
       - ts-node
 
-  /tailwindcss/3.1.8_postcss@8.4.18:
+  /tailwindcss/3.1.8:
     resolution: {integrity: sha512-YSneUCZSFDYMwk+TGq8qYFdCA3yfBRdBlS7txSq0LUmzyeqRe3a8fBQzbz9M3WS/iFT4BNf/nmw9mEzrnSaC0g==}
     engines: {node: '>=12.13.0'}
     hasBin: true
-    peerDependencies:
-      postcss: ^8.0.9
     dependencies:
       arg: 5.0.2
       chokidar: 3.5.3
@@ -33988,11 +33936,10 @@ packages:
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
     dev: true
 
-  /vite-plugin-pwa/0.12.8_v7patrztka3wxwjwwj7rxgk7ey:
+  /vite-plugin-pwa/0.12.8_vite@3.2.5:
     resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
-      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.12

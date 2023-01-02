@@ -37,12 +37,12 @@ export const List: FC<{}> = () => {
     }
   };
 
-  const handleChange = (ev: ChangeEvent<HTMLInputElement>) => {
-    setText(ev.target.value);
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setText(event.target.value);
   };
 
-  const handleKeyDown = (ev: KeyboardEvent<HTMLInputElement>) => {
-    switch (ev.key) {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    switch (event.key) {
       case 'Enter': {
         const title = text.trim();
         if (title.length) {
