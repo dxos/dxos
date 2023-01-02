@@ -1,5 +1,5 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
 import React, { useEffect } from 'react';
@@ -41,26 +41,26 @@ export const Routes = () => {
             {
               path: '/',
               element: <SpacesPage />
-            }
-          ]
-        },
-        {
-          path: '/spaces/:space',
-          element: <SpaceLayout />,
-          children: [
+            },
             {
               path: '/spaces/:space',
-              element: <SpacePage />
-            }
-          ]
-        },
-        {
-          path: '/spaces/:space/settings',
-          element: <SpaceSettingsLayout />,
-          children: [
+              element: <SpaceLayout />,
+              children: [
+                {
+                  path: '/spaces/:space',
+                  element: <SpacePage />
+                }
+              ]
+            },
             {
               path: '/spaces/:space/settings',
-              element: <ManageSpacePage />
+              element: <SpaceSettingsLayout />,
+              children: [
+                {
+                  path: '/spaces/:space/settings',
+                  element: <ManageSpacePage />
+                }
+              ]
             }
           ]
         }
