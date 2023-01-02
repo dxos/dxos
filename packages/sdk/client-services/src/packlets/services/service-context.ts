@@ -119,6 +119,7 @@ export class ServiceContext {
 
   // Called when identity is created.
   private async _initialize() {
+    log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
       credentialProvider: MOCK_AUTH_PROVIDER,

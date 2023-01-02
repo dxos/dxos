@@ -55,6 +55,7 @@ export class IdentityManager {
     await this._metadataStore.load();
 
     const identityRecord = this._metadataStore.getIdentityRecord();
+    log('identity record', { identityRecord })
     if (identityRecord) {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open();

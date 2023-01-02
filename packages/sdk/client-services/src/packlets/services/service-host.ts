@@ -65,11 +65,10 @@ export class ClientServicesHost implements ClientServicesProvider {
   }
 
   async open() {
-    await this._initialize();
-    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
-    log('opening...', { deviceKey });
+    log('opening...',);
     await this._initialize();
     await this._serviceContext.open();
+    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
   }
 
