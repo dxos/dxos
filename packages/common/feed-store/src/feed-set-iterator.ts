@@ -98,7 +98,9 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     );
 
     // TODO(burdon): Open at index?
-    await queue.open();
+    await queue.open({
+      start: this.options.start?.find((index) => index.feedKey.equals(feed.key))?.index
+    });
 
     // Wake when feed added or queue updated.
     this._trigger.wake();
