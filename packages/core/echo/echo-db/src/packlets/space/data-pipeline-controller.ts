@@ -71,7 +71,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   }
 
   getStartTimeframe(): Timeframe {
-    return this.snapshotTimeframe ?? new Timeframe();
+    return snapshotTimeframeToStartingTimeframe(this.snapshotTimeframe ?? new Timeframe());
   }
 
   async open(pipeline: Pipeline) {
@@ -154,4 +154,11 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     assert(this._pipeline, 'Pipeline is not initialized.');
     await this._pipeline.state.waitUntilTimeframe(timeframe);
   }
+}
+
+/**
+ * Increase all indexes by one so that we start processing the next mutation after the one in the snapshot.
+ */
+const snapshotTimeframeToStartingTimeframe = (snapshotTimeframe: Timeframe) => {
+  return snapshotTimeframe.map(([key, seq]) => [key, seq + 1]);
 }
