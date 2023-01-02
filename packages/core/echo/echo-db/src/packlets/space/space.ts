@@ -187,9 +187,11 @@ export class Space {
   private async _openDataPipeline() {
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
+    this._dataPipelineController = this._dataPipelineControllerProvider();
+
     // Create pipeline.
     {
-      this._dataPipeline = new Pipeline(new Timeframe());
+      this._dataPipeline = new Pipeline(this._dataPipelineController.getStartTimeframe());
       this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.spaceState.feeds.values()) {
         await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
@@ -197,8 +199,6 @@ export class Space {
     }
 
     await this._dataPipeline.start();
-
-    this._dataPipelineController = this._dataPipelineControllerProvider();
     await this._dataPipelineController.open(this._dataPipeline);
   }
 

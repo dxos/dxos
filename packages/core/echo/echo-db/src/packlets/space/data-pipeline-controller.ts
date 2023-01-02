@@ -18,21 +18,31 @@ import { Timeframe } from '@dxos/timeframe';
 import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackendHost } from '../database';
 import { Pipeline } from '../pipeline';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 /**
  * Controls data pipeline in the space.
  * Consumes mutations from the feed and applies them to the database.
  */
 export interface DataPipelineController {
+
+  /**
+   * Starting timeframe for the data pipeline.
+   */
+  getStartTimeframe(): Timeframe;
+
   // TODO(dmaretskyi): Methods to set the initial timeframe, restart the pipeline on a new epoch and so on.
   open(dataPipeline: Pipeline): Promise<void>;
   close(): Promise<void>;
 }
 
 export class NoopDataPipelineController implements DataPipelineController {
-  async open(dataPipeline: Pipeline): Promise<void> {}
+  getStartTimeframe(): Timeframe {
+    return new Timeframe();
+  }
+  async open(dataPipeline: Pipeline): Promise<void> { }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> { }
 }
 
 export class DataPipelineControllerImpl implements DataPipelineController {
@@ -44,14 +54,24 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
-    private readonly _feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined
-  ) {}
+    private readonly _feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined,
+    private readonly _spaceKey: PublicKey,
+    private readonly _snapshot: SpaceSnapshot | undefined
+  ) { }
 
   public databaseBackend?: DatabaseBackendHost;
   public database?: Database;
 
   get pipelineState() {
     return this._pipeline?.state;
+  }
+
+  get snapshotTimeframe() {
+    return this._snapshot?.timeframe;
+  }
+
+  getStartTimeframe(): Timeframe {
+    return this.snapshotTimeframe ?? new Timeframe();
   }
 
   async open(pipeline: Pipeline) {
@@ -68,7 +88,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
     this.databaseBackend = new DatabaseBackendHost(
       feedWriter,
-      {}, // TODO(dmaretskyi): Populate snapshot.
+      this._snapshot?.database,
       {
         snapshots: true // TODO(burdon): Config.
       }
@@ -88,6 +108,14 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     await this._ctx.dispose();
     await this.databaseBackend?.close();
     await this.database?.destroy();
+  }
+
+  createSnapshot(): SpaceSnapshot {
+    return {
+      spaceKey: this._spaceKey.asUint8Array(),
+      timeframe: this._pipeline?.state.timeframe ?? new Timeframe(),
+      database: this.databaseBackend!.createSnapshot(),
+    }
   }
 
   private async _consumePipeline() {
