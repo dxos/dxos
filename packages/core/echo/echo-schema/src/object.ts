@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor } from '@dxos/model-factory';
 
 import { EchoDatabase } from './database';
-import { db, id, unproxy } from './defs';
+import { base, db, id } from './defs';
 
 /**
  * Base class for all echo objects.
@@ -17,16 +17,16 @@ export abstract class EchoObject<T extends Model = any> {
   /**
    * @internal
    */
-  _id!: string;
+  _id = PublicKey.random().toHex();
 
   /**
-   * Maybe not be present for freshly created objects.
+   * Not present for freshly created objects.
    * @internal
    */
   _database?: EchoDatabase;
 
   /**
-   * Maybe not be present for freshly created objects.
+   * Not present for freshly created objects.
    * @internal
    */
   _item?: Item<T>;
@@ -34,20 +34,8 @@ export abstract class EchoObject<T extends Model = any> {
   /**
    * @internal
    */
+  // TODO(burdon): Remove? Deduce from whether _database is set?
   _isBound = false;
-
-  // ID accessor.
-  get [id](): string {
-    return this[unproxy]._id;
-  }
-
-  // Database property.
-  get [db](): EchoDatabase | undefined {
-    return this[unproxy]._database;
-  }
-
-  // Proxy object.
-  [unproxy]: this = this;
 
   /**
    * @internal
@@ -56,6 +44,19 @@ export abstract class EchoObject<T extends Model = any> {
 
   constructor() {
     this._id = PublicKey.random().toHex();
+  }
+
+  /** Proxied object. */
+  [base]: this = this;
+
+  /** ID accessor. */
+  get [id](): string {
+    return this[base]._id;
+  }
+
+  /** Database reference if bound. */
+  get [db](): EchoDatabase | undefined {
+    return this[base]._database;
   }
 
   /**
@@ -70,7 +71,6 @@ export abstract class EchoObject<T extends Model = any> {
   _bind(item: Item<T>, database: EchoDatabase) {
     this._item = item;
     this._database = database;
-
     this._onBind();
   }
 }

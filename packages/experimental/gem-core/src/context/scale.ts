@@ -11,7 +11,7 @@ import { Bounds, Fraction, FractionUtil, ScreenBounds, Point, Vertex } from '../
  * Scale to map vector space to view (screen) space.
  */
 export class Scale {
-  private _transform: ZoomTransform;
+  private _transform?: ZoomTransform;
 
   constructor(private readonly _gridSize: number = 32) {}
 
@@ -49,7 +49,7 @@ export class Scale {
       return { x: sx, y: sy };
     },
 
-    snapBounds: ({ x, y, width, height }): Bounds => {
+    snapBounds: ({ x, y, width, height }: { x: Fraction; y: Fraction; width: Fraction; height: Fraction }): Bounds => {
       [x, y, width, height] = this.model.snapValues([x, y, width, height]);
       return { x, y, width, height };
     },
@@ -87,9 +87,10 @@ export class Scale {
   readonly screen = {
     snapValues: (array: number[]): number[] => array.map((n) => Math.round(n / this._gridSize) * this._gridSize),
 
-    snapPoint: ([x, y]): Point => [x, y].map((n) => Math.round(n / this._gridSize) * this._gridSize) as Point,
+    snapPoint: ([x, y]: [number, number]): Point =>
+      [x, y].map((n) => Math.round(n / this._gridSize) * this._gridSize) as Point,
 
-    snapBounds: ({ x, y, width, height }): ScreenBounds => {
+    snapBounds: ({ x, y, width, height }: { x: number; y: number; width: number; height: number }): ScreenBounds => {
       [x, y, width, height] = this.screen.snapValues([x, y, width, height]);
       return { x, y, width, height };
     },

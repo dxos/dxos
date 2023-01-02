@@ -9,11 +9,13 @@ import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
 
-// TODO(burdon): Need to trigger typegen before test.
+// TODO(burdon): Test with database.
+// TODO(burdon): Implement Task.from to deserialize JSON string.
 
 describe('schema', () => {
   test('keys', () => {
     const contact = new Contact();
+    expect(contact[id]).not.to.be.undefined;
     expect(Object.keys(contact).length).to.eq(5);
 
     // TODO(burdon): Test after saved with test database.
@@ -33,8 +35,8 @@ describe('schema', () => {
 
     task1.assignee = contact;
     expect(task1.assignee.name).to.eq('User 1');
-    expect(task1.toJSON()).to.deep.eq({ title: 'Task 1', assignee: { name: 'User 1' } });
-    expect(JSON.stringify(task1)).to.eq(JSON.stringify({ title: 'Task 1', assignee: { name: 'User 1' } }));
+    expect(task1.toJSON()).to.deep.eq({ title: 'Task 1', assignee: { id: contact[id] } });
+    expect(JSON.stringify(task1)).to.eq(JSON.stringify({ title: 'Task 1', assignee: { id: contact[id] } }));
   });
 
   test('json with recursion', () => {
@@ -46,26 +48,12 @@ describe('schema', () => {
       name: 'User 1',
       tasks: [
         {
-          title: 'Task 1',
-          assignee: {
-            name: 'User 1',
-            tasks: [
-              {
-                title: 'Task 1'
-              },
-              {
-                title: 'Task 2'
-              }
-            ]
-          }
+          id: contact.tasks[0][id]
         },
         {
-          title: 'Task 2'
+          id: contact.tasks[1][id]
         }
       ]
     });
   });
-
-  // TODO(burdon): Test sets.
-  // TODO(burdon): Implement Task.from to deserialize JSON string.
 });

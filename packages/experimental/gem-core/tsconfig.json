@@ -1,18 +1,13 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
+    "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "module": "ESNext",
-    "outDir": "dist/types",
-    "strict": false
+    "outDir": "dist/types"
   },
-  "exclude": [
-    "**/*.test.ts"
-  ],
   "include": [
     "src",
     "stories"

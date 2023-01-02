@@ -36,19 +36,10 @@
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/experimental/gem-core/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": [
-        "packages/experimental/gem-core/coverage"
-      ]
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "test"
   ]
 }
