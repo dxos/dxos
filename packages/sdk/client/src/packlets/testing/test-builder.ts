@@ -6,6 +6,7 @@ import { ClientServicesHost, ClientServicesProxy, createDefaultModelFactory } fr
 import { Config } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 import { Client } from '../client';
@@ -27,6 +28,8 @@ export const testConfigWithLocalSignal = new Config({
  */
 export class TestBuilder {
   private readonly _config: Config;
+
+  public storage?: Storage;
 
   // prettier-ignore
   constructor (
@@ -71,7 +74,8 @@ export class TestBuilder {
     return new ClientServicesHost({
       config: this._config,
       modelFactory: this._modelFactory,
-      networkManager: this.networkManager
+      networkManager: this.networkManager,
+      storage: this.storage
     });
   }
 

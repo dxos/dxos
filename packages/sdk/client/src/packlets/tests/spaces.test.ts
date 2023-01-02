@@ -11,6 +11,7 @@ import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -34,8 +35,9 @@ describe('Spaces', () => {
     );
   });
 
-  test.skip('creates a space re-opens the client', async () => {
+  test('creates a space re-opens the client', async () => {
     const testBuilder = new TestBuilder(new Config({ version: 1 }));
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();

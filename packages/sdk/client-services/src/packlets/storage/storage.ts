@@ -1,19 +1,11 @@
 //
-// Copyright 2021 DXOS.org
-//
-
-import jsondown from 'jsondown'; // TODO(burdon): Uses custom implementation.
-import leveljs from 'level-js';
-import memdown from 'memdown';
 
 import { InvalidConfigError } from '@dxos/errors';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { isNode } from '@dxos/util';
 
 import StorageDriver = Runtime.Client.Storage.StorageDriver;
 
-export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {
@@ -42,24 +34,7 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
       type: persistent ? toStorageType(storageType) : StorageType.RAM,
       root: `${path}/`
     }),
-    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram')
   };
-};
-
-// TODO(burdon): Factor out.
-const createKeyStorage = (path: string, type?: KeyStorageType) => {
-  const defaultedType = type ?? (isNode() ? 'jsondown' : 'leveljs');
-
-  switch (defaultedType) {
-    case 'leveljs':
-      return leveljs(path);
-    case 'jsondown':
-      return jsondown(path);
-    case 'ram':
-      return memdown();
-    default:
-      throw new InvalidConfigError(`Invalid key storage type: ${defaultedType}`);
-  }
 };
 
 const toStorageType = (type: StorageDriver | undefined): StorageType | undefined => {
@@ -78,20 +53,5 @@ const toStorageType = (type: StorageDriver | undefined): StorageType | undefined
       return StorageType.NODE;
     default:
       throw new Error(`Invalid storage type: ${StorageDriver[type]}`);
-  }
-};
-
-const toKeyStorageType = (type: StorageDriver | undefined): KeyStorageType | undefined => {
-  switch (type) {
-    case undefined:
-      return undefined;
-    case StorageDriver.RAM:
-      return 'ram';
-    case StorageDriver.LEVELJS:
-      return 'leveljs';
-    case StorageDriver.JSONDOWN:
-      return 'jsondown';
-    default:
-      throw new Error(`Invalid key storage type: ${StorageDriver[type]}`);
   }
 };
