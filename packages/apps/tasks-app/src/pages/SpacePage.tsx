@@ -9,7 +9,7 @@ import type { Item, ObjectModel, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 import { Loading } from '@dxos/react-uikit';
 
-import { TaskList, TASK_LIST } from '../containers/TaskList';
+import { TaskList, TASK_LIST } from '../containers';
 
 export const SpacePage = () => {
   const { space } = useOutletContext<{ space: Space }>();
