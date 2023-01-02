@@ -7,6 +7,7 @@ import assert from 'node:assert';
 import { Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   DataService,
   MutationReceipt,
@@ -20,7 +21,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { SpaceNotFoundError } from '../errors';
 import { DataServiceHost } from './data-service-host';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Clear on close.
 export class DataServiceSubscriptions {
@@ -31,12 +31,12 @@ export class DataServiceSubscriptions {
   }
 
   registerSpace(spaceKey: PublicKey, host: DataServiceHost) {
-    log('Registering space', { spaceKey })
+    log('Registering space', { spaceKey });
     this._spaces.set(spaceKey, host);
   }
 
   unregisterSpace(spaceKey: PublicKey) {
-    log('Unregistering space', { spaceKey })
+    log('Unregistering space', { spaceKey });
     this._spaces.delete(spaceKey);
   }
 

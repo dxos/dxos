@@ -140,7 +140,7 @@ export class TestAgent {
       identityKey,
       (feedKey) => space.spaceState.feeds.get(feedKey),
       spaceKey,
-      undefined,
+      undefined
     );
     const space = new Space({
       spaceKey,

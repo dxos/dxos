@@ -164,7 +164,7 @@ describe('FeedSetIterator', () => {
     await feedStore.close();
   }).timeout(3_000);
 
-  test('responds immediately when a feed is appended', async () => {
+  test('start from non-zero index', async () => {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
 
@@ -172,13 +172,15 @@ describe('FeedSetIterator', () => {
     const feed = await feedStore.openFeed(key, { writable: true });
 
     const iterator = new FeedSetIterator(randomFeedBlockSelector, {
-      start: [{
-        feedKey: feed.key,
-        index: 2
-      }]
+      start: [
+        {
+          feedKey: feed.key,
+          index: 2
+        }
+      ]
     });
     await iterator.open();
-    iterator.addFeed(feed);
+    await iterator.addFeed(feed);
 
     await builder.generator.writeBlocks(feed.createFeedWriter(), {
       count: 10
@@ -193,7 +195,6 @@ describe('FeedSetIterator', () => {
         break;
       }
     }
-
 
     await iterator.stop();
     await iterator.close();

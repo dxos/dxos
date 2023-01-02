@@ -13,19 +13,18 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { TypedMessage } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackendHost } from '../database';
 import { Pipeline } from '../pipeline';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 /**
  * Controls data pipeline in the space.
  * Consumes mutations from the feed and applies them to the database.
  */
 export interface DataPipelineController {
-
   /**
    * Starting timeframe for the data pipeline.
    */
@@ -40,9 +39,10 @@ export class NoopDataPipelineController implements DataPipelineController {
   getStartTimeframe(): Timeframe {
     return new Timeframe();
   }
-  async open(dataPipeline: Pipeline): Promise<void> { }
 
-  async close(): Promise<void> { }
+  async open(dataPipeline: Pipeline): Promise<void> {}
+
+  async close(): Promise<void> {}
 }
 
 export class DataPipelineControllerImpl implements DataPipelineController {
@@ -57,7 +57,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     private readonly _feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined,
     private readonly _spaceKey: PublicKey,
     private readonly _snapshot: SpaceSnapshot | undefined
-  ) { }
+  ) {}
 
   public databaseBackend?: DatabaseBackendHost;
   public database?: Database;
@@ -86,13 +86,9 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       pipeline.writer ?? failUndefined()
     );
 
-    this.databaseBackend = new DatabaseBackendHost(
-      feedWriter,
-      this._snapshot?.database,
-      {
-        snapshots: true // TODO(burdon): Config.
-      }
-    );
+    this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database, {
+      snapshots: true // TODO(burdon): Config.
+    });
 
     // Connect pipeline to the database.
     this.database = new Database(this._modelFactory, this.databaseBackend, this._memberKey);
@@ -114,8 +110,8 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     return {
       spaceKey: this._spaceKey.asUint8Array(),
       timeframe: this._pipeline?.state.timeframe ?? new Timeframe(),
-      database: this.databaseBackend!.createSnapshot(),
-    }
+      database: this.databaseBackend!.createSnapshot()
+    };
   }
 
   private async _consumePipeline() {
@@ -161,4 +157,4 @@ export class DataPipelineControllerImpl implements DataPipelineController {
  */
 const snapshotTimeframeToStartingTimeframe = (snapshotTimeframe: Timeframe) => {
   return snapshotTimeframe.map(([key, seq]) => [key, seq + 1]);
-}
+};

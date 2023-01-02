@@ -1,9 +1,15 @@
-import { PublicKey } from "@dxos/keys";
-import { SpaceSnapshot } from "@dxos/protocols/proto/dxos/echo/snapshot";
-import { createStorage } from "@dxos/random-access-storage";
-import { Timeframe } from "@dxos/timeframe";
+//
+// Copyright 2023 DXOS.org
+//
+
 import expect from 'expect';
-import { SnapshotStore } from "./snapshot-store";
+
+import { PublicKey } from '@dxos/keys';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { createStorage } from '@dxos/random-access-storage';
+import { Timeframe } from '@dxos/timeframe';
+
+import { SnapshotStore } from './snapshot-store';
 
 describe('SnapshotStore', () => {
   it('should save and load snapshot', async () => {
@@ -14,12 +20,12 @@ describe('SnapshotStore', () => {
       timeframe: new Timeframe(),
       database: {
         items: [],
-        links: [],
+        links: []
       }
     };
 
     const key = await store.saveSnapshot(snapshot);
     const loaded = await store.loadSnapshot(key);
     expect(loaded).toEqual(snapshot);
-  })
+  });
 });

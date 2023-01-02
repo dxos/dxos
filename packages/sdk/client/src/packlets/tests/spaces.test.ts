@@ -7,11 +7,11 @@ import { expect } from 'chai';
 import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { ObjectModel } from '@dxos/object-model';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 describe('Spaces', () => {
   test('creates a space', async () => {

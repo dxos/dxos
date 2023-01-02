@@ -137,7 +137,7 @@ export class ServiceContext {
       this.keyring,
       signingContext,
       this.modelFactory,
-      this.snapshotStore,
+      this.snapshotStore
     );
     await this.dataSpaceManager.open();
     this.spaceInvitations = new SpaceInvitationsHandler(

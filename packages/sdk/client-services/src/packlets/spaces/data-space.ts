@@ -8,8 +8,8 @@ import { Context } from '@dxos/context';
 import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { Presence } from '@dxos/teleport-extension-presence';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { Presence } from '@dxos/teleport-extension-presence';
 
 export type DataSpaceParams = {
   inner: Space;
@@ -17,7 +17,7 @@ export type DataSpaceParams = {
   memberKey: PublicKey;
   presence: Presence;
   snapshot?: SpaceSnapshot | undefined;
-}
+};
 
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();

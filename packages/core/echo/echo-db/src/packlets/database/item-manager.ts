@@ -92,7 +92,7 @@ export class ItemManager {
 
   async destroy() {
     log('destroying..');
-    for(const entity of this._entities.values()) {
+    for (const entity of this._entities.values()) {
       await entity._destroy();
     }
     this._entities.clear();

@@ -29,7 +29,7 @@ import { DataSpace } from './data-space';
 
 /**
  * Number of mutations since the last snapshot before we automatically create another snapshot.
- */ 
+ */
 const MESSAGES_PER_SNAPSHOT = 10;
 
 export class DataSpaceManager {
@@ -57,10 +57,10 @@ export class DataSpaceManager {
   @synchronized
   async open() {
     await this._metadataStore.load();
-    log('metadata loaded', { spaces: this._metadataStore.spaces.length })
+    log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
     for (const spaceMetadata of this._metadataStore.spaces) {
-      log('load space', { spaceMetadata })
+      log('load space', { spaceMetadata });
       const space = await this._constructSpace(spaceMetadata);
       if (spaceMetadata.latestTimeframe) {
         log('waiting for latest timeframe', { spaceMetadata });
@@ -72,10 +72,10 @@ export class DataSpaceManager {
   @synchronized
   async close() {
     await this._ctx.dispose();
-    for(const space of this._spaces.values()) {
+    for (const space of this._spaces.values()) {
       await this._saveSnapshot(space);
       const latestTimeframe = space.dataPipelineController.pipelineState?.timeframe;
-      if(latestTimeframe) {
+      if (latestTimeframe) {
         await this._metadataStore.setSpaceLatestTimeframe(space.key, latestTimeframe);
       }
     }
@@ -137,8 +137,8 @@ export class DataSpaceManager {
       dataPipelineControllerProvider: () => dataSpace.dataPipelineController,
       presence
     });
-    let snapshot: SpaceSnapshot | undefined = undefined;
-    if(metadata.snapshot) {
+    let snapshot: SpaceSnapshot | undefined;
+    if (metadata.snapshot) {
       snapshot = await this._snapshotStore.loadSnapshot(metadata.snapshot);
     }
     const dataSpace = new DataSpace({
@@ -146,30 +146,29 @@ export class DataSpaceManager {
       modelFactory: this._modelFactory,
       memberKey: this._signingContext.identityKey,
       presence,
-      snapshot,
+      snapshot
     });
-
 
     let lastSnapshotTimeframe: Timeframe = snapshot?.timeframe ?? new Timeframe();
 
     dataSpace.dataPipelineController.onTimeframeReached.debounce(1000).on(this._ctx, async () => {
       const latestTimeframe = dataSpace.dataPipelineController.pipelineState?.timeframe;
-      if(!latestTimeframe) {
+      if (!latestTimeframe) {
         return;
       }
-      
+
       // Record last timeframe.
       if (latestTimeframe) {
         await this._metadataStore.setSpaceLatestTimeframe(metadata.key, latestTimeframe);
       }
 
       // Save snapshot.
-      if(latestTimeframe.totalMessages() - lastSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT) {
+      if (latestTimeframe.totalMessages() - lastSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT) {
         const snapshot = await this._saveSnapshot(dataSpace);
         lastSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-        console.log('save', { 
-          snapshot,
-        })
+        console.log('save', {
+          snapshot
+        });
       }
     });
 

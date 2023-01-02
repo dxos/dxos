@@ -74,6 +74,6 @@ export class Entity<M extends Model | null = Model> {
    * Waits for pending operations to complete.
    */
   async _destroy() {
-    this._stateManager.destroy();
+    await this._stateManager.destroy();
   }
 }

@@ -1,11 +1,14 @@
 //
 
+//
+// Copyright 2023 DXOS.org
+//
+
 import { InvalidConfigError } from '@dxos/errors';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import StorageDriver = Runtime.Client.Storage.StorageDriver;
-
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {
@@ -33,7 +36,7 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
     storage: createStorage({
       type: persistent ? toStorageType(storageType) : StorageType.RAM,
       root: `${path}/`
-    }),
+    })
   };
 };
 

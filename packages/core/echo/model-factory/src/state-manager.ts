@@ -54,7 +54,7 @@ type OptimisticMutation = {
  * - Optimistic mutations.
  */
 export class StateManager<M extends Model> {
-  private readonly _pendingWrites = new Set<Promise<any>>()
+  private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
   private _modelMeta: ModelMeta | null = null;
@@ -107,7 +107,7 @@ export class StateManager<M extends Model> {
     return this._model;
   }
 
-  async destroy () {
+  async destroy() {
     log('destroy');
     try {
       await Promise.all(this._pendingWrites);
@@ -151,9 +151,9 @@ export class StateManager<M extends Model> {
 
     // Track receipt promise.
     this._pendingWrites.add(receiptPromise);
-    receiptPromise.then(() => {
+    void receiptPromise.then(() => {
       this._pendingWrites.delete(receiptPromise);
-    })
+    });
 
     // Write mutation to the feed store and assign metadata from the receipt.
     // Confirms that the optimistic mutation has been written to the feed store.
