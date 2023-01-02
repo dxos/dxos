@@ -11,8 +11,6 @@
     "dxtype": "./bin/dxtype.js"
   },
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist",
     "src"
   ],

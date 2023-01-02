@@ -9,10 +9,10 @@ import { id } from '@dxos/echo-schema';
 import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
-import { Card, Input, Table } from '../components';
+import { Card, Input, TableRow } from '../components';
 import { useSpace } from '../hooks';
 import { createProject, createTask, Project } from '../proto';
-import { TaskItem } from './TaskList';
+import { DraggableTaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
   const { space } = useSpace();
@@ -23,7 +23,7 @@ export const ProjectList: FC<{}> = () => {
   };
 
   const Menubar = () => (
-    <button className='mr-2' onClick={handleCreate}>
+    <button onClick={handleCreate}>
       <PlusCircle className={getSize(6)} />
     </button>
   );
@@ -76,7 +76,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           <h2 className='pl-3 pt-1 text-xs'>Tasks</h2>
           <div className='p-3 pt-1'>
             {project.tasks?.map((task) => (
-              <TaskItem key={task[id]} task={task} />
+              <DraggableTaskItem key={task[id]} task={task} />
             ))}
           </div>
         </div>
@@ -87,7 +87,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           <h2 className='pl-3 text-xs'>Team</h2>
           <div className='p-3 pt-1'>
             {project.team?.map((contact) => (
-              <Table key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
+              <TableRow key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
             ))}
           </div>
         </div>

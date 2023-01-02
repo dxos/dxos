@@ -17,8 +17,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/core/echo/echo-typegen/src/main.ts",
-          "packages/core/echo/echo-typegen/test/proto/index.ts"
+          "packages/core/echo/echo-typegen/src/main.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/core/echo/echo-typegen/dist/lib",

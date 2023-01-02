@@ -9,7 +9,7 @@ import { id } from '@dxos/echo-schema';
 import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
-import { Card, Input, Table } from '../components';
+import { Card, Input, TableRow } from '../components';
 import { useSpace } from '../hooks';
 import { Address, Contact, createContact } from '../proto';
 
@@ -44,7 +44,7 @@ export const Person = makeReactive<{ person: Contact }>(({ person }) => {
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
-    <Table
+    <TableRow
       sidebar={<User className={getSize(5)} />}
       header={
         <Input
@@ -58,6 +58,6 @@ export const Person = makeReactive<{ person: Contact }>(({ person }) => {
       {person.username && <div className='flex text-sm text-green-800'>{person.username}</div>}
       {person.email && <div className='flex text-sm text-green-800'>{person.email}</div>}
       {person.address && <div className='flex text-sm text-gray-800'>{address(person.address)}</div>}
-    </Table>
+    </TableRow>
   );
 });
