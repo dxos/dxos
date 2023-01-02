@@ -5,26 +5,13 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { createMemoryDatabase } from '@dxos/echo-db/testing';
-import { PublicKey } from '@dxos/keys';
-import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
-import { TextModel } from '@dxos/text-model';
 
-import { EchoDatabase } from './database';
 import { DatabaseRouter } from './database-router';
 import { Document } from './document';
 import { OrderedSet } from './ordered-set';
+import { createDatabase } from './testing';
 import { TextObject } from './text-object';
-
-const createDatabase = async (router = new DatabaseRouter()) => {
-  const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TextModel);
-  const database = await createMemoryDatabase(modelFactory);
-  const db = new EchoDatabase(router, database);
-  router.register(PublicKey.random(), db);
-  return db;
-};
 
 describe('EchoDatabase', () => {
   test('get/set properties', async () => {
@@ -45,10 +32,7 @@ describe('EchoDatabase', () => {
   test('initializer', async () => {
     const db = await createDatabase();
 
-    const obj = new Document({
-      title: 'Test title',
-      description: 'Test description'
-    });
+    const obj = new Document({ title: 'Test title', description: 'Test description' });
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
 
@@ -170,7 +154,7 @@ describe('EchoDatabase', () => {
   });
 
   describe('text', () => {
-    test('works', async () => {
+    test('basic', async () => {
       const db = await createDatabase();
       const text = new TextObject();
       await db.save(text);
@@ -183,7 +167,7 @@ describe('EchoDatabase', () => {
       expect(text.model!.textContent).toEqual('Hello world');
     });
 
-    test('as a prop', async () => {
+    test('text property', async () => {
       const db = await createDatabase();
       const task = new Document();
       await db.save(task);

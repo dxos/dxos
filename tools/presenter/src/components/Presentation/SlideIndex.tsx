@@ -23,8 +23,8 @@ export const SlideIndex: FC<PresentationProps> = ({ title, slides }) => {
   // console.log(t);
 
   useEffect(() => {
-    const handler = (ev: KeyboardEvent) => {
-      switch (ev.key) {
+    const handler = (event: KeyboardEvent) => {
+      switch (event.key) {
         case 'ArrowDown': {
           navigate(presentation.slidePath());
           break;

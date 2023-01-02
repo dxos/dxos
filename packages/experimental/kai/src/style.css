@@ -51,3 +51,9 @@
 .logo:hover {
   transform: rotate(-300deg);
 }
+
+/** TODO(burdon): Patch containing div of tiptap. */
+.editor-container > div {
+  display: flex;
+  flex: 1;
+}

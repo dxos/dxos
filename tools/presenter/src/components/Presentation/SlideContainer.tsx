@@ -30,8 +30,8 @@ export const SlideContainer: FC<PresentationProps> = ({ title, slides }) => {
   };
 
   useEffect(() => {
-    const handler = (ev: KeyboardEvent) => {
-      switch (ev.key) {
+    const handler = (event: KeyboardEvent) => {
+      switch (event.key) {
         case 'ArrowLeft': {
           handleNav(slideNum - 1);
           break;

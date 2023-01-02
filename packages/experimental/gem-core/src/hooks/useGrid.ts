@@ -55,7 +55,7 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
   }
 
   // Scale grid size.
-  const mod = (n, size, delta = 0) => Math.floor(n / size + delta) * size;
+  const mod = (n: number, size: number, delta = 0) => Math.floor(n / size + delta) * size;
 
   // Major grid lines.
   const majorSize = context.scale.gridSize;
@@ -131,7 +131,7 @@ export class GridController {
   _visible = false;
 
   constructor(
-    private readonly _ref: RefObject<SVGGElement>,
+    private readonly _ref: RefObject<SVGGElement | undefined>,
     private readonly _context: SVGContext,
     private readonly _options: GridOptions
   ) {
@@ -152,7 +152,7 @@ export class GridController {
     }
 
     const paths = this._visible ? createGrid(this._context, this._options) : [];
-    const root = d3.select(this._ref.current);
+    const root = d3.select(this._ref.current!);
 
     root
       .selectAll<SVGPathElement, PathGroup>('path')

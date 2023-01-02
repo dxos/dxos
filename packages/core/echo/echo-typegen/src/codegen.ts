@@ -39,6 +39,7 @@ export class SourceBuilder {
 /**
  * Protobuf schema as JSON object.
  */
+// TODO(burdon): Missing name.
 export const createSchema = (schema: pb.NamespaceBase) => {
   const json = JSON.stringify(JSON.stringify(schema.toJSON()));
   const str = json.replace(/\\"/g, '"').replace(/(^"|"$)/g, '');

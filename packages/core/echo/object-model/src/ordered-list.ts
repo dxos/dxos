@@ -15,9 +15,9 @@ import { ObjectModel } from './object-model';
 export class OrderedList {
   private _values: ItemID[] = [];
 
-  update = new Event<ItemID[]>();
+  private readonly _unsubscribe: () => void;
 
-  private _unsubscribe: () => void;
+  update = new Event<ItemID[]>();
 
   // prettier-ignore
   constructor(
@@ -93,9 +93,9 @@ export class OrderedList {
       }
     }
 
-    const commited = builder.commit();
+    const committed = builder.commit();
     this.refresh();
-    await commited;
+    await committed;
     return this._values;
   }
 
@@ -121,9 +121,9 @@ export class OrderedList {
         builder.set(`${this._property}.${next}`, last);
       }
 
-      const commited = builder.commit();
+      const committed = builder.commit();
       this.refresh();
-      await commited;
+      await committed;
     }
 
     return this._values;
@@ -146,9 +146,9 @@ export class OrderedList {
       }
     }
 
-    const commited = builder.commit();
+    const committed = builder.commit();
     this.refresh();
-    await commited;
+    await committed;
     return this._values;
   }
 }

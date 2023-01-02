@@ -218,6 +218,10 @@ service SpaceInvitationsService {
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
 }
 
+//
+// MESH
+//
+
 enum ConnectionState {
   OFFLINE = 0;
   ONLINE = 1;
@@ -232,6 +236,7 @@ message SetNetworkOptionsRequest {
   ConnectionState state = 1;
 }
 
+// TODO(burdon): Widen API (too heavy for single feature: e.g., status).
 service NetworkService {
   rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
   rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);

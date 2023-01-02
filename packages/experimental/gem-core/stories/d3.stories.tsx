@@ -8,6 +8,7 @@ import React, { useEffect } from 'react';
 
 import {
   Bounds,
+  Fraction,
   FractionUtil,
   FullScreen,
   Scale,
@@ -64,8 +65,8 @@ type DataItem = {
 };
 
 // TODO(burdon): To Util.
-const convertPoints = (array) =>
-  array.map(([x, y]) => ({
+const convertPoints = (array: any) =>
+  array.map(([x, y]: [number, number]) => ({
     x: FractionUtil.toFraction(x),
     y: FractionUtil.toFraction(y)
   }));
@@ -131,7 +132,7 @@ const data: DataItem[] = [
   }
 ];
 
-const updateCircle = (el, scale, { pos, r }) => {
+const updateCircle = (el: any, scale: Scale, { pos, r }: { pos: Vertex; r: Fraction }) => {
   const [cx, cy] = scale.model.toPoint(pos);
   return el
     .attr('cx', cx)
@@ -139,7 +140,11 @@ const updateCircle = (el, scale, { pos, r }) => {
     .attr('r', scale.model.toValues([r])[0]);
 };
 
-const updateText = (el, scale, { style = {}, bounds, pos, text }) => {
+const updateText = (
+  el: any,
+  scale: Scale,
+  { style = {}, bounds, pos, text }: { style: any; bounds: Bounds; pos: Vertex; text: string }
+) => {
   const anchor = style['text-anchor'] ?? 'middle';
   let [x = 0, y = 0] = [];
   if (pos) {
@@ -172,7 +177,7 @@ const updateText = (el, scale, { style = {}, bounds, pos, text }) => {
     .text(text);
 };
 
-const updateRect = (el, scale, { bounds, style }) => {
+const updateRect = (el: any, scale: Scale, { bounds, style }: { bounds: Bounds; style: any }) => {
   const { x, y, width, height } = scale.model.toBounds(bounds);
   const { rx } = style ?? {};
   return el
@@ -183,7 +188,11 @@ const updateRect = (el, scale, { bounds, style }) => {
     .attr('height', height);
 };
 
-const updatePath = (el, scale, { points, curve, closed }) => {
+const updatePath = (
+  el: any,
+  scale: Scale,
+  { points, curve, closed }: { points: Vertex[]; curve: string; closed: boolean }
+) => {
   const p = points.map((p) => scale.model.toPoint(p));
   let line;
   switch (curve) {
@@ -199,6 +208,7 @@ const updatePath = (el, scale, { points, curve, closed }) => {
       line = closed ? d3.curveLinearClosed : d3.curveLinear;
     }
   }
+
   return el.attr('d', d3.line().curve(line)(p));
 };
 
@@ -209,12 +219,12 @@ const Component = () => {
 
   useEffect(() => {
     const scale = context.scale;
-    d3.select(zoom.ref.current)
+    d3.select(zoom.ref.current!)
       .selectAll('g')
       .data(data)
       .join('g')
       .each(({ type, data }, i, nodes) => {
-        const el = d3.select(nodes[i]).attr('class', data.class);
+        const el = d3.select(nodes[i]).attr('class', data.class ?? '');
 
         switch (type) {
           case 'circle': {
@@ -251,7 +261,7 @@ const Component = () => {
             const { points } = data;
             el.selectAll('path').data([0]).join('path').call(updatePath, scale, data);
             el.selectAll('circle')
-              .data(points)
+              .data(points as any[])
               .join('circle')
               .each((pos, i, nodes) => {
                 const [cx, cy] = scale.model.toPoint(pos);
@@ -269,8 +279,8 @@ const Component = () => {
 
   return (
     <svg xmlns='http://www.w3.org/2000/svg' ref={context.ref} className={styles}>
-      <g ref={grid?.ref} className={defaultGridStyles} />
-      <g ref={zoom?.ref} />
+      <g ref={grid?.ref as any} className={defaultGridStyles} />
+      <g ref={zoom?.ref as any} />
     </svg>
   );
 };

@@ -3,30 +3,46 @@
 //
 
 import clsx from 'clsx';
-import { AirplaneInFlight, AirplaneTakeoff, Bug, PlusCircle, Gear } from 'phosphor-react';
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Bug, PlusCircle, Gear, Robot, WifiHigh, WifiSlash } from 'phosphor-react';
+import React, { useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { useSpace } from '../hooks';
-import { MembersList } from './MembersList';
+import { Generator } from '../proto';
+import { MemberList } from './MemberList';
 import { SpaceList } from './SpaceList';
+import { views } from './views';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
+  const { spaceKey: currentSpaceKey, view } = useParams();
   const client = useClient();
   const { space } = useSpace();
   const { state: connectionState } = useNetworkStatus();
+  const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
+
+  const setView = (spaceKey: string, view: string) => {
+    navigate(`/${spaceKey}/${view}`);
+  };
+
+  const handleSettings = () => {
+    navigate('/settings');
+  };
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     navigate(`/${space.key.truncate()}`);
   };
 
-  const handleAirplaneMode = async () => {
+  const handleGenerateData = async () => {
+    await generator?.generate();
+  };
+
+  const handleToggleConnection = async () => {
     switch (connectionState) {
       case ConnectionState.OFFLINE: {
         await client.mesh.setConnectionState(ConnectionState.ONLINE);
@@ -51,23 +67,34 @@ export const Sidebar = () => {
         </div>
       </div>
 
+      <div className='flex p-3 mb-2'>
+        {views.map(({ key, Icon }) => (
+          <button key={key} className='mr-2' onClick={() => setView(currentSpaceKey!, key)}>
+            <Icon className={clsx(getSize(6), view !== key && 'text-gray-500')} />
+          </button>
+        ))}
+      </div>
+
       <div className='flex flex-1 flex-col overflow-y-scroll'>
         <SpaceList />
       </div>
 
       <div className='flex flex-shrink-0 p-3 mt-6'>
-        <MembersList spaceKey={space.key} />
+        <MemberList spaceKey={space.key} />
       </div>
 
       <div className='flex flex-shrink-0 p-3 mt-2'>
-        <button className='mr-2'>
+        <button className='mr-2' title='Settings' onClick={handleSettings}>
           <Gear className={getSize(6)} />
         </button>
-        <button className='mr-2' title='Reset store.' onClick={handleAirplaneMode}>
+        <button className='mr-2' title='Generate data' onClick={handleGenerateData}>
+          <Robot className={getSize(6)} />
+        </button>
+        <button className='mr-2' title='Toggle connection.' onClick={handleToggleConnection}>
           {connectionState === ConnectionState.ONLINE ? (
-            <AirplaneTakeoff className={getSize(6)} />
+            <WifiHigh className={getSize(6)} />
           ) : (
-            <AirplaneInFlight className={getSize(6)} />
+            <WifiSlash className={clsx(getSize(6), 'text-orange-500')} />
           )}
         </button>
       </div>

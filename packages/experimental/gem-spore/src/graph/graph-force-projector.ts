@@ -3,12 +3,9 @@
 //
 
 import * as d3 from 'd3';
-import debug from 'debug';
 
 import { Projector } from '../scene';
 import { emptyGraph, GraphData, GraphLayout, GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
-
-const log = debug('gem:graph-force-projector');
 
 /**
  * Return value or invoke function.
@@ -165,7 +162,6 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
   }
 
   onUpdate(data?: GraphData<N>) {
-    log('onUpdate', JSON.stringify({ nodes: data?.nodes.length, links: data?.links.length }));
     this.mergeData(data);
     this.updateForces();
 
@@ -253,7 +249,6 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
       })
       .on('end', () => {
         // alpha < alphaMin
-        log('stopped');
       })
 
       // .alphaDecay(1 - Math.pow(0.001, 1 / 300))
@@ -268,7 +263,6 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
 
   private updateForces() {
     const forces = this.options.forces;
-    log('forces', JSON.stringify(forces));
 
     // https://github.com/d3/d3-force#simulation_force
     this._simulation

@@ -8,10 +8,13 @@
   "author": "info@dxos.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
+    "testing.d.ts",
+    "testing.js",
     "dist",
     "src"
   ],

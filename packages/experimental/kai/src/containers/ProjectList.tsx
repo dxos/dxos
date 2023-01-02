@@ -9,21 +9,21 @@ import { id } from '@dxos/echo-schema';
 import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
-import { Card, Input, Table } from '../components';
+import { Card, Input, TableRow } from '../components';
 import { useSpace } from '../hooks';
 import { createProject, createTask, Project } from '../proto';
-import { TaskItem } from './TaskList';
+import { DraggableTaskItem } from './TaskList';
 
 export const ProjectList: FC<{}> = () => {
   const { space } = useSpace();
   const projects = useQuery(space, Project.filter());
 
   const handleCreate = async () => {
-    await createProject(space.db2);
+    await createProject(space.experimental.db);
   };
 
   const Menubar = () => (
-    <button className='mr-2' onClick={handleCreate}>
+    <button onClick={handleCreate}>
       <PlusCircle className={getSize(6)} />
     </button>
   );
@@ -45,8 +45,10 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
   const { space } = useSpace();
 
   const handleCreate = async () => {
-    const task = await createTask(space.db2);
+    const task = await createTask(space.experimental.db);
     project.tasks.push(task);
+    // TODO(burdon): Can't set array. new OrderedSet().
+    // project.tasks = [task];
     if (task.assignee) {
       project.team.push(task.assignee);
     }
@@ -68,22 +70,13 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           <Plus className={getSize(6)} />
         </button>
       </div>
-      {/*
-      {project.description?.doc && (
-        <Composer
-          doc={project.description?.doc}
-          className={mx(
-            'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[3em]'
-          )}
-        />
-      )} */}
 
       {project.tasks?.length > 0 && (
         <div>
           <h2 className='pl-3 pt-1 text-xs'>Tasks</h2>
           <div className='p-3 pt-1'>
             {project.tasks?.map((task) => (
-              <TaskItem key={task[id]} task={task} />
+              <DraggableTaskItem key={task[id]} task={task} />
             ))}
           </div>
         </div>
@@ -94,7 +87,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           <h2 className='pl-3 text-xs'>Team</h2>
           <div className='p-3 pt-1'>
             {project.team?.map((contact) => (
-              <Table key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
+              <TableRow key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
             ))}
           </div>
         </div>
