@@ -141,7 +141,6 @@ export class DataSpaceManager {
     if(metadata.snapshot) {
       snapshot = await this._snapshotStore.loadSnapshot(metadata.snapshot);
     }
-    console.log('snapshot', snapshot);
     const dataSpace = new DataSpace({
       inner: space,
       modelFactory: this._modelFactory,
