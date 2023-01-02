@@ -20,6 +20,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { SpaceNotFoundError } from '../errors';
 import { DataServiceHost } from './data-service-host';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Clear on close.
 export class DataServiceSubscriptions {
@@ -30,10 +31,12 @@ export class DataServiceSubscriptions {
   }
 
   registerSpace(spaceKey: PublicKey, host: DataServiceHost) {
+    log('Registering space', { spaceKey })
     this._spaces.set(spaceKey, host);
   }
 
   unregisterSpace(spaceKey: PublicKey) {
+    log('Unregistering space', { spaceKey })
     this._spaces.delete(spaceKey);
   }
 

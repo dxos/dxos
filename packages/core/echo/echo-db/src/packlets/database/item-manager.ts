@@ -90,6 +90,14 @@ export class ItemManager {
     return Array.from(this._entities.values()).filter((entity): entity is Link<Model> => entity instanceof Link);
   }
 
+  async destroy() {
+    log('destroying..');
+    for(const entity of this._entities.values()) {
+      await entity._destroy();
+    }
+    this._entities.clear();
+  }
+
   /**
    * Creates an item and writes the genesis message.
    * @param {ModelType} modelType
