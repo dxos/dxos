@@ -39,7 +39,7 @@ export const DraggableTaskList = makeReactive<{ tasks: Task[]; onCreate?: (task:
     const handleDragEnd = ({ active, over }: any) => {
       // TODO(burdon): Click counts as dragging (disables checkbox/input).
       // TODO(burdon): Check if initially above/below to understand how to swap.
-      if (over && active.data.current.supports.includes(over.data.current.type)) {
+      if (over && active.data.current.supports?.includes(over.data.current.type)) {
         console.log('::::', active.id, over.id);
         // tasks.splice(0, 1, tasks[2]);
         // console.log(tasks.map((task) => task[id]));
@@ -93,6 +93,7 @@ export const DraggableTaskListContainer = makeReactive<{
   );
 });
 
+// TODO(burdon): Doesn't handle variable height items.
 export const DraggableTaskItem = makeReactive<{
   task: Task;
   onEnter?: (task: Task) => void;
@@ -105,10 +106,12 @@ export const DraggableTaskItem = makeReactive<{
   };
 
   return (
-    <div ref={setNodeRef} className='flex flex-1 ml-3 items-center' style={style}>
-      <button className='w-4' {...listeners} {...attributes}>
-        <DotsSixVertical />
-      </button>
+    <div ref={setNodeRef} className='flex flex-1 ml-3' style={style}>
+      <div className='pt-1'>
+        <button className='w-4' {...listeners} {...attributes}>
+          <DotsSixVertical />
+        </button>
+      </div>
       <TaskItem task={task} onEnter={onEnter} onDelete={onDelete} />
     </div>
   );

@@ -8,7 +8,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { makeReactive, useQuery } from '@dxos/react-client';
+import { makeReactive, useQuery, useSubscription } from '@dxos/react-client';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, TableRow } from '../components';
@@ -65,7 +65,7 @@ export const NewTaskItem = makeReactive<{
 }>(({ task, onEnter }) => {
   return (
     <TableRow
-      sidebar={<div className='flex flex-shrink-0 ml-7 mr-1'></div>}
+      sidebar={<div className='flex flex-shrink-0 ml-5 mr-1'></div>}
       header={
         <Input
           className='w-full outline-0'
@@ -84,17 +84,18 @@ export const NewTaskItem = makeReactive<{
   );
 });
 
-export const TaskItem = makeReactive<{
+export const TaskItem: FC<{
   task: Task;
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}>(({ task, onEnter, onDelete }) => {
+}> = ({ task, onEnter, onDelete }) => {
   const { debug } = useOptions();
+  useSubscription([task]);
 
   return (
     <TableRow
       sidebar={
-        <div className='flex flex-shrink-0 justify-center w-6 mr-2'>
+        <div className='flex flex-shrink-0 justify-center w-6'>
           <input
             type='checkbox'
             spellCheck={false}
@@ -131,4 +132,4 @@ export const TaskItem = makeReactive<{
       </div>
     </TableRow>
   );
-});
+};

@@ -13,7 +13,7 @@ export const TableRow: FC<{ sidebar?: ReactNode; action?: ReactNode; header: Rea
   return (
     <div className='flex flex-col pl-2 pr-2'>
       <div className='flex items-center'>
-        {sidebar && <div className='flex flex-shrink-0'>{sidebar}</div>}
+        {sidebar && <div className='flex flex-shrink-0 mr-2'>{sidebar}</div>}
         <div className='flex flex-1'>{header}</div>
         {action && <div className='flex ml-2'>{action}</div>}
       </div>

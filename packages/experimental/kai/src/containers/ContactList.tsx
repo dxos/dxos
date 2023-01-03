@@ -46,7 +46,7 @@ export const Person = makeReactive<{ person: Contact }>(({ person }) => {
   return (
     <TableRow
       sidebar={
-        <div className='flex flex-shrink-0 justify-center w-6 mr-2'>
+        <div className='flex flex-shrink-0 justify-center w-6'>
           <User className={getSize(5)} />
         </div>
       }

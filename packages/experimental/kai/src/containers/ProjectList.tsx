@@ -69,6 +69,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
         </button>
       </div>
 
+      {/* Tasks */}
       {project.tasks?.length > 0 && (
         <div>
           <h2 className='pl-3 pt-1 pb-1 text-xs'>Tasks</h2>
@@ -82,10 +83,11 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
         </div>
       )}
 
+      {/* Contacts */}
       {project.team?.length > 0 && (
         <div>
           <h2 className='pl-3 text-xs'>Team</h2>
-          <div className='p-3 pt-1'>
+          <div className='p-1 pt-1'>
             {project.team?.map((contact) => (
               <TableRow key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
             ))}
