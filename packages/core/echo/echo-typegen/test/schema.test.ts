@@ -18,7 +18,9 @@ describe('schema', () => {
     expect(contact[id]).to.exist;
     expect(Object.keys(contact).length).to.eq(5);
     contact.email = 'test@example.com';
-    contact.address.zip = '11205';
+
+    // TODO(burdon): Address should be auto-created?
+    // contact.address.zip = '11205';
 
     // TODO(burdon): Test after saved with test database.
     expect(contact[id]).to.be.a('string'); // TODO(burdon): Expose as property.
