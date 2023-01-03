@@ -206,7 +206,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   findIndex(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): number {
-    throw new Error('Method not implemented.');
+    return Array.from(this[Symbol.iterator]()).findIndex(predicate, thisArg);
   }
 
   fill(value: T, start?: number | undefined, end?: number | undefined): this {
