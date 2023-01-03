@@ -10,10 +10,14 @@ export type UseRector = {
   render: (component: ReactElement<any, any> | null) => ReactElement<any, any> | null;
 };
 
+export type ReactorProps = {
+  onChange?: () => void;
+};
+
 /**
  * Hook to update components that access the database when modified.
  */
-export const useReactor = (): UseRector => {
+export const useReactor = (props?: ReactorProps): UseRector => {
   const client = useClient();
   const accessObserver = client.echo.dbRouter.createAccessObserver();
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -22,6 +26,7 @@ export const useReactor = (): UseRector => {
   const [handle] = useState(() =>
     client.echo.dbRouter.createSubscription(() => {
       forceUpdate();
+      props?.onChange?.(); // TODO(burdon): Pass in modified objects.
     })
   );
 

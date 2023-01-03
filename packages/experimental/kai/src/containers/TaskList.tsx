@@ -3,7 +3,7 @@
 //
 
 import clsx from 'clsx';
-import { PlusCircle, XCircle } from 'phosphor-react';
+import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
@@ -28,6 +28,22 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   const { space } = useSpace();
   const tasks = useQuery(space, Task.filter({ completed }));
   const [newTask, setNewTask] = useState<Task>();
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    if (saving) {
+      if (t) {
+        clearTimeout(t);
+      }
+      t = setTimeout(() => {
+        setSaving(false);
+      }, 1000);
+    }
+
+    return () => clearTimeout(t);
+  }, [saving]);
+
   useEffect(() => {
     if (!readonly) {
       setNewTask(new Task());
@@ -45,6 +61,10 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     }
   };
 
+  const handleSave = () => {
+    setSaving(true);
+  };
+
   const Menubar = () => (
     <button onClick={handleGenerateTask}>
       <PlusCircle className={getSize(6)} />
@@ -53,24 +73,30 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
 
   return (
     <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
-      <div className={'mt-2'}>
-        {tasks?.map((task) => (
-          <TaskItem key={task[id]} task={task} readonly={readonly} />
-        ))}
+      <div className='flex flex-col flex-1 overflow-y-scroll'>
+        <div className={'mt-2'}>
+          {tasks?.map((task) => (
+            <TaskItem key={task[id]} task={task} onSave={handleSave} readonly={readonly} />
+          ))}
+        </div>
+
+        <div>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} />}</div>
       </div>
 
-      <div>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} />}</div>
+      {saving && (
+        <div className='flex justify-end p-1 text-red-500'>
+          <Spinner />
+        </div>
+      )}
     </Card>
   );
 };
 
-export const NewTaskItem: FC<{
+export const NewTaskItem = withReactor<{
   task: Task;
   onEnter?: (task: Task) => void;
-}> = ({ task, onEnter }) => {
-  const { render } = useReactor();
-
-  return render(
+}>(({ task, onEnter }) => {
+  return (
     <TableRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6 invisible'>
@@ -93,17 +119,23 @@ export const NewTaskItem: FC<{
       }
     />
   );
-};
+});
 
-export const TaskItem = withReactor<{
+export const TaskItem: FC<{
   task: Task;
   readonly?: boolean;
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}>(({ task, readonly, onEnter, onDelete }) => {
+  onSave?: (task: Task) => void;
+}> = ({ task, readonly, onEnter, onDelete, onSave }) => {
   const { debug } = useOptions();
+  const { render } = useReactor({
+    onChange: () => {
+      onSave?.(task);
+    }
+  });
 
-  return (
+  return render(
     <TableRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6'>
@@ -144,4 +176,4 @@ export const TaskItem = withReactor<{
       </div>
     </TableRow>
   );
-});
+};

@@ -42,8 +42,8 @@ export const ProjectList: FC<{}> = () => {
 };
 
 export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
-  const { render } = useReactor();
   const { space } = useSpace();
+  const { render } = useReactor();
 
   const handleGenerateTask = async () => {
     const task = await createTask(space.experimental.db);
