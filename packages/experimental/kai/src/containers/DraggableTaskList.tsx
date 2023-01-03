@@ -39,6 +39,7 @@ export const DraggableTaskList = makeReactive<{ tasks: Task[]; onCreate?: (task:
     const handleDragEnd = ({ active, over }: any) => {
       // TODO(burdon): Click counts as dragging (disables checkbox/input).
       // TODO(burdon): Check if initially above/below to understand how to swap.
+      console.log(active, over);
       if (over && active.data.current.supports?.includes(over.data.current.type)) {
         console.log('::::', active.id, over.id);
         // tasks.splice(0, 1, tasks[2]);
