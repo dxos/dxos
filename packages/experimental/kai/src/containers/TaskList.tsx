@@ -53,13 +53,13 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
 
   return (
     <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
-      <div className='mt-2'>
+      <div className={'mt-2'}>
         {tasks?.map((task) => (
-          <TaskItem key={task[id]} task={task} />
+          <TaskItem key={task[id]} task={task} readonly={readonly} />
         ))}
       </div>
 
-      <div className='mt-2'>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} />}</div>
+      <div>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} />}</div>
     </Card>
   );
 };
@@ -72,7 +72,11 @@ export const NewTaskItem: FC<{
 
   return render(
     <TableRow
-      sidebar={<div className='flex flex-shrink-0 ml-5 mr-1'></div>}
+      sidebar={
+        <div className='flex flex-shrink-0 justify-center w-6 invisible'>
+          <input type='checkbox' autoFocus disabled />
+        </div>
+      }
       header={
         <Input
           className='w-full outline-0'
@@ -93,9 +97,10 @@ export const NewTaskItem: FC<{
 
 export const TaskItem = withReactor<{
   task: Task;
+  readonly?: boolean;
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}>(({ task, onEnter, onDelete }) => {
+}>(({ task, readonly, onEnter, onDelete }) => {
   const { debug } = useOptions();
 
   return (
@@ -104,7 +109,7 @@ export const TaskItem = withReactor<{
         <div className='flex flex-shrink-0 justify-center w-6'>
           <input
             type='checkbox'
-            spellCheck={false}
+            disabled={readonly}
             checked={!!task.completed}
             onChange={() => (task.completed = !task.completed)}
           />
@@ -129,6 +134,7 @@ export const TaskItem = withReactor<{
           onChange={(value) => {
             task.title = value;
           }}
+          disabled={readonly}
         />
       }
     >

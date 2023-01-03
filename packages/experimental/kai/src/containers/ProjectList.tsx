@@ -5,7 +5,7 @@
 import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { id } from '@dxos/echo-schema';
+import { id, OrderedSet } from '@dxos/echo-schema';
 import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
@@ -55,6 +55,14 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
     }
   };
 
+  // TODO(burdon): Implement splice.
+  const handleDrag = (active: number, over: number) => {
+    const task1 = project.tasks[active];
+    const task2 = project.tasks[over];
+    console.log(task1, task2);
+    project.tasks = new OrderedSet([new Task({ title: 't1' })]);
+  };
+
   return render(
     <div className='flex flex-col'>
       <div className='flex p-2 pb-0 items-center'>
@@ -81,8 +89,9 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
             onCreate={(task: Task) => {
               project.tasks.push(task);
             }}
+            onDrag={handleDrag}
           />
-          <div className='p-3 pt-1'></div>
+          <div className='p-3'></div>
         </div>
       )}
 

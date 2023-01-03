@@ -20,7 +20,11 @@ import { TaskItem, NewTaskItem } from './TaskList';
  * Sortable task list.
  * https://docs.dndkit.com/presets/sortable
  */
-export const DraggableTaskList: FC<{ tasks: Task[]; onCreate?: (task: Task) => void }> = ({ tasks, onCreate }) => {
+export const DraggableTaskList: FC<{
+  tasks: Task[];
+  onCreate?: (task: Task) => void;
+  onDrag?: (active: number, over: number) => void;
+}> = ({ tasks, onCreate, onDrag }) => {
   const { render } = useReactor();
   const { space } = useSpace();
   const [newTask, setNewTask] = useState<Task>();
@@ -37,13 +41,10 @@ export const DraggableTaskList: FC<{ tasks: Task[]; onCreate?: (task: Task) => v
   };
 
   const handleDragEnd = ({ active, over }: any) => {
-    // TODO(burdon): Click counts as dragging (disables checkbox/input).
-    // TODO(burdon): Check if initially above/below to understand how to swap.
-    console.log(active, over);
-    if (over && active.data.current.supports?.includes(over.data.current.type)) {
-      console.log('::::', active.id, over.id);
-      // tasks.splice(0, 1, tasks[2]);
-      // console.log(tasks.map((task) => task[id]));
+    if (onDrag && over?.id && active.id !== over?.id) {
+      const i1 = tasks.findIndex((task) => task[id] === active.id);
+      const i2 = tasks.findIndex((task) => task[id] === over.id);
+      onDrag(i1, i2);
     }
   };
 
@@ -60,7 +61,7 @@ export const DraggableTaskList: FC<{ tasks: Task[]; onCreate?: (task: Task) => v
 
   return render(
     <div>
-      <DndContext onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
+      <DndContext onDragEnd={onDrag ? handleDragEnd : undefined} modifiers={[restrictToVerticalAxis]}>
         <SortableContext items={tasks.map((task) => task[id])}>
           <DraggableTaskListContainer tasks={tasks} newTask={newTask} onCreate={handleCreateTask} />
         </SortableContext>
@@ -86,7 +87,7 @@ export const DraggableTaskListContainer: FC<{
       ))}
 
       {newTask && (
-        <div className='flex mt-2 ml-7' style={active ? { visibility: 'hidden' } : {}}>
+        <div className='flex ml-7' style={active ? { visibility: 'hidden' } : {}}>
           <NewTaskItem task={newTask} onEnter={onCreate} />
         </div>
       )}
@@ -115,6 +116,7 @@ export const DraggableTaskItem: FC<{
           <DotsSixVertical />
         </button>
       </div>
+
       <TaskItem task={task} onEnter={onEnter} onDelete={onDelete} />
     </div>
   );
