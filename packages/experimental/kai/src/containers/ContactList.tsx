@@ -6,7 +6,7 @@ import { PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { makeReactive, useQuery } from '@dxos/react-client';
+import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, TableRow } from '../components';
@@ -40,10 +40,11 @@ export const ContactList: FC<{}> = () => {
   );
 };
 
-export const Person = makeReactive<{ person: Contact }>(({ person }) => {
+export const Person: FC<{ person: Contact }> = ({ person }) => {
+  const { render } = useReactor();
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
-  return (
+  return render(
     <TableRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6'>
@@ -66,4 +67,4 @@ export const Person = makeReactive<{ person: Contact }>(({ person }) => {
       </div>
     </TableRow>
   );
-});
+};

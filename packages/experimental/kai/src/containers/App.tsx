@@ -211,6 +211,8 @@ export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
     return null;
   }
 
+  // TODO(burdon): Error boundary and indicator.
+
   return (
     <ClientProvider client={client}>
       <OptionsContext.Provider value={{ debug }}>

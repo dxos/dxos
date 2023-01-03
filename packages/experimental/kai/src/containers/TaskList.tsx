@@ -8,11 +8,11 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { makeReactive, useQuery } from '@dxos/react-client';
+import { useQuery, useReactor, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, TableRow } from '../components';
-import { useOptions, useSpace, useSubscription } from '../hooks';
+import { useOptions, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
@@ -59,11 +59,13 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   );
 };
 
-export const NewTaskItem = makeReactive<{
+export const NewTaskItem: FC<{
   task: Task;
   onEnter?: (task: Task) => void;
-}>(({ task, onEnter }) => {
-  return (
+}> = ({ task, onEnter }) => {
+  const { render } = useReactor();
+
+  return render(
     <TableRow
       sidebar={<div className='flex flex-shrink-0 ml-5 mr-1'></div>}
       header={
@@ -82,15 +84,14 @@ export const NewTaskItem = makeReactive<{
       }
     />
   );
-});
+};
 
-export const TaskItem: FC<{
+export const TaskItem = withReactor<{
   task: Task;
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}> = ({ task, onEnter, onDelete }) => {
+}>(({ task, onEnter, onDelete }) => {
   const { debug } = useOptions();
-  useSubscription([task]);
 
   return (
     <TableRow
@@ -132,4 +133,4 @@ export const TaskItem: FC<{
       </div>
     </TableRow>
   );
-};
+});

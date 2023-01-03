@@ -6,7 +6,7 @@ import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { makeReactive, useQuery } from '@dxos/react-client';
+import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, TableRow } from '../components';
@@ -41,7 +41,8 @@ export const ProjectList: FC<{}> = () => {
   );
 };
 
-export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
+export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
+  const { render } = useReactor();
   const { space } = useSpace();
 
   const handleGenerateTask = async () => {
@@ -52,7 +53,7 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
     }
   };
 
-  return (
+  return render(
     <div className='flex flex-col'>
       <div className='flex p-2 pb-0 items-center'>
         <div className='flex flex-shrink-0 justify-center w-8 mr-1'>
@@ -96,4 +97,4 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
       )}
     </div>
   );
-});
+};
