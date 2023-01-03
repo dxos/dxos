@@ -5,7 +5,7 @@
 import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { id, OrderedSet } from '@dxos/echo-schema';
+import { id } from '@dxos/echo-schema';
 import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
@@ -60,7 +60,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
     const task1 = project.tasks[active];
     const task2 = project.tasks[over];
     console.log(task1, task2);
-    project.tasks = new OrderedSet([new Task({ title: 't1' })]);
+    // project.tasks = new OrderedSet([new Task({ title: 't1' })]);
   };
 
   return render(

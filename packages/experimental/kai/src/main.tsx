@@ -5,7 +5,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { App } from './containers';
+import { App } from './app';
 
 // TODO(burdon): Next
 //  - API: space.experimental.db

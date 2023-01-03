@@ -6,9 +6,9 @@ import clsx from 'clsx';
 import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
-import { id } from '@dxos/echo-schema';
+import { deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { useQuery, useReactor, withReactor } from '@dxos/react-client';
+import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, TableRow } from '../components';
@@ -61,6 +61,10 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     }
   };
 
+  const handleDeleteTask = async (task: Task) => {
+    await space.experimental.db.delete(task);
+  };
+
   const handleSave = () => {
     setSaving(true);
   };
@@ -76,7 +80,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
       <div className='flex flex-col flex-1 overflow-y-scroll'>
         <div className={'mt-2'}>
           {tasks?.map((task) => (
-            <TaskItem key={task[id]} task={task} onSave={handleSave} readonly={readonly} />
+            <TaskItem key={task[id]} task={task} onSave={handleSave} onDelete={handleDeleteTask} readonly={readonly} />
           ))}
         </div>
 
@@ -92,10 +96,10 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   );
 };
 
-export const NewTaskItem = withReactor<{
+export const NewTaskItem: FC<{
   task: Task;
   onEnter?: (task: Task) => void;
-}>(({ task, onEnter }) => {
+}> = ({ task, onEnter }) => {
   return (
     <TableRow
       sidebar={
@@ -119,7 +123,7 @@ export const NewTaskItem = withReactor<{
       }
     />
   );
-});
+};
 
 export const TaskItem: FC<{
   task: Task;
@@ -173,6 +177,7 @@ export const TaskItem: FC<{
       <div className='ml-8 text-sm text-blue-800'>
         {debug && <div>{PublicKey.from(task[id]).truncate()}</div>}
         <div>{task.assignee?.name}</div>
+        <div>[{task[deleted] ? 'del' : 'ok'}]</div>
       </div>
     </TableRow>
   );

@@ -2,15 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { useEffect, useState, FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { ContactList } from './ContactList';
-import { Editor } from './Editor';
-import { ProjectGraph } from './ProjectGraph';
-import { ProjectList } from './ProjectList';
-import { Sidebar } from './Sidebar';
-import { TaskList } from './TaskList';
+import { useSpaces } from '@dxos/react-client';
+
+import { views, ContactList, Editor, ProjectGraph, ProjectList, Sidebar, TaskList } from '../../containers';
+import { SpaceContext, SpaceContextType } from '../../hooks';
 
 const sidebarWidth = 200;
 
@@ -50,7 +49,6 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
   );
 };
 
-// TODO(burdon): Drag-and-drop implementation.
 const TasksView: FC<{ props: any }> = ({ props }) => {
   return (
     <div className='flex flex-1 justify-center'>
@@ -68,7 +66,7 @@ const EditorView: FC<{ props: any }> = ({ props }) => {
 /**
  * Main grid layout.
  */
-export const Main: FC<{ view: string }> = ({ view }) => {
+const ViewContainer: FC<{ view: string }> = ({ view }) => {
   // TODO(burdon): Dynamic masonry (set cols based on width, scroll-y with min height).
   const { ref, height } = useResizeDetector();
   const props = height ? { minHeight: (height - 32) / 2 } : {};
@@ -85,5 +83,46 @@ export const Main: FC<{ view: string }> = ({ view }) => {
         {view === 'editor' && <EditorView props={props} />}
       </div>
     </div>
+  );
+};
+
+/**
+ * Home page with current space.
+ */
+export const SpacePage = () => {
+  const navigate = useNavigate();
+  const { spaceKey: currentSpaceKey, view } = useParams();
+  const spaces = useSpaces();
+  const [context, setContext] = useState<SpaceContextType | undefined>();
+
+  useEffect(() => {
+    if (!view || views.findIndex(({ key }) => key === view) === -1) {
+      navigate(`/${currentSpaceKey}/${views[0].key}`);
+    }
+  }, [view, currentSpaceKey]);
+
+  useEffect(() => {
+    if (!spaces.length) {
+      navigate('/');
+      return;
+    }
+
+    const space = spaces.find((space) => space.key.truncate() === currentSpaceKey);
+    if (space) {
+      setContext({ space });
+    } else {
+      navigate('/');
+    }
+  }, [spaces, currentSpaceKey]);
+
+  if (!context) {
+    return null;
+  }
+
+  // prettier-ignore
+  return (
+    <SpaceContext.Provider value={context}>
+      {view && <ViewContainer view={view} />}
+    </SpaceContext.Provider>
   );
 };
