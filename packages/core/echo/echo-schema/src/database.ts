@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { base, db, id } from './defs';
+import { base, db, deleted, id } from './defs';
 import { Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -69,8 +69,7 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
-    console.log((obj as any).title); // OK.
-    assert(obj[id]); // TODO(burdon): Undefined.
+    assert(obj[id]); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
     if (obj[base]._isBound) {
       return obj;
@@ -86,6 +85,21 @@ export class EchoDatabase {
     })) as Item<any>;
 
     obj[base]._bind(item, this);
+    return obj;
+  }
+
+  /**
+   * Toggle deleted flag.
+   */
+  async delete<T extends EchoObject>(obj: T): Promise<T> {
+    console.log(1, obj[deleted], obj[base]._item);
+    if (obj[deleted]) {
+      await obj[base]._item!.restore();
+    } else {
+      console.log('del');
+      await obj[base]._item!.delete();
+    }
+    console.log(2); // TODO(burdon): Not reached (wait for isn't reached).
     return obj;
   }
 
