@@ -11,7 +11,7 @@ export const useSubscription = (deps: EchoObject[]) => {
   const [, forceUpdate] = useState({});
   useEffect(() => {
     const handles = deps.map((obj) =>
-      obj[base].updated.on(() => {
+      obj[base].modified.on(() => {
         forceUpdate({});
       })
     );

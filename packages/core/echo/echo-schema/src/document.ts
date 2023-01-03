@@ -31,6 +31,8 @@ export class DocumentBase extends EchoObject<ObjectModel> {
    */
   private _uninitialized?: Record<keyof any, any> = {};
 
+  override _modelConstructor = ObjectModel;
+
   // prettier-ignore
   constructor(
     initialProps?: Record<keyof any, any>,
@@ -50,9 +52,6 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     return this._createProxy(this);
   }
 
-  override _modelConstructor = ObjectModel;
-
-  // TODO(burdon): Document.
   get [Symbol.toStringTag]() {
     return this[base]?._schemaType?.name ?? 'Document';
   }
@@ -154,7 +153,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   private _setModelProp(prop: string, value: any): any {
     if (value instanceof EchoObject) {
-      void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
+      void this._item!.model.set(`${prop}$type`, 'ref');
       void this._item!.model.set(prop, value[base]._id);
       void this._database!.save(value);
     } else if (value instanceof OrderedSet) {
@@ -220,14 +219,14 @@ export class DocumentBase extends EchoObject<ObjectModel> {
         if (!isValidKey(property)) {
           const set = Reflect.set(target, property, value, receiver);
           if (set) {
-            this.updated.emit();
+            this.modified.emit();
           }
 
           return set;
         }
 
         this._set(getProperty(property as string), value);
-        this.updated.emit();
+        this.modified.emit();
         return true;
       }
     });
@@ -237,6 +236,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     for (const [key, value] of Object.entries(this._uninitialized!)) {
       this._setModelProp(key, value);
     }
+
     this._uninitialized = undefined;
   }
 }

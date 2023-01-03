@@ -38,7 +38,7 @@ export abstract class EchoObject<T extends Model = any> {
   // TODO(burdon): Remove? Deduce from whether _database is set?
   _isBound = false;
 
-  public readonly updated = new Event();
+  public readonly modified = new Event();
 
   /**
    * @internal
