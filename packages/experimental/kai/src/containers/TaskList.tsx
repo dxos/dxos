@@ -8,11 +8,11 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { makeReactive, useQuery, useSubscription } from '@dxos/react-client';
+import { makeReactive, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-uikit';
 
 import { Card, Input, TableRow } from '../components';
-import { useOptions, useSpace } from '../hooks';
+import { useOptions, useSpace, useSubscription } from '../hooks';
 import { createTask, Task } from '../proto';
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
