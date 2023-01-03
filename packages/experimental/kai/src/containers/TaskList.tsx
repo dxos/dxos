@@ -80,7 +80,13 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
       <div className='flex flex-col flex-1 overflow-y-scroll'>
         <div className={'mt-2'}>
           {tasks?.map((task) => (
-            <TaskItem key={task[id]} task={task} onSave={handleSave} onDelete={handleDeleteTask} readonly={readonly} />
+            <TaskItem
+              key={task[id]}
+              task={task}
+              onSave={handleSave}
+              onDelete={readonly ? undefined : handleDeleteTask}
+              readonly={readonly}
+            />
           ))}
         </div>
 
@@ -160,7 +166,7 @@ export const TaskItem: FC<{
       }
       header={
         <Input
-          className='w-full outline-0'
+          className={clsx('w-full outline-0 bg-white', task[deleted] && 'text-red-300')}
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
@@ -177,7 +183,6 @@ export const TaskItem: FC<{
       <div className='ml-8 text-sm text-blue-800'>
         {debug && <div>{PublicKey.from(task[id]).truncate()}</div>}
         <div>{task.assignee?.name}</div>
-        <div>[{task[deleted] ? 'del' : 'ok'}]</div>
       </div>
     </TableRow>
   );
