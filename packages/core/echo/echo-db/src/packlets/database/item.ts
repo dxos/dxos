@@ -128,7 +128,6 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     }
 
     const onUpdate = this._onUpdate.waitFor(() => this.deleted);
-
     await this._writeStream.write({
       itemId: this.id,
       itemMutation: {
@@ -146,12 +145,8 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     if (!this._writeStream) {
       throw new Error(`Item is read-only: ${this.id}`);
     }
-    if (!this.deleted) {
-      throw new Error(`Item was note delted: ${this.id}`);
-    }
 
     const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
-
     await this._writeStream.write({
       itemId: this.id,
       itemMutation: {

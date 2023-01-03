@@ -14,19 +14,23 @@ import { Contact, Task } from './proto';
 
 describe('schema', () => {
   test('keys', () => {
-    const contact = new Contact();
-    expect(contact[id]).not.to.be.undefined;
+    const contact = new Contact({ name: 'Test User' });
+    expect(contact[id]).to.exist;
     expect(Object.keys(contact).length).to.eq(5);
+    contact.email = 'test@example.com';
+
+    // TODO(burdon): Address should be auto-created?
+    // contact.address.zip = '11205';
 
     // TODO(burdon): Test after saved with test database.
-    expect(contact[id]).to.be.a('string');
+    expect(contact[id]).to.be.a('string'); // TODO(burdon): Expose as property.
   });
 
   test('json', () => {
     const contact = new Contact();
     contact.name = 'User 1';
     expect(contact.name).to.eq('User 1');
-    expect(contact.toJSON()).to.deep.eq({ name: 'User 1' });
+    expect(contact.toJSON()).to.deep.eq({ name: 'User 1' }); // TODO(burdon): Add id.
 
     const task1 = new Task();
     task1.title = 'Task 1';

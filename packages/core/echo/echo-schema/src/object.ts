@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor } from '@dxos/model-factory';
 
 import { EchoDatabase } from './database';
-import { base, db, id } from './defs';
+import { base, db, deleted, id } from './defs';
 
 /**
  * Base class for all echo objects.
@@ -50,8 +50,14 @@ export abstract class EchoObject<T extends Model = any> {
   [base]: this = this;
 
   /** ID accessor. */
+  // TODO(burdon): Expose as property?
   get [id](): string {
     return this[base]._id;
+  }
+
+  /** Deletion. */
+  get [deleted](): boolean {
+    return this[base]._item!.deleted;
   }
 
   /** Database reference if bound. */
