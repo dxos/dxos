@@ -48,6 +48,8 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
   const handleGenerateTask = async () => {
     const task = await createTask(space.experimental.db);
     project.tasks.push(task);
+    // TODO(burdon): Can't set array. new OrderedSet().
+    // project.tasks = [task];
     if (task.assignee) {
       project.team.push(task.assignee);
     }

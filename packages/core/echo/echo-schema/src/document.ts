@@ -217,16 +217,10 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
       set: (target, property, value, receiver) => {
         if (!isValidKey(property)) {
-          const set = Reflect.set(target, property, value, receiver);
-          if (set) {
-            this.modified.emit();
-          }
-
-          return set;
+          return Reflect.set(target, property, value, receiver);
         }
 
         this._set(getProperty(property as string), value);
-        this.modified.emit();
         return true;
       }
     });

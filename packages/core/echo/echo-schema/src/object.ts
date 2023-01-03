@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor } from '@dxos/model-factory';
@@ -37,8 +36,6 @@ export abstract class EchoObject<T extends Model = any> {
    */
   // TODO(burdon): Remove? Deduce from whether _database is set?
   _isBound = false;
-
-  public readonly modified = new Event();
 
   /**
    * @internal

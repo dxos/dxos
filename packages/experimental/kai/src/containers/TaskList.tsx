@@ -15,6 +15,11 @@ import { Card, Input, TableRow } from '../components';
 import { useOptions, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
+/**
+ * Sortable task list.
+ * https://docs.dndkit.com/presets/sortable
+ */
+// TODO(burdon): Reuse in Project.
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
   completed = undefined,
   readonly = false,

@@ -9,9 +9,7 @@ import { Item, ObjectModel, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 import { Button, getSize, Loading } from '@dxos/react-uikit';
 
-import { CheckboxItem } from '../components/CheckboxItem';
-import { Input } from '../components/Input';
-import { List } from '../components/List';
+import { CheckboxItem, Input, List } from '../components';
 
 export const TASK_LIST = 'dxos:type/task-list';
 export const TASK_ITEM = 'dxos:type/task-list/item';

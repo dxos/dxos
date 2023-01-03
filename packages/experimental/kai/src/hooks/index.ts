@@ -4,4 +4,3 @@
 
 export * from './useOptions';
 export * from './useSpace';
-export * from './useSubscription';
