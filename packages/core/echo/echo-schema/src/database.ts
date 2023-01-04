@@ -104,7 +104,6 @@ export class EchoDatabase {
     } else {
       (obj as any)['@deleted'] = true;
     }
-    console.log(2); // TODO(burdon): Not reached (wait for isn't reached).
     return obj;
   }
 
