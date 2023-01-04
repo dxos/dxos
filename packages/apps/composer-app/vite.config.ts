@@ -41,7 +41,6 @@ export default defineConfig({
       '@dxos/react-client',
       '@dxos/react-composer',
       '@dxos/react-ui',
-      '@dxos/react-uikit',
       '@dxos/sentry',
       '@dxos/text-model'
     ],
@@ -72,7 +71,6 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs')
       ]

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 export const ConfigPanel = () => {
   const config = useConfig();

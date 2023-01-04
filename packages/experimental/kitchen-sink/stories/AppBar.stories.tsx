@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { AppBar, ViewType, ThemeProvider } from '../src';
 

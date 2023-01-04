@@ -23,7 +23,6 @@
     "@dxos/react-composer": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-uikit": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "phosphor-react": "^1.4.1",

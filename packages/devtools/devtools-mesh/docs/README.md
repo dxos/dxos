@@ -123,7 +123,7 @@ end
 
 subgraph deprecated [deprecated]
   style deprecated fill:transparent
-  dxos/react-components("@dxos/react-components"):::def
+  dxos/react-components("@dxos/react-components-deprecated"):::def
   click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
   dxos/react-toolkit("@dxos/react-toolkit"):::def
   click dxos/react-toolkit "dxos/dxos/tree/main/packages/deprecated/react-toolkit/docs"
@@ -232,7 +232,7 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/protocols`](../../../core/protocols/docs/README.md) |  |
 | [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/react-async`](../../../common/react-async/docs/README.md) |  |
-| [`@dxos/react-components`](../../../deprecated/react-components/docs/README.md) | &check; |
+| [`@dxos/react-components-deprecated`](../../../deprecated/react-components/docs/README.md) | &check; |
 | [`@dxos/react-registry-client`](../../../experimental/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../deprecated/react-toolkit/docs/README.md) | &check; |
 | [`@dxos/registry-client`](../../../experimental/registry-client/docs/README.md) |  |

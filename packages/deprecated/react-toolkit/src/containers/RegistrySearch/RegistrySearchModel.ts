@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 
 import { Event } from '@dxos/async';
-import { SearchModel, SearchResult } from '@dxos/react-components';
+import { SearchModel, SearchResult } from '@dxos/react-components-deprecated';
 import { RegistryClient, RegistryType, ResourceSet } from '@dxos/registry-client';
 
 export type SearchFilter = (resource: ResourceSet) => boolean;

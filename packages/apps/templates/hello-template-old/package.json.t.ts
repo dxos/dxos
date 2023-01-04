@@ -39,7 +39,6 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
     "@dxos/react-list": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/text-model": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/react-ui": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-    "@dxos/react-uikit": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/util": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "classnames": "^2.3.2",
     "phosphor-react": "^1.4.1",

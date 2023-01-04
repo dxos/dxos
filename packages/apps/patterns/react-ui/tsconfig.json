@@ -21,25 +21,25 @@
   ],
   "references": [
     {
-      "path": "../../common/debug"
+      "path": "../../../common/debug"
     },
     {
-      "path": "../../common/keys"
+      "path": "../../../common/keys"
     },
     {
-      "path": "../../common/react-ui"
+      "path": "../../../common/react-components"
     },
     {
-      "path": "../../common/util"
+      "path": "../../../common/util"
     },
     {
-      "path": "../client"
+      "path": "../../../sdk/client"
     },
     {
-      "path": "../config"
+      "path": "../../../sdk/config"
     },
     {
-      "path": "../react-client"
+      "path": "../../../sdk/react-client"
     }
   ]
 }

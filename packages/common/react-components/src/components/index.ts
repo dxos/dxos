@@ -3,7 +3,6 @@
 //
 
 export * from './Alert';
-export * from './AlertDialog';
 export * from './Avatar';
 export * from './Button';
 export * from './CompoundButton';

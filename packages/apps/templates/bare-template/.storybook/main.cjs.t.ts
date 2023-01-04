@@ -40,7 +40,6 @@ export default defineTemplate(
                 '@dxos/react-client',
                 '@dxos/react-composer',
                 '@dxos/react-ui',
-                '@dxos/react-uikit',
                 '@dxos/text-model',
                 '@dxos/util',
                 'storybook-dark-mode'

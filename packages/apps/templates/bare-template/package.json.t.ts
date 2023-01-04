@@ -17,7 +17,6 @@ export const reactDevDeps = ({ depVersion }: { depVersion: string }) => ({
 });
 export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
   '@dxos/react-ui': depVersion,
-  '@dxos/react-uikit': depVersion,
   '@dxos/react-appkit': depVersion,
   'phosphor-react': '^1.4.1',
   'react-router-dom': '^6.3.0',

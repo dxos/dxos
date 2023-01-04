@@ -48,7 +48,6 @@ export default defineConfig({
       '@dxos/react-async',
       '@dxos/react-client',
       '@dxos/react-ui',
-      '@dxos/react-uikit',
       '@dxos/rpc',
       '@dxos/rpc-tunnel',
       '@dxos/sentry',
@@ -79,7 +78,6 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
       ]
     }),

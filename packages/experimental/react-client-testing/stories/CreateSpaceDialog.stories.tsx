@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { CreateSpaceDialog } from '../src';
 

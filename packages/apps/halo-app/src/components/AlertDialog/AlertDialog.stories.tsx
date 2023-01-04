@@ -5,8 +5,8 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { templateForComponent } from '../../testing';
-import { Button } from '../Button';
+import { Button } from '../../../../../common/react-components/src/components/Button';
+import { templateForComponent } from '../../../../../common/react-components/src/testing';
 import { AlertDialog, AlertDialogProps } from './AlertDialog';
 
 export default {

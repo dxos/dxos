@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/react-components",
+  "name": "@dxos/react-components-deprecated",
   "version": "0.1.20",
   "private": true,
   "description": "Low-level material components.",

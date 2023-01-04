@@ -1,4 +1,4 @@
-# @dxos/react-components
+# @dxos/react-components-deprecated
 
 Low-level material components.
 
@@ -17,7 +17,7 @@ flowchart LR
 
 subgraph deprecated [deprecated]
   style deprecated fill:transparent
-  dxos/react-components("@dxos/react-components"):::root
+  dxos/react-components("@dxos/react-components-deprecated"):::root
   click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
 end
 

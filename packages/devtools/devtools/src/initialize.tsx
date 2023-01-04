@@ -10,7 +10,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material';
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { Loader } from './components';

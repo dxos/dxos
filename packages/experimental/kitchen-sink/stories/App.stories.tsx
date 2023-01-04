@@ -12,7 +12,7 @@ import { InvitationEncoder, Space } from '@dxos/client';
 import { SpaceBuilder, buildTestSpace } from '@dxos/client-testing';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { CreateSpaceDialog, ExportAction, ProfileInitializer, useTestSpace } from '@dxos/react-client-testing';
-import { useFileDownload } from '@dxos/react-components';
+import { useFileDownload } from '@dxos/react-components-deprecated';
 import { uploadFilesToIpfs, useIpfsClient } from '@dxos/react-ipfs';
 import { useSpaceSerializer } from '@dxos/react-toolkit';
 

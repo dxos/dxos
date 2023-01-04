@@ -7,9 +7,11 @@ import React, { useCallback } from 'react';
 
 import { BASE_TELEMETRY_PROPERTIES, DX_TELEMETRY, getTelemetryIdentifier } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { useTranslation, Button, getSize, Input, AlertDialog, Avatar, defaultGroup } from '@dxos/react-uikit';
+import { useTranslation, Button, getSize, Input, Avatar, defaultGroup } from '@dxos/react-uikit';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
+
+import { AlertDialog } from '../components';
 
 const IdentityPage = () => {
   const client = useClient();

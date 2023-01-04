@@ -15,7 +15,7 @@ import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { useSpaces, useSpace, useSelection } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { TextModel } from '@dxos/text-model';
 
 import { KeySelect, Panel } from '../../components';

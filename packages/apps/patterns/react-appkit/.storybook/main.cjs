@@ -30,7 +30,6 @@ module.exports = {
           '@dxos/keys',
           '@dxos/react-client',
           '@dxos/react-client-testing',
-          '@dxos/react-uikit',
           '@dxos/react-ui',
           '@dxos/util',
           'storybook-dark-mode'
@@ -46,7 +45,7 @@ module.exports = {
         ThemePlugin({
           content: [
             resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-            resolve(__dirname, '../node_modules/@dxos/react-uikit/dist/**/*.js')
+            resolve(__dirname, '../node_modules/@dxos/react-ui/dist/**/*.js')
           ]
         })
       ]

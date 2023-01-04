@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useDevtools, useSpaces, useStream } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { KeySelect, Panel } from '../../components';
 

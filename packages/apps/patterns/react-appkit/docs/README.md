@@ -37,8 +37,6 @@ subgraph sdk [sdk]
   click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
   dxos/react-client("@dxos/react-client"):::def
   click dxos/react-client "dxos/dxos/tree/main/packages/sdk/react-client/docs"
-  dxos/react-uikit("@dxos/react-uikit"):::def
-  click dxos/react-uikit "dxos/dxos/tree/main/packages/sdk/react-uikit/docs"
 end
 
 subgraph common [common]
@@ -223,8 +221,7 @@ dxos/telemetry --> dxos/sentry
 | [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/react-async`](../../../../common/react-async/docs/README.md) | &check; |
 | [`@dxos/react-client`](../../../../sdk/react-client/docs/README.md) | &check; |
-| [`@dxos/react-ui`](../../../../common/react-ui/docs/README.md) | &check; |
-| [`@dxos/react-uikit`](../../../../sdk/react-uikit/docs/README.md) | &check; |
+| [`@dxos/react-ui`](../../../../common/react-components/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../../core/mesh/rpc/docs/README.md) |  |
 | [`@dxos/rpc-tunnel`](../../../../core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/sentry`](../../../../common/sentry/docs/README.md) | &check; |

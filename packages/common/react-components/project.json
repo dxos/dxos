@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/common/react-ui/src",
+  "sourceRoot": "packages/common/react-components/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/common/react-ui/src/index.ts",
-        "outputPath": "packages/common/react-ui/dist/types",
-        "tsConfig": "packages/common/react-ui/tsconfig.json"
+        "main": "packages/common/react-components/src/index.ts",
+        "outputPath": "packages/common/react-components/dist/types",
+        "tsConfig": "packages/common/react-components/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -32,9 +32,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/common/react-ui/src/index.ts"
+          "packages/common/react-components/src/index.ts"
         ],
-        "outputPath": "packages/common/react-ui/dist/lib",
+        "outputPath": "packages/common/react-components/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -50,11 +50,11 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/common/react-ui/src/esbuild-plugin.ts",
-          "packages/common/react-ui/src/plugin.ts",
-          "packages/common/react-ui/src/theme.css"
+          "packages/common/react-components/src/esbuild-plugin.ts",
+          "packages/common/react-components/src/plugin.ts",
+          "packages/common/react-components/src/theme.css"
         ],
-        "outputPath": "packages/common/react-ui/dist/plugin",
+        "outputPath": "packages/common/react-components/dist/plugin",
         "platforms": [
           "node"
         ]
@@ -68,7 +68,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/react-ui/src/**/*.{js,jsx,ts,tsx}"
+          "packages/common/react-components/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
@@ -84,7 +84,7 @@
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "config": {
-          "configFolder": "packages/common/react-ui/.storybook"
+          "configFolder": "packages/common/react-components/.storybook"
         },
         "uiFramework": "@storybook/react"
       }

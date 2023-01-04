@@ -6,7 +6,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { KeyTable } from './KeyTable';
 

@@ -7,7 +7,7 @@ import React, { SyntheticEvent, useState, useRef } from 'react';
 
 import { Button, TextField } from '@mui/material';
 
-import { Dialog } from '@dxos/react-components';
+import { Dialog } from '@dxos/react-components-deprecated';
 
 /**
  * Dialog to import keyring from file.

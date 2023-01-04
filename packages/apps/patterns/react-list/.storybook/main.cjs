@@ -34,7 +34,6 @@ module.exports = {
           '@dxos/react-async',
           '@dxos/react-client',
           '@dxos/react-ui',
-          '@dxos/react-uikit',
           '@dxos/object-model',
           'storybook-dark-mode',
         ]

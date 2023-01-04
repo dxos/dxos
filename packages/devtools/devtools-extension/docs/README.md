@@ -77,8 +77,6 @@ subgraph sdk [sdk]
   click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
   dxos/react-client("@dxos/react-client"):::def
   click dxos/react-client "dxos/dxos/tree/main/packages/sdk/react-client/docs"
-  dxos/react-uikit("@dxos/react-uikit"):::def
-  click dxos/react-uikit "dxos/dxos/tree/main/packages/sdk/react-uikit/docs"
 end
 
 subgraph core [core]
@@ -151,7 +149,7 @@ end
 
 subgraph deprecated [deprecated]
   style deprecated fill:transparent
-  dxos/react-components("@dxos/react-components"):::def
+  dxos/react-components("@dxos/react-components-deprecated"):::def
   click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
   dxos/react-toolkit("@dxos/react-toolkit"):::def
   click dxos/react-toolkit "dxos/dxos/tree/main/packages/deprecated/react-toolkit/docs"
@@ -275,11 +273,10 @@ dxos/telemetry --> dxos/sentry
 | [`@dxos/react-appkit`](../../../apps/patterns/react-appkit/docs/README.md) |  |
 | [`@dxos/react-async`](../../../common/react-async/docs/README.md) |  |
 | [`@dxos/react-client`](../../../sdk/react-client/docs/README.md) |  |
-| [`@dxos/react-components`](../../../deprecated/react-components/docs/README.md) |  |
+| [`@dxos/react-components-deprecated`](../../../deprecated/react-components/docs/README.md) |  |
 | [`@dxos/react-registry-client`](../../../experimental/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../deprecated/react-toolkit/docs/README.md) | &check; |
-| [`@dxos/react-ui`](../../../common/react-ui/docs/README.md) |  |
-| [`@dxos/react-uikit`](../../../sdk/react-uikit/docs/README.md) |  |
+| [`@dxos/react-ui`](../../../common/react-components/docs/README.md) |  |
 | [`@dxos/registry-client`](../../../experimental/registry-client/docs/README.md) |  |
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) |  |

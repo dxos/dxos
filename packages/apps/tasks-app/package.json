@@ -16,7 +16,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-uikit": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@sentry/react": "^7.17.2",
     "phosphor-react": "^1.4.1",

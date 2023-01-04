@@ -206,7 +206,7 @@ dxos/react-uikit --> dxos/react-ui
 | [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/react-async`](../../../common/react-async/docs/README.md) |  |
 | [`@dxos/react-client`](../../react-client/docs/README.md) | &check; |
-| [`@dxos/react-ui`](../../../common/react-ui/docs/README.md) | &check; |
+| [`@dxos/react-ui`](../../../common/react-components/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) |  |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/teleport`](../../../core/mesh/teleport/docs/README.md) |  |

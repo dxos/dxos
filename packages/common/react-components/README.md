@@ -35,7 +35,6 @@ design system packages your project uses, e.g.:
 
 ```
 './node_modules/@dxos/react-ui/dist/**/*.mjs',
-'./node_modules/@dxos/react-uikit/dist/**/*.mjs',
 './node_modules/@dxos/react-appkit/dist/**/*.mjs',
 './node_modules/@dxos/react-composer/dist/**/*.mjs',
 ```

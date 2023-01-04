@@ -21,7 +21,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emotion/css": "^11.7.1",
