@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { OrderedList } from '@dxos/object-model';
 
-import { base } from './defs';
+import { base, id } from './defs';
 import { Document, DocumentBase } from './document';
 
 // TODO(burdon): Remove?
@@ -126,9 +126,23 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   // TODO(burdon): Double linked list.
   splice(start: number, deleteCount?: number | undefined): T[];
   splice(start: number, deleteCount: number, ...items: T[]): T[];
-  splice(start: unknown, deleteCount?: unknown, ...items: unknown[]): T[] {
+  splice(start: number, deleteCount?: number | undefined, ...items: unknown[]): T[] {
     if (this._orderedList) {
-      throw new Error('Method not implemented.');
+      if (deleteCount !== undefined && deleteCount > 0) {
+        throw new Error('deleteCount not supported.');
+      }
+
+      for(let i = 0; i < items.length; i++) {
+        const idx = start + i;
+        const itemId = typeof items[i] === 'string' ? items[i] : (items[i] as any)[id];
+        if(idx === 0) {
+          this._orderedList.insert(itemId, this._orderedList.values[0]);
+        } else {
+          this._orderedList.insert(itemId, this._orderedList.values[idx - 1]);
+        }
+      }
+
+
     } else {
       assert(this._uninitialized);
       // TODO(burdon): Check param types.
@@ -142,7 +156,17 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   indexOf(searchElement: T, fromIndex?: number | undefined): number {
-    throw new Error('Method not implemented.');
+    if (this._orderedList) {
+      const itemId = typeof searchElement === 'string' ? searchElement : (searchElement as any)[id];
+      if (!itemId) {
+        return -1;
+      }
+
+      return this._orderedList.values.indexOf(itemId);
+    } else {
+      assert(this._uninitialized);
+      return this._uninitialized.indexOf(searchElement);
+    }
   }
 
   lastIndexOf(searchElement: T, fromIndex?: number | undefined): number {
