@@ -62,10 +62,10 @@ export class EchoDatabase {
 
   getObjectById(id: string) {
     const obj = this._objects.get(id);
-    if(!obj) {
+    if (!obj) {
       return undefined;
     }
-    if((obj as any)[deleted] === true) {
+    if ((obj as any)[deleted] === true) {
       return undefined;
     }
     return obj;
@@ -116,7 +116,9 @@ export class EchoDatabase {
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
     const matchObject = (object: EchoObject): object is DocumentBase =>
-      object instanceof DocumentBase && !object[deleted] && Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
+      object instanceof DocumentBase &&
+      !object[deleted] &&
+      Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
 
     // Current result.
     let cache: Document[] | undefined;

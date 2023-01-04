@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor } from '@dxos/model-factory';
 
 import { EchoDatabase } from './database';
-import { base, db, deleted, id } from './defs';
+import { base, db, id } from './defs';
 
 /**
  * Base class for all echo objects.
