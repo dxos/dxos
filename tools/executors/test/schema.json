@@ -27,6 +27,10 @@
       "description": "Environments to run tests in CI",
       "default": ["nodejs", "chromium", "firefox", "webkit"]
     },
+    "playwright": {
+      "type": "boolean",
+      "description": "Running playwright tests, sets up and provides a playwright environment"
+    },
     "setup": {
       "type": "string",
       "description": "Setup script to run before tests"

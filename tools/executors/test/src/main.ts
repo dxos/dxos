@@ -5,8 +5,9 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { resolve } from 'node:path';
 
-import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
+import { BrowserOptions, runBrowser as runBrowserMocha, runBrowserBuild } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
+import { runPlaywright } from './run-playwright';
 import { BrowserTypes, TestEnvironment, TestEnvironments } from './types';
 import { runSetup } from './util';
 
@@ -15,6 +16,7 @@ export type MochaExecutorOptions = NodeOptions &
     environments?: (TestEnvironment | 'all')[];
     devEnvironments: TestEnvironment[];
     ciEnvironments: TestEnvironment[];
+    playwright?: boolean;
     setup?: string;
   };
 
@@ -37,6 +39,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   };
 
   const includesBrowserEnv =
+    !options.playwright &&
     resolvedOptions.environments.filter((environment) => ([...BrowserTypes.values()] as string[]).includes(environment))
       .length > 0;
 
@@ -44,6 +47,8 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     includesBrowserEnv && runBrowserBuild(resolvedOptions),
     resolvedOptions.setup && runSetup(resolvedOptions.setup)
   ]);
+
+  const runBrowser = options.playwright ? runPlaywright : runBrowserMocha;
 
   // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
   // TODO(wittjosiah): Run all even if there are failures.
@@ -53,7 +58,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
       case 'chromium':
       case 'firefox':
       case 'webkit': {
-        success &&= skipBrowserTests || (await runBrowser(context.projectName!, env, resolvedOptions));
+        success &&= skipBrowserTests || (await runBrowser(context, { ...resolvedOptions, browser: env }));
         break;
       }
 
@@ -74,6 +79,8 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
 const getEnvironments = (options: MochaExecutorOptions) => {
   if (options.environments) {
     return options.environments.includes('all') ? TestEnvironments : (options.environments as TestEnvironment[]);
+  } else if (options.playwright) {
+    return BrowserTypes;
   } else if (process.env.CI) {
     return options.ciEnvironments;
   }

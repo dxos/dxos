@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { ExecutorContext } from '@nrwl/devkit';
 import chalk from 'chalk';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -11,6 +12,7 @@ import { BrowserType } from './types';
 import { mochaComment, resolveFiles } from './util';
 
 export type BrowserOptions = {
+  browser: BrowserType;
   testPatterns: string[];
   tags: string[];
   outputPath: string;
@@ -24,22 +26,22 @@ export type BrowserOptions = {
   browserArgs?: string[];
 };
 
-export const runBrowser = async (name: string, browserType: BrowserType, options: BrowserOptions) => {
-  console.log(chalk`\nRunning in {blue {bold ${browserType}}}\n`);
+export const runBrowser = async (context: ExecutorContext, options: BrowserOptions) => {
+  console.log(chalk`\nRunning in {blue {bold ${options.browser}}}\n`);
 
-  const { page } = await getNewBrowserContext(browserType, options);
-  const results = await runTests(page, browserType, join(options.outputPath, 'out/bundle.js'), options);
+  const { page } = await getNewBrowserContext(options.browser, options);
+  const results = await runTests(page, options.browser, join(options.outputPath, 'out/bundle.js'), options);
   const exitCode = await outputResults(results, {
-    name,
-    browserType,
+    name: context.projectName!,
+    browserType: options.browser,
     outDir: options.xmlReport ? options.resultsPath : undefined
   });
 
   const success = exitCode === 0;
   if (success) {
-    console.log(chalk`\n{green Passed in {blue {bold ${browserType}}}}\n`);
+    console.log(chalk`\n{green Passed in {blue {bold ${options.browser}}}}\n`);
   } else {
-    console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n`);
+    console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${options.browser}}}}\n`);
   }
 
   if (options.stayOpen) {

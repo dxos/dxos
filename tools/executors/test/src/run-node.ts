@@ -27,13 +27,31 @@ export type NodeOptions = {
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
+  const args = await getNodeArgs(context, options);
+  const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
+  const exitCode = await execTool(mocha, args, {
+    env: {
+      ...process.env,
+      FORCE_COLOR: '2',
+      MOCHA_TAGS: options.tags.join(','),
+
+      // Patch in ts-node will read this.
+      // https://github.com/TypeStrong/ts-node/issues/1937
+      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]])
+    }
+  });
+
+  return !exitCode;
+};
+
+export const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
   const setupArgs = getSetupArgs(context.root, options.domRequired);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
-  const args = [
+  return [
     ...coverageArgs,
     ...options.testPatterns,
     ...ignoreArgs,
@@ -49,21 +67,6 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     ...(options.forceExit ? ['--exit'] : []),
     ...(options.inspect ? ['--inspect'] : [])
   ];
-
-  const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
-  const exitCode = await execTool(mocha, args, {
-    env: {
-      ...process.env,
-      FORCE_COLOR: '2',
-      MOCHA_TAGS: options.tags.join(','),
-
-      // Patch in ts-node will read this.
-      // https://github.com/TypeStrong/ts-node/issues/1937
-      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]])
-    }
-  });
-
-  return !exitCode;
 };
 
 const setupReporter = async (context: ExecutorContext, options: NodeOptions) => {
