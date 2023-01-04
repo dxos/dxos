@@ -28,15 +28,13 @@ window.addEventListener('message', async (event) => {
     log('Opening RPC Server...');
     await waitForDXOS();
     await browser.devtools.inspectedWindow.eval('window.__DXOS__.openClientRpcServer()');
-    const config = await browser.devtools.inspectedWindow.eval('window.__DXOS__.config');
 
     sandbox.contentWindow?.postMessage(
       {
         data: 'open-rpc',
         source: 'panel'
       },
-      '*',
-      config
+      '*'
     );
 
     return;
