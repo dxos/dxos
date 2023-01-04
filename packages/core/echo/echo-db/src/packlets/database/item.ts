@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
-
 import { FeedWriter } from '@dxos/feed-store';
+import { log } from '@dxos/log';
 import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -13,7 +12,6 @@ import { Entity } from './entity';
 import { ItemManager } from './item-manager';
 import type { Link } from './link';
 import { createItemSelection, Selection } from './selection';
-import { log } from '@dxos/log';
 
 /**
  * A globally addressable data item.
