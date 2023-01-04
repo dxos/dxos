@@ -16,10 +16,12 @@ import { Project } from '../proto';
 export const Editor: FC = () => {
   const { render } = useReactor();
   const { space } = useSpace();
-  const projects = useQuery(space, Project.filter());
+  const projects = useQuery(space, Project.filter()); // TODO(burdon): Pass in project.
   if (!projects[0]) {
     return null;
   }
+
+  const project = projects[0];
 
   return render(
     <Card title='Editor' className='bg-purple-400'>
@@ -31,14 +33,14 @@ export const Editor: FC = () => {
           className='w-full p-1 text-lg outline-0'
           spellCheck={false}
           value={projects[0].title}
-          onChange={(value) => (projects[0].title = value)}
+          onChange={(value) => (project.title = value)}
         />
       </div>
 
       {projects[0].description?.doc && (
         <div className={'flex flex-1 overflow-y-scroll border-t editor-container'}>
           <Composer
-            doc={projects[0].description?.doc}
+            doc={project.description?.doc}
             className={mx('z-0 bg-white text-black w-full m-2 p-2 min-bs-[12em]')}
           />
         </div>

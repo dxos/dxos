@@ -24,7 +24,7 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
         <ContactList />
       </div>
 
-      <div className='flex flex-shrink-0  row-span-2' style={props}>
+      <div className='flex flex-shrink-0 row-span-2' style={props}>
         <TaskList />
       </div>
 
@@ -44,21 +44,11 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
 };
 
 const TasksView: FC = () => {
-  return (
-    <div className='flex flex-1 justify-center p-2'>
-      <div className='flex' style={{ width: 600 }}>
-        <TaskList />
-      </div>
-    </div>
-  );
+  return <TaskList />;
 };
 
 const EditorView: FC = () => {
-  return (
-    <div className='flex flex-1 p-2'>
-      <Editor />
-    </div>
-  );
+  return <Editor />;
 };
 
 /**
