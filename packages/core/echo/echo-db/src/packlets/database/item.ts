@@ -13,8 +13,7 @@ import { Entity } from './entity';
 import { ItemManager } from './item-manager';
 import type { Link } from './link';
 import { createItemSelection, Selection } from './selection';
-
-const log = debug('dxos:echo-db:item');
+import { log } from '@dxos/log';
 
 /**
  * A globally addressable data item.
@@ -182,7 +181,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
    * @private (Package-private).
    */
   _processMutation(mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
-    log('_processMutation %s', JSON.stringify(mutation));
+    log('_processMutation %s', { mutation });
 
     const { action, parentId } = mutation;
 

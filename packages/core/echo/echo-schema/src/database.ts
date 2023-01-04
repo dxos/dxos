@@ -61,7 +61,14 @@ export class EchoDatabase {
   }
 
   getObjectById(id: string) {
-    return this._objects.get(id);
+    const obj = this._objects.get(id);
+    if(!obj) {
+      return undefined;
+    }
+    if((obj as any)[deleted] === false) {
+      return undefined;
+    }
+    return obj;
   }
 
   /**
@@ -91,13 +98,11 @@ export class EchoDatabase {
   /**
    * Toggle deleted flag.
    */
-  async delete<T extends EchoObject>(obj: T): Promise<T> {
-    console.log(1, obj[deleted], obj[base]._item);
+  async delete<T extends DocumentBase>(obj: T): Promise<T> {
     if (obj[deleted]) {
-      await obj[base]._item!.restore();
+      (obj as any)['@deleted'] = false;
     } else {
-      console.log('del');
-      await obj[base]._item!.delete();
+      (obj as any)['@deleted'] = true;
     }
     console.log(2); // TODO(burdon): Not reached (wait for isn't reached).
     return obj;
@@ -112,7 +117,7 @@ export class EchoDatabase {
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
     const matchObject = (object: EchoObject): object is DocumentBase =>
-      object instanceof DocumentBase && Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
+      object instanceof DocumentBase && !object[deleted] && Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
 
     // Current result.
     let cache: Document[] | undefined;

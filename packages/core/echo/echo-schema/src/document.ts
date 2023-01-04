@@ -4,7 +4,7 @@
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { base, id } from './defs';
+import { base, deleted, id } from './defs';
 import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -54,6 +54,11 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   get [Symbol.toStringTag]() {
     return this[base]?._schemaType?.name ?? 'Document';
+  }
+
+  /** Deletion. */
+  get [deleted](): boolean {
+    return this[base]._get('@deleted') ?? false;
   }
 
   /**

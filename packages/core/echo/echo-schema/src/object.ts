@@ -55,11 +55,6 @@ export abstract class EchoObject<T extends Model = any> {
     return this[base]._id;
   }
 
-  /** Deletion. */
-  get [deleted](): boolean {
-    return this[base]._item!.deleted;
-  }
-
   /** Database reference if bound. */
   get [db](): EchoDatabase | undefined {
     return this[base]._database;
