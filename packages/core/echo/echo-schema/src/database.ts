@@ -65,7 +65,7 @@ export class EchoDatabase {
     if(!obj) {
       return undefined;
     }
-    if((obj as any)[deleted] === false) {
+    if((obj as any)[deleted] === true) {
       return undefined;
     }
     return obj;

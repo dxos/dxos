@@ -230,6 +230,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
       return this._orderedList.values
         .slice(0, -1)
         .map((id) => this._object!._database!.getObjectById(id) as T)
+        .filter(Boolean)
         .values();
     } else {
       assert(this._uninitialized);
