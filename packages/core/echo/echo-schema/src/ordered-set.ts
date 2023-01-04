@@ -143,6 +143,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
           void this._orderedList.insert(this._orderedList.values[idx - 1], itemId);
         }
       }
+
+      return [];
     } else {
       assert(this._uninitialized);
       // TODO(burdon): Check param types.
