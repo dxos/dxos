@@ -29,7 +29,7 @@ export const ProjectList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Projects' className='bg-cyan-400' menubar={<Menubar />}>
+    <Card title='Projects' fade scrollbar className='bg-cyan-400' menubar={<Menubar />}>
       <>
         {projects.map((project) => (
           <div key={project[id]} className='border-b'>
@@ -64,7 +64,8 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
   };
 
   return render(
-    <div className='flex flex-col'>
+    <div className='flex flex-col pb-2'>
+      {/* Header */}
       <div className='flex p-2 pb-0 items-center'>
         <div className='flex flex-shrink-0 justify-center w-8 mr-1'>
           <Archive className={getSize(6)} />
@@ -91,13 +92,12 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
             }}
             onDrag={handleDrag}
           />
-          <div className='p-3'></div>
         </div>
       )}
 
       {/* Contacts */}
       {project.team?.length > 0 && (
-        <div>
+        <div className='pt-2'>
           <h2 className='pl-3 text-xs'>Team</h2>
           <div className='p-1 pt-1'>
             {project.team?.map((contact) => (
