@@ -40,7 +40,7 @@ const windowPort = (): RpcPort => ({
 });
 
 const waitForRpc = async () =>
-  new Promise<Config>((resolve) => {
+  new Promise<void>((resolve) => {
     const handler = (event: MessageEvent) => {
       const message = event.data;
       console.log('SANDBOX Received message from panel:', message);
@@ -51,7 +51,7 @@ const waitForRpc = async () =>
       if (message.data === 'open-rpc') {
         log('Panel RPC port ready.');
         window.removeEventListener('message', handler);
-        resolve(message);
+        resolve();
       }
     };
 
