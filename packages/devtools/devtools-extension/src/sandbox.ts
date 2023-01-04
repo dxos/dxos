@@ -75,7 +75,6 @@ const init = async () => {
   const rpcPort = windowPort();
   const servicesProvider = new ClientServicesProxy(rpcPort);
 
-  // TODO(mykola): Catch config from the panel.
   await waitForRpc();
 
   const client = new Client({ services: servicesProvider });
