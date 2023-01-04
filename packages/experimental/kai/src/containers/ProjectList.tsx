@@ -59,8 +59,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
   const handleDrag = (active: number, over: number) => {
     const task1 = project.tasks[active];
     const task2 = project.tasks[over];
-    console.log(task1, task2);
-    // project.tasks = new OrderedSet([new Task({ title: 't1' })]);
+    project.tasks.splice(project.tasks.indexOf(task2), 0, task1);
   };
 
   return render(
