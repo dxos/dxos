@@ -22,7 +22,7 @@ import { theme } from './theme';
 export type ClientAndServices = { client: Client; services: ClientServices }
 
 const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices> }) => {
-  const [value, setValue] = useState<{ client: Client; services: ClientServices }>();
+  const [value, setValue] = useState<ClientAndServices>();
 
   useEffect(() => {
     clientReady.on((value) => setValue(value));
