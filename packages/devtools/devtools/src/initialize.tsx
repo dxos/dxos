@@ -19,9 +19,9 @@ import { PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
-type ClientReadyEvent = Event<{ client: Client; services: ClientServices }>;
+export type ClientAndServices = { client: Client; services: ClientServices }
 
-const Devtools = ({ clientReady }: { clientReady: ClientReadyEvent }) => {
+const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices> }) => {
   const [value, setValue] = useState<{ client: Client; services: ClientServices }>();
 
   useEffect(() => {
@@ -45,6 +45,6 @@ const Devtools = ({ clientReady }: { clientReady: ClientReadyEvent }) => {
   );
 };
 
-export const initializeDevtools = (clientReady: ClientReadyEvent) => {
+export const initializeDevtools = (clientReady: Event<ClientAndServices>) => {
   createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
 };

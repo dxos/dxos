@@ -6,13 +6,13 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
-import { ClientServices, ClientServicesProxy } from '@dxos/client-services';
-import { initializeDevtools } from '@dxos/devtools';
+import { ClientServicesProxy } from '@dxos/client-services';
+import { ClientAndServices, initializeDevtools } from '@dxos/devtools';
 import { RpcPort } from '@dxos/rpc';
 
 const log = debug('dxos:extension:sandbox');
 
-const clientReady = new Event<{ client: Client; services: ClientServices }>();
+const clientReady = new Event<ClientAndServices>();
 
 const windowPort = (): RpcPort => ({
   send: async (message) =>
@@ -78,18 +78,7 @@ const init = async () => {
   // TODO(mykola): Catch config from the panel.
   await waitForRpc();
 
-  const client = new Client({
-    config: new Config({
-      runtime: {
-        services: {
-          dxns: {
-            server: 'wss://node1.devnet.dxos.network/dxns/ws'
-          }
-        }
-      }
-    }),
-    services: servicesProvider
-  });
+  const client = new Client({ services: servicesProvider });
 
   await client.initialize();
   log('Initialized client RPC server finished.');
