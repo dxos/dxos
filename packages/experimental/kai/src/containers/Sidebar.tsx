@@ -62,7 +62,7 @@ export const Sidebar = () => {
         <div className='flex flex-1 items-center'>
           <Bug className={clsx('logo', getSize(8))} />
           <div className='flex-1'></div>
-          <button className='flex' onClick={handleCreateSpace}>
+          <button className='flex' title='Create new space' onClick={handleCreateSpace}>
             <PlusCircle className={getSize(6)} />
           </button>
         </div>

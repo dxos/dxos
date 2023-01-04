@@ -15,25 +15,25 @@ const sidebarWidth = 200;
 
 const BlocksView: FC<{ props: any }> = ({ props }) => {
   return (
-    <div className='flex grid grid-cols-5 grid-flow-row gap-2 p-2 overflow-y-scroll'>
+    <div className='flex flex-1 grid grid-cols-5 grid-flow-row gap-2 p-2 overflow-y-scroll scrollbar'>
       <div className='flex flex-shrink-0 col-span-2' style={props}>
         <ProjectList />
+      </div>
+
+      <div className='flex flex-shrink-0 col-span-2' style={props}>
+        <ContactList />
+      </div>
+
+      <div className='flex flex-shrink-0  row-span-2' style={props}>
+        <TaskList />
       </div>
 
       <div className='flex flex-shrink-0' style={props}>
         <TaskList title='Completed Tasks' completed={true} readonly />
       </div>
 
-      <div className='flex flex-shrink-0 col-span-2 row-span-2' style={props}>
+      <div className='flex flex-shrink-0 col-span-3' style={props}>
         <ProjectGraph />
-      </div>
-
-      <div className='flex flex-shrink-0' style={props}>
-        <TaskList />
-      </div>
-
-      <div className='flex flex-shrink-0 col-span-2' style={props}>
-        <ContactList />
       </div>
 
       <div className='flex flex-shrink-0 col-span-5' style={props}>
