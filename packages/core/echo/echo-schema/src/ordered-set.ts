@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { OrderedList } from '@dxos/object-model';
 
-import { base } from './defs';
+import { base, id } from './defs';
 import { Document, DocumentBase } from './document';
 
 // TODO(burdon): Remove?
@@ -126,15 +126,36 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   // TODO(burdon): Double linked list.
   splice(start: number, deleteCount?: number | undefined): T[];
   splice(start: number, deleteCount: number, ...items: T[]): T[];
-  splice(start: unknown, deleteCount?: unknown, ...items: unknown[]): T[] {
+  splice(start: number, deleteCount?: number | undefined, ...items: unknown[]): T[] {
     if (this._orderedList) {
-      throw new Error('Method not implemented.');
+      if (deleteCount !== undefined && deleteCount > 0) {
+        throw new Error('deleteCount not supported.');
+      }
+
+      for (let i = 0; i < items.length; i++) {
+        const idx = start + i;
+        const itemId = typeof items[i] === 'string' ? items[i] : (items[i] as any)[id];
+        if (idx === 0) {
+          // console.log('insert', itemId, this._orderedList.values[0])
+          void this._orderedList.insert(itemId, this._orderedList.values[0]);
+        } else {
+          // console.log('insert', this._orderedList.values[idx - 1], itemId)
+          void this._orderedList.insert(this._orderedList.values[idx - 1], itemId);
+        }
+      }
+
+      return [];
     } else {
       assert(this._uninitialized);
       // TODO(burdon): Check param types.
       this._uninitialized.splice(start as number, deleteCount as number, ...(items as any[]));
       return this._uninitialized;
     }
+
+    // console.log({
+    //   links: (this._orderedList as any)._model.get((this._orderedList as any)._property) ?? {},
+    //   values: this._orderedList.values
+    // })
   }
 
   unshift(...items: T[]): number {
@@ -142,7 +163,17 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   indexOf(searchElement: T, fromIndex?: number | undefined): number {
-    throw new Error('Method not implemented.');
+    if (this._orderedList) {
+      const itemId = typeof searchElement === 'string' ? searchElement : (searchElement as any)[id];
+      if (!itemId) {
+        return -1;
+      }
+
+      return this._orderedList.values.indexOf(itemId);
+    } else {
+      assert(this._uninitialized);
+      return this._uninitialized.indexOf(searchElement);
+    }
   }
 
   lastIndexOf(searchElement: T, fromIndex?: number | undefined): number {
@@ -228,8 +259,9 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   values(): IterableIterator<T> {
     if (this._orderedList) {
       return this._orderedList.values
-        .slice(0, -1)
+        .filter((x) => x !== '__EMPTY__')
         .map((id) => this._object!._database!.getObjectById(id) as T)
+        .filter(Boolean)
         .values();
     } else {
       assert(this._uninitialized);
@@ -265,6 +297,11 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
       assert(this._uninitialized);
       this._uninitialized.push(...items);
     }
+
+    // console.log({
+    //   links: (this._orderedList as any)._model.get((this._orderedList as any)._property) ?? {},
+    //   values: this._orderedList!.values
+    // })
 
     return this.length;
   }
