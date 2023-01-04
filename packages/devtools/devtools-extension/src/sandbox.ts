@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { Client, Config } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { ClientServicesProxy } from '@dxos/client-services';
 import { ClientAndServices, initializeDevtools } from '@dxos/devtools';
 import { RpcPort } from '@dxos/rpc';
