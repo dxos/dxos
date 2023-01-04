@@ -1,7 +1,9 @@
-//
-// Copyright 2022 DXOS.org
-//
+# Test
 
+This is an unlisted page which may be useful for testing new docs functionality.
+
+:::showcase[demo=Test#L5-L13]
+```tsx
 import React from 'react';
 
 import { useClient } from '@dxos/react-client';
@@ -11,5 +13,5 @@ const Test = () => {
 
   return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
 };
-
-export default Test;
+```
+:::

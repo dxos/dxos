@@ -90,7 +90,7 @@ code {
 }
 
 html[data-theme=light] {
-  div[class*=language-] > button.copy-code-button:not(.pure) {
+  div[class*=language-] > button.copy:not(.pure) {
     background-color: $zinc-300;
     box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
     &:hover {
@@ -100,7 +100,7 @@ html[data-theme=light] {
 }
 
 html[data-theme=dark] {
-  div[class*=language-] > button.copy-code-button:not(.pure) {
+  div[class*=language-] > button.copy:not(.pure) {
     background-color: $zinc-700;
     .copy-icon {
       color: $zinc-400;
