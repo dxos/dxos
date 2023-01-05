@@ -20,7 +20,6 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "lodash.debounce": "^4.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

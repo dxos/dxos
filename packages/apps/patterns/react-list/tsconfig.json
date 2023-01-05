@@ -44,9 +44,6 @@
     },
     {
       "path": "../react-appkit"
-    },
-    {
-      "path": "../react-ui"
     }
   ]
 }
