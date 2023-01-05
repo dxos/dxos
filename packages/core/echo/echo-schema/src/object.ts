@@ -50,6 +50,7 @@ export abstract class EchoObject<T extends Model = any> {
   [base]: this = this;
 
   /** ID accessor. */
+  // TODO(burdon): Expose as property?
   get [id](): string {
     return this[base]._id;
   }

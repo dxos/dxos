@@ -57,16 +57,18 @@ export const Sidebar = () => {
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden bg-slate-700 text-white'>
+      {/* Header */}
       <div className='flex flex-shrink-0 p-3 mb-2'>
         <div className='flex flex-1 items-center'>
           <Bug className={clsx('logo', getSize(8))} />
           <div className='flex-1'></div>
-          <button className='flex' onClick={handleCreateSpace}>
+          <button className='flex' title='Create new space' onClick={handleCreateSpace}>
             <PlusCircle className={getSize(6)} />
           </button>
         </div>
       </div>
 
+      {/* Views */}
       <div className='flex p-3 mb-2'>
         {views.map(({ key, Icon }) => (
           <button key={key} className='mr-2' onClick={() => setView(currentSpaceKey!, key)}>
@@ -75,14 +77,21 @@ export const Sidebar = () => {
         ))}
       </div>
 
+      {/* Spaces */}
       <div className='flex flex-1 flex-col overflow-y-scroll'>
+        {/* <div className='flex p-1 pl-3 text-gray-300 text-xs'>Spaces</div> */}
         <SpaceList />
       </div>
 
-      <div className='flex flex-shrink-0 p-3 mt-6'>
-        <MemberList spaceKey={space.key} />
+      {/* Members */}
+      <div className='flex flex-col flex-shrink-0 mt-6'>
+        <div className='flex p-1 pl-3 mb-2 text-gray-300 text-xs'>Members</div>
+        <div className='flex flex-shrink-0 pl-3'>
+          <MemberList spaceKey={space.key} />
+        </div>
       </div>
 
+      {/* Footer */}
       <div className='flex flex-shrink-0 p-3 mt-2'>
         <button className='mr-2' title='Settings' onClick={handleSettings}>
           <Gear className={getSize(6)} />

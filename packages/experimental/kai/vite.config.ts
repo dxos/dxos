@@ -6,6 +6,7 @@ import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ThemePlugin } from '@dxos/react-ui/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -53,6 +54,7 @@ export default defineConfig({
       include: [/packages/, /node_modules/]
     }
   },
+  // TODO(burdon): Add fonts.
   plugins: [
     ConfigPlugin(),
     ThemePlugin({
@@ -87,6 +89,33 @@ export default defineConfig({
             src: 'icons/icon-256.png',
             sizes: '256x256',
             type: 'image/png'
+          }
+        ]
+      }
+    }),
+
+    // https://www.npmjs.com/package/vite-plugin-fonts
+    // https://fonts.google.com
+    VitePluginFonts({
+      google: {
+        injectTo: 'head-prepend',
+        // prettier-ignore
+        families: [
+          'Roboto',
+          'Roboto Mono',
+          'DM Sans',
+          'DM Mono',
+          'Montserrat'
+        ]
+      },
+
+      custom: {
+        preload: false,
+        injectTo: 'head-prepend',
+        families: [
+          {
+            name: 'Sharp Sans',
+            src: 'node_modules/@dxos/assets/assets/fonts/sharp-sans/*.ttf'
           }
         ]
       }

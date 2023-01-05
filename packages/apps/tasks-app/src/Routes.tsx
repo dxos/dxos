@@ -8,11 +8,8 @@ import { useRoutes } from 'react-router-dom';
 import { ManageSpacePage, RequireIdentity, useTelemetry } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
 
-import { AppLayout } from './layouts/AppLayout';
-import { SpaceLayout } from './layouts/SpaceLayout';
-import { SpaceSettingsLayout } from './layouts/SpaceSettingsLayout';
-import { SpacePage } from './pages';
-import { SpacesPage } from './pages/SpacesPage';
+import { AppLayout, SpaceLayout, SpaceSettingsLayout } from './layouts';
+import { SpacePage, SpacesPage } from './pages';
 
 export const Routes = () => {
   const client = useClient();

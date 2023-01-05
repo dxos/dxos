@@ -49,6 +49,13 @@ function readPackage(packageJson, context) {
       packageJson.peerDependencies['react'] = '^18.0.0'
       break;
     }
+
+    // Ensure vuepress uses patched vite.
+    case '@vitejs/plugin-vue':
+    case '@vuepress/bundler-vite': {
+      packageJson.dependencies['vite'] = '3.2.5'
+      break;
+    }
   }
 
   return packageJson

@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { base, db, id } from './defs';
+import { base, db, deleted, id } from './defs';
 import { Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -61,7 +61,14 @@ export class EchoDatabase {
   }
 
   getObjectById(id: string) {
-    return this._objects.get(id);
+    const obj = this._objects.get(id);
+    if (!obj) {
+      return undefined;
+    }
+    if ((obj as any)[deleted] === true) {
+      return undefined;
+    }
+    return obj;
   }
 
   /**
@@ -69,8 +76,7 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
-    console.log((obj as any).title); // OK.
-    assert(obj[id]); // TODO(burdon): Undefined.
+    assert(obj[id]); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
     if (obj[base]._isBound) {
       return obj;
@@ -90,6 +96,18 @@ export class EchoDatabase {
   }
 
   /**
+   * Toggle deleted flag.
+   */
+  async delete<T extends DocumentBase>(obj: T): Promise<T> {
+    if (obj[deleted]) {
+      (obj as any)['@deleted'] = false;
+    } else {
+      (obj as any)['@deleted'] = true;
+    }
+    return obj;
+  }
+
+  /**
    * Filter by type.
    */
   // TODO(burdon): Additional filters?
@@ -98,7 +116,9 @@ export class EchoDatabase {
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
     const matchObject = (object: EchoObject): object is DocumentBase =>
-      object instanceof DocumentBase && Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
+      object instanceof DocumentBase &&
+      !object[deleted] &&
+      Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
 
     // Current result.
     let cache: Document[] | undefined;

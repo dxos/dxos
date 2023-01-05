@@ -3,9 +3,9 @@
 //
 
 import { Archive } from 'phosphor-react';
-import React from 'react';
+import React, { FC } from 'react';
 
-import { makeReactive, useQuery } from '@dxos/react-client';
+import { useQuery, useReactor } from '@dxos/react-client';
 import { Composer } from '@dxos/react-composer';
 import { getSize, mx } from '@dxos/react-ui';
 
@@ -13,15 +13,15 @@ import { Card, Input } from '../components';
 import { useSpace } from '../hooks';
 import { Project } from '../proto';
 
-export const Editor = makeReactive(() => {
+export const Editor: FC = () => {
+  const { render } = useReactor();
   const { space } = useSpace();
   const projects = useQuery(space, Project.filter());
-
   if (!projects[0]) {
     return null;
   }
 
-  return (
+  return render(
     <Card title='Editor' className='bg-purple-400'>
       <div className='flex p-2 pb-0 items-center'>
         <div className='pl-2 pr-1'>
@@ -45,4 +45,4 @@ export const Editor = makeReactive(() => {
       )}
     </Card>
   );
-});
+};

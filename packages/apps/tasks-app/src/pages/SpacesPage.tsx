@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Space, ObjectModel } from '@dxos/client';
 import { SpacesPage as BaseSpacesPage } from '@dxos/react-appkit';
 
-import { TASK_LIST } from '../containers/TaskList';
+import { TASK_LIST } from '../containers';
 
 export type SpacesPageProps = {};
 

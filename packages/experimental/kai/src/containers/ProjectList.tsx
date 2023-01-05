@@ -6,13 +6,13 @@ import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { makeReactive, useQuery } from '@dxos/react-client';
+import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, TableRow } from '../components';
 import { useSpace } from '../hooks';
-import { createProject, createTask, Project } from '../proto';
-import { DraggableTaskItem } from './TaskList';
+import { Project, Task, createProject, createTask } from '../proto';
+import { DraggableTaskList } from './DraggableTaskList';
 
 export const ProjectList: FC<{}> = () => {
   const { space } = useSpace();
@@ -29,7 +29,7 @@ export const ProjectList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Projects' className='bg-cyan-400' menubar={<Menubar />}>
+    <Card title='Projects' fade scrollbar className='bg-cyan-400' menubar={<Menubar />}>
       <>
         {projects.map((project) => (
           <div key={project[id]} className='border-b'>
@@ -41,10 +41,11 @@ export const ProjectList: FC<{}> = () => {
   );
 };
 
-export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
+export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
   const { space } = useSpace();
+  const { render } = useReactor();
 
-  const handleCreate = async () => {
+  const handleGenerateTask = async () => {
     const task = await createTask(space.experimental.db);
     project.tasks.push(task);
     // TODO(burdon): Can't set array. new OrderedSet().
@@ -54,10 +55,18 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
     }
   };
 
-  return (
-    <div className='flex flex-col'>
+  // TODO(burdon): Implement splice.
+  const handleDrag = (active: number, over: number) => {
+    const task1 = project.tasks[active];
+    const task2 = project.tasks[over];
+    project.tasks.splice(project.tasks.indexOf(task2), 0, task1);
+  };
+
+  return render(
+    <div className='flex flex-col pb-2'>
+      {/* Header */}
       <div className='flex p-2 pb-0 items-center'>
-        <div className='pl-2 pr-1'>
+        <div className='flex flex-shrink-0 justify-center w-8 mr-1'>
           <Archive className={getSize(6)} />
         </div>
         <Input
@@ -66,26 +75,30 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
           value={project.title}
           onChange={(value) => (project.title = value)}
         />
-        <button className='mr-2 text-gray-500' onClick={handleCreate}>
+        <button className='mr-2 text-gray-500' onClick={handleGenerateTask}>
           <Plus className={getSize(6)} />
         </button>
       </div>
 
+      {/* Tasks */}
       {project.tasks?.length > 0 && (
         <div>
-          <h2 className='pl-3 pt-1 text-xs'>Tasks</h2>
-          <div className='p-3 pt-1'>
-            {project.tasks?.map((task) => (
-              <DraggableTaskItem key={task[id]} task={task} />
-            ))}
-          </div>
+          <h2 className='pl-3 pt-1 pb-1 text-xs'>Tasks</h2>
+          <DraggableTaskList
+            tasks={project.tasks}
+            onCreate={(task: Task) => {
+              project.tasks.push(task);
+            }}
+            onDrag={handleDrag}
+          />
         </div>
       )}
 
+      {/* Contacts */}
       {project.team?.length > 0 && (
-        <div>
+        <div className='pt-2'>
           <h2 className='pl-3 text-xs'>Team</h2>
-          <div className='p-3 pt-1'>
+          <div className='p-1 pt-1'>
             {project.team?.map((contact) => (
               <TableRow key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
             ))}
@@ -94,4 +107,4 @@ export const ProjectItem = makeReactive<{ project: Project }>(({ project }) => {
       )}
     </div>
   );
-});
+};

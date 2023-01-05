@@ -5,7 +5,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { App } from './containers';
+import { App } from './app';
 
 // TODO(burdon): Next
 //  - API: space.experimental.db
@@ -25,5 +25,5 @@ import './style.css';
 
 (() => {
   // TODO(burdon): Get debug from config.
-  createRoot(document.getElementById('root')!).render(<App debug={true} />);
+  createRoot(document.getElementById('root')!).render(<App debug={false} />);
 })();

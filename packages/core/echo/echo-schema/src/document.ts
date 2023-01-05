@@ -4,7 +4,7 @@
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { base, id } from './defs';
+import { base, deleted, id } from './defs';
 import { EchoObject } from './object';
 import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -31,6 +31,8 @@ export class DocumentBase extends EchoObject<ObjectModel> {
    */
   private _uninitialized?: Record<keyof any, any> = {};
 
+  override _modelConstructor = ObjectModel;
+
   // prettier-ignore
   constructor(
     initialProps?: Record<keyof any, any>,
@@ -50,11 +52,13 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     return this._createProxy(this);
   }
 
-  override _modelConstructor = ObjectModel;
-
-  // TODO(burdon): Document.
   get [Symbol.toStringTag]() {
     return this[base]?._schemaType?.name ?? 'Document';
+  }
+
+  /** Deletion. */
+  get [deleted](): boolean {
+    return this[base]._get('@deleted') ?? false;
   }
 
   /**
@@ -154,7 +158,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   private _setModelProp(prop: string, value: any): any {
     if (value instanceof EchoObject) {
-      void this._item!.model.set(`${prop}$type`, 'ref'); // TODO(burdon): Async.
+      void this._item!.model.set(`${prop}$type`, 'ref');
       void this._item!.model.set(prop, value[base]._id);
       void this._database!.save(value);
     } else if (value instanceof OrderedSet) {
@@ -231,6 +235,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     for (const [key, value] of Object.entries(this._uninitialized!)) {
       this._setModelProp(key, value);
     }
+
     this._uninitialized = undefined;
   }
 }

@@ -6,7 +6,7 @@ import { PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { makeReactive, useQuery } from '@dxos/react-client';
+import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, TableRow } from '../components';
@@ -28,24 +28,29 @@ export const ContactList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Contacts' className='bg-blue-400' menubar={<Menubar />}>
-      <>
+    <Card title='Contacts' fade scrollbar className='bg-blue-400' menubar={<Menubar />}>
+      <div className='mt-2'>
         {contacts.map((contact) => (
-          <div key={contact[id]} className='p-2 pl-3 border-b'>
+          <div key={contact[id]} className='border-b'>
             <Person person={contact} />
           </div>
         ))}
-      </>
+      </div>
     </Card>
   );
 };
 
-export const Person = makeReactive<{ person: Contact }>(({ person }) => {
+export const Person: FC<{ person: Contact }> = ({ person }) => {
+  const { render } = useReactor();
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
-  return (
+  return render(
     <TableRow
-      sidebar={<User className={getSize(5)} />}
+      sidebar={
+        <div className='flex flex-shrink-0 justify-center w-6'>
+          <User className={getSize(5)} />
+        </div>
+      }
       header={
         <Input
           className='w-full outline-0'
@@ -55,9 +60,11 @@ export const Person = makeReactive<{ person: Contact }>(({ person }) => {
         />
       }
     >
-      {person.username && <div className='flex text-sm text-green-800'>{person.username}</div>}
-      {person.email && <div className='flex text-sm text-green-800'>{person.email}</div>}
-      {person.address && <div className='flex text-sm text-gray-800'>{address(person.address)}</div>}
+      <div className='ml-8 mb-1'>
+        {person.username && <div className='flex text-sm text-green-800'>{person.username}</div>}
+        {person.email && <div className='flex text-sm text-green-800'>{person.email}</div>}
+        {person.address && <div className='flex text-sm text-gray-800'>{address(person.address)}</div>}
+      </div>
     </TableRow>
   );
-});
+};
