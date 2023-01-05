@@ -61,7 +61,7 @@ message KeyValueObject {
  * Reference to an Item.
  */
 message Reference {
-  string id                           = 1;
+  string itemId                           = 1;
 }
 
 /**
