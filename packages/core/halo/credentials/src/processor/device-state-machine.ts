@@ -9,11 +9,18 @@ import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexSet } from '@dxos/util';
 
 import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
+import { CredentialProcessor } from './credential-processor';
+
+export type DeviceStateMachineParams = {
+  identityKey: PublicKey;
+  deviceKey: PublicKey;
+  onUpdate?: () => void;
+};
 
 /**
  * Processes device invitation credentials.
  */
-export class DeviceStateMachine {
+export class DeviceStateMachine implements CredentialProcessor {
   // TODO(burdon): Return values via getter.
   public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(PublicKey.hash);
   public readonly deviceChainReady = new Trigger();
@@ -22,15 +29,18 @@ export class DeviceStateMachine {
 
   // prettier-ignore
   constructor(
-    private readonly _identityKey: PublicKey,
-    private readonly _deviceKey: PublicKey
+    private readonly _params: DeviceStateMachineParams
   ) {}
 
   async process(credential: Credential) {
-    log('processing credential...', { identityKey: this._identityKey, deviceKey: this._deviceKey, credential });
+    log('processing credential...', {
+      identityKey: this._params.identityKey,
+      deviceKey: this._params.deviceKey,
+      credential
+    });
 
     // Save device keychain credential when processed by the space state machine.
-    if (isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {
+    if (isValidAuthorizedDeviceCredential(credential, this._params.identityKey, this._params.deviceKey)) {
       this.deviceCredentialChain = { credential };
       this.deviceChainReady.wake();
     }
@@ -41,10 +51,11 @@ export class DeviceStateMachine {
         // TODO(dmaretskyi): Extra validation for the credential?
         this.authorizedDeviceKeys.add(assertion.deviceKey);
         log('added device', {
-          localDeviceKey: this._deviceKey,
+          localDeviceKey: this._params.deviceKey,
           deviceKey: assertion.deviceKey,
           size: this.authorizedDeviceKeys.size
         });
+        this._params.onUpdate?.();
         break;
       }
     }

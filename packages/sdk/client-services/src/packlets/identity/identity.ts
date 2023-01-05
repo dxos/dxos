@@ -10,7 +10,8 @@ import {
   CredentialSigner,
   createCredentialSignerWithKey,
   createCredentialSignerWithChain,
-  ProfileStateMachine
+  ProfileStateMachine,
+  CredentialConsumer
 } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
 import { Space } from '@dxos/echo-db';
@@ -42,8 +43,8 @@ export type IdentityParams = {
 export class Identity {
   public readonly space: Space;
   private readonly _signer: Signer;
-  private readonly _deviceStateMachine: DeviceStateMachine;
-  private readonly _profileStateMachine: ProfileStateMachine;
+  private readonly _deviceStateMachine: CredentialConsumer<DeviceStateMachine>;
+  private readonly _profileStateMachine: CredentialConsumer<ProfileStateMachine>;
   public readonly authVerifier: HaloAuthVerifier;
 
   public readonly identityKey: PublicKey;
@@ -58,16 +59,19 @@ export class Identity {
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
 
-    this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey);
-    this._profileStateMachine = new ProfileStateMachine(this.identityKey);
-
-    // Process halo-specific credentials.
-    this.space.onCredentialProcessed.set(async (credential) => {
-      // Save device keychain credential when processed by the space state machine.
-      await this._deviceStateMachine.process(credential);
-      await this._profileStateMachine.process(credential);
-      this.stateUpdate.emit();
-    });
+    this._deviceStateMachine = this.space.spaceState.registerProcessor(
+      new DeviceStateMachine({
+        identityKey: this.identityKey,
+        deviceKey: this.deviceKey,
+        onUpdate: () => this.stateUpdate.emit()
+      })
+    );
+    this._profileStateMachine = this.space.spaceState.registerProcessor(
+      new ProfileStateMachine({
+        identityKey: this.identityKey,
+        onUpdate: () => this.stateUpdate.emit()
+      })
+    );
 
     this.authVerifier = new HaloAuthVerifier({
       trustedDevicesProvider: () => this.authorizedDeviceKeys,
@@ -78,26 +82,30 @@ export class Identity {
 
   // TODO(burdon): Expose state object?
   get authorizedDeviceKeys(): ComplexSet<PublicKey> {
-    return this._deviceStateMachine.authorizedDeviceKeys;
+    return this._deviceStateMachine.processor.authorizedDeviceKeys;
   }
 
   async open() {
+    await this._deviceStateMachine.open();
+    await this._profileStateMachine.open();
     await this.space.open();
   }
 
   async close() {
     await this.authVerifier.close();
+    await this._deviceStateMachine.close();
+    await this._profileStateMachine.close();
     await this.space.close();
   }
 
   async ready() {
-    await this._deviceStateMachine.deviceChainReady.wait();
+    await this._deviceStateMachine.processor.deviceChainReady.wait();
 
     // TODO(dmaretskyi): Should we also wait for our feeds to be admitted?
   }
 
   get profileDocument(): ProfileDocument | undefined {
-    return this._profileStateMachine.profile;
+    return this._profileStateMachine.processor.profile;
   }
 
   /**
@@ -128,10 +136,10 @@ export class Identity {
    * Requires identity to be ready.
    */
   getIdentityCredentialSigner(): CredentialSigner {
-    assert(this._deviceStateMachine.deviceCredentialChain, 'Device credential chain is not ready.');
+    assert(this._deviceStateMachine.processor.deviceCredentialChain, 'Device credential chain is not ready.');
     return createCredentialSignerWithChain(
       this._signer,
-      this._deviceStateMachine.deviceCredentialChain,
+      this._deviceStateMachine.processor.deviceCredentialChain,
       this.deviceKey
     );
   }
