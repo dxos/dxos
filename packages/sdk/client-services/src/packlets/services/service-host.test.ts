@@ -22,7 +22,7 @@ describe('ClientServicesHost', () => {
     const [done, tick] = latch({ count: 3 });
     stream.subscribe((credential) => {
       tick();
-      console.log(credential)
+      // console.log(credential);
     });
     afterTest(() => stream.close());
 
