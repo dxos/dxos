@@ -4,11 +4,13 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { failUndefined } from '@dxos/debug';
 import {
   AcceptSpaceOptions,
   DataServiceSubscriptions,
   MetadataStore,
   SigningContext,
+  SnapshotStore,
   Space,
   spaceGenesis,
   SpaceManager
@@ -18,10 +20,17 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Presence } from '@dxos/teleport-extension-presence';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { DataSpace } from './data-space';
+
+/**
+ * Number of mutations since the last snapshot before we automatically create another snapshot.
+ */
+const MESSAGES_PER_SNAPSHOT = 10;
 
 export class DataSpaceManager {
   private readonly _ctx = new Context();
@@ -36,7 +45,8 @@ export class DataSpaceManager {
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
-    private readonly _modelFactory: ModelFactory
+    private readonly _modelFactory: ModelFactory,
+    private readonly _snapshotStore: SnapshotStore
   ) {}
 
   // TODO(burdon): Remove.
@@ -47,8 +57,10 @@ export class DataSpaceManager {
   @synchronized
   async open() {
     await this._metadataStore.load();
+    log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
     for (const spaceMetadata of this._metadataStore.spaces) {
+      log('load space', { spaceMetadata });
       const space = await this._constructSpace(spaceMetadata);
       if (spaceMetadata.latestTimeframe) {
         log('waiting for latest timeframe', { spaceMetadata });
@@ -60,6 +72,13 @@ export class DataSpaceManager {
   @synchronized
   async close() {
     await this._ctx.dispose();
+    for (const space of this._spaces.values()) {
+      await this._saveSnapshot(space);
+      const latestTimeframe = space.dataPipelineController.pipelineState?.timeframe;
+      if (latestTimeframe) {
+        await this._metadataStore.setSpaceLatestTimeframe(space.key, latestTimeframe);
+      }
+    }
   }
 
   /**
@@ -118,11 +137,38 @@ export class DataSpaceManager {
       dataPipelineControllerProvider: () => dataSpace.dataPipelineController,
       presence
     });
-    const dataSpace = new DataSpace(space, this._modelFactory, this._signingContext.identityKey, presence);
+    let snapshot: SpaceSnapshot | undefined;
+    if (metadata.snapshot) {
+      snapshot = await this._snapshotStore.loadSnapshot(metadata.snapshot);
+    }
+    const dataSpace = new DataSpace({
+      inner: space,
+      modelFactory: this._modelFactory,
+      memberKey: this._signingContext.identityKey,
+      presence,
+      snapshot
+    });
+
+    let lastSnapshotTimeframe: Timeframe = snapshot?.timeframe ?? new Timeframe();
+
     dataSpace.dataPipelineController.onTimeframeReached.debounce(1000).on(this._ctx, async () => {
       const latestTimeframe = dataSpace.dataPipelineController.pipelineState?.timeframe;
+      if (!latestTimeframe) {
+        return;
+      }
+
+      // Record last timeframe.
       if (latestTimeframe) {
         await this._metadataStore.setSpaceLatestTimeframe(metadata.key, latestTimeframe);
+      }
+
+      // Save snapshot.
+      if (latestTimeframe.totalMessages() - lastSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT) {
+        const snapshot = await this._saveSnapshot(dataSpace);
+        lastSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
+        console.log('save', {
+          snapshot
+        });
       }
     });
 
@@ -130,5 +176,12 @@ export class DataSpaceManager {
     this._dataServiceSubscriptions.registerSpace(space.key, dataSpace.database.createDataServiceHost());
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
+  }
+
+  private async _saveSnapshot(space: DataSpace) {
+    const snapshot = await space.dataPipelineController.createSnapshot();
+    const snapshotKey = await this._snapshotStore.saveSnapshot(snapshot);
+    await this._metadataStore.setSpaceSnapshot(space.key, snapshotKey);
+    return snapshot;
   }
 }
