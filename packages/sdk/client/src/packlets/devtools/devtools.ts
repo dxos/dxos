@@ -45,12 +45,10 @@ const port: RpcPort = {
   }
 };
 
-// Console debug access.
-// TODO(burdon): Debug only.
 export const createDevtoolsRpcServer = async (client: Client, clientServices: ClientServicesProvider) => {
   let server: RpcPeer;
   ((window as any).__DXOS__ as DevtoolsHook) = {
-    client,
+    client, // To debug client from console using 'window.__DXOS__.client'.
     openClientRpcServer: async () => {
       if (server) {
         log('Closing existing client RPC server.');

@@ -16,6 +16,7 @@
     "@babel/runtime": "^7.9.6",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
