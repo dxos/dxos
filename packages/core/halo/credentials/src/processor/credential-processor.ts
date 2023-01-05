@@ -15,7 +15,7 @@ export class CredentialConsumer<T extends CredentialProcessor> {
 
   /**
    * @internal
-   * Processor is open are is ready to process live credentials.
+   * Processor is ready to process live credentials.
    * NOTE: Setting this flag before all existing credentials are processed will cause them to be processed out of order.
    * Set externally.
    */
