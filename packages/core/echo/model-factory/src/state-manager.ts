@@ -54,6 +54,7 @@ type OptimisticMutation = {
  * - Optimistic mutations.
  */
 export class StateManager<M extends Model> {
+  private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
   private _modelMeta: ModelMeta | null = null;
@@ -106,6 +107,13 @@ export class StateManager<M extends Model> {
     return this._model;
   }
 
+  async destroy() {
+    log('destroy');
+    try {
+      await Promise.all(this._pendingWrites);
+    } catch {}
+  }
+
   private _emitModelUpdate() {
     scheduleTask(new Context(), () => {
       assert(this._model);
@@ -139,10 +147,18 @@ export class StateManager<M extends Model> {
       this._emitModelUpdate();
     }
 
+    const receiptPromise = this._feedWriter.write(mutationEncoded);
+
+    // Track receipt promise.
+    this._pendingWrites.add(receiptPromise);
+    void receiptPromise.then(() => {
+      this._pendingWrites.delete(receiptPromise);
+    });
+
     // Write mutation to the feed store and assign metadata from the receipt.
     // Confirms that the optimistic mutation has been written to the feed store.
     // NOTE: Possible race condition: What if processMessage gets called before write() resolves?
-    const receipt = await this._feedWriter.write(mutationEncoded);
+    const receipt = await receiptPromise;
     log('Confirm', mutation);
     optimisticMutation.receipt = receipt;
 

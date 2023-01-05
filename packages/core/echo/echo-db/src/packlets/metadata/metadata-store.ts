@@ -145,6 +145,14 @@ export class MetadataStore {
     space.latestTimeframe = timeframe;
     await this._save();
   }
+
+  async setSpaceSnapshot(spaceKey: PublicKey, snapshot: string) {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+
+    space.snapshot = snapshot;
+    await this._save();
+  }
 }
 
 const toBytesInt32 = (num: number) => {

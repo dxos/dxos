@@ -7,3 +7,4 @@ export * from './seedphrase';
 export * from './passcode';
 export * from './credentials';
 export * from './state-machine';
+export * from './processor';

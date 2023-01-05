@@ -21,7 +21,7 @@ import { theme } from './theme';
 
 const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
 
-export const Telemetry = () => {
+const Telemetry = () => {
   useTelemetry({ namespace: 'devtools', router: false });
   return null;
 };
