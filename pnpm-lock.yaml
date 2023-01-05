@@ -72,6 +72,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       '@types/node': ^18.11.9
+      '@types/node-fetch': ^2.5.10
       '@types/react': ^18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': ~8.3.3
@@ -97,6 +98,7 @@ importers:
       mocha: ^8.4.0
       mocha-junit-reporter: ^2.1.0
       mocha-multi-reporters: ^1.5.1
+      node-fetch: ^2.6.0
       nx: 15.3.3
       nyc: ^15.1.0
       pkg-up: ^3.1.0
@@ -164,6 +166,7 @@ importers:
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
       '@types/node': 18.11.9
+      '@types/node-fetch': 2.6.2
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
@@ -188,6 +191,7 @@ importers:
       mocha: 8.4.0
       mocha-junit-reporter: 2.1.0_mocha@8.4.0
       mocha-multi-reporters: 1.5.1_mocha@8.4.0
+      node-fetch: 2.6.7
       nx: 15.3.3_h4pdoyo3l3nua2jmzaw5vfqqmq
       nyc: 15.1.0
       pkg-up: 3.1.0
@@ -7580,7 +7584,7 @@ packages:
       magic-string: 0.27.0
       react-docgen-typescript: 2.2.2_typescript@4.8.4
       typescript: 4.8.4
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_pftdh3zqu4qevmbqg2nu3a7f3e
     dev: true
 
   /@jridgewell/gen-mapping/0.1.1:
@@ -10615,7 +10619,7 @@ packages:
       rollup-plugin-external-globals: 0.7.1_rollup@3.9.1
       slash: 3.0.0
       typescript: 4.8.4
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_pftdh3zqu4qevmbqg2nu3a7f3e
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -11048,7 +11052,7 @@ packages:
       react: 18.2.0
       react-docgen: 6.0.0-alpha.3
       react-dom: 18.2.0_react@18.2.0
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_pftdh3zqu4qevmbqg2nu3a7f3e
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - supports-color
@@ -13357,7 +13361,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
     transitivePeerDependencies:
       - supports-color
     dev: true

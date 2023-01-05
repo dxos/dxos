@@ -31,6 +31,11 @@
       "type": "boolean",
       "description": "Running playwright tests, sets up and provides a playwright environment"
     },
+    "serve": {
+      "type": "string",
+      "description": "Project target to run concurrently alongside the tests",
+      "examples": ["kai:serve:5173", "react-client:storybook:9009"]
+    },
     "setup": {
       "type": "string",
       "description": "Setup script to run before tests"

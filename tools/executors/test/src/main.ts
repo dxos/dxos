@@ -2,14 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, runExecutor } from '@nrwl/devkit';
+import fetch, { Response } from 'node-fetch';
 import { resolve } from 'node:path';
 
 import { BrowserOptions, runBrowser as runBrowserMocha, runBrowserBuild } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
 import { runPlaywright } from './run-playwright';
 import { BrowserTypes, TestEnvironment, TestEnvironments } from './types';
-import { runSetup } from './util';
+import { poll, runSetup } from './util';
 
 export type MochaExecutorOptions = NodeOptions &
   BrowserOptions & {
@@ -17,6 +18,7 @@ export type MochaExecutorOptions = NodeOptions &
     devEnvironments: TestEnvironment[];
     ciEnvironments: TestEnvironment[];
     playwright?: boolean;
+    serve?: string;
     setup?: string;
   };
 
@@ -49,6 +51,23 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   ]);
 
   const runBrowser = options.playwright ? runPlaywright : runBrowserMocha;
+
+  if (options.serve) {
+    const [project, target, port] = options.serve.split(':');
+    const iterator = await runExecutor({ project, target }, {}, context);
+    void iterator.next();
+    await poll<Response | undefined>(
+      async () => {
+        console.log(`Polling port ${port}...`);
+        try {
+          return await fetch(`http://localhost:${port}`);
+        } catch {
+          return undefined;
+        }
+      },
+      (res) => (res ? res.status < 400 : false)
+    );
+  }
 
   // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
   // TODO(wittjosiah): Run all even if there are failures.

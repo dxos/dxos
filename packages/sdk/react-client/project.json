@@ -32,6 +32,7 @@
         "outputPath": "tmp/mocha/packages/sdk/react-client/playwright",
         "playwright": true,
         "resultsPath": "test-results/packages/sdk/react-client/playwright",
+        "serve": "react-client:storybook:9009",
         "testPatterns": [
           "packages/sdk/react-client/src/tests/playwright/**/*.test.{ts,tsx,js,jsx}"
         ],
