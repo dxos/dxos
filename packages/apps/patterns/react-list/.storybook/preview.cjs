@@ -1,6 +1,6 @@
 import React, { createElement, useEffect } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
-import { UiKitProvider, Loading } from '@dxos/react-uikit';
+import { UiKitProvider, Loading } from '@dxos/react-ui';
 import {translations} from '@dxos/react-appkit';
 
 export const parameters = {

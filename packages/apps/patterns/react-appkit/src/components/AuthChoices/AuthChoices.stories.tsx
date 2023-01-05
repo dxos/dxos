@@ -5,9 +5,8 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Group, mx, useTranslation } from '@dxos/react-ui';
+import { Group, mx, useTranslation, templateForComponent } from '@dxos/react-ui';
 
-import { templateForComponent } from '../../testing';
 import { AuthChoices, AuthChoicesProps } from './AuthChoices';
 
 export default {

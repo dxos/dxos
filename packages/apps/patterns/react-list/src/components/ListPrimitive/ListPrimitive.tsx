@@ -16,7 +16,7 @@ import {
   defaultGroup,
   defaultHover,
   mx
-} from '@dxos/react-uikit';
+} from '@dxos/react-ui';
 
 import { usePropStatefully } from '../../hooks';
 

@@ -5,8 +5,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
+import { Heading, useTranslation } from '@dxos/react-ui';
 
 const CreateIdentityPage = () => {
   const { t } = useTranslation();

@@ -8,7 +8,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Config, Dynamics, Defaults } from '@dxos/config';
 import { GenericFallback, ServiceWorkerToast, Fallback } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { UiKitProvider } from '@dxos/react-uikit';
+import { UiProvider } from '@dxos/react-ui';
 
 // Dynamics allows configuration to be supplied by the hosting KUBE
 const config = async () => new Config(await Dynamics(), Defaults());
@@ -24,7 +24,7 @@ export const App = () => {
     }
   });
   return (
-    <UiKitProvider appNs='@dxos/bare' fallback={<Fallback message='Loading...' />}>
+    <UiProvider appNs='@dxos/bare' fallback={<Fallback message='Loading...' />}>
       <ClientProvider config={config} fallback={<GenericFallback />}>
         {/* your components here */}
         {needRefresh ? (
@@ -33,6 +33,6 @@ export const App = () => {
           <ServiceWorkerToast variant='offlineReady' />
         ) : null}
       </ClientProvider>
-    </UiKitProvider>
+    </UiProvider>
   );
 };

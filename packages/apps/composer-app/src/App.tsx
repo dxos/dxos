@@ -20,7 +20,7 @@ import {
   StatusIndicator2
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { UiKitProvider } from '@dxos/react-uikit';
+import { UiProvider } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';
@@ -44,7 +44,7 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider
+    <UiProvider
       resourceExtensions={[translations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='composer'
@@ -65,6 +65,6 @@ export const App = () => {
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>
-    </UiKitProvider>
+    </UiProvider>
   );
 };

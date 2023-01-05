@@ -8,7 +8,7 @@ export default defineTemplate(
     const render = renderSlots(slots)({ ...rest, input, defaultOutputFile, imports });
     const ClientProvider = imports.lazy('ClientProvider', '@dxos/react-client');
     const { Config, Dynamics, Defaults } = imports.lazy(['Config', 'Dynamics', 'Defaults'], '@dxos/config');
-    const UiKitProvider = imports.lazy('UiKitProvider', '@dxos/react-uikit');
+    const UiKitProvider = imports.lazy('UiKitProvider', '@dxos/react-ui');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
     const ServiceWorkerToast = imports.lazy('ServiceWorkerToast', '@dxos/react-appkit');
     const swToast = () => text`

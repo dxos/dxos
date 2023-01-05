@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState, Dispatch, SetStateAction } from 'react';
 
-import { randomString } from '@dxos/react-uikit';
+import { randomString } from '@dxos/react-ui';
 
 const isEqual = <T>(a: T, b: T) => a === b;
 

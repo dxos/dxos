@@ -7,7 +7,7 @@ import { useOutletContext } from 'react-router-dom';
 
 import type { Item, ObjectModel, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
-import { Loading } from '@dxos/react-uikit';
+import { Loading } from '@dxos/react-ui';
 
 import { TaskList, TASK_LIST } from '../containers';
 

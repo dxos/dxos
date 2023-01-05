@@ -55,7 +55,7 @@ export default defineTemplate(
               ThemePlugin({
                 content: [
                   resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-                  resolve(__dirname, '../node_modules/@dxos/react-uikit/dist/**/*.js')
+                  resolve(__dirname, '../node_modules/@dxos/react-ui/dist/**/*.js')
                 ]
               })
             ]

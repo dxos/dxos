@@ -6,7 +6,7 @@ import { Plus } from 'phosphor-react';
 import React from 'react';
 
 import { HeadingWithActions } from '@dxos/react-appkit';
-import { useTranslation, Button, getSize, defaultDisabled, Group, mx } from '@dxos/react-uikit';
+import { useTranslation, Button, getSize, defaultDisabled, Group, mx } from '@dxos/react-ui';
 
 const ContactsPage = () => {
   const { t } = useTranslation('halo');

@@ -6,18 +6,9 @@ import React, { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Client, Space } from '@dxos/client';
+import { AuthChoices } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
-import {
-  AuthChoices,
-  Avatar,
-  Button,
-  defaultGroup,
-  Heading,
-  useTranslation,
-  Trans,
-  getSize,
-  mx
-} from '@dxos/react-uikit';
+import { Avatar, Button, defaultGroup, Heading, useTranslation, Trans, getSize, mx } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 import lightThemeLogo from '../assets/icon-halo-black.png';
