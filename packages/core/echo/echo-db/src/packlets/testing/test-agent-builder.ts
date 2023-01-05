@@ -138,7 +138,9 @@ export class TestAgent {
     const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl(
       new ModelFactory().registerModel(ObjectModel),
       identityKey,
-      (feedKey) => space.spaceState.feeds.get(feedKey)
+      (feedKey) => space.spaceState.feeds.get(feedKey),
+      spaceKey,
+      undefined
     );
     const space = new Space({
       spaceKey,

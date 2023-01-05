@@ -8,20 +8,32 @@ import { Context } from '@dxos/context';
 import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Presence } from '@dxos/teleport-extension-presence';
+
+export type DataSpaceParams = {
+  inner: Space;
+  modelFactory: ModelFactory;
+  memberKey: PublicKey;
+  presence: Presence;
+  snapshot?: SpaceSnapshot | undefined;
+};
 
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;
+  private readonly _inner: Space;
+  private readonly _presence: Presence;
 
-  constructor(
-    private readonly _inner: Space,
-    private readonly _modelFactory: ModelFactory,
-    private readonly _memberKey: PublicKey,
-    private readonly _presence: Presence
-  ) {
-    this._dataPipelineController = new DataPipelineControllerImpl(_modelFactory, _memberKey, (feedKey) =>
-      _inner.spaceState.feeds.get(feedKey)
+  constructor(params: DataSpaceParams) {
+    this._inner = params.inner;
+    this._presence = params.presence;
+    this._dataPipelineController = new DataPipelineControllerImpl(
+      params.modelFactory,
+      params.memberKey,
+      (feedKey) => this._inner.spaceState.feeds.get(feedKey),
+      this._inner.key,
+      params.snapshot
     );
   }
 
