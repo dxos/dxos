@@ -43,7 +43,6 @@ const waitForRpc = async () =>
   new Promise<void>((resolve) => {
     const handler = (event: MessageEvent) => {
       const message = event.data;
-      console.log('SANDBOX Received message from panel:', message);
       if (typeof message !== 'object' || message === null || message.source !== 'panel') {
         return;
       }
@@ -71,7 +70,7 @@ const waitForRpc = async () =>
 const init = async () => {
   initializeDevtools(clientReady);
 
-  console.log('Initialize client RPC server starting...');
+  log('Initialize client RPC server starting...');
   const rpcPort = windowPort();
   const servicesProvider = new ClientServicesProxy(rpcPort);
 
