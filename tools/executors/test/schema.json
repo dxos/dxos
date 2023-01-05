@@ -33,8 +33,8 @@
     },
     "serve": {
       "type": "string",
-      "description": "Project target to run concurrently alongside the tests",
-      "examples": ["kai:serve:5173", "react-client:storybook:9009"]
+      "description": "Project target to run concurrently alongside the tests and a port the target will be served on",
+      "examples": ["halo-app:preview:3000", "kai:serve:5173", "react-client:storybook:9009"]
     },
     "setup": {
       "type": "string",
