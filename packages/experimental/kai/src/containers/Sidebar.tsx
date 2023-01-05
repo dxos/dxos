@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
 import { Bug, PlusCircle, Gear, Robot, Trash, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { getSize } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui';
 
 import { Button, FolderHierarchy } from '../components';
 import { useOptions, useSpace, viewConfig } from '../hooks';
@@ -64,7 +63,7 @@ export const Sidebar = () => {
       {/* Header */}
       <div className='flex flex-shrink-0 p-3 mb-2'>
         <div className='flex flex-1 items-center'>
-          <Bug className={clsx('logo', getSize(8))} />
+          <Bug className={mx('logo', getSize(8))} />
           <div className='flex-1'></div>
           <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
             <PlusCircle className={getSize(6)} />
@@ -79,7 +78,7 @@ export const Sidebar = () => {
             const { Icon } = viewConfig[view];
             return (
               <Button key={view} className='mr-2' onClick={() => setView(currentSpaceKey!, view)}>
-                <Icon className={clsx(getSize(6), view !== currentView && 'text-gray-500')} />
+                <Icon className={mx(getSize(6), view !== currentView && 'text-gray-500')} />
               </Button>
             );
           })}
@@ -91,32 +90,32 @@ export const Sidebar = () => {
         <SpaceList />
       </div>
 
-      <div className='ml-4'>
+      <div className='mt-4'>
         <FolderHierarchy
           items={[
             {
               id: '1',
-              title: 'A'
+              title: 'HALO'
             },
             {
               id: '2',
-              title: 'B',
+              title: 'ECHO',
               items: [
                 {
                   id: '2.1',
-                  title: 'B.1'
+                  title: 'Storage'
                 },
                 {
                   id: '2.2',
-                  title: 'B.2',
+                  title: 'Feeds',
                   items: [
                     {
                       id: '2.2.1',
-                      title: 'B.2.1',
+                      title: 'Data',
                       items: [
                         {
-                          id: '2.2.1.2',
-                          title: 'B.2.1.2'
+                          id: '2.2.1.1',
+                          title: 'Items'
                         }
                       ]
                     }
@@ -126,11 +125,11 @@ export const Sidebar = () => {
             },
             {
               id: '3',
-              title: 'C'
+              title: 'MESH'
             },
             {
               id: '4',
-              title: 'D'
+              title: 'KUBE'
             }
           ]}
         />
@@ -161,7 +160,7 @@ export const Sidebar = () => {
           {connectionState === ConnectionState.ONLINE ? (
             <WifiHigh className={getSize(6)} />
           ) : (
-            <WifiSlash className={clsx(getSize(6), 'text-orange-500')} />
+            <WifiSlash className={mx(getSize(6), 'text-orange-500')} />
           )}
         </Button>
       </div>

@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
 import { Smiley, SmileyBlank, UserCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { SpaceMember } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useMembers } from '@dxos/react-client';
-import { getSize } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-ui';
 
 export const MemberList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
   const client = useClient();
@@ -22,11 +21,11 @@ export const MemberList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
         <div key={member.identityKey.toHex()} className='flex mb-1 items-center'>
           <div className='mr-3'>
             {member.identityKey.equals(client.halo.profile!.identityKey) ? (
-              <UserCircle className={clsx(getSize(6), 'text-orange-500')} />
+              <UserCircle className={mx(getSize(6), 'text-orange-500')} />
             ) : member.presence === SpaceMember.PresenceState.ONLINE ? (
-              <Smiley className={clsx(getSize(6), 'text-green-500')} />
+              <Smiley className={mx(getSize(6), 'text-green-500')} />
             ) : (
-              <SmileyBlank className={clsx(getSize(6), 'text-slate-500')} />
+              <SmileyBlank className={mx(getSize(6), 'text-slate-500')} />
             )}
           </div>
           <div className='font-mono text-slate-300'>{member.identityKey.truncate()}</div>
