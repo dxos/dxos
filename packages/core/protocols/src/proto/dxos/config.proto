@@ -52,6 +52,7 @@ message Module {
   optional string description = 4;
   repeated string tags = 5;
   optional bytes bundle = 6;
+  optional bool tunnel = 7;
 
   optional Build build = 100;
   repeated Repo repos = 101;
@@ -181,6 +182,13 @@ message Runtime {
       bool disabled = 1;
     }
 
+    message AppTunneling {
+      optional bool enabled = 1;
+      optional string command_template = 2;
+      optional string output_re = 3;
+      optional string port = 4;
+    }
+
     optional string host = 1;
     optional string port = 2;
     optional Autoupdate autoupdate = 3;
@@ -192,6 +200,7 @@ message Runtime {
     optional Monitoring monitoring = 9;
     optional Trace trace = 10;
     optional Telemetry telemetry = 11;
+    optional AppTunneling app_tunneling = 12;
   }
 
   //
