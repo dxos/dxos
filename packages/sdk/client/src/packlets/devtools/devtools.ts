@@ -12,6 +12,7 @@ import { Client } from '../client';
  * A hook bound to window.__DXOS__.
  */
 export interface DevtoolsHook {
+  client: Client;
   openClientRpcServer: () => Promise<boolean>;
 }
 
@@ -44,11 +45,10 @@ const port: RpcPort = {
   }
 };
 
-// Console debug access.
-// TODO(burdon): Debug only.
 export const createDevtoolsRpcServer = async (client: Client, clientServices: ClientServicesProvider) => {
   let server: RpcPeer;
   ((window as any).__DXOS__ as DevtoolsHook) = {
+    client, // Console debug access.
     openClientRpcServer: async () => {
       if (server) {
         log('Closing existing client RPC server.');
