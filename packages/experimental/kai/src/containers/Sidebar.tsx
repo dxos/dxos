@@ -10,7 +10,7 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-ui';
 
-import { Button, FolderHierarchy } from '../components';
+import { Button } from '../components';
 import { useOptions, useSpace, viewConfig } from '../hooks';
 import { Generator } from '../proto';
 import { MemberList } from './MemberList';
@@ -88,51 +88,6 @@ export const Sidebar = () => {
       {/* Spaces */}
       <div className='flex flex-shrink-0 flex-col overflow-y-scroll'>
         <SpaceList />
-      </div>
-
-      <div className='mt-4'>
-        <FolderHierarchy
-          items={[
-            {
-              id: '1',
-              title: 'HALO'
-            },
-            {
-              id: '2',
-              title: 'ECHO',
-              items: [
-                {
-                  id: '2.1',
-                  title: 'Storage'
-                },
-                {
-                  id: '2.2',
-                  title: 'Feeds',
-                  items: [
-                    {
-                      id: '2.2.1',
-                      title: 'Data',
-                      items: [
-                        {
-                          id: '2.2.1.1',
-                          title: 'Items'
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              id: '3',
-              title: 'MESH'
-            },
-            {
-              id: '4',
-              title: 'KUBE'
-            }
-          ]}
-        />
       </div>
 
       <div className='flex flex-1'></div>

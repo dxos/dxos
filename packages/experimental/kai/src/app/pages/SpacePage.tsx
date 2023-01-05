@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
 
-import { ContactList, Editor, ProjectGraph, ProjectList, Sidebar, TaskList } from '../../containers';
+import { ContactList, Editor, ProjectGraph, ProjectList, ProjectTree, Sidebar, TaskList } from '../../containers';
 import { AppView, SpaceContext, SpaceContextType, useOptions, viewConfig } from '../../hooks';
 
 const sidebarWidth = 200;
@@ -36,8 +36,12 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
         <ProjectGraph />
       </div>
 
-      <div className='flex flex-shrink-0 col-span-5' style={props}>
+      <div className='flex flex-shrink-0 col-span-3' style={props}>
         <Editor />
+      </div>
+
+      <div className='flex flex-shrink-0 col-span-2' style={props}>
+        <ProjectTree />
       </div>
     </div>
   );

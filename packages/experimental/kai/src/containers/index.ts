@@ -9,6 +9,7 @@ export * from './Game';
 export * from './MemberList';
 export * from './ProjectGraph';
 export * from './ProjectList';
+export * from './ProjectTree';
 export * from './Sidebar';
 export * from './SpaceList';
 export * from './TaskList';

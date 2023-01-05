@@ -14,7 +14,10 @@ export type Item = {
   items?: Item[];
 };
 
-export const FolderHierarchy: FC<{ items: Item[] }> = ({ items }) => {
+export const FolderHierarchy: FC<{ items: Item[]; highlightClassName?: string }> = ({
+  items,
+  highlightClassName = ''
+}) => {
   // TODO(burdon): Externalize.
   const [selected, setSelected] = useState<string>();
   const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>({});
@@ -30,21 +33,21 @@ export const FolderHierarchy: FC<{ items: Item[] }> = ({ items }) => {
     });
   };
 
-  // TODO(burdon): Style colors?
   const Item = ({ item, depth = 0 }: { item: Item; depth?: number }) => {
     const open = openMap[item.id];
+    const sub = item.items && item.items.length > 0;
+
     return (
       <div className='flex flex-col'>
         <div
-          className={mx('flex select-none cursor-pointer pl-4', item.id === selected && 'bg-slate-800')}
+          className={mx('flex select-none cursor-pointer pl-3', item.id === selected && highlightClassName)}
           onClick={() => setSelected(item.id)}
         >
-          <div className='flex items-center text-sm' style={{ marginLeft: depth * 16 }}>
+          <div className='flex items-center text-xs' style={{ marginLeft: depth * 16 }}>
             <div style={{ width: 20 }} onClick={() => handleToggle(item)}>
-              {item.items?.length &&
-                (open ? <CaretDown className={getSize(3)} /> : <CaretRight className={getSize(3)} />)}
+              {sub && (open ? <CaretDown className={getSize(3)} /> : <CaretRight className={getSize(3)} />)}
             </div>
-            <div>{item.title}</div>
+            <div style={{ lineHeight: 1.6 }}>{item.title}</div>
           </div>
         </div>
 
