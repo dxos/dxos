@@ -24,7 +24,7 @@ const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
   const children = useSelection(item.select().children()) ?? [];
 
   return (
-    <TreeItem nodeId={item.id} label={item.type ?? item.modelType} onClick={() => onSelect(item)}>
+    <TreeItem nodeId={item.id} label={item.type ?? item.modelType ?? 'undefined'} onClick={() => onSelect(item)}>
       {children.map((child) => (
         <ItemNode key={child.id} item={child} onSelect={onSelect} />
       ))}
