@@ -30,6 +30,8 @@ message Value {
 
     KeyValueObject object             = 20;
     Array array                       = 21;
+
+    Reference reference               = 30;
   }
 }
 
@@ -53,6 +55,13 @@ message KeyValue {
  */
 message KeyValueObject {
   repeated KeyValue properties        = 1;
+}
+
+/**
+ * Reference to an Item.
+ */
+message Reference {
+  string id                           = 1;
 }
 
 /**
