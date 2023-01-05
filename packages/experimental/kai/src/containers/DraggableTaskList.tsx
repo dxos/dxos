@@ -12,6 +12,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { id } from '@dxos/echo-schema';
 import { useReactor } from '@dxos/react-client';
 
+import { Button } from '../components';
 import { useSpace } from '../hooks';
 import { Task } from '../proto';
 import { TaskItem, NewTaskItem } from './TaskList';
@@ -112,9 +113,9 @@ export const DraggableTaskItem: FC<{
   return render(
     <div ref={setNodeRef} className='flex flex-1 ml-3' style={style}>
       <div className='pt-1'>
-        <button className='w-4' {...listeners} {...attributes}>
+        <Button className='w-4' {...listeners} {...attributes}>
           <DotsSixVertical />
-        </button>
+        </Button>
       </div>
 
       <TaskItem task={task} onEnter={onEnter} onDelete={onDelete} />

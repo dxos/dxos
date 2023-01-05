@@ -8,8 +8,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
 
-import { views, ContactList, Editor, ProjectGraph, ProjectList, Sidebar, TaskList } from '../../containers';
-import { SpaceContext, SpaceContextType } from '../../hooks';
+import { ContactList, Editor, ProjectGraph, ProjectList, Sidebar, TaskList } from '../../containers';
+import { AppView, SpaceContext, SpaceContextType, useOptions, viewConfig } from '../../hooks';
 
 const sidebarWidth = 200;
 
@@ -43,6 +43,10 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
   );
 };
 
+const ProjectsView: FC = () => {
+  return <ProjectList />;
+};
+
 const TasksView: FC = () => {
   return <TaskList />;
 };
@@ -64,9 +68,10 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
         <Sidebar />
       </div>
 
-      {view === 'blocks' && <BlocksView props={props} />}
-      {view === 'tasks' && <TasksView />}
-      {view === 'editor' && <EditorView />}
+      {view === AppView.CARDS && <BlocksView props={props} />}
+      {view === AppView.PROJECTS && <ProjectsView />}
+      {view === AppView.TASKS && <TasksView />}
+      {view === AppView.EDITOR && <EditorView />}
     </div>
   );
 };
@@ -76,13 +81,14 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
  */
 export const SpacePage = () => {
   const navigate = useNavigate();
+  const { views } = useOptions();
   const { spaceKey: currentSpaceKey, view } = useParams();
   const spaces = useSpaces();
   const [context, setContext] = useState<SpaceContextType | undefined>();
 
   useEffect(() => {
-    if (!view || views.findIndex(({ key }) => key === view) === -1) {
-      navigate(`/${currentSpaceKey}/${views[0].key}`);
+    if (!view || !viewConfig[view]) {
+      navigate(`/${currentSpaceKey}/${views[0]}`);
     }
   }, [view, currentSpaceKey]);
 

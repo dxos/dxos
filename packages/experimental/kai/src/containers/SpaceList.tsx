@@ -13,6 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
+import { Button } from '../components';
 import { useSpace } from '../hooks';
 
 export const SpaceList = () => {
@@ -70,9 +71,9 @@ export const SpaceList = () => {
           {space.key.truncate() === currentSpaceKey && (
             <div className='flex items-center'>
               <CopyToClipboard text={window.origin + '/' + url}>
-                <button>
+                <Button>
                   <ShareNetwork className={clsx(getSize(5), 'cursor-pointer')} />
-                </button>
+                </Button>
               </CopyToClipboard>
             </div>
           )}

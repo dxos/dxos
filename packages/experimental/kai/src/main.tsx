@@ -16,8 +16,9 @@ import { App } from './app';
 // TODO(burdon): Responsive Masonry (web/desktop/mobile). Multiple browsers.
 // TODO(burdon): Materialized links (referential integrity).
 // TODO(burdon): Cards (see kitchen sink).
-//  - https://cruip.com/demos/mosaic/?ref=highscore
 // TODO(burdon): Virtual table.
+//  - https://react-table-v7.tanstack.com
+//  - nhttps://bvaughn.github.io/react-virtualized/#/components/Masonry
 // TODO(burdon): PWA/Electron.
 // TODO(burdon): Super app (WeChat/Twitter) for IPFS: https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 

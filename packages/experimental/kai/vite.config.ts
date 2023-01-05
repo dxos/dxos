@@ -57,7 +57,7 @@ export default defineConfig({
 
   // TODO(burdon): Document.
   build: {
-    outDir: 'out/tasks',
+    outDir: 'out/kai',
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     }

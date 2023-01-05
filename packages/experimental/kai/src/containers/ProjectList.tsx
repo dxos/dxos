@@ -9,7 +9,7 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
-import { Card, Input, TableRow } from '../components';
+import { Card, Input, CardRow, Button } from '../components';
 import { useSpace } from '../hooks';
 import { Project, Task, createProject, createTask } from '../proto';
 import { DraggableTaskList } from './DraggableTaskList';
@@ -23,9 +23,9 @@ export const ProjectList: FC<{}> = () => {
   };
 
   const Menubar = () => (
-    <button onClick={handleCreate}>
+    <Button onClick={handleCreate}>
       <PlusCircle className={getSize(6)} />
-    </button>
+    </Button>
   );
 
   return (
@@ -75,9 +75,9 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
           value={project.title}
           onChange={(value) => (project.title = value)}
         />
-        <button className='mr-2 text-gray-500' onClick={handleGenerateTask}>
+        <Button className='mr-2 text-gray-500' onClick={handleGenerateTask}>
           <Plus className={getSize(6)} />
-        </button>
+        </Button>
       </div>
 
       {/* Tasks */}
@@ -100,7 +100,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
           <h2 className='pl-3 text-xs'>Team</h2>
           <div className='p-1 pt-1'>
             {project.team?.map((contact) => (
-              <TableRow key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
+              <CardRow key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />
             ))}
           </div>
         </div>

@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './views';
 export * from './ContactList';
 export * from './DraggableTaskList';
 export * from './Editor';

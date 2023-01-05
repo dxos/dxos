@@ -9,8 +9,8 @@ import { Client, fromHost } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { OptionsContext } from '../hooks';
-import { InitPage, SettingsPage, JoinPage, SpacePage } from './pages';
+import { AppView, OptionsContext } from '../hooks';
+import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
 
 /**
  * Main app routes.
@@ -71,11 +71,13 @@ export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
     return null;
   }
 
-  // TODO(burdon): Error boundary and indicator.
+  // TODO(burdon): Configure.
+  const defaultViews = [AppView.CARDS, AppView.PROJECTS, AppView.TASKS, AppView.EDITOR];
 
+  // TODO(burdon): Error boundary and indicator.
   return (
     <ClientProvider client={client}>
-      <OptionsContext.Provider value={{ debug }}>
+      <OptionsContext.Provider value={{ debug, views: defaultViews }}>
         <HashRouter>
           <Routes />
         </HashRouter>

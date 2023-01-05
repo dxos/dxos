@@ -9,7 +9,7 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, useReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
-import { Card, Input, TableRow } from '../components';
+import { Card, Input, CardRow, Button } from '../components';
 import { useSpace } from '../hooks';
 import { Address, Contact, createContact } from '../proto';
 
@@ -22,9 +22,9 @@ export const ContactList: FC<{}> = () => {
   };
 
   const Menubar = () => (
-    <button className='mr-2' onClick={handleCreate}>
+    <Button className='mr-2' onClick={handleCreate}>
       <PlusCircle className={getSize(6)} />
-    </button>
+    </Button>
   );
 
   return (
@@ -45,7 +45,7 @@ export const Person: FC<{ person: Contact }> = ({ person }) => {
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return render(
-    <TableRow
+    <CardRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6'>
           <User className={getSize(5)} />
@@ -65,6 +65,6 @@ export const Person: FC<{ person: Contact }> = ({ person }) => {
         {person.email && <div className='flex text-sm text-green-800'>{person.email}</div>}
         {person.address && <div className='flex text-sm text-gray-800'>{address(person.address)}</div>}
       </div>
-    </TableRow>
+    </CardRow>
   );
 };
