@@ -15,7 +15,7 @@ export type DeviceStateMachineParams = {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   onUpdate?: () => void;
-}
+};
 
 /**
  * Processes device invitation credentials.
@@ -29,11 +29,15 @@ export class DeviceStateMachine implements CredentialProcessor {
 
   // prettier-ignore
   constructor(
-    private readonly _params: DeviceStateMachineParams,
+    private readonly _params: DeviceStateMachineParams
   ) {}
 
   async process(credential: Credential) {
-    log('processing credential...', { identityKey: this._params.identityKey, deviceKey: this._params.deviceKey, credential });
+    log('processing credential...', {
+      identityKey: this._params.identityKey,
+      deviceKey: this._params.deviceKey,
+      credential
+    });
 
     // Save device keychain credential when processed by the space state machine.
     if (isValidAuthorizedDeviceCredential(credential, this._params.identityKey, this._params.deviceKey)) {

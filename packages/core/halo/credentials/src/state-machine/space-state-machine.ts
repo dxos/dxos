@@ -6,9 +6,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
-import { CredentialConsumer, CredentialProcessor } from '../processor/credential-processor';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
+import { CredentialConsumer, CredentialProcessor } from '../processor/credential-processor';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
 
@@ -31,7 +31,7 @@ export class SpaceStateMachine implements SpaceState {
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
-  private _credentialProcessors: CredentialConsumer<any>[] = []
+  private _credentialProcessors: CredentialConsumer<any>[] = [];
 
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
@@ -111,8 +111,8 @@ export class SpaceStateMachine implements SpaceState {
 
     this._credentials.push(credential);
 
-    for(const processor of this._credentialProcessors) {
-      if(processor._isReadyForLiveCredentials) {
+    for (const processor of this._credentialProcessors) {
+      if (processor._isReadyForLiveCredentials) {
         await processor._process(credential);
       }
     }
@@ -126,7 +126,7 @@ export class SpaceStateMachine implements SpaceState {
     const processor = new CredentialConsumer(
       handler,
       async () => {
-        for(const credential of this._credentials) {
+        for (const credential of this._credentials) {
           await processor._process(credential);
         }
         // NOTE: It is important to set this flag after immediately after processing existing credentials.
@@ -135,13 +135,12 @@ export class SpaceStateMachine implements SpaceState {
         processor._isReadyForLiveCredentials = true;
       },
       async () => {
-        this._credentialProcessors = this._credentialProcessors.filter(p => p !== processor);
+        this._credentialProcessors = this._credentialProcessors.filter((p) => p !== processor);
       }
     );
     this._credentialProcessors.push(processor);
     return processor;
   }
-
 
   private _canInviteNewMembers(key: PublicKey): boolean {
     return key.equals(this._spaceKey) || this._members.getRole(key) === SpaceMember.Role.ADMIN;

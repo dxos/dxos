@@ -1,6 +1,10 @@
-import { runInContextAsync } from "@dxos/async";
-import { Context } from "@dxos/context";
-import { Credential } from "@dxos/protocols/proto/dxos/halo/credentials";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { runInContextAsync } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export interface CredentialProcessor {
   process(credential: Credential): Promise<void>;
@@ -15,26 +19,26 @@ export class CredentialConsumer<T extends CredentialProcessor> {
    * NOTE: Setting this flag before all existing credentials are processed will cause them to be processed out of order.
    * Set externally.
    */
-  _isReadyForLiveCredentials: boolean = false;
+  _isReadyForLiveCredentials = false;
 
   constructor(
     public readonly processor: T,
     private readonly _onOpen: () => Promise<void>,
-    private readonly _onClose: () => Promise<void>,
-  ) { }
+    private readonly _onClose: () => Promise<void>
+  ) {}
 
   /**
    * @internal
    */
   async _process(credential: Credential) {
     await runInContextAsync(this._ctx, async () => {
-      await this.processor.process(credential)
-    })
+      await this.processor.process(credential);
+    });
   }
 
   async open() {
     if (this._ctx.disposed) {
-      throw new Error("CredentialProcessor is disposed");
+      throw new Error('CredentialProcessor is disposed');
     }
 
     await this._onOpen();

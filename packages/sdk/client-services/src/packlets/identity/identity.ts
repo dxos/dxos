@@ -59,15 +59,19 @@ export class Identity {
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
 
-    this._deviceStateMachine = this.space.spaceState.registerProcessor(new DeviceStateMachine({
-      identityKey: this.identityKey, 
-      deviceKey: this.deviceKey,
-      onUpdate: () => this.stateUpdate.emit()
-    }));
-    this._profileStateMachine = this.space.spaceState.registerProcessor(new ProfileStateMachine({
-      identityKey: this.identityKey, 
-      onUpdate: () => this.stateUpdate.emit()
-    }));
+    this._deviceStateMachine = this.space.spaceState.registerProcessor(
+      new DeviceStateMachine({
+        identityKey: this.identityKey,
+        deviceKey: this.deviceKey,
+        onUpdate: () => this.stateUpdate.emit()
+      })
+    );
+    this._profileStateMachine = this.space.spaceState.registerProcessor(
+      new ProfileStateMachine({
+        identityKey: this.identityKey,
+        onUpdate: () => this.stateUpdate.emit()
+      })
+    );
 
     this.authVerifier = new HaloAuthVerifier({
       trustedDevicesProvider: () => this.authorizedDeviceKeys,
