@@ -19,5 +19,5 @@ describe('Smoke test', function () {
       const isVisible = await this.page.isVisible(':has-text("initialized")');
       expect(isVisible).to.be.true;
     });
-  });
+  }).skipEnvironments('firefox'); // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
 });
