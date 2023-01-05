@@ -6,6 +6,6 @@ import { resources } from './src/translations';
 
 declare module 'react-i18next' {
   interface CustomTypeOptions {
-    resources: typeof resources['en-US']
+    resources: typeof resources['en-US'];
   }
 }

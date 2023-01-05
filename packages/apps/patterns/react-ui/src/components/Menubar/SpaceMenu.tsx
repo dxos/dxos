@@ -4,11 +4,10 @@
 
 import { Gear, UserPlus, UsersThree } from 'phosphor-react';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { Space } from '@dxos/client';
 import { useMembers } from '@dxos/react-client';
-import { Button, defaultInlineSeparator, getSize, Popover, mx, buttonStyles } from '@dxos/react-ui';
+import { Button, defaultInlineSeparator, getSize, Popover, mx, buttonStyles, useTranslation } from '@dxos/react-ui';
 
 export interface SpaceMenuProps {
   space: Space;

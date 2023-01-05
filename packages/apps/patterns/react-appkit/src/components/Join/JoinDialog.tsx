@@ -3,9 +3,8 @@
 //
 
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { Dialog, DialogProps } from '@dxos/react-ui';
+import { Dialog, DialogProps, useTranslation } from '@dxos/react-ui';
 
 import { JoinPanel, JoinPanelProps } from './JoinPanel';
 

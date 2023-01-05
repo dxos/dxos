@@ -5,9 +5,8 @@
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import { Check } from 'phosphor-react';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { Button, getSize } from '@dxos/react-ui';
+import { Button, getSize, useTranslation } from '@dxos/react-ui';
 
 export interface SpaceLinkProps {
   onClickGoToSpace?: () => void;

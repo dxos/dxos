@@ -3,23 +3,26 @@
 //
 
 import i18Next, { Resource } from 'i18next';
-import React, { PropsWithChildren, ReactNode, Suspense, useEffect, createContext, useContext } from 'react';
+import React, { PropsWithChildren, ReactNode, Suspense, useEffect, createContext } from 'react';
 import { initReactI18next, useTranslation } from 'react-i18next';
 
-import { Loading } from '@dxos/react-ui';
+import { Loading } from '../Loading';
 
-import * as enUS from './locales/en-US';
-
-const basicNS = 'uikit';
+const initialLng = 'en-US';
+const initialNs = 'dxos-common';
 
 export const resources = {
-  'en-US': enUS
+  [initialLng]: {
+    [initialNs]: {
+      'loading translations': 'Loading translations…'
+    }
+  }
 } as const;
 
 void i18Next.use(initReactI18next).init({
   resources,
-  lng: 'en-US',
-  defaultNS: basicNS,
+  lng: initialLng,
+  defaultNS: initialNs,
   interpolation: {
     escapeValue: false
   }
@@ -33,15 +36,13 @@ export interface TranslationsProviderProps {
 }
 
 const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
-  const { t: _t } = useTranslation(basicNS);
+  const { t: _t } = useTranslation(initialNs);
   return <>{children}</>;
 };
 
 export const TranslationsContext = createContext({
-  appNs: basicNS
+  appNs: initialNs
 });
-
-export const useTranslationsContext = () => useContext(TranslationsContext);
 
 export const TranslationsProvider = ({ fallback, resourceExtensions, children, appNs }: TranslationsProviderProps) => {
   useEffect(() => {
@@ -56,8 +57,8 @@ export const TranslationsProvider = ({ fallback, resourceExtensions, children, a
     }
   }, [resourceExtensions]);
   return (
-    <TranslationsContext.Provider value={{ appNs: appNs ?? basicNS }}>
-      <Suspense fallback={fallback ?? <Loading label={enUS[basicNS]['loading translations']} />}>
+    <TranslationsContext.Provider value={{ appNs: appNs ?? initialNs }}>
+      <Suspense fallback={fallback ?? <Loading label={resources[initialLng][initialNs]['loading translations']} />}>
         <TranslationsProviderLoaded>{children}</TranslationsProviderLoaded>
       </Suspense>
     </TranslationsContext.Provider>

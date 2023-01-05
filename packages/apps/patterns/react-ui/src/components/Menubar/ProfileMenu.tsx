@@ -4,11 +4,10 @@
 
 import { UserCircleGear } from 'phosphor-react';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { Profile as ProfileType } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
-import { Avatar, Button, getSize, Popover } from '@dxos/react-ui';
+import { Avatar, Button, getSize, Popover, useTranslation } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 export interface ProfileMenuProps {

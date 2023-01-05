@@ -551,12 +551,10 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       debug: ^4.3.3
-      i18next: ^21.10.0
       lodash.throttle: ^4.1.1
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
-      react-i18next: ^11.18.6
       storybook-dark-mode: ^1.1.2
       url-join: ^5.0.0
       vite: 3.2.5
@@ -571,9 +569,7 @@ importers:
       '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@react-hook/async': 3.1.1_react@18.2.0
       debug: 4.3.4
-      i18next: 21.10.0
       lodash.throttle: 4.1.1
-      react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
       url-join: 5.0.0
     devDependencies:
       '@types/debug': 4.1.7
@@ -1242,6 +1238,7 @@ importers:
       autoprefixer: ^10.4.12
       esbuild: ^0.15.1
       esbuild-style-plugin: ^1.6.0
+      i18next: ^21.10.0
       jdenticon: ^3.2.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
@@ -1249,6 +1246,7 @@ importers:
       rci: ^0.0.3
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-i18next: ^11.18.6
       storybook-dark-mode: ^1.1.2
       tailwind-merge: ^1.8.0
       tailwindcss: ^3.1.8
@@ -1272,10 +1270,12 @@ importers:
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
       alea: 1.0.1
       autoprefixer: 10.4.12_postcss@8.4.18
+      i18next: 21.10.0
       jdenticon: 3.2.0
       postcss: 8.4.18
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
+      react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
       tailwind-merge: 1.8.0
       tailwindcss: 3.1.8
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
@@ -11860,7 +11860,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       deepmerge: 4.2.2
@@ -11873,7 +11873,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@styled-system/color': 5.1.2
       '@styled-system/should-forward-prop': 5.1.5
       '@styled-system/space': 5.1.2
@@ -11888,7 +11888,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       '@theme-ui/parse-props': 0.14.7_gyryel6m34lsxtsejhafetjriq
       deepmerge: 4.2.2
@@ -11900,7 +11900,7 @@ packages:
     peerDependencies:
       '@emotion/react': ^11
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       csstype: 3.1.1
     dev: true
 
@@ -11911,7 +11911,7 @@ packages:
       '@mdx-js/react': ^1 || ^2
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -11924,7 +11924,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       react: 18.2.0
     dev: true
@@ -11935,7 +11935,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/color-modes': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -33927,7 +33927,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

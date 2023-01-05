@@ -3,10 +3,9 @@
 //
 
 import React, { ComponentProps, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { Invitation } from '@dxos/client';
-import { strongShimmer, getSize, mx } from '@dxos/react-ui';
+import { strongShimmer, getSize, mx, useTranslation } from '@dxos/react-ui';
 
 const pip = mx('rounded-full flex-none', getSize(2));
 const stripe = mx('rounded-full grow', getSize(2));

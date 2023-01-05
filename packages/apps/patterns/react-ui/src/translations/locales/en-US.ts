@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export const uikit = {
+export const os = {
   'current app name': 'This app',
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',

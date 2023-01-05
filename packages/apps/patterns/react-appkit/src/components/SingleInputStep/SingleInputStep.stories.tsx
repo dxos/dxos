@@ -4,11 +4,9 @@
 
 import '@dxosTheme';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { Group, mx } from '@dxos/react-ui';
+import { Group, mx, templateForComponent, useTranslation } from '@dxos/react-ui';
 
-import { templateForComponent } from '../../testing';
 import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
 
 export default {

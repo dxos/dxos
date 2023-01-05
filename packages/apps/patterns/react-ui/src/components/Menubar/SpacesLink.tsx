@@ -4,9 +4,8 @@
 
 import { CaretLeft, Planet } from 'phosphor-react';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { Button, getSize, Tooltip } from '@dxos/react-ui';
+import { Button, getSize, Tooltip, useTranslation } from '@dxos/react-ui';
 
 export interface SpacesLinkProps {
   onClickGoToSpaces?: () => void;
