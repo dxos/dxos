@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Skip code coverage upload for forks to avoid passing CI secrets to forks.
+if [ -z $CODECOV_TOKEN ]; then
+  exit 0
+fi
+
 # This file is referenced from the .circleci/config.yml
 # https://docs.codecov.com/docs/codecov-uploader
 
