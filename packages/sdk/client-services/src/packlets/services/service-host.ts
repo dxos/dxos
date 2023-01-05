@@ -104,7 +104,7 @@ export class ClientServicesHost implements ClientServicesProvider {
         () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
       ),
 
-      SpacesService: new SpacesServiceImpl(),
+      SpacesService: new SpacesServiceImpl(this._serviceContext.spaceManager),
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
