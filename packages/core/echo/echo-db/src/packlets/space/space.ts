@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Database, DatabaseBackend } from '../database';
@@ -187,9 +186,11 @@ export class Space {
   private async _openDataPipeline() {
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
+    this._dataPipelineController = this._dataPipelineControllerProvider();
+
     // Create pipeline.
     {
-      this._dataPipeline = new Pipeline(new Timeframe());
+      this._dataPipeline = new Pipeline(this._dataPipelineController.getStartTimeframe());
       this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.spaceState.feeds.values()) {
         await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
@@ -197,8 +198,6 @@ export class Space {
     }
 
     await this._dataPipeline.start();
-
-    this._dataPipelineController = this._dataPipelineControllerProvider();
     await this._dataPipelineController.open(this._dataPipeline);
   }
 

@@ -142,6 +142,7 @@ export class EchoProxy implements Echo {
     for (const space of this._spaces.values()) {
       await space.destroy();
     }
+    this._spaces.clear();
 
     await this._subscriptions.clear();
     this._invitationProxy = undefined;
