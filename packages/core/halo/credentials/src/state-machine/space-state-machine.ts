@@ -6,6 +6,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
+import { CredentialConsumer, CredentialProcessor } from '../processor/credential-processor';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
@@ -16,6 +17,8 @@ export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
   readonly feeds: ReadonlyMap<PublicKey, FeedInfo>;
   readonly credentials: Credential[];
+
+  registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T>;
 }
 
 /**
@@ -28,6 +31,7 @@ export class SpaceStateMachine implements SpaceState {
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
+  private _credentialProcessors: CredentialConsumer<any>[] = []
 
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
@@ -36,7 +40,7 @@ export class SpaceStateMachine implements SpaceState {
   // prettier-ignore
   constructor(
     private readonly _spaceKey: PublicKey
-  ) {}
+  ) { }
 
   get genesisCredential(): Credential | undefined {
     return this._genesisCredential;
@@ -106,10 +110,38 @@ export class SpaceStateMachine implements SpaceState {
     }
 
     this._credentials.push(credential);
+
+    for(const processor of this._credentialProcessors) {
+      if(processor._isReadyForLiveCredentials) {
+        await processor._process(credential);
+      }
+    }
+
     await this.onCredentialProcessed.callIfSet(credential);
 
     return true;
   }
+
+  public registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T> {
+    const processor = new CredentialConsumer(
+      handler,
+      async () => {
+        for(const credential of this._credentials) {
+          await processor._process(credential);
+        }
+        // NOTE: It is important to set this flag after immediately after processing existing credentials.
+        // Otherwise, we might miss some credentials.
+        // Having an `await` statement between the end of the loop and setting the flag would cause a race condition.
+        processor._isReadyForLiveCredentials = true;
+      },
+      async () => {
+        this._credentialProcessors = this._credentialProcessors.filter(p => p !== processor);
+      }
+    );
+    this._credentialProcessors.push(processor);
+    return processor;
+  }
+
 
   private _canInviteNewMembers(key: PublicKey): boolean {
     return key.equals(this._spaceKey) || this._members.getRole(key) === SpaceMember.Role.ADMIN;
