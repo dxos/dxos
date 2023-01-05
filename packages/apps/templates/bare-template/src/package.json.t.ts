@@ -21,7 +21,7 @@ export namespace Features {
     devDependencies: {
       '@types/react': '^18.0.21',
       '@types/react-dom': '^18.0.6',
-      '@vitejs/plugin-react': '^2.0.1'
+      '@vitejs/plugin-react': '^3.0.1'
     }
   });
 
@@ -36,9 +36,9 @@ export namespace Features {
 
   export const tailwind = (): Partial<PackageJson> => ({
     devDependencies: {
-      tailwindcss: '^3.2.4',
-      autoprefixer: '^10.4.13',
-      postcss: '^8.4.20'
+      tailwindcss: '^3.1.8',
+      autoprefixer: '^10.4.12',
+      postcss: '^8.4.17'
     }
   });
 
@@ -107,21 +107,21 @@ export default defineTemplate(
       ...input
     };
 
-    const packageJson = merge(
-      [
-        base(context),
-        react && Features.react(context),
-        pwa && Features.pwa(),
-        dxosUi && Features.dxosUi(context),
-        tailwind && Features.tailwind(),
-        storybook && Features.storybook(),
-        monorepo && {
-          pnpm: {
-            patchedDependencies
-          }
+    const [first, ...rest] = [
+      base(context),
+      react && Features.react(context),
+      pwa && Features.pwa(),
+      dxosUi && Features.dxosUi(context),
+      tailwind && Features.tailwind(),
+      storybook && Features.storybook(),
+      monorepo && {
+        pnpm: {
+          patchedDependencies
         }
-      ].filter(Boolean)
-    );
+      }
+    ].filter(Boolean);
+
+    const packageJson = merge(first, ...rest);
 
     const result = JSON.stringify(packageJson, null, 2);
     return result;

@@ -3,7 +3,7 @@
 //
 
 import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import config from './config.t';
 
 export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
   const { react } = input;

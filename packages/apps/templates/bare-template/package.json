@@ -4,13 +4,17 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "main": "dist/src/config.t.js",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "@dxos/plate": "workspace:*",
     "lodash.merge": "^4.6.2",
     "types-package-json": "^2.0.39"
   },
   "devDependencies": {
-    "@types/lodash.merge": "^4.6.7",
+    "@types/lodash.merge": "^4.6.6",
     "typescript": "^4.8.4"
   }
 }

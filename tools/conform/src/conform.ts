@@ -7,6 +7,7 @@ import path from 'path';
 import readDir from 'recursive-readdir';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import chalk from 'chalk';
 
 import { executeDirectoryTemplate, catFiles } from '@dxos/plate';
 
@@ -43,7 +44,8 @@ const main = async () => {
         console.log(results.length, 'results');
         const savePromises = results.flat().map(async (file) => {
           const result = await file.save();
-          console.log(result ? 'wrote' : 'skipped', file.shortDescription(process.cwd()));
+          const msg = file.shortDescription(process.cwd());
+          console.log(result ? 'wrote' : 'skipped', result ? msg : chalk.gray(msg));
         });
         await Promise.all(savePromises);
         console.log(packages.length, 'packages conformed');

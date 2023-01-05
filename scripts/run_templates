@@ -1,8 +1,11 @@
 #!/usr/bin/env sh
 set -euxo pipefail
 
-rm -rf packages/apps/samples/bare
-plate packages/apps/templates/bare-template --output packages/apps/samples/bare --name @dxos/bare --interactive false
+rm -rf packages/apps/samples/bare-sample
+plate packages/apps/templates/bare-template/src --output packages/apps/samples/bare-sample --name @dxos/bare-sample --interactive false
 
-rm -rf packages/apps/samples/hello
-plate packages/apps/templates/hello-template --output packages/apps/samples/hello --name @dxos/hello --interactive false
+rm -rf packages/apps/samples/hello-sample
+plate packages/apps/templates/hello-template/src --output packages/apps/samples/hello-sample --name @dxos/hello-sample --interactive false
+
+rm -rf packages/apps/samples/tasks-sample
+plate packages/apps/templates/tasks-template/src --output packages/apps/samples/tasks-sample --name @dxos/tasks-sample --interactive false

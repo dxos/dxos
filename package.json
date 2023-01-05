@@ -20,6 +20,7 @@
     "install-playwright": "playwright install",
     "lint": "nx run-many --target=lint --fix",
     "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
+    "new": "new",
     "nx": "nx",
     "prepare": "husky install",
     "run:templates": "scripts/run_templates",

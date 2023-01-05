@@ -1,6 +1,13 @@
 import { defineConfig, z } from '@dxos/plate';
 import { isDxosMonorepoSync } from './utils.t/getDxosRepoInfo';
 
+export * from './utils.t/getDxosRepoInfo';
+export * from './utils.t/nodePackage';
+
+import appTsx from './src/App.tsx.t';
+import indexHtml from './index.html.t';
+export { appTsx, indexHtml };
+
 export default defineConfig({
   exclude: ['project.json', 'tsconfig.plate.json'],
   inputShape: z.object({

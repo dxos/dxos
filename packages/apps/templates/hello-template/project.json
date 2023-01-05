@@ -1,0 +1,29 @@
+{
+  "sourceRoot": "packages/apps/templates/hello-template/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/templates/hello-template/src/index.ts",
+        "outputPath": "packages/apps/templates/hello-template/dist",
+        "tsConfig": "packages/apps/templates/hello-template/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/templates/hello-template/src/**/*.{ts,js,tsx,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}
