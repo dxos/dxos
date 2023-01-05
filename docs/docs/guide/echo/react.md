@@ -79,7 +79,7 @@ createRoot(document.body).render(<App />);
 The following are react hooks which ensure the reactivity of the underlying data sources and re-render consuming components when the data changes. Use all of these in a `<ClientProvider />` context.
 
 :::apidoc[@dxos/react-client.useClient]
-### [useClient()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L32)
+### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L32)
 
 Hook returning instance of DXOS client.
 Requires ClientContext to be set via ClientProvider.
@@ -90,7 +90,7 @@ Arguments: none
 :::
 
 :::apidoc[@dxos/react-client.useSpace]
-### [useSpace(\[spaceKey\])](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
+### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
 
 Get a specific Space.
 Requires ClientContext to be set via ClientProvider.
@@ -103,7 +103,7 @@ Arguments:
 :::
 
 :::apidoc[@dxos/react-client.useSelection]
-### [useSelection(selection, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L20)
+### [useSelection(selection, deps)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L20)
 
 Hook to generate values from a selection using a selector function.
 

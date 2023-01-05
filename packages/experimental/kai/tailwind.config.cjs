@@ -13,6 +13,7 @@ module.exports = {
     './src/**/*.{js,jsx,ts,tsx}'
   ],
 
+  // https://tailwindcss.com/docs/scroll-margin#customizing-your-theme
   theme: {},
 
   // https://tailwindcss.com/docs/plugins

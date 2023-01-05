@@ -19,7 +19,6 @@ import { createTask, Task } from '../proto';
  * Sortable task list.
  * https://docs.dndkit.com/presets/sortable
  */
-// TODO(burdon): Reuse in Project.
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
   completed = undefined,
   readonly = false,
@@ -76,8 +75,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   );
 
   return (
-    <Card title={title} className='bg-teal-400' menubar={!readonly && <Menubar />}>
-      <div className='flex flex-col flex-1 overflow-y-scroll'>
+    <Card title={title} fade className='bg-teal-400' menubar={!readonly && <Menubar />}>
+      <div className='flex flex-col flex-1 overflow-y-scroll scrollbar-thin'>
         <div className={'mt-2'}>
           {tasks?.map((task) => (
             <TaskItem
@@ -94,7 +93,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
       </div>
 
       {saving && (
-        <div className='flex justify-end p-1 text-red-500'>
+        <div className='absolute bottom-0 right-0 z-50 p-3 animate-spin text-red-600'>
           <Spinner />
         </div>
       )}

@@ -28,7 +28,7 @@ export const ContactList: FC<{}> = () => {
   );
 
   return (
-    <Card title='Contacts' className='bg-blue-400' menubar={<Menubar />}>
+    <Card title='Contacts' fade scrollbar className='bg-blue-400' menubar={<Menubar />}>
       <div className='mt-2'>
         {contacts.map((contact) => (
           <div key={contact[id]} className='border-b'>
