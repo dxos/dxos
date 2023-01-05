@@ -3,7 +3,7 @@
 //
 
 import clsx from 'clsx';
-import { Bug, PlusCircle, Gear, Robot, WifiHigh, WifiSlash } from 'phosphor-react';
+import { Bug, PlusCircle, Gear, Robot, Trash, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -29,18 +29,21 @@ export const Sidebar = () => {
     navigate(`/${spaceKey}/${view}`);
   };
 
-  const handleSettings = () => {
-    navigate('/settings');
-  };
-
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     navigate(`/${space.key.truncate()}`);
   };
 
+  const handleSettings = () => {
+    navigate('/settings');
+  };
+
   const handleGenerateData = async () => {
     await generator?.generate();
   };
+
+  // TODO(burdon): Clear database.
+  const handleReset = () => {};
 
   const handleToggleConnection = async () => {
     switch (connectionState) {
@@ -98,6 +101,9 @@ export const Sidebar = () => {
         </button>
         <button className='mr-2' title='Generate data' onClick={handleGenerateData}>
           <Robot className={getSize(6)} />
+        </button>
+        <button className='mr-2' title='Reset store' onClick={handleReset}>
+          <Trash className={getSize(6)} />
         </button>
         <button className='mr-2' title='Toggle connection.' onClick={handleToggleConnection}>
           {connectionState === ConnectionState.ONLINE ? (

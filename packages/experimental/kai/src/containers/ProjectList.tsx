@@ -55,7 +55,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
     }
   };
 
-  // TODO(burdon): Implement splice.
+  // TODO(burdon): Pass in Task1, Task2.
   const handleDrag = (active: number, over: number) => {
     const task1 = project.tasks[active];
     const task2 = project.tasks[over];

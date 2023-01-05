@@ -20,13 +20,16 @@ const isValidKey = (key: string | symbol) =>
     key === 'toJSON'
   );
 
+// TODO(burdon): Change to underlying item.deleted property.
+export const DELETED = '__deleted';
+
 /**
  * Base class for generated document types and dynamic objects.
  */
 // TODO(burdon): Support immutable objects?
 export class DocumentBase extends EchoObject<ObjectModel> {
   /**
-   * Pending values before commited to model.
+   * Pending values before committed to model.
    * @internal
    */
   private _uninitialized?: Record<keyof any, any> = {};
@@ -58,7 +61,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   /** Deletion. */
   get [deleted](): boolean {
-    return this[base]._get('@deleted') ?? false;
+    return this[base]._get(DELETED) ?? false;
   }
 
   /**
