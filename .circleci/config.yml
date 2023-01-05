@@ -6,7 +6,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.0
+  nx: nrwl/nx@1.6.1
 
 aliases:
   - &docker_image
@@ -100,7 +100,6 @@ jobs:
       # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
       # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       - run:
-          name: Bundle Apps
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
@@ -109,9 +108,9 @@ jobs:
       - *store_test_results
 
   #
-  # Deploy applications.
+  # Publish applications.
   #
-  deploy:
+  publish:
     docker:
       - *docker_image
     steps:
@@ -120,14 +119,14 @@ jobs:
       - run: pnpm install
       - *cache_save
       - run: pnpm nx build cli
-      - run: Deploy Apps
-        command: ./.circleci/scripts/publish.sh
-        environment:
-          NODE_ENV: production
-          NODE_OPTIONS: --max_old_space_size=4096
+      - run:
+          command: ./.circleci/scripts/publish.sh
+          environment:
+            NODE_ENV: production
+            NODE_OPTIONS: --max_old_space_size=4096
 
 workflows:
-  check:
+  default:
     jobs:
       - check:
           context:
@@ -138,7 +137,7 @@ workflows:
 
   deploy:
     jobs:
-      - deploy:
+      - publish:
           filters:
             branches:
               only:
@@ -147,3 +146,5 @@ workflows:
                 - staging
           context:
             - Github
+
+# VS Code Extension Version: 1.5.1
