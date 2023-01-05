@@ -28,7 +28,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
           return {
             key: space.key,
             isOpen: space.isOpen,
-            timeframe: spaceMetadata!.latestTimeframe!,
+            timeframe: spaceMetadata?.latestTimeframe,
             genesisFeed: space.genesisFeedKey,
             controlFeed: space.controlFeedKey,
             dataFeed: space.dataFeedKey
