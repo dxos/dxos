@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Loading } from '@@dxos/react-components';
 import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import type { Item, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
-import { Loading } from '@dxos/react-ui';
 import type { TextModel } from '@dxos/text-model';
 
 export const SpacePage = () => {

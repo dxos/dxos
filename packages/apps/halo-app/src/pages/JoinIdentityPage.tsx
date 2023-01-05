@@ -30,7 +30,7 @@ const JoinIdentityPage = () => {
 
   return (
     <main className='max-is-lg mli-auto pli-7 mbs-7'>
-      <Heading>{t('join identity label', { ns: 'uikit' })}</Heading>
+      <Heading>{t('join identity label', { ns: 'appkit' })}</Heading>
       <JoinPanel
         initialInvitationCode={invitationParam ?? undefined}
         parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}

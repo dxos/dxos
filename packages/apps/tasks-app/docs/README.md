@@ -184,9 +184,7 @@ dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-appkit --> dxos/react-uikit
-dxos/react-uikit --> dxos/react-client
-dxos/react-uikit --> dxos/react-ui
+dxos/react-appkit --> dxos/react-ui
 dxos/react-appkit --> dxos/telemetry
 dxos/telemetry --> dxos/sentry
 dxos/tasks-app --> dxos/react-list

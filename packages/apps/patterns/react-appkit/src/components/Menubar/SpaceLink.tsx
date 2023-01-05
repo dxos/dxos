@@ -13,7 +13,7 @@ export interface SpaceLinkProps {
 }
 
 export const SpaceLink = ({ onClickGoToSpace }: SpaceLinkProps) => {
-  const { t } = useTranslation('uikit');
+  const { t } = useTranslation('appkit');
   return (
     <ToolbarButtonItem asChild>
       <Button compact className='pointer-events-auto flex gap-1 pli-2' onClick={onClickGoToSpace}>

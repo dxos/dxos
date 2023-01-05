@@ -18,7 +18,7 @@ const ContactsPage = () => {
         actions={
           <Button variant='primary' className='grow flex gap-1'>
             <Plus className={getSize(5)} />
-            {t('add contact label', { ns: 'uikit' })}
+            {t('add contact label', { ns: 'appkit' })}
           </Button>
         }
       />

@@ -87,7 +87,7 @@ const LockPage = () => {
           className='w-full'
           onClick={() => window.open('https://github.com/dxos/dxos', '_blank')}
         >
-          {t('generic help label', { ns: 'uikit' })}
+          {t('generic help label', { ns: 'appkit' })}
         </Button>
       </div>
     </main>

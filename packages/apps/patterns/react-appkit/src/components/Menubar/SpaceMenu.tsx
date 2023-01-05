@@ -15,7 +15,7 @@ export interface SpaceMenuProps {
 }
 
 export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
-  const { t } = useTranslation('uikit');
+  const { t } = useTranslation('appkit');
   const members = useMembers(space.key);
 
   return (

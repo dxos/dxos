@@ -99,8 +99,7 @@ Now you can use Tailwind utility classnames in your project.
 
 ## Set up the provider
 
-In order for the project to render correctly, wrap your app with `<UiKitProvider/>` if your project uses `react-uikit`,
-or `<UiProvider/>` if your project only uses this package. Don’t use both, since the former already includes the latter.
+In order for the project to render correctly, wrap your app with `<UiProvider/>`.
 
 ## Set up theming
 

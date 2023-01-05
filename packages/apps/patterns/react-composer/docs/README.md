@@ -178,9 +178,8 @@ dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-composer --> dxos/react-uikit
-dxos/react-uikit --> dxos/react-client
-dxos/react-uikit --> dxos/react-ui
+dxos/react-composer --> dxos/react-ui
+dxos/react-ui --> dxos/react-client
 dxos/react-composer --> dxos/vite-plugin
 dxos/vite-plugin --> dxos/config
 ```

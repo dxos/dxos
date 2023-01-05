@@ -23,7 +23,7 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
     tab?.focus();
   };
   const { profile, onClickManageProfile = defaultManageProfile } = props;
-  const { t } = useTranslation('uikit');
+  const { t } = useTranslation('appkit');
   return (
     <Popover
       openTrigger={

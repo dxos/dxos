@@ -10,7 +10,7 @@ import { Group, mx, templateForComponent, useTranslation } from '@dxos/react-ui'
 import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
 
 export default {
-  title: 'react-uikit/SingleInputStep',
+  title: 'react-appkit/SingleInputStep',
   component: SingleInputStep,
   argTypes: {
     onClickBack: { action: 'back' },

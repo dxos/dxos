@@ -10,7 +10,7 @@ import { Group, mx, useTranslation, templateForComponent } from '@dxos/react-ui'
 import { AuthChoices, AuthChoicesProps } from './AuthChoices';
 
 export default {
-  title: 'react-uikit/AuthChoices',
+  title: 'react-appkit/AuthChoices',
   component: AuthChoices,
   argTypes: {
     onCreate: { action: 'create' },

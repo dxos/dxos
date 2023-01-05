@@ -96,7 +96,7 @@ const ListLoaded = ({ space, list, listItems: propsListItems }: ListLoadedProps)
 };
 
 export const List = ({ spaceKey, itemId }: ListProps) => {
-  const { t } = useTranslation('uikit');
+  const { t } = useTranslation('appkit');
 
   const space = useSpace(spaceKey);
   const list = (useSelection(space?.database.select({ id: itemId })) ?? [])[0];

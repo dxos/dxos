@@ -55,7 +55,7 @@ export const ManageSpacePage = ({
       <HeadingWithActions
         heading={{
           level: 2,
-          children: t('space members label', { ns: 'uikit' })
+          children: t('space members label', { ns: 'appkit' })
         }}
         actions={
           <>

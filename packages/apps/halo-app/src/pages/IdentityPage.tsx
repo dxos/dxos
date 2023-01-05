@@ -43,7 +43,7 @@ const IdentityPage = () => {
         slots={{ root: { className: defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' }) } }}
       />
       <Input
-        label={t('displayName label', { ns: 'uikit' })}
+        label={t('displayName label', { ns: 'appkit' })}
         placeholder={humanize(profileHex)}
         initialValue={profile?.displayName}
         onChange={onChangeDisplayName}
@@ -66,7 +66,7 @@ const IdentityPage = () => {
             {telemetryDisabled ? t('enable telemetry label') : t('disable telemetry label')}
           </Button>
         }
-        cancelTrigger={<Button>{t('cancel label', { ns: 'uikit' })}</Button>}
+        cancelTrigger={<Button>{t('cancel label', { ns: 'appkit' })}</Button>}
         confirmTrigger={
           <Button
             onClick={() => {
@@ -99,7 +99,7 @@ const IdentityPage = () => {
         destructiveConfirmInputProps={{
           label: t('confirm reset device label', { confirmString })
         }}
-        cancelTrigger={<Button>{t('cancel label', { ns: 'uikit' })}</Button>}
+        cancelTrigger={<Button>{t('cancel label', { ns: 'appkit' })}</Button>}
         confirmTrigger={
           <Button
             onClick={async () => {

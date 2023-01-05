@@ -1,4 +1,9 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { defineTemplate, renderSlots, text, Imports } from '@dxos/plate';
+
 import config from '../config.t';
 
 export default defineTemplate(
@@ -52,7 +57,7 @@ export default defineTemplate(
 // } from '@dxos/react-appkit';
 // import { ClientProvider, useConfig, useSelection } from '@dxos/react-client';
 // import { List, LIST_TYPE } from '@dxos/react-list';
-// import { Loading, UiKitProvider, useTranslation } from '@dxos/react-uikit';
+// import { Loading, UiKitProvider, useTranslation } from '@dxos/react-ui';
 
 // import translationResources from './translations';
 

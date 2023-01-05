@@ -39,12 +39,12 @@ const RecoverIdentityPage = () => {
 
   return (
     <main className='max-is-5xl mli-auto pli-7 mbs-7'>
-      <Heading>{t('recover identity label', { ns: 'uikit' })}</Heading>
+      <Heading>{t('recover identity label', { ns: 'appkit' })}</Heading>
       <SingleInputStep
         {...{
           pending,
-          inputLabel: t('seed phrase label', { ns: 'uikit' }),
-          inputPlaceholder: t('seed phrase placeholder', { ns: 'uikit' }),
+          inputLabel: t('seed phrase label', { ns: 'appkit' }),
+          inputPlaceholder: t('seed phrase placeholder', { ns: 'appkit' }),
           onChange: setSeedphrase,
           onNext,
           onBack: () => history.back()

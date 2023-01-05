@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { mx } from '@@dxos/react-components';
 import React, { ComponentProps } from 'react';
-
-import { mx } from '@dxos/react-ui';
 
 export const Main = (props: ComponentProps<'main'>) => {
   const { children, className, ...rest } = props;

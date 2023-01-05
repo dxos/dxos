@@ -52,7 +52,7 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
         ]
       })}
       {...(variant === 'offlineReady' && {
-        closeTrigger: <Button>{t('confirm label', { ns: 'uikit' })}</Button>
+        closeTrigger: <Button>{t('confirm label', { ns: 'appkit' })}</Button>
       })}
     />
   );

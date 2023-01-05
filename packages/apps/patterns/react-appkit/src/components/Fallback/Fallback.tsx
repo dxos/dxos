@@ -16,6 +16,6 @@ export const Fallback = ({ message }: { message: string }) => (
 );
 
 export const GenericFallback = () => {
-  const { t } = useTranslation('uikit');
+  const { t } = useTranslation('appkit');
   return <Fallback message={t('generic loading label')} />;
 };

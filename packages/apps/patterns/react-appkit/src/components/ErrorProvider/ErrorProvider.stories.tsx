@@ -11,7 +11,7 @@ import { Button } from '@dxos/react-ui';
 import { ErrorProvider } from './ErrorProvider';
 
 export default {
-  title: 'react-uikit/ErrorProvider',
+  title: 'react-appkit/ErrorProvider',
   component: ErrorProvider
 };
 

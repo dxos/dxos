@@ -1,6 +1,6 @@
-# @dxos/react-uikit
+# @dxos/react-ui
 
-A React component library for DXOS
+A React component library for DXOS’s OS experiences
 
 ## Dependency Graph
 
@@ -17,8 +17,6 @@ flowchart LR
 
 subgraph sdk [sdk]
   style sdk fill:transparent
-  dxos/react-uikit("@dxos/react-uikit"):::root
-  click dxos/react-uikit "dxos/dxos/tree/main/packages/sdk/react-uikit/docs"
   dxos/client("@dxos/client"):::def
   click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs"
   dxos/client-services("@dxos/client-services"):::def
@@ -166,10 +164,8 @@ dxos/client-services --> dxos/text-model
 dxos/text-model --> dxos/echo-db
 dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
-dxos/react-uikit --> dxos/react-client
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-uikit --> dxos/react-ui
 ```
 
 ## Dependencies

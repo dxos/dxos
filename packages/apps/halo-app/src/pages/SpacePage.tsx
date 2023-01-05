@@ -23,7 +23,7 @@ const SpacePage = () => {
 
   return (
     <>
-      <Heading level={2}>{t('space members label', { ns: 'uikit' })}</Heading>
+      <Heading level={2}>{t('space members label', { ns: 'appkit' })}</Heading>
       <ProfileList profiles={memberProfiles} />
     </>
   );

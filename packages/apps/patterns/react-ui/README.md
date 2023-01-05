@@ -1,11 +1,11 @@
-# @dxos/react-uikit
+# @dxos/react-ui
 
-A React component library for DXOS
+A React component library for DXOS’s OS experiences
 
 ## Installation
 
 ```bash
-pnpm i @dxos/react-uikit
+pnpm i @dxos/react-ui
 ```
 
 ## DXOS Resources

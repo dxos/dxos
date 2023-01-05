@@ -45,8 +45,8 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
-  dxos/react-ui("@dxos/react-ui"):::def
-  click dxos/react-ui "dxos/dxos/tree/main/packages/common/react-ui/docs"
+  @dxos/react-components("@@dxos/react-components"):::def
+  click @dxos/react-components "dxos/dxos/tree/main/packages/common/react-ui/docs"
   dxos/sentry("@dxos/sentry"):::def
   click dxos/sentry "dxos/dxos/tree/main/packages/common/sentry/docs"
   dxos/telemetry("@dxos/telemetry"):::def
@@ -191,9 +191,7 @@ dxos/metagraph --> dxos/config
 dxos/halo-app --> dxos/react-appkit
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-appkit --> dxos/react-uikit
-dxos/react-uikit --> dxos/react-client
-dxos/react-uikit --> dxos/react-ui
+dxos/react-ui --> dxos/react-client
 dxos/react-appkit --> dxos/telemetry
 dxos/telemetry --> dxos/sentry
 ```

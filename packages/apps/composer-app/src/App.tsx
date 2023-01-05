@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { UiProvider } from '@@dxos/react-components';
 import { ErrorBoundary } from '@sentry/react';
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
@@ -20,7 +21,6 @@ import {
   StatusIndicator2
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { UiProvider } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';

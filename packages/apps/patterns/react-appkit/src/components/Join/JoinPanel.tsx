@@ -68,8 +68,8 @@ const JoinStep1 = ({
     <SingleInputStep
       {...{
         pending: status === Invitation.State.CONNECTING,
-        inputLabel: t('invitation code label', { ns: 'uikit' }),
-        inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
+        inputLabel: t('invitation code label', { ns: 'appkit' }),
+        inputPlaceholder: t('invitation code placeholder', { ns: 'appkit' }),
         inputProps: {
           initialValue: invitationCode,
           slots: { input: { autoFocus: true, className: 'text-center' } },
@@ -108,7 +108,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
     <SingleInputStep
       {...{
         pending,
-        inputLabel: t('invitation secret label', { ns: 'uikit' }),
+        inputLabel: t('invitation secret label', { ns: 'appkit' }),
         inputProps: {
           size: 'pin',
           length: pinLength,

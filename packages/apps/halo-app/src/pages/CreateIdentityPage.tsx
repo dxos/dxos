@@ -39,12 +39,12 @@ const CreateIdentityPage = () => {
 
   return (
     <main className='max-is-lg mli-auto pli-7 mbs-7'>
-      <Heading>{t('create identity label', { ns: 'uikit' })}</Heading>
+      <Heading>{t('create identity label', { ns: 'appkit' })}</Heading>
       <SingleInputStep
         {...{
           pending,
-          inputLabel: t('displayName label', { ns: 'uikit' }),
-          inputPlaceholder: t('displayName placeholder', { ns: 'uikit' }),
+          inputLabel: t('displayName label', { ns: 'appkit' }),
+          inputPlaceholder: t('displayName placeholder', { ns: 'appkit' }),
           onChange: setDisplayName,
           onNext,
           onBack: () => history.back()
