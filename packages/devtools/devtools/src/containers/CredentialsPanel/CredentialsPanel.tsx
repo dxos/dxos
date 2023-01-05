@@ -5,22 +5,25 @@
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useClientServices, useDevtools, useStream } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
 import { KeySelect, Panel } from '../../components';
 
 export const CredentialsPanel = () => {
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
+
   const devtoolsHost = useDevtools();
   if (!devtoolsHost) {
     return null;
   }
   const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
 
-  const { messages } = useStream(() => devtoolsHost.subscribeToCredentialMessages({ spaceKey: selectedSpaceKey }), {}, [
-    selectedSpaceKey
-  ]);
+  const services = useClientServices();
+  if (!services) {
+    return null;
+  }
+  const credentials = useStream(() => services.SpacesService.queryCredentials({ selectedSpaceKey }), {}) ?? [];
 
   return (
     <Panel
@@ -33,7 +36,7 @@ export const CredentialsPanel = () => {
         />
       }
     >
-      <JsonTreeView size='small' data={messages} />
+      <JsonTreeView size='small' data={credentials} />
     </Panel>
   );
 };
