@@ -23,7 +23,7 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/dx
 2. Then to build the extension:
 
 ```
-pnpm -w nx build devtools-extension
+pnpm -w nx bundle devtools-extension
 ```
 
 ### Chromium
