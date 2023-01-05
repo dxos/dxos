@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-composer",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
