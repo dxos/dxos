@@ -11,10 +11,10 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/async"
+      "path": "../../../common/codec-protobuf"
     },
     {
-      "path": "../../../common/codec-protobuf"
+      "path": "../../../common/context"
     },
     {
       "path": "../../../common/keys"

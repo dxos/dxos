@@ -43,10 +43,11 @@ export default class Publish extends BaseCommand {
       assert(moduleConfig.values.package, 'Missing package definition in dx.yml');
 
       for (const module of moduleConfig.values.package!.modules ?? []) {
-        this.log(`Building module ${module.name}...`);
-
         await build({ verbose }, { log: (...args) => this.log(...args), module });
-        const cid = await publish({ verbose }, { module, config: this.clientConfig });
+        const cid = await publish(
+          { verbose },
+          { log: (...args) => this.log(...args), module, config: this.clientConfig }
+        );
         module.bundle = cid.bytes;
 
         if (version) {
@@ -71,10 +72,8 @@ export default class Publish extends BaseCommand {
         });
 
         result?.modules?.forEach(({ module, urls }) => {
-          urls?.length && this.log(`Module ${module.name} published to ${urls.join(', ')}`);
+          urls?.length && this.log(`Module ${module.name} published to ${urls.join(', ')}.`);
         });
-
-        this.log('Published to KUBE.');
       });
     } catch (err: any) {
       captureException(err);

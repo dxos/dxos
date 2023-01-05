@@ -16,7 +16,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
         executor: '@nrwl/linter:eslint',
         options: {
           format: 'unix',
-          lintFilePatterns: [`${outputDirectoryRelativeToMonorepoRoot}/**/*.{ts,js}?(x)`]
+          lintFilePatterns: [`${outputDirectoryRelativeToMonorepoRoot}/**/*.{ts,js,tsx,jsx}`]
         },
         outputs: ['{options.outputFile}']
       }

@@ -11,6 +11,7 @@ import { schema } from '@dxos/protocols';
 import { EchoMetadata, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { IdentityRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Directory } from '@dxos/random-access-storage';
+import { Timeframe } from '@dxos/timeframe';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -134,6 +135,22 @@ export class MetadataStore {
     );
 
     (this._metadata.spaces ??= []).push(record);
+    await this._save();
+  }
+
+  async setSpaceLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+
+    space.latestTimeframe = timeframe;
+    await this._save();
+  }
+
+  async setSpaceSnapshot(spaceKey: PublicKey, snapshot: string) {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+
+    space.snapshot = snapshot;
     await this._save();
   }
 }

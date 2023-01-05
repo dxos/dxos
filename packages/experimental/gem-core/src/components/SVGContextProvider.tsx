@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 import React, { ReactNode, useEffect, useMemo } from 'react';
-import useResizeObserver from 'use-resize-observer';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { SVGContext } from '../context';
 import { SVGContextDef } from '../hooks';
@@ -22,7 +22,7 @@ export interface SVGCOntextProviderProps {
  * @constructor
  */
 export const SVGContextProvider = ({ context: provided, children }: SVGCOntextProviderProps) => {
-  const { ref: resizeRef, width, height } = useResizeObserver<HTMLDivElement>();
+  const { ref: resizeRef, width, height } = useResizeDetector();
   const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
 
   useEffect(() => {

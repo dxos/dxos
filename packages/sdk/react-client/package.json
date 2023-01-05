@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.1.17",
+  "version": "0.1.20",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,6 +18,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",

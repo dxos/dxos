@@ -5,7 +5,7 @@
 import { Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
 import { exec } from 'node:child_process';
-import { mkdir, copyFile, rm } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cwd } from 'process';
 import tempy from 'tempy';
@@ -47,13 +47,18 @@ export default class Create extends BaseCommand {
       description: 'Template to use when creating the project.',
       default: 'hello',
       options: APP_TEMPLATES
+    }),
+    interactive: Flags.boolean({
+      char: 'i',
+      description: 'Customize app template options via interactive prompt',
+      default: false
     })
   };
 
   async run(): Promise<any> {
     const { args, flags } = await this.parse(Create);
     const { name } = args;
-    const { tag = `v${this.config.version}`, template } = flags;
+    const { tag = `v${this.config.version}`, template, interactive } = flags;
 
     const tmpDirectory = tempy.directory({ prefix: `dxos-app-create-${name}` });
     const templateDirectory = `${tmpDirectory}/packages/apps/templates/${template}-template`;
@@ -65,32 +70,60 @@ export default class Create extends BaseCommand {
     if (outputDirExists && !isOutputEmpty) {
       this.error(`Output directory ${outputDirectory} is not empty`, { exit: 1 });
     }
-
+    try {
+      await promisify(exec)('which pnpm');
+    } catch {
+      this.error('pnpm not found. Please run "npm i -g pnpm" first.', { exit: 1 });
+    }
     try {
       this.log('Cloning template from Github...');
       await promisify(exec)(`
         git clone --filter=blob:none --no-checkout git@github.com:dxos/dxos.git ${tmpDirectory} &&
           cd ${tmpDirectory} &&
-          git sparse-checkout set --cone tsconfig.json patches packages/apps/templates/${template}-template &&
-          git checkout ${tag}
+          git sparse-checkout set --cone tsconfig.json patches ${
+            template !== 'bare' ? 'packages/apps/templates/bare-template ' : ''
+          }packages/apps/templates/${template}-template &&
+          git checkout ${tag} && mkdir node_modules && pnpm link ${require
+        .resolve('@dxos/plate')
+        .slice(0, -'/dist/lib/node/index.cjs'.length)}
       `);
 
-      this.log('Preparing template...');
+      // this.log('Preparing template...');
 
       // Copy vite patch.
-      await mkdir(`${templateDirectory}/patches`);
-      await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
+      // await mkdir(`${templateDirectory}/patches`);
+      // await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
 
       this.log('Creating app...');
 
+      // TODO: find a way to import this type from the real template
+      type AppTemplateInput = {
+        name: string;
+        react: boolean;
+        monorepo: boolean;
+        dxosUi: boolean;
+        storybook: boolean;
+        pwa: boolean;
+      };
+
       // TS templating.
-      const result = await executeDirectoryTemplate({
+      const result = await executeDirectoryTemplate<AppTemplateInput>({
         templateDirectory,
         outputDirectory,
-        input: {
-          monorepo: false,
-          name
-        }
+        interactive,
+        input: interactive
+          ? {
+              monorepo: false,
+              name
+            }
+          : {
+              monorepo: false,
+              name,
+              react: true,
+              dxosUi: true,
+              storybook: false,
+              pwa: true
+            }
       });
 
       await Promise.all(result.map((file) => file.save()));
@@ -98,6 +131,7 @@ export default class Create extends BaseCommand {
       this.log(`App created. To get started run the following commands:\n\n  cd ${name}\n  pnpm install\n  pnpm serve`);
     } catch (err: any) {
       this.log(`Unable to create: ${err.message}`);
+      this.log(err?.stack);
       this.error(err, { exit: 1 });
     } finally {
       await rm(tmpDirectory, { recursive: true, force: true });

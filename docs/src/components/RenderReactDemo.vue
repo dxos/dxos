@@ -6,6 +6,9 @@
   import { createRoot } from 'react-dom/client';
   import { defineComponent } from 'vue';
 
+  import { fromHost } from '@dxos/client';
+  import { ClientProvider } from '@dxos/react-client';
+
   export default defineComponent({
     props: ['target', 'demo'],
     async setup(props) {
@@ -18,7 +21,13 @@
     },
     created() {
       createRoot(document.getElementById(this.target))
-        .render(createElement(this.component, {}, null));
+        .render(
+          createElement(
+            ClientProvider,
+            { services: (config) => fromHost(config) }, 
+            createElement(this.component, {}, null)
+          )
+        );
     }
   });
 </script>

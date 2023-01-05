@@ -18,8 +18,9 @@ const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
 describe('space/space', () => {
   test('crates a database with object model', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
     const agent = await builder.createPeer();
-    const space = await agent.createSpace();
+    const [space, db] = await agent.createSpace();
 
     await space.open();
     expect(space.isOpen).toBeTruthy();
@@ -45,11 +46,11 @@ describe('space/space', () => {
     }
 
     {
-      assert(space.database);
-      const item1 = await space.database.createItem<ObjectModel>({
+      assert(db.database);
+      const item1 = await db.database.createItem<ObjectModel>({
         type: 'dxos.example'
       });
-      const item2 = await space.database.createItem<ObjectModel>({
+      const item2 = await db.database.createItem<ObjectModel>({
         type: 'dxos.example'
       });
 
@@ -59,7 +60,7 @@ describe('space/space', () => {
       expect(item1.model.get('key_1')).toEqual('value_1');
       expect(item2.model.get('key_2')).toEqual('value_2');
 
-      expect(space.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2);
+      expect(db.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2);
     }
 
     await builder.close();
@@ -68,13 +69,14 @@ describe('space/space', () => {
 
   test('two spaces replicating', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
 
     //
     // Agent 1
     //
-    const [agent1, space1] = await run(async () => {
+    const [agent1, space1, db1] = await run(async () => {
       const agent = await builder.createPeer();
-      const space = await agent.createSpace(agent.identityKey);
+      const [space, db] = await agent.createSpace(agent.identityKey);
 
       await space.open();
       expect(space.isOpen).toBeTruthy();
@@ -98,22 +100,22 @@ describe('space/space', () => {
         await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
       }
 
-      return [agent, space];
+      return [agent, space, db];
     });
 
     //
     // Agent 2
     //
-    const [agent2, space2] = await run(async () => {
+    const [agent2, space2, db2] = await run(async () => {
       // NOTE: The genesisKey would be passed as part of the invitation.
       const agent = await builder.createPeer();
-      const space = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey);
+      const [space, db] = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey);
 
       await space.open();
       expect(space.isOpen).toBeTruthy();
       afterTest(() => space.close());
 
-      return [agent, space];
+      return [agent, space, db];
     });
 
     expect(agent1).toBeDefined();
@@ -153,10 +155,10 @@ describe('space/space', () => {
 
     {
       // Check item replicated from 1 => 2.
-      const item1 = await space1.database!.createItem({
+      const item1 = await db1.database!.createItem({
         type: 'dxos.example.1'
       });
-      const item2 = await space2.database!.waitForItem({
+      const item2 = await db2.database!.waitForItem({
         type: 'dxos.example.1'
       });
       expect(item1.id).toEqual(item2.id);
@@ -164,10 +166,10 @@ describe('space/space', () => {
 
     {
       // Check item replicated from 2 => 1.
-      const item1 = await space2.database!.createItem({
+      const item1 = await db2.database!.createItem({
         type: 'dxos.example.2'
       });
-      const item2 = await space1.database!.waitForItem({
+      const item2 = await db1.database!.waitForItem({
         type: 'dxos.example.2'
       });
       expect(item1.id).toEqual(item2.id);

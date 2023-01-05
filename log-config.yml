@@ -7,12 +7,22 @@ filter:
   - warn
   - info
   # - debug
+  - space-invitations-handler.ts:debug
+  - entity:debug
+  - database:debug
+  - service-host:debug
+  - service:debug
+  - data:debug
+  - identity:debug
+  # - test:debug
+  # - debug
   # - swarm.ts:debug
   # - swarm:debug
   # - peer:debug
   # - connection:debug
   # - test:debug
-  - framer:debug
+  # - client-services:debug
+  # - framer:debug
   # - feed-wrapper:debug
   # - service-host:debug
   # - client:debug

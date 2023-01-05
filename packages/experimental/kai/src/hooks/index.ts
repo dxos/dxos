@@ -2,4 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './use-test-items';
+export * from './useOptions';
+export * from './useSpace';

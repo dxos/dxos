@@ -14,6 +14,7 @@ import {
 } from '@dxos/client-services';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
+import { DatabaseRouter } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -35,6 +36,8 @@ export interface Echo {
   getSpace(spaceKey: PublicKey): Space | undefined;
   querySpaces(): ResultSet<Space>;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+
+  dbRouter: DatabaseRouter;
 }
 
 export class EchoProxy implements Echo {
@@ -42,6 +45,8 @@ export class EchoProxy implements Echo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event();
   private readonly _spacesInitialized = new Event<PublicKey>();
+
+  public readonly dbRouter = new DatabaseRouter();
 
   private _invitationProxy?: SpaceInvitationsProxy;
   private _destroying = false; // TODO(burdon): Standardize enum.
@@ -105,6 +110,7 @@ export class EchoProxy implements Echo {
             this._serviceProvider,
             this._modelFactory,
             space,
+            this.dbRouter,
             this._haloProxy.profile!.identityKey
           );
 
@@ -136,6 +142,7 @@ export class EchoProxy implements Echo {
     for (const space of this._spaces.values()) {
       await space.destroy();
     }
+    this._spaces.clear();
 
     await this._subscriptions.clear();
     this._invitationProxy = undefined;

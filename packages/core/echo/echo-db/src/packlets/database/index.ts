@@ -13,3 +13,4 @@ export * from './link';
 export * from './entity';
 export * from './selection';
 export * from './database';
+export * from './snapshot-store';

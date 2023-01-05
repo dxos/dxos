@@ -9,12 +9,14 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 
 import { SpaceServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
+import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
@@ -31,6 +33,7 @@ type ClientServicesHostParams = {
   config: Config;
   modelFactory?: ModelFactory;
   networkManager: NetworkManager;
+  storage?: Storage;
 };
 
 /**
@@ -43,16 +46,19 @@ export class ClientServicesHost implements ClientServicesProvider {
   private readonly _config: Config;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
+  private _storage: Storage;
 
   constructor({
     config,
     modelFactory = createDefaultModelFactory(),
     // TODO(burdon): Create ApolloLink abstraction (see Client).
-    networkManager
+    networkManager,
+    storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage
   }: ClientServicesHostParams) {
     this._config = config;
     this._modelFactory = modelFactory;
     this._networkManager = networkManager;
+    this._storage = storage;
   }
 
   get descriptors() {
@@ -64,11 +70,10 @@ export class ClientServicesHost implements ClientServicesProvider {
   }
 
   async open() {
-    await this._initialize();
-    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
-    log('opening...', { deviceKey });
+    log('opening...');
     await this._initialize();
     await this._serviceContext.open();
+    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
   }
 
@@ -81,11 +86,8 @@ export class ClientServicesHost implements ClientServicesProvider {
 
   // TODO(burdon): Move into open.
   async _initialize() {
-    // TODO(dmaretskyi): Remove keyStorage.
-    const { storage } = createStorageObjects(this._config.get('runtime.client.storage', {})!);
-
     // TODO(burdon): Break into components.
-    this._serviceContext = new ServiceContext(storage, this._networkManager, this._modelFactory);
+    this._serviceContext = new ServiceContext(this._storage, this._networkManager, this._modelFactory);
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
@@ -99,12 +101,14 @@ export class ClientServicesHost implements ClientServicesProvider {
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
         this._serviceContext.identityManager,
         () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
-        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized'))
+        () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
       ),
 
       SpacesService: new SpacesServiceImpl(),
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
+
+      NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager),
 
       // TODO(burdon): Move to new protobuf definitions.
       ProfileService: new ProfileServiceImpl(this._serviceContext),

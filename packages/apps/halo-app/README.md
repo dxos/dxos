@@ -1,29 +1,16 @@
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-# DXOS Wallet
+# @dxos/halo-app
 
-NOTE: Most app code was copied from @dxos/react-appkit in the Braneframe repo.
-=======
-# HALO App
+HALO PWA
 
-## Development
+## DXOS Resources
 
-```bash
-pnpm -w nx run-many --target=build
-pnpm -w nx run halo-app:serve
-```
->>>>>>> Stashed changes
-=======
-# DXOS Halo
-=======
-# HALO App
->>>>>>> Stashed changes
+- [Website](https://dxos.org)
+- [Developer Documentation](https://docs.dxos.org)
+- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with `#dxos`
+- Tag us on twitter [`@dxos_org`](https://twitter.com/dxos_org)
 
-## Development
+## Contributions
 
-```bash
-pnpm -w nx run-many --target=build
-pnpm -w nx run halo-app:serve
-```
->>>>>>> main
+Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs). If you would like to contribute to the design and implementation of DXOS, please [start with the contributor's guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
+
+License: [MIT](./LICENSE) Copyright 2022 © DXOS

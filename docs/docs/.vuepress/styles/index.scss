@@ -2,6 +2,10 @@
 @import './tailwind-colors.scss';
 @import './palette.scss';
 
+.page {
+  transition: none;
+}
+
 html[data-theme=light] {
   th, td {
     border-color: $zinc-200;
@@ -36,6 +40,13 @@ div[class^="language-"] {
 
 html[data-theme=dark] div[class^="language-"] {
   background-color: $zinc-900;
+}
+
+div[class^="language-error"] code {
+  color: $red-600;
+  html[data-theme=dark] & {
+    color: $red-400;
+  }
 }
 
 #message-container .message {
@@ -79,7 +90,7 @@ code {
 }
 
 html[data-theme=light] {
-  div[class*=language-] > button.copy-code-button:not(.pure) {
+  div[class*=language-] > button.copy:not(.pure) {
     background-color: $zinc-300;
     box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
     &:hover {
@@ -89,7 +100,7 @@ html[data-theme=light] {
 }
 
 html[data-theme=dark] {
-  div[class*=language-] > button.copy-code-button:not(.pure) {
+  div[class*=language-] > button.copy:not(.pure) {
     background-color: $zinc-700;
     .copy-icon {
       color: $zinc-400;
@@ -129,3 +140,4 @@ html[data-theme=light] .home.project .hero {
 html[data-theme=dark] .custom-container.note {
   background-color: darken($zinc-800, 3%);
 }
+

@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.1.20](https://github.com/dxos/dxos/compare/v0.1.19...v0.1.20) (2022-12-16)
+
+
+### Features
+
+* **devtools:** Add Members Panel ([#2147](https://github.com/dxos/dxos/issues/2147)) ([150915c](https://github.com/dxos/dxos/commit/150915c727ee94b7aae489a059b069bcb81b303c))
+
+
+### Bug Fixes
+
+* fix usage of null items in tasks-app ([#2159](https://github.com/dxos/dxos/issues/2159)) ([af04235](https://github.com/dxos/dxos/commit/af0423568e2034d8a855ae818c5e5ac36e2be100))
+
+## [0.1.19](https://github.com/dxos/dxos/compare/v0.1.18...v0.1.19) (2022-12-16)
+
+
+### Features
+
+* Auth extension ([#2112](https://github.com/dxos/dxos/issues/2112)) ([621ff00](https://github.com/dxos/dxos/commit/621ff00f50bac35a5d02b786e9634a91c1e3f2b6))
+* **cli:** add staging config ([#2119](https://github.com/dxos/dxos/issues/2119)) ([ce013cc](https://github.com/dxos/dxos/commit/ce013ccd5c3bed306fe09cf3a72037b859f89e3c))
+* Enable auth for HALO spaces ([#2156](https://github.com/dxos/dxos/issues/2156)) ([54991d7](https://github.com/dxos/dxos/commit/54991d71f3c6c7dd02ad8b5ba1cc5f933b6bf2a8))
+* **presence:** Integration into ClientServices ([#2146](https://github.com/dxos/dxos/issues/2146)) ([419d470](https://github.com/dxos/dxos/commit/419d4708376d4098a03b478d6622572b84c0262f))
+* Refactor database & space management ([#2151](https://github.com/dxos/dxos/issues/2151)) ([363e987](https://github.com/dxos/dxos/commit/363e987bf89f29b6bfd160f051371a1760725152))
+* **space-protocol:** Integrate Teleport Presence ([#2095](https://github.com/dxos/dxos/issues/2095)) ([838e8ac](https://github.com/dxos/dxos/commit/838e8aca5f3faed0a47e112d03df8ae7372b1d06))
+
+
+### Bug Fixes
+
+* **cli:** better logging on app publish ([#2145](https://github.com/dxos/dxos/issues/2145)) ([cb5f900](https://github.com/dxos/dxos/commit/cb5f900260423aaa4db929dc4b148b0b42cff7b0))
+* **cli:** Update default config ([#2117](https://github.com/dxos/dxos/issues/2117)) ([f18afb1](https://github.com/dxos/dxos/commit/f18afb13e6575260318eb240346337155ff0ef96))
+* more review feedback ([#2155](https://github.com/dxos/dxos/issues/2155)) ([4425ea4](https://github.com/dxos/dxos/commit/4425ea4933b6a52866be7ae2bf07e0dcb2ef8aa8))
+* review feedback 1 ([#2154](https://github.com/dxos/dxos/issues/2154)) ([6a8546e](https://github.com/dxos/dxos/commit/6a8546ecf0f20b81284720d28743235406a37eb7))
+
+## [0.1.18](https://github.com/dxos/dxos/compare/v0.1.17...v0.1.18) (2022-12-14)
+
+
+### Features
+
+* guide docs ([#2093](https://github.com/dxos/dxos/issues/2093)) ([b48ecfc](https://github.com/dxos/dxos/commit/b48ecfcd73ebc9bc9006a332f7577913325fdc83))
+* improved readmes and docs ([#2106](https://github.com/dxos/dxos/issues/2106)) ([827ebad](https://github.com/dxos/dxos/commit/827ebad88c4c582da596c8bde450deaef6426547))
+* Remove old mesh protocol ([#2099](https://github.com/dxos/dxos/issues/2099)) ([f8ccbde](https://github.com/dxos/dxos/commit/f8ccbde75a8aa70c9dfb60e02c01bbf92e039987))
+* Simplify stack for synchronized ([#2096](https://github.com/dxos/dxos/issues/2096)) ([a3be59c](https://github.com/dxos/dxos/commit/a3be59c984b8e6f533e50b8de8087ae92b7e8ea1))
+* start of kube cli extension. ([#2036](https://github.com/dxos/dxos/issues/2036)) ([71810da](https://github.com/dxos/dxos/commit/71810da8b81cfd48f3168c86410e4cebf496555e))
+* Tree of user stories ([#2078](https://github.com/dxos/dxos/issues/2078)) ([089f9a1](https://github.com/dxos/dxos/commit/089f9a11cbd04319a7d4e7c2354f19f892c1185d))
+* upgrade templates ([#2108](https://github.com/dxos/dxos/issues/2108)) ([ce45c99](https://github.com/dxos/dxos/commit/ce45c992227b0572928ca5c7896da44183fa89b6))
+
+
+### Bug Fixes
+
+* apidoc to not complain about git in CI ([#2098](https://github.com/dxos/dxos/issues/2098)) ([b20b606](https://github.com/dxos/dxos/commit/b20b60695d96caf5133508f522c966ad79906b75))
+* bugs in docs ([#2101](https://github.com/dxos/dxos/issues/2101)) ([2214aab](https://github.com/dxos/dxos/commit/2214aab0a7cb4bf9fb587506d7b5e444684a5321))
+* Dual iframes on fresh app ([#2094](https://github.com/dxos/dxos/issues/2094)) ([42b8b59](https://github.com/dxos/dxos/commit/42b8b59faef2c4a6438726d873d20dc5cc86fbec))
+* fixed dx app new flow outside of monorepo ([#2110](https://github.com/dxos/dxos/issues/2110)) ([fbea7a9](https://github.com/dxos/dxos/commit/fbea7a9bf4be08e57224149709ca3fe844517cf6))
+* lint on tasks app ([#2105](https://github.com/dxos/dxos/issues/2105)) ([a5312bb](https://github.com/dxos/dxos/commit/a5312bbb144ce7b4463d5c925d65e2b9be32e5ad))
+
 ## [0.1.17](https://github.com/dxos/dxos/compare/v0.1.16...v0.1.17) (2022-12-10)
 
 

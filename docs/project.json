@@ -73,6 +73,15 @@
         "docs/docs/.vuepress/dist"
       ]
     },
+    "serve": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "serve"
+      }
+    },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"
     },

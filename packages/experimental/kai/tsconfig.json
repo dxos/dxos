@@ -17,13 +17,43 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
+      "path": "../../apps/patterns/react-composer"
+    },
+    {
+      "path": "../../apps/patterns/react-list"
+    },
+    {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/react-ui"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/client"
@@ -35,7 +65,16 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-uikit"
+    },
+    {
       "path": "../client-testing"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
     }
   ]
 }

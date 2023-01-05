@@ -13,6 +13,7 @@ import {
   CreateSnapshotRequest,
   GetSpaceDetailsRequest,
   Space,
+  SpaceMember,
   SpaceDetails,
   SpaceService,
   SetSpaceStateRequest,
@@ -97,17 +98,22 @@ export class SpaceServiceImpl implements SpaceService {
       const subscriptions = new EventSubscriptions();
 
       const onUpdate = () => {
-        const spaces = Array.from(this.serviceContext.spaceManager!.spaces.values()).map(
+        const spaces = Array.from(this.serviceContext.dataSpaceManager!.spaces.values()).map(
           (space): Space => ({
             publicKey: space.key,
             isOpen: true,
             isActive: true,
-            members: Array.from(space.spaceState.members.values()).map((member) => ({
+            members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
               identityKey: member.key,
               profile: {
                 identityKey: member.key,
                 displayName: member.assertion.profile?.displayName ?? humanize(member.key)
-              }
+              },
+              presence:
+                this.serviceContext.identityManager.identity?.identityKey.equals(member.key) ||
+                space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+                  ? SpaceMember.PresenceState.ONLINE
+                  : SpaceMember.PresenceState.OFFLINE
             }))
           })
         );
@@ -116,23 +122,25 @@ export class SpaceServiceImpl implements SpaceService {
       };
 
       setTimeout(async () => {
-        if (!this.serviceContext.spaceManager) {
+        if (!this.serviceContext.dataSpaceManager) {
           next({ spaces: [] });
         }
 
         await this.serviceContext.initialized.wait();
 
         subscriptions.add(
-          this.serviceContext.spaceManager!.updated.on(() => {
-            this.serviceContext.spaceManager!.spaces.forEach((space) => {
+          this.serviceContext.dataSpaceManager!.updated.on(() => {
+            this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
               subscriptions.add(space.stateUpdate.on(onUpdate));
+              subscriptions.add(space.presence.updated.on(onUpdate));
             });
             onUpdate();
           })
         );
 
-        this.serviceContext.spaceManager!.spaces.forEach((space) => {
+        this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
           subscriptions.add(space.stateUpdate.on(onUpdate));
+          subscriptions.add(space.presence.updated.on(onUpdate));
         });
 
         onUpdate();
@@ -152,7 +160,7 @@ export class SpaceServiceImpl implements SpaceService {
 
   async createSpace(): Promise<Space> {
     await this.serviceContext.initialized.wait();
-    const space = await this.serviceContext.spaceManager!.createSpace();
+    const space = await this.serviceContext.dataSpaceManager!.createSpace();
     return {
       publicKey: space.key,
       isOpen: true,

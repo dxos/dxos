@@ -1,6 +1,6 @@
 {
   "name": "@dxos/presenter",
-  "version": "0.1.17",
+  "version": "0.1.20",
   "private": true,
   "description": "Slide presentations using Vite/Tailwind.",
   "homepage": "https://dxos.org",
@@ -32,6 +32,7 @@
     "react-router-dom": "^6.3.0"
   },
   "devDependencies": {
+    "@dxos/config": "workspace:*",
     "@mdx-js/rollup": "^2.1.5",
     "@react-pdf/renderer": "^3.0.1",
     "@tailwindcss/aspect-ratio": "^0.4.2",

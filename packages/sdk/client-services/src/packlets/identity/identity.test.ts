@@ -4,8 +4,15 @@
 
 import expect from 'expect';
 
-import { CredentialGenerator, verifyCredential, createCredentialSignerWithKey } from '@dxos/credentials';
-import { valueEncoding, Database, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from '@dxos/echo-db';
+import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
+import {
+  MOCK_AUTH_PROVIDER,
+  MOCK_AUTH_VERIFIER,
+  NoopDataPipelineController,
+  Space,
+  SpaceProtocol,
+  valueEncoding
+} from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -14,13 +21,10 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from '@dxos/test';
+import { Presence } from '@dxos/teleport-extension-presence';
+import { afterTest, describe, test } from '@dxos/test';
 
-import { createDefaultModelFactory } from '../services';
-import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
-
-const modelFactory = createDefaultModelFactory();
 
 describe('identity/identity', () => {
   test('create', async () => {
@@ -49,14 +53,20 @@ describe('identity/identity', () => {
 
     const protocol = new SpaceProtocol({
       topic: spaceKey,
-      identity: {
-        peerKey: identityKey,
-        credentialProvider: createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
-        credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
+      swarmIdentity: {
+        peerKey: deviceKey,
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory
+      }),
+      presence: new Presence({
+        localPeerId: deviceKey,
+        announceInterval: 30,
+        offlineTimeout: 200,
+        identityKey
       })
     });
 
@@ -67,7 +77,7 @@ describe('identity/identity', () => {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-      databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
+      dataPipelineControllerProvider: () => new NoopDataPipelineController()
     });
 
     const identity = new Identity({
@@ -120,6 +130,7 @@ describe('identity/identity', () => {
     const signalContext = new MemorySignalManagerContext();
 
     let spaceKey: PublicKey;
+    let identityKey: PublicKey;
     let genesisFeedKey: PublicKey;
     let identity1: Identity;
     let identity2: Identity;
@@ -129,7 +140,7 @@ describe('identity/identity', () => {
     //
     {
       const keyring = new Keyring();
-      const identityKey = await keyring.createKey();
+      identityKey = await keyring.createKey();
       const deviceKey = await keyring.createKey();
       spaceKey = await keyring.createKey();
 
@@ -155,7 +166,7 @@ describe('identity/identity', () => {
 
       const protocol = new SpaceProtocol({
         topic: spaceKey,
-        identity: {
+        swarmIdentity: {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
@@ -163,6 +174,12 @@ describe('identity/identity', () => {
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
+        }),
+        presence: new Presence({
+          localPeerId: deviceKey,
+          announceInterval: 30,
+          offlineTimeout: 200,
+          identityKey
         })
       });
 
@@ -173,7 +190,7 @@ describe('identity/identity', () => {
         controlFeed,
         dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
+        dataPipelineControllerProvider: () => new NoopDataPipelineController()
       });
 
       const identity = (identity1 = new Identity({
@@ -236,7 +253,7 @@ describe('identity/identity', () => {
 
       const protocol = new SpaceProtocol({
         topic: spaceKey,
-        identity: {
+        swarmIdentity: {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
@@ -244,6 +261,12 @@ describe('identity/identity', () => {
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
+        }),
+        presence: new Presence({
+          localPeerId: deviceKey,
+          announceInterval: 30,
+          offlineTimeout: 200,
+          identityKey
         })
       });
 
@@ -254,7 +277,7 @@ describe('identity/identity', () => {
         controlFeed,
         dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
+        dataPipelineControllerProvider: () => new NoopDataPipelineController()
       });
 
       const identity = (identity2 = new Identity({

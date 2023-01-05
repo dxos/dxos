@@ -2,53 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { Client, ClientServicesProvider, fromHost, PublicKey } from '@dxos/client';
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-import { AgentSpec, Command, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
+import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
 
-export type StateMachineFactory = (id: string) => AgentStateMachine;
-
-/**
- * Base class for custom state machines.
- */
-export abstract class AgentStateMachine {
-  public _agent?: AgentContext;
-
-  get agent(): AgentContext {
-    assert(this._agent);
-    return this._agent;
-  }
-
-  setContext(agent: AgentContext) {
-    assert(agent);
-    this._agent = agent;
-    return this;
-  }
-
-  abstract processCommand(command: Command): Promise<void>;
-}
-
-/**
- * Dummy state machine.
- */
-export class DummyStateMachine extends AgentStateMachine {
-  public count = 0;
-  override async processCommand(command: Command) {
-    this.count++;
-  }
-}
-
-/**
- * Interface for state machine to acess agent state.
- * E.g., client, stats, etc.
- */
-export interface AgentContext {
-  client: Client;
-}
+import { AgentStateMachine, AgentContext, DummyStateMachine } from './statemachine';
 
 export type AgentParams = {
   config: ConfigProto;
@@ -111,7 +73,6 @@ export class Agent implements AgentContext {
   }
 
   async start() {
-    log('starting...', { id: this.id });
     if (this._running) {
       return;
     }
@@ -120,16 +81,13 @@ export class Agent implements AgentContext {
       await this.runSequence(this._spec.startSequence);
     }
 
-    // TODO(burdon): Config sequentially or randomly run test sequences.
-    //  - Config interval.
-    setTimeout(async () => {
-      for (const sequence of this._spec.testSequences ?? []) {
-        await this.runSequence(sequence);
-        this.sequenceComplete.emit(sequence);
-      }
-    });
+    log.info('Starting test sequences...');
+    for (const sequence of this._spec.testSequences ?? []) {
+      await this.runSequence(sequence);
+      this.sequenceComplete.emit(sequence);
+    }
+    log.info('Test sequences complete.');
 
-    log('started', { id: this.id });
     this._running = true;
   }
 
@@ -149,7 +107,7 @@ export class Agent implements AgentContext {
 
   async runSequence(sequence: CommandSequence) {
     for (const command of sequence.commands ?? []) {
-      log('processing', { command });
+      log.info('processing: ', { command });
       await this._stateMachine.processCommand(command);
     }
   }

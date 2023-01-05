@@ -1,0 +1,45 @@
+diff --git a/src/executors/tsc/tsc.impl.js b/src/executors/tsc/tsc.impl.js
+index 160a75e458a71ce0bd7bbb2cffe3d163604607c5..e8977baac33e617562e172b4436a6751979603c8 100644
+--- a/src/executors/tsc/tsc.impl.js
++++ b/src/executors/tsc/tsc.impl.js
+@@ -8,10 +8,8 @@ const copy_assets_handler_1 = require("../../utils/assets/copy-assets-handler");
+ const check_dependencies_1 = require("../../utils/check-dependencies");
+ const compiler_helper_dependency_1 = require("../../utils/compiler-helper-dependency");
+ const inline_1 = require("../../utils/inline");
+-const update_package_json_1 = require("../../utils/package-json/update-package-json");
+ const compile_typescript_files_1 = require("../../utils/typescript/compile-typescript-files");
+ const load_ts_transformers_1 = require("../../utils/typescript/load-ts-transformers");
+-const watch_for_single_file_changes_1 = require("../../utils/watch-for-single-file-changes");
+ function normalizeOptions(options, contextRoot, sourceRoot, projectRoot) {
+     const outputPath = (0, path_1.join)(contextRoot, options.outputPath);
+     const rootDir = options.rootDir
+@@ -83,16 +81,13 @@ function tscExecutor(_options, context) {
+         }
+         const typescriptCompilation = (0, compile_typescript_files_1.compileTypeScriptFiles)(options, tsCompilationOptions, () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+             yield assetHandler.processAllAssetsOnce();
+-            (0, update_package_json_1.updatePackageJson)(options, context, target, dependencies);
+             (0, inline_1.postProcessInlinedDependencies)(tsCompilationOptions.outputPath, tsCompilationOptions.projectRoot, inlineProjectGraph);
+         }));
+         if (options.watch) {
+             const disposeWatchAssetChanges = yield tslib_1.__await(assetHandler.watchAndProcessOnAssetChange());
+-            const disposePackageJsonChanges = yield tslib_1.__await((0, watch_for_single_file_changes_1.watchForSingleFileChanges)(context.projectName, options.projectRoot, 'package.json', () => (0, update_package_json_1.updatePackageJson)(options, context, target, dependencies)));
+             const handleTermination = (exitCode) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                 yield typescriptCompilation.close();
+                 disposeWatchAssetChanges();
+-                disposePackageJsonChanges();
+                 process.exit(exitCode);
+             });
+             process.on('SIGINT', () => handleTermination(128 + 2));
+diff --git a/src/utils/inline.js b/src/utils/inline.js
+index bf2f3664c1d854369b8936f7bac47570404a0e6f..82a432a47e19805814d888e40d532a97c87d8bd8 100644
+--- a/src/utils/inline.js
++++ b/src/utils/inline.js
+@@ -54,7 +54,7 @@ function postProcessInlinedDependencies(outputPath, parentOutputPath, inlineGrap
+ exports.postProcessInlinedDependencies = postProcessInlinedDependencies;
+ function readBasePathAliases(context) {
+     var _a;
+-    const tsConfigPath = (0, path_1.join)(context.root, 'tsconfig.base.json');
++    const tsConfigPath = (0, path_1.join)(context.root, 'tsconfig.json');
+     return ((_a = (0, devkit_1.readJsonFile)(tsConfigPath)) === null || _a === void 0 ? void 0 : _a['compilerOptions']['paths']) || {};
+ }
+ function emptyInlineGraph() {

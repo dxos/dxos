@@ -51,7 +51,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         outExtension: { '.js': extension },
         format,
         write: true,
-        sourcemap: false && options.sourcemap, // force false b.c. the source paths are broken by esbuild?
+        sourcemap: options.sourcemap,
         metafile: options.metafile,
         bundle: options.bundle,
         platform,

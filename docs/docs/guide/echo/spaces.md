@@ -5,7 +5,7 @@ description: DXOS Spaces
 
 # Spaces
 
-Spaces are the unit of sharing and access control in ECHO. Roughly equivalent to a "collection" in a document store, a space is a logical boundary around a set of items which are to be replicated amongst a set of peer members of the space. A given peer is typically a part of many spaces at any given time.
+Spaces are the units of sharing and access control in ECHO. Roughly equivalent to a "collection" in a document store, a space is a logical boundary around a set of items which are to be replicated amongst a set of peer members of the space. A given peer is typically a part of many spaces at any given time.
 
 There are several steps to establishing a space between peers:
 
@@ -13,9 +13,9 @@ There are several steps to establishing a space between peers:
 2.  Peer B obtains the invite code and locates the listening peer A via the signaling network
 3.  Peer A and B establish a secure connection via Diffie Hellmann key exchange
 4.  Peer A decides on a secret PIN code
-5.  To complete the connection, Peer B must provide the PIN code to Peer A over the secure connection
+5.  Finally, Peer B must provide the PIN code to Peer A over the connection just established to verify its security
 
-After a space with a peer is established, the peer's public key becomes "known" to the user's HALO and subsequent mutual spaces are easier to negotiate.
+After a space with a peer is established, the peer's public key becomes "known" to the user's [HALO](../halo) and subsequent mutual spaces are easier to negotiate.
 
 ## Creating spaces
 

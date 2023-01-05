@@ -21,6 +21,9 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/crypto"
     },
     {
@@ -67,6 +70,9 @@
     },
     {
       "path": "../../mesh/teleport"
+    },
+    {
+      "path": "../../mesh/teleport-extension-presence"
     },
     {
       "path": "../../mesh/teleport-extension-replicator"

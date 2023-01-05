@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import React, { ReactElement } from 'react';
 
 export type ListProps = {

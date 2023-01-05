@@ -22,6 +22,7 @@ import {
   FeedsPanel,
   IdentityPanel,
   ItemsPanel,
+  MembersPanel,
   // NetworkPanel,
   KeyringPanel,
   SpacesPanel,
@@ -111,6 +112,12 @@ export const sections: Section[] = [
         panel: NetworkPanel
       },
       */
+      {
+        id: 'mesh.members',
+        title: 'Members',
+        icon: <IdentityIcon />,
+        panel: <MembersPanel />
+      },
       {
         id: 'mesh.swarminfo',
         title: 'Swarm',

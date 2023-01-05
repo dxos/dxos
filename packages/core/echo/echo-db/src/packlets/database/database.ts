@@ -20,6 +20,7 @@ import { Link } from './link';
 import { RootFilter, Selection, createSelection } from './selection';
 
 export interface CreateItemOption<M extends Model> {
+  id?: ItemID;
   model?: ModelConstructor<M>;
   type?: ItemType;
   parent?: ItemID;
@@ -101,6 +102,7 @@ export class Database {
       return;
     }
 
+    await this._itemManager.destroy();
     await this._backend.close();
     this._state = State.DESTROYED;
   }
@@ -127,6 +129,7 @@ export class Database {
     // TODO(burdon): Get model_type from somewhere other than `ObjectModel.meta.type`.
     return (await this._itemManager.createItem(
       options.model.meta.type,
+      options.id,
       options.type,
       options.parent,
       options.props

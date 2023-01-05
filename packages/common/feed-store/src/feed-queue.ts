@@ -83,9 +83,9 @@ export class FeedQueue<T extends {}> {
     }
 
     this._index = options.start ?? 0;
-    if (this._index !== 0) {
-      console.warn('Start index not yet supported.');
-    }
+    // if (this._index !== 0) {
+    //   console.warn('Start index not yet supported.');
+    // }
 
     log('opening', { feedKey: this._feed.key });
 

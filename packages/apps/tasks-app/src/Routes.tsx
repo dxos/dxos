@@ -1,12 +1,16 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import React, { useEffect } from 'react';
 import { useRoutes } from 'react-router-dom';
-import { SpacePage } from './pages';
-import { useClient, useIdentity } from '@dxos/react-client';
+
 import { ManageSpacePage, RequireIdentity, useTelemetry } from '@dxos/react-appkit';
-import { SpacesPage } from './pages/SpacesPage';
-import { SpaceLayout } from './layouts/SpaceLayout';
-import { AppLayout } from './layouts/AppLayout';
-import { SpaceSettingsLayout } from './layouts/SpaceSettingsLayout';
+import { useClient, useIdentity } from '@dxos/react-client';
+
+import { AppLayout, SpaceLayout, SpaceSettingsLayout } from './layouts';
+import { SpacePage, SpacesPage } from './pages';
+
 export const Routes = () => {
   const client = useClient();
   const identity = useIdentity();

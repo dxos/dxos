@@ -13,6 +13,12 @@
       "path": "../../../packages/common/codec-protobuf"
     },
     {
+      "path": "../../../packages/common/log"
+    },
+    {
+      "path": "../../../packages/common/node-std"
+    },
+    {
       "path": "../../protobuf-test"
     }
   ]

@@ -3,6 +3,7 @@
     <words>
       <w>braneframe</w>
       <w>burdon</w>
+      <w>callbackfn</w>
       <w>ctors</w>
       <w>delimitered</w>
       <w>demuxer</w>
@@ -12,6 +13,7 @@
       <w>dxos</w>
       <w>dxos's</w>
       <w>frontmatter</w>
+      <w>hljs</w>
       <w>hypercore</w>
       <w>hypercore's</w>
       <w>hypertrie</w>
@@ -39,6 +41,7 @@
       <w>onwait</w>
       <w>onwant</w>
       <w>packlets</w>
+      <w>proxied</w>
       <w>rehype</w>
       <w>reopenable</w>
       <w>ridoculous</w>
@@ -49,10 +52,13 @@
       <w>stringified</w>
       <w>testutils</w>
       <w>truncatable</w>
+      <w>typegen</w>
       <w>undownload</w>
       <w>unhave</w>
+      <w>unproxy</w>
       <w>unwant</w>
       <w>wittjosiah</w>
+      <w>workflowy</w>
       <w>zoomable</w>
     </words>
   </dictionary>

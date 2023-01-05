@@ -1,15 +1,10 @@
 ---
 order: 6
-title: Mutations
 ---
 
 # Mutating data
 
 ```ts file=./snippets/write-items.ts#L5-
-//
-// Copyright 2022 DXOS.org
-//
-
 import { Client, ObjectModel } from '@dxos/client';
 
 const client = new Client();

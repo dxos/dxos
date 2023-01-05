@@ -3,12 +3,21 @@
 //
 
 import { File } from './File';
+import { HTMLFile } from './HTMLFile';
+import { JSFile } from './JSFile';
 import { MDFile } from './MDFile';
+import { TSFile } from './TSFile';
 
 export const fileTypes: {
   [extension: string]: new (...args: any[]) => any;
 } = {
-  '.md': MDFile
+  '.md': MDFile,
+  '.ts': TSFile,
+  '.tsx': TSFile,
+  '.js': JSFile,
+  '.jsx': JSFile,
+  '.html': HTMLFile,
+  '.htm': HTMLFile
 };
 
 export const getFileType = (path: string) => {

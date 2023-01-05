@@ -16,7 +16,7 @@ interface BuildArgs {
 }
 
 export const build = ({ verbose }: BuildArgs, { log, module }: BuildParams) => {
-  verbose && log(`Building module ${module.name}...`);
+  log(`Building module ${module.name}...`);
 
   const [command, ...args] = module.build!.command!.split(' ');
 
@@ -30,9 +30,9 @@ export const build = ({ verbose }: BuildArgs, { log, module }: BuildParams) => {
   });
 
   if (status) {
-    verbose && log('Build failed.');
+    log(`Build failed.${verbose ? '' : ' Re-run with --verbose for more details.'}`);
     process.exit(status);
   }
 
-  verbose && log('Build succeded.');
+  log('Build succeded.');
 };

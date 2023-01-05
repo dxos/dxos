@@ -19,5 +19,5 @@ export interface GridProps {
 export const Grid = ({ axis, className = defaultGridStyles }: GridProps) => {
   const grid = useGrid({ axis });
 
-  return <g ref={grid.ref} className={className} />;
+  return <g ref={grid.ref as any} className={className} />;
 };

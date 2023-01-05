@@ -28,6 +28,7 @@ for APP in $APPS; do
 
     $ROOT/packages/devtools/cli/bin/run app publish \
       --config=$DX_CONFIG \
+      --accessToken=$KUBE_ACCESS_TOKEN \
       --version=$VERSION \
       --skipExisting \
       --verbose
@@ -38,6 +39,7 @@ for APP in $APPS; do
 
     $ROOT/packages/devtools/cli/bin/run app publish \
       --config=$DX_CONFIG \
+      --accessToken=$KUBE_ACCESS_TOKEN \
       --version=$VERSION \
       --skipExisting \
       --verbose
@@ -47,6 +49,7 @@ for APP in $APPS; do
 
     $ROOT/packages/devtools/cli/bin/run app publish \
       --config=$DX_CONFIG \
+      --accessToken=$KUBE_ACCESS_TOKEN \
       --verbose
   fi
 

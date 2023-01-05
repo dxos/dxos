@@ -9,7 +9,6 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { PeerState } from '@dxos/protocols/proto/dxos/mesh/teleport/presence';
-import { Teleport } from '@dxos/teleport';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { PresenceExtension } from './presence-extension';
@@ -26,6 +25,11 @@ export type PresenceParams = {
    * Should be greater than announceInterval.
    */
   offlineTimeout: number;
+
+  /**
+   * Identity key of the local peer.
+   */
+  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
 };
 
 /**
@@ -62,11 +66,7 @@ export class Presence {
     );
   }
 
-  createExtension({ teleport }: { teleport: Teleport }): PresenceExtension {
-    assert(
-      teleport.localPeerId.equals(this._params.localPeerId),
-      'Teleport local peer id does not match presence local peer id.'
-    );
+  createExtension({ remotePeerId }: { remotePeerId: PublicKey }): PresenceExtension {
     const extension = new PresenceExtension({
       onAnnounce: async (peerState) => {
         if (this._receivedMessages.has(peerState.messageId)) {
@@ -77,24 +77,30 @@ export class Presence {
         scheduleTask(this._ctx, async () => {
           await this._propagateAnnounce(peerState);
         });
+        scheduleTask(
+          this._ctx,
+          () => {
+            this.updated.emit();
+          },
+          this._params.offlineTimeout + 10 // Trigger the update so that the consumer gets notified when the peer is getting removed from the online set
+        );
       },
       onClose: async (err) => {
         if (err) {
           log.catch(err);
         }
-        if (this._connections.has(teleport.remotePeerId)) {
-          this._connections.delete(teleport.remotePeerId);
+        if (this._connections.has(remotePeerId)) {
+          this._connections.delete(remotePeerId);
         }
         scheduleTask(this._ctx, async () => {
           await this._sendAnnounces();
         });
       }
     });
-    this._connections.set(teleport.remotePeerId, extension);
+    this._connections.set(remotePeerId, extension);
     scheduleTask(this._ctx, async () => {
       await this._sendAnnounces();
     });
-    teleport.addExtension('dxos.mesh.teleport.presence', extension);
 
     return extension;
   }
@@ -125,7 +131,8 @@ export class Presence {
             peerId: this._params.localPeerId,
             connections: this._getConnections(),
             messageId: PublicKey.random(),
-            timestamp: new Date()
+            timestamp: new Date(),
+            identityKey: this._params.identityKey
           })
           .catch((err) => log.catch(err))
       )

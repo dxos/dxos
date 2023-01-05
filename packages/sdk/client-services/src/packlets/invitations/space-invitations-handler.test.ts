@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 import assert from 'node:assert';
 
-import { asyncChain, Trigger } from '@dxos/async';
+import { asyncChain, latch, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItems } from '../testing';
@@ -24,15 +25,15 @@ describe('services/space-invitations-handler', () => {
   test('genesis', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
-    const space = await peer.spaceManager!.createSpace();
+    const space = await peer.dataSpaceManager!.createSpace();
     expect(space.database).not.to.be.undefined;
-    expect(peer.spaceManager!.spaces.has(space.key)).to.be.true;
+    expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
     await space.close();
   });
 
   test('genesis with database mutations', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
-    const space = await peer.spaceManager!.createSpace();
+    const space = await peer.dataSpaceManager!.createSpace();
 
     {
       const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
@@ -56,7 +57,7 @@ describe('services/space-invitations-handler', () => {
     let attempt = 0;
     const authenticationCode = new Trigger<string>();
 
-    const space1 = await host.spaceManager!.createSpace();
+    const space1 = await host.dataSpaceManager!.createSpace();
     const observable1 = host.spaceInvitations!.createInvitation(space1);
     observable1.subscribe({
       onConnecting: async (invitation1: Invitation) => {
@@ -98,8 +99,8 @@ describe('services/space-invitations-handler', () => {
     expect(spaceKey1).to.deep.eq(spaceKey2);
 
     {
-      const space1 = host.spaceManager!.spaces.get(spaceKey1)!;
-      const space2 = guest.spaceManager!.spaces.get(spaceKey2)!;
+      const space1 = host.dataSpaceManager!.spaces.get(spaceKey1)!;
+      const space2 = guest.dataSpaceManager!.spaces.get(spaceKey2)!;
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
@@ -117,7 +118,7 @@ describe('services/space-invitations-handler', () => {
     const connecting1 = new Trigger<Invitation>(); // peer 1 connected.
     const connecting2 = new Trigger<Invitation>(); // peer 2 connected.
 
-    const space1 = await host.spaceManager!.createSpace();
+    const space1 = await host.dataSpaceManager!.createSpace();
     const observable1 = await host.spaceInvitations!.createInvitation(space1);
     observable1.subscribe({
       onConnecting: async (invitation1: Invitation) => {
@@ -156,5 +157,56 @@ describe('services/space-invitations-handler', () => {
 
     await cancelled.wait();
     await space1.close();
+  });
+
+  test('test multi-use invitation', async () => {
+    const GUEST_COUNT = 3;
+    const [host, ...guests] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(
+      createPeers(GUEST_COUNT + 1)
+    );
+
+    const hostSpace = await host.dataSpaceManager!.createSpace();
+    const swarmKey = PublicKey.random();
+    const hostObservable = await host.spaceInvitations!.createInvitation(hostSpace, {
+      swarmKey,
+      type: Invitation.Type.MULTIUSE_TESTING
+    });
+
+    const [done, count] = latch({ count: GUEST_COUNT });
+    hostObservable.subscribe({
+      onConnecting: async (invitation2: Invitation) => {},
+      onConnected: async (invitation2: Invitation) => {},
+      onSuccess: () => {
+        count();
+      },
+      onCancelled: () => {},
+      onTimeout: (err: Error) => raise(new Error(err.message)),
+      onError: (err: Error) => raise(new Error(err.message))
+    });
+
+    await Promise.all(
+      range(GUEST_COUNT).map(async (idx) => {
+        const observable = await guests[idx].spaceInvitations!.acceptInvitation({
+          swarmKey,
+          type: Invitation.Type.MULTIUSE_TESTING
+        });
+        const success = new Trigger();
+        observable.subscribe({
+          onConnecting: async (invitation2: Invitation) => {},
+          onConnected: async (invitation2: Invitation) => {},
+          onSuccess: () => {
+            success.wake();
+          },
+          onCancelled: () => raise(new Error()),
+          onTimeout: (err: Error) => raise(new Error(err.message)),
+          onError: (err: Error) => raise(new Error(err.message))
+        });
+        await success.wait({ timeout: 300 });
+      })
+    );
+    await done();
+
+    await hostObservable.cancel();
+    await hostSpace.close();
   });
 });
