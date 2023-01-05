@@ -34,8 +34,5 @@
         "{options.outputFile}"
       ]
     }
-  },
-  "implicitDependencies": [
-    "playwright"
-  ]
+  }
 }

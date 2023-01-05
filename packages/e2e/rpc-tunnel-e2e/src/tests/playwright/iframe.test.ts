@@ -2,26 +2,28 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect, Page, test } from '@playwright/test';
+import { expect } from 'chai';
+import type { Page } from 'playwright';
 import waitForExpect from 'wait-for-expect';
+
+import { beforeAll, describe, setupPage, test } from '@dxos/test';
 
 const config = {
   baseUrl: 'http://localhost:5173'
 };
 
-test.describe('iframe', () => {
+describe('iframe', () => {
   let page: Page;
 
-  test.beforeAll(async ({ browser }) => {
-    const context = await browser.newContext();
-    page = await context.newPage();
-    await page.goto(`${config.baseUrl}/iframe.html`);
+  beforeAll(async function () {
+    const result = await setupPage(this.browser, `${config.baseUrl}/iframe.html`);
+    page = result.page;
   });
 
   test('loads and connects.', async () => {
     await waitForExpect(async () => {
       const isVisible = await page.isVisible(':has-text("value")');
-      expect(isVisible).toBeTruthy();
+      expect(isVisible).to.be.true;
     });
   });
 
@@ -30,6 +32,6 @@ test.describe('iframe', () => {
     const b = await page.frameLocator('#test-iframe').locator('p:right-of(:text("value"), 10)').textContent();
     const [intA, intB] = [a!, b!].map((str) => parseInt(str.slice(1)));
 
-    expect(Math.abs(intA - intB)).toBeLessThan(50);
+    expect(Math.abs(intA - intB)).to.be.lessThan(50);
   });
 });

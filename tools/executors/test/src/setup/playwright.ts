@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { BrowserContext, Page } from 'playwright';
+import { Browser } from 'playwright';
 
-import { getNewBrowserContext } from '../browser';
+import { getBrowser } from '../browser';
 import { BrowserType } from '../types';
 
 export type TestsContext = {
-  browserType: BrowserType;
-  context: BrowserContext;
-  page: Page;
+  browser: Browser;
 };
 
 type MochaHooks = {
@@ -20,18 +18,16 @@ type MochaHooks = {
 
 export const mochaHooks: MochaHooks & Partial<TestsContext> = {
   async beforeAll() {
-    const { browserType, context, page } = await getNewBrowserContext(process.env.MOCHA_ENV as BrowserType, {
+    const browser = await getBrowser(process.env.MOCHA_ENV as BrowserType).launch({
       headless: process.env.HEADLESS !== 'false'
     });
 
-    this.browserType = browserType;
-    this.context = context;
-    this.page = page;
+    this.browser = browser;
   },
 
   async afterAll() {
     if (process.env.STAY_OPEN !== 'true') {
-      await this.context?.close();
+      await this.browser?.close();
     }
   }
 };

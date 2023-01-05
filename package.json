@@ -39,7 +39,6 @@
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/log-hook": "workspace:*",
     "@dxos/plate": "workspace:*",
-    "@dxos/playwright": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/swc-log-plugin": "workspace:*",

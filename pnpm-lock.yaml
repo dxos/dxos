@@ -36,7 +36,6 @@ importers:
       '@dxos/eslint-plugin-rules': workspace:*
       '@dxos/log-hook': workspace:*
       '@dxos/plate': workspace:*
-      '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/swc-log-plugin': workspace:*
@@ -130,7 +129,6 @@ importers:
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
       '@dxos/log-hook': link:tools/log-hook
       '@dxos/plate': link:packages/common/plate
-      '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/signal': link:packages/core/mesh/signal
       '@dxos/swc-log-plugin': link:tools/swc-log-plugin
@@ -3822,9 +3820,6 @@ importers:
     specifiers: {}
 
   tools/executors/esbuild:
-    specifiers: {}
-
-  tools/executors/playwright:
     specifiers: {}
 
   tools/executors/protobuf-compiler:

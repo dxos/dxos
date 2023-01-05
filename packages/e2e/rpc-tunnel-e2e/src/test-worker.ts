@@ -9,10 +9,13 @@ import { PortMuxer } from '@dxos/rpc-tunnel';
 import { Channels } from './channels';
 import { TestClient } from './test-client';
 
+const log = console.log;
+
 const clientOne = new TestClient();
 const clientTwo = new TestClient({ value: 10050 });
 
 onconnect = async (event) => {
+  log('connect', { event });
   const muxer = new PortMuxer(event.ports[0]);
 
   await Promise.all([setup(muxer, Channels.ONE, clientOne), setup(muxer, Channels.TWO, clientTwo)]);

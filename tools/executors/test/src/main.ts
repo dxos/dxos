@@ -65,7 +65,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
           return undefined;
         }
       },
-      (res) => (res ? res.status < 400 : false)
+      (res) => (res ? res.status >= 400 : true)
     );
   }
 
