@@ -5,7 +5,7 @@ import React from 'react';
 
 import type { Profile } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
-import { useTranslation, Tag, Avatar, defaultDisabled, defaultGroup, Group, mx } from '@dxos/react-ui';
+import { useTranslation, Tag, Avatar, defaultDisabled, defaultGroup, Group, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 export interface ProfileListProps {

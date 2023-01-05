@@ -6,8 +6,8 @@ import { Archive } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { useQuery, useReactor } from '@dxos/react-client';
+import { getSize, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
-import { getSize, mx } from '@dxos/react-ui';
 
 import { Card, Input } from '../components';
 import { useSpace } from '../hooks';

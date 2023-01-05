@@ -5,7 +5,7 @@
 import { Clipboard } from 'phosphor-react';
 import React, { useCallback } from 'react';
 
-import { Alert, Button, Dialog, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Alert, Button, Dialog, Tooltip, useTranslation } from '@dxos/react-components';
 
 export interface FatalErrorProps {
   error: Error;

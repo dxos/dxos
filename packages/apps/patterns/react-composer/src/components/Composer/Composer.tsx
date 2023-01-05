@@ -9,7 +9,7 @@ import StarterKit from '@tiptap/starter-kit';
 import React from 'react';
 
 import { Item } from '@dxos/client';
-import { useTranslation, mx } from '@dxos/react-ui';
+import { useTranslation, mx } from '@dxos/react-components';
 import { TextModel, Doc } from '@dxos/text-model';
 
 export interface ComposerProps {

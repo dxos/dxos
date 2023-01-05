@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { Avatar, Group, Tag, useTranslation } from '@dxos/react-ui';
+import { Avatar, Group, Tag, useTranslation } from '@dxos/react-components';
 
 export interface DeviceProps {
   publicKey: PublicKey;

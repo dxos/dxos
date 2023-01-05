@@ -7,9 +7,9 @@ import { TemplateFunction } from '@dxos/plate';
 import packageJson from './package.json';
 
 export type Input = {
-  monorepo?: boolean
-  name: string
-}
+  monorepo?: boolean;
+  name: string;
+};
 
 // TODO(wittjosiah): Nx executor to execute in place.
 const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
@@ -17,13 +17,17 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "version": "${packageJson.version}",
   "private": true,
   "description": "DXOS 'hello world' application template.",
-  ${input.monorepo ? `
+  ${
+    input.monorepo
+      ? `
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  ` : ''}"scripts": {
+  `
+      : ''
+  }"scripts": {
     "build": "NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit && vite build",
     "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
     "preview": "vite preview",
@@ -38,7 +42,7 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
     "@dxos/react-composer": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/react-list": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/text-model": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-    "@dxos/react-ui": "${input.monorepo ? 'workspace:*' : packageJson.version}",
+    "@dxos/react-components": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/util": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "classnames": "^2.3.2",
     "phosphor-react": "^1.4.1",
@@ -69,12 +73,16 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
     "vite-plugin-pwa": "^0.12.4",
     "webpack": "^5.74.0",
     "workbox-window": "^6.5.4"
-  }${input.monorepo ? '' : `,
+  }${
+    input.monorepo
+      ? ''
+      : `,
   "pnpm": {
     "patchedDependencies": {
       "vite@3.0.9": "patches/vite@3.0.9.patch"
     }
-  }`}
+  }`
+  }
 }`;
 
 export default template;

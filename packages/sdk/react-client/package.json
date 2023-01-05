@@ -30,7 +30,7 @@
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",

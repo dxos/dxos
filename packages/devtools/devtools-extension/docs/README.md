@@ -43,8 +43,8 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
-  dxos/react-ui("@dxos/react-ui"):::def
-  click dxos/react-ui "dxos/dxos/tree/main/packages/common/react-ui/docs"
+  dxos/react-components("@dxos/react-components"):::def
+  click dxos/react-components "dxos/dxos/tree/main/packages/common/react-ui/docs"
   dxos/sentry("@dxos/sentry"):::def
   click dxos/sentry "dxos/dxos/tree/main/packages/common/sentry/docs"
   dxos/telemetry("@dxos/telemetry"):::def
@@ -226,7 +226,7 @@ dxos/messenger-model --> dxos/model-factory
 dxos/devtools --> dxos/react-appkit
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-appkit --> dxos/react-ui
+dxos/react-appkit --> dxos/react-components
 dxos/react-appkit --> dxos/telemetry
 dxos/telemetry --> dxos/sentry
 ```
@@ -274,7 +274,7 @@ dxos/telemetry --> dxos/sentry
 | [`@dxos/react-components-deprecated`](../../../deprecated/react-components/docs/README.md) |  |
 | [`@dxos/react-registry-client`](../../../experimental/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../deprecated/react-toolkit/docs/README.md) | &check; |
-| [`@dxos/react-ui`](../../../common/react-components/docs/README.md) |  |
+| [`@dxos/react-components`](../../../common/react-components/docs/README.md) |  |
 | [`@dxos/registry-client`](../../../experimental/registry-client/docs/README.md) |  |
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) |  |

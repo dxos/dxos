@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Client, Space } from '@dxos/client';
 import { AuthChoices } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
-import { Avatar, Button, defaultGroup, Heading, useTranslation, Trans, getSize, mx } from '@dxos/react-ui';
+import { Avatar, Button, defaultGroup, Heading, useTranslation, Trans, getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 import lightThemeLogo from '../assets/icon-halo-black.png';

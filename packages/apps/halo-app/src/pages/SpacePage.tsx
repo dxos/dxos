@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Profile } from '@dxos/client';
 import { useSafeSpaceKey, ProfileList } from '@dxos/react-appkit';
 import { useMembers } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-ui';
+import { Heading, useTranslation } from '@dxos/react-components';
 
 const SpacePage = () => {
   const { t } = useTranslation('halo');

@@ -19,7 +19,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",

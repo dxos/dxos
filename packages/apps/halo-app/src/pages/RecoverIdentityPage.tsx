@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-ui';
+import { Heading, useTranslation } from '@dxos/react-components';
 
 const RecoverIdentityPage = () => {
   const { t } = useTranslation();

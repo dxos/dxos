@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Item, PublicKey, Space } from '@dxos/client';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, useSpace } from '@dxos/react-client';
-import { Loading, useTranslation } from '@dxos/react-ui';
+import { Loading, useTranslation } from '@dxos/react-components';
 
 import { LIST_ITEM_TYPE } from '../../model';
 import {

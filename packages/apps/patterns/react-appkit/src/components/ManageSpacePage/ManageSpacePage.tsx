@@ -9,7 +9,7 @@ import urlJoin from 'url-join';
 
 import type { Profile } from '@dxos/client';
 import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
-import { Button, getSize, useTranslation } from '@dxos/react-ui';
+import { Button, getSize, useTranslation } from '@dxos/react-components';
 
 import { useSafeSpaceKey } from '../../hooks';
 import { HeadingWithActions } from '../HeadingWithActions';

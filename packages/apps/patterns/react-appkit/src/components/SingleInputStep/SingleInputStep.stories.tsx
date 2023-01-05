@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Group, mx, templateForComponent, useTranslation } from '@dxos/react-ui';
+import { Group, mx, templateForComponent, useTranslation } from '@dxos/react-components';
 
 import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
 

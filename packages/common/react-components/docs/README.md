@@ -1,4 +1,4 @@
-# @dxos/react-ui
+# @dxos/react-components
 
 Vite plugin which configures a low-level design system for DXOS.
 
@@ -17,8 +17,8 @@ flowchart LR
 
 subgraph common [common]
   style common fill:transparent
-  dxos/react-ui("@dxos/react-ui"):::root
-  click dxos/react-ui "dxos/dxos/tree/main/packages/common/react-ui/docs"
+  dxos/react-components("@dxos/react-components"):::root
+  click dxos/react-components "dxos/dxos/tree/main/packages/common/react-ui/docs"
 end
 ```
 

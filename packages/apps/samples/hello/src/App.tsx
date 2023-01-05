@@ -8,7 +8,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Config, Dynamics, Defaults } from '@dxos/config';
 import { GenericFallback, ServiceWorkerToast, Fallback } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { UiProvider } from '@dxos/react-ui';
+import { UiProvider } from '@dxos/react-components';
 
 import { Welcome } from './Welcome';
 

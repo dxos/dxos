@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { CancellableInvitationObservable } from '@dxos/client';
 import { HeadingWithActions, InvitationList } from '@dxos/react-appkit';
 import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
-import { Heading, Button, useTranslation, getSize } from '@dxos/react-ui';
+import { Heading, Button, useTranslation, getSize } from '@dxos/react-components';
 
 import { DeviceList } from '../components';
 import { createInvitationUrl } from '../util';

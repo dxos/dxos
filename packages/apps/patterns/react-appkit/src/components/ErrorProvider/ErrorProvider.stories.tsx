@@ -6,7 +6,7 @@ import '@dxosTheme';
 import { ComponentStory, Story } from '@storybook/react';
 import React, { FC } from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button } from '@dxos/react-components';
 
 import { ErrorProvider } from './ErrorProvider';
 

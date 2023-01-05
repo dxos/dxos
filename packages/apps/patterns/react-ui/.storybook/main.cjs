@@ -2,7 +2,7 @@ const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
 const { ConfigPlugin } = require('@dxos/config/vite-plugin');
-const { ThemePlugin } = require('@dxos/react-ui/plugin');
+const { ThemePlugin } = require('@dxos/react-components/plugin');
 
 module.exports = {
   stories: [
@@ -30,7 +30,7 @@ module.exports = {
         '@dxos/client',
         '@dxos/config',
         '@dxos/react-client',
-        '@dxos/react-ui',
+        '@dxos/react-components',
         '@dxos/util',
         'storybook-dark-mode',
         'i18next',

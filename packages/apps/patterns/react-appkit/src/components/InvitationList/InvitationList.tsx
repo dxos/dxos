@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { CancellableInvitationObservable } from '@dxos/client';
-import { defaultDisabled, Group, useTranslation, mx } from '@dxos/react-ui';
+import { defaultDisabled, Group, useTranslation, mx } from '@dxos/react-components';
 
 import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
 

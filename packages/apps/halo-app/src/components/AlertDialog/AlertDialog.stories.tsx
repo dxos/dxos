@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Button, templateForComponent } from '@dxos/react-ui';
+import { Button, templateForComponent } from '@dxos/react-components';
 
 import { AlertDialog, AlertDialogProps } from './AlertDialog';
 

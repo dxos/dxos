@@ -246,5 +246,5 @@ export const tailwindConfig = ({
   },
   plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
   ...(env === 'development' && { mode: 'jit' }),
-  content: [resolve(root, 'node_modules/@dxos/react-ui/dist/**/*.mjs'), ...content]
+  content: [resolve(root, 'node_modules/@dxos/react-components/dist/**/*.mjs'), ...content]
 });

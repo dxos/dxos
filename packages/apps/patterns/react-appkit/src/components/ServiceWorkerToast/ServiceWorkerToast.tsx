@@ -5,7 +5,7 @@
 import { Gift } from 'phosphor-react';
 import React from 'react';
 
-import { useTranslation, Toast, Button, getSize, mx, useTranslationsContext } from '@dxos/react-ui';
+import { useTranslation, Toast, Button, getSize, mx, useTranslationsContext } from '@dxos/react-components';
 
 interface NeedRefreshToastProps {
   variant: 'needRefresh';

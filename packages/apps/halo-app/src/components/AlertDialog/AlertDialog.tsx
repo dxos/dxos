@@ -6,7 +6,7 @@ import { Transition } from '@headlessui/react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import React, { cloneElement, ComponentProps, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
 
-import { Input, InputProps, defaultDescription, defaultFocus, mx } from '@dxos/react-ui';
+import { Input, InputProps, defaultDescription, defaultFocus, mx } from '@dxos/react-components';
 
 export interface AlertDialogSlots {
   overlay?: Pick<ComponentProps<typeof AlertDialogPrimitive.Overlay>, 'className'>;

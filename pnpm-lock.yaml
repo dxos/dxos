@@ -289,8 +289,8 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-composer': workspace:*
-      '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
       '@sentry/react': ^7.17.2
@@ -309,8 +309,8 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/react-composer': link:../patterns/react-composer
-      '@dxos/react-ui': link:../../common/react-components
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@sentry/react': 7.20.0_react@18.2.0
@@ -339,7 +339,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -376,7 +376,7 @@ importers:
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../../common/react-components
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
@@ -416,7 +416,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
@@ -440,7 +440,7 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-components
+      '@dxos/react-components': link:../../../common/react-components
       '@dxos/sentry': link:../../../common/sentry
       '@dxos/telemetry': link:../../../common/telemetry
       '@dxos/util': link:../../../common/util
@@ -467,7 +467,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/text-model': workspace:*
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
@@ -488,7 +488,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-components
+      '@dxos/react-components': link:../../../common/react-components
       '@dxos/text-model': link:../../../core/echo/text-model
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_cqilutfevdyuwlti5pasjm52fe
@@ -515,7 +515,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@types/lodash.debounce': ^4.0.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -530,7 +530,7 @@ importers:
       '@dxos/react-appkit': link:../react-appkit
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-components
+      '@dxos/react-components': link:../../../common/react-components
       lodash.debounce: 4.0.8
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -549,7 +549,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/util': workspace:*
       '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
@@ -569,7 +569,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/keys': link:../../../common/keys
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-components
+      '@dxos/react-components': link:../../../common/react-components
       '@dxos/util': link:../../../common/util
       '@react-hook/async': 3.1.1_react@18.2.0
       debug: 4.3.4
@@ -593,7 +593,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@storybook/addon-actions': ^6.5.10
       '@storybook/addon-essentials': ^6.5.10
       '@storybook/addon-interactions': ^6.5.10
@@ -623,7 +623,7 @@ importers:
       '@dxos/config': link:../../../sdk/config
       '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-components
+      '@dxos/react-components': link:../../../common/react-components
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -660,7 +660,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@storybook/addon-actions': ^6.5.10
       '@storybook/addon-essentials': ^6.5.10
       '@storybook/addon-interactions': ^6.5.10
@@ -690,7 +690,7 @@ importers:
       '@dxos/config': link:../../../sdk/config
       '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-components
+      '@dxos/react-components': link:../../../common/react-components
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -726,8 +726,8 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-list': workspace:*
-      '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
       '@sentry/react': ^7.17.2
       '@types/react': ^18.0.21
@@ -746,8 +746,8 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/react-list': link:../patterns/react-list
-      '@dxos/react-ui': link:../../common/react-components
       '@dxos/sentry': link:../../common/sentry
       '@sentry/react': 7.20.0_react@18.2.0
       phosphor-react: 1.4.1_react@18.2.0
@@ -2769,9 +2769,9 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-composer': workspace:*
       '@dxos/react-list': workspace:*
-      '@dxos/react-ui': workspace:*
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
@@ -2813,9 +2813,9 @@ importers:
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
-      '@dxos/react-ui': link:../../common/react-components
       clsx: 1.2.1
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
@@ -3580,7 +3580,7 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
@@ -3614,7 +3614,7 @@ importers:
       '@dxos/util': link:../../common/util
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
-      '@dxos/react-ui': link:../../common/react-components
+      '@dxos/react-components': link:../../common/react-components
       '@testing-library/dom': 8.19.0
       '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
@@ -33780,7 +33780,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

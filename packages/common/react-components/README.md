@@ -1,6 +1,6 @@
 # DXOS design system
 
-The `react-ui` package is the single source of truth for DXOS’s design system.
+The `react-components` package is the single source of truth for DXOS’s lower-level design system.
 
 To get started, you’ll need to add the build plugin (Vite or ESBuild), then set up the provider, then set up theming.
 
@@ -11,12 +11,12 @@ otherwise needs no configuration.
 
 ### 1. Add the Vite plugin
 
-Add `@dxos/react-ui` to the project’s dev dependencies, then extend the
+Add `@dxos/react-components` to the project’s dev dependencies, then extend the
 project’s Vite config (`vite.config.ts`) to use it, e.g.:
 
 ```ts
 // ...
-import { ThemePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-components/plugin';
 // ...
 export default defineConfig({
   // ...
@@ -34,7 +34,7 @@ Ensure `content` contains globs for your project’s own files that will use Tai
 design system packages your project uses, e.g.:
 
 ```
-'./node_modules/@dxos/react-ui/dist/**/*.mjs',
+'./node_modules/@dxos/react-components/dist/**/*.mjs',
 './node_modules/@dxos/react-appkit/dist/**/*.mjs',
 './node_modules/@dxos/react-composer/dist/**/*.mjs',
 ```
@@ -57,22 +57,22 @@ The ESBuild plugin is experimental and has several caveats noted below, proceed 
 
 ### 1. Add the ESBuild plugin
 
-Add `@dxos/react-ui` to the project’s dev dependencies, then extend the
+Add `@dxos/react-components` to the project’s dev dependencies, then extend the
 project’s ESBuild config to use it, e.g.:
 
 ```ts
 // ...
-import { ThemePlugins } from '@dxos/react-ui/esbuild-plugin';
+import { ThemePlugins } from '@dxos/react-components/esbuild-plugin';
 // ...
 void build({
-  entryPoints: [/* ... */, resolve(__dirname, '../node_modules/@dxos/react-ui/src/theme.css')],
+  entryPoints: [/* ... */, resolve(__dirname, '../node_modules/@dxos/react-components/src/theme.css')],
   // ...
   plugins: ThemePlugins({
     outdir: resolve(__dirname, '../dist'),
     content: [
       resolve(__dirname, '../index.html'),
       resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-      resolve(__dirname, '../node_modules/@dxos/react-ui/dist/**/*.mjs')
+      resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs')
       // other sources to scan
     ]
   })
@@ -80,7 +80,7 @@ void build({
 // ...
 ```
 
-Ensure `theme.css` from `react-ui` is included as an entrypoint, and `outdir` passed to `ThemePlugins` is the same as
+Ensure `theme.css` from `react-components` is included as an entrypoint, and `outdir` passed to `ThemePlugins` is the same as
 provided to ESBuild.
 
 ### 2. Reference the basic stylesheet
@@ -88,7 +88,7 @@ provided to ESBuild.
 Load the built stylesheet as appropriate for your project, e.g. simply add it to `index.html`:
 
 ```html
-<link rel="stylesheet" href="./dist/node_modules/@dxos/react-ui/src/theme.css"/>
+<link rel="stylesheet" href="./dist/node_modules/@dxos/react-components/src/theme.css"/>
 ```
 
 Note that _this is not in your project’s node_modules directory_, it’s in your project’s `outdir`.

@@ -20,7 +20,7 @@ import {
   StatusIndicator2
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { UiProvider } from '@dxos/react-ui';
+import { UiProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';

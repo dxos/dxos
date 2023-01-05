@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Profile as ProfileType } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
-import { Avatar, Button, getSize, Popover, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, getSize, Popover, useTranslation } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 export interface ProfileMenuProps {

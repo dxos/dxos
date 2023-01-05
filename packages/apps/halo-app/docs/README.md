@@ -191,7 +191,7 @@ dxos/metagraph --> dxos/config
 dxos/halo-app --> dxos/react-appkit
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-ui --> dxos/react-client
+dxos/react-components --> dxos/react-client
 dxos/react-appkit --> dxos/telemetry
 dxos/telemetry --> dxos/sentry
 ```
@@ -232,7 +232,7 @@ dxos/telemetry --> dxos/sentry
 | [`@dxos/react-appkit`](../../patterns/react-appkit/docs/README.md) | &check; |
 | [`@dxos/react-async`](../../../common/react-async/docs/README.md) | &check; |
 | [`@dxos/react-client`](../../../sdk/react-client/docs/README.md) | &check; |
-| [`@dxos/react-ui`](../../../common/react-components/docs/README.md) | &check; |
+| [`@dxos/react-components`](../../../common/react-components/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) | &check; |
 | [`@dxos/sentry`](../../../common/sentry/docs/README.md) | &check; |

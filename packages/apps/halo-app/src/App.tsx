@@ -22,7 +22,7 @@ import {
   StatusIndicator
 } from '@dxos/react-appkit';
 import { ClientProvider, useStatus } from '@dxos/react-client';
-import { UiProvider } from '@dxos/react-ui';
+import { UiProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
 import { NavMenu } from './components';

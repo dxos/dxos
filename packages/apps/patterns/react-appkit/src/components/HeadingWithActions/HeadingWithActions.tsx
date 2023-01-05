@@ -4,7 +4,7 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { Heading, HeadingProps, mx } from '@dxos/react-ui';
+import { Heading, HeadingProps, mx } from '@dxos/react-components';
 
 export interface HeadingWithActionsProps extends ComponentProps<'div'> {
   heading: HeadingProps;

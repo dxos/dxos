@@ -5,7 +5,7 @@
 import { CaretRight, Plus, QrCode, Textbox } from 'phosphor-react';
 import React from 'react';
 
-import { CompoundButton, useTranslation } from '@dxos/react-ui';
+import { CompoundButton, useTranslation } from '@dxos/react-components';
 
 export interface AuthChoicesProps {
   onCreate?: () => void;

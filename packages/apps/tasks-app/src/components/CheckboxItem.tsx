@@ -5,7 +5,7 @@
 import { X } from 'phosphor-react';
 import React, { KeyboardEvent } from 'react';
 
-import { mx, getSize, defaultFocus, Button, defaultHover } from '@dxos/react-ui';
+import { mx, getSize, defaultFocus, Button, defaultHover } from '@dxos/react-components';
 
 import { Input } from './Input';
 

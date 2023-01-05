@@ -4,7 +4,7 @@
 
 import React, { useCallback, KeyboardEvent, useMemo } from 'react';
 
-import { Button, GroupProps, Input, InputProps, Loading, mx, useTranslation } from '@dxos/react-ui';
+import { Button, GroupProps, Input, InputProps, Loading, mx, useTranslation } from '@dxos/react-components';
 
 export interface SingleInputStepProps extends Omit<GroupProps, 'label' | 'onChange'> {
   inputLabel: string;

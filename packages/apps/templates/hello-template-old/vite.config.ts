@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config/
@@ -25,7 +25,7 @@ export default defineConfig({
       '@dxos/react-client',
       '@dxos/react-composer',
       '@dxos/react-list',
-      '@dxos/react-ui',
+      '@dxos/react-components',
       '@dxos/text-model',
       '@dxos/util'
     ],
@@ -55,7 +55,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')

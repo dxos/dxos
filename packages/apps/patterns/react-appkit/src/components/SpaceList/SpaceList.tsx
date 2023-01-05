@@ -16,7 +16,7 @@ import {
   Group,
   Heading,
   mx
-} from '@dxos/react-ui';
+} from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 export interface SpaceListProps {

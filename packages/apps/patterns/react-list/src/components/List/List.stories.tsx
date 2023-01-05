@@ -12,7 +12,7 @@ import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useSelection, useSpace } from '@dxos/react-client';
-import { Loading } from '@dxos/react-ui';
+import { Loading } from '@dxos/react-components';
 
 import { LIST_TYPE } from '../../model';
 import { templateForComponent } from '../../testing';

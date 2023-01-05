@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/react-ui",
+  "name": "@dxos/react-os-ui",
   "version": "0.1.20",
   "description": "A React component library for DXOS’s OS experiences",
   "homepage": "https://dxos.org",
@@ -18,7 +18,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/util": "workspace:*",
     "@react-hook/async": "^3.1.1",
     "debug": "^4.3.3",

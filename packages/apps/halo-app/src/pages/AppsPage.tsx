@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Heading, Loading, useTranslation } from '@dxos/react-ui';
+import { Heading, Loading, useTranslation } from '@dxos/react-components';
 
 import { AppList, AppProps } from '../components';
 import { useModules } from '../experimental';

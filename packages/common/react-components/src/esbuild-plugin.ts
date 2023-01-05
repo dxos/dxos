@@ -17,7 +17,7 @@ export const ThemePlugins = (options: { content: string[]; outdir: string }): Pl
     {
       name: 'esbuild-plugin-dxos-ui-theme-resolvers',
       setup: async (build) => {
-        const fontsDir = join(options.outdir, 'node_modules/@dxos/react-ui/fonts');
+        const fontsDir = join(options.outdir, 'node_modules/@dxos/react-components/fonts');
         try {
           await mkdir(fontsDir);
         } catch (_e) {}

@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Invitation } from '@dxos/client';
 import { JoinPanel } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-ui';
+import { Heading, useTranslation } from '@dxos/react-components';
 
 import { invitationCodeFromUrl } from '../util';
 

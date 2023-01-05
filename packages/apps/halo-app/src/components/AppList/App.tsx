@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { Avatar, Group } from '@dxos/react-ui';
+import { Avatar, Group } from '@dxos/react-components';
 
 export interface AppProps {
   module: Module;

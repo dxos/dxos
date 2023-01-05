@@ -7,7 +7,15 @@ import React from 'react';
 
 import { Space } from '@dxos/client';
 import { useMembers } from '@dxos/react-client';
-import { Button, defaultInlineSeparator, getSize, Popover, mx, buttonStyles, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  defaultInlineSeparator,
+  getSize,
+  Popover,
+  mx,
+  buttonStyles,
+  useTranslation
+} from '@dxos/react-components';
 
 export interface SpaceMenuProps {
   space: Space;

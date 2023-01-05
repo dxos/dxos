@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { getSize } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-components';
 
 import { useSpace } from '../hooks';
 import { Generator } from '../proto';

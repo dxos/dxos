@@ -17,7 +17,7 @@ import {
   Tooltip,
   useTranslation,
   mx
-} from '@dxos/react-ui';
+} from '@dxos/react-components';
 
 import { HeadingWithActions } from '../HeadingWithActions';
 import { InvitationStatus } from '../InvitationStatus';

@@ -57,7 +57,7 @@ export default defineTemplate(
 // } from '@dxos/react-appkit';
 // import { ClientProvider, useConfig, useSelection } from '@dxos/react-client';
 // import { List, LIST_TYPE } from '@dxos/react-list';
-// import { Loading, UiKitProvider, useTranslation } from '@dxos/react-ui';
+// import { Loading, UiKitProvider, useTranslation } from '@dxos/react-components';
 
 // import translationResources from './translations';
 
