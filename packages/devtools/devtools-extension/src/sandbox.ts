@@ -6,13 +6,13 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { initializeDevtools } from '@dxos/devtools';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { ClientServicesProxy } from '@dxos/client-services';
+import { ClientAndServices, initializeDevtools } from '@dxos/devtools';
 import { RpcPort } from '@dxos/rpc';
 
 const log = debug('dxos:extension:sandbox');
 
-const clientReady = new Event<Client>();
+const clientReady = new Event<ClientAndServices>();
 
 const windowPort = (): RpcPort => ({
   send: async (message) =>
@@ -72,27 +72,15 @@ const init = async () => {
 
   log('Initialize client RPC server starting...');
   const rpcPort = windowPort();
-  const client = new Client(
-    {
-      runtime: {
-        client: {
-          mode: Runtime.Client.Mode.REMOTE
-        },
-        // TODO(wittjosiah): Missing config in local client should fallback to remote client.
-        services: {
-          dxns: {
-            server: 'wss://node1.devnet.dxos.network/dxns/ws'
-          }
-        }
-      }
-    },
-    { rpcPort }
-  );
+  const servicesProvider = new ClientServicesProxy(rpcPort);
 
   await waitForRpc();
+
+  const client = new Client({ services: servicesProvider });
+
   await client.initialize();
   log('Initialized client RPC server finished.');
-  clientReady.emit(client);
+  clientReady.emit({ client, services: servicesProvider.services });
 };
 
 void init();

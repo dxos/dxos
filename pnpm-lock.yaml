@@ -2395,6 +2395,7 @@ importers:
       '@babel/runtime': ^7.9.6
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
@@ -2437,6 +2438,7 @@ importers:
       '@babel/runtime': 7.19.4
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../core/halo/credentials
