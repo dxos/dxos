@@ -1,7 +1,7 @@
 {
   "name": "@dxos/react-uikit",
   "version": "0.1.20",
-  "description": "A React component library for DXOS",
+  "description": "A React component library for DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -20,15 +20,12 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-toolbar": "^1.0.1",
     "@react-hook/async": "^3.1.1",
     "debug": "^4.3.3",
-    "lodash.throttle": "^4.1.1",
     "url-join": "^5.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/lodash.throttle": "^4.1.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",

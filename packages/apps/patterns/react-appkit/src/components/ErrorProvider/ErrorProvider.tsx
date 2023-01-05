@@ -5,7 +5,7 @@
 import { Warning } from 'phosphor-react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
-import { Tooltip, valenceColorText, defaultFocus, useTranslation, mx } from '@dxos/react-uikit';
+import { Tooltip, valenceColorText, defaultFocus, useTranslation, mx } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
 export interface ErrorContextState {

@@ -8,10 +8,11 @@ import { generatePath, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Invitation, Space } from '@dxos/client';
 import { InvitationResult, useClient, useSpaces } from '@dxos/react-client';
-import { Button, getSize, JoinDialog, useTranslation } from '@dxos/react-uikit';
+import { Button, getSize, useTranslation } from '@dxos/react-ui';
 import { MaybePromise } from '@dxos/util';
 
 import { HeadingWithActions } from '../HeadingWithActions';
+import { JoinDialog } from '../Join';
 import { SpaceList } from '../SpaceList';
 
 const invitationCodeFromUrl = (text: string) => {

@@ -11,7 +11,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useSelection, useSpace } from '@dxos/react-client';
-import { Loading, mx } from '@dxos/react-uikit';
+import { Loading, mx } from '@dxos/react-ui';
 import { TextModel } from '@dxos/text-model';
 
 import { DOCUMENT_TYPE } from '../../model';

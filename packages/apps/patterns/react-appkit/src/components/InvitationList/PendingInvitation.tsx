@@ -15,12 +15,12 @@ import {
   getSize,
   Loading,
   Tooltip,
-  InvitationStatus,
   useTranslation,
   mx
-} from '@dxos/react-uikit';
+} from '@dxos/react-ui';
 
 import { HeadingWithActions } from '../HeadingWithActions';
+import { InvitationStatus } from '../InvitationStatus';
 
 export interface PendingInvitationProps {
   wrapper: CancellableInvitationObservable;

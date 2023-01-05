@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Tooltip, useTranslation, valenceColorText, mx } from '@dxos/react-uikit';
+import { Tooltip, useTranslation, valenceColorText, mx } from '@dxos/react-ui';
 
 // TODO(burdon): Extend to show heartbeat, network status, etc.
 // TODO(burdon): Merge with ErrorBoundary indicator since overlaps.

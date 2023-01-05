@@ -23,10 +23,13 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@radix-ui/react-toolbar": "^1.0.1",
+    "lodash.throttle": "^4.1.1",
     "url-join": "^5.0.0"
   },
   "devDependencies": {
     "@dxos/react-client-testing": "workspace:*",
+    "@types/lodash.throttle": "^4.1.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",

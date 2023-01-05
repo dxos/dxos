@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Heading, Loading, useTranslation } from '@dxos/react-uikit';
+import { Heading, Loading, useTranslation } from '@dxos/react-ui';
 
 export const Fallback = ({ message }: { message: string }) => (
   <div className='py-8 flex flex-col gap-4' aria-live='polite'>
