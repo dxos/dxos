@@ -1,22 +1,67 @@
 on:
   push:
     branches:
-      - main
+      - rc-*
+      - hotfix-*
 
-name: Release automation with Release Please
+name: release-please
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - name: Github Release
+        id: release
+        uses: google-github-actions/release-please-action@v3
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
+          default-branch: ${{ github.ref_name }}
           release-type: node
           command: github-release
 
-      - uses: google-github-actions/release-please-action@v3
+      - name: Version Bump
+        uses: google-github-actions/release-please-action@v3
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
+          default-branch: ${{ github.ref_name }}
           release-type: node
           command: manifest-pr
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Checkout all branches
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config user.name "dxos-bot"
+          git config user.email "bot@dxos.org"
+
+      - name: Merge with production
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git switch production
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
+          git push
+
+      - name: Merge with main
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git switch main
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into main"
+          git push
+
+      - name: Fast-forward main
+        if: ${{ !steps.release.outputs.release_created }}
+        run: |
+          git switch main
+          git merge --ff-only ${{ github.ref_name }}
+          git push
+
+      - name: Delete release branch
+        if: ${{ steps.release.outputs.release_created }}
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.CREATE_PR_TOKEN }}
+          branches: ${{ github.ref_name }}
