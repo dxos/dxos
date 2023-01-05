@@ -14,7 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { useSpaces, useSpace, useSelection } from '@dxos/react-client';
+import { useSpace, useSelection, useDevtools, useStream } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
@@ -36,7 +36,12 @@ export const ItemsPanel = () => {
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
-  const spaces = useSpaces();
+  const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+  const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
+
   const space = useSpace(selectedSpaceKey);
   const items = useSelection(space?.select()) ?? [];
 
