@@ -34,7 +34,7 @@
         "resultsPath": "test-results/packages/sdk/react-client/playwright",
         "serve": "react-client:storybook:9009",
         "testPatterns": [
-          "packages/sdk/react-client/src/tests/playwright/**/*.test.{ts,js}"
+          "packages/sdk/react-client/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/react-client/src/**/*"

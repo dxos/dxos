@@ -34,7 +34,7 @@
         "resultsPath": "test-results/packages/e2e/rpc-tunnel-e2e",
         "serve": "rpc-tunnel-e2e:serve:5173",
         "testPatterns": [
-          "packages/e2e/rpc-tunnel-e2e/src/tests/playwright/**/*.test.{ts,js}"
+          "packages/e2e/rpc-tunnel-e2e/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
           "packages/e2e/rpc-tunnel-e2e/src/**/*"

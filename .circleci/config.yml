@@ -96,7 +96,7 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1
       # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1

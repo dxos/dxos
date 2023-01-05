@@ -77,7 +77,7 @@
         "resultsPath": "test-results/packages/apps/halo-app",
         "serve": "halo-app:preview:3000",
         "testPatterns": [
-          "packages/apps/halo-app/src/tests/playwright/**/*.test.{ts,js}"
+          "packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"
         ],
         "watchPatterns": [
           "packages/apps/halo-app/src/**/*"
