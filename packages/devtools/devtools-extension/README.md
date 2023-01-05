@@ -4,7 +4,9 @@ WARNING: This package is currently outdated and unmaintained.
 
 The DevTools extension provides debugging information about all aspects of the currently loaded DXOS app.
 
-<img width="640" alt="Screen Shot 2022-01-26 at 7 04 10 PM" src="https://user-images.githubusercontent.com/3523355/151267314-12169bab-8e45-4662-aa67-57128313ebb7.png">
+[![Watch the video](https://user-images.githubusercontent.com/36420699/210833098-ea42d197-0c4e-4b71-a83c-de2649c1a5cb.png)](https://github.com/dxos/dxos/pull/2193#issue-1512878065)
+
+Demo https://github.com/dxos/dxos/pull/2193#issue-1512878065
 
 ## Installation
 
@@ -68,9 +70,9 @@ The injected script sends messages through the content script via window events 
 1. Content script is injected into the page automatically by browser.
     1. Allows messaging with the page.
 1. Devtools page is created.
-    1. Waits for `window.__DXOS__` hook to appear.
     1. Creates devtools panel.
 1. Devtools panel is loaded.
+    1. Waits for `window.__DXOS__` hook to appear.
     1. Renders the devtools application.
     1. Client API connects via the `window.__DXOS__` hook.
 1. Devtools panel is ready.
