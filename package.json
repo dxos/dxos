@@ -23,6 +23,7 @@
     "nx": "nx",
     "prepare": "husky install",
     "run:templates": "scripts/run_templates",
+    "serve": "serve",
     "test": "nx run-many --target=test"
   },
   "dependencies": {
@@ -110,6 +111,7 @@
     "react-dom": "^18.2.0",
     "rollup": "^3.9.1",
     "semver": "^7.3.8",
+    "serve": "^14.1.2",
     "syncpack": "^8.2.4",
     "ts-jest": "^28.0.0",
     "ts-node": "10.9.1",

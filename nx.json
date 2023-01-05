@@ -97,6 +97,12 @@
         "^build"
       ]
     },
+    "preview": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "bundle"
+      ]
+    },
     "serve": {
       "inputs": ["production", "^production"],
       "dependsOn": [
