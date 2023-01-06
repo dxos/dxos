@@ -31,7 +31,6 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.13",
     "@dxos/async": "workspace:*",
     "@dxos/beast": "workspace:*",
     "@dxos/esbuild": "workspace:*",
@@ -109,7 +108,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rollup": "^3.9.1",
-    "rxjs": "^7.5.7",
     "semver": "^7.3.8",
     "syncpack": "^8.2.4",
     "ts-jest": "^28.0.0",

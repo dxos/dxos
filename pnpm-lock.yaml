@@ -24,7 +24,6 @@ importers:
 
   .:
     specifiers:
-      '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/beast': workspace:*
       '@dxos/conform': workspace:^0.1.0
@@ -104,7 +103,6 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       rollup: ^3.9.1
-      rxjs: ^7.5.7
       semver: ^7.3.8
       syncpack: ^8.2.4
       ts-jest: ^28.0.0
@@ -119,7 +117,6 @@ importers:
       execa: 5.1.1
       tslib: 2.4.0
     devDependencies:
-      '@babel/core': 7.19.3
       '@dxos/async': link:packages/common/async
       '@dxos/beast': link:tools/beast
       '@dxos/esbuild': link:tools/executors/esbuild
@@ -197,10 +194,9 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       rollup: 3.9.1
-      rxjs: 7.5.7
       semver: 7.3.8
       syncpack: 8.2.4
-      ts-jest: 28.0.8_jt6l6jnwaedusjewavi4f2yota
+      ts-jest: 28.0.8_zvlycx4l3ocl6q5apf7lthxxl4
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_taqxcviixjxyd5vh2trpwxojdm
       typescript: 4.8.4
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
@@ -29542,6 +29538,7 @@ packages:
     resolution: {integrity: sha512-z9MzKh/UcOqB3i20H6rtrlaE/CgjLOvheWK/9ILrbhROGTweAi1BaFsTT9FbwZi5Trr1qNRs+MXkhmR06awzQA==}
     dependencies:
       tslib: 2.4.1
+    dev: false
 
   /sade/1.8.1:
     resolution: {integrity: sha512-xal3CZX1Xlo/k4ApwCFrHVACi9fBqJ7V+mwhBsuf/1IOKbBy098Fex+Wa/5QMubw09pSZ/u8EY8PWgevJsXp1A==}
@@ -31692,7 +31689,7 @@ packages:
       typescript: 4.8.4
     dev: true
 
-  /ts-jest/28.0.8_jt6l6jnwaedusjewavi4f2yota:
+  /ts-jest/28.0.8_zvlycx4l3ocl6q5apf7lthxxl4:
     resolution: {integrity: sha512-5FaG0lXmRPzApix8oFG8RKjAz4ehtm8yMKOTy5HX3fY6W8kmvOrmcY0hKDElW52FJov+clhUbrKAqofnj4mXTg==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     hasBin: true
@@ -31713,7 +31710,6 @@ packages:
       esbuild:
         optional: true
     dependencies:
-      '@babel/core': 7.19.3
       bs-logger: 0.2.6
       esbuild: 0.16.14
       fast-json-stable-stringify: 2.1.0
