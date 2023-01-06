@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 import type { Page } from 'playwright';
-import waitForExpect from 'wait-for-expect';
 
 import { beforeAll, describe, setupPage, test } from '@dxos/test';
 
@@ -16,15 +15,16 @@ describe('iframe', () => {
   let page: Page;
 
   beforeAll(async function () {
-    const result = await setupPage(this.browser, `${config.baseUrl}/iframe.html`);
+    const result = await setupPage(this, `${config.baseUrl}/iframe.html`, async (page) => {
+      return await page.isVisible(':has-text("value")');
+    });
+
     page = result.page;
   });
 
   test('loads and connects.', async () => {
-    await waitForExpect(async () => {
-      const isVisible = await page.isVisible(':has-text("value")');
-      expect(isVisible).to.be.true;
-    });
+    const isVisible = await page.isVisible(':has-text("value")');
+    expect(isVisible).to.be.true;
   });
 
   test('parent and child share source of truth.', async () => {

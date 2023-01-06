@@ -4,13 +4,12 @@
 
 import { ExecutorContext, runExecutor } from '@nrwl/devkit';
 import chalk from 'chalk';
-import fetch, { Response } from 'node-fetch';
 import { resolve } from 'node:path';
 
 import { BrowserOptions, runBrowser as runBrowserMocha, runBrowserBuild } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
 import { BrowserTypes, TestEnvironment, TestEnvironments } from './types';
-import { poll, runSetup } from './util';
+import { runSetup } from './util';
 
 export type MochaExecutorOptions = NodeOptions &
   BrowserOptions & {
@@ -50,27 +49,9 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   ]);
 
   if (options.serve) {
-    const [project, target, port] = options.serve.split(':');
+    const [project, target] = options.serve.split(':');
     const iterator = await runExecutor({ project, target }, {}, context);
     void iterator.next();
-    await poll<Response | undefined>(
-      async () => {
-        process.stdout.write(`Polling port ${port}...`);
-        try {
-          const res = await fetch(`http://localhost:${port}`);
-          if (res.status < 400) {
-            process.stdout.write(chalk` {green ${res.status}}\n`);
-          } else {
-            process.stdout.write(chalk` {red ${res.status}}\n`);
-          }
-          return res;
-        } catch (err: any) {
-          process.stdout.write(chalk` {red ${err?.message}}\n`);
-          return undefined;
-        }
-      },
-      (res) => (res ? res.status >= 400 : true)
-    );
   }
 
   // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.

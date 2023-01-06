@@ -75,7 +75,7 @@
         "outputPath": "tmp/mocha/packages/apps/halo-app",
         "playwright": true,
         "resultsPath": "test-results/packages/apps/halo-app",
-        "serve": "halo-app:preview:3000",
+        "serve": "halo-app:preview",
         "testPatterns": [
           "packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"
         ],

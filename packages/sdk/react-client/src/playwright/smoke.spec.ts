@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 import { Page } from 'playwright';
-import waitForExpect from 'wait-for-expect';
 
 import { beforeAll, describe, setupPage, test } from '@dxos/test';
 
@@ -15,15 +14,21 @@ describe('Smoke test', function () {
   let page: Page;
 
   beforeAll(async function () {
-    const result = await setupPage(this.browser, storybookUrl('react-client-clientcontext--primary'));
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
+    if (mochaExecutor.environment === 'firefox') {
+      return;
+    }
+
+    const result = await setupPage(this, storybookUrl('react-client-clientcontext--primary'), async (page) => {
+      return await page.isVisible(':has-text("initialized")');
+    });
+
     page = result.page;
   });
 
   // NOTE: This test depends on connecting to the default production deployed HALO vault.
   test('Renders remote client info', async () => {
-    await waitForExpect(async () => {
-      const isVisible = await page.isVisible(':has-text("initialized")');
-      expect(isVisible).to.be.true;
-    }, 10_000);
+    const isVisible = await page.isVisible(':has-text("initialized")');
+    expect(isVisible).to.be.true;
   }).skipEnvironments('firefox'); // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
 });
