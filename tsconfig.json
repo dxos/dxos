@@ -23,6 +23,9 @@
     "stripInternal": true,
     "target": "ES2018"
   },
+  "ts-node": {
+    "swc": true
+  },
   "include": [
     "**/*.ts",
     "**/*.tsx"
