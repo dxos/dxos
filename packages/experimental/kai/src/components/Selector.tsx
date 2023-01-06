@@ -39,6 +39,7 @@ export const Selector: FC<{
         if (options?.length) {
           const option = options[Math.max(0, idx - 1)];
           handleSelect(option.id);
+          setOpen(true);
         }
         break;
       }
@@ -47,21 +48,28 @@ export const Selector: FC<{
         if (options?.length) {
           const option = options[Math.min(options.length - 1, idx + 1)];
           handleSelect(option.id);
+          setOpen(true);
         }
         break;
       }
     }
   };
 
-  // TODO(burdon): Esc to cancel/close.
-  // TODO(burdon): Cursor up/down (input tab).
+  // TODO(burdon): Esc to cancel/close (ref).
+  // TODO(burdon): Refocus on button click.
   // TODO(burdon): On change dynamic options.
-  // TODO(burdon): Click outside (lose focus) to close.
 
   return (
     <div className='flex flex-col'>
       <div className={mx('flex flex-1 items-center p-2 border-2', open ? 'rounded-t' : 'rounded')}>
-        <Input className='w-full outline-0' onKeyDown={handleKeyDown} onChange={onChange} placeholder='Select...' />
+        <Input
+          className='w-full outline-0'
+          onKeyDown={handleKeyDown}
+          onChange={onChange}
+          onBlur={() => setOpen(false)}
+          placeholder='Select...'
+        />
+
         <div className='flex' style={{ width: 24 }}>
           {hasOptions && (
             <button className='p-1' onClick={handleToggleOpen}>

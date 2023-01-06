@@ -8,6 +8,7 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChan
   onChange?: (value: string) => void;
   onEnter?: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
+  onBlur?: () => void;
   delay?: number;
 }
 
@@ -19,6 +20,7 @@ export const Input: FC<InputProps> = ({
   onKeyDown,
   onChange,
   onEnter,
+  onBlur,
   delay = 1000,
   ...props
 }) => {
@@ -44,6 +46,11 @@ export const Input: FC<InputProps> = ({
     }
   };
 
+  const handleBlur = () => {
+    handleUpdate(value);
+    onBlur?.();
+  };
+
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case 'Enter': {
@@ -64,13 +71,5 @@ export const Input: FC<InputProps> = ({
     }
   };
 
-  return (
-    <input
-      value={value}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      onBlur={() => handleUpdate(value)}
-      {...props}
-    />
-  );
+  return <input value={value} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} {...props} />;
 };
