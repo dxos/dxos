@@ -38,14 +38,8 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     ...options.testPatterns,
     ...ignoreArgs,
     ...reporterArgs,
-    // NOTE: The import order here is important.
-    //   The `require` hooks that are registered in those modules will be run in the same order as they are imported.
-    //   We want the logger preprocessor to be run on typescript source first.
-    //   Then the SWC will transpile the typescript source to javascript.
     '-r',
-    '@dxos/log-hook/register',
-    '-r',
-    '@swc-node/register',
+    'ts-node/register',
     ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
     ...setupArgs,
     ...watchArgs,
@@ -61,7 +55,11 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     env: {
       ...process.env,
       FORCE_COLOR: '2',
-      MOCHA_TAGS: options.tags.join(',')
+      MOCHA_TAGS: options.tags.join(','),
+
+      // Patch in ts-node will read this.
+      // https://github.com/TypeStrong/ts-node/issues/1937
+      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]])
     }
   });
 
