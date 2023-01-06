@@ -1,18 +1,17 @@
 /**
  * Inspired by https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.entry
  */
-export function entry<K, V>(map: Map<K, V>, key: K): MapEntry<K, V, undefined> {
-  return new MapEntry(map, key);
-}
+//
+// Copyright 2023 DXOS.org
+//
+
+export const entry = <K, V>(map: Map<K, V>, key: K): MapEntry<K, V, undefined> => new MapEntry(map, key);
 
 export class MapEntry<K, V, U> {
   /**
    * @internal
    */
-  constructor(
-    private readonly _map: Map<K, V>,
-    private readonly _key: K,
-  ) {}
+  constructor(private readonly _map: Map<K, V>, private readonly _key: K) {}
 
   get key(): K {
     return this._key;

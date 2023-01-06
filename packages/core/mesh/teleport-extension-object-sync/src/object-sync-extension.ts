@@ -1,5 +1,9 @@
 //
 
+//
+// Copyright 2023 DXOS.org
+//
+
 import { scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -12,7 +16,7 @@ export type ObjectSyncExtensionParams = {
   onClose: () => Promise<void>;
   onWantListUpdated: (wantList: Set<string>) => void;
   onPush: (data: DataObject) => Promise<void>;
-}
+};
 
 /**
  * Manages replication between a set of feeds for a single teleport session.
@@ -30,15 +34,15 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
   ) {
     super({
       exposed: {
-        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService'),
+        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService')
       },
       requested: {
-        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService'),
+        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService')
       },
       encodingOptions: {
         preserveAny: true
       }
-    })
+    });
   }
 
   override async onOpen(context: ExtensionContext): Promise<void> {
@@ -55,16 +59,16 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
     return {
       ObjectSyncService: {
         want: async (headers) => {
-          log('remote want', { ids: headers.ids })
+          log('remote want', { ids: headers.ids });
           this.remoteWantList = new Set(headers.ids ?? []);
           this._syncParams.onWantListUpdated(this.remoteWantList);
         },
         push: async (data) => {
-          log('received', { data })
+          log('received', { data });
           await this._syncParams.onPush(data);
         }
       }
-    }
+    };
   }
 
   @synchronized
@@ -72,7 +76,7 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
     if (this._ctx.disposed) {
       return;
     }
-    log('push', { data })
+    log('push', { data });
     await this.rpc.ObjectSyncService.push(data);
   }
 
@@ -82,7 +86,7 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
       return;
     }
 
-    log('want', { wantList })
+    log('want', { wantList });
     await this.rpc.ObjectSyncService.want({ ids: [...wantList] });
   }
 
@@ -91,7 +95,7 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
   }
 
   updateWantListInASeparateTask(wantList: Set<string>) {
-    scheduleTask(this._ctx, async () => this.updateWantList(wantList))
+    scheduleTask(this._ctx, async () => this.updateWantList(wantList));
   }
 }
 
