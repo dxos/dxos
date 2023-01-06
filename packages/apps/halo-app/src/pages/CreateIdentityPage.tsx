@@ -10,7 +10,7 @@ import { useClient, useIdentity } from '@dxos/react-client';
 import { Heading, useTranslation } from '@dxos/react-components';
 
 const CreateIdentityPage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const client = useClient();
   const identity = useIdentity();
   const [displayName, setDisplayName] = useState('');
@@ -39,12 +39,12 @@ const CreateIdentityPage = () => {
 
   return (
     <main className='max-is-lg mli-auto pli-7 mbs-7'>
-      <Heading>{t('create identity label', { ns: 'appkit' })}</Heading>
+      <Heading>{t('create identity label')}</Heading>
       <SingleInputStep
         {...{
           pending,
-          inputLabel: t('displayName label', { ns: 'appkit' }),
-          inputPlaceholder: t('displayName placeholder', { ns: 'appkit' }),
+          inputLabel: t('displayName label'),
+          inputPlaceholder: t('displayName placeholder'),
           onChange: setDisplayName,
           onNext,
           onBack: () => history.back()

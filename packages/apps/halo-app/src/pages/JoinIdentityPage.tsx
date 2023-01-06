@@ -14,7 +14,7 @@ import { invitationCodeFromUrl } from '../util';
 
 const JoinIdentityPage = () => {
   const client = useClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const invitationParam = searchParams.get('invitation');
@@ -30,7 +30,7 @@ const JoinIdentityPage = () => {
 
   return (
     <main className='max-is-lg mli-auto pli-7 mbs-7'>
-      <Heading>{t('join identity label', { ns: 'appkit' })}</Heading>
+      <Heading>{t('join identity label')}</Heading>
       <JoinPanel
         initialInvitationCode={invitationParam ?? undefined}
         parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
