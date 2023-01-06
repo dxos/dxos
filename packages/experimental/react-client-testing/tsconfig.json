@@ -32,7 +32,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../deprecated/react-components"
+      "path": "../../deprecated/react-components-deprecated"
     },
     {
       "path": "../../sdk/client"

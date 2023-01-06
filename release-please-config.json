@@ -278,7 +278,7 @@
         },
         {
           "type": "json",
-          "path": "packages/deprecated/react-components/package.json",
+          "path": "packages/deprecated/react-components-deprecated/package.json",
           "jsonpath": "$.version"
         },
         {

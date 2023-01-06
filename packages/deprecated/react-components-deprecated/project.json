@@ -1,16 +1,16 @@
 {
-  "sourceRoot": "packages/deprecated/react-components/src",
+  "sourceRoot": "packages/deprecated/react-components-deprecated/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/deprecated/react-components/src/index.ts",
-        "outputPath": "packages/deprecated/react-components/dist",
+        "main": "packages/deprecated/react-components-deprecated/src/index.ts",
+        "outputPath": "packages/deprecated/react-components-deprecated/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/deprecated/react-components/tsconfig.json"
+        "tsConfig": "packages/deprecated/react-components-deprecated/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -21,7 +21,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/deprecated/react-components/**/*.{ts,tsx,js,jsx}"
+          "packages/deprecated/react-components-deprecated/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [

@@ -191,7 +191,7 @@ dxos/react-appkit --> @dxos/react-components
 dxos/react-appkit --> dxos/telemetry
 dxos/telemetry --> dxos/sentry
 dxos/composer-app --> dxos/react-composer
-dxos/react-composer --> @dxos/react-componentskit
+dxos/react-composer --> @dxos/react-components
 dxos/react-composer --> dxos/vite-plugin
 dxos/vite-plugin --> dxos/config
 ```

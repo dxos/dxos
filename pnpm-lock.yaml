@@ -1971,7 +1971,7 @@ importers:
       debug: 4.3.4
       glob: 7.1.7
 
-  packages/deprecated/react-components:
+  packages/deprecated/react-components-deprecated:
     specifiers:
       '@babel/core': ^7.18.13
       '@babel/plugin-transform-runtime': ^7.11.5
@@ -2119,7 +2119,7 @@ importers:
       '@dxos/keys': link:../../common/keys
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-client-testing': link:../../experimental/react-client-testing
-      '@dxos/react-components-deprecated': link:../react-components
+      '@dxos/react-components-deprecated': link:../react-components-deprecated
       '@dxos/registry-client': link:../../experimental/registry-client
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
@@ -2180,7 +2180,7 @@ importers:
       '@dxos/echo-db': link:../../../core/echo/echo-db
       '@dxos/protocols': link:../../../core/protocols
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-components-deprecated': link:../../react-components
+      '@dxos/react-components-deprecated': link:../../react-components-deprecated
       '@dxos/react-toolkit': link:../../react-toolkit
       '@dxos/rpc': link:../../../core/mesh/rpc
       '@dxos/util': link:../../../common/util
@@ -2225,7 +2225,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-components-deprecated': link:../../react-components
+      '@dxos/react-components-deprecated': link:../../react-components-deprecated
       '@dxos/react-toolkit': link:../../react-toolkit
       '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
       '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
@@ -2402,7 +2402,7 @@ importers:
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components-deprecated': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/react-registry-client': link:../../experimental/react-registry-client
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/registry-client': link:../../experimental/registry-client
@@ -2559,7 +2559,7 @@ importers:
       '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/network-manager': link:../../core/mesh/network-manager
-      '@dxos/react-components-deprecated': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.10.0_@babel+core@7.19.3
@@ -2609,7 +2609,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-components-deprecated': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -2906,7 +2906,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-client-testing': link:../react-client-testing
-      '@dxos/react-components-deprecated': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/react-echo-graph': link:../react-echo-graph
       '@dxos/react-ipfs': link:../react-ipfs
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
@@ -3094,7 +3094,7 @@ importers:
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components-deprecated': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/util': link:../../common/util
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
@@ -3151,7 +3151,7 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-client-testing': link:../react-client-testing
-      '@dxos/react-components-deprecated': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
@@ -5830,6 +5830,7 @@ packages:
 
   /@dxos/esbuild-server/2.29.0:
     resolution: {integrity: sha512-5jsQ800UgsX80Mbp5tGct/r3U1/4nzQDkyCWN2gbKnLBs/Nd3WTkLOTgbRd/GIBN6DSTkCdycPEVDXI0+P13uw==}
+    deprecated: Versions published prior to open sourcing are no longer supported
     hasBin: true
     dependencies:
       '@babel/core': 7.19.3
@@ -5861,6 +5862,7 @@ packages:
 
   /@dxos/esbuild-server/2.29.0_@types+react@18.0.21:
     resolution: {integrity: sha512-5jsQ800UgsX80Mbp5tGct/r3U1/4nzQDkyCWN2gbKnLBs/Nd3WTkLOTgbRd/GIBN6DSTkCdycPEVDXI0+P13uw==}
+    deprecated: Versions published prior to open sourcing are no longer supported
     hasBin: true
     dependencies:
       '@babel/core': 7.19.3
@@ -33780,7 +33782,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 2.79.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
