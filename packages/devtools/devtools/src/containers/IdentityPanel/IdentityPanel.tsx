@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useDevices, useIdentity } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 export const IdentityPanel = () => {
   const identity = useIdentity();

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Config } from '@dxos/protocols/proto/dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClientServices } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 export const ConfigPanel = () => {
   const services = useClientServices();

@@ -8,12 +8,12 @@ import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { truncateKey } from '@dxos/debug';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { CopyText } from '@dxos/react-components';
+import { CopyText } from '@dxos/react-components-deprecated';
 import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';
-import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
+import { BooleanIcon } from '../BooleanIcon';
 import { Table, TableCell } from '../Table';
 
 const TimeFrame = ({ value }: { value: Timeframe }) => (

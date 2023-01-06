@@ -37,8 +37,6 @@ subgraph sdk [sdk]
   click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
   dxos/react-client("@dxos/react-client"):::def
   click dxos/react-client "dxos/dxos/tree/main/packages/sdk/react-client/docs"
-  dxos/react-uikit("@dxos/react-uikit"):::def
-  click dxos/react-uikit "dxos/dxos/tree/main/packages/sdk/react-uikit/docs"
   dxos/vite-plugin("@dxos/vite-plugin"):::def
   click dxos/vite-plugin "dxos/dxos/tree/main/packages/sdk/vite-plugin/docs"
 end
@@ -61,8 +59,8 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
-  dxos/react-ui("@dxos/react-ui"):::def
-  click dxos/react-ui "dxos/dxos/tree/main/packages/common/react-ui/docs"
+  dxos/react-components("@dxos/react-components"):::def
+  click dxos/react-components "dxos/dxos/tree/main/packages/common/react-ui/docs"
 
   subgraph _ [ ]
     style _ fill:transparent
@@ -180,9 +178,8 @@ dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-composer --> dxos/react-uikit
-dxos/react-uikit --> dxos/react-client
-dxos/react-uikit --> dxos/react-ui
+dxos/react-composer --> dxos/react-components
+dxos/react-components --> dxos/react-client
 dxos/react-composer --> dxos/vite-plugin
 dxos/vite-plugin --> dxos/config
 ```
@@ -221,8 +218,7 @@ dxos/vite-plugin --> dxos/config
 | [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/react-async`](../../../../common/react-async/docs/README.md) | &check; |
 | [`@dxos/react-client`](../../../../sdk/react-client/docs/README.md) | &check; |
-| [`@dxos/react-ui`](../../../../common/react-ui/docs/README.md) | &check; |
-| [`@dxos/react-uikit`](../../../../sdk/react-uikit/docs/README.md) | &check; |
+| [`@dxos/react-components`](../../../../common/react-components/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../../core/mesh/rpc/docs/README.md) |  |
 | [`@dxos/rpc-tunnel`](../../../../core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/teleport`](../../../../core/mesh/teleport/docs/README.md) |  |

@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
@@ -34,24 +34,29 @@ const App = ({ port }: { port: MessagePort }) => {
     await client.open();
 
     const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
-    stream.subscribe(msg => {
-      setValue(msg.data);
-    }, error => {
-      if (error) {
-        setError(error.message);
+    stream.subscribe(
+      (msg) => {
+        setValue(msg.data);
+      },
+      (error) => {
+        if (error) {
+          setError(error.message);
+        }
+        setClosed(true);
       }
-      setClosed(true);
-    });
+    );
 
     setClosed(false);
   }, []);
 
   return (
-    <JsonTreeView data={{
-      closed,
-      error,
-      value
-    }} />
+    <JsonTreeView
+      data={{
+        closed,
+        error,
+        value
+      }}
+    />
   );
 };
 
@@ -59,12 +64,11 @@ if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
 
-    createRoot(document.getElementById('root')!)
-      .render(
-        <StrictMode>
-          <App port={worker.port} />
-        </StrictMode>
-      );
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <App port={worker.port} />
+      </StrictMode>
+    );
   })();
 } else {
   throw new Error('Requires a browser with support for shared workers.');

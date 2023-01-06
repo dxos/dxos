@@ -16,8 +16,7 @@ export const reactDevDeps = ({ depVersion }: { depVersion: string }) => ({
   '@vitejs/plugin-react': '^2.0.1'
 });
 export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
-  '@dxos/react-ui': depVersion,
-  '@dxos/react-uikit': depVersion,
+  '@dxos/react-components': depVersion,
   '@dxos/react-appkit': depVersion,
   'phosphor-react': '^1.4.1',
   'react-router-dom': '^6.3.0',

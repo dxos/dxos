@@ -11,7 +11,7 @@ export default defineTemplate(
       const { resolve } = require('path');
       
       const { ConfigPlugin } = require('@dxos/config/vite-plugin');
-      const { ThemePlugin } = require('@dxos/react-ui/plugin');
+      const { ThemePlugin } = require('@dxos/react-components/plugin');
       
       module.exports = {
         stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
@@ -39,8 +39,7 @@ export default defineTemplate(
                 '@dxos/react-appkit',
                 '@dxos/react-client',
                 '@dxos/react-composer',
-                '@dxos/react-ui',
-                '@dxos/react-uikit',
+                '@dxos/react-components',
                 '@dxos/text-model',
                 '@dxos/util',
                 'storybook-dark-mode'
@@ -56,7 +55,7 @@ export default defineTemplate(
               ThemePlugin({
                 content: [
                   resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-                  resolve(__dirname, '../node_modules/@dxos/react-uikit/dist/**/*.js')
+                  resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.js')
                 ]
               })
             ]

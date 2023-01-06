@@ -8,7 +8,7 @@ import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import { CopyText } from '@dxos/react-components';
+import { CopyText } from '@dxos/react-components-deprecated';
 import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';

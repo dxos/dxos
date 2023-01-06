@@ -7,7 +7,7 @@ import React from 'react';
 
 import { FeedBlock } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { MessageTable } from './MessageTable';
 
@@ -19,8 +19,12 @@ export default {
 const generateTree = (node = {}, level = 1) => {
   if (level > 0) {
     [...new Array(1 + Math.floor(Math.random() * 5))].forEach(() => {
-      (node as any)[faker.lorem.word()] = Math.random() > 0.5 ? Boolean(Math.random() > 0.5)
-        : (level - 1) > 0 ? generateTree({}, level - 1) : faker.lorem.word();
+      (node as any)[faker.lorem.word()] =
+        Math.random() > 0.5
+          ? Boolean(Math.random() > 0.5)
+          : level - 1 > 0
+          ? generateTree({}, level - 1)
+          : faker.lorem.word();
     });
   }
 
@@ -39,9 +43,7 @@ export const Primary = () => {
 
   return (
     <FullScreen>
-      <MessageTable
-        messages={messages}
-      />
+      <MessageTable messages={messages} />
     </FullScreen>
   );
 };
