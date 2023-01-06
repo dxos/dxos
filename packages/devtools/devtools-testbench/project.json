@@ -2,35 +2,6 @@
   "sourceRoot": "packages/devtools/devtools-testbench/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/devtools/devtools-testbench/src/index.ts",
-        "outputPath": "packages/devtools/devtools-testbench/dist/types",
-        "tsConfig": "packages/devtools/devtools-testbench/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "build-storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nrwl/storybook:build",
-      "options": {
-        "config": {
-          "configFolder": "packages/devtools/devtools-testbench/.storybook"
-        },
-        "outputPath": "packages/devtools/devtools-testbench/out/dxos/storybook/devtools",
-        "uiFramework": "@storybook/react"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "bundle": {
       "executor": "@nxext/vite:build",
       "inputs": [
@@ -63,18 +34,6 @@
         "{options.outputPath}"
       ]
     },
-    "compile": {
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/devtools/devtools-testbench/src/index.ts"
-        ],
-        "outputPath": "packages/devtools/devtools-testbench/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -92,20 +51,6 @@
       "options": {
         "configFile": "packages/devtools/devtools-testbench/vite.config.ts",
         "outputPath": "packages/devtools/devtools-testbench/out/devtools"
-      }
-    },
-    "storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nrwl/storybook:storybook",
-      "options": {
-        "config": {
-          "configFolder": "packages/devtools/devtools-testbench/.storybook"
-        },
-        "uiFramework": "@storybook/react"
       }
     }
   },

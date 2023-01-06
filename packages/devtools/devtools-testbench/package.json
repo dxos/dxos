@@ -7,10 +7,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -20,6 +16,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/devtools-mesh": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/kai": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/messenger-model": "workspace:*",
@@ -48,7 +45,8 @@
     "jdenticon": "^3.2.0",
     "moment": "^2.24.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
