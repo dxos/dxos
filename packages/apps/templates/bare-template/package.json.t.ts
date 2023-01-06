@@ -28,14 +28,12 @@ export const pwaDevDeps = ({ depVersion }: { depVersion: string }) => ({
 });
 export const storybookDevDeps = ({ depVersion }: { depVersion: string }) => ({
   '@babel/core': '^7.18.13',
-  '@storybook/addon-actions': '^6.5.10',
   '@storybook/addon-essentials': '^6.5.10',
   '@storybook/addon-interactions': '^6.5.10',
   '@storybook/addon-links': '^6.5.10',
   '@storybook/builder-vite': '^0.2.2',
   '@storybook/mdx2-csf': '^0.0.3',
   '@storybook/react': '^6.5.10',
-  '@storybook/testing-library': '^0.0.13',
   'require-from-string': '^2.0.2',
   'storybook-dark-mode': '^1.1.2',
   webpack: '^5.74.0'

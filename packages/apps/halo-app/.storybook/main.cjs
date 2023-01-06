@@ -3,53 +3,46 @@ const { mergeConfig } = require('vite');
 const { ConfigPlugin } = require('@dxos/config/vite-plugin');
 
 module.exports = {
-  stories: [
-    '../src/**/*.stories.mdx',
-    '../src/**/*.stories.@(js|jsx|ts|tsx)'
-  ],
+  stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-essentials',
-    '@storybook/addon-interactions'
+    '@storybook/addon-interactions',
+    'storybook-dark-mode'
   ],
-  framework: '@storybook/react',
-  core: {
-    builder: '@storybook/builder-vite'
+  framework: {
+    name: '@storybook/react-vite',
+    options: {}
   },
-  features: {
-    storyStoreV7: true,
-    previewMdx2: true
-  },
-  viteFinal: async config => mergeConfig(config, {
-    optimizeDeps: {
-      include: [
-        '@dxos/client',
-        '@dxos/config',
-        '@dxos/protocols',
-        '@dxos/react-async',
-        '@dxos/react-client',
-        '@dxos/react-client-testing',
-        '@dxos/react-components',
-        '@dxos/react-toolkit',
-        '@dxos/util'
-      ]
-    },
-    build: {
-      commonjsOptions: {
+  viteFinal: async (config) =>
+    mergeConfig(config, {
+      optimizeDeps: {
         include: [
-          /client/,
-          /config/,
-          /protocols/,
-          /react-async/,
-          /react-client/,
-          /react-client-testing/,
-          /react-components/,
-          /react-toolkit/,
-          /util/,
-          /node_modules/
+          '@dxos/async',
+          '@dxos/client',
+          '@dxos/keys',
+          '@dxos/log',
+          '@dxos/config',
+          '@dxos/metagraph',
+          '@dxos/network-manager',
+          '@dxos/protocols',
+          '@dxos/react-appkit',
+          '@dxos/react-async',
+          '@dxos/react-client',
+          '@dxos/react-ui',
+          '@dxos/react-uikit',
+          '@dxos/rpc',
+          '@dxos/rpc-tunnel',
+          '@dxos/sentry',
+          '@dxos/telemetry',
+          '@dxos/util'
         ]
-      }
-    },
-    plugins: [ConfigPlugin()]
-  })
+      },
+      build: {
+        commonjsOptions: {
+          include: [/packages/, /node_modules/]
+        }
+      },
+      plugins: [ConfigPlugin()]
+    })
 };

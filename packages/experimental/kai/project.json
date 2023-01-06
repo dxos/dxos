@@ -2,6 +2,15 @@
   "sourceRoot": "packages/experimental/kai/src",
   "projectType": "application",
   "targets": {
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "outputPath": "packages/experimental/kai/out/kai"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -27,10 +36,9 @@
       ]
     },
     "serve": {
-      "executor": "@nxext/vite:dev",
+      "executor": "@nrwl/vite:dev-server",
       "options": {
-        "configFile": "packages/experimental/kai/vite.config.ts",
-        "outputPath": "packages/experimental/kai/out/halo"
+        "buildTarget": "kai:bundle"
       }
     },
     "test": {

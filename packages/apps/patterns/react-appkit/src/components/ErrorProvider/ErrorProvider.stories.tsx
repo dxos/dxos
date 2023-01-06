@@ -3,15 +3,13 @@
 //
 
 import '@dxosTheme';
-import { ComponentStory, Story } from '@storybook/react';
-import React, { FC } from 'react';
+import React from 'react';
 
 import { Button } from '@dxos/react-components';
 
 import { ErrorProvider } from './ErrorProvider';
 
 export default {
-  title: 'react-appkit/ErrorProvider',
   component: ErrorProvider
 };
 
@@ -29,24 +27,12 @@ const UnhandledRejectionThrower = () => {
   );
 };
 
-const Template = (_args: {}) => (
-  <ErrorProvider>
-    <div className='flex flex-col gap-4'>
-      <UnhandledRejectionThrower />
-    </div>
-  </ErrorProvider>
-);
-
-// TODO(wittjosiah): Factor out.
-const templateForComponent =
-  <P extends {}>(Component: FC<P>) =>
-  (props: P): Story<P> => {
-    const template: ComponentStory<typeof Component> = (args) => <Component {...args} />;
-
-    const story = template.bind({});
-    story.args = props;
-    return story;
-  };
-
-export const Default = templateForComponent(Template)({});
-Default.args = {};
+export const Default = {
+  render: () => {
+    <ErrorProvider>
+      <div className='flex flex-col gap-4'>
+        <UnhandledRejectionThrower />
+      </div>
+    </ErrorProvider>;
+  }
+};
