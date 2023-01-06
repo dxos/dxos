@@ -1845,6 +1845,33 @@ importers:
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
+  packages/core/mesh/teleport-extension-object-sync:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/teleport': workspace:*
+      '@dxos/util': workspace:*
+      typescript: ^4.8.4
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/context': link:../../../common/context
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
+      '@dxos/protocols': link:../../protocols
+      '@dxos/rpc': link:../rpc
+      '@dxos/teleport': link:../teleport
+      '@dxos/util': link:../../../common/util
+    devDependencies:
+      typescript: 4.8.4
+
   packages/core/mesh/teleport-extension-presence:
     specifiers:
       '@dxos/async': workspace:*
