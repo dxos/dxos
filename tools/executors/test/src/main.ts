@@ -9,7 +9,6 @@ import { resolve } from 'node:path';
 
 import { BrowserOptions, runBrowser as runBrowserMocha, runBrowserBuild } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
-import { runPlaywright } from './run-playwright';
 import { BrowserTypes, TestEnvironment, TestEnvironments } from './types';
 import { poll, runSetup } from './util';
 
@@ -18,7 +17,6 @@ export type MochaExecutorOptions = NodeOptions &
     environments?: (TestEnvironment | 'all')[];
     devEnvironments: TestEnvironment[];
     ciEnvironments: TestEnvironment[];
-    playwright?: boolean;
     serve?: string;
     setup?: string;
   };
@@ -51,8 +49,6 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     resolvedOptions.setup && runSetup(resolvedOptions.setup)
   ]);
 
-  const runBrowser = options.playwright ? runPlaywright : runBrowserMocha;
-
   if (options.serve) {
     const [project, target, port] = options.serve.split(':');
     const iterator = await runExecutor({ project, target }, {}, context);
@@ -81,16 +77,18 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   // TODO(wittjosiah): Run all even if there are failures.
   let success = true;
   for (const env of resolvedOptions.environments) {
+    let exitCode: number | null;
     switch (env) {
       case 'chromium':
       case 'firefox':
       case 'webkit': {
-        success &&= skipBrowserTests || (await runBrowser(context, { ...resolvedOptions, browser: env }));
+        const runBrowser = options.playwright ? runNode : runBrowserMocha;
+        exitCode = skipBrowserTests ? null : await runBrowser(context, { ...resolvedOptions, browser: env });
         break;
       }
 
       case 'nodejs': {
-        success &&= await runNode(context, resolvedOptions);
+        exitCode = await runNode(context, resolvedOptions);
         break;
       }
 
@@ -98,6 +96,14 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
         throw new Error(`Invalid env: ${env}`);
       }
     }
+
+    if (exitCode === 0) {
+      console.log(chalk`\n{green Passed in {blue {bold ${env}}}}\n`);
+    } else if (exitCode) {
+      console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${env}}}}\n`);
+    }
+
+    success &&= exitCode === 0;
   }
 
   return { success };

@@ -37,22 +37,17 @@ export const runBrowser = async (context: ExecutorContext, options: BrowserOptio
     outDir: options.xmlReport ? options.resultsPath : undefined
   });
 
-  const success = exitCode === 0;
-  if (success) {
-    console.log(chalk`\n{green Passed in {blue {bold ${options.browser}}}}\n`);
-  } else {
-    console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${options.browser}}}}\n`);
-  }
-
   if (options.stayOpen) {
-    console.log(`\nCompleted with ${success ? 'success' : 'failure'}. Browser window stays open.`);
+    console.log(
+      `\nCompleted with ${exitCode === 0 ? chalk`{green success}` : chalk`{red failure}`}. Browser window stays open.`
+    );
 
     await new Promise((resolve) => {
       page.on('close', resolve);
     });
   }
 
-  return success;
+  return exitCode;
 };
 
 export const runBrowserBuild = async (options: BrowserOptions) => {

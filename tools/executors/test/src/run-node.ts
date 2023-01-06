@@ -22,6 +22,11 @@ export type NodeOptions = {
   checkLeaks: boolean;
   forceExit: boolean;
   domRequired: boolean;
+  playwright: boolean;
+  browser?: string;
+  headless: boolean;
+  stayOpen: boolean;
+  browserArgs?: string[];
   reporter?: string;
   inspect?: boolean;
 };
@@ -33,7 +38,10 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     env: {
       ...process.env,
       FORCE_COLOR: '2',
+      HEADLESS: String(options.headless),
+      STAY_OPEN: String(options.stayOpen),
       MOCHA_TAGS: options.tags.join(','),
+      MOCHA_ENV: options.browser ?? 'nodejs',
 
       // Patch in ts-node will read this.
       // https://github.com/TypeStrong/ts-node/issues/1937
@@ -41,13 +49,13 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     }
   });
 
-  return !exitCode;
+  return exitCode;
 };
 
-export const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
+const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
-  const setupArgs = getSetupArgs(context.root, options.domRequired);
+  const setupArgs = getSetupArgs(context.root, options.domRequired, options.playwright);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
@@ -112,8 +120,14 @@ const getIgnoreArgs = async (testPatterns: string[]) => {
     .flat();
 };
 
-const getSetupArgs = (root: string, domRequired: boolean) => {
-  const scripts = ['colors', 'mocha-env', 'catch-unhandled-rejections', ...(domRequired ? ['react-setup'] : [])];
+const getSetupArgs = (root: string, domRequired: boolean, playwright: boolean) => {
+  const scripts = [
+    'colors',
+    'mocha-env',
+    'catch-unhandled-rejections',
+    ...(domRequired ? ['react-setup'] : []),
+    ...(playwright ? ['playwright'] : [])
+  ];
 
   return scripts
     .map((script) => join(root, 'tools/executors/test/dist/src/setup', `${script}.js`))

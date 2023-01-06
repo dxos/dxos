@@ -29,7 +29,8 @@
     },
     "playwright": {
       "type": "boolean",
-      "description": "Running playwright tests, sets up and provides a playwright environment"
+      "description": "Running playwright tests, sets up and provides a playwright environment",
+      "default": false
     },
     "serve": {
       "type": "string",
