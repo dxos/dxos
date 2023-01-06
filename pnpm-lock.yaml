@@ -170,8 +170,8 @@ importers:
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       babel-loader: 8.2.5_wfdvla2jorjoj23kkavho2upde
       chai: 4.3.6
       chai-as-promised: 7.1.1_chai@4.3.6
@@ -206,7 +206,7 @@ importers:
       semver: 7.3.8
       syncpack: 8.2.4
       ts-jest: 28.0.8_2mlypa2nfjbqiqoxx2moogkvdu
-      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_taqxcviixjxyd5vh2trpwxojdm
       typescript: 4.8.4
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
@@ -276,7 +276,7 @@ importers:
       prettier: 2.7.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
       typedoc: 0.23.22_typescript@4.8.4
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
@@ -292,9 +292,8 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-composer': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
       '@sentry/react': ^7.17.2
@@ -313,9 +312,8 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/react-composer': link:../patterns/react-composer
-      '@dxos/react-ui': link:../../common/react-ui
-      '@dxos/react-uikit': link:../../sdk/react-uikit
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@sentry/react': 7.20.0_react@18.2.0
@@ -327,7 +325,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/apps/halo-app:
@@ -344,13 +342,14 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
+      '@headlessui/react': ^1.7.3
+      '@radix-ui/react-alert-dialog': ^1.0.2
       '@react-hook/async': ^3.1.1
       '@sentry/react': ^7.17.2
       '@types/debug': ^4.1.7
@@ -380,13 +379,14 @@ importers:
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../../common/react-ui
-      '@dxos/react-uikit': link:../../sdk/react-uikit
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
+      '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-alert-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@react-hook/async': 3.1.1_react@18.2.0
       '@sentry/react': 7.20.0_react@18.2.0
       debug: 4.3.4
@@ -404,7 +404,7 @@ importers:
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/apps/patterns/assets:
@@ -419,13 +419,16 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-uikit': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
+      '@radix-ui/react-toolbar': ^1.0.1
+      '@types/lodash.throttle': ^4.1.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
+      lodash.throttle: ^4.1.1
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -440,13 +443,16 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/react-components': link:../../../common/react-components
       '@dxos/sentry': link:../../../common/sentry
       '@dxos/telemetry': link:../../../common/telemetry
       '@dxos/util': link:../../../common/util
+      '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      lodash.throttle: 4.1.1
       url-join: 5.0.0
     devDependencies:
       '@dxos/react-client-testing': link:../../../experimental/react-client-testing
+      '@types/lodash.throttle': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
@@ -464,8 +470,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/text-model': workspace:*
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
@@ -486,8 +491,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-ui
-      '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/react-components': link:../../../common/react-components
       '@dxos/text-model': link:../../../core/echo/text-model
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_cqilutfevdyuwlti5pasjm52fe
@@ -514,8 +518,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
+      '@dxos/react-components': workspace:*
       '@types/lodash.debounce': ^4.0.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -530,8 +533,7 @@ importers:
       '@dxos/react-appkit': link:../react-appkit
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-ui
-      '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/react-components': link:../../../common/react-components
       lodash.debounce: 4.0.8
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -543,6 +545,49 @@ importers:
       '@types/react-dom': 18.0.6
       phosphor-react: 1.4.1_react@18.2.0
 
+  packages/apps/patterns/react-ui:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/util': workspace:*
+      '@react-hook/async': ^3.1.1
+      '@types/debug': ^4.1.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^2.0.1
+      debug: ^4.3.3
+      phosphor-react: ^1.4.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      storybook-dark-mode: ^1.1.2
+      url-join: ^5.0.0
+      vite: 3.2.5
+    dependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-components': link:../../../common/react-components
+      '@dxos/util': link:../../../common/util
+      '@react-hook/async': 3.1.1_react@18.2.0
+      debug: 4.3.4
+      url-join: 5.0.0
+    devDependencies:
+      '@types/debug': 4.1.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 2.1.0_vite@3.2.5
+      phosphor-react: 1.4.1_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
+
   packages/apps/samples/bare:
     specifiers:
       '@babel/core': ^7.18.13
@@ -551,8 +596,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
+      '@dxos/react-components': workspace:*
       '@storybook/addon-actions': ^6.5.10
       '@storybook/addon-essentials': ^6.5.10
       '@storybook/addon-interactions': ^6.5.10
@@ -582,8 +626,7 @@ importers:
       '@dxos/config': link:../../../sdk/config
       '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-ui
-      '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/react-components': link:../../../common/react-components
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -608,7 +651,7 @@ importers:
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_pftdh3zqu4qevmbqg2nu3a7f3e
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       webpack: 5.74.0
       workbox-window: 6.5.4
 
@@ -620,8 +663,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
+      '@dxos/react-components': workspace:*
       '@storybook/addon-actions': ^6.5.10
       '@storybook/addon-essentials': ^6.5.10
       '@storybook/addon-interactions': ^6.5.10
@@ -651,8 +693,7 @@ importers:
       '@dxos/config': link:../../../sdk/config
       '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-ui
-      '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/react-components': link:../../../common/react-components
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -677,7 +718,7 @@ importers:
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_pftdh3zqu4qevmbqg2nu3a7f3e
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       webpack: 5.74.0
       workbox-window: 6.5.4
 
@@ -688,9 +729,8 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-list': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
       '@dxos/sentry': workspace:*
       '@sentry/react': ^7.17.2
       '@types/react': ^18.0.21
@@ -709,9 +749,8 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/react-list': link:../patterns/react-list
-      '@dxos/react-ui': link:../../common/react-ui
-      '@dxos/react-uikit': link:../../sdk/react-uikit
       '@dxos/sentry': link:../../common/sentry
       '@sentry/react': 7.20.0_react@18.2.0
       phosphor-react: 1.4.1_react@18.2.0
@@ -723,7 +762,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/apps/todomvc:
@@ -1116,7 +1155,7 @@ importers:
       mkdirp: 1.0.4
       prettier: 2.7.1
       recursive-readdir: 2.2.2
-      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_taqxcviixjxyd5vh2trpwxojdm
       yaml: 2.1.3
       yargs: 16.2.0
       zod: 3.20.2
@@ -1181,7 +1220,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
-  packages/common/react-ui:
+  packages/common/react-components:
     specifiers:
       '@fontsource/fira-code': ^4.5.12
       '@fontsource/roboto-flex': ^4.5.2
@@ -1204,6 +1243,7 @@ importers:
       autoprefixer: ^10.4.12
       esbuild: ^0.15.1
       esbuild-style-plugin: ^1.6.0
+      i18next: ^21.10.0
       jdenticon: ^3.2.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
@@ -1211,6 +1251,7 @@ importers:
       rci: ^0.0.3
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-i18next: ^11.18.6
       storybook-dark-mode: ^1.1.2
       tailwind-merge: ^1.8.0
       tailwindcss: ^3.1.8
@@ -1234,12 +1275,14 @@ importers:
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
       alea: 1.0.1
       autoprefixer: 10.4.12_postcss@8.4.18
+      i18next: 21.10.0
       jdenticon: 3.2.0
       postcss: 8.4.18
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
+      react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
       tailwind-merge: 1.8.0
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
     devDependencies:
@@ -1436,7 +1479,7 @@ importers:
       '@swc/core': 1.3.21
       '@types/mocha': 8.2.3
       '@types/node': 18.11.9
-      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_taqxcviixjxyd5vh2trpwxojdm
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
@@ -1958,7 +2001,7 @@ importers:
       debug: 4.3.4
       glob: 7.1.7
 
-  packages/deprecated/react-components:
+  packages/deprecated/react-components-deprecated:
     specifiers:
       '@babel/core': ^7.18.13
       '@babel/plugin-transform-runtime': ^7.11.5
@@ -2053,7 +2096,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@dxos/react-registry-client': workspace:*
       '@dxos/registry-client': workspace:*
       '@emotion/css': ^11.7.1
@@ -2106,7 +2149,7 @@ importers:
       '@dxos/keys': link:../../common/keys
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-client-testing': link:../../experimental/react-client-testing
-      '@dxos/react-components': link:../react-components
+      '@dxos/react-components-deprecated': link:../react-components-deprecated
       '@dxos/registry-client': link:../../experimental/registry-client
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
@@ -2135,7 +2178,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@dxos/react-toolkit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
@@ -2167,7 +2210,7 @@ importers:
       '@dxos/echo-db': link:../../../core/echo/echo-db
       '@dxos/protocols': link:../../../core/protocols
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-components': link:../../react-components
+      '@dxos/react-components-deprecated': link:../../react-components-deprecated
       '@dxos/react-toolkit': link:../../react-toolkit
       '@dxos/rpc': link:../../../core/mesh/rpc
       '@dxos/util': link:../../../common/util
@@ -2200,7 +2243,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
       '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@dxos/react-toolkit': workspace:*
       '@mui/icons-material': ^5.8.0
       '@mui/material': ^5.8.1
@@ -2212,7 +2255,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-components': link:../../react-components
+      '@dxos/react-components-deprecated': link:../../react-components-deprecated
       '@dxos/react-toolkit': link:../../react-toolkit
       '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
       '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
@@ -2342,7 +2385,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@dxos/react-registry-client': workspace:*
       '@dxos/react-toolkit': workspace:*
       '@dxos/registry-client': workspace:*
@@ -2389,7 +2432,7 @@ importers:
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/react-registry-client': link:../../experimental/react-registry-client
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/registry-client': link:../../experimental/registry-client
@@ -2418,7 +2461,7 @@ importers:
       faker: 5.5.3
       typescript: 4.8.4
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
@@ -2524,7 +2567,7 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@dxos/react-toolkit': workspace:*
       '@dxos/util': workspace:*
       '@emotion/css': ^11.7.1
@@ -2546,7 +2589,7 @@ importers:
       '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/network-manager': link:../../core/mesh/network-manager
-      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.10.0_@babel+core@7.19.3
@@ -2575,7 +2618,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@emotion/react': ^11.9.0
@@ -2596,7 +2639,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -2756,10 +2799,9 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-composer': workspace:*
       '@dxos/react-list': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
@@ -2801,10 +2843,9 @@ importers:
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
-      '@dxos/react-ui': link:../../common/react-ui
-      '@dxos/react-uikit': link:../../sdk/react-uikit
       clsx: 1.2.1
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
@@ -2824,10 +2865,10 @@ importers:
       '@vitejs/plugin-react': 2.1.0_vite@3.2.5
       faker: 5.5.3
       postcss: 8.4.18
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       vite-plugin-fonts: 0.6.0_vite@3.2.5
-      vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
+      vite-plugin-pwa: 0.12.8_vite@3.2.5
       workbox-window: 6.5.4
 
   packages/experimental/kitchen-sink:
@@ -2847,7 +2888,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@dxos/react-echo-graph': workspace:*
       '@dxos/react-ipfs': workspace:*
       '@dxos/react-toolkit': workspace:*
@@ -2895,7 +2936,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-client-testing': link:../react-client-testing
-      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/react-echo-graph': link:../react-echo-graph
       '@dxos/react-ipfs': link:../react-ipfs
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
@@ -2936,7 +2977,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       robotjs: 0.6.0
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
   packages/experimental/kodama:
@@ -3015,7 +3056,7 @@ importers:
       '@types/yargs': 16.0.4
       esbuild: 0.15.18
       supervisor: 0.12.0
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
   packages/experimental/metagraph:
@@ -3051,7 +3092,7 @@ importers:
       '@dxos/esbuild-server': ~2.29.0
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@dxos/util': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
@@ -3083,7 +3124,7 @@ importers:
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/util': link:../../common/util
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
@@ -3114,7 +3155,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-components-deprecated': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
@@ -3140,7 +3181,7 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-client-testing': link:../react-client-testing
-      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
@@ -3254,13 +3295,13 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
       '@polkadot/api': 4.17.1
-      '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
+      '@polkadot/keyring': 6.11.1
       '@polkadot/metadata': 4.17.1
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/typegen': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       bn.js: 4.12.0
       faker: 5.5.3
       fs-extra: 8.1.0
@@ -3302,7 +3343,7 @@ importers:
       '@types/isomorphic-fetch': 0.0.36
       '@types/node': 18.11.9
       faker: 5.5.3
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
   packages/gravity/gravity-agent:
@@ -3569,7 +3610,7 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
-      '@dxos/react-ui': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
@@ -3603,7 +3644,7 @@ importers:
       '@dxos/util': link:../../common/util
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
-      '@dxos/react-ui': link:../../common/react-ui
+      '@dxos/react-components': link:../../common/react-components
       '@testing-library/dom': 8.19.0
       '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
@@ -3615,59 +3656,6 @@ importers:
       level-js: 5.0.2
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-
-  packages/sdk/react-uikit:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/util': workspace:*
-      '@radix-ui/react-toolbar': ^1.0.1
-      '@react-hook/async': ^3.1.1
-      '@types/debug': ^4.1.7
-      '@types/lodash.throttle': ^4.1.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^2.0.1
-      debug: ^4.3.3
-      i18next: ^21.10.0
-      lodash.throttle: ^4.1.1
-      phosphor-react: ^1.4.1
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-i18next: ^11.18.6
-      storybook-dark-mode: ^1.1.2
-      url-join: ^5.0.0
-      vite: 3.2.5
-    dependencies:
-      '@dxos/client': link:../client
-      '@dxos/config': link:../config
-      '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
-      '@dxos/react-client': link:../react-client
-      '@dxos/react-ui': link:../../common/react-ui
-      '@dxos/util': link:../../common/util
-      '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@react-hook/async': 3.1.1_react@18.2.0
-      debug: 4.3.4
-      i18next: 21.10.0
-      lodash.throttle: 4.1.1
-      react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
-      url-join: 5.0.0
-    devDependencies:
-      '@types/debug': 4.1.7
-      '@types/lodash.throttle': 4.1.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 2.1.0_vite@3.2.5
-      phosphor-react: 1.4.1_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4
 
   tools/apidoc:
     specifiers:
@@ -3820,8 +3808,8 @@ importers:
       '@dxos/eslint-plugin-rules': link:../eslint-rules
       '@rushstack/eslint-plugin-packlets': 0.4.1_z4bbprzjrhnsfa24uvmcbu7f5q
       '@stayradiated/eslint-plugin-prefer-arrow-functions': 4.4.0_eslint@8.25.0
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       eslint-config-semistandard: 16.0.0_u7hi4tob5jexe3bxs45csc22mq
       eslint-config-standard: 17.0.0_qjhcey4ofknbrbveepk4bditci
       eslint-plugin-import: 2.26.0_3rwetfi6epq3x3lrbut2iai3km
@@ -3884,7 +3872,7 @@ importers:
       '@types/glob': 7.1.4
       '@types/mocha': 8.2.3
       '@types/node': 18.11.9
-      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_taqxcviixjxyd5vh2trpwxojdm
       typescript: 4.8.4
 
   tools/executors/test:
@@ -3921,7 +3909,7 @@ importers:
       '@types/lodash.pick': 4.4.7
       '@types/lodash.sortby': 4.7.7
       '@types/node': 18.11.9
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
   tools/log-hook:
@@ -4027,7 +4015,7 @@ importers:
       remark-parse-frontmatter: 1.0.3
       remark-unwrap-texts: 1.0.3
       rollup: 2.79.1
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
       typescript: 4.8.4
@@ -4107,7 +4095,7 @@ importers:
       '@types/protocol-buffers-schema': 3.4.1
       '@types/yargs': 16.0.4
       diff: 5.1.0
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
   tools/swc-log-plugin:
@@ -7493,7 +7481,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/devkit': 15.3.3_nx@15.3.3+typescript@4.8.4
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       chalk: 4.1.0
       confusing-browser-globals: 1.0.11
@@ -8104,7 +8092,7 @@ packages:
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@polkadot/x-rxjs': 6.11.1
     transitivePeerDependencies:
       - encoding
@@ -8117,14 +8105,14 @@ packages:
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/api-derive': 4.17.1
-      '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
+      '@polkadot/keyring': 6.11.1
       '@polkadot/metadata': 4.17.1
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/rpc-provider': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/types-known': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@polkadot/x-rxjs': 6.11.1
       eventemitter3: 4.0.7
     transitivePeerDependencies:
@@ -8132,16 +8120,13 @@ packages:
       - supports-color
     dev: false
 
-  /@polkadot/keyring/6.11.1_w5wqjwuvue5eixzgnjxqpuw26i:
+  /@polkadot/keyring/6.11.1:
     resolution: {integrity: sha512-rW8INl7pO6Dmaffd6Df1yAYCRWa2RmWQ0LGfJeA/M6seVIkI6J3opZqAd4q2Op+h9a7z4TESQGk8yggOEL+Csg==}
     engines: {node: '>=14.0.0'}
-    peerDependencies:
-      '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
     dev: false
 
   /@polkadot/metadata/4.17.1:
@@ -8152,7 +8137,7 @@ packages:
       '@polkadot/types': 4.17.1
       '@polkadot/types-known': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
     dev: false
 
   /@polkadot/networks/6.11.1:
@@ -8184,7 +8169,7 @@ packages:
       '@babel/runtime': 7.19.4
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@polkadot/x-fetch': 6.11.1
       '@polkadot/x-global': 6.11.1
       '@polkadot/x-ws': 6.11.1
@@ -8232,15 +8217,13 @@ packages:
       '@babel/runtime': 7.19.4
       '@polkadot/metadata': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@polkadot/x-rxjs': 6.11.1
     dev: false
 
-  /@polkadot/util-crypto/6.11.1_@polkadot+util@6.11.1:
+  /@polkadot/util-crypto/6.11.1:
     resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
     engines: {node: '>=14.0.0'}
-    peerDependencies:
-      '@polkadot/util': 6.11.1
     dependencies:
       '@babel/runtime': 7.19.4
       '@polkadot/networks': 6.11.1
@@ -11796,7 +11779,7 @@ packages:
     peerDependencies:
       tailwindcss: '>=2.0.0 || >=3.0.0 || >=3.0.0-alpha.1'
     dependencies:
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
     dev: true
 
   /@tailwindcss/forms/0.5.3_tailwindcss@3.1.8:
@@ -11805,7 +11788,7 @@ packages:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
     dev: false
 
   /@tailwindcss/typography/0.5.8_tailwindcss@3.1.8:
@@ -11817,7 +11800,7 @@ packages:
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.1.8_postcss@8.4.18
+      tailwindcss: 3.1.8
     dev: true
 
   /@tanstack/react-table/8.0.0-beta.3_biqbaboplfbrettd7655fr4n2y:
@@ -13288,18 +13271,17 @@ packages:
     resolution: {integrity: sha512-RRHc1+8Hc5mf/2lZKnom6kCnqcNS07s8keahniWTOva0KELF6RgDJmaEcvGEKUUJgN4UgessmEsWuidaOycIOw==}
     dev: true
 
-  /@typescript-eslint/eslint-plugin/5.45.0_pi7zx7ojc4phxkdwiczrakx6sq:
+  /@typescript-eslint/eslint-plugin/5.45.0_usuh4uodfyzfr5qbbynfqnfnsy:
     resolution: {integrity: sha512-CXXHNlf0oL+Yg021cxgOdMHNTXD17rHkq7iW6RFHoybdFgQBjU3yIXhhcPpGwr1CjZlo6ET8C6tzX5juQoXeGA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       '@typescript-eslint/parser': ^5.0.0
-      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       '@typescript-eslint/scope-manager': 5.45.0
       '@typescript-eslint/type-utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@typescript-eslint/utils': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
@@ -13327,11 +13309,10 @@ packages:
       - typescript
     dev: false
 
-  /@typescript-eslint/parser/5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q:
+  /@typescript-eslint/parser/5.45.0_typescript@4.8.4:
     resolution: {integrity: sha512-brvs/WSM4fKUmF5Ot/gEve6qYiCMjm6w4HkHPfS6ZNmxTS0m0iNN4yOChImaCkqc1hRwFGqUyanMXuGal6oyyQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
@@ -13504,15 +13485,21 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-vue/3.2.0_vite@3.2.5+vue@3.2.45:
+  /@vitejs/plugin-vue/3.2.0_hppad2fblv3lzmnzyfg2uzpjau:
     resolution: {integrity: sha512-E0tnaL4fr+qkdCNxJ+Xd0yM31UwMkQje76fsDVBBUCoGOUPexu2VDUYHL8P4CwV+zMvWw6nlRw19OnRKmYAJpw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
-      vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4_@types+node@18.11.9
       vue: 3.2.45
+    transitivePeerDependencies:
+      - '@types/node'
+      - less
+      - sass
+      - stylus
+      - sugarss
+      - terser
     dev: true
 
   /@vue/compiler-core/3.2.45:
@@ -13613,7 +13600,7 @@ packages:
   /@vuepress/bundler-vite/2.0.0-beta.53_odkjkoia5xunhxkdrka32ib6vi:
     resolution: {integrity: sha512-zkqkV+EnoTi7cTRi6xjb0SRg0GzRYwceJu80/6q7Bd+h+VktqhapcHAZ8QaIsq8OxCXbg3sms/A9kg3UxBnRqg==}
     dependencies:
-      '@vitejs/plugin-vue': 3.2.0_vite@3.2.5+vue@3.2.45
+      '@vitejs/plugin-vue': 3.2.0_hppad2fblv3lzmnzyfg2uzpjau
       '@vuepress/client': 2.0.0-beta.53
       '@vuepress/core': 2.0.0-beta.53
       '@vuepress/shared': 2.0.0-beta.53
@@ -19375,7 +19362,7 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       debug: 3.2.7
       eslint: 8.25.0
       eslint-import-resolver-node: 0.3.6
@@ -19415,7 +19402,7 @@ packages:
       '@typescript-eslint/parser':
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.45.0_z4bbprzjrhnsfa24uvmcbu7f5q
+      '@typescript-eslint/parser': 5.45.0_typescript@4.8.4
       array-includes: 3.1.5
       array.prototype.flat: 1.3.0
       debug: 2.6.9
@@ -19545,7 +19532,7 @@ packages:
       '@typescript-eslint/eslint-plugin':
         optional: true
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.45.0_pi7zx7ojc4phxkdwiczrakx6sq
+      '@typescript-eslint/eslint-plugin': 5.45.0_usuh4uodfyzfr5qbbynfqnfnsy
       eslint: 8.25.0
       eslint-rule-composer: 0.3.0
     dev: false
@@ -23758,7 +23745,7 @@ packages:
       pretty-format: 28.1.3
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_taqxcviixjxyd5vh2trpwxojdm
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -23798,7 +23785,7 @@ packages:
       pretty-format: 28.1.3
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_taqxcviixjxyd5vh2trpwxojdm
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -28401,7 +28388,7 @@ packages:
     dependencies:
       lilconfig: 2.0.6
       postcss: 8.4.18
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54
       yaml: 2.1.3
     dev: true
 
@@ -31317,6 +31304,7 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
+    deprecated: Please use @jridgewell/sourcemap-codec instead
 
   /space-separated-tokens/1.1.5:
     resolution: {integrity: sha512-q/JSVd1Lptzhf5bkYm4ob4iWPjx0KiRe3sRFBNrVqbJkFaBm5vbbowy1mymoPNLRa52+oadOhJ+K49wsSeSjTA==}
@@ -32082,12 +32070,10 @@ packages:
     transitivePeerDependencies:
       - ts-node
 
-  /tailwindcss/3.1.8_postcss@8.4.18:
+  /tailwindcss/3.1.8:
     resolution: {integrity: sha512-YSneUCZSFDYMwk+TGq8qYFdCA3yfBRdBlS7txSq0LUmzyeqRe3a8fBQzbz9M3WS/iFT4BNf/nmw9mEzrnSaC0g==}
     engines: {node: '>=12.13.0'}
     hasBin: true
-    peerDependencies:
-      postcss: ^8.0.9
     dependencies:
       arg: 5.0.2
       chokidar: 3.5.3
@@ -32732,7 +32718,7 @@ packages:
       code-block-writer: 11.0.3
     dev: false
 
-  /ts-node/10.9.1_cbe7ovvae6zqfnmtgctpgpys54:
+  /ts-node/10.9.1_rke3py7up3u364r7wwqfla7cdm_cbe7ovvae6zqfnmtgctpgpys54:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -32762,8 +32748,9 @@ packages:
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     dev: true
+    patched: true
 
-  /ts-node/10.9.1_taqxcviixjxyd5vh2trpwxojdm:
+  /ts-node/10.9.1_rke3py7up3u364r7wwqfla7cdm_taqxcviixjxyd5vh2trpwxojdm:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -32793,6 +32780,7 @@ packages:
       typescript: 4.8.4
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    patched: true
 
   /ts-pnp/1.2.0_typescript@4.8.4:
     resolution: {integrity: sha512-csd+vJOb/gkzvcCHgTGSChYpy5f1/XKNsmvBGO4JXS+z1v2HobugDz4s1IeFXM3wZB44uczs+eazB5Q/ccdhQw==}
@@ -33816,11 +33804,10 @@ packages:
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
     dev: true
 
-  /vite-plugin-pwa/0.12.8_v7patrztka3wxwjwwj7rxgk7ey:
+  /vite-plugin-pwa/0.12.8_vite@3.2.5:
     resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
-      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.12
