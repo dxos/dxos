@@ -22,8 +22,8 @@ export const mapModules = (modules: PackageModule[]) => {
 export const mapTunnels = (tunnels: TunnelResponse[]) => {
   return tunnels.map((tunnel) => ({
     key: tunnel.name,
+    enabled: tunnel.enabled,
     url: tunnel.url,
-    enabled: tunnel.enabled
   }));
 };
 
@@ -51,11 +51,11 @@ export const printTunnels = (tunnels: TunnelResponse[], flags = {}) => {
       key: {
         header: 'App'
       },
-      url: {
-        header: 'URL'
-      },
       enabled: {
         header: 'Enabled'
+      },
+      url: {
+        header: 'URL'
       }
     },
     {
