@@ -3,7 +3,7 @@
 //
 
 import { CaretDown, CaretUp } from 'phosphor-react';
-import React, { FC, useState } from 'react';
+import React, { FC, KeyboardEvent, useState } from 'react';
 
 import { mx } from '@dxos/react-ui';
 
@@ -32,6 +32,27 @@ export const Selector: FC<{
     onSelect?.(id);
   };
 
+  const handleKeyDown = (event: KeyboardEvent) => {
+    const idx = options?.findIndex((option) => option.id === selected) ?? -1;
+    switch (event.key) {
+      case 'ArrowUp': {
+        if (options?.length) {
+          const option = options[Math.max(0, idx - 1)];
+          handleSelect(option.id);
+        }
+        break;
+      }
+
+      case 'ArrowDown': {
+        if (options?.length) {
+          const option = options[Math.min(options.length - 1, idx + 1)];
+          handleSelect(option.id);
+        }
+        break;
+      }
+    }
+  };
+
   // TODO(burdon): Esc to cancel/close.
   // TODO(burdon): Cursor up/down (input tab).
   // TODO(burdon): On change dynamic options.
@@ -40,11 +61,16 @@ export const Selector: FC<{
   return (
     <div className='flex flex-col'>
       <div className={mx('flex flex-1 items-center p-2 border-2', open ? 'rounded-t' : 'rounded')}>
-        <Input className='w-full outline-0' onChange={onChange} placeholder='Select...' />
-        <div className='flex' style={{ width: 16 }}>
-          {hasOptions && <button onClick={handleToggleOpen}>{open ? <CaretDown /> : <CaretUp />}</button>}
+        <Input className='w-full outline-0' onKeyDown={handleKeyDown} onChange={onChange} placeholder='Select...' />
+        <div className='flex' style={{ width: 24 }}>
+          {hasOptions && (
+            <button className='p-1' onClick={handleToggleOpen}>
+              {open ? <CaretDown /> : <CaretUp />}
+            </button>
+          )}
         </div>
       </div>
+
       {hasOptions && open && (
         <div className='relative'>
           <div className='absolute flex flex-col w-full bg-gray-100'>

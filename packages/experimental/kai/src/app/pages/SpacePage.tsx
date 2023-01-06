@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { id } from '@dxos/echo-schema';
 import { useQuery, useSpaces } from '@dxos/react-client';
 
-import { Card, SearchBar, Selector } from '../../components';
+import { SearchBar, Selector } from '../../components';
 import { ContactList, Editor, ProjectGraph, ProjectList, ProjectTree, Sidebar, TaskList } from '../../containers';
 import { AppView, SpaceContext, SpaceContextType, useOptions, useSpace, viewConfig } from '../../hooks';
 import { Project } from '../../proto';
@@ -67,7 +67,7 @@ const TestView = () => {
   const projects = useQuery(space, Project.filter());
 
   return (
-    <Card title='Tests'>
+    <div className='flex flex-1 flex-col bg-white'>
       <div className='flex m-4'>
         <SearchBar />
       </div>
@@ -75,7 +75,7 @@ const TestView = () => {
       <div className='flex m-4'>
         <Selector options={projects.map((project) => ({ id: project[id], title: project.title }))} />
       </div>
-    </Card>
+    </div>
   );
 };
 

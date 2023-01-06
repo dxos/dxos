@@ -7,13 +7,21 @@ import React, { ChangeEvent, InputHTMLAttributes, FC, useEffect, useRef, useStat
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onBlur'> {
   onChange?: (value: string) => void;
   onEnter?: (value: string) => void;
+  onKeyDown?: (event: KeyboardEvent) => void;
   delay?: number;
 }
 
 /**
  * Input element that updates when losing focus or after a delay.
  */
-export const Input: FC<InputProps> = ({ value: initialValue, onChange, onEnter, delay = 1000, ...props }) => {
+export const Input: FC<InputProps> = ({
+  value: initialValue,
+  onKeyDown,
+  onChange,
+  onEnter,
+  delay = 1000,
+  ...props
+}) => {
   const t = useRef<ReturnType<typeof setTimeout>>();
   const [value, setValue] = useState<string>('');
   useEffect(() => {
@@ -21,6 +29,7 @@ export const Input: FC<InputProps> = ({ value: initialValue, onChange, onEnter, 
   }, [initialValue]);
 
   const handleUpdate = (value: string) => {
+    setValue(value);
     if (value !== initialValue) {
       clearTimeout(t.current);
       onChange?.(value);
@@ -42,13 +51,22 @@ export const Input: FC<InputProps> = ({ value: initialValue, onChange, onEnter, 
         onEnter?.(value);
         break;
       }
+
+      case 'Escape': {
+        handleUpdate('');
+        onEnter?.('');
+        break;
+      }
+
+      default: {
+        onKeyDown?.(event);
+      }
     }
   };
 
   return (
     <input
       value={value}
-      spellCheck={true}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       onBlur={() => handleUpdate(value)}

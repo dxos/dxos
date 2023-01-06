@@ -25,7 +25,8 @@ export const SearchBar: FC<{
           onChange={setText}
           placeholder='Search...'
         />
-        <button onClick={() => onSearch?.(text)}>
+
+        <button className='p-1' onClick={() => onSearch?.(text)}>
           <MagnifyingGlass />
         </button>
       </div>
