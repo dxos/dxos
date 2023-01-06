@@ -13,7 +13,7 @@ export const reactDeps = ({ depVersion }: { depVersion: string }) => ({
 export const reactDevDeps = ({ depVersion }: { depVersion: string }) => ({
   '@types/react': '^18.0.21',
   '@types/react-dom': '^18.0.6',
-  '@vitejs/plugin-react': '^2.0.1'
+  '@vitejs/plugin-react': '^3.0.1'
 });
 export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
   '@dxos/react-components': depVersion,
@@ -23,20 +23,19 @@ export const uiDeps = ({ depVersion }: { depVersion: string }) => ({
   sass: '^1.56.2'
 });
 export const pwaDevDeps = ({ depVersion }: { depVersion: string }) => ({
-  'vite-plugin-pwa': '^0.12.4',
+  'vite-plugin-pwa': '^0.14.1',
   'workbox-window': '^6.5.4'
 });
 export const storybookDevDeps = ({ depVersion }: { depVersion: string }) => ({
-  '@babel/core': '^7.18.13',
-  '@storybook/addon-essentials': '^6.5.10',
-  '@storybook/addon-interactions': '^6.5.10',
-  '@storybook/addon-links': '^6.5.10',
-  '@storybook/builder-vite': '^0.2.2',
+  '@storybook/addon-essentials': '^7.0.0-beta.19',
+  '@storybook/addon-interactions': '^7.0.0-beta.19',
+  '@storybook/addon-links': '^7.0.0-beta.19',
+  '@storybook/builder-vite': '^7.0.0-beta.19',
   '@storybook/mdx2-csf': '^0.0.3',
-  '@storybook/react': '^6.5.10',
+  '@storybook/react': '^7.0.0-beta.19',
+  '@storybook/react-vite': '^7.0.0-beta.19',
   'require-from-string': '^2.0.2',
-  'storybook-dark-mode': '^1.1.2',
-  webpack: '^5.74.0'
+  'storybook-dark-mode': '^1.1.2'
 });
 
 export default defineTemplate(
@@ -71,7 +70,7 @@ export default defineTemplate(
         '@types/node': '^18.11.9',
         '@dxos/cli': depVersion,
         typescript: '^4.8.4',
-        vite: '3.2.5',
+        vite: '4.0.4',
         ...(react ? reactDevDeps({ depVersion }) : {}),
         ...(pwa ? pwaDevDeps({ depVersion }) : {}),
         ...(storybook ? storybookDevDeps({ depVersion }) : {})
