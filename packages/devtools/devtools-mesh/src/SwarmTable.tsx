@@ -8,7 +8,7 @@ import { Button, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/m
 
 import { PublicKey } from '@dxos/keys';
 import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { CopyText } from '@dxos/react-components';
+import { CopyText } from '@dxos/react-components-deprecated';
 
 import { BooleanIcon } from './BooleanIcon';
 

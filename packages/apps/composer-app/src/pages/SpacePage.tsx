@@ -7,8 +7,8 @@ import { useOutletContext } from 'react-router-dom';
 
 import type { Item, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
+import { Loading } from '@dxos/react-components';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
-import { Loading } from '@dxos/react-uikit';
 import type { TextModel } from '@dxos/text-model';
 
 export const SpacePage = () => {

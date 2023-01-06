@@ -8,7 +8,7 @@ import { HashRouter } from 'react-router-dom';
 
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
-import { Button } from '@dxos/react-uikit';
+import { Button } from '@dxos/react-components';
 
 import { SpaceList } from './SpaceList';
 

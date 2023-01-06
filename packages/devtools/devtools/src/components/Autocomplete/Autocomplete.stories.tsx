@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Box } from '@mui/material';
 
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { Autocomplete } from './Autocomplete';
 
@@ -21,11 +21,7 @@ export const Primary = () => {
   return (
     <FullScreen>
       <Box sx={{ padding: 2 }}>
-        <Autocomplete
-          label='Test'
-          options={options}
-          onUpdate={value => console.log(value)}
-        />
+        <Autocomplete label='Test' options={options} onUpdate={(value) => console.log(value)} />
       </Box>
     </FullScreen>
   );

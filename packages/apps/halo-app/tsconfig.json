@@ -30,7 +30,7 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-ui"
+      "path": "../../common/react-components"
     },
     {
       "path": "../../common/sentry"
@@ -67,9 +67,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-uikit"
     },
     {
       "path": "../patterns/react-appkit"

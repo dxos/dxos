@@ -15,12 +15,12 @@ import {
   getSize,
   Loading,
   Tooltip,
-  InvitationStatus,
   useTranslation,
   mx
-} from '@dxos/react-uikit';
+} from '@dxos/react-components';
 
 import { HeadingWithActions } from '../HeadingWithActions';
+import { InvitationStatus } from '../InvitationStatus';
 
 export interface PendingInvitationProps {
   wrapper: CancellableInvitationObservable;
@@ -33,7 +33,7 @@ const PendingInvitationSkeleton = ({ message }: { message: string }) => {
 };
 
 export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove }: PendingInvitationProps) => {
-  const { t } = useTranslation('uikit');
+  const { t } = useTranslation('appkit');
   const { cancel, status, haltedAt, authenticationCode, invitationCode } = useInvitationStatus(wrapper);
 
   const handleRemove = useCallback(() => {
@@ -66,8 +66,8 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
                 ) : (
                   <CompactQrCode
                     {...{
-                      copyLabel: t('copy space invite code short label', { ns: 'uikit' }),
-                      displayQrLabel: t('display space invite qr code label', { ns: 'uikit' }),
+                      copyLabel: t('copy space invite code short label', { ns: 'appkit' }),
+                      displayQrLabel: t('display space invite qr code label', { ns: 'appkit' }),
                       value: createInvitationUrl(invitationCode!)
                     }}
                   />

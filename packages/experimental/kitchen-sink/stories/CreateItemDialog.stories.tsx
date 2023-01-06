@@ -6,7 +6,7 @@ import React from 'react';
 
 import { TestType } from '@dxos/client-testing';
 import { itemAdapter } from '@dxos/react-client-testing';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { CreateItemButton, CreateItemDialog } from '../src';
 

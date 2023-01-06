@@ -9,7 +9,7 @@ import { ChevronRight as ExpandIcon } from '@mui/icons-material';
 import { IconButton, Link, TableBody, TableHead, TableRow, colors, useTheme } from '@mui/material';
 
 import { FeedBlock } from '@dxos/feed-store';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { Table, TableCell } from '../Table';
 

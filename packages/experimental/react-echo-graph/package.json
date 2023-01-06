@@ -29,7 +29,7 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-components-deprecated": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",

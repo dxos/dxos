@@ -9,7 +9,7 @@ import { List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography }
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
-import { BoxContainer } from '@dxos/react-components';
+import { BoxContainer } from '@dxos/react-components-deprecated';
 
 export interface EchoListProps {
   items?: Item<ObjectModel>[];

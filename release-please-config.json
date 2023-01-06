@@ -53,6 +53,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/patterns/react-ui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/samples/bare/package.json",
           "jsonpath": "$.version"
         },
@@ -153,7 +158,7 @@
         },
         {
           "type": "json",
-          "path": "packages/common/react-ui/package.json",
+          "path": "packages/common/react-components/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -278,7 +283,7 @@
         },
         {
           "type": "json",
-          "path": "packages/deprecated/react-components/package.json",
+          "path": "packages/deprecated/react-components-deprecated/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -419,11 +424,6 @@
         {
           "type": "json",
           "path": "packages/sdk/react-client/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/sdk/react-uikit/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -8,7 +8,7 @@ import React from 'react';
 import { ItemID } from '@dxos/protocols';
 import { ClientProvider, useSelection } from '@dxos/react-client';
 import { ProfileInitializer, itemAdapter, useTestSpace } from '@dxos/react-client-testing';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { EchoBoard } from '../src';
 

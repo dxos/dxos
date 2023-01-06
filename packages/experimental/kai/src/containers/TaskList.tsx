@@ -9,7 +9,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactor } from '@dxos/react-client';
-import { getSize } from '@dxos/react-uikit';
+import { getSize } from '@dxos/react-components';
 
 import { Card, Input, TableRow } from '../components';
 import { useOptions, useSpace } from '../hooks';

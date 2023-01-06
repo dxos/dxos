@@ -7,7 +7,7 @@ import React from 'react';
 
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, itemAdapter, useTestSpace } from '@dxos/react-client-testing';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 import { EchoGraph, useGraphModel } from '@dxos/react-echo-graph';
 
 import { EchoGrid, Layout, graphStyles, tableStyles } from '../src';

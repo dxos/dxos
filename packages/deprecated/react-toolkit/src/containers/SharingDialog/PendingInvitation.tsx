@@ -8,7 +8,7 @@ import { Clear as CancelIcon, QrCode2 as QRCodeIcon } from '@mui/icons-material'
 import { Box, IconButton, Popover, Typography } from '@mui/material';
 
 import { Invitation, InvitationEncoder } from '@dxos/client';
-import { CopyToClipboard, HashIcon, Passcode, QRCode } from '@dxos/react-components';
+import { CopyToClipboard, HashIcon, Passcode, QRCode } from '@dxos/react-components-deprecated';
 
 export type PendingInvitationProps = {
   invitation: Invitation;

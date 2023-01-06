@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { Tooltip, useTranslation, valenceColorText, mx } from '@dxos/react-uikit';
+import { Tooltip, useTranslation, valenceColorText, mx } from '@dxos/react-components';
 
 // TODO(burdon): Extend to show heartbeat, network status, etc.
 // TODO(burdon): Merge with ErrorBoundary indicator since overlaps.
 export const Indicator = ({ status }: { status: boolean }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   return (
     <div role='none' className={mx('fixed bottom-4 right-4', valenceColorText('success'))}>
       {status && (

@@ -17,7 +17,7 @@ export default defineConfig({
       '@dxos/log',
       '@dxos/protocols',
       '@dxos/react-async',
-      '@dxos/react-components',
+      '@dxos/react-components-deprecated',
       '@dxos/rpc',
       '@dxos/rpc-tunnel'
     ]

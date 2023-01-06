@@ -9,7 +9,7 @@ import urlJoin from 'url-join';
 
 import type { Profile } from '@dxos/client';
 import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
-import { Button, getSize, useTranslation } from '@dxos/react-uikit';
+import { Button, getSize, useTranslation } from '@dxos/react-components';
 
 import { useSafeSpaceKey } from '../../hooks';
 import { HeadingWithActions } from '../HeadingWithActions';
@@ -55,7 +55,7 @@ export const ManageSpacePage = ({
       <HeadingWithActions
         heading={{
           level: 2,
-          children: t('space members label', { ns: 'uikit' })
+          children: t('space members label', { ns: 'appkit' })
         }}
         actions={
           <>

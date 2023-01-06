@@ -1,6 +1,6 @@
 import { createElement, useEffect } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
-import { UiProvider } from '@dxos/react-ui';
+import { ThemeProvider } from '@dxos/react-components';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -23,7 +23,7 @@ const ThemeWrapper = ({ children }) => {
 
 export const decorators = [
   (Story) =>
-    createElement(UiProvider, {
+    createElement(ThemeProvider, {
       children: createElement(ThemeWrapper, {
         children: createElement(Story)
       })

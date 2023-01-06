@@ -4,7 +4,7 @@
 
 import React, { ComponentProps } from 'react';
 
-import { mx } from '@dxos/react-uikit';
+import { mx } from '@dxos/react-components';
 
 export const Main = (props: ComponentProps<'main'>) => {
   const { children, className, ...rest } = props;

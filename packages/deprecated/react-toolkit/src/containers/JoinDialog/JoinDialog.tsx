@@ -9,7 +9,7 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import { Space, InvitationEncoder } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
 // import { useSecretProvider } from '@dxos/react-client';
-import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
+import { Dialog, HashIcon, Passcode } from '@dxos/react-components-deprecated';
 
 import { handleKey } from '../../helpers';
 

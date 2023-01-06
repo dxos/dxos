@@ -7,9 +7,11 @@ import React, { useCallback } from 'react';
 
 import { BASE_TELEMETRY_PROPERTIES, DX_TELEMETRY, getTelemetryIdentifier } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { useTranslation, Button, getSize, Input, AlertDialog, Avatar, defaultGroup } from '@dxos/react-uikit';
+import { useTranslation, Button, getSize, Input, Avatar, defaultGroup } from '@dxos/react-components';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
+
+import { AlertDialog } from '../components';
 
 const IdentityPage = () => {
   const client = useClient();
@@ -41,7 +43,7 @@ const IdentityPage = () => {
         slots={{ root: { className: defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' }) } }}
       />
       <Input
-        label={t('displayName label', { ns: 'uikit' })}
+        label={t('displayName label', { ns: 'appkit' })}
         placeholder={humanize(profileHex)}
         initialValue={profile?.displayName}
         onChange={onChangeDisplayName}
@@ -64,7 +66,7 @@ const IdentityPage = () => {
             {telemetryDisabled ? t('enable telemetry label') : t('disable telemetry label')}
           </Button>
         }
-        cancelTrigger={<Button>{t('cancel label', { ns: 'uikit' })}</Button>}
+        cancelTrigger={<Button>{t('cancel label', { ns: 'appkit' })}</Button>}
         confirmTrigger={
           <Button
             onClick={() => {
@@ -97,7 +99,7 @@ const IdentityPage = () => {
         destructiveConfirmInputProps={{
           label: t('confirm reset device label', { confirmString })
         }}
-        cancelTrigger={<Button>{t('cancel label', { ns: 'uikit' })}</Button>}
+        cancelTrigger={<Button>{t('cancel label', { ns: 'appkit' })}</Button>}
         confirmTrigger={
           <Button
             onClick={async () => {
