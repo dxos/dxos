@@ -19,6 +19,9 @@ patchedDependencies:
   vite@4.0.4:
     hash: udc44hkgfm6fy435xbwnwc7wvu
     path: patches/vite@4.0.4.patch
+  '@nrwl/vite@15.3.3':
+    hash: fn5o7myuabkpulrbxiapqjium4
+    path: patches/@nrwl__vite@15.3.3.patch
 
 importers:
 
@@ -140,7 +143,7 @@ importers:
       '@nrwl/linter': 15.3.3_j33eolyzn5ypbl6vxsvwjl4h4e
       '@nrwl/nx-cloud': 15.0.2
       '@nrwl/storybook': 15.3.3_gdock4p4movmb2frdehezgvwjy_7r6w4ikm3foxfb2rs6sgxh7iva
-      '@nrwl/vite': 15.3.3_wsm632uk7mgcwyotx765mj5zdm
+      '@nrwl/vite': 15.3.3_fn5o7myuabkpulrbxiapqjium4_wsm632uk7mgcwyotx765mj5zdm
       '@nrwl/workspace': 15.3.3_mlbovilqnvggnt5yedqlfaesd4
       '@playwright/test': 1.27.1
       '@rushstack/eslint-patch': 1.2.0
@@ -7577,7 +7580,7 @@ packages:
       magic-string: 0.27.0
       react-docgen-typescript: 2.2.2_typescript@4.8.4
       typescript: 4.8.4
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_pftdh3zqu4qevmbqg2nu3a7f3e
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
     dev: true
 
   /@jridgewell/gen-mapping/0.1.1:
@@ -8514,7 +8517,7 @@ packages:
       - debug
     dev: true
 
-  /@nrwl/vite/15.3.3_wsm632uk7mgcwyotx765mj5zdm:
+  /@nrwl/vite/15.3.3_fn5o7myuabkpulrbxiapqjium4_wsm632uk7mgcwyotx765mj5zdm:
     resolution: {integrity: sha512-iiuteKozN1A8RZAR0FJpNqpG28/xtHfGnp1y88/U1G9GyKQnlRGjauw8nlZ3UloOoW3mKE7q8FUFVE+BiyP8gA==}
     peerDependencies:
       vite: 4.0.4
@@ -8535,6 +8538,7 @@ packages:
       - prettier
       - typescript
     dev: true
+    patched: true
 
   /@nrwl/workspace/15.3.3_mlbovilqnvggnt5yedqlfaesd4:
     resolution: {integrity: sha512-vPv/JSy0K7X9f9oiciF74DpmzH0DvTyDr5HJZhom9tJsFM1FCfHRGu3LysfK3lC3pOpNeNeK4iApJw/BTdXI5A==}
@@ -10611,7 +10615,7 @@ packages:
       rollup-plugin-external-globals: 0.7.1_rollup@3.9.1
       slash: 3.0.0
       typescript: 4.8.4
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_pftdh3zqu4qevmbqg2nu3a7f3e
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -11044,7 +11048,7 @@ packages:
       react: 18.2.0
       react-docgen: 6.0.0-alpha.3
       react-dom: 18.2.0_react@18.2.0
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_pftdh3zqu4qevmbqg2nu3a7f3e
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
     transitivePeerDependencies:
       - '@preact/preset-vite'
       - supports-color
@@ -13353,7 +13357,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true

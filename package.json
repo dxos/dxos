@@ -124,6 +124,7 @@
     "patchedDependencies": {
       "@nrwl/js@15.3.3": "patches/@nrwl__js@15.3.3.patch",
       "@nrwl/storybook@15.3.3": "patches/@nrwl__storybook@15.3.3.patch",
+      "@nrwl/vite@15.3.3": "patches/@nrwl__vite@15.3.3.patch",
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",
