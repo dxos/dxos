@@ -16,7 +16,7 @@ import {
   FatalError,
   GenericFallback,
   ServiceWorkerToast,
-  translations,
+  appkitTranslations,
   StatusIndicator2
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
@@ -45,7 +45,7 @@ export const App = () => {
 
   return (
     <UiProvider
-      resourceExtensions={[translations, composerTranslations]}
+      resourceExtensions={[appkitTranslations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='composer'
     >
