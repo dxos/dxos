@@ -2722,6 +2722,8 @@ importers:
       '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
+      '@swc-node/register': ^1.5.4
+      '@swc/core': ^1.3.21
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
@@ -2729,7 +2731,6 @@ importers:
       '@types/react-syntax-highlighter': ^15.5.5
       '@types/react-table': ^7.7.14
       '@vitejs/plugin-react': ^2.0.1
-      clsx: ^1.1.1
       faker: ^5.5.3
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
@@ -2741,6 +2742,8 @@ importers:
       react-syntax-highlighter: ^15.5.0
       react-table: ^7.8.0
       tailwindcss: ^3.1.8
+      typescript: ^4.8.4
+      url-join: ^5.0.0
       vite: 3.2.5
       vite-plugin-fonts: ^0.6.0
       vite-plugin-pwa: ^0.12.4
@@ -2769,7 +2772,6 @@ importers:
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../sdk/react-uikit
-      clsx: 1.2.1
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
@@ -2781,6 +2783,8 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/client-testing': link:../client-testing
+      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
+      '@swc/core': 1.3.21
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
@@ -2791,6 +2795,8 @@ importers:
       faker: 5.5.3
       postcss: 8.4.18
       tailwindcss: 3.1.8
+      typescript: 4.8.4
+      url-join: 5.0.0
       vite: 3.2.5_magqryo643lwpdprn2fbusqud4
       vite-plugin-fonts: 0.6.0_vite@3.2.5
       vite-plugin-pwa: 0.12.8_vite@3.2.5
@@ -33568,7 +33574,6 @@ packages:
   /url-join/5.0.0:
     resolution: {integrity: sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-    dev: false
 
   /url-loader/4.1.1_lit45vopotvaqup7lrvlnvtxwy:
     resolution: {integrity: sha512-3BTV812+AVHHOJQO8O5MkWgZ5aosP7GnROJwvzLS9hWDj00lZ6Z0wNak423Lp9PBZN05N+Jk/N5Si8jRAlGyWA==}

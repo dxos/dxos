@@ -45,7 +45,7 @@ const Routes = () => {
 /**
  * Main app container with routes.
  */
-export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
+export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = false }) => {
   const [client, setClient] = useState<Client | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -71,13 +71,10 @@ export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
     return null;
   }
 
-  // TODO(burdon): Configure.
-  const defaultViews = [AppView.CARDS, AppView.PROJECTS, AppView.TASKS, AppView.EDITOR];
-
   // TODO(burdon): Error boundary and indicator.
   return (
     <ClientProvider client={client}>
-      <OptionsContext.Provider value={{ debug, views: defaultViews }}>
+      <OptionsContext.Provider value={{ debug, views }}>
         <HashRouter>
           <Routes />
         </HashRouter>

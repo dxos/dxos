@@ -56,10 +56,27 @@ export default defineConfig({
   },
 
   // TODO(burdon): Document.
+  // build: {
+  //   outDir: 'out/kai',
+  //   commonjsOptions: {
+  //     include: [/packages/, /node_modules/]
+  //   }
+  // },
+
   build: {
-    outDir: 'out/kai',
     commonjsOptions: {
       include: [/packages/, /node_modules/]
+    },
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        projects: resolve(__dirname, 'projects.html')
+      },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-router-dom', 'react-dom']
+        }
+      }
     }
   },
 

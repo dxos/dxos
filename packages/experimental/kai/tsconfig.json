@@ -9,6 +9,13 @@
     ],
     "outDir": "dist"
   },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    },
+    "files": true,
+    "transpileOnly": true
+  },
   "exclude": [
     "/node_modules/"
   ],

@@ -11,8 +11,6 @@ import { AppView } from './hooks';
 import './style.css';
 
 (() => {
-  // TODO(burdon): Get debug from config.
-  createRoot(document.getElementById('root')!).render(
-    <App views={[AppView.CARDS, AppView.PROJECTS, AppView.TASKS, AppView.EDITOR]} debug={false} />
-  );
+  const views = [AppView.PROJECTS];
+  createRoot(document.getElementById('root')!).render(<App views={views} />);
 })();
