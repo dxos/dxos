@@ -5,10 +5,10 @@
 import { defineTemplate } from '@dxos/plate';
 import config from './config.t';
 import { getTsConfig, getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
-// import rootTsconfig from '../../../../tsconfig.json';
+import path from 'path';
 
 // TODO(wittjosiah): Nx executor to execute in place.
-export default defineTemplate<typeof config>(async ({ input }) => {
+export default defineTemplate<typeof config>(async ({ input, outputDirectory }) => {
   const info = await getDxosRepoInfo();
 
   const rootTsConfig = info.isDxosMonorepo ? await getTsConfig(info.repositoryRootPath) : {};
@@ -33,10 +33,10 @@ export default defineTemplate<typeof config>(async ({ input }) => {
   const tsconfig =
     input.monorepo && info.isDxosMonorepo
       ? {
-          extends: '../../../../tsconfig.json',
+          extends: path.relative(outputDirectory, info.repositoryRootPath + '/tsconfig.json'),
           compilerOptions,
           include,
-          exclude: [...exclude, '*.t.ts'],
+          exclude: [...exclude],
           references: [
             ...references,
             {

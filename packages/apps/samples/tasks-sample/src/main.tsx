@@ -1,6 +1,10 @@
-import React from "react";
-import { createRoot } from "react-dom/client";
+//
+// Copyright 2023 DXOS.org
+//
 
-import { App } from "./App";
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 
-createRoot(document.getElementById("root")!).render(<App />);
+import { App } from './App';
+
+createRoot(document.getElementById('root')!).render(<App />);

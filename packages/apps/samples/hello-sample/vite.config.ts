@@ -38,7 +38,16 @@ export default defineConfig({
     ConfigPlugin(),
     react(),
     ThemePlugin({
+<<<<<<< HEAD
       content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')]
+=======
+      content: [
+        resolve(__dirname, "./index.html"),
+        resolve(__dirname, "./src/**/*.{js,ts,jsx,tsx}"),
+        resolve(__dirname, "node_modules/@dxos/react-appkit/dist/**/*.mjs"),
+        resolve(__dirname, "node_modules/@dxos/react-uikit/dist/**/*.mjs"),
+      ],
+>>>>>>> ed5b7345a (wip test of new app templates)
     }),
     VitePWA({
       registerType: 'autoUpdate',

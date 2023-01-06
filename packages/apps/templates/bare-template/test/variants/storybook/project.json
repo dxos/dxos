@@ -1,0 +1,18 @@
+{
+  "sourceRoot": "packages/apps/templates/bare-template/test/variants/storybook/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/templates/bare-template/test/variants/storybook/**/*.{ts,js,tsx,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.lintFilePatterns.0}"
+      ]
+    }
+  }
+}

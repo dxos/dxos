@@ -71,7 +71,10 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
           ? `${ThemePlugin()}({
         content: [
           ${resolve()}(__dirname, './index.html'),
-          ${resolve()}(__dirname, './src/**/*.{js,ts,jsx,tsx}')
+          ${resolve()}(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+          ${dxosUi && text`
+          ${resolve()}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs'),
+          ${resolve()}(__dirname, 'node_modules/@dxos/react-uikit/dist/**/*.mjs')`}
         ]
       }),`
           : ''

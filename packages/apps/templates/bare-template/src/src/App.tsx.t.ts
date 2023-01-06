@@ -10,62 +10,51 @@ export default defineTemplate(
     const { Config, Dynamics, Defaults } = imports.lazy(['Config', 'Dynamics', 'Defaults'], '@dxos/config');
     const UiKitProvider = imports.lazy('UiKitProvider', '@dxos/react-uikit');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
-    const ServiceWorkerToast = imports.lazy('ServiceWorkerToast', '@dxos/react-appkit');
-    const swToast = () => text`
-    {needRefresh ? (
-      <${ServiceWorkerToast()} {...{ variant: 'needRefresh', updateServiceWorker }} />
-    ) : offlineReady ? (
-      <${ServiceWorkerToast()} variant='offlineReady' />
-    ) : null}`;
-    const Fallback = imports.lazy('Fallback', '@dxos/react-appkit');
-    const GenericFallback = imports.lazy('GenericFallback', '@dxos/react-appkit');
+    const { ServiceWorkerToastContainer, GenericFallback, translations } = imports.lazy(
+      ['ServiceWorkerToastContainer', 'GenericFallback', 'translations'],
+      '@dxos/react-appkit'
+    );
+
+    const swToast = () => `<${ServiceWorkerToastContainer()} {...serviceWorker} />`;
+    
     const coreContent = text`
     <${ClientProvider()} config={config} ${dxosUi ? `fallback={<${GenericFallback()} />}` : ''}>
       ${render.content()}
       ${dxosUi && pwa && swToast()}
     </${ClientProvider()}>`;
+
     const uiProviders = (content: string) => text`
-    <${UiKitProvider()} appNs='${name}' fallback={<${Fallback()} message='Loading...' />}>
+    <${UiKitProvider()} appNs='${name}' resourceExtensions={[${translations()}]} fallback={<${GenericFallback()} />}>
       ${content}
     </${UiKitProvider()}>
     `;
+    
     return !react
       ? null
       : text`
       import React from 'react';
       ${() => imports.render(defaultOutputFile)}
+      
       ${render.extraImports()}
+      
+      ${dxosUi && text`
+      // this includes css styles from @dxos/react-ui
+      import '@dxosTheme';`}
       
       // Dynamics allows configuration to be supplied by the hosting KUBE
       const config = async () => new ${Config()}(await ${Dynamics()}(), ${Defaults()}());
 
       export const App = () => {
-        ${
-          pwa &&
-          text`
-        ${
-          !!dxosUi &&
-          `const {
-          offlineReady: [offlineReady, _setOfflineReady],
-          needRefresh: [needRefresh, _setNeedRefresh],
-          updateServiceWorker
-        } = `
-        }${useRegisterSW()}({
-          onRegisterError: (err) => {
-            console.error(err);
-          }
-        });`
-        }
+        ${pwa && `const serviceWorker = ${useRegisterSW()}();`}
         return (
           ${dxosUi ? uiProviders(coreContent) : coreContent}
         )
-      }
-      `;
+      }`;
   },
   {
     config,
     slots: {
-      content: '{/* your components here */}',
+      content: '<div>Your code goes here</div>',
       extraImports: ''
     }
   }

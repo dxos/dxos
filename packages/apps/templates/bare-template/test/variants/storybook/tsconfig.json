@@ -1,0 +1,34 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../../../../devtools/cli"
+    },
+    {
+      "path": "../../../../../../sdk/client"
+    },
+    {
+      "path": "../../../../../../sdk/config"
+    },
+    {
+      "path": "../../../../../../sdk/react-client"
+    }
+  ]
+}

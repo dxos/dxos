@@ -18,7 +18,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/templates/bare-template/src/**/*.{ts,js,tsx,jsx}"
+          "packages/apps/templates/bare-template/{src,scripts}/**/*.{ts,js,tsx,jsx}"
         ]
       },
       "outputs": [

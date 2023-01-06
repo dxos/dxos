@@ -18,7 +18,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
           format: 'unix',
           lintFilePatterns: [`${outputDirectoryRelativeToMonorepoRoot}/**/*.{ts,js,tsx,jsx}`]
         },
-        outputs: ['{options.outputFile}']
+        outputs: ['{options.lintFilePatterns.0}']
       }
     }
   };

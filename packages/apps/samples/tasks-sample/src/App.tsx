@@ -1,15 +1,14 @@
-import React from "react";
-import { Config } from "@dxos/config";
-import { Dynamics } from "@dxos/config";
-import { Defaults } from "@dxos/config";
-import { ClientProvider } from "@dxos/react-client";
+//
+// Copyright 2023 DXOS.org
+//
+
+import React from 'react';
+
+import { Config, Dynamics, Defaults } from '@dxos/config';
+import { ClientProvider } from '@dxos/react-client';
 
 const config = async () => new Config(await Dynamics(), Defaults());
 
 export const App = () => {
-  return (
-    <ClientProvider config={config}>
-      {/* your components here */}
-    </ClientProvider>
-  );
+  return <ClientProvider config={config}>{/* your components here */}</ClientProvider>;
 };

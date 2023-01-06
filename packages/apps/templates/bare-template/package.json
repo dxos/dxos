@@ -6,7 +6,8 @@
   "author": "info@dxos.org",
   "main": "dist/src/config.t.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "rm -rf test/variants && ts-node test/generate.ts && pnpm i"
   },
   "dependencies": {
     "@dxos/plate": "workspace:*",
@@ -15,6 +16,8 @@
   },
   "devDependencies": {
     "@types/lodash.merge": "^4.6.6",
+    "@types/node": "^18.11.9",
+    "ts-node": "10.9.1",
     "typescript": "^4.8.4"
   }
 }

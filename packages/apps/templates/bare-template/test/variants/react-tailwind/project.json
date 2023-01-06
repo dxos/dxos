@@ -1,0 +1,18 @@
+{
+  "sourceRoot": "packages/apps/templates/bare-template/test/variants/react-tailwind/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/templates/bare-template/test/variants/react-tailwind/**/*.{ts,js,tsx,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.lintFilePatterns.0}"
+      ]
+    }
+  }
+}
