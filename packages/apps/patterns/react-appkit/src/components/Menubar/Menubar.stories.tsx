@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { InvitationEncoder, Space } from '@dxos/client';
 import { ClientProvider, useClient, useIdentity } from '@dxos/react-client';
-import { Group, Loading } from '@dxos/react-ui';
+import { Group, Loading } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 import { SingleInputStep } from '../SingleInputStep';
