@@ -18,7 +18,7 @@ import {
   GenericFallback,
   ServiceWorkerToast,
   useTelemetry,
-  translations,
+  appkitTranslations,
   StatusIndicator
 } from '@dxos/react-appkit';
 import { ClientProvider, useStatus } from '@dxos/react-client';
@@ -26,7 +26,7 @@ import { UiProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
 import { NavMenu } from './components';
-import haloTranslations from './translations';
+import { haloTranslations } from './translations';
 
 const LockPage = React.lazy(() => import('./pages/LockPage'));
 const AppsPage = React.lazy(() => import('./pages/AppsPage'));
@@ -109,7 +109,7 @@ export const App = () => {
 
   return (
     <UiProvider
-      resourceExtensions={[translations, haloTranslations]}
+      resourceExtensions={[appkitTranslations, haloTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='halo'
     >

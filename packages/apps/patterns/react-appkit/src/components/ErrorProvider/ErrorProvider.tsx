@@ -24,7 +24,7 @@ export const ErrorContext = createContext<ErrorContextState>({
 const logError = (f: string, ...args: any[]) => console.error(f, ...args);
 
 export const ErrorProvider = ({ children }: PropsWithChildren<{}>) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const [errors, setErrors] = useState<Error[]>([]);
   const addError = useCallback((error: Error) => setErrors([error, ...errors]), []);
   const resetErrors = useCallback(() => setErrors([]), []);

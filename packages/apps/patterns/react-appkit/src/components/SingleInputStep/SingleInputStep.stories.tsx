@@ -20,7 +20,7 @@ export default {
 };
 
 const Template = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: string }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   return (
     <Group
       elevation={5}

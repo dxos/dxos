@@ -17,5 +17,11 @@ export const Fallback = ({ message }: { message: string }) => (
 
 export const GenericFallback = () => {
   const { t } = useTranslation('appkit');
-  return <Fallback message={t('generic loading label')} />;
+  console.log(
+    '[messages]',
+    t('current app name', { ns: 'halo' }),
+    t('loading translations', { ns: 'dxos-common' }),
+    t('generic loading label', { ns: 'appkit' })
+  );
+  return <Fallback message={t('generic loading label', { ns: 'appkit' })} />;
 };

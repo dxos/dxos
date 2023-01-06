@@ -3,8 +3,8 @@
 //
 
 import i18Next, { Resource } from 'i18next';
-import React, { PropsWithChildren, ReactNode, Suspense, useEffect, createContext } from 'react';
-import { initReactI18next, useTranslation } from 'react-i18next';
+import React, { ReactNode, useEffect, createContext, useState, Suspense } from 'react';
+import { initReactI18next } from 'react-i18next';
 
 import { Loading } from '../Loading';
 
@@ -35,32 +35,36 @@ export interface TranslationsProviderProps {
   appNs?: string;
 }
 
-const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
-  const { t: _t } = useTranslation(initialNs);
-  return <>{children}</>;
-};
-
 export const TranslationsContext = createContext({
   appNs: initialNs
 });
 
-export const TranslationsProvider = ({ fallback, resourceExtensions, children, appNs }: TranslationsProviderProps) => {
+export const TranslationsProvider = ({
+  fallback = <Loading label={resources[initialLng][initialNs]['loading translations']} />,
+  resourceExtensions,
+  children,
+  appNs
+}: TranslationsProviderProps) => {
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
+    setLoaded(false);
     if (resourceExtensions && resourceExtensions.length) {
       resourceExtensions.forEach((resource) => {
         Object.keys(resource).forEach((language) => {
           Object.keys(resource[language]).forEach((ns) => {
+            console.log('[adding]', language, ns, resource[language][ns]);
             i18Next.addResourceBundle(language, ns, resource[language][ns]);
           });
         });
       });
     }
+    setLoaded(true);
   }, [resourceExtensions]);
+
+  // todo(thure): This is not ideal, but i18next was causing `Suspense` to not render the fallback even when the child was asking for namespaces yet to be added.
   return (
     <TranslationsContext.Provider value={{ appNs: appNs ?? initialNs }}>
-      <Suspense fallback={fallback ?? <Loading label={resources[initialLng][initialNs]['loading translations']} />}>
-        <TranslationsProviderLoaded>{children}</TranslationsProviderLoaded>
-      </Suspense>
+      <Suspense fallback={fallback}>{loaded ? children : fallback}</Suspense>
     </TranslationsContext.Provider>
   );
 };

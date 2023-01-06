@@ -34,7 +34,7 @@ export const InvitationStatus = ({
   status: Invitation.State;
   haltedAt?: Invitation.State;
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
 
   const statusLabelMap = useMemo(
     () =>

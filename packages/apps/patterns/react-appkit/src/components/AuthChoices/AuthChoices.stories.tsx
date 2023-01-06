@@ -20,7 +20,7 @@ export default {
 };
 
 const Template = (args: AuthChoicesProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   return (
     <Group
       elevation={5}

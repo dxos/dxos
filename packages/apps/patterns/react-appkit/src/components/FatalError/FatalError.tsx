@@ -12,7 +12,7 @@ export interface FatalErrorProps {
 }
 
 export const FatalError = ({ error }: FatalErrorProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const isDev = process.env.NODE_ENV === 'development';
 
   const message = String(error); // Error.name + Error.message

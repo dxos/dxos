@@ -14,7 +14,7 @@ export interface AuthChoicesProps {
 }
 
 export const AuthChoices = ({ onCreate, onJoin, onRecover }: AuthChoicesProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
 
   return (
     <div role='none' className='flex flex-col gap-2 mt-4 px-2'>

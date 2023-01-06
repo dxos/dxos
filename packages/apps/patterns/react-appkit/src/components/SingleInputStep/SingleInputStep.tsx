@@ -35,7 +35,7 @@ export const SingleInputStep = ({
   inputPlaceholder,
   inputProps
 }: SingleInputStepProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const onKeyUp = useCallback((e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onNext(), [onNext]);
   const inputSlots = useMemo(() => ({ input: { onKeyUp, autoFocus: true } }), [onKeyUp]);
   return (

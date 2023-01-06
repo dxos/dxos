@@ -13,7 +13,7 @@ export interface JoinSpaceDialogProps extends JoinPanelProps {
 }
 
 export const JoinDialog = ({ dialogProps, ...props }: JoinSpaceDialogProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   return (
     <Dialog title={t('join space label')} {...dialogProps}>
       <JoinPanel {...props} />

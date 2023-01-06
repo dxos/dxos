@@ -49,7 +49,7 @@ const JoinStep1 = ({
   initialInvitationCode,
   acceptInvitation
 }: JoinStep1Props) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
 
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
 
@@ -87,7 +87,7 @@ const JoinStep1 = ({
 };
 
 const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const [invitationSecret, setInvitationSecret] = useState('');
   const [pending, setPending] = useState(false);
 
