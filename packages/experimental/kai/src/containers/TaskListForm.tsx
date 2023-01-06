@@ -39,8 +39,13 @@ const useTransaction = (db: EchoDatabase): Transaction => {
 };
 
 export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task: currentTask, onClose }) => {
+<<<<<<< HEAD
   const { space } = useSpace();
   const tx = useTransaction(space.experimental.db);
+=======
+  const { experimental } = useSpace().space;
+  const tx = useTransaction(experimental.db);
+>>>>>>> 658a16d9f (Fix Kai)
   const task = tx.wrap(currentTask); // Projection.
 
   const handleClose = (commit: boolean) => {
