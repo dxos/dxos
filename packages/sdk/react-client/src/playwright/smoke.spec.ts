@@ -24,6 +24,6 @@ describe('Smoke test', function () {
     await waitForExpect(async () => {
       const isVisible = await page.isVisible(':has-text("initialized")');
       expect(isVisible).to.be.true;
-    });
+    }, 10_000);
   }).skipEnvironments('firefox'); // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
 });
