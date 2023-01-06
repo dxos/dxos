@@ -258,6 +258,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mesh/teleport-extension-object-sync/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/teleport-extension-presence/package.json",
           "jsonpath": "$.version"
         },
