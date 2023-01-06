@@ -4,8 +4,6 @@
 
 import { defineConfig } from 'vite';
 
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
-
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
@@ -29,9 +27,5 @@ export default defineConfig({
         /node_modules/
       ]
     }
-  },
-  plugins: [ConfigPlugin()],
-  worker: {
-    plugins: [ConfigPlugin()]
   }
 });
