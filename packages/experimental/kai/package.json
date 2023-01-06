@@ -7,6 +7,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
   "scripts": {
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
