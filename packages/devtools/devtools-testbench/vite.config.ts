@@ -47,6 +47,13 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/echo/feed',
       '@dxos/protocols/proto/dxos/halo/invitations',
       '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/async',
+      '@dxos/client',
+      '@dxos/debug',
+      '@dxos/protocols',
+      '@dxos/react-appkit',
+      '@dxos/react-async',
+      '@dxos/react-client',
       '@dxos/react-toolkit'
     ]
   },

@@ -9,13 +9,13 @@ import { Client, fromHost } from '@dxos/client';
 import { ClientAndServices, PanelsContainer, sections } from '@dxos/devtools';
 import { OptionsContext, Routes as KaiRoutes } from '@dxos/kai';
 import { Config, Defaults } from '@dxos/config';
-import { ClientContext } from '@dxos/react-client';
+import { ClientContext, ClientProvider } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
 /**
  * Main app container with routes.
  */
-export const App = () => {
+export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
   const [value, setValue] = useState<ClientAndServices | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -45,20 +45,14 @@ export const App = () => {
   // TODO(burdon): Error boundary and indicator.
 
   return (
-    <ErrorBoundary>
-      <ClientContext.Provider value={value}>
-        <div style={{ flexDirection: 'row' }}>
-          <div style={{ display: 'flex', flexShrink: 0 }}>
-            <HashRouter>
-              <KaiRoutes />
-            </HashRouter>
-          </div>
+    <ClientProvider value={value}>
+      <OptionsContext.Provider value={{ debug }}>
+        <HashRouter>
+          <KaiRoutes />
+        </HashRouter>
+      </OptionsContext.Provider>
 
-          <div style={{ display: 'flex', flexShrink: 0 }}>
-            <PanelsContainer sections={sections} />
-          </div>
-        </div>
-      </ClientContext.Provider>
-    </ErrorBoundary>
+      {/* <PanelsContainer sections={sections} /> */}
+    </ClientProvider>
   );
 };
