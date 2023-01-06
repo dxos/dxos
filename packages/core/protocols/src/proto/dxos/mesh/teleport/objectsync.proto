@@ -9,7 +9,7 @@ import "google/protobuf/any.proto";
 
 package dxos.mesh.teleport.objectsync;
 
-message HeaderList {
+message WantList {
   repeated string ids = 1;
 }
 
@@ -25,10 +25,7 @@ message DataObject {
  */
 service ObjectSyncService {
   /// Notify the peer that we want to receive specified objects.
-  rpc Want(HeaderList) returns (google.protobuf.Empty);
-
-  /// Notify the peer that we no longer want to receive specified objects.
-  rpc Unwant(HeaderList) returns (google.protobuf.Empty);
+  rpc Want(WantList) returns (google.protobuf.Empty);
 
   /// Send an object to the peer.
   rpc Push(DataObject) returns (google.protobuf.Empty);
