@@ -7,7 +7,7 @@ import React, { FC, ReactNode } from 'react';
 import { mx } from '@dxos/react-ui';
 
 export const Card: FC<{
-  title: string;
+  title?: string;
   className?: string;
   menubar?: ReactNode;
   children?: ReactNode;
@@ -17,7 +17,7 @@ export const Card: FC<{
   return (
     <div className='flex flex-1 flex-col overflow-hidden drop-shadow-md'>
       <div className={mx('flex p-2', className)}>
-        <h2 className='text-lg'>{title}</h2>
+        <h2 className='text-lg'>{title ?? 'Card'}</h2>
         <div className='flex-1' />
         {menubar}
       </div>

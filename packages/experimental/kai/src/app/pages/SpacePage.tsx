@@ -6,10 +6,13 @@ import React, { useEffect, useState, FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useSpaces } from '@dxos/react-client';
+import { id } from '@dxos/echo-schema';
+import { useQuery, useSpaces } from '@dxos/react-client';
 
+import { Card, SearchBar, Selector } from '../../components';
 import { ContactList, Editor, ProjectGraph, ProjectList, ProjectTree, Sidebar, TaskList } from '../../containers';
-import { AppView, SpaceContext, SpaceContextType, useOptions, viewConfig } from '../../hooks';
+import { AppView, SpaceContext, SpaceContextType, useOptions, useSpace, viewConfig } from '../../hooks';
+import { Project } from '../../proto';
 
 const sidebarWidth = 200;
 
@@ -59,6 +62,23 @@ const EditorView: FC = () => {
   return <Editor />;
 };
 
+const TestView = () => {
+  const { space } = useSpace();
+  const projects = useQuery(space, Project.filter());
+
+  return (
+    <Card title='Tests'>
+      <div className='flex m-4'>
+        <SearchBar />
+      </div>
+
+      <div className='flex m-4'>
+        <Selector options={projects.map((project) => ({ id: project[id], title: project.title }))} />
+      </div>
+    </Card>
+  );
+};
+
 /**
  * Main grid layout.
  */
@@ -76,6 +96,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
       {view === AppView.PROJECTS && <ProjectsView />}
       {view === AppView.TASKS && <TasksView />}
       {view === AppView.EDITOR && <EditorView />}
+      {view === AppView.TEST && <TestView />}
     </div>
   );
 };

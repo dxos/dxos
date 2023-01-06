@@ -5,7 +5,7 @@
 import React, { ChangeEvent, InputHTMLAttributes, FC, useEffect, useRef, useState, KeyboardEvent } from 'react';
 
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onBlur'> {
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   onEnter?: (value: string) => void;
   delay?: number;
 }
@@ -23,7 +23,7 @@ export const Input: FC<InputProps> = ({ value: initialValue, onChange, onEnter, 
   const handleUpdate = (value: string) => {
     if (value !== initialValue) {
       clearTimeout(t.current);
-      onChange(value);
+      onChange?.(value);
     }
   };
 

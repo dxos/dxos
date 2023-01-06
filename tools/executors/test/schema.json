@@ -109,6 +109,10 @@
       "type": "boolean",
       "description": "Enable node inspector",
       "default": false
+    },
+    "grep": {
+      "type": "string",
+      "description": "Name of test for debugging"
     }
   },
   "required": [

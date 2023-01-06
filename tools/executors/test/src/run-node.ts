@@ -24,6 +24,7 @@ export type NodeOptions = {
   domRequired: boolean;
   reporter?: string;
   inspect?: boolean;
+  grep?: string;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -53,7 +54,8 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     String(options.timeout),
     ...(options.checkLeaks ? ['--checkLeaks'] : []),
     ...(options.forceExit ? ['--exit'] : []),
-    ...(options.inspect ? ['--inspect'] : [])
+    ...(options.inspect ? ['--inspect'] : []),
+    ...(options.grep ? ['--grep', options.grep] : [])
   ];
 
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');

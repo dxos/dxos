@@ -30,13 +30,13 @@ export const ProjectList: FC<{}> = () => {
 
   return (
     <Card title='Projects' fade scrollbar className='bg-cyan-400' menubar={<Menubar />}>
-      <>
+      <div className='flex flex-col flex-1'>
         {projects.map((project) => (
           <div key={project[id]} className='border-b'>
             <ProjectItem project={project} />
           </div>
         ))}
-      </>
+      </div>
     </Card>
   );
 };
