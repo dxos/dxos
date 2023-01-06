@@ -3,6 +3,10 @@
   "projectType": "application",
   "targets": {
     "build": {
+      "dependsOn": [
+        "prebuild",
+        "^build"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/experimental/kai/src/index.ts",
@@ -14,6 +18,10 @@
       ]
     },
     "compile": {
+      "dependsOn": [
+        "prebuild",
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
