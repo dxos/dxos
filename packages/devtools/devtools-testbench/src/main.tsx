@@ -25,5 +25,5 @@ import './style.css';
 
 (() => {
   // TODO(burdon): Get debug from config.
-  createRoot(document.getElementById('root')!).render(<App debug={false} />);
+  createRoot(document.getElementById('root')!).render(<App />);
 })();

@@ -33,6 +33,7 @@ export default defineConfig({
     force: true,
     include: [
       '@dxos/config',
+      '@dxos/devtools',
       '@dxos/keys',
       '@dxos/log',
       '@dxos/protocols',
@@ -45,7 +46,8 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/halo/keys',
       '@dxos/protocols/proto/dxos/echo/feed',
       '@dxos/protocols/proto/dxos/halo/invitations',
-      '@dxos/protocols/proto/dxos/echo/model/object'
+      '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/react-toolkit'
     ]
   },
   build: {

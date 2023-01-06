@@ -6,25 +6,26 @@ import React, { FC, useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { Client, fromHost } from '@dxos/client';
+import { ClientAndServices, PanelsContainer, sections } from '@dxos/devtools';
 import { OptionsContext, Routes as KaiRoutes } from '@dxos/kai';
 import { Config, Defaults } from '@dxos/config';
-import { ClientProvider } from '@dxos/react-client';
-
-
+import { ClientContext } from '@dxos/react-client';
+import { ErrorBoundary } from '@dxos/react-toolkit';
 
 /**
  * Main app container with routes.
  */
-export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
-  const [client, setClient] = useState<Client | undefined>(undefined);
+export const App = () => {
+  const [value, setValue] = useState<ClientAndServices | undefined>(undefined);
 
   // Auto-create client and profile.
   useEffect(() => {
     setTimeout(async () => {
       const config = new Config(Defaults());
+      const services = fromHost(config);
       const client = new Client({
         config,
-        services: fromHost(config)
+        services
       });
 
       await client.initialize();
@@ -33,23 +34,31 @@ export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
         await client.halo.createProfile();
       }
 
-      setClient(client);
+      setValue({ client, services: services.services });
     });
   }, []);
 
-  if (!client) {
+  if (!value) {
     return null;
   }
 
   // TODO(burdon): Error boundary and indicator.
 
   return (
-    <ClientProvider client={client}>
-      <OptionsContext.Provider value={{ debug }}>
-        <HashRouter>
-          <KaiRoutes />
-        </HashRouter>
-      </OptionsContext.Provider>
-    </ClientProvider>
+    <ErrorBoundary>
+      <ClientContext.Provider value={value}>
+        <div style={{ flexDirection: 'row' }}>
+          <div style={{ display: 'flex', flexShrink: 0 }}>
+            <HashRouter>
+              <KaiRoutes />
+            </HashRouter>
+          </div>
+
+          <div style={{ display: 'flex', flexShrink: 0 }}>
+            <PanelsContainer sections={sections} />
+          </div>
+        </div>
+      </ClientContext.Provider>
+    </ErrorBoundary>
   );
 };
