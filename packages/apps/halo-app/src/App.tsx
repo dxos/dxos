@@ -22,7 +22,7 @@ import {
   StatusIndicator
 } from '@dxos/react-appkit';
 import { ClientProvider, useStatus } from '@dxos/react-client';
-import { UiProvider } from '@dxos/react-components';
+import { ThemeProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
 import { NavMenu } from './components';
@@ -108,7 +108,7 @@ export const App = () => {
   });
 
   return (
-    <UiProvider
+    <ThemeProvider
       resourceExtensions={[appkitTranslations, haloTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='halo'
@@ -129,6 +129,6 @@ export const App = () => {
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>
-    </UiProvider>
+    </ThemeProvider>
   );
 };

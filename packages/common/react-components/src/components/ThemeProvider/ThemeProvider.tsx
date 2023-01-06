@@ -15,14 +15,14 @@ import { defaultFocus } from '../../styles';
 import { mx } from '../../util';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
-export type UiProviderProps = PropsWithChildren<{
+export type ThemeProviderProps = PropsWithChildren<{
   tooltipProviderProps?: TooltipProviderProps;
   toastProviderProps?: ToastProviderProps;
   toastViewportProps?: ToastViewportProps;
 }> &
   Omit<TranslationsProviderProps, 'children'>;
 
-export const UiProvider = ({
+export const ThemeProvider = ({
   children,
   tooltipProviderProps,
   toastProviderProps,
@@ -30,7 +30,7 @@ export const UiProvider = ({
   fallback,
   resourceExtensions,
   appNs
-}: UiProviderProps) => {
+}: ThemeProviderProps) => {
   return (
     <TranslationsProvider
       {...{

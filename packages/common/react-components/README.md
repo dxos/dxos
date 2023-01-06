@@ -99,7 +99,7 @@ Now you can use Tailwind utility classnames in your project.
 
 ## Set up the provider
 
-In order for the project to render correctly, wrap your app with `<UiProvider/>`.
+In order for the project to render correctly, wrap your app with `<ThemeProvider/>`.
 
 ## Set up theming
 
