@@ -52,7 +52,6 @@ export const TranslationsProvider = ({
       resourceExtensions.forEach((resource) => {
         Object.keys(resource).forEach((language) => {
           Object.keys(resource[language]).forEach((ns) => {
-            console.log('[adding]', language, ns, resource[language][ns]);
             i18Next.addResourceBundle(language, ns, resource[language][ns]);
           });
         });
