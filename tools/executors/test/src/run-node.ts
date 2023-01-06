@@ -58,10 +58,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
       MOCHA_TAGS: options.tags.join(','),
 
       // Patch in ts-node will read this.
-      SWC_PLUGINS: JSON.stringify([[
-        require.resolve('@dxos/swc-log-plugin'),
-        {}
-      ]])
+      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]])
     }
   });
 
