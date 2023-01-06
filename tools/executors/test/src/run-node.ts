@@ -58,6 +58,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
       MOCHA_TAGS: options.tags.join(','),
 
       // Patch in ts-node will read this.
+      // https://github.com/TypeStrong/ts-node/issues/1937
       SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]])
     }
   });
