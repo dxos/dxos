@@ -23,7 +23,7 @@ export const mapTunnels = (tunnels: TunnelResponse[]) => {
   return tunnels.map((tunnel) => ({
     key: tunnel.name,
     enabled: tunnel.enabled,
-    url: tunnel.url,
+    url: tunnel.url
   }));
 };
 
