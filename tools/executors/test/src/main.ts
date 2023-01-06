@@ -3,6 +3,7 @@
 //
 
 import { ExecutorContext, runExecutor } from '@nrwl/devkit';
+import chalk from 'chalk';
 import fetch, { Response } from 'node-fetch';
 import { resolve } from 'node:path';
 
@@ -58,10 +59,17 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     void iterator.next();
     await poll<Response | undefined>(
       async () => {
-        console.log(`Polling port ${port}...`);
+        process.stdout.write(`Polling port ${port}...`);
         try {
-          return await fetch(`http://localhost:${port}`);
-        } catch {
+          const res = await fetch(`http://localhost:${port}`);
+          if (res.status < 400) {
+            process.stdout.write(chalk` {green ${res.status}}\n`);
+          } else {
+            process.stdout.write(chalk` {red ${res.status}}\n`);
+          }
+          return res;
+        } catch (err: any) {
+          process.stdout.write(chalk` {red ${err?.message}}\n`);
           return undefined;
         }
       },
