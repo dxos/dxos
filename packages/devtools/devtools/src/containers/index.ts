@@ -3,7 +3,7 @@
 //
 
 export * from './ConfigPanel';
-export * from './CredentialMessagesPanel';
+export * from './CredentialsPanel';
 export * from './FeedsPanel';
 export * from './IdentityPanel';
 export * from './ItemsPanel';
