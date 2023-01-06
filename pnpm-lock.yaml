@@ -1,6 +1,9 @@
 lockfileVersion: 5.4
 
 patchedDependencies:
+  '@nrwl/js@15.3.3':
+    hash: obprir4htkvwr7g5rv5iu5yfs4
+    path: patches/@nrwl__js@15.3.3.patch
   '@nxext/vite@15.0.0':
     hash: yhihq6rejpjgfdxtvvnsfkkkhu
     path: patches/@nxext__vite@15.0.0.patch
@@ -13,9 +16,6 @@ patchedDependencies:
   vite@3.2.5:
     hash: magqryo643lwpdprn2fbusqud4
     path: patches/vite@3.2.5.patch
-  '@nrwl/js@15.3.3':
-    hash: obprir4htkvwr7g5rv5iu5yfs4
-    path: patches/@nrwl__js@15.3.3.patch
 
 importers:
 
@@ -104,6 +104,7 @@ importers:
       require-from-string: ^2.0.2
       rollup: ^2.77.3
       rxjs: ^7.5.7
+      semver: ^7.3.8
       syncpack: ^8.2.4
       ts-jest: ^28.0.0
       ts-node: 10.9.1
@@ -199,6 +200,7 @@ importers:
       require-from-string: 2.0.2
       rollup: 2.79.1
       rxjs: 7.5.7
+      semver: 7.3.8
       syncpack: 8.2.4
       ts-jest: 28.0.8_2mlypa2nfjbqiqoxx2moogkvdu
       ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
@@ -583,7 +585,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-      sass: 1.56.2
+      sass: 1.57.1
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/cli': link:../../../devtools/cli
@@ -602,7 +604,7 @@ importers:
       require-from-string: 2.0.2
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_pftdh3zqu4qevmbqg2nu3a7f3e
       vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       webpack: 5.74.0
       workbox-window: 6.5.4
@@ -652,7 +654,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-      sass: 1.56.2
+      sass: 1.57.1
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/cli': link:../../../devtools/cli
@@ -671,7 +673,7 @@ importers:
       require-from-string: 2.0.2
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_pftdh3zqu4qevmbqg2nu3a7f3e
       vite-plugin-pwa: 0.12.8_v7patrztka3wxwjwwj7rxgk7ey
       webpack: 5.74.0
       workbox-window: 6.5.4
@@ -1114,7 +1116,7 @@ importers:
       ts-node: 10.9.1_taqxcviixjxyd5vh2trpwxojdm
       yaml: 2.1.3
       yargs: 16.2.0
-      zod: 3.20.1
+      zod: 3.20.2
     devDependencies:
       '@types/inquirer': 8.2.5
       '@types/lodash.flatten': 4.4.7
@@ -6631,7 +6633,7 @@ packages:
       magic-string: 0.26.7
       react-docgen-typescript: 2.2.2_typescript@4.8.4
       typescript: 4.8.4
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_pftdh3zqu4qevmbqg2nu3a7f3e
     dev: true
 
   /@jridgewell/gen-mapping/0.1.1:
@@ -10048,7 +10050,7 @@ packages:
       react-docgen: 6.0.0-alpha.3
       slash: 3.0.0
       sveltedoc-parser: 4.2.1
-      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4
+      vite: 3.2.5_magqryo643lwpdprn2fbusqud4_pftdh3zqu4qevmbqg2nu3a7f3e
     transitivePeerDependencies:
       - '@babel/core'
       - eslint
@@ -13863,7 +13865,7 @@ packages:
       '@vuepress/shared': 2.0.0-beta.53
       '@vuepress/utils': 2.0.0-beta.53
       '@vueuse/core': 9.6.0_vue@3.2.45
-      sass: 1.56.2
+      sass: 1.57.1
       vue: 3.2.45
       vue-router: 4.1.6_vue@3.2.45
     transitivePeerDependencies:
@@ -19689,7 +19691,7 @@ packages:
       eslint-scope: 7.1.1
       eslint-utils: 3.0.0_eslint@8.3.0
       eslint-visitor-keys: 3.3.0
-      espree: 9.4.0
+      espree: 9.1.0
       esquery: 1.4.0
       esutils: 2.0.3
       fast-deep-equal: 3.1.3
@@ -19736,7 +19738,7 @@ packages:
       eslint-scope: 7.1.1
       eslint-utils: 3.0.0_eslint@8.4.1
       eslint-visitor-keys: 3.3.0
-      espree: 9.4.0
+      espree: 9.2.0
       esquery: 1.4.0
       esutils: 2.0.3
       fast-deep-equal: 3.1.3
@@ -30373,7 +30375,6 @@ packages:
 
   /rollup-plugin-terser/7.0.2_rollup@2.79.1:
     resolution: {integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==}
-    deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-terser
     peerDependencies:
       rollup: ^2.0.0
     dependencies:
@@ -30514,8 +30515,8 @@ packages:
       - supports-color
     dev: true
 
-  /sass/1.56.2:
-    resolution: {integrity: sha512-ciEJhnyCRwzlBCB+h5cCPM6ie/6f8HrhZMQOf5vlU60Y1bI1rx5Zb0vlDZvaycHsg/MqFfF1Eq2eokAa32iw8w==}
+  /sass/1.57.1:
+    resolution: {integrity: sha512-O2+LwLS79op7GI0xZ8fqzF7X2m/m8WFfI02dHOdsK5R2ECeS5F62zrwg/relM1rjSLy7Vd/DiMNIvPrQGsA0jw==}
     engines: {node: '>=12.0.0'}
     hasBin: true
     dependencies:
@@ -31313,7 +31314,6 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
-    deprecated: Please use @jridgewell/sourcemap-codec instead
 
   /space-separated-tokens/1.1.5:
     resolution: {integrity: sha512-q/JSVd1Lptzhf5bkYm4ob4iWPjx0KiRe3sRFBNrVqbJkFaBm5vbbowy1mymoPNLRa52+oadOhJ+K49wsSeSjTA==}
@@ -33900,7 +33900,7 @@ packages:
     dev: true
     patched: true
 
-  /vite/3.2.5_magqryo643lwpdprn2fbusqud4_t3frbqhr6ncnsli4jbcnetyud4:
+  /vite/3.2.5_magqryo643lwpdprn2fbusqud4_pftdh3zqu4qevmbqg2nu3a7f3e:
     resolution: {integrity: sha512-4mVEpXpSOgrssFZAOmGIr85wPHKvaDAcXqxVxVRZhljkJOMZi1ibLibzjLHzJvcok8BMguLc7g1W6W/GqZbLdQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -33930,7 +33930,7 @@ packages:
       postcss: 8.4.18
       resolve: 1.22.1
       rollup: 2.79.1
-      sass: 1.56.2
+      sass: 1.57.1
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
@@ -34191,7 +34191,7 @@ packages:
     dependencies:
       '@vuepress/utils': 2.0.0-beta.53
       chokidar: 3.5.3
-      sass: 1.56.2
+      sass: 1.57.1
       vuepress-shared: 2.0.0-beta.122
     transitivePeerDependencies:
       - supports-color
@@ -35489,8 +35489,8 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /zod/3.20.1:
-    resolution: {integrity: sha512-At2YngeqktnHk6L9vf6Sdt7IGcRFziasf7JyQfKwxMd2rOWIUvURP6oLUTW6N0WKQ5bcIdI+IZ3+uGZCCcQcQg==}
+  /zod/3.20.2:
+    resolution: {integrity: sha512-1MzNQdAvO+54H+EaK5YpyEy0T+Ejo/7YLHS93G3RnYWh5gaotGHwGeN/ZO687qEDU2y4CdStQYXVHIgrUl5UVQ==}
     dev: false
 
   /zrender/5.4.0:
