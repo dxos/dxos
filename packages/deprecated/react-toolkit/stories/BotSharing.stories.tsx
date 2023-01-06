@@ -10,7 +10,7 @@ import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
-import { CopyText, FullScreen } from '@dxos/react-components';
+import { CopyText, FullScreen } from '@dxos/react-components-deprecated';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
 import { ErrorBoundary, SpaceSharingDialog } from '../src';

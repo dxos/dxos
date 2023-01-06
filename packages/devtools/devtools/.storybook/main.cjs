@@ -43,7 +43,7 @@ module.exports = {
         '@dxos/protocols',
         '@dxos/react-async',
         '@dxos/react-client',
-        '@dxos/react-components',
+        '@dxos/react-components-deprecated',
         '@dxos/react-registry-client',
         '@dxos/react-toolkit',
         '@dxos/registry-client',

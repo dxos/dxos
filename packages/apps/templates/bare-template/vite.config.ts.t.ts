@@ -10,7 +10,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
   const { react, name, dxosUi, pwa, monorepo } = input;
   const imports = new Imports();
   const reactPlugin = imports.lazy('react', '@vitejs/plugin-react', { isDefault: true });
-  const ThemePlugin = imports.lazy('ThemePlugin', '@dxos/react-ui/plugin');
+  const ThemePlugin = imports.lazy('ThemePlugin', '@dxos/react-components/plugin');
   const VitePWA = imports.lazy('VitePWA', 'vite-plugin-pwa');
   const resolve = imports.lazy('resolve', monorepo ? 'node:path' : 'path');
 

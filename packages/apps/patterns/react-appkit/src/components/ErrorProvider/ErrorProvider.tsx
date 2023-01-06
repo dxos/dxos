@@ -5,7 +5,7 @@
 import { Warning } from 'phosphor-react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
-import { Tooltip, valenceColorText, defaultFocus, useTranslation, mx } from '@dxos/react-uikit';
+import { Tooltip, valenceColorText, defaultFocus, useTranslation, mx } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
 export interface ErrorContextState {
@@ -24,7 +24,7 @@ export const ErrorContext = createContext<ErrorContextState>({
 const logError = (f: string, ...args: any[]) => console.error(f, ...args);
 
 export const ErrorProvider = ({ children }: PropsWithChildren<{}>) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const [errors, setErrors] = useState<Error[]>([]);
   const addError = useCallback((error: Error) => setErrors([error, ...errors]), []);
   const resetErrors = useCallback(() => setErrors([]), []);

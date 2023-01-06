@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { PublicKey } from '@dxos/keys';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { useClientServices, useDevtools, useStream } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { KeySelect, Panel } from '../../components';
 

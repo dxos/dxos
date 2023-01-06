@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
@@ -47,8 +47,7 @@ export default defineConfig({
       '@dxos/react-appkit',
       '@dxos/react-async',
       '@dxos/react-client',
-      '@dxos/react-ui',
-      '@dxos/react-uikit',
+      '@dxos/react-components',
       '@dxos/rpc',
       '@dxos/rpc-tunnel',
       '@dxos/sentry',
@@ -78,8 +77,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
       ]
     }),

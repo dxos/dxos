@@ -6,12 +6,12 @@ import '@dxosTheme';
 import { ComponentStory, Story } from '@storybook/react';
 import React, { FC } from 'react';
 
-import { Button } from '@dxos/react-uikit';
+import { Button } from '@dxos/react-components';
 
 import { ErrorProvider } from './ErrorProvider';
 
 export default {
-  title: 'react-uikit/ErrorProvider',
+  title: 'react-appkit/ErrorProvider',
   component: ErrorProvider
 };
 

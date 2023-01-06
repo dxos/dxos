@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// File copied from @dxos/react-ui to not depend on @dxos/react-ui because it is not fully finished yet.
+// File copied from @dxos/react-components to not depend on @dxos/react-components because it is not fully finished yet.
 
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
 import cx from 'classnames';

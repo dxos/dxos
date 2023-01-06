@@ -16,7 +16,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@emotion/react": "^11.9.0",

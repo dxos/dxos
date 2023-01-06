@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Box, Button, LinearProgress, TextField, Typography } from '@mui/material';
 
 import { useMounted } from '@dxos/react-async';
-import { Dialog } from '@dxos/react-components';
+import { Dialog } from '@dxos/react-components-deprecated';
 
 import { ImportMenu } from './ImportMenu';
 

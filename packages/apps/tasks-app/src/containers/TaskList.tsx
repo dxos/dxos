@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Item, ObjectModel, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
-import { Button, getSize, Loading } from '@dxos/react-uikit';
+import { Button, getSize, Loading } from '@dxos/react-components';
 
 import { CheckboxItem, Input, List } from '../components';
 
