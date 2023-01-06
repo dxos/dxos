@@ -4,8 +4,8 @@
   "targets": {
     "build": {
       "dependsOn": [
-        "prebuild",
-        "^build"
+        "^build",
+        "prebuild"
       ],
       "executor": "@nrwl/js:tsc",
       "options": {
@@ -19,8 +19,8 @@
     },
     "compile": {
       "dependsOn": [
-        "prebuild",
-        "^compile"
+        "^compile",
+        "prebuild"
       ],
       "executor": "@dxos/esbuild:build",
       "options": {
