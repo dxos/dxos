@@ -16,6 +16,9 @@ patchedDependencies:
   vite@3.2.5:
     hash: magqryo643lwpdprn2fbusqud4
     path: patches/vite@3.2.5.patch
+  ts-node@10.9.1:
+    hash: rke3py7up3u364r7wwqfla7cdm
+    path: patches/ts-node@10.9.1.patch
 
 importers:
 
