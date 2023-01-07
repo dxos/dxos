@@ -9,8 +9,8 @@ import { Client, fromHost } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { OptionsContext } from '../hooks';
-import { InitPage, SettingsPage, JoinPage, SpacePage } from './pages';
+import { AppView, OptionsContext } from '../hooks';
+import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
 
 /**
  * Main app routes.
@@ -45,7 +45,7 @@ const Routes = () => {
 /**
  * Main app container with routes.
  */
-export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
+export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = false }) => {
   const [client, setClient] = useState<Client | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -72,10 +72,9 @@ export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
   }
 
   // TODO(burdon): Error boundary and indicator.
-
   return (
     <ClientProvider client={client}>
-      <OptionsContext.Provider value={{ debug }}>
+      <OptionsContext.Provider value={{ debug, views }}>
         <HashRouter>
           <Routes />
         </HashRouter>

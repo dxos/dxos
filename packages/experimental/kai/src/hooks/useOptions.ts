@@ -4,11 +4,17 @@
 
 import { Context, createContext, useContext } from 'react';
 
-type OptionsContextType = {
+import { AppView } from './views';
+
+export type OptionsContextType = {
   debug: boolean;
+  views: AppView[];
 };
 
-export const OptionsContext: Context<OptionsContextType> = createContext<OptionsContextType>({ debug: false });
+export const OptionsContext: Context<OptionsContextType> = createContext<OptionsContextType>({
+  debug: false,
+  views: [AppView.CARDS]
+});
 
 export const useOptions = (): OptionsContextType => {
   return useContext(OptionsContext)!;
