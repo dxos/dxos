@@ -26,13 +26,25 @@
       ]
     },
     "e2e": {
-      "executor": "@dxos/playwright:playwright",
+      "executor": "@dxos/test:run",
       "options": {
-        "config": "packages/e2e/rpc-tunnel-e2e/playwright/config.ts",
+        "coveragePath": "coverage/packages/e2e/rpc-tunnel-e2e",
+        "outputPath": "tmp/mocha/packages/e2e/rpc-tunnel-e2e",
+        "playwright": true,
+        "resultsPath": "test-results/packages/e2e/rpc-tunnel-e2e",
+        "serve": "rpc-tunnel-e2e:serve",
         "testPatterns": [
-          "packages/e2e/rpc-tunnel-e2e/playwright/tests/*.spec.ts"
+          "packages/e2e/rpc-tunnel-e2e/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/e2e/rpc-tunnel-e2e/src/**/*"
         ]
-      }
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
@@ -54,6 +66,6 @@
     }
   },
   "implicitDependencies": [
-    "playwright"
+    "test"
   ]
 }

@@ -26,13 +26,25 @@
       ]
     },
     "e2e": {
-      "executor": "@dxos/playwright:playwright",
+      "executor": "@dxos/test:run",
       "options": {
-        "config": "packages/sdk/react-client/playwright/config.ts",
+        "coveragePath": "coverage/packages/sdk/react-client/playwright",
+        "outputPath": "tmp/mocha/packages/sdk/react-client/playwright",
+        "playwright": true,
+        "resultsPath": "test-results/packages/sdk/react-client/playwright",
+        "serve": "react-client:storybook",
         "testPatterns": [
-          "packages/sdk/react-client/playwright/tests/*.test.ts"
+          "packages/sdk/react-client/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/react-client/src/**/*"
         ]
-      }
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
@@ -88,7 +100,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "playwright",
     "test"
   ]
 }
