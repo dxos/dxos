@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+import type { StoryFn } from '@storybook/react';
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
@@ -13,30 +14,33 @@ import { Button } from '@dxos/react-components';
 import { SpaceList } from './SpaceList';
 
 export default {
-  title: 'react-appkit/SpaceList'
+  component: SpaceList
 };
 
-const Story = () => {
-  const client = useClient();
-  const spaces = useSpaces();
+export const Default = {
+  render: () => {
+    const client = useClient();
+    const spaces = useSpaces();
 
-  return (
-    <div>
-      <Button onClick={() => client.echo.createSpace()}>Add Space</Button>
+    return (
+      <div>
+        <Button onClick={() => client.echo.createSpace()}>Add Space</Button>
 
-      <SpaceList spaces={spaces} />
-    </div>
-  );
-};
-
-export const Primary = () => {
-  return (
-    <ClientProvider>
-      <ProfileInitializer>
-        <HashRouter>
-          <Story />
-        </HashRouter>
-      </ProfileInitializer>
-    </ClientProvider>
-  );
+        <SpaceList spaces={spaces} />
+      </div>
+    );
+  },
+  decorators: [
+    (Story: StoryFn) => {
+      return (
+        <ClientProvider>
+          <ProfileInitializer>
+            <HashRouter>
+              <Story />
+            </HashRouter>
+          </ProfileInitializer>
+        </ClientProvider>
+      );
+    }
+  ]
 };

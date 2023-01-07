@@ -1,7 +1,6 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "jsx": "preserve",
     "lib": [
       "DOM",
       "ESNext"
@@ -13,9 +12,6 @@
       "node"
     ]
   },
-  "exclude": [
-    "src/demos"
-  ],
   "include": [
     "src",
     "typings.d.ts",

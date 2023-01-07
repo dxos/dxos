@@ -43,10 +43,10 @@
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^2.0.1",
+    "@vitejs/plugin-react": "^3.0.1",
     "typescript": "^4.8.4",
-    "vite": "3.2.5",
-    "vite-plugin-pwa": "^0.12.4",
+    "vite": "4.0.4",
+    "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
   }
 }

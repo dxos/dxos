@@ -5,13 +5,11 @@
 import '@dxosTheme';
 import React, { PropsWithChildren } from 'react';
 
-import { templateForComponent } from '../../testing';
 import { Group } from '../Group';
 import { Button } from './Button';
 import { ButtonProps } from './ButtonProps';
 
 export default {
-  title: 'react-ui/Button',
   component: Button
 };
 
@@ -26,20 +24,20 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
   </>
 );
 
-const Template = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => (
-  <Container>
-    <Button {...args}>{children}</Button>
-    <Button {...args} disabled>
-      Disabled
-    </Button>
-  </Container>
-);
+export const Default = {
+  render: ({ children, ...args }: Omit<ButtonProps, 'ref'>) => (
+    <Container>
+      <Button {...args}>{children}</Button>
+      <Button {...args} disabled>
+        Disabled
+      </Button>
+    </Container>
+  ),
+  args: { children: 'Hello', disabled: false, variant: 'default' }
+};
 
-export const Default = templateForComponent(Template)({});
-Default.args = { children: 'Hello', disabled: false, variant: 'default' };
+export const Primary = { ...Default, args: { variant: 'primary', children: 'Hello' } };
 
-export const Primary = () => <Template {...{ variant: 'primary', children: 'Hello' }} />;
+export const Outline = { ...Default, args: { variant: 'outline', children: 'Hello' } };
 
-export const Outline = () => <Template {...{ variant: 'outline', children: 'Hello' }} />;
-
-export const Ghost = () => <Template {...{ variant: 'ghost', children: 'Hello' }} />;
+export const Ghost = { ...Default, args: { variant: 'ghost', children: 'Hello' } };
