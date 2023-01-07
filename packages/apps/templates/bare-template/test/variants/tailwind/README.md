@@ -2,8 +2,6 @@
 
 This app was created with the DXOS `bare` application template.
 
-- [x] React
-
 Run the app with `pnpm`:
 
 ```bash

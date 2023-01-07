@@ -52,7 +52,7 @@ export const configs: ExtractInput<typeof config>[] = [
     monorepo: true,
     pwa: false,
     dxosUi: false,
-    react: true,
+    react: false,
     storybook: false,
     tailwind: true
   },

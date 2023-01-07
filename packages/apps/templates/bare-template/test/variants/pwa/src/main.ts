@@ -5,6 +5,9 @@
 import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 
+// import css files directly
+import './index.css';
+
 void (async () => {
   // grab a configuration with defaults and dynamic values from KUBE
   const config = new Config(await Dynamics(), Defaults());

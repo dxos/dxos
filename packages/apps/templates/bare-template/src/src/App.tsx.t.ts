@@ -40,6 +40,10 @@ export default defineTemplate(
       ${dxosUi && text`
       // this includes css styles from @dxos/react-components
       import '@dxosTheme';`}
+
+      ${!dxosUi && text`
+      // include css files directly
+      import 'index.css';`}
       
       // Dynamics allows configuration to be supplied by the hosting KUBE
       const config = async () => new ${Config()}(await ${Dynamics()}(), ${Defaults()}());

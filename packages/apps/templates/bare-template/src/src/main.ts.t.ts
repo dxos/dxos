@@ -7,11 +7,13 @@ import config from '../config.t';
 
 export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
   const { react } = input;
-  return react
-    ? null
-    : text`
+  return !react
+    ? text`
     import { Client } from '@dxos/client';
     import { Config, Defaults, Dynamics } from '@dxos/config';
+
+    // import css files directly
+    import './index.css';
     
     void (async () => {
       // grab a configuration with defaults and dynamic values from KUBE
@@ -25,5 +27,5 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
       const element = document.createElement('pre');
       element.innerText = JSON.stringify(client.toJSON(), null, 2);
       document.body.appendChild(element);
-    })();`;
+    })();` : null;
 });
