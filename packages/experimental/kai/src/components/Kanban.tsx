@@ -22,7 +22,7 @@ export const Kanban: FC<{ objects: EchoObject[]; columns: KanbanColumnDef[]; col
   columnWidth = 300
 }) => {
   return (
-    <div className='flex flex-1 p-2 bg-white overflow-x-scroll'>
+    <div className='flex flex-1 p-2 bg-white overflow-x-scroll overflow-y-hidden'>
       <div className='flex'>
         {columns.map((column, i) => (
           <div
