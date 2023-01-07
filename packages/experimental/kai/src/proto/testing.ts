@@ -6,8 +6,7 @@ import faker from 'faker';
 
 import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 
-import { Contact, Task } from '../proto';
-import { Project } from './gen/schema';
+import { Contact, Organization, Project, Task } from './gen/schema';
 
 // TODO(burdon): Don't save inside utils.
 
@@ -58,11 +57,26 @@ export class Generator {
   }
 }
 
+export const tags = ['red', 'green', 'blue', 'orange'];
+
+export const createOrganization = async (db: EchoDatabase) => {
+  const organization = new Organization({
+    name: faker.company.companyName()
+  });
+
+  return await db.save(organization);
+};
+
 export const createProject = async (db: EchoDatabase) => {
   const project = new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
-    description: new TextObject()
+    description: new TextObject(),
+    tag: faker.random.arrayElement(tags)
+    // tags: [faker.random.arrayElement(tags)] // TODO(burdon): Implement constructor.
   });
+
+  // TODO(burdon): Broken.
+  // project.tags.add(faker.random.arrayElement(tags));
 
   return await db.save(project);
 };

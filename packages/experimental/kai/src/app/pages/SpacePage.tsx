@@ -16,6 +16,7 @@ import {
   Editor,
   mapProjectToItem,
   ProjectGraph,
+  ProjectKanban,
   ProjectList,
   ProjectTree,
   Sidebar,
@@ -24,7 +25,7 @@ import {
 import { AppView, SpaceContext, SpaceContextType, useOptions, useSpace, viewConfig } from '../../hooks';
 import { Generator, Contact, Project } from '../../proto';
 
-const sidebarWidth = 200;
+const sidebarWidth = 6 * (24 + 8) + 16;
 
 const BlocksView: FC<{ props: any }> = ({ props }) => {
   return (
@@ -58,18 +59,6 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
       </div>
     </div>
   );
-};
-
-const ProjectsView: FC = () => {
-  return <ProjectList />;
-};
-
-const TasksView: FC = () => {
-  return <TaskList />;
-};
-
-const EditorView: FC = () => {
-  return <Editor />;
 };
 
 const TestView = withReactor(() => {
@@ -134,9 +123,10 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
       </div>
 
       {view === AppView.CARDS && <BlocksView props={props} />}
-      {view === AppView.PROJECTS && <ProjectsView />}
-      {view === AppView.TASKS && <TasksView />}
-      {view === AppView.EDITOR && <EditorView />}
+      {view === AppView.PROJECTS && <ProjectList />}
+      {view === AppView.KANBAN && <ProjectKanban />}
+      {view === AppView.TASKS && <TaskList />}
+      {view === AppView.EDITOR && <Editor />}
       {view === AppView.TEST && <TestView />}
     </div>
   );

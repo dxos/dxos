@@ -29,8 +29,9 @@ The word kai (貝) is the Japanese word for shell.
 - [ ] Deploy mobile app.
 - [ ] Import/export JSON.
 - [ ] CRM/KM.
+- [ ] Styling slots.
 - [ ] Selector control.
-- [ ] Search.
+- [ ] Search (filtering).
 - [ ] Separate bundle for projects configuration.
 - [ ] Drag-and-drop reordering.
 - [ ] Materialized links (referential integrity).
@@ -41,3 +42,9 @@ The word kai (貝) is the Japanese word for shell.
   - https://bvaughn.github.io/react-virtualized/#/components/Masonry
 - [ ] Super app (WeChat/Twitter) for IPFS:
   https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
+
+## ECHO Issues
+
+- [ ] Delete.
+- [ ] Splice (drag and drop).
+- [ ] Scalar sets (e.g., Project tags for kanban).

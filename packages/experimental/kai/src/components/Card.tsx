@@ -8,14 +8,14 @@ import { mx } from '@dxos/react-components';
 
 export const Card: FC<{
   title?: string;
-  className?: string;
+  className?: string; // TODO(burdon): Slots.
   menubar?: ReactNode;
   children?: ReactNode;
   scrollbar?: boolean;
   fade?: boolean;
 }> = ({ title, className = 'bg-gray-400', menubar, scrollbar, fade, children }) => {
   return (
-    <div className='flex flex-1 flex-col overflow-hidden drop-shadow-md'>
+    <div className='flex flex-col w-full overflow-hidden drop-shadow-md'>
       <div className={mx('flex p-2', className)}>
         <h2 className='text-lg'>{title ?? 'Card'}</h2>
         <div className='flex-1' />

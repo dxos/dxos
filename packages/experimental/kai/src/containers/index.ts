@@ -8,6 +8,7 @@ export * from './Editor';
 export * from './Game';
 export * from './MemberList';
 export * from './ProjectGraph';
+export * from './ProjectKanban';
 export * from './ProjectList';
 export * from './ProjectTree';
 export * from './Sidebar';

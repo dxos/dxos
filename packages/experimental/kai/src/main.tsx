@@ -13,6 +13,9 @@ import './style.css';
 (() => {
   // TODO(burdon): Get debug from config.
   createRoot(document.getElementById('root')!).render(
-    <App views={[AppView.CARDS, AppView.PROJECTS, AppView.TASKS, AppView.EDITOR, AppView.TEST]} debug={false} />
+    <App
+      views={[AppView.CARDS, AppView.PROJECTS, AppView.KANBAN, AppView.TASKS, AppView.EDITOR, AppView.TEST]}
+      debug={false}
+    />
   );
 })();
