@@ -6,7 +6,7 @@ import React from 'react';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/client';
-import { Menubar2, ProfileMenu, Separator, SpaceMenu, SpacesLink } from '@dxos/react-appkit';
+import { Menubar, ProfileMenu, Separator, SpaceMenu, SpacesLink } from '@dxos/react-appkit';
 import { useIdentity, useSpace } from '@dxos/react-client';
 
 import { Main } from '../components';
@@ -19,12 +19,12 @@ export const SpaceLayout = () => {
   const navigate = useNavigate();
   return (
     <>
-      <Menubar2>
+      <Menubar>
         <SpacesLink onClickGoToSpaces={() => navigate('..')} />
         <Separator className='grow' />
         {space && <SpaceMenu space={space} onClickManageSpace={() => navigate('settings')} />}
         {identity && <ProfileMenu profile={identity} />}
-      </Menubar2>
+      </Menubar>
       <Main>
         <Outlet context={{ space }} />
       </Main>

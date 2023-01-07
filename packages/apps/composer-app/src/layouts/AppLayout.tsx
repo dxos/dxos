@@ -5,7 +5,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { Menubar2, Separator, ProfileMenu } from '@dxos/react-appkit';
+import { Menubar, Separator, ProfileMenu } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
 
 import { Main } from '../components';
@@ -14,10 +14,10 @@ export const AppLayout = () => {
   const identity = useIdentity();
   return (
     <>
-      <Menubar2>
+      <Menubar>
         <Separator className='grow' />
         {identity && <ProfileMenu profile={identity} />}
-      </Menubar2>
+      </Menubar>
       <Main>
         <Outlet />
       </Main>
