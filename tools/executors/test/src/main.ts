@@ -59,12 +59,18 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   let success = true;
   for (const env of resolvedOptions.environments) {
     let exitCode: number | null;
+
     switch (env) {
       case 'chromium':
       case 'firefox':
       case 'webkit': {
+        if (skipBrowserTests) {
+          exitCode = -1;
+          break;
+        }
+
         const runBrowser = options.playwright ? runNode : runBrowserMocha;
-        exitCode = skipBrowserTests ? null : await runBrowser(context, { ...resolvedOptions, browser: env });
+        exitCode = await runBrowser(context, { ...resolvedOptions, browser: env });
         break;
       }
 
@@ -80,11 +86,11 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
 
     if (exitCode === 0) {
       console.log(chalk`\n{green Passed in {blue {bold ${env}}}}\n`);
-    } else if (exitCode) {
+    } else if (!exitCode || exitCode > 0) {
       console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${env}}}}\n`);
     }
 
-    success &&= exitCode === 0;
+    success &&= exitCode === null ? false : exitCode <= 0;
   }
 
   return { success };
