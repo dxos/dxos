@@ -29,6 +29,7 @@ export type NodeOptions = {
   browserArgs?: string[];
   reporter?: string;
   inspect?: boolean;
+  grep?: string;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -73,7 +74,8 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
     String(options.timeout),
     ...(options.checkLeaks ? ['--checkLeaks'] : []),
     ...(options.forceExit ? ['--exit'] : []),
-    ...(options.inspect ? ['--inspect'] : [])
+    ...(options.inspect ? ['--inspect'] : []),
+    ...(options.grep ? ['--grep', options.grep] : [])
   ];
 };
 

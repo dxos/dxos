@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
 import { Planet, ShareNetwork } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
@@ -11,8 +10,9 @@ import { Link, useHref, useParams } from 'react-router-dom';
 import { Invitation, CancellableInvitationObservable, InvitationEncoder } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/react-components';
 
+import { Button } from '../components';
 import { useSpace } from '../hooks';
 
 export const SpaceList = () => {
@@ -54,14 +54,9 @@ export const SpaceList = () => {
       {spaces.map((space) => (
         <div
           key={space.key.toHex()}
-          className={clsx(
-            'flex p-2 pl-3 pr-4 items-center',
-            space.key.truncate() === currentSpaceKey && 'bg-slate-600'
-          )}
+          className={mx('flex p-2 pl-3 pr-4 items-center', space.key.truncate() === currentSpaceKey && 'bg-slate-600')}
         >
-          <div
-            className={clsx('mr-3', space.key.truncate() === currentSpaceKey ? 'text-orange-500' : 'text-slate-500')}
-          >
+          <div className={mx('mr-3', space.key.truncate() === currentSpaceKey ? 'text-orange-500' : 'text-slate-500')}>
             <Planet className={getSize(6)} />
           </div>
           <div className='flex flex-1 font-mono text-slate-300 cursor-pointer'>
@@ -70,9 +65,9 @@ export const SpaceList = () => {
           {space.key.truncate() === currentSpaceKey && (
             <div className='flex items-center'>
               <CopyToClipboard text={window.origin + '/' + url}>
-                <button>
-                  <ShareNetwork className={clsx(getSize(5), 'cursor-pointer')} />
-                </button>
+                <Button>
+                  <ShareNetwork className={mx(getSize(5), 'cursor-pointer')} />
+                </Button>
               </CopyToClipboard>
             </div>
           )}

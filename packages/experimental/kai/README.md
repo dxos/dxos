@@ -22,3 +22,22 @@ The word kai (貝) is the Japanese word for shell.
 ## Data
 
 - https://fakerjs.dev/api
+
+
+## Roadmap
+
+- [ ] Deploy mobile app.
+- [ ] Import/export JSON.
+- [ ] CRM/KM.
+- [ ] Selector control.
+- [ ] Search.
+- [ ] Separate bundle for projects configuration.
+- [ ] Drag-and-drop reordering.
+- [ ] Materialized links (referential integrity).
+- [ ] Deprecate Kitchen Sink.
+- [ ] Integrate with Devtools.
+- [ ] Virtual table:
+  - https://react-table-v7.tanstack.com
+  - https://bvaughn.github.io/react-virtualized/#/components/Masonry
+- [ ] Super app (WeChat/Twitter) for IPFS:
+  https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
