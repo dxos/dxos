@@ -463,11 +463,6 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/playwright/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/executors/protobuf-compiler/package.json",
           "jsonpath": "$.version"
         },
