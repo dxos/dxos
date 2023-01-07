@@ -16,9 +16,10 @@ export type SelectorOption = { id: string; title: string };
  */
 export const Selector: FC<{
   options?: SelectorOption[];
+  rows?: number;
   onSelect?: (id: string) => void;
   onChange?: (text: string) => void;
-}> = ({ options, onSelect, onChange }) => {
+}> = ({ options, rows = 5, onSelect, onChange }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string>();
   const hasOptions = !!(options?.length ?? 0);
@@ -81,7 +82,7 @@ export const Selector: FC<{
 
       {hasOptions && open && (
         <div className='relative z-50'>
-          <div className='absolute flex flex-col w-full bg-gray-100'>
+          <div className='absolute flex flex-col overflow-y-scroll w-full bg-gray-100' style={{ maxHeight: rows * 32 }}>
             {options!.map((option) => (
               <div
                 key={option.id}
