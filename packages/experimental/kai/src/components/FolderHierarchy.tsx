@@ -5,7 +5,7 @@
 import { CaretDown, CaretRight } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
-import { getSize, mx } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-components';
 
 export type FolderHierarchyItem = {
   id: string;
