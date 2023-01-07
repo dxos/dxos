@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
-import { useFlexLayout, useResizeColumns, useTable } from 'react-table';
+import React, { FC, useMemo } from 'react';
+import { Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
 import { EchoObject } from '@dxos/echo-schema';
 
@@ -28,18 +28,28 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
-export const Table = () => {
+/**
+ *
+ */
+export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = ({ columns, data }) => {
+  const defaultColumn = useMemo(
+    () => ({
+      // When using the useFlexLayout:
+      minWidth: 30, // minWidth is only used as a limit for resizing
+      width: 150, // width is used for both the flex-basis and flex-grow
+      maxWidth: 200 // maxWidth is only used as a limit for resizing
+    }),
+    []
+  );
+
   const { getTableProps, headerGroups, prepareRow, rows } = useTable<EchoObject>(
-    {
-      columns: [],
-      data: []
-    },
+    { columns, data, defaultColumn },
     useResizeColumns,
     useFlexLayout
   );
 
   return (
-    <div {...getTableProps()} className='table'>
+    <div {...getTableProps()} className='table flex flex-1'>
       {/* Header */}
       <div>
         {headerGroups.map((headerGroup) => (
@@ -48,12 +58,12 @@ export const Table = () => {
             {...headerGroup.getHeaderGroupProps({
               // style: { paddingRight: '15px' },
             })}
-            className='tr'
+            className='tr bg-gray-200'
           >
             {/* TODO(burdon): see UseResizeColumnsColumnProps */}
             {headerGroup.headers.map((column: any) => (
               // eslint-disable-next-line react/jsx-key
-              <div {...column.getHeaderProps(headerProps)} className='th'>
+              <div {...column.getHeaderProps(headerProps)} className='th pl-2 pr-2'>
                 {column.render('Header')}
 
                 {/* Use column.getResizerProps to hook up the events correctly. */}
@@ -76,7 +86,7 @@ export const Table = () => {
               {row.cells.map((cell) => {
                 return (
                   // eslint-disable-next-line react/jsx-key
-                  <div {...cell.getCellProps(cellProps)} className='td'>
+                  <div {...cell.getCellProps(cellProps)} className='td pl-2 pr-2 overflow-hidden text-ellipsis'>
                     {cell.render('Cell')}
                   </div>
                 );

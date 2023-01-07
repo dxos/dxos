@@ -2,17 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState, FC } from 'react';
+import React, { useEffect, useState, FC, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Column } from 'react-table';
 
-import { id } from '@dxos/echo-schema';
-import { useQuery, useSpaces } from '@dxos/react-client';
+import { EchoObject, id } from '@dxos/echo-schema';
+import { useQuery, useSpaces, withReactor } from '@dxos/react-client';
 
-import { SearchBar, Selector } from '../../components';
-import { ContactList, Editor, ProjectGraph, ProjectList, ProjectTree, Sidebar, TaskList } from '../../containers';
+import { Card, FolderHierarchy, SearchBar, Selector, Table } from '../../components';
+import {
+  ContactList,
+  Editor,
+  mapProjectToItem,
+  ProjectGraph,
+  ProjectList,
+  ProjectTree,
+  Sidebar,
+  TaskList
+} from '../../containers';
 import { AppView, SpaceContext, SpaceContextType, useOptions, useSpace, viewConfig } from '../../hooks';
-import { Project } from '../../proto';
+import { Generator, Contact, Project } from '../../proto';
 
 const sidebarWidth = 200;
 
@@ -62,22 +72,53 @@ const EditorView: FC = () => {
   return <Editor />;
 };
 
-const TestView = () => {
+const TestView = withReactor(() => {
   const { space } = useSpace();
+  const contacts = useQuery(space, Contact.filter());
   const projects = useQuery(space, Project.filter());
+  const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
+  useEffect(() => {
+    if (projects.length === 0 || contacts.length === 0) {
+      void generator?.generate();
+    }
+  }, [generator]);
+
+  const columns = useMemo<Column<EchoObject>[]>(
+    () => [
+      { Header: 'Name', accessor: 'name' as any },
+      { Header: 'Username', accessor: 'username' as any },
+      { Header: 'Email', accessor: 'email' as any },
+      { Header: 'ZIP', accessor: 'address.zip' as any, maxWidth: 80 }
+    ],
+    []
+  );
+
+  const items = useMemo(() => projects.map((project) => mapProjectToItem(project)), [contacts]);
 
   return (
-    <div className='flex flex-1 flex-col bg-white'>
+    <Card title='Experiments' className='bg-teal-400' scrollbar>
       <div className='flex m-4'>
-        <SearchBar />
+        <div className='flex flex-1'>
+          <SearchBar />
+        </div>
+
+        <div className='w-8'></div>
+
+        <div className='flex flex-1'>
+          <Selector options={contacts.map((contact) => ({ id: contact[id], title: contact.name }))} />
+        </div>
       </div>
 
-      <div className='flex m-4'>
-        <Selector options={projects.map((project) => ({ id: project[id], title: project.title }))} />
+      <div className='flex mt-4 mb-4'>
+        <FolderHierarchy items={items} />
       </div>
-    </div>
+
+      <div className='flex mt-4'>
+        <Table columns={columns} data={contacts} />
+      </div>
+    </Card>
   );
-};
+});
 
 /**
  * Main grid layout.

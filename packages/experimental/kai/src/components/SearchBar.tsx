@@ -16,7 +16,7 @@ export const SearchBar: FC<{
   const [text, setText] = useState('');
 
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-1 flex-col'>
       <div className='flex flex-1 items-center p-2 border-2 rounded'>
         <Input
           className='w-full outline-0'

@@ -7,11 +7,11 @@ import React from 'react';
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
-import { Card, FolderHierarchy } from '../components';
+import { Card, FolderHierarchy, FolderHierarchyItem } from '../components';
 import { useSpace } from '../hooks';
 import { Project } from '../proto';
 
-const mapProject = (project: Project) => ({
+export const mapProjectToItem = (project: Project): FolderHierarchyItem => ({
   id: project[id],
   title: project.title,
   items: project.tasks?.map((task) => ({
@@ -33,7 +33,7 @@ export const ProjectTree = withReactor(() => {
   // TODO(burdon): useQuery should not return undefined.
   // TODO(burdon): Need subscription for children.
   const projects = useQuery(space, Project.filter()) ?? [];
-  const items = projects.map((project) => mapProject(project));
+  const items = projects.map((project) => mapProjectToItem(project));
 
   return (
     <Card title='Projects' scrollbar className='bg-orange-400'>

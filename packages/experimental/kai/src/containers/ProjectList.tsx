@@ -6,7 +6,7 @@ import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { useQuery, useReactor } from '@dxos/react-client';
+import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-ui';
 
 import { Card, Input, CardRow, Button } from '../components';
@@ -41,9 +41,8 @@ export const ProjectList: FC<{}> = () => {
   );
 };
 
-export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
+export const ProjectItem: FC<{ project: Project }> = withReactor(({ project }) => {
   const { space } = useSpace();
-  const { render } = useReactor();
 
   const handleGenerateTask = async () => {
     const task = await createTask(space.experimental.db);
@@ -62,7 +61,7 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
     project.tasks.splice(project.tasks.indexOf(task2), 0, task1);
   };
 
-  return render(
+  return (
     <div className='flex flex-col pb-2'>
       {/* Header */}
       <div className='flex p-2 pb-0 items-center'>
@@ -107,4 +106,4 @@ export const ProjectItem: FC<{ project: Project }> = ({ project }) => {
       )}
     </div>
   );
-};
+});

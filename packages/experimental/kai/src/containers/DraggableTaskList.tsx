@@ -10,7 +10,7 @@ import { DotsSixVertical } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { useReactor } from '@dxos/react-client';
+import { withReactor } from '@dxos/react-client';
 
 import { Button } from '../components';
 import { useSpace } from '../hooks';
@@ -25,8 +25,7 @@ export const DraggableTaskList: FC<{
   tasks: Task[];
   onCreate?: (task: Task) => void;
   onDrag?: (active: number, over: number) => void;
-}> = ({ tasks, onCreate, onDrag }) => {
-  const { render } = useReactor();
+}> = withReactor(({ tasks, onCreate, onDrag }) => {
   const { space } = useSpace();
   const [newTask, setNewTask] = useState<Task>();
   useEffect(() => {
@@ -60,7 +59,7 @@ export const DraggableTaskList: FC<{
   //  - Tab to indent.
   //  - Split current task if pressing Enter in the middle.
 
-  return render(
+  return (
     <div>
       <DndContext onDragEnd={onDrag ? handleDragEnd : undefined} modifiers={[restrictToVerticalAxis]}>
         <SortableContext items={tasks.map((task) => task[id])}>
@@ -69,19 +68,18 @@ export const DraggableTaskList: FC<{
       </DndContext>
     </div>
   );
-};
+});
 
 export const DraggableTaskListContainer: FC<{
   tasks: Task[];
   newTask?: Task;
   onCreate?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}> = ({ tasks, newTask, onCreate, onDelete }) => {
-  const { render } = useReactor();
+}> = withReactor(({ tasks, newTask, onCreate, onDelete }) => {
   const { active } = useDndContext();
 
   // TODO(burdon): NewTaskItem doesn't update on create.
-  return render(
+  return (
     <div>
       {tasks.map((task) => (
         <DraggableTaskItem key={task[id]} task={task} onDelete={onDelete} />
@@ -94,14 +92,13 @@ export const DraggableTaskListContainer: FC<{
       )}
     </div>
   );
-};
+});
 
 export const DraggableTaskItem: FC<{
   task: Task;
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}> = ({ task, onEnter, onDelete }) => {
-  const { render } = useReactor();
+}> = withReactor(({ task, onEnter, onDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task[id] });
 
   // TODO(burdon): Dragging doesn't handle variable height items?
@@ -110,7 +107,7 @@ export const DraggableTaskItem: FC<{
     transition
   };
 
-  return render(
+  return (
     <div ref={setNodeRef} className='flex flex-1 ml-3' style={style}>
       <div className='pt-1'>
         <Button className='w-4' {...listeners} {...attributes}>
@@ -121,4 +118,4 @@ export const DraggableTaskItem: FC<{
       <TaskItem task={task} onEnter={onEnter} onDelete={onDelete} />
     </div>
   );
-};
+});

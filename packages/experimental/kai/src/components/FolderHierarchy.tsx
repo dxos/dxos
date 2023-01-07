@@ -7,21 +7,21 @@ import React, { FC, useState } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui';
 
-export type Item = {
+export type FolderHierarchyItem = {
   id: string;
   Icon?: FC;
   title: string;
-  items?: Item[];
+  items?: FolderHierarchyItem[];
 };
 
-export const FolderHierarchy: FC<{ items: Item[]; highlightClassName?: string }> = ({
+export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassName?: string }> = ({
   items,
-  highlightClassName = ''
+  highlightClassName = 'bg-gray-300'
 }) => {
   // TODO(burdon): Externalize.
   const [selected, setSelected] = useState<string>();
   const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>({});
-  const handleToggle = (item: Item) => {
+  const handleToggle = (item: FolderHierarchyItem) => {
     setOpenMap((map) => {
       if (map[item.id]) {
         delete map[item.id];
@@ -33,12 +33,12 @@ export const FolderHierarchy: FC<{ items: Item[]; highlightClassName?: string }>
     });
   };
 
-  const Item = ({ item, depth = 0 }: { item: Item; depth?: number }) => {
+  const Item = ({ item, depth = 0 }: { item: FolderHierarchyItem; depth?: number }) => {
     const open = openMap[item.id];
     const sub = item.items && item.items.length > 0;
 
     return (
-      <div className='flex flex-col'>
+      <div className='flex flex-1 flex-col'>
         <div
           className={mx('flex select-none cursor-pointer pl-3', item.id === selected && highlightClassName)}
           onClick={() => setSelected(item.id)}
@@ -63,10 +63,12 @@ export const FolderHierarchy: FC<{ items: Item[]; highlightClassName?: string }>
   };
 
   return (
-    <div className='flex flex-col'>
-      {items.map((item) => (
-        <Item key={item.id} item={item} />
-      ))}
+    <div className='flex flex-1 flex-col'>
+      <div className='flex flex-col'>
+        {items.map((item) => (
+          <Item key={item.id} item={item} />
+        ))}
+      </div>
     </div>
   );
 };

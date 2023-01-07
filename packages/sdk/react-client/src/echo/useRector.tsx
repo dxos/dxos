@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ReactElement, useEffect, useReducer, useState } from 'react';
+import React, { FC, ReactElement, createContext, useContext, useEffect, useReducer, useState } from 'react';
 
 import { useClient } from '../client';
 
@@ -17,16 +17,16 @@ export type ReactorProps = {
 /**
  * Hook to update components that access the database when modified.
  */
-export const useReactor = (props?: ReactorProps): UseRector => {
+export const useReactor = (opts?: ReactorProps): UseRector => {
   const client = useClient();
-  const accessObserver = client.echo.dbRouter.createAccessObserver();
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+  const observer = client.echo.dbRouter.createAccessObserver();
+  const [, forceUpdate] = useReducer((tick) => tick + 1, 0);
 
   // Create subscription.
   const [handle] = useState(() =>
     client.echo.dbRouter.createSubscription(() => {
       forceUpdate();
-      props?.onChange?.(); // TODO(burdon): Pass in modified objects.
+      opts?.onChange?.(); // TODO(burdon): Pass in modified objects.
     })
   );
 
@@ -46,18 +46,31 @@ export const useReactor = (props?: ReactorProps): UseRector => {
         return component;
       } finally {
         // Trigger to update components if modified.
-        handle.update([...accessObserver.accessed]);
+        handle.update([...observer.accessed]);
       }
     }
   };
 };
 
+const ReactorContext = createContext({});
+
 /**
  * Reactive HOC.
  */
-export const withReactor = <P>(component: FC<P>): React.FC<P> => {
-  return (props) => {
-    const { render } = useReactor();
-    return render(component(props));
+export const withReactor = <P,>(component: FC<P>): FC<P> => {
+  return (props: P) => {
+    const { render } = useReactor({
+      onChange: () => {
+        // console.log('UPDATED');
+      }
+    });
+
+    return <ReactorContext.Provider value={{}}>{render(component(props))}</ReactorContext.Provider>;
   };
+};
+
+// TODO(burdon): Allow caller to subscribe to changes?
+export const useReactorContext = (opts?: ReactorProps) => {
+  useContext(ReactorContext);
+  useEffect(() => {}, [opts]);
 };

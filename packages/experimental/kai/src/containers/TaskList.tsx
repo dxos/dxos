@@ -7,7 +7,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { useQuery, useReactor } from '@dxos/react-client';
+import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { mx } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-uikit';
 
@@ -136,15 +136,15 @@ export const TaskItem: FC<{
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
-}> = ({ task, readonly, onEnter, onDelete, onSave }) => {
+}> = withReactor(({ task, readonly, onEnter, onDelete, onSave }) => {
   const { debug } = useOptions();
-  const { render } = useReactor({
+  useReactorContext({
     onChange: () => {
       onSave?.(task);
     }
   });
 
-  return render(
+  return (
     <CardRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6'>
@@ -185,4 +185,4 @@ export const TaskItem: FC<{
       </div>
     </CardRow>
   );
-};
+});
