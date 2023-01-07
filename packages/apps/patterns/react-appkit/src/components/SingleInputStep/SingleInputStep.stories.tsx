@@ -5,12 +5,11 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Group, mx, templateForComponent, useTranslation } from '@dxos/react-components';
+import { Group, mx, useTranslation } from '@dxos/react-components';
 
 import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
 
 export default {
-  title: 'react-appkit/SingleInputStep',
   component: SingleInputStep,
   argTypes: {
     onClickBack: { action: 'back' },
@@ -19,7 +18,7 @@ export default {
   }
 };
 
-const Template = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: string }) => {
+const render = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: string }) => {
   const { t } = useTranslation('appkit');
   return (
     <Group
@@ -36,59 +35,58 @@ const Template = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: st
   );
 };
 
-export const CreateProfile = templateForComponent(Template)({
-  rootLabel: '',
-  inputLabel: '',
-  inputPlaceholder: '',
-  onNext: () => {},
-  onChange: () => {}
-});
-CreateProfile.args = {
-  pending: false,
-  rootLabel: 'create profile label',
-  inputLabel: 'displayName label',
-  inputPlaceholder: 'displayName placeholder',
-  inputProps: { slots: { input: { autoComplete: 'displayName' } } }
+export const CreateProfile = {
+  render,
+  args: {
+    pending: false,
+    rootLabel: 'create profile label',
+    inputLabel: 'displayName label',
+    inputPlaceholder: 'displayName placeholder',
+    inputProps: { slots: { input: { autoComplete: 'displayName' } } }
+  }
 };
 
-export const JoinSpace = () => (
-  <Template
-    rootLabel='join space label'
-    inputLabel='invitation code label'
-    inputPlaceholder='invitation code placeholder'
-    backLabel='cancel label'
-    nextLabel='redeem invitation label'
-    onChange={() => {}}
-    onNext={() => {}}
-    onBack={() => {}}
-  />
-);
+export const JoinSpace = {
+  render,
+  args: {
+    rootLabel: 'join space label',
+    inputLabel: 'invitation code label',
+    inputPlaceholder: 'invitation code placeholder',
+    backLabel: 'cancel label',
+    nextLabel: 'redeem invitation label',
+    onChange: () => {},
+    onNext: () => {},
+    onBack: () => {}
+  }
+};
 
-export const RestoreProfile = () => (
-  <Template
-    rootLabel='recover profile label'
-    inputLabel='seed phrase label'
-    inputPlaceholder='seed phrase placeholder'
-    nextLabel='validate seed phrase label'
-    onChange={() => {}}
-    onNext={() => {}}
-    onBack={() => {}}
-  />
-);
+export const RestoreProfile = {
+  render,
+  args: {
+    rootLabel: 'recover profile label',
+    inputLabel: 'seed phrase label',
+    inputPlaceholder: 'seed phrase placeholder',
+    nextLabel: 'validate seed phrase label',
+    onChange: () => {},
+    onNext: () => {},
+    onBack: () => {}
+  }
+};
 
-export const RestoreProfileWithError = () => (
-  <Template
-    rootLabel='recover profile label'
-    inputLabel='seed phrase label'
-    inputPlaceholder='seed phrase placeholder'
-    nextLabel='validate seed phrase label'
-    onChange={() => {}}
-    onNext={() => {}}
-    onBack={() => {}}
-    inputProps={{
+export const RestoreProfileWithError = {
+  render,
+  args: {
+    rootLabel: 'recover profile label',
+    inputLabel: 'seed phrase label',
+    inputPlaceholder: 'seed phrase placeholder',
+    nextLabel: 'validate seed phrase label',
+    onChange: () => {},
+    onNext: () => {},
+    onBack: () => {},
+    inputProps: {
       validationMessage: 'This only has 3 of the required 24 words',
       validationValence: 'error',
       initialValue: 'squirrels potatoes dolphins'
-    }}
-  />
-);
+    }
+  }
+};

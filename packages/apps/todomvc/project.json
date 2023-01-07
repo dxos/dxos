@@ -17,9 +17,8 @@
       ]
     },
     "bundle": {
-      "executor": "@nxext/vite:build",
+      "executor": "@nrwl/vite:build",
       "options": {
-        "configFile": "packages/apps/todomvc/vite.config.ts",
         "outputPath": "packages/apps/todomvc/out/todomvc"
       },
       "outputs": [
@@ -39,10 +38,9 @@
       ]
     },
     "serve": {
-      "executor": "@nxext/vite:dev",
+      "executor": "@nrwl/vite:dev-server",
       "options": {
-        "configFile": "packages/apps/todomvc/vite.config.ts",
-        "outputPath": "packages/apps/todomvc/out/todomvc"
+        "buildTarget": "todomvc:bundle"
       }
     },
     "serve-with-halo": {

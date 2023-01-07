@@ -12,13 +12,9 @@ module.exports = {
     '@storybook/addon-interactions',
     'storybook-dark-mode'
   ],
-  framework: '@storybook/react',
-  core: {
-    builder: '@storybook/builder-vite'
-  },
-  features: {
-    storyStoreV7: true,
-    previewMdx2: true
+  framework: {
+    name: '@storybook/react-vite',
+    options: {}
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
@@ -26,7 +22,6 @@ module.exports = {
         force: true,
         include: [
           '@dxos/async',
-          '@dxos/bot-factory-client',
           '@dxos/client',
           '@dxos/codec-protobuf',
           '@dxos/config',

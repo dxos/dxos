@@ -3,21 +3,11 @@
 //
 
 import '@dxosTheme';
-import React from 'react';
 
-import { templateForComponent } from '../../testing';
-import { Tag, TagProps } from './Tag';
+import { Tag } from './Tag';
 
 export default {
-  title: 'react-ui/Tag',
   component: Tag
 };
 
-const Template = ({ children, ...props }: TagProps) => {
-  return <Tag {...props}>{children}</Tag>;
-};
-
-const defaultProps = {};
-
-export const Default = templateForComponent(Template)(defaultProps);
-Default.args = { children: 'Hello' };
+export const Default = { args: { children: 'Hello' } };

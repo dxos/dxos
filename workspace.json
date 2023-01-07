@@ -57,7 +57,6 @@
     "node-std": "packages/common/node-std",
     "object-model": "packages/core/echo/object-model",
     "plate": "packages/common/plate",
-    "playwright": "tools/executors/playwright",
     "presenter": "tools/presenter",
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-test": "tools/protobuf-test",

@@ -56,6 +56,7 @@ export default defineConfig({
     ]
   },
   build: {
+    sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     },

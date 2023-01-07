@@ -3,13 +3,10 @@
 //
 
 import '@dxosTheme';
-import React from 'react';
 
-import { templateForComponent } from '../../testing';
-import { Loading, LoadingProps } from './Loading';
+import { Loading } from './Loading';
 
 export default {
-  title: 'react-ui/Loading',
   component: Loading,
   argTypes: {
     size: {
@@ -23,12 +20,8 @@ export default {
   }
 };
 
-const Template = (props: LoadingProps) => <Loading {...props} />;
-
-export const Default = templateForComponent(Template)({ label: 'Loading' });
-Default.args = { label: 'Loading', size: 'md', color: 'primary' };
-
-export const Small = () => <Template label='Loading' size={'sm'} />;
-export const Neutral = () => <Template label='Loading' color={'neutral'} />;
-export const Large = () => <Template label='Loading' size={'lg'} />;
-export const ExtraLarge = () => <Template label='Loading' size={'xl'} />;
+export const Default = { args: { label: 'Loading', size: 'md', color: 'primary' } };
+export const Small = { args: { ...Default.args, size: 'sm' } };
+export const Neutral = { args: { ...Default.args, color: 'neutral' } };
+export const Large = { args: { ...Default.args, size: 'lg' } };
+export const ExtraLarge = { args: { ...Default.args, size: 'xl' } };

@@ -13,13 +13,9 @@ module.exports = {
     '@storybook/addon-essentials',
     '@storybook/addon-interactions'
   ],
-  framework: '@storybook/react',
-  core: {
-    builder: '@storybook/builder-vite'
-  },
-  features: {
-    storyStoreV7: true,
-    previewMdx2: true
+  framework: {
+    name: '@storybook/react-vite',
+    options: {}
   },
   viteFinal: async config => mergeConfig(config, {
     optimizeDeps: {
@@ -27,12 +23,9 @@ module.exports = {
         '@dxos/async',
         '@dxos/client',
         '@dxos/client-services',
-        '@dxos/codec-protobuf',
         '@dxos/config',
-        '@dxos/credentials',
         '@dxos/debug',
         '@dxos/devtools-mesh',
-        '@dxos/echo-db',
         '@dxos/feed-store',
         '@dxos/keys',
         '@dxos/messaging',
@@ -41,14 +34,16 @@ module.exports = {
         '@dxos/network-manager',
         '@dxos/object-model',
         '@dxos/protocols',
+        '@dxos/react-appkit',
         '@dxos/react-async',
         '@dxos/react-client',
         '@dxos/react-components-deprecated',
         '@dxos/react-registry-client',
         '@dxos/react-toolkit',
         '@dxos/registry-client',
-        '@dxos/rpc',
-        '@dxos/text-model'
+        '@dxos/text-model',
+        '@dxos/timeframe',
+        '@dxos/util'
       ],
       esbuildOptions: {
         plugins: [
