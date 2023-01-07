@@ -8,7 +8,7 @@ import React, { FC } from 'react';
 import { SpaceMember } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useMembers } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-components';
 
 export const MemberList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
   const client = useClient();

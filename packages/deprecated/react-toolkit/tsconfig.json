@@ -57,7 +57,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../react-components"
+      "path": "../react-components-deprecated"
     }
   ]
 }

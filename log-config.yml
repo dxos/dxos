@@ -8,6 +8,13 @@ filter:
   - info
   # - debug
   - space-invitations-handler.ts:debug
+  - entity:debug
+  - database:debug
+  - service-host:debug
+  - service:debug
+  - data:debug
+  - identity:debug
+  - sync:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug

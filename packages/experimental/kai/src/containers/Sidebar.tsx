@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-components';
 
 import { Button } from '../components';
 import { useOptions, useSpace, viewConfig } from '../hooks';

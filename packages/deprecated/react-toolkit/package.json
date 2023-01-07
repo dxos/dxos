@@ -46,7 +46,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
@@ -67,7 +67,7 @@
   "peerDependencies": {
     "@dxos/client": "*",
     "@dxos/react-client": "*",
-    "@dxos/react-components": "*",
+    "@dxos/react-components-deprecated": "*",
     "@dxos/registry-client": "*",
     "@emotion/react": ">=11.0.0",
     "@emotion/styled": ">=11.0.0",

@@ -27,6 +27,16 @@
       "description": "Environments to run tests in CI",
       "default": ["nodejs", "chromium", "firefox", "webkit"]
     },
+    "playwright": {
+      "type": "boolean",
+      "description": "Running playwright tests, sets up and provides a playwright environment",
+      "default": false
+    },
+    "serve": {
+      "type": "string",
+      "description": "Project target to run concurrently alongside the tests",
+      "examples": ["halo-app:preview", "react-client:storybook"]
+    },
     "setup": {
       "type": "string",
       "description": "Setup script to run before tests"

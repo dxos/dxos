@@ -68,4 +68,12 @@ export class Entity<M extends Model | null = Model> {
   subscribe(listener: (entity: this) => void) {
     return this._onUpdate.on(listener as any);
   }
+
+  /**
+   * @internal
+   * Waits for pending operations to complete.
+   */
+  async _destroy() {
+    await this._stateManager.destroy();
+  }
 }

@@ -19,7 +19,7 @@ import {
   useSpaceBuilder,
   useTestSpace
 } from '@dxos/react-client-testing';
-import { BoxContainer, FullScreen } from '@dxos/react-components';
+import { BoxContainer, FullScreen } from '@dxos/react-components-deprecated';
 
 import { EchoGraph, useGraphModel } from '../src';
 

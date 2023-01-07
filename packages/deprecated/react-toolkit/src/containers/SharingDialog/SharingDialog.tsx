@@ -9,7 +9,7 @@ import { Face as NewIcon, Contacts as AddressIcon, Adb as BotIcon } from '@mui/i
 import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
 import { InvitationEncoder, Invitation, SpaceMember } from '@dxos/client';
-import { Dialog } from '@dxos/react-components';
+import { Dialog } from '@dxos/react-components-deprecated';
 import { ResourceSet } from '@dxos/registry-client';
 
 import { MemberRow } from './MemberRow';

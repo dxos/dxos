@@ -163,4 +163,40 @@ describe('FeedSetIterator', () => {
     await iterator.close();
     await feedStore.close();
   }).timeout(3_000);
+
+  test('start from non-zero index', async () => {
+    const builder = new TestItemBuilder();
+    const feedStore = builder.createFeedStore();
+
+    const key = await builder.keyring.createKey();
+    const feed = await feedStore.openFeed(key, { writable: true });
+
+    const iterator = new FeedSetIterator(randomFeedBlockSelector, {
+      start: [
+        {
+          feedKey: feed.key,
+          index: 2
+        }
+      ]
+    });
+    await iterator.open();
+    await iterator.addFeed(feed);
+
+    await builder.generator.writeBlocks(feed.createFeedWriter(), {
+      count: 10
+    });
+
+    let index = 2;
+    for await (const block of iterator) {
+      log('received', block);
+      expect(block.seq).to.eq(index);
+
+      if (++index === 10) {
+        break;
+      }
+    }
+
+    await iterator.stop();
+    await iterator.close();
+  });
 });

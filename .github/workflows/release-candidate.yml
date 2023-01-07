@@ -1,0 +1,33 @@
+on:
+  workflow_dispatch:
+
+name: release-candidate
+
+jobs:
+  release-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Branch Check
+        id: branch
+        run: |
+          if [ "${{ github.ref_name }}" == "production" ]; then
+            echo "prefix=hotfix" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" == "main" ]; then
+            echo "prefix=rc" >> $GITHUB_OUTPUT
+          else
+            exit 1
+          fi
+
+      - name: Compute Date
+        id: time
+        run: echo "today=$(date +"%Y%m%d")" >> $GITHUB_OUTPUT
+
+      - name: Compute Hash
+        id: git
+        run: echo "sha=$(echo $GITHUB_SHA | cut -c1-4)" >> $GITHUB_OUTPUT
+
+      - uses: peterjgrainger/action-create-branch@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+        with:
+          branch: ${{ steps.branch.outputs.prefix }}-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}

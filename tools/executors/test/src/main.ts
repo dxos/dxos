@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, runExecutor } from '@nrwl/devkit';
+import chalk from 'chalk';
 import { resolve } from 'node:path';
 
-import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
+import { BrowserOptions, runBrowser as runBrowserMocha, runBrowserBuild } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
 import { BrowserTypes, TestEnvironment, TestEnvironments } from './types';
 import { runSetup } from './util';
@@ -15,6 +16,7 @@ export type MochaExecutorOptions = NodeOptions &
     environments?: (TestEnvironment | 'all')[];
     devEnvironments: TestEnvironment[];
     ciEnvironments: TestEnvironment[];
+    serve?: string;
     setup?: string;
   };
 
@@ -37,6 +39,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   };
 
   const includesBrowserEnv =
+    !options.playwright &&
     resolvedOptions.environments.filter((environment) => ([...BrowserTypes.values()] as string[]).includes(environment))
       .length > 0;
 
@@ -45,20 +48,34 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     resolvedOptions.setup && runSetup(resolvedOptions.setup)
   ]);
 
+  if (options.serve) {
+    const [project, target] = options.serve.split(':');
+    const iterator = await runExecutor({ project, target }, {}, context);
+    void iterator.next();
+  }
+
   // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
   // TODO(wittjosiah): Run all even if there are failures.
   let success = true;
   for (const env of resolvedOptions.environments) {
+    let exitCode: number | null;
+
     switch (env) {
       case 'chromium':
       case 'firefox':
       case 'webkit': {
-        success &&= skipBrowserTests || (await runBrowser(context.projectName!, env, resolvedOptions));
+        if (skipBrowserTests) {
+          exitCode = -1;
+          break;
+        }
+
+        const runBrowser = options.playwright ? runNode : runBrowserMocha;
+        exitCode = await runBrowser(context, { ...resolvedOptions, browser: env });
         break;
       }
 
       case 'nodejs': {
-        success &&= await runNode(context, resolvedOptions);
+        exitCode = await runNode(context, resolvedOptions);
         break;
       }
 
@@ -66,6 +83,14 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
         throw new Error(`Invalid env: ${env}`);
       }
     }
+
+    if (exitCode === 0) {
+      console.log(chalk`\n{green Passed in {blue {bold ${env}}}}\n`);
+    } else if (!exitCode || exitCode > 0) {
+      console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${env}}}}\n`);
+    }
+
+    success &&= exitCode === null ? false : exitCode <= 0;
   }
 
   return { success };
@@ -74,6 +99,8 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
 const getEnvironments = (options: MochaExecutorOptions) => {
   if (options.environments) {
     return options.environments.includes('all') ? TestEnvironments : (options.environments as TestEnvironment[]);
+  } else if (options.playwright) {
+    return BrowserTypes;
   } else if (process.env.CI) {
     return options.ciEnvironments;
   }

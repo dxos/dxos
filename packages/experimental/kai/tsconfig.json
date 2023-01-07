@@ -9,13 +9,6 @@
     ],
     "outDir": "dist"
   },
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    },
-    "files": true,
-    "transpileOnly": true
-  },
   "exclude": [
     "/node_modules/"
   ],
@@ -31,6 +24,9 @@
     },
     {
       "path": "../../apps/patterns/react-list"
+    },
+    {
+      "path": "../../apps/patterns/react-ui"
     },
     {
       "path": "../../common/async"
@@ -51,7 +47,7 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-ui"
+      "path": "../../common/react-components"
     },
     {
       "path": "../../core/echo/echo-schema"
@@ -72,9 +68,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-uikit"
-    },
-    {
       "path": "../client-testing"
     },
     {
@@ -83,5 +76,12 @@
     {
       "path": "../gem-spore"
     }
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    },
+    "files": true,
+    "transpileOnly": true
+  }
 }

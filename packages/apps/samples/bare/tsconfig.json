@@ -20,7 +20,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/react-ui"
+      "path": "../../../common/react-components"
     },
     {
       "path": "../../../devtools/cli"
@@ -33,9 +33,6 @@
     },
     {
       "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../sdk/react-uikit"
     },
     {
       "path": "../../patterns/react-appkit"

@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Autocomplete, Box, TextField } from '@mui/material';
 
-import { SearchAutocomplete, SearchResult } from '@dxos/react-components';
+import { SearchAutocomplete, SearchResult } from '@dxos/react-components-deprecated';
 import { RegistryType, ResourceSet } from '@dxos/registry-client';
 
 import { RegistrySearchModel } from './RegistrySearchModel';

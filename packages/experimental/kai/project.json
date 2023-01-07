@@ -2,6 +2,18 @@
   "sourceRoot": "packages/experimental/kai/src",
   "projectType": "application",
   "targets": {
+    "bundle": {
+      "dependsOn": [
+        "prebuild"
+      ],
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "outputPath": "packages/experimental/kai/out/kai"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -17,20 +29,19 @@
     "prebuild": {
       "executor": "nx:run-script",
       "options": {
-        "script": "prebuild",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ]
+        "script": "prebuild"
       },
       "outputs": [
         "{options.outputPath}"
       ]
     },
     "serve": {
-      "executor": "@nxext/vite:dev",
+      "dependsOn": [
+        "prebuild"
+      ],
+      "executor": "@nrwl/vite:dev-server",
       "options": {
-        "configFile": "packages/experimental/kai/vite.config.ts",
-        "outputPath": "packages/experimental/kai/out/kai"
+        "buildTarget": "kai:bundle"
       }
     },
     "storybook": {

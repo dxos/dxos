@@ -4,11 +4,12 @@
 
 import { defineConfig } from 'vite';
 
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
-
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
+  server: {
+    host: true
+  },
   optimizeDeps: {
     force: true,
     include: [
@@ -17,7 +18,7 @@ export default defineConfig({
       '@dxos/log',
       '@dxos/protocols',
       '@dxos/react-async',
-      '@dxos/react-components',
+      '@dxos/react-components-deprecated',
       '@dxos/rpc',
       '@dxos/rpc-tunnel'
     ]
@@ -29,9 +30,5 @@ export default defineConfig({
         /node_modules/
       ]
     }
-  },
-  plugins: [ConfigPlugin()],
-  worker: {
-    plugins: [ConfigPlugin()]
   }
 });

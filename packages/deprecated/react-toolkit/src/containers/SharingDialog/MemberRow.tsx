@@ -8,7 +8,7 @@ import { Clear as CancelIcon } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { SpaceMember } from '@dxos/client';
-import { MemberAvatar } from '@dxos/react-components';
+import { MemberAvatar } from '@dxos/react-components-deprecated';
 
 export interface MemberRowProps {
   member: SpaceMember;

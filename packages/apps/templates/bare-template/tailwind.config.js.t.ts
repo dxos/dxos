@@ -8,7 +8,7 @@ export default defineTemplate(
       ? null
       : text`
   // This file is generated intentionally empty to enable vscode extensions to run in this project. 
-  // Tailwind itself is configured within the vite plugin from @dxos/react-ui`;
+  // Tailwind itself is configured within the vite plugin from @dxos/react-components`;
   },
   { config }
 );

@@ -12,7 +12,7 @@ import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useTelemetry } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { PanelsContainer } from './containers';
@@ -21,7 +21,7 @@ import { theme } from './theme';
 
 const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
 
-export const Telemetry = () => {
+const Telemetry = () => {
   useTelemetry({ namespace: 'devtools', router: false });
   return null;
 };

@@ -10,7 +10,7 @@ import { Link, useHref, useParams } from 'react-router-dom';
 import { Invitation, CancellableInvitationObservable, InvitationEncoder } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-components';
 
 import { Button } from '../components';
 import { useSpace } from '../hooks';

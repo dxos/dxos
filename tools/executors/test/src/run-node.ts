@@ -22,31 +22,51 @@ export type NodeOptions = {
   checkLeaks: boolean;
   forceExit: boolean;
   domRequired: boolean;
+  playwright: boolean;
+  browser?: string;
+  headless: boolean;
+  stayOpen: boolean;
+  browserArgs?: string[];
   reporter?: string;
   inspect?: boolean;
   grep?: string;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
+  const args = await getNodeArgs(context, options);
+  const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
+  const exitCode = await execTool(mocha, args, {
+    env: {
+      ...process.env,
+      FORCE_COLOR: '2',
+      HEADLESS: String(options.headless),
+      STAY_OPEN: String(options.stayOpen),
+      MOCHA_TAGS: options.tags.join(','),
+      MOCHA_ENV: options.browser ?? 'nodejs',
+
+      // Patch in ts-node will read this.
+      // https://github.com/TypeStrong/ts-node/issues/1937
+      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]])
+    }
+  });
+
+  return exitCode;
+};
+
+const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
-  const setupArgs = getSetupArgs(context.root, options.domRequired);
+  const setupArgs = getSetupArgs(context.root, options.domRequired, options.playwright);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
-  const args = [
+  return [
     ...coverageArgs,
     ...options.testPatterns,
     ...ignoreArgs,
     ...reporterArgs,
-    // NOTE: The import order here is important.
-    //   The `require` hooks that are registered in those modules will be run in the same order as they are imported.
-    //   We want the logger preprocessor to be run on typescript source first.
-    //   Then the SWC will transpile the typescript source to javascript.
     '-r',
-    '@dxos/log-hook/register',
-    '-r',
-    '@swc-node/register',
+    'ts-node/register',
     ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
     ...setupArgs,
     ...watchArgs,
@@ -57,17 +77,6 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     ...(options.inspect ? ['--inspect'] : []),
     ...(options.grep ? ['--grep', options.grep] : [])
   ];
-
-  const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
-  const exitCode = await execTool(mocha, args, {
-    env: {
-      ...process.env,
-      FORCE_COLOR: '2',
-      MOCHA_TAGS: options.tags.join(',')
-    }
-  });
-
-  return !exitCode;
 };
 
 const setupReporter = async (context: ExecutorContext, options: NodeOptions) => {
@@ -113,8 +122,14 @@ const getIgnoreArgs = async (testPatterns: string[]) => {
     .flat();
 };
 
-const getSetupArgs = (root: string, domRequired: boolean) => {
-  const scripts = ['colors', 'mocha-env', 'catch-unhandled-rejections', ...(domRequired ? ['react-setup'] : [])];
+const getSetupArgs = (root: string, domRequired: boolean, playwright: boolean) => {
+  const scripts = [
+    'colors',
+    'mocha-env',
+    'catch-unhandled-rejections',
+    ...(domRequired ? ['react-setup'] : []),
+    ...(playwright ? ['playwright'] : [])
+  ];
 
   return scripts
     .map((script) => join(root, 'tools/executors/test/dist/src/setup', `${script}.js`))

@@ -39,8 +39,6 @@ subgraph sdk [sdk]
   click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
   dxos/react-client("@dxos/react-client"):::def
   click dxos/react-client "dxos/dxos/tree/main/packages/sdk/react-client/docs"
-  dxos/react-uikit("@dxos/react-uikit"):::def
-  click dxos/react-uikit "dxos/dxos/tree/main/packages/sdk/react-uikit/docs"
 end
 
 subgraph common [common]
@@ -61,8 +59,8 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
-  dxos/react-ui("@dxos/react-ui"):::def
-  click dxos/react-ui "dxos/dxos/tree/main/packages/common/react-ui/docs"
+  dxos/react-components("@dxos/react-components"):::def
+  click dxos/react-components "dxos/dxos/tree/main/packages/common/react-ui/docs"
   dxos/sentry("@dxos/sentry"):::def
   click dxos/sentry "dxos/dxos/tree/main/packages/common/sentry/docs"
   dxos/telemetry("@dxos/telemetry"):::def
@@ -185,56 +183,53 @@ dxos/rpc-tunnel --> dxos/rpc
 dxos/react-list --> dxos/react-appkit
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
-dxos/react-appkit --> dxos/react-uikit
-dxos/react-uikit --> dxos/react-client
-dxos/react-uikit --> dxos/react-ui
+dxos/react-appkit --> dxos/react-components
 dxos/react-appkit --> dxos/telemetry
 dxos/telemetry --> dxos/sentry
 ```
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
-| [`@dxos/async`](../../../../common/async/docs/README.md) |  |
-| [`@dxos/broadcast`](../../../../core/mesh/broadcast/docs/README.md) |  |
-| [`@dxos/client`](../../../../sdk/client/docs/README.md) | &check; |
-| [`@dxos/client-services`](../../../../sdk/client-services/docs/README.md) |  |
-| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) |  |
-| [`@dxos/config`](../../../../sdk/config/docs/README.md) | &check; |
-| [`@dxos/context`](../../../../common/context/docs/README.md) |  |
-| [`@dxos/credentials`](../../../../core/halo/credentials/docs/README.md) |  |
-| [`@dxos/crypto`](../../../../common/crypto/docs/README.md) |  |
-| [`@dxos/debug`](../../../../common/debug/docs/README.md) |  |
-| [`@dxos/echo-db`](../../../../core/echo/echo-db/docs/README.md) |  |
-| [`@dxos/errors`](../../../../sdk/errors/docs/README.md) |  |
-| [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md) |  |
-| [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md) |  |
-| [`@dxos/keyring`](../../../../core/halo/keyring/docs/README.md) |  |
-| [`@dxos/keys`](../../../../common/keys/docs/README.md) |  |
-| [`@dxos/log`](../../../../common/log/docs/README.md) |  |
-| [`@dxos/mesh-protocol`](../../../../core/mesh/mesh-protocol/docs/README.md) |  |
-| [`@dxos/messaging`](../../../../core/mesh/messaging/docs/README.md) |  |
-| [`@dxos/model-factory`](../../../../core/echo/model-factory/docs/README.md) |  |
-| [`@dxos/network-generator`](../../../../core/mesh/network-generator/docs/README.md) |  |
-| [`@dxos/network-manager`](../../../../core/mesh/network-manager/docs/README.md) |  |
-| [`@dxos/object-model`](../../../../core/echo/object-model/docs/README.md) | &check; |
-| [`@dxos/protocol-plugin-presence`](../../../../core/mesh/protocol-plugin-presence/docs/README.md) |  |
+| Module                                                                                                | Direct |
+|-------------------------------------------------------------------------------------------------------|---|
+| [`@dxos/async`](../../../../common/async/docs/README.md)                                              |  |
+| [`@dxos/broadcast`](../../../../core/mesh/broadcast/docs/README.md)                                   |  |
+| [`@dxos/client`](../../../../sdk/client/docs/README.md)                                               | &check; |
+| [`@dxos/client-services`](../../../../sdk/client-services/docs/README.md)                             |  |
+| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md)                            |  |
+| [`@dxos/config`](../../../../sdk/config/docs/README.md)                                               | &check; |
+| [`@dxos/context`](../../../../common/context/docs/README.md)                                          |  |
+| [`@dxos/credentials`](../../../../core/halo/credentials/docs/README.md)                               |  |
+| [`@dxos/crypto`](../../../../common/crypto/docs/README.md)                                            |  |
+| [`@dxos/debug`](../../../../common/debug/docs/README.md)                                              |  |
+| [`@dxos/echo-db`](../../../../core/echo/echo-db/docs/README.md)                                       |  |
+| [`@dxos/errors`](../../../../sdk/errors/docs/README.md)                                               |  |
+| [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md)                                    |  |
+| [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md)                                      |  |
+| [`@dxos/keyring`](../../../../core/halo/keyring/docs/README.md)                                       |  |
+| [`@dxos/keys`](../../../../common/keys/docs/README.md)                                                |  |
+| [`@dxos/log`](../../../../common/log/docs/README.md)                                                  |  |
+| [`@dxos/mesh-protocol`](../../../../core/mesh/mesh-protocol/docs/README.md)                           |  |
+| [`@dxos/messaging`](../../../../core/mesh/messaging/docs/README.md)                                   |  |
+| [`@dxos/model-factory`](../../../../core/echo/model-factory/docs/README.md)                           |  |
+| [`@dxos/network-generator`](../../../../core/mesh/network-generator/docs/README.md)                   |  |
+| [`@dxos/network-manager`](../../../../core/mesh/network-manager/docs/README.md)                       |  |
+| [`@dxos/object-model`](../../../../core/echo/object-model/docs/README.md)                             | &check; |
+| [`@dxos/protocol-plugin-presence`](../../../../core/mesh/protocol-plugin-presence/docs/README.md)     |  |
 | [`@dxos/protocol-plugin-replicator`](../../../../core/mesh/protocol-plugin-replicator/docs/README.md) |  |
-| [`@dxos/protocol-plugin-rpc`](../../../../core/mesh/protocol-plugin-rpc/docs/README.md) |  |
-| [`@dxos/protocols`](../../../../core/protocols/docs/README.md) |  |
-| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
-| [`@dxos/react-appkit`](../../react-appkit/docs/README.md) | &check; |
-| [`@dxos/react-async`](../../../../common/react-async/docs/README.md) | &check; |
-| [`@dxos/react-client`](../../../../sdk/react-client/docs/README.md) | &check; |
-| [`@dxos/react-ui`](../../../../common/react-ui/docs/README.md) | &check; |
-| [`@dxos/react-uikit`](../../../../sdk/react-uikit/docs/README.md) | &check; |
-| [`@dxos/rpc`](../../../../core/mesh/rpc/docs/README.md) |  |
-| [`@dxos/rpc-tunnel`](../../../../core/mesh/rpc-tunnel/docs/README.md) |  |
-| [`@dxos/sentry`](../../../../common/sentry/docs/README.md) |  |
-| [`@dxos/telemetry`](../../../../common/telemetry/docs/README.md) |  |
-| [`@dxos/teleport`](../../../../core/mesh/teleport/docs/README.md) |  |
+| [`@dxos/protocol-plugin-rpc`](../../../../core/mesh/protocol-plugin-rpc/docs/README.md)               |  |
+| [`@dxos/protocols`](../../../../core/protocols/docs/README.md)                                        |  |
+| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md)              |  |
+| [`@dxos/react-appkit`](../../react-appkit/docs/README.md)                                             | &check; |
+| [`@dxos/react-async`](../../../../common/react-async/docs/README.md)                                  | &check; |
+| [`@dxos/react-client`](../../../../sdk/react-client/docs/README.md)                                   | &check; |
+| [`@dxos/react-components`](../../../../common/react-components/docs/README.md)                        | &check; |
+| [`@dxos/rpc`](../../../../core/mesh/rpc/docs/README.md)                                               |  |
+| [`@dxos/rpc-tunnel`](../../../../core/mesh/rpc-tunnel/docs/README.md)                                 |  |
+| [`@dxos/sentry`](../../../../common/sentry/docs/README.md)                                            |  |
+| [`@dxos/telemetry`](../../../../common/telemetry/docs/README.md)                                      |  |
+| [`@dxos/teleport`](../../../../core/mesh/teleport/docs/README.md)                                     |  |
 | [`@dxos/teleport-plugin-replicator`](../../../../core/mesh/teleport-plugin-replicator/docs/README.md) |  |
-| [`@dxos/text-model`](../../../../core/echo/text-model/docs/README.md) |  |
-| [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md) |  |
-| [`@dxos/util`](../../../../common/util/docs/README.md) |  |
+| [`@dxos/text-model`](../../../../core/echo/text-model/docs/README.md)                                 |  |
+| [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md)                                      |  |
+| [`@dxos/util`](../../../../common/util/docs/README.md)                                                |  |

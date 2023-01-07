@@ -5,8 +5,8 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 
+import { Menubar2, Separator, ProfileMenu } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
-import { Menubar2, Separator, ProfileMenu } from '@dxos/react-uikit';
 
 import { Main } from '../components';
 

@@ -4,6 +4,6 @@
 
 import * as enUS from './en-US';
 
-export const translations = {
+export const appkitTranslations = {
   'en-US': enUS
 };

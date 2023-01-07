@@ -6,9 +6,9 @@ import React, { ReactNode, useCallback } from 'react';
 import { generatePath, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useClient, useIdentity, useSpace, useStatus } from '@dxos/react-client';
-import { Menubar } from '@dxos/react-uikit';
 
 import { useSafeSpaceKey } from '../../hooks';
+import { Menubar } from '../Menubar';
 import { StatusIndicator } from '../StatusIndicator';
 
 const StatusContainer = () => {

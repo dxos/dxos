@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { getSize } from '@dxos/react-ui';
+import { getSize } from '@dxos/react-components';
 
 import { Card, Input, CardRow, Button } from '../components';
 import { useSpace } from '../hooks';

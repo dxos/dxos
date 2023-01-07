@@ -11,6 +11,7 @@ import {
   FilterTiltShift as SwarmIcon,
   Group as SpacesIcon,
   List as FeedsIcon,
+  List as CredentialsIcon,
   // AppRegistration as RegistryIcon,
   Router as SignalIcon,
   Settings as ConfigIcon,
@@ -19,6 +20,7 @@ import {
 
 import {
   ConfigPanel,
+  CredentialsPanel,
   FeedsPanel,
   IdentityPanel,
   ItemsPanel,
@@ -63,13 +65,13 @@ export const sections: Section[] = [
         title: 'Keyring',
         icon: <KeyIcon />,
         panel: <KeyringPanel />
+      },
+      {
+        id: 'halo.credentials',
+        title: 'Credentials',
+        icon: <CredentialsIcon />,
+        panel: <CredentialsPanel />
       }
-      //     {
-      //       id: 'halo.messagess',
-      //       title: 'Messages',
-      //       icon: <MessagesIcon />,
-      //       panel: <CredentialMessagesPanel />
-      //     }
     ]
   },
   {

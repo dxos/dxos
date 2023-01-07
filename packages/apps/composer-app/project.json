@@ -17,7 +17,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nxext/vite:build",
+      "executor": "@nrwl/vite:build",
       "inputs": [
         {
           "env": "CONFIG_DYNAMIC"
@@ -44,7 +44,6 @@
         "production"
       ],
       "options": {
-        "configFile": "packages/apps/composer-app/vite.config.ts",
         "outputPath": "packages/apps/composer-app/out/composer"
       },
       "outputs": [
@@ -64,10 +63,9 @@
       ]
     },
     "serve": {
-      "executor": "@nxext/vite:dev",
+      "executor": "@nrwl/vite:dev-server",
       "options": {
-        "configFile": "packages/apps/composer-app/vite.config.ts",
-        "outputPath": "packages/apps/composer-app/out/composer"
+        "buildTarget": "composer-app:bundle"
       }
     },
     "serve-with-halo": {

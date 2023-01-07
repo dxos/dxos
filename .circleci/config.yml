@@ -6,7 +6,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.0
+  nx: nrwl/nx@1.6.1
 
 aliases:
   - &docker_image
@@ -95,12 +95,10 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags e2e --coverage --xmlReport
-      # TODO(wittjosiah): Re-enable playwright tests. Use mocha executor?
-      # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1
       # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       - run:
-          name: Bundle Apps
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
@@ -109,9 +107,9 @@ jobs:
       - *store_test_results
 
   #
-  # Deploy applications.
+  # Publish applications.
   #
-  deploy:
+  publish:
     docker:
       - *docker_image
     steps:
@@ -120,56 +118,14 @@ jobs:
       - run: pnpm install
       - *cache_save
       - run: pnpm nx build cli
-      # TODO(wittjosiah): Factor out the deployable apps list to the script.
       - run:
-          name: Deploy HALO
-          working_directory: ./packages/apps/halo-app
-          command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
+          command: ./.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=4096
-      - run:
-          name: Deploy Tasks
-          working_directory: ./packages/apps/tasks-app
-          command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=4096
-      - run:
-          name: Deploy Composer
-          working_directory: ./packages/apps/composer-app
-          command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=4096
-      - run:
-          name: Deploy Devtools
-          working_directory: ./packages/devtools/devtools
-          command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=5120
-      - run:
-          name: Deploy Docs
-          working_directory: ./docs
-          command: |
-            ../.circleci/scripts/publish.sh production
-            ../.circleci/scripts/publish.sh
-          no_output_timeout: 30m
-          environment:
-            NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=5120
 
 workflows:
-  check:
+  default:
     jobs:
       - check:
           context:
@@ -180,11 +136,14 @@ workflows:
 
   deploy:
     jobs:
-      - deploy:
+      - publish:
           filters:
             branches:
               only:
                 - main
-                - release
+                - production
+                - staging
           context:
             - Github
+
+# VS Code Extension Version: 1.5.1
