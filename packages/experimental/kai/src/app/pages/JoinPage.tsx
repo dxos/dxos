@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Trigger } from '@dxos/async';
 import { Invitation, InvitationEncoder, PublicKey, Space } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
-import { mx } from '@dxos/react-ui';
+import { mx } from '@dxos/react-components';
 
 /**
  * Join space via invitation URL.

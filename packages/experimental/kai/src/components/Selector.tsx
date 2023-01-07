@@ -5,7 +5,7 @@
 import { CaretDown, CaretUp } from 'phosphor-react';
 import React, { FC, KeyboardEvent, useState } from 'react';
 
-import { mx } from '@dxos/react-ui';
+import { mx } from '@dxos/react-components';
 
 import { Input } from './Input';
 

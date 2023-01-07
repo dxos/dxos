@@ -8,8 +8,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
-import { mx } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/react-components';
 
 import { Button, Card, Input, CardRow } from '../components';
 import { useOptions, useSpace } from '../hooks';

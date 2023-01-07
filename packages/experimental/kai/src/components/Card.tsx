@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-import { mx } from '@dxos/react-ui';
+import { mx } from '@dxos/react-components';
 
 export const Card: FC<{
   title?: string;
