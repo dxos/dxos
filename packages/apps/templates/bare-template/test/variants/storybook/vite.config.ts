@@ -26,7 +26,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "out/app/@dxos/sample-storybook",
+    outDir: "out/app/@dxos/bare-template-storybook",
     commonjsOptions: {
       include: [/packages/, /node_modules/],
     },

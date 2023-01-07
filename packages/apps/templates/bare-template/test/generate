@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+rm -rf test/variants
+ts-node test/generate.ts
+pnpm -w nx run-many --target=lint --projects=${PWD##*/}-* --fix

@@ -1,4 +1,4 @@
-# @dxos/sample-tailwind
+# @dxos/bare-template-tailwind
 
 This app was created with the DXOS `bare` application template.
 

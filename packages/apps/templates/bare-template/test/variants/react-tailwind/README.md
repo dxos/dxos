@@ -1,4 +1,4 @@
-# @dxos/sample-react-tailwind
+# @dxos/bare-template-react-tailwind
 
 This app was created with the DXOS `bare` application template.
 

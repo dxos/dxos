@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/sample-react",
+  "name": "@dxos/bare-template-react",
   "version": "0.1.20",
-  "description": "@dxos/sample-react - a DXOS application",
+  "description": "@dxos/bare-template-react - a DXOS application",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -25,13 +25,13 @@
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^2.0.1",
+    "@vitejs/plugin-react": "^3.0.1",
     "typescript": "^4.8.4",
-    "vite": "3.2.5"
+    "vite": "4.0.4"
   },
   "pnpm": {
     "patchedDependencies": {
-      "vite@3.2.5": "patches/vite@3.2.5.patch"
+      "vite@4.0.4": "patches/vite@4.0.4.patch"
     }
   }
 }

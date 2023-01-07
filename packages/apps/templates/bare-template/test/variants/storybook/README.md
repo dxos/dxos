@@ -1,4 +1,4 @@
-# @dxos/sample-storybook
+# @dxos/bare-template-storybook
 
 This app was created with the DXOS `bare` application template.
 

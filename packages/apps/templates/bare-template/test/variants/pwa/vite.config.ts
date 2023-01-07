@@ -26,7 +26,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "out/app/@dxos/sample-pwa",
+    outDir: "out/app/@dxos/bare-template-pwa",
     commonjsOptions: {
       include: [/packages/, /node_modules/],
     },
@@ -41,8 +41,8 @@ export default defineConfig({
       },
       includeAssets: ["favicon.ico"],
       manifest: {
-        name: "@dxos/sample-pwa",
-        short_name: "@dxos/sample-pwa",
+        name: "@dxos/bare-template-pwa",
+        short_name: "@dxos/bare-template-pwa",
         theme_color: "#ffffff",
         icons: [
           {

@@ -1,6 +1,11 @@
-import React from "react";
-import { ClientProvider } from "@dxos/react-client";
-import { Config, Dynamics, Defaults } from "@dxos/config";
+//
+// Copyright 2023 DXOS.org
+//
+
+import React from 'react';
+
+import { Config, Dynamics, Defaults } from '@dxos/config';
+import { ClientProvider } from '@dxos/react-client';
 
 // Dynamics allows configuration to be supplied by the hosting KUBE
 const config = async () => new Config(await Dynamics(), Defaults());

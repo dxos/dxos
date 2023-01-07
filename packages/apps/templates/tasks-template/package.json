@@ -7,7 +7,8 @@
   "author": "info@dxos.org",
   "main": "dist/src/config.t.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "generate": "test/generate"
   },
   "dependencies": {
     "@dxos/bare-template": "workspace:*"

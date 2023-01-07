@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import { ConfigPlugin } from "@dxos/config/vite-plugin";
 import react from "@vitejs/plugin-react";
-import { ThemePlugin } from "@dxos/react-ui/plugin";
+import { ThemePlugin } from "@dxos/react-components/plugin";
 import { resolve } from "node:path";
 import { VitePWA } from "vite-plugin-pwa";
 
@@ -42,7 +42,6 @@ export default defineConfig({
         resolve(__dirname, "./index.html"),
         resolve(__dirname, "./src/**/*.{js,ts,jsx,tsx}"),
         resolve(__dirname, "node_modules/@dxos/react-appkit/dist/**/*.mjs"),
-        resolve(__dirname, "node_modules/@dxos/react-uikit/dist/**/*.mjs"),
       ],
     }),
     VitePWA({

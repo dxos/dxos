@@ -1,11 +1,11 @@
 version: 1
 package:
   modules:
-    - name: @dxos/sample-pwa
+    - name: @dxos/bare-template-pwa
       type: dxos:type/app
       build:
         command: npm run build
-        outdir: out/app/@dxos/sample-pwa
+        outdir: out/app/@dxos/bare-template-pwa
 runtime:
   client:
     storage:

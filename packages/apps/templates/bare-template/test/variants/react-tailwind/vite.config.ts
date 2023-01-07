@@ -26,7 +26,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "out/app/@dxos/sample-react-tailwind",
+    outDir: "out/app/@dxos/bare-template-react-tailwind",
     commonjsOptions: {
       include: [/packages/, /node_modules/],
     },

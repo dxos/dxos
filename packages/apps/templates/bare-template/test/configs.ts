@@ -3,7 +3,7 @@ import { ExtractInput } from '@dxos/plate';
 
 export const configs: ExtractInput<typeof config>[] = [
   {
-    name: 'minimum',
+    name: 'min',
     monorepo: true,
     pwa: false,
     dxosUi: false,
@@ -21,13 +21,13 @@ export const configs: ExtractInput<typeof config>[] = [
     tailwind: false
   },
   {
-    name: 'dxosUi',
+    name: 'dxosui',
     monorepo: true,
     pwa: false,
     dxosUi: true,
     react: true,
     storybook: false,
-    tailwind: false
+    tailwind: true
   },
   {
     name: 'react',
@@ -66,7 +66,7 @@ export const configs: ExtractInput<typeof config>[] = [
     tailwind: true
   },
   {
-    name: 'complete',
+    name: 'max',
     monorepo: true,
     pwa: true,
     dxosUi: true,

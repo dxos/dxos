@@ -1,11 +1,11 @@
 version: 1
 package:
   modules:
-    - name: @dxos/sample-dxosUi
+    - name: @dxos/bare-template-dxosui
       type: dxos:type/app
       build:
         command: npm run build
-        outdir: out/app/@dxos/sample-dxosUi
+        outdir: out/app/@dxos/bare-template-dxosui
 runtime:
   client:
     storage:

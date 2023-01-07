@@ -1,4 +1,4 @@
-# @dxos/sample-dxosUi
+# @dxos/bare-template-dxosui
 
 This app was created with the DXOS `bare` application template.
 

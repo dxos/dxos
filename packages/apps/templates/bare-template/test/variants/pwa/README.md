@@ -1,4 +1,4 @@
-# @dxos/sample-pwa
+# @dxos/bare-template-pwa
 
 This app was created with the DXOS `bare` application template.
 

@@ -1,4 +1,4 @@
-# @dxos/sample-react
+# @dxos/bare-template-react
 
 This app was created with the DXOS `bare` application template.
 

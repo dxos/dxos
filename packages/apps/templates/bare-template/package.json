@@ -7,7 +7,7 @@
   "main": "dist/src/config.t.js",
   "scripts": {
     "build": "tsc",
-    "test": "rm -rf test/variants && ts-node test/generate.ts && pnpm i"
+    "generate": "test/generate"
   },
   "dependencies": {
     "@dxos/plate": "workspace:*",

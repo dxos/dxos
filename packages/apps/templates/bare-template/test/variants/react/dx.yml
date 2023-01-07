@@ -1,11 +1,11 @@
 version: 1
 package:
   modules:
-    - name: @dxos/sample-react
+    - name: @dxos/bare-template-react
       type: dxos:type/app
       build:
         command: npm run build
-        outdir: out/app/@dxos/sample-react
+        outdir: out/app/@dxos/bare-template-react
 runtime:
   client:
     storage:

@@ -23,6 +23,6 @@ export default defineConfig({
         .describe('Assume generated output is within the DXOS monorepo')
         .default(isDxosMonorepoSync())
     })
-    .refine((val) => !(val.dxosUi && !val.react), { message: 'dxosUi requires react' })
+    .refine((val) => !(val.dxosUi && !(val.react && val.tailwind)), { message: 'dxosUi requires react and tailwind' })
     .refine((val) => !(val.storybook && !val.react), { message: 'storybook requires react' })
 });

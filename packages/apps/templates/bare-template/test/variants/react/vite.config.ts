@@ -26,7 +26,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "out/app/@dxos/sample-react",
+    outDir: "out/app/@dxos/bare-template-react",
     commonjsOptions: {
       include: [/packages/, /node_modules/],
     },

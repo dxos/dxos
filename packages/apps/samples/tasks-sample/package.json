@@ -18,8 +18,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-uikit": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -28,13 +27,14 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/cli": "workspace:*",
+    "@storybook/addon-actions": "^6.5.15",
     "@storybook/addon-essentials": "7.0.0-beta.19",
     "@storybook/addon-interactions": "7.0.0-beta.19",
     "@storybook/addon-links": "7.0.0-beta.19",
     "@storybook/builder-vite": "7.0.0-beta.19",
     "@storybook/mdx2-csf": "^0.0.3",
     "@storybook/react": "7.0.0-beta.19",
-    "@storybook/react-vite": "7.0.0-beta.19",
+    "@storybook/testing-library": "^0.0.13",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
@@ -52,7 +52,7 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "vite@3.2.5": "patches/vite@3.2.5.patch"
+      "vite@4.0.4": "patches/vite@4.0.4.patch"
     }
   }
 }

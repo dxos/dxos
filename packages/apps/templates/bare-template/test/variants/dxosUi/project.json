@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/apps/templates/bare-template/test/variants/dxosUi/src",
+  "sourceRoot": "packages/apps/templates/bare-template/test/variants/dxosui/src",
   "projectType": "application",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/templates/bare-template/test/variants/dxosUi/**/*.{ts,js,tsx,jsx}"
+          "packages/apps/templates/bare-template/test/variants/dxosui/**/*.{ts,js,tsx,jsx}"
         ]
       },
       "outputs": [

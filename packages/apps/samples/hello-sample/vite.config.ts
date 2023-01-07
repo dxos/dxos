@@ -1,77 +1,72 @@
-import { defineConfig } from 'vite';
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import react from '@vitejs/plugin-react';
-import { ThemePlugin } from '@dxos/react-components/plugin';
-import { resolve } from 'node:path';
-import { VitePWA } from 'vite-plugin-pwa';
+import { defineConfig } from "vite";
+import { ConfigPlugin } from "@dxos/config/vite-plugin";
+import react from "@vitejs/plugin-react";
+import { ThemePlugin } from "@dxos/react-components/plugin";
+import { resolve } from "node:path";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // Ensures relative path to assets.
+  base: "", // Ensures relative path to assets.
   server: {
-    host: true
+    host: true,
   },
   optimizeDeps: {
     force: true,
-    include: ['@dxos/client', '@dxos/react-client', '@dxos/config'],
+    include: ["@dxos/client", "@dxos/react-client", "@dxos/config"],
     esbuildOptions: {
       // TODO(wittjosiah): Remove.
       plugins: [
         {
-          name: 'yjs',
+          name: "yjs",
           setup: ({ onResolve }) => {
             onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
+              return { path: require.resolve("yjs").replace(".cjs", ".mjs") };
             });
-          }
-        }
-      ]
-    }
+          },
+        },
+      ],
+    },
   },
   build: {
     outDir: "out/app/@dxos/hello-sample",
     commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    }
+      include: [/packages/, /node_modules/],
+    },
   },
   plugins: [
     ConfigPlugin(),
     react(),
     ThemePlugin({
-<<<<<<< HEAD
-      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')]
-=======
       content: [
         resolve(__dirname, "./index.html"),
         resolve(__dirname, "./src/**/*.{js,ts,jsx,tsx}"),
         resolve(__dirname, "node_modules/@dxos/react-appkit/dist/**/*.mjs"),
-        resolve(__dirname, "node_modules/@dxos/react-uikit/dist/**/*.mjs"),
       ],
->>>>>>> ed5b7345a (wip test of new app templates)
     }),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: "autoUpdate",
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
       },
-      includeAssets: ['favicon.ico'],
+      includeAssets: ["favicon.ico"],
       manifest: {
         name: "@dxos/hello-sample",
         short_name: "@dxos/hello-sample",
         theme_color: "#ffffff",
         icons: [
           {
-            src: 'icons/icon-32.png',
-            sizes: '32x32',
-            type: 'image/png'
+            src: "icons/icon-32.png",
+            sizes: "32x32",
+            type: "image/png",
           },
           {
-            src: 'icons/icon-256.png',
-            sizes: '256x256',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
-  ]
+            src: "icons/icon-256.png",
+            sizes: "256x256",
+            type: "image/png",
+          },
+        ],
+      },
+    }),
+  ],
 });

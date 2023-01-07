@@ -26,7 +26,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "out/app/@dxos/sample-tailwind",
+    outDir: "out/app/@dxos/bare-template-tailwind",
     commonjsOptions: {
       include: [/packages/, /node_modules/],
     },

@@ -12,9 +12,13 @@ module.exports = {
     '@storybook/addon-interactions',
     'storybook-dark-mode'
   ],
-  framework: {
-    name: '@storybook/react-vite',
-    options: {}
+  framework: '@storybook/react',
+  core: {
+    builder: '@storybook/builder-vite'
+  },
+  features: {
+    storyStoreV7: true,
+    previewMdx2: true
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
@@ -42,7 +46,8 @@ module.exports = {
         ThemePlugin({
           content: [
             resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-            resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.js')
+            resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.js'),
+            resolve(__dirname, '../node_modules/@dxos/react-appkit/dist/**/*.js')
           ]
         })
       ]

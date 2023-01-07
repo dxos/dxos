@@ -1,11 +1,11 @@
 version: 1
 package:
   modules:
-    - name: @dxos/sample-storybook
+    - name: @dxos/bare-template-storybook
       type: dxos:type/app
       build:
         command: npm run build
-        outdir: out/app/@dxos/sample-storybook
+        outdir: out/app/@dxos/bare-template-storybook
 runtime:
   client:
     storage:

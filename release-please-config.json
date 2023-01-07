@@ -83,17 +83,17 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/complete/package.json",
+          "path": "packages/apps/templates/bare-template/test/variants/dxosui/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/dxosUi/package.json",
+          "path": "packages/apps/templates/bare-template/test/variants/max/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/minimum/package.json",
+          "path": "packages/apps/templates/bare-template/test/variants/min/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -128,7 +128,27 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/templates/hello-template/test/variants/complete/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/hello-template/test/variants/min/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/tasks-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/tasks-template/test/variants/complete/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/tasks-template/test/variants/min/package.json",
           "jsonpath": "$.version"
         },
         {

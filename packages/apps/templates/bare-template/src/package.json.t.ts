@@ -27,8 +27,7 @@ export namespace Features {
 
   export const dxosUi = ({ depVersion }: Context): Partial<PackageJson> => ({
     dependencies: {
-      '@dxos/react-ui': depVersion,
-      '@dxos/react-uikit': depVersion,
+      '@dxos/react-components': depVersion,
       '@dxos/react-appkit': depVersion,
       'phosphor-react': '^1.4.1'
     }
@@ -48,13 +47,13 @@ export namespace Features {
     },
     devDependencies: {
       '@babel/core': '^7.18.13',
-      '@storybook/addon-actions': '^6.5.10',
-      '@storybook/addon-essentials': '^6.5.10',
-      '@storybook/addon-interactions': '^6.5.10',
-      '@storybook/addon-links': '^6.5.10',
-      '@storybook/builder-vite': '^0.2.2',
+      '@storybook/addon-actions': '^6.5.15',
+      '@storybook/addon-essentials': '7.0.0-beta.19',
+      '@storybook/addon-interactions': '7.0.0-beta.19',
+      '@storybook/addon-links': '7.0.0-beta.19',
+      '@storybook/builder-vite': '7.0.0-beta.19',
+      '@storybook/react': '7.0.0-beta.19',
       '@storybook/mdx2-csf': '^0.0.3',
-      '@storybook/react': '^6.5.10',
       '@storybook/testing-library': '^0.0.13',
       'require-from-string': '^2.0.2',
       'storybook-dark-mode': '^1.1.2',
@@ -64,7 +63,7 @@ export namespace Features {
 
   export const pwa = (): Partial<PackageJson> => ({
     devDependencies: {
-      'vite-plugin-pwa': '^0.12.4',
+      'vite-plugin-pwa': '^0.14.1',
       'workbox-window': '^6.5.4'
     }
   });
@@ -89,7 +88,7 @@ export const base = ({ name, version, depVersion }: Context): Partial<PackageJso
       '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
       typescript: '^4.8.4',
-      vite: '3.2.5'
+      vite: '4.0.4'
     }
   };
 };

@@ -1,25 +1,30 @@
-import React from "react";
-import { ClientProvider } from "@dxos/react-client";
-import { GenericFallback, translations } from "@dxos/react-appkit";
-import { Config, Dynamics, Defaults } from "@dxos/config";
-import { UiKitProvider } from "@dxos/react-uikit";
+//
+// Copyright 2023 DXOS.org
+//
 
-// this includes css styles from @dxos/react-ui
-import "@dxosTheme";
+import React from 'react';
+
+import { Config, Dynamics, Defaults } from '@dxos/config';
+import { GenericFallback, appkitTranslations } from '@dxos/react-appkit';
+import { ClientProvider } from '@dxos/react-client';
+import { ThemeProvider } from '@dxos/react-components';
+
+// this includes css styles from @dxos/react-components
+import '@dxosTheme';
 
 // Dynamics allows configuration to be supplied by the hosting KUBE
 const config = async () => new Config(await Dynamics(), Defaults());
 
 export const App = () => {
   return (
-    <UiKitProvider
-      appNs="@dxos/sample-dxosUi"
-      resourceExtensions={[translations]}
+    <ThemeProvider
+      appNs='@dxos/bare-template-dxosui'
+      resourceExtensions={[appkitTranslations]}
       fallback={<GenericFallback />}
     >
       <ClientProvider config={config} fallback={<GenericFallback />}>
         <div>Your code goes here</div>
       </ClientProvider>
-    </UiKitProvider>
+    </ThemeProvider>
   );
 };

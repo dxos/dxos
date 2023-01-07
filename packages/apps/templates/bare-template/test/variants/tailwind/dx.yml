@@ -1,11 +1,11 @@
 version: 1
 package:
   modules:
-    - name: @dxos/sample-tailwind
+    - name: @dxos/bare-template-tailwind
       type: dxos:type/app
       build:
         command: npm run build
-        outdir: out/app/@dxos/sample-tailwind
+        outdir: out/app/@dxos/bare-template-tailwind
 runtime:
   client:
     storage:

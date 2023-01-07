@@ -1,0 +1,18 @@
+{
+  "sourceRoot": "packages/apps/templates/tasks-template/test/variants/min/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/templates/tasks-template/test/variants/min/**/*.{ts,js,tsx,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.lintFilePatterns.0}"
+      ]
+    }
+  }
+}

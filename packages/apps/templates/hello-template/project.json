@@ -13,6 +13,15 @@
         "{options.outputPath}"
       ]
     },
+    "generate": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "generate"
+      },
+      "outputs": [
+        "packages/apps/templates/hello-template/test/variants"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {

@@ -8,10 +8,10 @@ export default defineTemplate(
     const render = renderSlots(slots)({ ...rest, input, defaultOutputFile, imports });
     const ClientProvider = imports.lazy('ClientProvider', '@dxos/react-client');
     const { Config, Dynamics, Defaults } = imports.lazy(['Config', 'Dynamics', 'Defaults'], '@dxos/config');
-    const UiKitProvider = imports.lazy('UiKitProvider', '@dxos/react-uikit');
+    const ThemeProvider = imports.lazy('ThemeProvider', '@dxos/react-components');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
-    const { ServiceWorkerToastContainer, GenericFallback, translations } = imports.lazy(
-      ['ServiceWorkerToastContainer', 'GenericFallback', 'translations'],
+    const { ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
+      ['ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
       '@dxos/react-appkit'
     );
 
@@ -23,10 +23,10 @@ export default defineTemplate(
       ${dxosUi && pwa && swToast()}
     </${ClientProvider()}>`;
 
-    const uiProviders = (content: string) => text`
-    <${UiKitProvider()} appNs='${name}' resourceExtensions={[${translations()}]} fallback={<${GenericFallback()} />}>
+    const themeProvider = (content: string) => text`
+    <${ThemeProvider()} appNs='${name}' resourceExtensions={[${appkitTranslations()}]} fallback={<${GenericFallback()} />}>
       ${content}
-    </${UiKitProvider()}>
+    </${ThemeProvider()}>
     `;
     
     return !react
@@ -38,7 +38,7 @@ export default defineTemplate(
       ${render.extraImports()}
       
       ${dxosUi && text`
-      // this includes css styles from @dxos/react-ui
+      // this includes css styles from @dxos/react-components
       import '@dxosTheme';`}
       
       // Dynamics allows configuration to be supplied by the hosting KUBE
@@ -47,7 +47,7 @@ export default defineTemplate(
       export const App = () => {
         ${pwa && `const serviceWorker = ${useRegisterSW()}();`}
         return (
-          ${dxosUi ? uiProviders(coreContent) : coreContent}
+          ${dxosUi ? themeProvider(coreContent) : coreContent}
         )
       }`;
   },
