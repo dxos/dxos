@@ -2,16 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
 import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { useQuery, useReactor } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
+import { getSize, mx } from '@dxos/react-components';
 
-import { Card, Input, TableRow } from '../components';
+import { Button, Card, Input, CardRow } from '../components';
 import { useOptions, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
@@ -69,9 +68,9 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
   };
 
   const Menubar = () => (
-    <button onClick={handleGenerateTask}>
+    <Button onClick={handleGenerateTask}>
       <PlusCircle className={getSize(6)} />
-    </button>
+    </Button>
   );
 
   return (
@@ -106,7 +105,7 @@ export const NewTaskItem: FC<{
   onEnter?: (task: Task) => void;
 }> = ({ task, onEnter }) => {
   return (
-    <TableRow
+    <CardRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6 invisible'>
           <input type='checkbox' autoFocus disabled />
@@ -136,16 +135,16 @@ export const TaskItem: FC<{
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
-}> = ({ task, readonly, onEnter, onDelete, onSave }) => {
+}> = withReactor(({ task, readonly, onEnter, onDelete, onSave }) => {
   const { debug } = useOptions();
-  const { render } = useReactor({
+  useReactorContext({
     onChange: () => {
       onSave?.(task);
     }
   });
 
-  return render(
-    <TableRow
+  return (
+    <CardRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6'>
           <input
@@ -158,14 +157,14 @@ export const TaskItem: FC<{
       }
       action={
         onDelete && (
-          <button className='text-gray-300' onClick={() => onDelete(task)}>
-            <XCircle className={clsx(getSize(6), 'hover:text-red-400')} />
-          </button>
+          <Button className='text-gray-300' onClick={() => onDelete(task)}>
+            <XCircle className={mx(getSize(6), 'hover:text-red-400')} />
+          </Button>
         )
       }
       header={
         <Input
-          className={clsx('w-full outline-0 bg-white', task[deleted] && 'text-red-300')}
+          className={mx('w-full outline-0 bg-white', task[deleted] && 'text-red-300')}
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
@@ -183,6 +182,6 @@ export const TaskItem: FC<{
         {debug && <div>{PublicKey.from(task[id]).truncate()}</div>}
         <div>{task.assignee?.name}</div>
       </div>
-    </TableRow>
+    </CardRow>
   );
-};
+});

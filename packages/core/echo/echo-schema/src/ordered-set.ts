@@ -123,15 +123,18 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     throw new Error('Method not implemented.');
   }
 
-  // TODO(burdon): Double linked list.
   splice(start: number, deleteCount?: number | undefined): T[];
   splice(start: number, deleteCount: number, ...items: T[]): T[];
-  splice(start: number, deleteCount?: number | undefined, ...items: unknown[]): T[] {
+  splice(start: number, deleteCount?: number | undefined, ...items: T[]): T[] {
     if (this._orderedList) {
       if (deleteCount !== undefined && deleteCount > 0) {
         throw new Error('deleteCount not supported.');
       }
 
+      // TODO(burdon): Replace list.
+      void this._orderedList.init([...items.map((item) => item[id]), EMPTY]);
+
+      /*
       for (let i = 0; i < items.length; i++) {
         const idx = start + i;
         const itemId = typeof items[i] === 'string' ? items[i] : (items[i] as any)[id];
@@ -143,6 +146,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
           void this._orderedList.insert(this._orderedList.values[idx - 1], itemId);
         }
       }
+      */
 
       return [];
     } else {

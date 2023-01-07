@@ -22,17 +22,9 @@
     overflow: hidden;
     background-color: #DDD;
   }
-
-  button {
-    cursor: pointer;
-  }
-  button:hover {
-    opacity: 0.8;
-  }
-  button:active {
-    opacity: 0.5;
-  }
 }
+
+/* TODO(burdon): Remove custom CSS. */
 
 .full-screen {
   position: absolute;
@@ -52,7 +44,7 @@
   transform: rotate(-300deg);
 }
 
-/** TODO(burdon): Patch containing div of tiptap. */
+/** TODO(burdon): Patch containing div of Composer. */
 .editor-container > div {
   display: flex;
   flex: 1;

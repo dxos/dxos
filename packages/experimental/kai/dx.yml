@@ -11,11 +11,9 @@ package:
 
 runtime:
   client:
-    remoteSource: /vault.html
+    remoteSource: /index.html
     storage:
       persistent: false
-
-# TODO(burdon): Sanitize fails.
 
   services:
      signal:

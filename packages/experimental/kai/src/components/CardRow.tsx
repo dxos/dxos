@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode } from 'react';
 
-export const TableRow: FC<{ sidebar?: ReactNode; action?: ReactNode; header: ReactNode; children?: ReactNode }> = ({
+export const CardRow: FC<{ sidebar?: ReactNode; action?: ReactNode; header: ReactNode; children?: ReactNode }> = ({
   sidebar,
   action,
   header,

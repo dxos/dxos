@@ -166,9 +166,7 @@ export class DataSpaceManager {
       if (latestTimeframe.totalMessages() - lastSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT) {
         const snapshot = await this._saveSnapshot(dataSpace);
         lastSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-        console.log('save', {
-          snapshot
-        });
+        log('save', { snapshot });
       }
     });
 
