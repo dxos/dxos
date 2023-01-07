@@ -73,16 +73,8 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
   }, []);
 
   return (
-    <div
-      style={{
-        display: 'flex'
-      }}
-    >
-      <div
-        style={{
-          flexGrow: 1
-        }}
-      >
+    <div style={{ display: 'flex' }}>
+      <div style={{ flexGrow: 1 }}>
         <JsonTreeView
           data={{
             closed,

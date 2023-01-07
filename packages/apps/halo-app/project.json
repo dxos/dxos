@@ -68,6 +68,27 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/halo-app",
+        "outputPath": "tmp/mocha/packages/apps/halo-app",
+        "playwright": true,
+        "resultsPath": "test-results/packages/apps/halo-app",
+        "serve": "halo-app:preview",
+        "testPatterns": [
+          "packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/halo-app/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -79,6 +100,14 @@
       "outputs": [
         "{options.outputFile}"
       ]
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "pnpm -w serve -L packages/apps/halo-app/out/halo"
+        ]
+      }
     },
     "serve": {
       "executor": "@nrwl/vite:dev-server",

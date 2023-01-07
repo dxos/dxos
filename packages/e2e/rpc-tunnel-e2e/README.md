@@ -1,5 +1,7 @@
 # @dxos/rpc-tunnel-e2e
 
+TODO(wittjosiah): Move inside rpc-tunnel?
+
 ## Installation
 
 ```bash
