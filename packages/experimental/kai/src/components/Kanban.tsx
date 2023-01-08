@@ -36,7 +36,7 @@ export const Kanban: FC<{ objects: EchoObject[]; columns: KanbanColumnDef[]; col
                 {objects.filter(column.filter).map((object) => {
                   const Content = column.Content;
                   return (
-                    <div key={object[id]} className='mt-2 bg-white rounded border-2 border-slate-300'>
+                    <div key={object[id]} className='mt-2 bg-white rounded border border-slate-300'>
                       <Content object={object} />
                     </div>
                   );

@@ -3,7 +3,7 @@
 //
 
 import { Archive } from 'phosphor-react';
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
@@ -18,6 +18,9 @@ export const Editor: FC = withReactor(() => {
   const { space } = useSpace();
   const projects = useQuery(space, Project.filter());
   const [project, setProject] = useState<Project>();
+  useEffect(() => {
+    setProject(undefined);
+  }, [space]);
 
   return (
     <Card title='Editor' className='bg-purple-400'>
