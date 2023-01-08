@@ -8,14 +8,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSpaces } from '@dxos/react-client';
 
 import {
-  AppBar,
-  ContactsTable,
+  ContactTable,
   ProjectEditor,
   OrganizationHierarchy,
   ProjectGraph,
   ProjectKanban,
   ProjectList,
-  Sidebar,
   TaskList
 } from '../../containers';
 import {
@@ -27,7 +25,9 @@ import {
   useOptions,
   viewConfig
 } from '../../hooks';
+import { AppBar } from './AppBar';
 import { Dashboard } from './Dashboard';
+import { Sidebar } from './Sidebar';
 
 const sidebarWidth = 6 * (24 + 8) + 16;
 
@@ -52,7 +52,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
           {view === AppView.DASHBOARD && <Dashboard />}
           {view === AppView.ORGS && <OrganizationHierarchy />}
           {view === AppView.PROJECTS && <ProjectList />}
-          {view === AppView.CONTACTS && <ContactsTable />}
+          {view === AppView.CONTACTS && <ContactTable />}
           {view === AppView.KANBAN && <ProjectKanban />}
           {view === AppView.TASKS && <TaskList />}
           {view === AppView.EDITOR && <ProjectEditor />}

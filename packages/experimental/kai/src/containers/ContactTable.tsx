@@ -12,7 +12,7 @@ import { Searchbar, Table } from '../components';
 import { useSpace } from '../hooks';
 import { Contact } from '../proto';
 
-export const ContactsTable = () => {
+export const ContactTable = () => {
   const { space } = useSpace();
   const contacts = useQuery(space, Contact.filter());
   const columns = useMemo<Column<EchoObject>[]>(

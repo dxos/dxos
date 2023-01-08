@@ -30,12 +30,12 @@ export const ContactsListCard: FC = () => {
 
   return (
     <Card fade scrollbar header={<Header />}>
-      <ContactsList />
+      <ContactList />
     </Card>
   );
 };
 
-export const ContactsList: FC = () => {
+export const ContactList: FC = () => {
   const { space } = useSpace();
   const contacts: Contact[] = useQuery(space, Contact.filter());
 

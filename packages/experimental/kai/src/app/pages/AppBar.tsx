@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { AppView, useAppStateDispatch, useOptions, viewConfig } from '../hooks';
+import { AppView, useAppStateDispatch, useOptions, viewConfig } from '../../hooks';
 
 export const Menu = () => {
   return (

@@ -8,10 +8,11 @@ The word kai (貝) is the Japanese word for shell.
 - [ ] Deprecate Kitchen Sink.
 - [ ] Playwright.
 
-- [ ] Reset.
+- [ ] Profile (App team UX).
+- [ ] Invitations configuration (App team UX).
+- [ ] Project settings.
 - [ ] Saved prefs (e.g., persistent).
 - [ ] Import/export JSON.
-- [ ] Invitations.
 - [ ] Deploy mobile app.
 - [ ] Menu.
 - [ ] CRM/KM (Airtable + reusable cards).
@@ -34,10 +35,12 @@ The word kai (貝) is the Japanese word for shell.
 
 ### ECHO Issues
 
-- [ ] Delete.
+- [ ] Reset.
 - [ ] Splice (drag and drop).
 - [ ] Scalar sets (e.g., Project tags for kanban).
 - [ ] Materialized links (referential integrity).
+- [ ] Device management.
+- [ ] Save space credentials (membership) to HALO.
 
 ## Refs
 

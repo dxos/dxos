@@ -10,11 +10,10 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button } from '../components';
-import { useSpace } from '../hooks';
-import { Generator } from '../proto';
-import { MemberList } from './MemberList';
-import { SpaceList } from './SpaceList';
+import { Button } from '../../components';
+import { MemberList, SpaceList } from '../../containers';
+import { useSpace } from '../../hooks';
+import { Generator } from '../../proto';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
