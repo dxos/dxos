@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { AppView, useOptions, viewConfig } from '../hooks';
+import { AppView, useAppStateDispatch, useOptions, viewConfig } from '../hooks';
 
 export const Menu = () => {
   return (
@@ -50,6 +50,7 @@ export const AppBar = () => {
   const { views } = useOptions();
   const navigate = useNavigate();
   const { spaceKey: currentSpaceKey, view: currentView } = useParams();
+  const setAppState = useAppStateDispatch();
 
   const setView = (spaceKey: string, view: string) => {
     navigate(`/${spaceKey}/${view}`);
@@ -59,7 +60,7 @@ export const AppBar = () => {
     <div className='flex flex-col flex-shrink-0'>
       <div className='flex items-center bg-orange-400 pl-2 pr-2' style={{ height: 48 }}>
         <div className='flex ml-2'>
-          <button>
+          <button onClick={() => setAppState(({ showSidebar, ...rest }) => ({ showSidebar: !showSidebar, ...rest }))}>
             <List className={getSize(6)} />
           </button>
         </div>
@@ -72,7 +73,7 @@ export const AppBar = () => {
       </div>
 
       {views.length > 1 && (
-        <div className='flex flex-1 items-center bg-orange-500 pl-2 pr-2'>
+        <div className='flex flex-1 items-center bg-orange-500 pt-1 pl-2 pr-2'>
           <ViewSelector
             view={currentView}
             views={views}

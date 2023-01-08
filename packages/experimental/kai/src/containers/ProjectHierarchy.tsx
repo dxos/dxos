@@ -3,12 +3,12 @@
 //
 
 import { Archive, CheckSquare, User } from 'phosphor-react';
-import React from 'react';
+import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
-import { Card, FolderHierarchy, FolderHierarchyItem } from '../components';
+import { FolderHierarchy, FolderHierarchyItem } from '../components';
 import { useSpace } from '../hooks';
 import { Project } from '../proto';
 
@@ -32,7 +32,7 @@ export const mapProjectToItem = (project: Project): FolderHierarchyItem => ({
   }))
 });
 
-export const ProjectHierarchy = withReactor(() => {
+export const ProjectHierarchy: FC<{ header?: boolean }> = withReactor(({ header = false }) => {
   const { space } = useSpace();
   // TODO(burdon): useQuery should not return undefined.
   // TODO(burdon): Need subscription for children.
@@ -40,10 +40,8 @@ export const ProjectHierarchy = withReactor(() => {
   const items = projects.map((project) => mapProjectToItem(project));
 
   return (
-    <Card title='Projects' scrollbar className='bg-orange-400'>
-      <div className='mt-2'>
-        <FolderHierarchy items={items} highlightClassName='bg-slate-200' />
-      </div>
-    </Card>
+    <div className='mt-2'>
+      <FolderHierarchy items={items} highlightClassName='bg-slate-200' />
+    </div>
   );
 });

@@ -16,6 +16,9 @@ export type KanbanColumnDef = {
 
 // TODO(burdon): Slots.
 // TODO(burdon): Standardize items => objects across controls.
+// TODO(burdon): Drag.
+// TODO(burdon): Create item.
+
 export const Kanban: FC<{ objects: EchoObject[]; columns: KanbanColumnDef[]; columnWidth?: number }> = ({
   objects,
   columns,

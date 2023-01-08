@@ -3,11 +3,12 @@
 //
 
 export * from './AppBar';
-export * from './ContactList';
+export * from './ContactsList';
+export * from './ContactsTable';
 export * from './DraggableTaskList';
-export * from './Editor';
-export * from './Game';
 export * from './MemberList';
+export * from './OrganizationHierarchy';
+export * from './ProjectEditor';
 export * from './ProjectGraph';
 export * from './ProjectHierarchy';
 export * from './ProjectKanban';

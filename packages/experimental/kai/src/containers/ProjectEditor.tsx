@@ -10,11 +10,11 @@ import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { Card, Input, Selector } from '../components';
+import { Input, Selector } from '../components';
 import { useSpace } from '../hooks';
 import { Project } from '../proto';
 
-export const Editor: FC = withReactor(() => {
+export const ProjectEditor: FC = withReactor(() => {
   const { space } = useSpace();
   const projects = useQuery(space, Project.filter());
   const [project, setProject] = useState<Project>();
@@ -23,7 +23,7 @@ export const Editor: FC = withReactor(() => {
   }, [space]);
 
   return (
-    <Card title='Editor' className='bg-purple-400'>
+    <div className='flex flex-col flex-1'>
       <div className='flex p-2' style={{ width: 300 }}>
         <Selector
           placeholder='Project'
@@ -49,15 +49,18 @@ export const Editor: FC = withReactor(() => {
           </div>
 
           {project.description?.doc && (
-            <div className={'flex flex-1 overflow-y-scroll border-t editor-container'}>
-              <Composer
-                doc={project.description?.doc}
-                className={mx('z-0 bg-white text-black w-full m-2 p-2 min-bs-[12em]')}
-              />
+            <div className='flex flex-col flex-1 m-2'>
+              <div className='text-xs pb-1'>Description</div>
+              <div className='flex flex-1 overflow-y-scroll editor-container border'>
+                <Composer
+                  doc={project.description?.doc}
+                  className={mx('z-0 bg-white text-black w-full m-2 p-2 min-bs-[12em]')}
+                />
+              </div>
             </div>
           )}
         </>
       )}
-    </Card>
+    </div>
   );
 });

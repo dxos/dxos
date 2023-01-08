@@ -6,23 +6,25 @@ import React, { FC, ReactNode } from 'react';
 
 import { mx } from '@dxos/react-components';
 
+export const CardMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
+  return (
+    <div className='flex w-full p-1 items-center bg-slate-200 rounded-t'>
+      <h2>{title}</h2>
+      <div className='flex-1' />
+      {children}
+    </div>
+  );
+};
+
 export const Card: FC<{
-  title?: string;
-  className?: string; // TODO(burdon): Slots.
-  menubar?: ReactNode;
   children?: ReactNode;
   scrollbar?: boolean;
   fade?: boolean;
-}> = ({ title, className = 'bg-gray-400', menubar, scrollbar, fade, children }) => {
+  header?: JSX.Element;
+}> = ({ scrollbar, fade, header, children }) => {
   return (
-    <div className='flex flex-col w-full overflow-hidden drop-shadow-md'>
-      {false && (
-        <div className={mx('flex p-2', className)}>
-          <h2>{title ?? 'Card'}</h2>
-          <div className='flex-1' />
-          {menubar}
-        </div>
-      )}
+    <div className='flex flex-col w-full bg-white overflow-hidden drop-shadow-md'>
+      {header}
 
       <div
         className={mx(

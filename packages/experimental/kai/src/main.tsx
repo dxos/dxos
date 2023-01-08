@@ -16,7 +16,7 @@ import './style.css';
     <App
       views={[
         AppView.DASHBOARD,
-        AppView.ORG,
+        AppView.ORGS,
         AppView.PROJECTS,
         AppView.CONTACTS,
         AppView.KANBAN,

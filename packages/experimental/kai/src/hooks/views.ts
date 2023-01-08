@@ -8,10 +8,10 @@ export enum AppView {
   DASHBOARD = 'dashboard',
   PROJECTS = 'projects',
   CONTACTS = 'contacts',
-  ORG = 'org',
+  ORGS = 'org',
   KANBAN = 'kanban',
   TASKS = 'tasks',
-  EDITOR = 'editor',
+  EDITOR = 'documents',
   GRAPH = 'graph'
 }
 
@@ -20,7 +20,7 @@ export const viewConfig: { [key: string]: { Icon: any } } = {
   [AppView.DASHBOARD]: { Icon: Wall },
   [AppView.PROJECTS]: { Icon: Table },
   [AppView.CONTACTS]: { Icon: Users },
-  [AppView.ORG]: { Icon: TreeStructure },
+  [AppView.ORGS]: { Icon: TreeStructure },
   [AppView.KANBAN]: { Icon: Kanban },
   [AppView.TASKS]: { Icon: ListChecks },
   [AppView.EDITOR]: { Icon: Article },

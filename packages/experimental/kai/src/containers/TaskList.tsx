@@ -10,18 +10,43 @@ import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button, Card, Input, CardRow } from '../components';
+import { Button, Card, Input, CardRow, CardMenu } from '../components';
 import { useOptions, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
-/**
- * Sortable task list.
- * https://docs.dndkit.com/presets/sortable
- */
-export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
+// TODO(burdon): Generic header with create.
+
+export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
   completed = undefined,
   readonly = false,
   title = 'Tasks'
+}) => {
+  const { space } = useSpace();
+
+  const handleGenerateTask = async () => {
+    await createTask(space.experimental.db);
+  };
+
+  const Header = () => (
+    <CardMenu title={title}>
+      {!readonly && (
+        <Button onClick={handleGenerateTask}>
+          <PlusCircle className={getSize(5)} />
+        </Button>
+      )}
+    </CardMenu>
+  );
+
+  return (
+    <Card fade scrollbar header={<Header />}>
+      <TaskList completed={completed} readonly={readonly} />
+    </Card>
+  );
+};
+
+export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
+  completed = undefined,
+  readonly = false
 }) => {
   const { space } = useSpace();
   const tasks = useQuery(space, Task.filter({ completed }));
@@ -48,10 +73,6 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     }
   }, []);
 
-  const handleGenerateTask = async () => {
-    await createTask(space.experimental.db);
-  };
-
   const handleCreateTask = async (task: Task) => {
     if (task.title.length) {
       await space.experimental.db.save(task);
@@ -67,14 +88,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     setSaving(true);
   };
 
-  const Menubar = () => (
-    <Button onClick={handleGenerateTask}>
-      <PlusCircle className={getSize(6)} />
-    </Button>
-  );
-
   return (
-    <Card title={title} fade className='bg-teal-400' menubar={!readonly && <Menubar />}>
+    <div className='flex flex-col flex-1'>
       <div className='flex flex-col flex-1 overflow-y-scroll scrollbar-thin'>
         <div className={'mt-2'}>
           {tasks?.map((task) => (
@@ -96,7 +111,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
           <Spinner />
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 
@@ -164,7 +179,7 @@ export const TaskItem: FC<{
       }
       header={
         <Input
-          className={mx('w-full outline-0 bg-white', task[deleted] && 'text-red-300')}
+          className={mx('w-full outline-0', task[deleted] && 'text-red-300')}
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'

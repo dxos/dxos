@@ -16,7 +16,7 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
   return <ProjectItem project={object as Project} />;
 };
 
-export const ProjectKanban: FC<{}> = () => {
+export const ProjectKanban: FC = () => {
   const { space } = useSpace();
   const projects = useQuery(space, Project.filter());
 
@@ -30,7 +30,7 @@ export const ProjectKanban: FC<{}> = () => {
   }));
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden bg-white'>
+    <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='flex p-2'>
         <div>
           <Searchbar />

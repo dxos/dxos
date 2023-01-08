@@ -13,6 +13,7 @@ import { Contact, Organization, Project, Task } from './gen/schema';
 type MinMax = { min: number; max: number };
 
 type GeneratorOptions = {
+  organizations: MinMax;
   projects: MinMax;
   tasks: MinMax;
   contacts: MinMax;
@@ -22,6 +23,7 @@ export class Generator {
   constructor(
     private readonly _db: EchoDatabase,
     private readonly _options: GeneratorOptions = {
+      organizations: { min: 1, max: 3 },
       projects: { min: 1, max: 2 },
       tasks: { min: 1, max: 8 },
       contacts: { min: 3, max: 5 }
@@ -29,29 +31,41 @@ export class Generator {
   ) {}
 
   async generate() {
+    // Organizations.
     await Promise.all(
-      Array.from({ length: faker.datatype.number(this._options.contacts) }).map(async () => {
-        return await createContact(this._db);
-      })
-    );
+      Array.from({ length: faker.datatype.number(this._options.organizations) }).map(async () => {
+        const organization = await createOrganization(this._db);
 
-    await Promise.all(
-      Array.from({ length: faker.datatype.number(this._options.projects) }).map(async () => {
-        const project = await createProject(this._db);
-
-        const tasks = await Promise.all(
-          Array.from({ length: faker.datatype.number(this._options.tasks) }).map(async () => {
-            // TODO(burdon): Fails add multiple.
-            // project.tasks.push(await createTask(this._db));
-            const task = await createTask(this._db);
-            task.completed = faker.datatype.boolean();
-            return task;
+        // Contacts.
+        await Promise.all(
+          Array.from({ length: faker.datatype.number(this._options.contacts) }).map(async () => {
+            const contact = await createContact(this._db);
+            organization.team.push(contact);
+            return contact;
           })
         );
 
-        tasks.forEach((task: Task) => project.tasks.push(task));
+        // Projects.
+        await Promise.all(
+          Array.from({ length: faker.datatype.number(this._options.projects) }).map(async () => {
+            const project = await createProject(this._db);
+            organization.projects.push(project);
 
-        return project;
+            // Tasks.
+            const tasks = await Promise.all(
+              Array.from({ length: faker.datatype.number(this._options.tasks) }).map(async () => {
+                // TODO(burdon): Fails add multiple.
+                // project.tasks.push(await createTask(this._db));
+                const task = await createTask(this._db);
+                task.completed = faker.datatype.boolean();
+                return task;
+              })
+            );
+
+            tasks.forEach((task: Task) => project.tasks.push(task));
+            return project;
+          })
+        );
       })
     );
   }
@@ -64,6 +78,9 @@ export const createOrganization = async (db: EchoDatabase) => {
     name: faker.company.companyName()
   });
 
+  const projects = await Promise.all(Array.from({ length: faker.datatype.number(3) }).map(() => createProject(db)));
+  projects.forEach((project) => organization.projects.push(project));
+
   return await db.save(organization);
 };
 
@@ -75,8 +92,11 @@ export const createProject = async (db: EchoDatabase) => {
     // tags: [faker.random.arrayElement(tags)] // TODO(burdon): Implement constructor.
   });
 
-  // TODO(burdon): Broken.
+  // TODO(burdon): Not working.
   // project.tags.add(faker.random.arrayElement(tags));
+
+  // TODO(burdon): Not working.
+  project.description.model?.insert('Hello', 0);
 
   return await db.save(project);
 };
