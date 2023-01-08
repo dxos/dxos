@@ -128,12 +128,22 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/hello-template/test/variants/complete/package.json",
+          "path": "packages/apps/templates/hello-template/test/variants/dxosui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/hello-template/test/variants/max/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/templates/hello-template/test/variants/min/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/hello-template/test/variants/tailwind/package.json",
           "jsonpath": "$.version"
         },
         {

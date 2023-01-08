@@ -10,9 +10,6 @@ import { GenericFallback, ServiceWorkerToastContainer, appkitTranslations } from
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 
-// this includes css styles from @dxos/react-components
-import '@dxosTheme';
-
 // Dynamics allows configuration to be supplied by the hosting KUBE
 const config = async () => new Config(await Dynamics(), Defaults());
 

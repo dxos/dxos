@@ -6,14 +6,20 @@ import { defineTemplate, text } from '@dxos/plate';
 import config from '../config.t';
 
 export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
-  const { react } = input;
+  const { react, dxosUi } = input;
   return !react
     ? text`
     import { Client } from '@dxos/client';
     import { Config, Defaults, Dynamics } from '@dxos/config';
 
-    // import css files directly
-    import './index.css';
+    ${dxosUi && text`
+    // this includes css styles from @dxos/react-components
+    // this must precede all other style imports in the app
+    import '@dxosTheme';`}
+
+    ${!dxosUi && text`
+    // include any css files directly
+    import 'index.css';`}
     
     void (async () => {
       // grab a configuration with defaults and dynamic values from KUBE

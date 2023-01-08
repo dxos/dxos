@@ -10,11 +10,10 @@ export default defineTemplate(
         tailwind &&
         !dxosUi &&
         text`
-      @tailwind base;
-      @tailwind components;
-      @tailwind utilities;`
-      }
-      `
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;`}
+        `
       : null;
   },
   { config }

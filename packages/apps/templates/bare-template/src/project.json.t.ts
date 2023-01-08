@@ -4,7 +4,7 @@ import config from './config.t';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 
 export default defineTemplate<typeof config>(async ({ input, outputDirectory }) => {
-  const { monorepo } = input;
+  const { monorepo, storybook } = input;
   const info = await getDxosRepoInfo();
   const outputDirectoryRelativeToMonorepoRoot =
     monorepo && info.isDxosMonorepo ? path.relative(info.repositoryRootPath, outputDirectory) : outputDirectory;
@@ -19,6 +19,22 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
           lintFilePatterns: [`${outputDirectoryRelativeToMonorepoRoot}/**/*.{ts,js,tsx,jsx}`]
         },
         outputs: ['{options.lintFilePatterns.0}']
+      },
+      ...{
+        storybook: {
+          configurations: {
+            ci: {
+              quiet: true
+            }
+          },
+          executor: '@nrwl/storybook:storybook',
+          options: {
+            config: {
+              configFolder: 'packages/common/react-components/.storybook'
+            },
+            uiFramework: '@storybook/react'
+          }
+        }
       }
     }
   };

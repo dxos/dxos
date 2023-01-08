@@ -6,16 +6,13 @@ import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Config, Dynamics, Defaults } from '@dxos/config';
-import { GenericFallback, ServiceWorkerToastContainer, translations } from '@dxos/react-appkit';
+import { GenericFallback, ServiceWorkerToastContainer, appkitTranslations } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { UiKitProvider } from '@dxos/react-uikit';
+import { ThemeProvider } from '@dxos/react-components';
 
 import { Welcome } from './Welcome';
 
-import './index.scss';
-
-// this includes css styles from @dxos/react-ui
-import '@dxosTheme';
+import './index.css';
 
 // Dynamics allows configuration to be supplied by the hosting KUBE
 const config = async () => new Config(await Dynamics(), Defaults());
@@ -23,11 +20,11 @@ const config = async () => new Config(await Dynamics(), Defaults());
 export const App = () => {
   const serviceWorker = useRegisterSW();
   return (
-    <UiKitProvider appNs='@dxos/hello-sample' resourceExtensions={[translations]} fallback={<GenericFallback />}>
+    <ThemeProvider appNs='@dxos/hello-sample' resourceExtensions={[appkitTranslations]} fallback={<GenericFallback />}>
       <ClientProvider config={config} fallback={<GenericFallback />}>
         <Welcome name='@dxos/hello-sample' />
         <ServiceWorkerToastContainer {...serviceWorker} />
       </ClientProvider>
-    </UiKitProvider>
+    </ThemeProvider>
   );
 };

@@ -12,7 +12,25 @@ export const configs: ExtractInput<typeof config>[] = [
     tailwind: false
   },
   {
-    name: 'complete',
+    name: 'tailwind',
+    monorepo: true,
+    pwa: false,
+    dxosUi: false,
+    react: false,
+    storybook: false,
+    tailwind: true
+  },
+  {
+    name: 'dxosui',
+    monorepo: true,
+    pwa: false,
+    dxosUi: true,
+    react: true,
+    storybook: false,
+    tailwind: true
+  },
+  {
+    name: 'max',
     monorepo: true,
     pwa: true,
     dxosUi: true,

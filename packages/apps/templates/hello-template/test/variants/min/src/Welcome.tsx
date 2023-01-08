@@ -1,7 +1,3 @@
-//
-// Copyright 2023 DXOS.org
-//
-
 import React from 'react';
 
 export const Welcome = ({ name }: { name: string }) => {
@@ -22,7 +18,7 @@ export const Welcome = ({ name }: { name: string }) => {
           is available.
         </p>
         <p>
-          Add your <code>css</code> to <code>src/index.scss</code> or import <code>.scss</code> files from your{' '}
+          Add your <code>css</code> to <code>src/index.css</code> or import <code>.css</code> files from your{' '}
           <code>.ts</code> files directly.
         </p>
         <p>

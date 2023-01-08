@@ -13,10 +13,10 @@
         "{options.outputPath}"
       ]
     },
-    "generate": {
+    "gen": {
       "executor": "nx:run-script",
       "options": {
-        "script": "generate"
+        "script": "gen"
       },
       "outputs": [
         "packages/apps/templates/hello-template/test/variants"
