@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { Kanban, KanbanColumnDef } from '../components';
+import { Kanban, KanbanColumnDef, Searchbar } from '../components';
 import { useSpace } from '../hooks';
 import { Project, tags } from '../proto';
 import { ProjectItem } from './ProjectList';
@@ -29,5 +29,16 @@ export const ProjectKanban: FC<{}> = () => {
     filter: (object: EchoObject) => (object as Project).tag === tag
   }));
 
-  return <Kanban objects={projects} columns={columns} />;
+  return (
+    <div className='flex flex-col flex-1 overflow-hidden bg-white'>
+      <div className='flex p-2'>
+        <div>
+          <Searchbar />
+        </div>
+      </div>
+      <div className='flex flex-1 overflow-hidden'>
+        <Kanban objects={projects} columns={columns} />
+      </div>
+    </div>
+  );
 };

@@ -8,6 +8,6 @@ export * from './CardRow';
 export * from './FolderHierarchy';
 export * from './Input';
 export * from './Kanban';
-export * from './SearchBar';
+export * from './Searchbar';
 export * from './Selector';
 export * from './Table';

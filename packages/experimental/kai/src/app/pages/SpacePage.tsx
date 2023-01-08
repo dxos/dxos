@@ -7,29 +7,34 @@ import { useResizeDetector } from 'react-resize-detector';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Column } from 'react-table';
 
-import { EchoObject, id } from '@dxos/echo-schema';
-import { useQuery, useSpaces, withReactor } from '@dxos/react-client';
+import { EchoObject } from '@dxos/echo-schema';
+import { useQuery, useSpaces } from '@dxos/react-client';
 
-import { Card, FolderHierarchy, SearchBar, Selector, Table } from '../../components';
+import { FolderHierarchy, Searchbar, Table } from '../../components';
 import {
+  AppBar,
   ContactList,
   Editor,
   mapProjectToItem,
   ProjectGraph,
   ProjectKanban,
   ProjectList,
-  ProjectTree,
+  ProjectHierarchy,
   Sidebar,
   TaskList
 } from '../../containers';
 import { AppView, SpaceContext, SpaceContextType, useOptions, useSpace, viewConfig } from '../../hooks';
-import { Generator, Contact, Project } from '../../proto';
+import { Contact, Project } from '../../proto';
 
 const sidebarWidth = 6 * (24 + 8) + 16;
 
-const BlocksView: FC<{ props: any }> = ({ props }) => {
+const DashboardView: FC<{}> = () => {
+  // TODO(burdon): Move into block.
+  const { ref, height } = useResizeDetector();
+  const props = height ? { minHeight: (height - 8) / 2 } : {};
+
   return (
-    <div className='flex flex-1 grid grid-cols-5 grid-flow-row gap-2 p-2 overflow-y-scroll scrollbar'>
+    <div ref={ref} className='flex flex-1 grid grid-cols-5 grid-flow-row gap-4 p-4 overflow-y-scroll scrollbar'>
       <div className='flex flex-shrink-0 col-span-2' style={props}>
         <ProjectList />
       </div>
@@ -55,23 +60,26 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
       </div>
 
       <div className='flex flex-shrink-0 col-span-2' style={props}>
-        <ProjectTree />
+        <ProjectHierarchy />
       </div>
     </div>
   );
 };
 
-const TestView = withReactor(() => {
+const OrgView = () => {
+  const { space } = useSpace();
+  const projects = useQuery(space, Project.filter());
+  const items = useMemo(() => projects.map((project) => mapProjectToItem(project)), [projects]);
+  return (
+    <div className='flex flex-1 p-2 bg-white'>
+      <FolderHierarchy items={items} />
+    </div>
+  );
+};
+
+const ContactsView = () => {
   const { space } = useSpace();
   const contacts = useQuery(space, Contact.filter());
-  const projects = useQuery(space, Project.filter());
-  const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
-  useEffect(() => {
-    if (projects.length === 0 || contacts.length === 0) {
-      void generator?.generate();
-    }
-  }, [generator]);
-
   const columns = useMemo<Column<EchoObject>[]>(
     () => [
       { Header: 'Name', accessor: 'name' as any },
@@ -82,52 +90,44 @@ const TestView = withReactor(() => {
     []
   );
 
-  const items = useMemo(() => projects.map((project) => mapProjectToItem(project)), [contacts]);
-
   return (
-    <Card title='Experiments' className='bg-teal-400' scrollbar>
-      <div className='flex m-4'>
-        <div className='flex flex-1'>
-          <SearchBar />
-        </div>
-
-        <div className='w-8'></div>
-
-        <div className='flex flex-1'>
-          <Selector options={contacts.map((contact) => ({ id: contact[id], title: contact.name }))} />
+    <div className='flex flex-col flex-1 overflow-hidden bg-white'>
+      <div className='flex p-2'>
+        <div>
+          <Searchbar />
         </div>
       </div>
-
-      <div className='flex mt-4 mb-4'>
-        <FolderHierarchy items={items} />
+      <div className='flex flex-1 overflow-hidden'>
+        <Table columns={columns} data={contacts} />{' '}
       </div>
-
-      <div className='flex mt-4'>
-        <Table columns={columns} data={contacts} />
-      </div>
-    </Card>
+    </div>
   );
-});
+};
 
 /**
  * Main grid layout.
  */
 const ViewContainer: FC<{ view: string }> = ({ view }) => {
-  const { ref, height } = useResizeDetector();
-  const props = height ? { minHeight: (height - 24) / 2 } : {};
-
   return (
-    <div ref={ref} className='full-screen'>
-      <div className='flex flex-shrink-0' style={{ width: sidebarWidth }}>
-        <Sidebar />
-      </div>
+    <div className='full-screen bg-gray-50'>
+      <AppBar />
 
-      {view === AppView.CARDS && <BlocksView props={props} />}
-      {view === AppView.PROJECTS && <ProjectList />}
-      {view === AppView.KANBAN && <ProjectKanban />}
-      {view === AppView.TASKS && <TaskList />}
-      {view === AppView.EDITOR && <Editor />}
-      {view === AppView.TEST && <TestView />}
+      <div className='flex flex-1 overflow-hidden'>
+        <div className='flex flex-shrink-0' style={{ width: sidebarWidth }}>
+          <Sidebar />
+        </div>
+
+        <div className='flex flex-1 overflow-y-scroll'>
+          {view === AppView.DASHBOARD && <DashboardView />}
+          {view === AppView.ORG && <OrgView />}
+          {view === AppView.PROJECTS && <ProjectList />}
+          {view === AppView.CONTACTS && <ContactsView />}
+          {view === AppView.KANBAN && <ProjectKanban />}
+          {view === AppView.TASKS && <TaskList />}
+          {view === AppView.EDITOR && <Editor />}
+          {view === AppView.GRAPH && <ProjectGraph />}
+        </div>
+      </div>
     </div>
   );
 };

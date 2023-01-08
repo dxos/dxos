@@ -16,11 +16,13 @@ export const Card: FC<{
 }> = ({ title, className = 'bg-gray-400', menubar, scrollbar, fade, children }) => {
   return (
     <div className='flex flex-col w-full overflow-hidden drop-shadow-md'>
-      <div className={mx('flex p-2', className)}>
-        <h2 className='text-lg'>{title ?? 'Card'}</h2>
-        <div className='flex-1' />
-        {menubar}
-      </div>
+      {false && (
+        <div className={mx('flex p-2', className)}>
+          <h2>{title ?? 'Card'}</h2>
+          <div className='flex-1' />
+          {menubar}
+        </div>
+      )}
 
       <div
         className={mx(

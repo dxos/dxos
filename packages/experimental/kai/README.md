@@ -28,9 +28,12 @@ The word kai (貝) is the Japanese word for shell.
 
 - [ ] Deploy mobile app.
 - [ ] Import/export JSON.
-- [ ] CRM/KM.
+- [ ] Consistent styles for controls (e.g., bg color).
 - [ ] Styling slots.
-- [ ] Selector control.
+- [ ] Menu.
+- [ ] CRM/KM (Airtable + reusable cards).
+- [ ] Graph control.
+- [x] Selector control.
 - [ ] Search (filtering).
 - [ ] Separate bundle for projects configuration.
 - [ ] Drag-and-drop reordering.

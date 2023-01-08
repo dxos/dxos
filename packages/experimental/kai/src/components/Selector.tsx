@@ -17,9 +17,10 @@ export type SelectorOption = { id: string; title: string };
 export const Selector: FC<{
   options?: SelectorOption[];
   rows?: number;
-  onSelect?: (id: string) => void;
+  placeholder?: string;
+  onSelect?: (id?: string) => void;
   onChange?: (text: string) => void;
-}> = ({ options, rows = 5, onSelect, onChange }) => {
+}> = ({ options, rows = 5, placeholder, onSelect, onChange }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string>();
   const hasOptions = !!(options?.length ?? 0);
@@ -28,8 +29,9 @@ export const Selector: FC<{
     setOpen((open) => !open);
   };
 
-  const handleSelect = (id: string) => {
+  const handleSelect = (id?: string) => {
     setSelected(id);
+    setOpen(false);
     onSelect?.(id);
   };
 
@@ -39,7 +41,7 @@ export const Selector: FC<{
       case 'ArrowUp': {
         if (options?.length) {
           const option = options[Math.max(0, idx - 1)];
-          handleSelect(option.id);
+          setSelected(option.id);
           setOpen(true);
         }
         break;
@@ -48,7 +50,7 @@ export const Selector: FC<{
       case 'ArrowDown': {
         if (options?.length) {
           const option = options[Math.min(options.length - 1, idx + 1)];
-          handleSelect(option.id);
+          setSelected(option.id);
           setOpen(true);
         }
         break;
@@ -61,14 +63,15 @@ export const Selector: FC<{
   // TODO(burdon): On change dynamic options.
 
   return (
-    <div className='flex flex-1 flex-col'>
-      <div className={mx('flex flex-1 items-center p-2 border-2', open ? 'rounded-t' : 'rounded')}>
+    <div className='flex flex-1 flex-col bg-white'>
+      <div className={mx('flex flex-1 items-center p-2 border', open ? 'rounded-t' : 'rounded')}>
         <Input
           className='w-full outline-0'
+          onEnter={() => handleSelect(selected)}
           onKeyDown={handleKeyDown}
           onChange={onChange}
           onBlur={() => setOpen(false)}
-          placeholder='Select...'
+          placeholder={placeholder ?? 'Select...'}
         />
 
         <div className='flex' style={{ width: 24 }}>

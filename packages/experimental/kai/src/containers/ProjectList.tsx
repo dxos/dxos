@@ -28,6 +28,7 @@ export const ProjectList: FC<{}> = () => {
     </Button>
   );
 
+  // TODO(burdon): Put menubar inside tab-specific menu.
   return (
     <Card title='Projects' fade scrollbar className='bg-cyan-400' menubar={<Menubar />}>
       <div className='flex flex-col flex-1'>

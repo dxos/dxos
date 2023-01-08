@@ -22,16 +22,16 @@ export const Kanban: FC<{ objects: EchoObject[]; columns: KanbanColumnDef[]; col
   columnWidth = 300
 }) => {
   return (
-    <div className='flex flex-1 p-2 bg-white overflow-x-scroll overflow-y-hidden'>
+    <div className='flex flex-1 p-3 overflow-x-scroll overflow-y-hidden'>
       <div className='flex'>
         {columns.map((column, i) => (
           <div
             key={column.id ?? i}
-            className='flex flex-col ml-4 first:ml-0 drop-shadow-md'
+            className='flex flex-col ml-4 first:ml-0 drop-shadow-md bg-gray-100'
             style={{ width: columnWidth }}
           >
-            <div className='p-2 bg-gray-200 rounded-t'>{column.header}</div>
-            <div className='flex flex-1 flex-col pl-2 pr-2 overflow-y-scroll bg-gray-200'>
+            <div className='p-2 rounded-t'>{column.header}</div>
+            <div className='flex flex-1 flex-col pl-2 pr-2 overflow-y-scroll'>
               <div>
                 {objects.filter(column.filter).map((object) => {
                   const Content = column.Content;

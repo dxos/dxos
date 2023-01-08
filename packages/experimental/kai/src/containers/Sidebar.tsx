@@ -2,32 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bug, PlusCircle, Gear, Robot, Trash, WifiHigh, WifiSlash } from 'phosphor-react';
+import { PlusCircle, Gear, Robot, Trash, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { Button } from '../components';
-import { useOptions, useSpace, viewConfig } from '../hooks';
+import { useSpace } from '../hooks';
 import { Generator } from '../proto';
 import { MemberList } from './MemberList';
 import { SpaceList } from './SpaceList';
 
 export const Sidebar = () => {
-  const { views } = useOptions();
   const navigate = useNavigate();
-  const { spaceKey: currentSpaceKey, view: currentView } = useParams();
   const client = useClient();
   const { space } = useSpace();
   const { state: connectionState } = useNetworkStatus();
   const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
-
-  const setView = (spaceKey: string, view: string) => {
-    navigate(`/${spaceKey}/${view}`);
-  };
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -59,42 +53,22 @@ export const Sidebar = () => {
   };
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden bg-slate-700 text-white'>
-      {/* Header */}
-      <div className='flex flex-shrink-0 p-3 mb-2'>
-        <div className='flex flex-1 items-center'>
-          <Bug className={mx('logo', getSize(8))} />
-          <div className='flex-1'></div>
+    <div className='flex flex-1 flex-col bg-gray-50 overflow-hidden border-r'>
+      {/* Spaces */}
+      <div className='flex flex-shrink-0 flex-col overflow-y-scroll mt-2'>
+        <SpaceList />
+        <div className='p-3'>
           <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
             <PlusCircle className={getSize(6)} />
           </Button>
         </div>
       </div>
 
-      {/* Views */}
-      {views.length > 1 && (
-        <div className='flex p-3 mb-2'>
-          {views.map((view) => {
-            const { Icon } = viewConfig[view];
-            return (
-              <Button key={view} className='mr-2' onClick={() => setView(currentSpaceKey!, view)}>
-                <Icon className={mx(getSize(6), view !== currentView && 'text-gray-500')} />
-              </Button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Spaces */}
-      <div className='flex flex-shrink-0 flex-col overflow-y-scroll'>
-        <SpaceList />
-      </div>
-
       <div className='flex flex-1'></div>
 
       {/* Members */}
       <div className='flex flex-col flex-shrink-0 mt-6'>
-        <div className='flex p-1 pl-3 mb-2 text-gray-300 text-xs'>Members</div>
+        <div className='flex p-1 pl-3 mb-2 text-xs'>Members</div>
         <div className='flex flex-shrink-0 pl-3'>
           <MemberList spaceKey={space.key} />
         </div>
