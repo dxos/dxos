@@ -5,6 +5,8 @@
 import React, { FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { Game } from '@dxos/chess-app';
+
 import { CardMenu, Card } from '../../components';
 import {
   ContactsListCard,
@@ -34,6 +36,10 @@ export const Dashboard: FC = () => {
 
       <div className='flex flex-shrink-0 row-span-2' style={props}>
         <TaskListCard />
+      </div>
+
+      <div className='flex flex-shrink-0' style={props}>
+        <Game />
       </div>
 
       <div className='flex flex-shrink-0' style={props}>

@@ -1,0 +1,21 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+// TODO(burdon): Import?
+//import "dxos/keys.proto";
+
+package dxos.experimental.chess;
+
+message Game {
+  option (object) = true;
+
+//  dxos.keys.PublicKey player_white = 1;
+//  dxos.keys.PublicKey player_black = 2;
+  string player_white = 1;
+  string player_black = 2;
+  repeated string moves = 3;
+  string fen = 4;
+}

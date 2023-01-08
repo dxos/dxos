@@ -1,0 +1,98 @@
+{
+  "sourceRoot": "packages/experimental/chess-app/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/chess-app/src/index.ts",
+        "outputPath": "packages/experimental/chess-app/dist/types",
+        "tsConfig": "packages/experimental/chess-app/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/chess-app/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/chess-app/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/experimental/chess-app/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "serve": {
+      "dependsOn": [
+        "prebuild"
+      ],
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "kai:bundle"
+      }
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/experimental/chess-app/.storybook"
+        },
+        "uiFramework": "@storybook/react"
+      }
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/experimental/kai",
+        "outputPath": "tmp/mocha/packages/experimental/kai",
+        "resultsPath": "test-results/packages/experimental/kai",
+        "testPatterns": [
+          "packages/experimental/chess-app/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/chess-app/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "test"
+  ]
+}
