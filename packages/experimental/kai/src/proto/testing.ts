@@ -84,11 +84,11 @@ export const createOrganization = async (db: EchoDatabase) => {
   return await db.save(organization);
 };
 
-export const createProject = async (db: EchoDatabase) => {
+export const createProject = async (db: EchoDatabase, tag?: string) => {
   const project = new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
     description: new TextObject(),
-    tag: faker.random.arrayElement(tags)
+    tag: tag ?? faker.random.arrayElement(tags)
     // tags: [faker.random.arrayElement(tags)] // TODO(burdon): Implement constructor.
   });
 

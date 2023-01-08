@@ -9,7 +9,7 @@ import { useQuery } from '@dxos/react-client';
 
 import { Kanban, KanbanColumnDef, Searchbar } from '../components';
 import { useSpace } from '../hooks';
-import { Project, tags } from '../proto';
+import { createProject, Project, tags } from '../proto';
 import { ProjectItem } from './ProjectList';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
@@ -22,6 +22,7 @@ export const ProjectKanban: FC = () => {
 
   const titleAccessor = (object: EchoObject) => (object as Project).title;
   const columns: KanbanColumnDef[] = tags.map((tag) => ({
+    id: tag,
     header: tag,
     title: titleAccessor,
     Content: ProjectContent,
@@ -29,15 +30,19 @@ export const ProjectKanban: FC = () => {
     filter: (object: EchoObject) => (object as Project).tag === tag
   }));
 
+  const handleCreate = async (column: KanbanColumnDef) => {
+    await createProject(space.experimental.db, column.id);
+  };
+
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='flex p-2'>
-        <div>
+        <div className='ml-1 mr-1' style={{ width: 300 }}>
           <Searchbar />
         </div>
       </div>
       <div className='flex flex-1 overflow-hidden'>
-        <Kanban objects={projects} columns={columns} />
+        <Kanban objects={projects} columns={columns} onCreate={handleCreate} />
       </div>
     </div>
   );
