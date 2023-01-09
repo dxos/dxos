@@ -35,6 +35,7 @@ export default defineConfig({
       '@dxos/config',
       '@dxos/devtools',
       '@dxos/keys',
+      '@dxos/kai',
       '@dxos/log',
       '@dxos/protocols',
       '@dxos/protocols/proto/dxos/client/services',

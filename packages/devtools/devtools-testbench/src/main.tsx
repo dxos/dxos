@@ -21,7 +21,7 @@ import { App } from './app';
 // TODO(burdon): PWA/Electron.
 // TODO(burdon): Super app (WeChat/Twitter) for IPFS: https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 
-import './style.css';
+import './node_modules/dxos/kai/src/style.css';
 
 (() => {
   // TODO(burdon): Get debug from config.
