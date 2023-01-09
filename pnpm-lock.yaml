@@ -1334,6 +1334,7 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/teleport': workspace:*
+      '@dxos/teleport-extension-object-sync': workspace:*
       '@dxos/teleport-extension-presence': workspace:*
       '@dxos/teleport-extension-replicator': workspace:*
       '@dxos/timeframe': workspace:*
@@ -1364,6 +1365,7 @@ importers:
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/rpc': link:../../mesh/rpc
       '@dxos/teleport': link:../../mesh/teleport
+      '@dxos/teleport-extension-object-sync': link:../../mesh/teleport-extension-object-sync
       '@dxos/teleport-extension-presence': link:../../mesh/teleport-extension-presence
       '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../../common/timeframe
