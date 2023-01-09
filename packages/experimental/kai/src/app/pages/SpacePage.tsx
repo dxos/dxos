@@ -8,11 +8,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSpaces } from '@dxos/react-client';
 
 import {
-  ChessGame,
   ChessGrid,
   ContactTable,
-  ProjectEditor,
   OrganizationHierarchy,
+  ProjectEditor,
   ProjectGraph,
   ProjectKanban,
   ProjectList,
