@@ -18,8 +18,9 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackendHost } from '../database';
-import { Pipeline } from '../pipeline';
 import { SnapshotManager } from '../database/snapshot-manager';
+import { MetadataStore } from '../metadata';
+import { Pipeline } from '../pipeline';
 
 export type DataPipelineControllerContext = {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
@@ -42,18 +43,32 @@ export class NoopDataPipelineController implements DataPipelineController {
 
 export type DataPipelineControllerImplParams = {
   modelFactory: ModelFactory,
-  snapshotManager?: SnapshotManager,
+  snapshotManager: SnapshotManager,
+  metadataStore: MetadataStore,
   memberKey: PublicKey,
   spaceKey: PublicKey,
   feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined,
-  snapshot: SpaceSnapshot | undefined
+  snapshotId: string | undefined
 }
+
+/**
+ * Number of mutations since the last snapshot before we automatically create another snapshot.
+ */
+const MESSAGES_PER_SNAPSHOT = 10;
+
+/**
+ * Minimum time between automatic snapshots.
+ */
+const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
 
 export class DataPipelineControllerImpl implements DataPipelineController {
   private _ctx = new Context();
   private _spaceContext!: DataPipelineControllerContext;
   private _pipeline?: Pipeline;
+  private _snapshot?: SpaceSnapshot;
 
+  private _lastAutomaticSnapshotTimeframe = new Timeframe();
+  
   public readonly onTimeframeReached = new Event<Timeframe>();
 
   constructor(
@@ -68,7 +83,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   }
 
   get snapshotTimeframe() {
-    return this._params.snapshot?.timeframe;
+    return this._snapshot?.timeframe;
   }
 
   getStartTimeframe(): Timeframe {
@@ -77,6 +92,11 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
   async open(spaceContext: DataPipelineControllerContext) {
     this._spaceContext = spaceContext;
+    if(this._params.snapshotId) {
+      this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
+      this._lastAutomaticSnapshotTimeframe = this._snapshot?.timeframe ?? new Timeframe();
+    }
+
     this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
 
     // Create database backend.
@@ -88,7 +108,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       this._pipeline.writer ?? failUndefined()
     );
 
-    this.databaseBackend = new DatabaseBackendHost(feedWriter, this._params.snapshot?.database, {
+    this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database, {
       snapshots: true // TODO(burdon): Config.
     });
 
@@ -100,9 +120,46 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     scheduleTask(this._ctx, async () => {
       await this._consumePipeline();
     });
+
+    this._createPeriodicSnapshots();
+  }
+
+  private _createPeriodicSnapshots() {
+    this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
+      const latestTimeframe = this._pipeline?.state.timeframe;
+      if (!latestTimeframe) {
+        return;
+      }
+
+      // Record last timeframe.
+      if (latestTimeframe) {
+        await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
+      }
+
+      // Save snapshot.
+      if (latestTimeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT) {
+        const snapshot = await this._saveSnapshot();
+        this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
+        console.log('save', {
+          snapshot
+        });
+      }
+    });
+  }
+
+  private async _saveSnapshot() {
+    const snapshot = await this.createSnapshot();
+    const snapshotKey = await this._params.snapshotManager.store(snapshot);
+    await this._params.metadataStore.setSpaceSnapshot(this._params.spaceKey, snapshotKey);
+    return snapshot;
   }
 
   async close() {
+    try {
+      await this._saveSnapshot();
+    } catch(err) {
+      log.catch(err)
+    }
     await this._ctx.dispose();
     await this._pipeline?.stop();
     await this.databaseBackend?.close();

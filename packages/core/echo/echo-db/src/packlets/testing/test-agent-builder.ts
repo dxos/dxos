@@ -13,6 +13,9 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
+import { SnapshotStore } from '../database';
+import { SnapshotManager } from '../database/snapshot-manager';
+import { MetadataStore } from '../metadata';
 
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { DataPipelineControllerImpl } from '../space/data-pipeline-controller';
@@ -134,13 +137,18 @@ export class TestAgent {
     const controlFeedKey = await this.keyring.createKey();
     const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
+    const snapshotManager = new SnapshotManager(
+      new SnapshotStore(createStorage().createDirectory('snapshots')),
+    )
 
     const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl({
       modelFactory: new ModelFactory().registerModel(ObjectModel),
+      metadataStore: new MetadataStore(createStorage().createDirectory('metadata')),
+      snapshotManager,
       memberKey: identityKey,
-      feedInfoProvider: (feedKey) => space.spaceState.feeds.get(feedKey),
       spaceKey,
-      snapshot: undefined
+      feedInfoProvider: (feedKey) => space.spaceState.feeds.get(feedKey),
+      snapshotId: undefined
     });
     const space = new Space({
       spaceKey,
@@ -166,7 +174,12 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: this._networkManagerProvider(),
-      presence: presence ?? this.createPresence()
+      onSessionAuth: async session => {
+        session.addExtension(
+          'dxos.mesh.teleport.presence',
+          (presence ?? this.createPresence()).createExtension({ remotePeerId: session.remotePeerId })
+        )
+      },
     });
   }
 

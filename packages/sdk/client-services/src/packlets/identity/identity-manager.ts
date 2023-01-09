@@ -194,12 +194,7 @@ export class IdentityManager {
         dataFeedKey: spaceRecord.writeDataFeedKey
       },
       swarmIdentity,
-      presence: new Presence({
-        localPeerId: swarmIdentity.peerKey,
-        announceInterval: 1_000,
-        offlineTimeout: 30_000,
-        identityKey
-      })
+      onNetworkConnection: async () => {},
     });
   }
 }

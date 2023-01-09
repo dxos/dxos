@@ -32,6 +32,10 @@ export class SnapshotManager {
     });
   }
 
+  get objectSync() {
+    return this._objectSync;
+  }
+
   async open() {
     await this._objectSync.open();
   }

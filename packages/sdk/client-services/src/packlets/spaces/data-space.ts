@@ -5,18 +5,21 @@
 import assert from 'node:assert';
 
 import { Context } from '@dxos/context';
-import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
+import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Presence } from '@dxos/teleport-extension-presence';
+import { SnapshotManager } from '@dxos/echo-db';
 
 export type DataSpaceParams = {
   inner: Space;
   modelFactory: ModelFactory;
-  memberKey: PublicKey;
+  metadataStore: MetadataStore;
+  snapshotManager: SnapshotManager,
   presence: Presence;
-  snapshot?: SpaceSnapshot | undefined;
+  memberKey: PublicKey;
+  snapshotId?: string | undefined;
 };
 
 export class DataSpace implements ISpace {
@@ -30,10 +33,12 @@ export class DataSpace implements ISpace {
     this._presence = params.presence;
     this._dataPipelineController = new DataPipelineControllerImpl({
       modelFactory: params.modelFactory,
+      metadataStore: params.metadataStore,
+      snapshotManager: params.snapshotManager,
       memberKey: params.memberKey,
-      feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
       spaceKey: this._inner.key,
-      snapshot: params.snapshot
+      feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
+      snapshotId: params.snapshotId
     });
   }
 

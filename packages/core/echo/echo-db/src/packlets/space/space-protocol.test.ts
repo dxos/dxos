@@ -56,12 +56,6 @@ describe('space/space-protocol', () => {
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory
       }),
-      presence: new Presence({
-        localPeerId: peerId1,
-        announceInterval: 100,
-        offlineTimeout: 1_000,
-        identityKey: PublicKey.random()
-      })
     });
 
     const protocol2 = new SpaceProtocol({
@@ -75,12 +69,6 @@ describe('space/space-protocol', () => {
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory
       }),
-      presence: new Presence({
-        localPeerId: peerId2,
-        announceInterval: 100,
-        offlineTimeout: 1_000,
-        identityKey: PublicKey.random()
-      })
     });
 
     await protocol1.start();

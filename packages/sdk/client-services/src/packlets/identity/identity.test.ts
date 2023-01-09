@@ -62,12 +62,6 @@ describe('identity/identity', () => {
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory
       }),
-      presence: new Presence({
-        localPeerId: deviceKey,
-        announceInterval: 30,
-        offlineTimeout: 200,
-        identityKey
-      })
     });
 
     const space: Space = new Space({
@@ -174,12 +168,6 @@ describe('identity/identity', () => {
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
         }),
-        presence: new Presence({
-          localPeerId: deviceKey,
-          announceInterval: 30,
-          offlineTimeout: 200,
-          identityKey
-        })
       });
 
       const space = new Space({
@@ -260,12 +248,6 @@ describe('identity/identity', () => {
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
         }),
-        presence: new Presence({
-          localPeerId: deviceKey,
-          announceInterval: 30,
-          offlineTimeout: 200,
-          identityKey
-        })
       });
 
       const space = new Space({

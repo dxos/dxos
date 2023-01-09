@@ -12,6 +12,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Teleport } from '@dxos/teleport';
 import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
@@ -45,7 +46,7 @@ export type SpaceManagerParams = {
 export type ConstructSpaceParams = {
   metadata: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
-  presence: Presence;
+  onNetworkConnection: (session: Teleport) => Promise<void>;
 };
 
 /**
@@ -75,7 +76,7 @@ export class SpaceManager {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  async constructSpace({ metadata, swarmIdentity, presence }: ConstructSpaceParams) {
+  async constructSpace({ metadata, swarmIdentity, onNetworkConnection }: ConstructSpaceParams) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
@@ -89,7 +90,7 @@ export class SpaceManager {
       topic: spaceKey,
       swarmIdentity,
       networkManager: this._networkManager,
-      presence
+      onSessionAuth: onNetworkConnection,
     });
 
     const space = new Space({
