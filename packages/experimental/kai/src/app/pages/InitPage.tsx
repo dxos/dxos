@@ -7,11 +7,15 @@ import { useNavigate } from 'react-router-dom';
 
 import { useClient, useSpaces } from '@dxos/react-client';
 
+import { useOptions } from '../../hooks';
+import { Generator } from '../../proto';
+
 /**
  * Selects or creates an initial space.
  */
 export const InitPage = () => {
   const navigate = useNavigate();
+  const { demo } = useOptions();
   const client = useClient();
   const spaces = useSpaces();
   const [init, setInit] = useState(false);
@@ -27,6 +31,10 @@ export const InitPage = () => {
       setInit(true); // Make idempotent.
       setTimeout(async () => {
         const space = await client.echo.createSpace();
+        if (demo && !client.config.values.runtime?.client?.storage?.persistent) {
+          await new Generator(space.experimental.db).generate();
+        }
+
         navigate('/' + space.key.truncate());
       });
     }

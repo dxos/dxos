@@ -28,7 +28,7 @@ export const MemberList: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
               <SmileyBlank className={mx(getSize(6), 'text-slate-500')} />
             )}
           </div>
-          <div className='font-mono text-slate-300'>{member.identityKey.truncate()}</div>
+          <div className='font-mono'>{member.identityKey.truncate()}</div>
         </div>
       ))}
     </div>
