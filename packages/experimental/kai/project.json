@@ -3,9 +3,6 @@
   "projectType": "application",
   "targets": {
     "bundle": {
-      "dependsOn": [
-        "prebuild"
-      ],
       "executor": "@nrwl/vite:build",
       "options": {
         "outputPath": "packages/experimental/kai/out/kai"
@@ -36,9 +33,6 @@
       ]
     },
     "serve": {
-      "dependsOn": [
-        "prebuild"
-      ],
       "executor": "@nrwl/vite:dev-server",
       "options": {
         "buildTarget": "kai:bundle"
