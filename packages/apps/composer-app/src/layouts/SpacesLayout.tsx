@@ -5,19 +5,18 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { Menubar, Separator } from '@dxos/react-appkit';
+import { Menubar, Separator, ProfileMenu } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
 
 import { Main } from '../components';
-import { IdentityPopover } from '../components/IdentityPopover';
 
-export const AppLayout = () => {
+export const SpacesLayout = () => {
   const identity = useIdentity();
   return (
     <>
       <Menubar>
         <Separator className='grow' />
-        {identity && <IdentityPopover {...{ identity }} />}
+        {identity && <ProfileMenu profile={identity} />}
       </Menubar>
       <Main>
         <Outlet />
