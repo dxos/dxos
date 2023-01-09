@@ -2,7 +2,7 @@
  * Copyright 2022 DXOS.org
  */
 
-/* Overriding kai/src/styles.css .full-screen to make kai render only for top half of screen. */
+/* Overriding kai/src/styles.css .full-screen to make kai render only for top half of the screen. */
 .full-screen {
   position: absolute;
   left: 0;

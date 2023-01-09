@@ -17,6 +17,18 @@
         "{options.outputPath}"
       ]
     },
+    "bundle": {
+      "dependsOn": [
+        "prebuild"
+      ],
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "outputPath": "packages/experimental/kai/out/kai"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "compile": {
       "dependsOn": [
         "^compile",
@@ -28,15 +40,6 @@
           "packages/experimental/kai/src/index.ts"
         ],
         "outputPath": "packages/experimental/kai/dist/lib"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "bundle": {
-      "executor": "@nrwl/vite:build",
-      "options": {
-        "outputPath": "packages/experimental/kai/out/kai"
       },
       "outputs": [
         "{options.outputPath}"

@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
-import { ThemePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
@@ -70,9 +70,9 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico'],
       manifest: {
-        name: 'DXOS Kai',
-        short_name: 'Kai',
-        description: 'DXOS Kai Demo',
+        name: 'DXOS TestBench',
+        short_name: 'TestBench',
+        description: 'DXOS TestBench',
         theme_color: '#ffffff',
         icons: [
           {
