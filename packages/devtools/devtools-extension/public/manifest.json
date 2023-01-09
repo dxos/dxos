@@ -23,12 +23,7 @@
     ]
   },
   "permissions": [
-    "storage",
-    "tabs"
-  ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
+    "activeTab"
   ],
   "devtools_page": "main.html",
   "background": {
@@ -37,7 +32,8 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "http://*/*",
+        "https://*/*"
       ],
       "js": [
         "content.js"
