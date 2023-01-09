@@ -2652,12 +2652,14 @@ importers:
 
   packages/experimental/chess-app:
     specifiers:
+      '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/protocols': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      chess.js: ^1.0.0-alpha.0
       react: ^18.2.0
       react-chessboard: ^2.0.7
       react-dom: ^18.2.0
@@ -2669,12 +2671,14 @@ importers:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/protocols': link:../../core/protocols
+      chess.js: 1.0.0-alpha.0
       react: 18.2.0
       react-chessboard: 2.0.7_rj7ozvcq3uehdlnj3cbwzbi5ce
       react-dom: 18.2.0_react@18.2.0
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
+      '@babel/core': 7.20.12
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       typescript: 4.8.4
@@ -16119,6 +16123,10 @@ packages:
       parse5: 7.1.1
       parse5-htmlparser2-tree-adapter: 7.0.0
     dev: true
+
+  /chess.js/1.0.0-alpha.0:
+    resolution: {integrity: sha512-nwEDlNEOZR/FaKW1DZLYtjgJrtAlxBW/6Fp4Hk8QXqpCCLrXweOU6/vKfJ/jNHT2gPqasxi0/ZPslcWAAdzozg==}
+    dev: false
 
   /chokidar/2.1.8:
     resolution: {integrity: sha512-ZmZUazfOzf0Nve7duiCKD23PFSCs4JPoYyccjUFF3aQkQadqBhfzhjkwBH2mNOG9cTBwhamM37EIsIkZw3nRgg==}
@@ -33038,7 +33046,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

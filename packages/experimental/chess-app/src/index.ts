@@ -3,5 +3,4 @@
 //
 
 export * from './proto';
-
-export * from './ChessGame';
+export * from './Chessboard';

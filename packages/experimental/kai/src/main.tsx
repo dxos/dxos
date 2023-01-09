@@ -15,7 +15,6 @@ import './style.css';
   createRoot(document.getElementById('root')!).render(
     <App
       views={[
-        AppView.GAME,
         AppView.DASHBOARD,
         AppView.ORGS,
         AppView.PROJECTS,
@@ -24,6 +23,7 @@ import './style.css';
         AppView.TASKS,
         AppView.GRAPH,
         AppView.EDITOR,
+        AppView.GAME
       ]}
       debug={false}
     />

@@ -9,6 +9,12 @@ syntax = "proto3";
 
 package dxos.experimental.chess;
 
+message Move {
+  string source = 1;
+  string target = 2;
+  string piece = 3;
+}
+
 message Game {
   option (object) = true;
 
@@ -16,6 +22,7 @@ message Game {
 //  dxos.keys.PublicKey player_black = 2;
   string player_white = 1;
   string player_black = 2;
+//  repeated Move moves = 3; // TODO(burdon): Not supported.
   repeated string moves = 3;
   string fen = 4;
 }

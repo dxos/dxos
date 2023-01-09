@@ -23,6 +23,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "chess.js": "^1.0.0-alpha.0",
     "react": "^18.2.0",
     "react-chessboard": "^2.0.7",
     "react-dom": "^18.2.0",
