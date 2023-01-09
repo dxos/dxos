@@ -43,7 +43,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "{options.outputPath}"
+        "packages/experimental/chess-app/src/proto/gen"
       ]
     },
     "serve": {

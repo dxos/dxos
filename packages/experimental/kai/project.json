@@ -29,7 +29,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "{options.outputPath}"
+        "packages/experimental/kai/src/proto/gen"
       ]
     },
     "serve": {
