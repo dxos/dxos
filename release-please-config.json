@@ -328,6 +328,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/chess-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/client-testing/package.json",
           "jsonpath": "$.version"
         },

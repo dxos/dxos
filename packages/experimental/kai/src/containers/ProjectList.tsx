@@ -9,35 +9,45 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
-import { Card, Input, CardRow, Button } from '../components';
+import { Card, Input, CardRow, Button, CardMenu } from '../components';
 import { useSpace } from '../hooks';
 import { Project, Task, createProject, createTask } from '../proto';
 import { DraggableTaskList } from './DraggableTaskList';
 
-export const ProjectList: FC<{}> = () => {
+export const ProjectListCard: FC = () => {
   const { space } = useSpace();
-  const projects = useQuery(space, Project.filter());
 
   const handleCreate = async () => {
     await createProject(space.experimental.db);
   };
 
-  const Menubar = () => (
-    <Button onClick={handleCreate}>
-      <PlusCircle className={getSize(6)} />
-    </Button>
+  const Header = () => (
+    <CardMenu title='Projects'>
+      <Button onClick={handleCreate}>
+        <PlusCircle className={getSize(5)} />
+      </Button>
+    </CardMenu>
   );
 
   return (
-    <Card title='Projects' fade scrollbar className='bg-cyan-400' menubar={<Menubar />}>
-      <div className='flex flex-col flex-1'>
-        {projects.map((project) => (
-          <div key={project[id]} className='border-b'>
-            <ProjectItem project={project} />
-          </div>
-        ))}
-      </div>
+    <Card fade scrollbar header={<Header />}>
+      <ProjectList />
     </Card>
+  );
+};
+
+export const ProjectList: FC<{ header?: boolean }> = ({ header = false }) => {
+  const { space } = useSpace();
+  const projects = useQuery(space, Project.filter());
+
+  return (
+    <div className='flex flex-col flex-1'>
+      {projects.map((project) => (
+        <div key={project[id]} className='border-b'>
+          <ProjectItem project={project} />
+        </div>
+      ))}
+    </div>
   );
 };
 

@@ -14,6 +14,11 @@ export type FolderHierarchyItem = {
   items?: FolderHierarchyItem[];
 };
 
+// TODO(burdon): Slots.
+// TODO(burdon): Navigate up/down.
+// TODO(burdon): Unselect on Escape.
+// TODO(burdon): onSelect.
+
 export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassName?: string }> = ({
   items,
   highlightClassName = 'bg-gray-300'
@@ -36,6 +41,7 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
   const Item = ({ item, depth = 0 }: { item: FolderHierarchyItem; depth?: number }) => {
     const open = openMap[item.id];
     const sub = item.items && item.items.length > 0;
+    const { Icon } = item;
 
     return (
       <div className='flex flex-1 flex-col'>
@@ -43,10 +49,15 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
           className={mx('flex select-none cursor-pointer pl-3', item.id === selected && highlightClassName)}
           onClick={() => setSelected(item.id)}
         >
-          <div className='flex items-center text-xs' style={{ marginLeft: depth * 16 }}>
+          <div className='flex items-center' style={{ marginLeft: depth * 16 }}>
             <div style={{ width: 20 }} onClick={() => handleToggle(item)}>
               {sub && (open ? <CaretDown className={getSize(3)} /> : <CaretRight className={getSize(3)} />)}
             </div>
+            {Icon && (
+              <div className='pr-1'>
+                <Icon />
+              </div>
+            )}
             <div style={{ lineHeight: 1.6 }}>{item.title}</div>
           </div>
         </div>

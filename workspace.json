@@ -8,6 +8,7 @@
     "bare": "packages/apps/samples/bare",
     "beast": "tools/beast",
     "bender-bot": "packages/bots/bender-bot",
+    "chess-app": "packages/experimental/chess-app",
     "cli": "packages/devtools/cli",
     "client": "packages/sdk/client",
     "client-services": "packages/sdk/client-services",
