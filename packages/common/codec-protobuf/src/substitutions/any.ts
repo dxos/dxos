@@ -23,19 +23,11 @@ export const anySubstitutions = {
 
       if (value['@type'] === 'google.protobuf.Any') {
         // eslint-disable-next-line camelcase
-        const { type_url, value: payload } = value as any as Any;
-        return {
-          type_url, // eslint-disable-line camelcase
-          value: payload
-        };
+        return value as any;
       }
 
       const codec = schema.tryGetCodecForType(value['@type']);
-      const data = codec.encode(value);
-      return {
-        type_url: value['@type'],
-        value: data
-      };
+      return codec.encodeAsAny(value);
     },
 
     decode: (value: any, schema: Schema<any>, options: EncodingOptions): WithTypeUrl<any> => {
