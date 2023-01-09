@@ -6,7 +6,7 @@
       "executor": "@nxext/vite:build",
       "options": {
         "configFile": "packages/devtools/devtools-testbench/vite.config.ts",
-        "outputPath": "packages/devtools/devtools-testbench/out/devtools"
+        "outputPath": "packages/devtools/devtools-testbench/out/testbench"
       },
       "outputs": [
         "{options.outputPath}"
@@ -28,7 +28,7 @@
       "executor": "@nxext/vite:dev",
       "options": {
         "configFile": "packages/devtools/devtools-testbench/vite.config.ts",
-        "outputPath": "packages/devtools/devtools-testbench/out/devtools"
+        "outputPath": "packages/devtools/devtools-testbench/out/testbench"
       }
     }
   },
