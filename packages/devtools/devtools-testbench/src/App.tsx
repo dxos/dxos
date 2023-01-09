@@ -10,7 +10,6 @@ import { ClientAndServices, PanelsContainer, sections } from '@dxos/devtools';
 import { OptionsContext, Routes as KaiRoutes } from '@dxos/kai';
 import { Config, Defaults } from '@dxos/config';
 import { ClientContext } from '@dxos/react-client';
-import { ErrorBoundary } from '@dxos/react-toolkit';
 
 /**
  * Main app container with routes.
@@ -45,21 +44,19 @@ export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
   // TODO(burdon): Error boundary and indicator.
 
   return (
-    <ErrorBoundary>
-      <ClientContext.Provider value={value}>
-        <div className='h-screen w-full grid grid-rows-2 grid-flow-col gap-4'>
-          <div className='h-1/2'>
-            <OptionsContext.Provider value={{ debug }}>
-              <HashRouter>
-                <KaiRoutes />
-              </HashRouter>
-            </OptionsContext.Provider>
-          </div>
-          <div className='h-1/2'>
-            <PanelsContainer sections={sections} />
-          </div>
+    <ClientContext.Provider value={value}>
+      <div className='h-screen w-full grid grid-rows-2 grid-flow-col gap-4'>
+        <div className='h-1/2'>
+          <OptionsContext.Provider value={{ debug }}>
+            <HashRouter>
+              <KaiRoutes />
+            </HashRouter>
+          </OptionsContext.Provider>
         </div>
-      </ClientContext.Provider>
-    </ErrorBoundary>
+        <div className='h-1/2'>
+          <PanelsContainer sections={sections} />
+        </div>
+      </div>
+    </ClientContext.Provider>
   );
 };

@@ -3,10 +3,9 @@
   "projectType": "application",
   "targets": {
     "bundle": {
-      "executor": "@nxext/vite:build",
+      "executor": "@nrwl/vite:build",
       "options": {
-        "configFile": "packages/devtools/devtools-testbench/vite.config.ts",
-        "outputPath": "packages/devtools/devtools-testbench/out/testbench"
+        "outputPath": "packages/devtools/devtools-testbench/out/devtools-testbench"
       },
       "outputs": [
         "{options.outputPath}"
@@ -25,10 +24,9 @@
       ]
     },
     "serve": {
-      "executor": "@nxext/vite:dev",
+      "executor": "@nrwl/vite:dev-server",
       "options": {
-        "configFile": "packages/devtools/devtools-testbench/vite.config.ts",
-        "outputPath": "packages/devtools/devtools-testbench/out/testbench"
+        "buildTarget": "devtools:bundle"
       }
     }
   },

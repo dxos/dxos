@@ -16,18 +16,22 @@ import packageJson from './package.json';
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${packageJson.version}` : undefined;
 
-// https://vitejs.dev/config/
+/**
+ * https://vitejs.dev/config
+ */
 export default defineConfig({
   base: '', // Ensures relative path to assets.
+
   server: {
     host: true
   },
+
   define: {
-    'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
-    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
-    'process.env.DX_VAULT': env(process.env.DX_VAULT),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.DX_RELEASE': env(DX_RELEASE)
+    'process.env.DX_RELEASE': env(DX_RELEASE),
+    'process.env.DX_VAULT': env(process.env.DX_VAULT),
+    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
+    'process.env.LOG_FILTER': env(process.env.LOG_FILTER)
   },
   optimizeDeps: {
     force: true,
@@ -38,14 +42,24 @@ export default defineConfig({
       '@dxos/protocols',
       '@dxos/protocols/proto/dxos/config',
       '@dxos/kai',
-      '@dxos/react-client',
-      '@dxos/react-toolkit'
+      '@dxos/react-client'
     ]
   },
+
   build: {
-    outDir: 'out/tasks',
     commonjsOptions: {
       include: [/packages/, /node_modules/]
+    },
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        projects: resolve(__dirname, 'projects.html')
+      },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-router-dom', 'react-dom']
+        }
+      }
     }
   },
   // TODO(burdon): Add fonts.
@@ -56,8 +70,7 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')
       ]
@@ -89,8 +102,11 @@ export default defineConfig({
       }
     }),
 
-    // https://www.npmjs.com/package/vite-plugin-fonts
-    // https://fonts.google.com
+    /**
+     * Bundle fonts.
+     * https://fonts.google.com
+     * https://www.npmjs.com/package/vite-plugin-fonts
+     */
     VitePluginFonts({
       google: {
         injectTo: 'head-prepend',
