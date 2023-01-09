@@ -16,7 +16,6 @@ import {
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
-import { Presence } from '@dxos/teleport-extension-presence';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
@@ -40,7 +39,7 @@ export type SpaceProtocolOptions = {
    * Called when new session is authenticated.
    * Additional extensions can be added here.
    */
-  onSessionAuth?: (session: Teleport) => Promise<void>;
+  onSessionAuth?: (session: Teleport) => void;
 };
 
 /**
@@ -49,7 +48,7 @@ export type SpaceProtocolOptions = {
 export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
-  private readonly _onSessionAuth?: (session: Teleport) => Promise<void>;
+  private readonly _onSessionAuth?: (session: Teleport) => void;
 
   private readonly _topic: PublicKey;
 
@@ -118,7 +117,7 @@ export class SpaceProtocol {
       const session = new SpaceProtocolSession({
         wireParams,
         swarmIdentity: this._swarmIdentity,
-        onSessionAuth: this._onSessionAuth,
+        onSessionAuth: this._onSessionAuth
       });
       this._sessions.set(wireParams.remotePeerId, session);
 
@@ -138,7 +137,7 @@ export type SpaceProtocolSessionParams = {
    * Called when new session is authenticated.
    * Additional extensions can be added here.
    */
-  onSessionAuth?: (session: Teleport) => Promise<void>;
+  onSessionAuth?: (session: Teleport) => void;
 };
 
 export enum AuthStatus {
@@ -155,7 +154,7 @@ export class SpaceProtocolSession implements WireProtocol {
   @logInfo
   private readonly _wireParams: WireProtocolParams;
 
-  private readonly _onSessionAuth?: (session: Teleport) => Promise<void>;
+  private readonly _onSessionAuth?: (session: Teleport) => void;
   private readonly _swarmIdentity: SwarmIdentity;
 
   private readonly _teleport: Teleport;
@@ -193,7 +192,7 @@ export class SpaceProtocolSession implements WireProtocol {
         onAuthSuccess: () => {
           this._authStatus = AuthStatus.SUCCESS;
           log('Peer authenticated');
-          this._onSessionAuth?.(this._teleport)
+          this._onSessionAuth?.(this._teleport);
           // TODO(dmaretskyi): Configure replicator to upload.
         },
         onAuthFailure: () => {

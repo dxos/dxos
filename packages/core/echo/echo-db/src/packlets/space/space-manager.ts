@@ -13,7 +13,6 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Teleport } from '@dxos/teleport';
-import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
 import { AuthProvider, AuthVerifier } from './auth';
@@ -46,7 +45,7 @@ export type SpaceManagerParams = {
 export type ConstructSpaceParams = {
   metadata: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
-  onNetworkConnection: (session: Teleport) => Promise<void>;
+  onNetworkConnection: (session: Teleport) => void;
 };
 
 /**
@@ -90,7 +89,7 @@ export class SpaceManager {
       topic: spaceKey,
       swarmIdentity,
       networkManager: this._networkManager,
-      onSessionAuth: onNetworkConnection,
+      onSessionAuth: onNetworkConnection
     });
 
     const space = new Space({
@@ -99,7 +98,7 @@ export class SpaceManager {
       genesisFeed,
       controlFeed,
       dataFeed,
-      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
+      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey)
     });
     this._spaces.set(space.key, space);
     return space;

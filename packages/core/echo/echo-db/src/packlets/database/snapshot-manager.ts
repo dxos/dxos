@@ -1,8 +1,13 @@
-import { SnapshotStore } from "./snapshot-store";
-import { ObjectSync } from '@dxos/teleport-extension-object-sync'
-import { SpaceSnapshot } from "@dxos/protocols/proto/dxos/echo/snapshot";
-import { schema } from "@dxos/protocols";
-import { DataObject } from "@dxos/protocols/proto/dxos/mesh/teleport/objectsync";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { schema } from '@dxos/protocols';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
+import { ObjectSync } from '@dxos/teleport-extension-object-sync';
+
+import { SnapshotStore } from './snapshot-store';
 
 /**
  * Snapshot manager for a specific space.
@@ -12,18 +17,18 @@ export class SnapshotManager {
 
   // prettier-ignore
   constructor(
-    private readonly _snapshotStore: SnapshotStore,
+    private readonly _snapshotStore: SnapshotStore
   ) {
     this._objectSync = new ObjectSync({
       getObject: async (id: string) => {
         const snapshot = await this._snapshotStore.loadSnapshot(id);
-        if(!snapshot) {
+        if (!snapshot) {
           return undefined;
         }
         return {
           id,
           payload: schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').encodeAsAny(snapshot)
-        }
+        };
       },
       setObject: async (data: DataObject) => {
         const snapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode(data.payload);
@@ -46,7 +51,7 @@ export class SnapshotManager {
 
   async load(id: string): Promise<SpaceSnapshot> {
     const local = await this._snapshotStore.loadSnapshot(id);
-    if(local) {
+    if (local) {
       return local;
     }
 

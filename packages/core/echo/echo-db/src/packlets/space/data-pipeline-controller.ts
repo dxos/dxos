@@ -24,7 +24,7 @@ import { Pipeline } from '../pipeline';
 
 export type DataPipelineControllerContext = {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
-}
+};
 
 /**
  * Controls data pipeline in the space.
@@ -42,14 +42,14 @@ export class NoopDataPipelineController implements DataPipelineController {
 }
 
 export type DataPipelineControllerImplParams = {
-  modelFactory: ModelFactory,
-  snapshotManager: SnapshotManager,
-  metadataStore: MetadataStore,
-  memberKey: PublicKey,
-  spaceKey: PublicKey,
-  feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined,
-  snapshotId: string | undefined
-}
+  modelFactory: ModelFactory;
+  snapshotManager: SnapshotManager;
+  metadataStore: MetadataStore;
+  memberKey: PublicKey;
+  spaceKey: PublicKey;
+  feedInfoProvider: (feedKey: PublicKey) => FeedInfo | undefined;
+  snapshotId: string | undefined;
+};
 
 /**
  * Number of mutations since the last snapshot before we automatically create another snapshot.
@@ -73,12 +73,10 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   private _snapshot?: SpaceSnapshot;
 
   private _lastAutomaticSnapshotTimeframe = new Timeframe();
-  
+
   public readonly onTimeframeReached = new Event<Timeframe>();
 
-  constructor(
-    private readonly _params: DataPipelineControllerImplParams
-  ) {}
+  constructor(private readonly _params: DataPipelineControllerImplParams) {}
 
   public databaseBackend?: DatabaseBackendHost;
   public database?: Database;
@@ -97,7 +95,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
   async open(spaceContext: DataPipelineControllerContext) {
     this._spaceContext = spaceContext;
-    if(this._params.snapshotId) {
+    if (this._params.snapshotId) {
       this._snapshot = await this._params.snapshotManager.load(this._params.snapshotId);
       this._lastAutomaticSnapshotTimeframe = this._snapshot?.timeframe ?? new Timeframe();
     }
@@ -136,7 +134,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       if (latestTimeframe) {
         await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
       }
-    })
+    });
 
     this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
       const latestTimeframe = this._pipeline?.state.timeframe;
@@ -145,7 +143,10 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       }
 
       // Save snapshot.
-      if (latestTimeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() > MESSAGES_PER_SNAPSHOT) {
+      if (
+        latestTimeframe.totalMessages() - this._lastAutomaticSnapshotTimeframe.totalMessages() >
+        MESSAGES_PER_SNAPSHOT
+      ) {
         const snapshot = await this._saveSnapshot();
         this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
         console.log('save', {
@@ -165,8 +166,8 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   async close() {
     try {
       await this._saveSnapshot();
-    } catch(err) {
-      log.catch(err)
+    } catch (err) {
+      log.catch(err);
     }
     await this._ctx.dispose();
     await this._pipeline?.stop();

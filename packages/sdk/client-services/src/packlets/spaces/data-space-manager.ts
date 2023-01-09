@@ -4,7 +4,6 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { failUndefined } from '@dxos/debug';
 import {
   AcceptSpaceOptions,
   DataServiceSubscriptions,
@@ -13,22 +12,18 @@ import {
   SnapshotStore,
   Space,
   spaceGenesis,
-  SpaceManager
+  SpaceManager,
+  SnapshotManager
 } from '@dxos/echo-db';
-import { SnapshotManager } from '@dxos/echo-db';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Presence } from '@dxos/teleport-extension-presence';
-import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { DataSpace } from './data-space';
-
-
 
 export class DataSpaceManager {
   private readonly _ctx = new Context();
@@ -133,18 +128,15 @@ export class DataSpaceManager {
         credentialProvider: this._signingContext.credentialProvider,
         credentialAuthenticator: this._signingContext.credentialAuthenticator
       },
-      onNetworkConnection: async session => {
+      onNetworkConnection: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.presence',
           presence.createExtension({ remotePeerId: session.remotePeerId })
         );
-        session.addExtension(
-          'dxos.mesh.teleport.objectsync',
-          snapshotManager.objectSync.createExtension(),
-        );
-      },
+        session.addExtension('dxos.mesh.teleport.objectsync', snapshotManager.objectSync.createExtension());
+      }
     });
-    
+
     const dataSpace = new DataSpace({
       inner: space,
       modelFactory: this._modelFactory,
@@ -160,5 +152,4 @@ export class DataSpaceManager {
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
   }
-
 }

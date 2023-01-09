@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import protobufjs, { IConversionOptions } from 'protobufjs';
 
 import { Any, EncodingOptions } from './common';
@@ -74,8 +73,8 @@ export class ProtoCodec<T = any> implements Codec<T> {
   encodeAsAny(value: T, options: EncodingOptions = {}): Any {
     return {
       type_url: this._type.fullName.slice(1),
-      value: this.encode(value, options),
-    }
+      value: this.encode(value, options)
+    };
   }
 
   fromObject(obj: any): T {

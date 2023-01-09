@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Any, EncodingOptions, WithTypeUrl } from '../common';
+import { EncodingOptions, WithTypeUrl } from '../common';
 import type { Schema } from '../schema';
 
 export const anySubstitutions = {

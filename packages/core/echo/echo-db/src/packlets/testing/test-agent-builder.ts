@@ -13,10 +13,10 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
+
 import { SnapshotStore } from '../database';
 import { SnapshotManager } from '../database/snapshot-manager';
 import { MetadataStore } from '../metadata';
-
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { DataPipelineControllerImpl } from '../space/data-pipeline-controller';
 import { TestFeedBuilder } from './test-feed-builder';
@@ -137,9 +137,7 @@ export class TestAgent {
     const controlFeedKey = await this.keyring.createKey();
     const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
-    const snapshotManager = new SnapshotManager(
-      new SnapshotStore(createStorage().createDirectory('snapshots')),
-    )
+    const snapshotManager = new SnapshotManager(new SnapshotStore(createStorage().createDirectory('snapshots')));
 
     const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl({
       modelFactory: new ModelFactory().registerModel(ObjectModel),
@@ -156,10 +154,10 @@ export class TestAgent {
       genesisFeed,
       controlFeed,
       dataFeed,
-      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
+      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey)
     });
-    await space.open()
-    await space.initDataPipeline(dataPipelineController)
+    await space.open();
+    await space.initDataPipeline(dataPipelineController);
 
     this._spaces.set(spaceKey, space);
     return [space, dataPipelineController];
@@ -174,12 +172,12 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       networkManager: this._networkManagerProvider(),
-      onSessionAuth: async session => {
+      onSessionAuth: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.presence',
           (presence ?? this.createPresence()).createExtension({ remotePeerId: session.remotePeerId })
-        )
-      },
+        );
+      }
     });
   }
 

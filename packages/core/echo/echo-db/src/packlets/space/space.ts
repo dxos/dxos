@@ -66,14 +66,7 @@ export class Space {
   private _dataPipeline?: Pipeline;
   private _dataPipelineController?: DataPipelineController;
 
-  constructor({
-    spaceKey,
-    protocol,
-    genesisFeed,
-    controlFeed,
-    dataFeed,
-    feedProvider,
-  }: SpaceParams) {
+  constructor({ spaceKey, protocol, genesisFeed, controlFeed, dataFeed, feedProvider }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
     this._controlFeed = controlFeed;
@@ -178,13 +171,13 @@ export class Space {
   }
 
   async initDataPipeline(controller: DataPipelineController) {
-    assert(this._isOpen, 'Space must be open to initialize data pipeline.')
+    assert(this._isOpen, 'Space must be open to initialize data pipeline.');
     assert(!this._dataPipelineController, 'Data pipeline already initialized.');
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
     this._dataPipelineController = controller;
     await this._dataPipelineController.open({
-      openPipeline: async start => {
+      openPipeline: async (start) => {
         assert(!this._dataPipeline, 'Data pipeline already initialized.'); // TODO(dmaretskyi): Allow concurrent pipelines.
         // Create pipeline.
         this._dataPipeline = new Pipeline(start);
@@ -197,6 +190,6 @@ export class Space {
 
         return this._dataPipeline;
       }
-    })
+    });
   }
 }

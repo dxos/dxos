@@ -5,18 +5,16 @@
 import assert from 'node:assert';
 
 import { Context } from '@dxos/context';
-import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space } from '@dxos/echo-db';
+import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, SnapshotManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Presence } from '@dxos/teleport-extension-presence';
-import { SnapshotManager } from '@dxos/echo-db';
 
 export type DataSpaceParams = {
   inner: Space;
   modelFactory: ModelFactory;
   metadataStore: MetadataStore;
-  snapshotManager: SnapshotManager,
+  snapshotManager: SnapshotManager;
   presence: Presence;
   memberKey: PublicKey;
   snapshotId?: string | undefined;
@@ -73,7 +71,7 @@ export class DataSpace implements ISpace {
 
   async open() {
     await this._inner.open();
-    await this._inner.initDataPipeline(this._dataPipelineController)
+    await this._inner.initDataPipeline(this._dataPipelineController);
   }
 
   async close() {
