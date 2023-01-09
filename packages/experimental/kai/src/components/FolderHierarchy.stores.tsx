@@ -3,7 +3,7 @@
 //
 
 import '@dxosTheme';
-import { ComponentStory, Story } from '@storybook/react';
+import { Story, StoryFn } from '@storybook/react';
 import React, { FC } from 'react';
 
 import { Group, mx } from '@dxos/react-components';
@@ -20,11 +20,12 @@ export default {
 const templateForComponent =
   <P extends {}>(Component: FC<P>) =>
   (props: P): Story<P> => {
-    const template: ComponentStory<typeof Component> = (args) => <Component {...args} />;
+    const template: StoryFn<typeof Component> = (args) => <Component {...(args as P)} />;
 
     const story = template.bind({});
     story.args = props;
-    return story;
+    // TODO(mykola): Fix type.
+    return story as StoryFn<P>;
   };
 
 const Template = (args: any) => {
@@ -42,5 +43,5 @@ const Template = (args: any) => {
   );
 };
 
-export const Default = templateForComponent(Template)({});
+export const Default: StoryFn<{}> = templateForComponent(Template)({});
 Default.args = {};
