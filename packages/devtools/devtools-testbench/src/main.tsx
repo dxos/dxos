@@ -9,6 +9,7 @@ import { AppView } from '@dxos/kai';
 
 import { App } from './app';
 
+import '@dxos/kai/src/style.css';
 import './style.css';
 
 (() => {
