@@ -8,6 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
+    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
@@ -30,34 +31,38 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/react-composer": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-uikit": "workspace:*",
-    "clsx": "^1.1.1",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
     "react-resize-detector": "^7.1.2",
     "react-router-dom": "^6.3.0",
-    "react-syntax-highlighter": "^15.5.0"
+    "react-syntax-highlighter": "^15.5.0",
+    "react-table": "^7.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/client-testing": "workspace:*",
+    "@swc-node/register": "^1.5.4",
+    "@swc/core": "^1.3.21",
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^18.0.6",
     "@types/react-syntax-highlighter": "^15.5.5",
-    "@vitejs/plugin-react": "^2.0.1",
+    "@types/react-table": "^7.7.14",
+    "@vitejs/plugin-react": "^3.0.1",
     "faker": "^5.5.3",
     "postcss": "^8.4.17",
     "tailwindcss": "^3.1.8",
-    "vite": "3.2.5",
-    "vite-plugin-fonts": "^0.6.0",
-    "vite-plugin-pwa": "^0.12.4",
+    "typescript": "^4.8.4",
+    "vite": "4.0.4",
+    "vite-plugin-fonts": "^0.7.0",
+    "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
   }
 }

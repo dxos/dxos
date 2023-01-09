@@ -11,7 +11,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db, deleted, id } from './defs';
-import { Document, DocumentBase } from './document';
+import { DELETED, Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
 
@@ -98,11 +98,12 @@ export class EchoDatabase {
   /**
    * Toggle deleted flag.
    */
+  // TODO(burdon): Delete/restore.
   async delete<T extends DocumentBase>(obj: T): Promise<T> {
     if (obj[deleted]) {
-      (obj as any)['@deleted'] = false;
+      (obj as any)[DELETED] = false;
     } else {
-      (obj as any)['@deleted'] = true;
+      (obj as any)[DELETED] = true;
     }
     return obj;
   }

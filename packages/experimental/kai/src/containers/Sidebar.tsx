@@ -2,24 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
-import { Bug, PlusCircle, Gear, Robot, WifiHigh, WifiSlash } from 'phosphor-react';
+import { Bug, PlusCircle, Gear, Robot, Trash, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { getSize } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/react-components';
 
-import { useSpace } from '../hooks';
+import { Button } from '../components';
+import { useOptions, useSpace, viewConfig } from '../hooks';
 import { Generator } from '../proto';
 import { MemberList } from './MemberList';
 import { SpaceList } from './SpaceList';
-import { views } from './views';
 
 export const Sidebar = () => {
+  const { views } = useOptions();
   const navigate = useNavigate();
-  const { spaceKey: currentSpaceKey, view } = useParams();
+  const { spaceKey: currentSpaceKey, view: currentView } = useParams();
   const client = useClient();
   const { space } = useSpace();
   const { state: connectionState } = useNetworkStatus();
@@ -29,18 +29,21 @@ export const Sidebar = () => {
     navigate(`/${spaceKey}/${view}`);
   };
 
-  const handleSettings = () => {
-    navigate('/settings');
-  };
-
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     navigate(`/${space.key.truncate()}`);
   };
 
+  const handleSettings = () => {
+    navigate('/settings');
+  };
+
   const handleGenerateData = async () => {
     await generator?.generate();
   };
+
+  // TODO(burdon): Clear database.
+  const handleReset = () => {};
 
   const handleToggleConnection = async () => {
     switch (connectionState) {
@@ -60,28 +63,34 @@ export const Sidebar = () => {
       {/* Header */}
       <div className='flex flex-shrink-0 p-3 mb-2'>
         <div className='flex flex-1 items-center'>
-          <Bug className={clsx('logo', getSize(8))} />
+          <Bug className={mx('logo', getSize(8))} />
           <div className='flex-1'></div>
-          <button className='flex' title='Create new space' onClick={handleCreateSpace}>
+          <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
             <PlusCircle className={getSize(6)} />
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Views */}
-      <div className='flex p-3 mb-2'>
-        {views.map(({ key, Icon }) => (
-          <button key={key} className='mr-2' onClick={() => setView(currentSpaceKey!, key)}>
-            <Icon className={clsx(getSize(6), view !== key && 'text-gray-500')} />
-          </button>
-        ))}
-      </div>
+      {views.length > 1 && (
+        <div className='flex p-3 mb-2'>
+          {views.map((view) => {
+            const { Icon } = viewConfig[view];
+            return (
+              <Button key={view} className='mr-2' onClick={() => setView(currentSpaceKey!, view)}>
+                <Icon className={mx(getSize(6), view !== currentView && 'text-gray-500')} />
+              </Button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Spaces */}
-      <div className='flex flex-1 flex-col overflow-y-scroll'>
-        {/* <div className='flex p-1 pl-3 text-gray-300 text-xs'>Spaces</div> */}
+      <div className='flex flex-shrink-0 flex-col overflow-y-scroll'>
         <SpaceList />
       </div>
+
+      <div className='flex flex-1'></div>
 
       {/* Members */}
       <div className='flex flex-col flex-shrink-0 mt-6'>
@@ -93,19 +102,22 @@ export const Sidebar = () => {
 
       {/* Footer */}
       <div className='flex flex-shrink-0 p-3 mt-2'>
-        <button className='mr-2' title='Settings' onClick={handleSettings}>
+        <Button className='mr-2' title='Settings' onClick={handleSettings}>
           <Gear className={getSize(6)} />
-        </button>
-        <button className='mr-2' title='Generate data' onClick={handleGenerateData}>
+        </Button>
+        <Button className='mr-2' title='Generate data' onClick={handleGenerateData}>
           <Robot className={getSize(6)} />
-        </button>
-        <button className='mr-2' title='Toggle connection.' onClick={handleToggleConnection}>
+        </Button>
+        <Button className='mr-2' title='Reset store' onClick={handleReset}>
+          <Trash className={getSize(6)} />
+        </Button>
+        <Button className='mr-2' title='Toggle connection.' onClick={handleToggleConnection}>
           {connectionState === ConnectionState.ONLINE ? (
             <WifiHigh className={getSize(6)} />
           ) : (
-            <WifiSlash className={clsx(getSize(6), 'text-orange-500')} />
+            <WifiSlash className={mx(getSize(6), 'text-orange-500')} />
           )}
-        </button>
+        </Button>
       </div>
     </div>
   );

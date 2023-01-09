@@ -11,7 +11,7 @@ import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServices } from '@dxos/client-services';
 import { ClientContext } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { Loader } from './components';

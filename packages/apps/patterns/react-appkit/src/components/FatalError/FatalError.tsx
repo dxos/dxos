@@ -5,14 +5,14 @@
 import { Clipboard } from 'phosphor-react';
 import React, { useCallback } from 'react';
 
-import { Alert, Button, Dialog, Tooltip, useTranslation } from '@dxos/react-uikit';
+import { Alert, Button, Dialog, Tooltip, useTranslation } from '@dxos/react-components';
 
 export interface FatalErrorProps {
   error: Error;
 }
 
 export const FatalError = ({ error }: FatalErrorProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const isDev = process.env.NODE_ENV === 'development';
 
   const message = String(error); // Error.name + Error.message

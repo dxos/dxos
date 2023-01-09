@@ -6,14 +6,14 @@ import React from 'react';
 
 import { createTheme as createMuiTheme, ThemeProvider, CssBaseline } from '@mui/material';
 
-import { FullScreen as FullScreenComponent } from '@dxos/react-components';
+import { FullScreen as FullScreenComponent } from '@dxos/react-components-deprecated';
 
 import { Root } from './Root';
 
 const baseTheme = createMuiTheme({
   components: {
     MuiCssBaseline: {
-      'styleOverrides': {
+      styleOverrides: {
         body: {
           margin: 0,
           overflow: 'hidden'

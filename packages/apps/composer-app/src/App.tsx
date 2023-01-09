@@ -16,11 +16,11 @@ import {
   FatalError,
   GenericFallback,
   ServiceWorkerToast,
-  translations,
+  appkitTranslations,
   StatusIndicator2
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { UiKitProvider } from '@dxos/react-uikit';
+import { ThemeProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';
@@ -44,8 +44,8 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider
-      resourceExtensions={[translations, composerTranslations]}
+    <ThemeProvider
+      resourceExtensions={[appkitTranslations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='composer'
     >
@@ -65,6 +65,6 @@ export const App = () => {
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>
-    </UiKitProvider>
+    </ThemeProvider>
   );
 };

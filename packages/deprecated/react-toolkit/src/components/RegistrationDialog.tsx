@@ -8,7 +8,7 @@ import { AddCircleOutline as CreateIcon, Restore as RestoreIcon } from '@mui/ico
 import { Avatar, Box, Button, Chip, Grid, Paper, TextField, Typography, styled, useTheme } from '@mui/material';
 
 import { generateSeedPhrase } from '@dxos/client';
-import { Dialog } from '@dxos/react-components';
+import { Dialog } from '@dxos/react-components-deprecated';
 
 import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers';
 

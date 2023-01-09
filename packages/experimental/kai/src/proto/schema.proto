@@ -42,6 +42,14 @@ message Project {
   repeated Task tasks = 4;
 }
 
+message Organization {
+  option (object) = true;
+
+  string title = 1;
+  repeated Project projects = 2;
+  repeated Contact team = 3;
+}
+
 // TODO(dmaretskyi): Move to separate file.
 /// Special object type for text object references.
 message TextObject {}

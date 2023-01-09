@@ -32,7 +32,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nxext/vite:build",
+      "executor": "@nrwl/vite:build",
       "inputs": [
         {
           "env": "CONFIG_DYNAMIC"
@@ -56,7 +56,6 @@
         "production"
       ],
       "options": {
-        "configFile": "packages/devtools/devtools/vite.config.ts",
         "outputPath": "packages/devtools/devtools/out/devtools"
       },
       "outputs": [
@@ -88,10 +87,9 @@
       ]
     },
     "serve": {
-      "executor": "@nxext/vite:dev",
+      "executor": "@nrwl/vite:dev-server",
       "options": {
-        "configFile": "packages/devtools/devtools/vite.config.ts",
-        "outputPath": "packages/devtools/devtools/out/devtools"
+        "buildTarget": "devtools:bundle"
       }
     },
     "storybook": {

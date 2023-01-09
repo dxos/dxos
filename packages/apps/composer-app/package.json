@@ -14,9 +14,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/react-composer": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-uikit": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@sentry/react": "^7.17.2",
@@ -27,9 +26,9 @@
   "devDependencies": {
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^2.0.1",
-    "vite": "3.2.5",
-    "vite-plugin-pwa": "^0.12.4",
+    "@vitejs/plugin-react": "^3.0.1",
+    "vite": "4.0.4",
+    "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
   }
 }

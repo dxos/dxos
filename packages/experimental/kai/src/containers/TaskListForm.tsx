@@ -6,6 +6,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { EchoDatabase } from '@dxos/echo-schema';
 
+import { Button } from '../components';
 import { useSpace } from '../hooks';
 import { Task } from '../proto';
 
@@ -38,8 +39,8 @@ const useTransaction = (db: EchoDatabase): Transaction => {
 };
 
 export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task: currentTask, onClose }) => {
-  const { database } = useSpace();
-  const tx = useTransaction(database);
+  const { space } = useSpace();
+  const tx = useTransaction(space.experimental.db);
   const task = tx.wrap(currentTask); // Projection.
 
   const handleClose = (commit: boolean) => {
@@ -57,8 +58,8 @@ export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task: cu
       <input type='checkbox' checked={!!task.completed} onChange={() => (task.completed = !task.completed)} />
       <input type='text' value={task.title} onChange={(event) => (task.title = event.target.value)} />
       <div>
-        <button onClick={() => handleClose(true)}>Save</button>
-        <button onClick={() => handleClose(false)}>Cancel</button>
+        <Button onClick={() => handleClose(true)}>Save</Button>
+        <Button onClick={() => handleClose(false)}>Cancel</Button>
       </div>
     </div>
   );

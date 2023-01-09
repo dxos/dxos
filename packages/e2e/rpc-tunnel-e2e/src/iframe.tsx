@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -38,7 +38,7 @@ const App = () => {
       });
       await server.open();
 
-      client.subscribe(value => setValue(String(value)));
+      client.subscribe((value) => setValue(String(value)));
     } else {
       const port = await createIFramePort({
         iframe: iframeRef.current!,
@@ -56,31 +56,32 @@ const App = () => {
       await client.open();
 
       const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
-      stream.subscribe(msg => {
-        setValue(msg.data);
-      }, error => {
-        if (error) {
-          setError(error.message);
+      stream.subscribe(
+        (msg) => {
+          setValue(msg.data);
+        },
+        (error) => {
+          if (error) {
+            setError(error.message);
+          }
+          setClosed(true);
         }
-        setClosed(true);
-      });
+      );
     }
 
     setClosed(false);
   }, []);
 
   return (
-    <div style={{
-      display: 'flex'
-    }}>
-      <div style={{
-        flexGrow: 1
-      }}>
-        <JsonTreeView data={{
-          closed,
-          error,
-          value
-        }} />
+    <div style={{ display: 'flex' }}>
+      <div style={{ flexGrow: 1 }}>
+        <JsonTreeView
+          data={{
+            closed,
+            error,
+            value
+          }}
+        />
       </div>
       {!IN_IFRAME && (
         <iframe
@@ -98,9 +99,8 @@ const App = () => {
   );
 };
 
-createRoot(document.getElementById('root')!)
-  .render(
-    <StrictMode>
-      <App />
-    </StrictMode>
-  );
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);

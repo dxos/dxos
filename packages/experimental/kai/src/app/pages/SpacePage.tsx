@@ -2,14 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState, FC } from 'react';
+import React, { useEffect, useState, FC, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Column } from 'react-table';
 
-import { useSpaces } from '@dxos/react-client';
+import { EchoObject, id } from '@dxos/echo-schema';
+import { useQuery, useSpaces, withReactor } from '@dxos/react-client';
 
-import { views, ContactList, Editor, ProjectGraph, ProjectList, Sidebar, TaskList } from '../../containers';
-import { SpaceContext, SpaceContextType } from '../../hooks';
+import { Card, FolderHierarchy, SearchBar, Selector, Table } from '../../components';
+import {
+  ContactList,
+  Editor,
+  mapProjectToItem,
+  ProjectGraph,
+  ProjectList,
+  ProjectTree,
+  Sidebar,
+  TaskList
+} from '../../containers';
+import { AppView, SpaceContext, SpaceContextType, useOptions, useSpace, viewConfig } from '../../hooks';
+import { Generator, Contact, Project } from '../../proto';
 
 const sidebarWidth = 200;
 
@@ -24,7 +37,7 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
         <ContactList />
       </div>
 
-      <div className='flex flex-shrink-0  row-span-2' style={props}>
+      <div className='flex flex-shrink-0 row-span-2' style={props}>
         <TaskList />
       </div>
 
@@ -36,30 +49,76 @@ const BlocksView: FC<{ props: any }> = ({ props }) => {
         <ProjectGraph />
       </div>
 
-      <div className='flex flex-shrink-0 col-span-5' style={props}>
+      <div className='flex flex-shrink-0 col-span-3' style={props}>
         <Editor />
+      </div>
+
+      <div className='flex flex-shrink-0 col-span-2' style={props}>
+        <ProjectTree />
       </div>
     </div>
   );
+};
+
+const ProjectsView: FC = () => {
+  return <ProjectList />;
 };
 
 const TasksView: FC = () => {
-  return (
-    <div className='flex flex-1 justify-center p-2'>
-      <div className='flex' style={{ width: 600 }}>
-        <TaskList />
-      </div>
-    </div>
-  );
+  return <TaskList />;
 };
 
 const EditorView: FC = () => {
-  return (
-    <div className='flex flex-1 p-2'>
-      <Editor />
-    </div>
-  );
+  return <Editor />;
 };
+
+const TestView = withReactor(() => {
+  const { space } = useSpace();
+  const contacts = useQuery(space, Contact.filter());
+  const projects = useQuery(space, Project.filter());
+  const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
+  useEffect(() => {
+    if (projects.length === 0 || contacts.length === 0) {
+      void generator?.generate();
+    }
+  }, [generator]);
+
+  const columns = useMemo<Column<EchoObject>[]>(
+    () => [
+      { Header: 'Name', accessor: 'name' as any },
+      { Header: 'Username', accessor: 'username' as any },
+      { Header: 'Email', accessor: 'email' as any },
+      { Header: 'ZIP', accessor: 'address.zip' as any, maxWidth: 80 }
+    ],
+    []
+  );
+
+  const items = useMemo(() => projects.map((project) => mapProjectToItem(project)), [contacts]);
+
+  return (
+    <Card title='Experiments' className='bg-teal-400' scrollbar>
+      <div className='flex m-4'>
+        <div className='flex flex-1'>
+          <SearchBar />
+        </div>
+
+        <div className='w-8'></div>
+
+        <div className='flex flex-1'>
+          <Selector options={contacts.map((contact) => ({ id: contact[id], title: contact.name }))} />
+        </div>
+      </div>
+
+      <div className='flex mt-4 mb-4'>
+        <FolderHierarchy items={items} />
+      </div>
+
+      <div className='flex mt-4'>
+        <Table columns={columns} data={contacts} />
+      </div>
+    </Card>
+  );
+});
 
 /**
  * Main grid layout.
@@ -74,9 +133,11 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
         <Sidebar />
       </div>
 
-      {view === 'blocks' && <BlocksView props={props} />}
-      {view === 'tasks' && <TasksView />}
-      {view === 'editor' && <EditorView />}
+      {view === AppView.CARDS && <BlocksView props={props} />}
+      {view === AppView.PROJECTS && <ProjectsView />}
+      {view === AppView.TASKS && <TasksView />}
+      {view === AppView.EDITOR && <EditorView />}
+      {view === AppView.TEST && <TestView />}
     </div>
   );
 };
@@ -86,13 +147,14 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
  */
 export const SpacePage = () => {
   const navigate = useNavigate();
+  const { views } = useOptions();
   const { spaceKey: currentSpaceKey, view } = useParams();
   const spaces = useSpaces();
   const [context, setContext] = useState<SpaceContextType | undefined>();
 
   useEffect(() => {
-    if (!view || views.findIndex(({ key }) => key === view) === -1) {
-      navigate(`/${currentSpaceKey}/${views[0].key}`);
+    if (!view || !viewConfig[view]) {
+      navigate(`/${currentSpaceKey}/${views[0]}`);
     }
   }, [view, currentSpaceKey]);
 

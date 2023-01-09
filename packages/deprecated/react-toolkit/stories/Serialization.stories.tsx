@@ -9,7 +9,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 import { Space } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, useTestSpace } from '@dxos/react-client-testing';
-import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
+import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components-deprecated';
 
 import { useSpaceSerializer } from '../src';
 

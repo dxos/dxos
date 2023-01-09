@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
@@ -16,7 +16,7 @@ import { Channels } from './channels';
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
 
-const App = ({ id, port }: { id: string, port: RpcPort }) => {
+const App = ({ id, port }: { id: string; port: RpcPort }) => {
   const [closed, setClosed] = useState(true);
   const [error, setError] = useState<string>();
   const [value, setValue] = useState<string>();
@@ -33,14 +33,17 @@ const App = ({ id, port }: { id: string, port: RpcPort }) => {
     await client.open();
 
     const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
-    stream.subscribe(msg => {
-      setValue(msg.data);
-    }, error => {
-      if (error) {
-        setError(error.message);
+    stream.subscribe(
+      (msg) => {
+        setValue(msg.data);
+      },
+      (error) => {
+        if (error) {
+          setError(error.message);
+        }
+        setClosed(true);
       }
-      setClosed(true);
-    });
+    );
 
     setClosed(false);
   }, []);
@@ -52,11 +55,13 @@ const App = ({ id, port }: { id: string, port: RpcPort }) => {
         flexGrow: 1
       }}
     >
-      <JsonTreeView data={{
-        closed,
-        error,
-        value
-      }} />
+      <JsonTreeView
+        data={{
+          closed,
+          error,
+          value
+        }}
+      />
     </div>
   );
 };
@@ -68,17 +73,18 @@ if (typeof SharedWorker !== 'undefined') {
     const portOne = muxer.createWorkerPort({ channel: Channels.ONE });
     const portTwo = muxer.createWorkerPort({ channel: Channels.TWO });
 
-    createRoot(document.getElementById('root')!)
-      .render(
-        <StrictMode>
-          <div style={{
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <div
+          style={{
             display: 'flex'
-          }}>
-            <App id={Channels.ONE} port={portOne} />
-            <App id={Channels.TWO} port={portTwo} />
-          </div>
-        </StrictMode>
-      );
+          }}
+        >
+          <App id={Channels.ONE} port={portOne} />
+          <App id={Channels.TWO} port={portTwo} />
+        </div>
+      </StrictMode>
+    );
   })();
 } else {
   throw new Error('Requires a browser with support for shared workers.');

@@ -25,7 +25,7 @@
       "path": "../../../common/react-async"
     },
     {
-      "path": "../../../common/react-ui"
+      "path": "../../../common/react-components"
     },
     {
       "path": "../../../core/echo/text-model"
@@ -38,9 +38,6 @@
     },
     {
       "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../sdk/react-uikit"
     }
   ]
 }

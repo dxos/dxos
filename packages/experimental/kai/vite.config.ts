@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
-import { ThemePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
@@ -16,19 +16,25 @@ import packageJson from './package.json';
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${packageJson.version}` : undefined;
 
-// https://vitejs.dev/config/
+/**
+ * https://vitejs.dev/config
+ */
 export default defineConfig({
   base: '', // Ensures relative path to assets.
+
   server: {
     host: true
   },
+
   define: {
-    'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
-    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
-    'process.env.DX_VAULT': env(process.env.DX_VAULT),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.DX_RELEASE': env(DX_RELEASE)
+    'process.env.DX_RELEASE': env(DX_RELEASE),
+    'process.env.DX_VAULT': env(process.env.DX_VAULT),
+    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
+    'process.env.LOG_FILTER': env(process.env.LOG_FILTER)
   },
+
+  // TODO(burdon): Document.
   optimizeDeps: {
     force: true,
     include: [
@@ -36,38 +42,64 @@ export default defineConfig({
       '@dxos/keys',
       '@dxos/log',
       '@dxos/protocols',
-      '@dxos/protocols/proto/dxos/client/services',
-      '@dxos/protocols/proto/dxos/halo/credentials',
-      '@dxos/protocols/proto/dxos/rpc',
-      '@dxos/protocols/proto/dxos/mesh/bridge',
       '@dxos/protocols/proto/dxos/client',
+      '@dxos/protocols/proto/dxos/client/services',
       '@dxos/protocols/proto/dxos/config',
-      '@dxos/protocols/proto/dxos/halo/keys',
       '@dxos/protocols/proto/dxos/echo/feed',
+      '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/protocols/proto/dxos/halo/credentials',
       '@dxos/protocols/proto/dxos/halo/invitations',
-      '@dxos/protocols/proto/dxos/echo/model/object'
+      '@dxos/protocols/proto/dxos/halo/keys',
+      '@dxos/protocols/proto/dxos/mesh/bridge',
+      '@dxos/protocols/proto/dxos/rpc'
     ]
   },
+
+  // TODO(burdon): Document.
+  // build: {
+  //   outDir: 'out/kai',
+  //   commonjsOptions: {
+  //     include: [/packages/, /node_modules/]
+  //   }
+  // },
+
   build: {
-    outDir: 'out/tasks',
     commonjsOptions: {
       include: [/packages/, /node_modules/]
+    },
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        projects: resolve(__dirname, 'projects.html')
+      },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-router-dom', 'react-dom']
+        }
+      }
     }
   },
-  // TODO(burdon): Add fonts.
+
+  // TODO(burdon): Document.
   plugins: [
+    // TODO(burdon): Document.
     ConfigPlugin(),
+
+    // TODO(burdon): Document.
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')
       ]
     }),
+
+    // TODO(burdon): Document.
     ReactPlugin(),
+
+    // TODO(burdon): Document.
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
@@ -94,8 +126,11 @@ export default defineConfig({
       }
     }),
 
-    // https://www.npmjs.com/package/vite-plugin-fonts
-    // https://fonts.google.com
+    /**
+     * Bundle fonts.
+     * https://fonts.google.com
+     * https://www.npmjs.com/package/vite-plugin-fonts
+     */
     VitePluginFonts({
       google: {
         injectTo: 'head-prepend',

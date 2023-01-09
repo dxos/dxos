@@ -7,7 +7,7 @@ import React from 'react';
 import { Button } from '@mui/material';
 
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { CopyText, JsonTreeView } from '@dxos/react-components';
+import { CopyText, JsonTreeView } from '@dxos/react-components-deprecated';
 
 export interface ConnectionInfoViewProps {
   connectionInfo: ConnectionInfo;
