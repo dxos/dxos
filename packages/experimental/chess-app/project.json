@@ -47,9 +47,6 @@
       ]
     },
     "serve": {
-      "dependsOn": [
-        "prebuild"
-      ],
       "executor": "@nrwl/vite:dev-server",
       "options": {
         "buildTarget": "kai:bundle"

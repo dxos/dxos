@@ -126,6 +126,7 @@
         }
       ],
       "dependsOn": [
+        "prebuild",
         "^compile"
       ]
     }
