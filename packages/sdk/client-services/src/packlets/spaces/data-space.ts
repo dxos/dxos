@@ -28,13 +28,13 @@ export class DataSpace implements ISpace {
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
     this._presence = params.presence;
-    this._dataPipelineController = new DataPipelineControllerImpl(
-      params.modelFactory,
-      params.memberKey,
-      (feedKey) => this._inner.spaceState.feeds.get(feedKey),
-      this._inner.key,
-      params.snapshot
-    );
+    this._dataPipelineController = new DataPipelineControllerImpl({
+      modelFactory: params.modelFactory,
+      memberKey: params.memberKey,
+      feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
+      spaceKey: this._inner.key,
+      snapshot: params.snapshot
+    });
   }
 
   get key() {
@@ -68,6 +68,7 @@ export class DataSpace implements ISpace {
 
   async open() {
     await this._inner.open();
+    await this._inner.initDataPipeline(this._dataPipelineController)
   }
 
   async close() {

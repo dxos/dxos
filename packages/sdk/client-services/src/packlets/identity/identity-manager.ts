@@ -193,7 +193,6 @@ export class IdentityManager {
         controlFeedKey: spaceRecord.writeControlFeedKey,
         dataFeedKey: spaceRecord.writeDataFeedKey
       },
-      dataPipelineControllerProvider: () => new NoopDataPipelineController(),
       swarmIdentity,
       presence: new Presence({
         localPeerId: swarmIdentity.peerKey,

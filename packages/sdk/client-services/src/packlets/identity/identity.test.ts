@@ -77,7 +77,6 @@ describe('identity/identity', () => {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-      dataPipelineControllerProvider: () => new NoopDataPipelineController()
     });
 
     const identity = new Identity({
@@ -190,7 +189,6 @@ describe('identity/identity', () => {
         controlFeed,
         dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        dataPipelineControllerProvider: () => new NoopDataPipelineController()
       });
 
       const identity = (identity1 = new Identity({
@@ -277,7 +275,6 @@ describe('identity/identity', () => {
         controlFeed,
         dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        dataPipelineControllerProvider: () => new NoopDataPipelineController()
       });
 
       const identity = (identity2 = new Identity({

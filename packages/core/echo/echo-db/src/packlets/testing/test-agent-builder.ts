@@ -135,13 +135,13 @@ export class TestAgent {
     const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
 
-    const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl(
-      new ModelFactory().registerModel(ObjectModel),
-      identityKey,
-      (feedKey) => space.spaceState.feeds.get(feedKey),
+    const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl({
+      modelFactory: new ModelFactory().registerModel(ObjectModel),
+      memberKey: identityKey,
+      feedInfoProvider: (feedKey) => space.spaceState.feeds.get(feedKey),
       spaceKey,
-      undefined
-    );
+      snapshot: undefined
+    });
     const space = new Space({
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
@@ -149,8 +149,9 @@ export class TestAgent {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
-      dataPipelineControllerProvider: () => dataPipelineController
     });
+    await space.open()
+    await space.initDataPipeline(dataPipelineController)
 
     this._spaces.set(spaceKey, space);
     return [space, dataPipelineController];

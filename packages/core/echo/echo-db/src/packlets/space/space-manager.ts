@@ -16,7 +16,6 @@ import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
 import { AuthProvider, AuthVerifier } from './auth';
-import { DataPipelineController } from './data-pipeline-controller';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
@@ -46,7 +45,6 @@ export type SpaceManagerParams = {
 export type ConstructSpaceParams = {
   metadata: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
-  dataPipelineControllerProvider: () => DataPipelineController;
   presence: Presence;
 };
 
@@ -77,7 +75,7 @@ export class SpaceManager {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  async constructSpace({ metadata, swarmIdentity, dataPipelineControllerProvider, presence }: ConstructSpaceParams) {
+  async constructSpace({ metadata, swarmIdentity, presence }: ConstructSpaceParams) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
@@ -101,7 +99,6 @@ export class SpaceManager {
       controlFeed,
       dataFeed,
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
-      dataPipelineControllerProvider
     });
     this._spaces.set(space.key, space);
     return space;

@@ -134,7 +134,6 @@ export class DataSpaceManager {
         credentialProvider: this._signingContext.credentialProvider,
         credentialAuthenticator: this._signingContext.credentialAuthenticator
       },
-      dataPipelineControllerProvider: () => dataSpace.dataPipelineController,
       presence
     });
     let snapshot: SpaceSnapshot | undefined;
@@ -172,7 +171,7 @@ export class DataSpaceManager {
       }
     });
 
-    await space.open();
+    await dataSpace.open();
     this._dataServiceSubscriptions.registerSpace(space.key, dataSpace.database.createDataServiceHost());
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
