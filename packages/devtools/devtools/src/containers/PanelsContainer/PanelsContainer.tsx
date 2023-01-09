@@ -34,9 +34,7 @@ export type Section = {
 
 export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
   const theme = useTheme();
-  console.log('before useClient', { theme });
   const client = useClient();
-  console.log('after useClient', { client });
   const [selected, setSelected] = useState(sections[0]?.items[0]?.id);
   const services = useClientServices();
   if (!services) {

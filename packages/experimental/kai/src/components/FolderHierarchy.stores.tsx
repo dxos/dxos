@@ -6,7 +6,7 @@ import '@dxosTheme';
 import { ComponentStory, Story } from '@storybook/react';
 import React, { FC } from 'react';
 
-import { Group, mx } from '@dxos/react-ui';
+import { Group, mx } from '@dxos/react-components';
 
 import { FolderHierarchy } from './FolderHierarchy';
 
