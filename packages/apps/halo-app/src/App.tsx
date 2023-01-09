@@ -11,7 +11,6 @@ import { fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
-  AppLayout,
   ErrorProvider,
   Fallback,
   FatalError,
@@ -26,6 +25,7 @@ import { ThemeProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
 import { NavMenu } from './components';
+import { AppLayout } from './layouts';
 import { haloTranslations } from './translations';
 
 const LockPage = React.lazy(() => import('./pages/LockPage'));

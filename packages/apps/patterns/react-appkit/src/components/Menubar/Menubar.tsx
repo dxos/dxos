@@ -4,13 +4,11 @@
 
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import throttle from 'lodash.throttle';
-import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/react-components';
 
-export interface MenubarProps2 {
-  children?: ReactNode;
-}
+export type MenubarProps = PropsWithChildren<{}>;
 
 export const Separator = ToolbarPrimitive.Separator;
 
@@ -19,7 +17,7 @@ export const Separator = ToolbarPrimitive.Separator;
  * @param props props
  * @returns ReactNode
  */
-export const Menubar = ({ children }: MenubarProps2) => {
+export const Menubar = ({ children }: MenubarProps) => {
   const [atTop, setAtTop] = useState(true);
 
   const handleScroll = useCallback(() => {
