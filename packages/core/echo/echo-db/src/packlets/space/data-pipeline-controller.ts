@@ -61,6 +61,11 @@ const MESSAGES_PER_SNAPSHOT = 10;
  */
 const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
 
+/**
+ * Minimum time between recording latest timeframe in metadata.
+ */
+const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
+
 export class DataPipelineControllerImpl implements DataPipelineController {
   private _ctx = new Context();
   private _spaceContext!: DataPipelineControllerContext;
@@ -125,15 +130,18 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   }
 
   private _createPeriodicSnapshots() {
+    // Record last timeframe.
+    this.onTimeframeReached.debounce(TIMEFRAME_SAVE_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
+      const latestTimeframe = this._pipeline?.state.timeframe;
+      if (latestTimeframe) {
+        await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
+      }
+    })
+
     this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
       const latestTimeframe = this._pipeline?.state.timeframe;
       if (!latestTimeframe) {
         return;
-      }
-
-      // Record last timeframe.
-      if (latestTimeframe) {
-        await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
       }
 
       // Save snapshot.
