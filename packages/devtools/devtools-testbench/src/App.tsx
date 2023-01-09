@@ -14,7 +14,7 @@ import { ClientContext } from '@dxos/react-client';
 /**
  * Main app container with routes.
  */
-export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = false }) => {
+export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = false, demo = true }) => {
   const [value, setValue] = useState<ClientAndServices | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -47,7 +47,7 @@ export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = 
     <ClientContext.Provider value={value}>
       <div className='h-screen w-full grid grid-rows-2 grid-flow-col gap-4'>
         <div className='h-1/2'>
-          <OptionsContext.Provider value={{ debug, views }}>
+          <OptionsContext.Provider value={{ debug, views, demo }}>
             <HashRouter>
               <KaiRoutes />
             </HashRouter>
