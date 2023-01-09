@@ -5,7 +5,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Game } from './Game';
+import { ChessGame } from './ChessGame';
 
 // TODO(burdon): DX app and components.
 
@@ -13,7 +13,7 @@ import { Game } from './Game';
   // TODO(burdon): Get debug from config.
   createRoot(document.getElementById('root')!).render(
     <div>
-      <Game />
+      <ChessGame />
     </div>
   );
 })();

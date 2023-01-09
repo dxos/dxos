@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Article, Graph, Kanban, ListChecks, Table, TreeStructure, Users, Wall } from 'phosphor-react';
+import { Article, Graph, Kanban, ListChecks, Sword, Table, TreeStructure, Users, Wall } from 'phosphor-react';
 
 export enum AppView {
   DASHBOARD = 'dashboard',
@@ -12,7 +12,8 @@ export enum AppView {
   KANBAN = 'kanban',
   TASKS = 'tasks',
   EDITOR = 'documents',
-  GRAPH = 'graph'
+  GRAPH = 'graph',
+  GAME = 'game'
 }
 
 // TODO(burdon): Types?
@@ -24,5 +25,6 @@ export const viewConfig: { [key: string]: { Icon: any } } = {
   [AppView.KANBAN]: { Icon: Kanban },
   [AppView.TASKS]: { Icon: ListChecks },
   [AppView.EDITOR]: { Icon: Article },
-  [AppView.GRAPH]: { Icon: Graph }
+  [AppView.GRAPH]: { Icon: Graph },
+  [AppView.GAME]: { Icon: Sword }
 };

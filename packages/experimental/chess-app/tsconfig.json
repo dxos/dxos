@@ -1,16 +1,15 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist",
+    "strict": false
   },
   "exclude": [
-    "/node_modules/"
+    "**/*.test.ts"
   ],
   "include": [
     "src"
@@ -28,12 +27,5 @@
     {
       "path": "../../sdk/client"
     }
-  ],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    },
-    "files": true,
-    "transpileOnly": true
-  }
+  ]
 }

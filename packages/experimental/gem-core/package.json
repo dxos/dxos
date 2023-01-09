@@ -2,15 +2,15 @@
   "name": "@dxos/gem-core",
   "version": "0.1.20",
   "description": "Gem core components and utils.",
-  "homepage": "https://github.com/dxos/gem#readme",
-  "bugs": "https://github.com/dxos/gem/issues",
+  "homepage": "https://github.com/dxos",
+  "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
   "browser": {
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
-  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"

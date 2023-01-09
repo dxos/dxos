@@ -8,6 +8,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSpaces } from '@dxos/react-client';
 
 import {
+  ChessGame,
+  ChessGrid,
   ContactTable,
   ProjectEditor,
   OrganizationHierarchy,
@@ -57,6 +59,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
           {view === AppView.TASKS && <TaskList />}
           {view === AppView.EDITOR && <ProjectEditor />}
           {view === AppView.GRAPH && <ProjectGraph />}
+          {view === AppView.GAME && <ChessGrid />}
         </div>
       </div>
     </div>
