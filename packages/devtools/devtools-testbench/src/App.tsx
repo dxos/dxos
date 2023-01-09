@@ -7,14 +7,14 @@ import { HashRouter } from 'react-router-dom';
 
 import { Client, fromHost } from '@dxos/client';
 import { ClientAndServices, PanelsContainer, sections } from '@dxos/devtools';
-import { OptionsContext, Routes as KaiRoutes } from '@dxos/kai';
+import { AppView, OptionsContext, Routes as KaiRoutes } from '@dxos/kai';
 import { Config, Defaults } from '@dxos/config';
 import { ClientContext } from '@dxos/react-client';
 
 /**
  * Main app container with routes.
  */
-export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
+export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = false }) => {
   const [value, setValue] = useState<ClientAndServices | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -47,7 +47,7 @@ export const App: FC<{ debug?: boolean }> = ({ debug = false }) => {
     <ClientContext.Provider value={value}>
       <div className='h-screen w-full grid grid-rows-2 grid-flow-col gap-4'>
         <div className='h-1/2'>
-          <OptionsContext.Provider value={{ debug }}>
+          <OptionsContext.Provider value={{ debug, views }}>
             <HashRouter>
               <KaiRoutes />
             </HashRouter>
