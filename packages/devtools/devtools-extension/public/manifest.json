@@ -23,8 +23,7 @@
     ]
   },
   "permissions": [
-    "storage",
-    "tabs"
+    "activeTab"
   ],
   "host_permissions": [
     "http://*/*",
@@ -37,7 +36,8 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "http://*/*",
+        "https://*/*"
       ],
       "js": [
         "content.js"
