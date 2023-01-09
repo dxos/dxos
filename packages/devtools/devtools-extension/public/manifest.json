@@ -25,10 +25,6 @@
   "permissions": [
     "activeTab"
   ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
   "devtools_page": "main.html",
   "background": {
     "service_worker": "background.js"
