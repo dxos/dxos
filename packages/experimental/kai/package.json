@@ -17,6 +17,7 @@
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/async": "workspace:*",
+    "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
