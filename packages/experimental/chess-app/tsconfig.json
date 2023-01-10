@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-ui"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -26,6 +29,15 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
     }
   ]
 }

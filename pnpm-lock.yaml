@@ -2654,9 +2654,12 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-ui': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chess.js: ^1.0.0-alpha.0
@@ -2666,6 +2669,7 @@ importers:
       react-resize-detector: ^7.1.2
       react-router-dom: ^6.3.0
       typescript: ^4.8.4
+      vite: 4.0.4
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -2679,9 +2683,13 @@ importers:
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.20.12
+      '@dxos/config': link:../../sdk/config
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       typescript: 4.8.4
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
 
   packages/experimental/client-testing:
     specifiers:

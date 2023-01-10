@@ -60,4 +60,10 @@ describe('schema', () => {
       ]
     });
   });
+
+  test('destructuring', () => {
+    const contact = new Contact({ name: 'user', address: { coordinates: { lat: -90, lng: 10 } } });
+    const { lat, lng } = contact.address.coordinates;
+    expect({ lat, lng }).to.deep.eq({ lat: -90, lng: 10 });
+  });
 });

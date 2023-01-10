@@ -16,6 +16,7 @@ import './style.css';
     <App
       debug={false}
       views={[
+        AppView.GAME,
         AppView.DASHBOARD,
         AppView.ORGS,
         AppView.PROJECTS,
@@ -24,8 +25,7 @@ import './style.css';
         AppView.TASKS,
         AppView.GRAPH,
         AppView.EDITOR,
-        AppView.MAP,
-        AppView.GAME
+        AppView.MAP
       ]}
     />
   );
