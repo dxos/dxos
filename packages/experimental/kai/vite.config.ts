@@ -56,14 +56,9 @@ export default defineConfig({
   },
 
   // TODO(burdon): Document.
-  // build: {
-  //   outDir: 'out/kai',
-  //   commonjsOptions: {
-  //     include: [/packages/, /node_modules/]
-  //   }
-  // },
-
   build: {
+    outDir: 'out/kai',
+    sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     },
