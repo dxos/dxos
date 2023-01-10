@@ -44,7 +44,10 @@ export class Generator {
           coordinates: {
             lat: city.coordinates[1],
             lng: city.coordinates[0]
-          }
+          },
+          // TODO (mykola): Add zip and state.
+          zip: '????',
+          state: '????'
         };
 
         // Contacts.
@@ -134,7 +137,8 @@ export const createContact = async (db: EchoDatabase) => {
       ? {
           city: faker.address.city(),
           state: faker.address.stateAbbr(),
-          zip: faker.address.zipCode()
+          zip: faker.address.zipCode(),
+          coordinates: { lat: Number(faker.address.latitude()), lng: Number(faker.address.longitude()) }
         }
       : undefined
   });
