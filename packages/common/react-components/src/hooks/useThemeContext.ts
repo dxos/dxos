@@ -6,4 +6,4 @@ import { useContext } from 'react';
 
 import { ThemeContext } from '../components';
 
-export const useTranslationsContext = () => useContext(ThemeContext);
+export const useThemeContext = () => useContext(ThemeContext);
