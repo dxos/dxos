@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import React from 'react';
+
 import { Chessboard } from './Chessboard';
 
 export default {
@@ -11,6 +13,6 @@ export default {
 
 export const Default = {
   render: () => {
-    return null;
+    return <div>sss</div>;
   }
 };

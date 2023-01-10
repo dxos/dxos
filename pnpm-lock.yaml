@@ -2653,13 +2653,25 @@ importers:
   packages/experimental/chess-app:
     specifiers:
       '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
+      '@dxos/util': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chess.js: ^1.0.0-alpha.0
@@ -2673,8 +2685,6 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@dxos/protocols': link:../../core/protocols
       chess.js: 1.0.0-alpha.0
       react: 18.2.0
       react-chessboard: 2.0.7_rj7ozvcq3uehdlnj3cbwzbi5ce
@@ -2683,9 +2693,23 @@ importers:
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.20.12
+      '@dxos/async': link:../../common/async
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
       '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
+      '@dxos/util': link:../../common/util
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       typescript: 4.8.4
@@ -33095,7 +33119,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_pftdh3zqu4qevmbqg2nu3a7f3e
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
