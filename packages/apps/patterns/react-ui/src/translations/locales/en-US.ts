@@ -3,5 +3,6 @@
 //
 
 export const os = {
-  'manage profile label': 'Manage identity'
+  'manage profile label': 'Manage identity',
+  'identity offline description': 'Offline'
 };

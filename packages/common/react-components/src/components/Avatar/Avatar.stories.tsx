@@ -14,9 +14,14 @@ export default {
 export const Default = {
   args: {
     fallbackValue: 'squirrel',
-    label: <span className='sr-only'>Hello</span>,
+    label: <p>Hello</p>,
+    description: <p>Potatoes</p>,
     status: 'active',
     variant: 'circle',
-    size: 12
+    size: 12,
+    slots: {
+      root: { className: 'flex gap-2' },
+      labels: { className: 'block' }
+    }
   }
 };

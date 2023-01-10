@@ -24,13 +24,15 @@ import { mx } from '../../util';
 
 export interface AvatarSlots {
   root?: Omit<ComponentProps<typeof AvatarPrimitive.Root>, 'children'>;
-  image?: Omit<ComponentProps<'image'>, 'children'>;
+  image?: ComponentProps<'image'>;
   fallback?: Omit<ComponentProps<typeof AvatarPrimitive.Fallback>, 'children'>;
+  labels?: Omit<ComponentProps<'div'>, 'children'>;
 }
 
 export interface AvatarProps {
   fallbackValue: string;
   label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  description?: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   size?: Size;
   variant?: 'square' | 'circle';
   status?: 'active' | 'inactive';
@@ -47,6 +49,7 @@ export const Avatar = forwardRef(
       mediaAlt,
       fallbackValue,
       label,
+      description,
       variant = 'square',
       status,
       size = 10,
@@ -55,6 +58,7 @@ export const Avatar = forwardRef(
     ref: ForwardedRef<HTMLSpanElement>
   ) => {
     const labelId = useId('avatarLabel');
+    const descriptionId = useId('avatarDescription');
     const maskId = useId('mask');
     const svgId = useId('mask');
     const fallbackSrc = useMemo(
@@ -73,9 +77,16 @@ export const Avatar = forwardRef(
           {...slots.root}
           className={mx('relative inline-flex', getSize(size), slots.root?.className)}
           aria-labelledby={labelId}
+          {...(description && { 'aria-describedby': descriptionId })}
           ref={ref}
         >
-          <svg width={imageSizeNumber} height={imageSizeNumber} id={svgId}>
+          <svg
+            viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
+            width={imageSizeNumber}
+            height={imageSizeNumber}
+            id={svgId}
+            className='is-full bs-full'
+          >
             <defs>
               <mask id={maskId}>
                 {variant === 'circle' ? (
@@ -95,11 +106,11 @@ export const Avatar = forwardRef(
             </defs>
             {mediaSrc && (
               <AvatarPrimitive.Image asChild>
-                <image href={mediaSrc} {...slots.image} mask={`url(#${maskId})`} />
+                <image href={mediaSrc} width='100%' height='100%' {...slots.image} mask={`url(#${maskId})`} />
               </AvatarPrimitive.Image>
             )}
             <AvatarPrimitive.Fallback delayMs={0} {...slots.fallback} asChild>
-              <image href={fallbackSrc} mask={`url(#${maskId})`} />
+              <image href={fallbackSrc} width='100%' height='100%' mask={`url(#${maskId})`} />
             </AvatarPrimitive.Fallback>
           </svg>
           {status === 'active' && (
@@ -122,15 +133,23 @@ export const Avatar = forwardRef(
             />
           )}
         </AvatarPrimitive.Root>
-        {typeof label === 'string' ? (
-          <PortalPrimitive.Root asChild>
-            <span id={labelId} className='sr-only'>
-              {label}
-            </span>
-          </PortalPrimitive.Root>
-        ) : (
-          cloneElement(label, { id: labelId })
-        )}
+        <div role='none' {...slots.labels} className={mx('contents', slots?.labels?.className)}>
+          {typeof label === 'string' ? (
+            <PortalPrimitive.Root asChild>
+              <span id={labelId} className='sr-only'>
+                {label}
+              </span>
+            </PortalPrimitive.Root>
+          ) : (
+            cloneElement(label, { id: labelId })
+          )}
+          {description &&
+            (typeof description === 'string' ? (
+              <span id={descriptionId}>{description}</span>
+            ) : (
+              cloneElement(description, { id: descriptionId })
+            ))}
+        </div>
       </>
     );
   }
