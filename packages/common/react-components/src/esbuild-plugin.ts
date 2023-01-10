@@ -7,8 +7,8 @@ import type { Plugin } from 'esbuild';
 import stylePlugin from 'esbuild-style-plugin';
 import { mkdir, cp } from 'node:fs/promises';
 import { resolve, relative, join, basename } from 'node:path';
-import tailwindcss from 'tailwindcss';
 import { AcceptedPlugin } from 'postcss';
+import tailwindcss from 'tailwindcss';
 
 import { tailwindConfig } from './config';
 
