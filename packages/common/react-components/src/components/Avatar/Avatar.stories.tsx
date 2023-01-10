@@ -13,9 +13,9 @@ export default {
 
 export const Default = {
   args: {
-    fallbackValue: 'squirrel',
-    label: <p>Hello</p>,
-    description: <p>Potatoes</p>,
+    fallbackValue: '20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b',
+    label: <p>Display name</p>,
+    description: <p>Away</p>,
     status: 'active',
     variant: 'circle',
     size: 12,
