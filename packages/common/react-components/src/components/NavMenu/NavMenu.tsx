@@ -7,7 +7,7 @@ import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'reac
 
 import { defaultFocus, defaultHover, defaultInlineSeparator } from '../../styles';
 import { mx } from '../../util';
-import { defaultButtonColors, primaryButtonColors } from '../Button';
+import { defaultAppButtonColors, primaryAppButtonColors } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
 
 interface NavMenuItemSharedProps {
@@ -60,7 +60,7 @@ const NavMenuInvokerItem = forwardRef(
         <NavigationMenuPrimitive.Trigger
           className={mx(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
-            active ? primaryButtonColors : defaultButtonColors,
+            active ? primaryAppButtonColors : defaultAppButtonColors,
             defaultFocus,
             defaultHover({})
           )}
@@ -91,7 +91,7 @@ const NavMenuLinkItem = forwardRef(
         active={active}
         className={mx(
           'px-3 py-2 text-sm rounded-md transition-color',
-          active ? primaryButtonColors : defaultButtonColors,
+          active ? primaryAppButtonColors : defaultAppButtonColors,
           active ? 'font-medium' : 'font-normal',
           defaultFocus,
           defaultHover({}),
@@ -114,7 +114,7 @@ const NavMenuTooltipLinkItem = forwardRef(
           active={active}
           className={mx(
             'px-3 py-2 text-sm rounded-md transition-color',
-            active ? primaryButtonColors : defaultButtonColors,
+            active ? primaryAppButtonColors : defaultAppButtonColors,
             active ? 'font-medium' : 'font-normal',
             defaultFocus,
             defaultHover({}),
