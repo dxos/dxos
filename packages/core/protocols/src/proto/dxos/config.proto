@@ -182,6 +182,12 @@ message Runtime {
       bool disabled = 1;
     }
 
+    message Gravity {
+      bool disabled = 1;
+      string name = 2;
+      optional string log_dir = 3;
+    }
+
     message AppTunneling {
       optional bool enabled = 1;
       optional string command_template = 2;
@@ -200,7 +206,8 @@ message Runtime {
     optional Monitoring monitoring = 9;
     optional Trace trace = 10;
     optional Telemetry telemetry = 11;
-    optional AppTunneling app_tunneling = 12;
+    optional Gravity gravity = 12;
+    optional AppTunneling app_tunneling = 13;
   }
 
   //
