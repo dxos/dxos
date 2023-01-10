@@ -18,7 +18,7 @@ import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
 import { EXPECTED_CONFIG_VERSION } from './config';
 import { SpaceSerializer } from './serializer';
-import { fromIFrame } from './utils';
+import { fromHost, fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -59,7 +59,7 @@ export class Client {
     services
   }: ClientOptions = {}) {
     this._config = config ?? new Config();
-    this._services = services ?? fromIFrame(this._config);
+    this._services = config?.values.runtime?.client?.remoteSource ? fromIFrame(this._config) : fromHost(this._config);
 
     // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
