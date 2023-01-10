@@ -70,7 +70,9 @@ export class Client {
 
     // TODO(burdon): Reconcile with Config.sanitizer.
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigError('Invalid config version', { current: this._config.values.version, expected: EXPECTED_CONFIG_VERSION });
+      throw new InvalidConfigError(
+        'Invalid config version', { current: this._config.values.version, expected: EXPECTED_CONFIG_VERSION }
+      );
     }
   }
 
