@@ -3,7 +3,7 @@
 //
 
 export * from './Menubar';
-export * from './Menubar2';
+export * from './Menubar';
 export * from './ProfileMenu';
 export * from './SpacesLink';
 export * from './SpaceLink';

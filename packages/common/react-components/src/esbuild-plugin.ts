@@ -7,6 +7,7 @@ import type { Plugin } from 'esbuild';
 import stylePlugin from 'esbuild-style-plugin';
 import { mkdir, cp } from 'node:fs/promises';
 import { resolve, relative, join, basename } from 'node:path';
+import { AcceptedPlugin } from 'postcss';
 import tailwindcss from 'tailwindcss';
 
 import { tailwindConfig } from './config';
@@ -36,7 +37,7 @@ export const ThemePlugins = (options: { content: string[]; outdir: string }): Pl
     stylePlugin({
       postcss: {
         plugins: [
-          tailwindcss(tailwindConfig({ env: process.env.NODE_ENV, content: options.content })) as any, // TODO(burdon): Type.
+          tailwindcss(tailwindConfig({ env: process.env.NODE_ENV, content: options.content })) as AcceptedPlugin,
           autoprefixer
         ]
       }

@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './AppLayout';
 export * from './AuthChoices';
 export * from './ErrorProvider';
 export * from './Fallback';
