@@ -25,6 +25,7 @@ modules:
       outdir: 'out'
       version: 1.2.3
       tag: latest
+    tunnel: false
 ```
 
 ## Deploying to your local KUBE
