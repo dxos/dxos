@@ -59,7 +59,10 @@ export class Client {
     services
   }: ClientOptions = {}) {
     this._config = config ?? new Config();
-    this._services = services ?? config?.values.runtime?.client?.remoteSource ? fromIFrame(this._config) : fromHost(this._config);
+    this._services =
+      services ?? (config?.values.runtime?.client?.remoteSource && typeof window === 'object')
+        ? fromIFrame(this._config)
+        : fromHost(this._config);
 
     // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
@@ -70,9 +73,10 @@ export class Client {
 
     // TODO(burdon): Reconcile with Config.sanitizer.
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigError(
-        'Invalid config version', { current: this._config.values.version, expected: EXPECTED_CONFIG_VERSION }
-      );
+      throw new InvalidConfigError('Invalid config version', {
+        current: this._config.values.version,
+        expected: EXPECTED_CONFIG_VERSION
+      });
     }
   }
 
