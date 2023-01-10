@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Article, Graph, Kanban, ListChecks, Sword, Table, TreeStructure, Users, Wall } from 'phosphor-react';
+import { Article, Compass, Graph, Kanban, ListChecks, Sword, Table, TreeStructure, Users, Wall } from 'phosphor-react';
 
 export enum AppView {
   DASHBOARD = 'dashboard',
@@ -13,6 +13,7 @@ export enum AppView {
   TASKS = 'tasks',
   EDITOR = 'documents',
   GRAPH = 'graph',
+  MAP = 'map',
   GAME = 'game'
 }
 
@@ -26,5 +27,6 @@ export const viewConfig: { [key: string]: { Icon: any } } = {
   [AppView.TASKS]: { Icon: ListChecks },
   [AppView.EDITOR]: { Icon: Article },
   [AppView.GRAPH]: { Icon: Graph },
+  [AppView.MAP]: { Icon: Compass },
   [AppView.GAME]: { Icon: Sword }
 };
