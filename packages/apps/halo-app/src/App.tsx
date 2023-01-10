@@ -80,7 +80,7 @@ const Routes = () => {
       children: [
         {
           path: '/',
-          element: <AppLayout menubarContent={<NavMenu />} suppressSpaceMenu manageProfilePath='/identity' />,
+          element: <AppLayout menubarContent={<NavMenu />} manageProfilePath='/identity' />,
           children: [
             { path: '/devices', element: <DevicesPage /> },
             { path: '/identity', element: <IdentityPage /> },
