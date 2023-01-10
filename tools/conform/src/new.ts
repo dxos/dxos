@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import chalk from 'chalk';
 import path from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import chalk from 'chalk';
 
 import { executeDirectoryTemplate, inquire, z } from '@dxos/plate';
 

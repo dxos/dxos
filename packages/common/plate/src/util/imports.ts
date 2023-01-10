@@ -4,7 +4,6 @@
 
 import os from 'os';
 import path from 'path';
-import { any } from 'zod';
 
 interface Import {
   name: string;

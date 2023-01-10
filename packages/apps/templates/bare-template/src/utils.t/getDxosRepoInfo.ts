@@ -1,11 +1,16 @@
-import path from 'path';
+//
+// Copyright 2023 DXOS.org
+//
+
 import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
+import path from 'path';
+
 import { exists } from '@dxos/plate';
 
 export const isDxosMonorepoSync = () => {
   try {
-    const gitRemoteResult = execSync(`git remote --v`, { stdio: 'pipe' }).toString();
+    const gitRemoteResult = execSync('git remote --v', { stdio: 'pipe' }).toString();
     const isDxosMonorepo = /\:dxos\//.test(gitRemoteResult);
     return isDxosMonorepo;
   } catch {
@@ -21,21 +26,25 @@ export const getTsConfig = async (rootDir: string) => {
 export const getDxosRepoInfo = async () => {
   const tryReadPackageJson = async (dir: string): Promise<object | undefined> => {
     const fileName = path.resolve(dir, 'package.json');
-    if (!(await exists(fileName))) return;
+    if (!(await exists(fileName))) {
+      return;
+    }
     const contents = JSON.parse(await fs.readFile(fileName, 'utf-8'));
-    if (contents?.name !== '@dxos/dxos') return;
+    if (contents?.name !== '@dxos/dxos') {
+      return;
+    }
     return contents;
   };
-  let dxosPackage: any | undefined = undefined;
+  let dxosPackage: any | undefined;
   let dir = __dirname;
   while (!!dir && dir !== '/' && !(dxosPackage = await tryReadPackageJson(dir))) {
     dir = path.resolve(dir, '..');
   }
   if (!dxosPackage) {
-    return { isDxosMonorepo: false as false };
+    return { isDxosMonorepo: false as const };
   }
   const findVitePatch = (patchedDependencies: any) => {
-    for (let key in patchedDependencies) {
+    for (const key in patchedDependencies) {
       if (/^vite/.test(key)) {
         return { [key]: patchedDependencies[key] };
       }
@@ -43,7 +52,7 @@ export const getDxosRepoInfo = async () => {
     return {};
   };
   return {
-    isDxosMonorepo: true as true,
+    isDxosMonorepo: true as const,
     repositoryRootPath: dir,
     version: dxosPackage.version,
     patchedDependencies: findVitePatch(dxosPackage.pnpm.patchedDependencies)

@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import chalk from 'chalk';
 import minimatch from 'minimatch';
 import path from 'path';
 import readDir from 'recursive-readdir';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import chalk from 'chalk';
 
 import { executeDirectoryTemplate, catFiles } from '@dxos/plate';
 

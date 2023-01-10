@@ -1,11 +1,3 @@
-* {
-  box-sizing: border-box;
-}
-
-body {
-  @apply bg-zinc-300 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200;
-}
-
 h1, p, pre {
   @apply my-6;
 }
@@ -15,12 +7,7 @@ h1 {
 }
 
 code, pre {
-  background-color: #e8e8e8;
   @apply dark:bg-zinc-900 py-1 px-2 rounded text-emerald-500 dark:text-emerald-300 shadow-sm dark:shadow-md;
-}
-
-pre {
-  @apply py-2 px-4;
 }
 
 a {
