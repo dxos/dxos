@@ -39,9 +39,9 @@ export default defineConfig({
       '@dxos/client',
       '@dxos/config',
       '@dxos/devtools',
+      '@dxos/kai',
       '@dxos/protocols',
       '@dxos/protocols/proto/dxos/config',
-      '@dxos/kai',
       '@dxos/react-client'
     ]
   },
