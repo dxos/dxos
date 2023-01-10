@@ -16,8 +16,8 @@ import {
   Value
 } from '@dxos/protocols/proto/dxos/echo/model/object';
 
-import { removeKey } from './util';
 import { Reference } from './reference';
+import { removeKey } from './util';
 
 /**
  * @typedef {Object} Value
