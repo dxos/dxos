@@ -46,7 +46,7 @@ export const IdentityPopover = ({
       }}
       triggerIsInToolbar={triggerIsInToolbar}
     >
-      <IdentityPanel />
+      <IdentityPanel identity={identity} />
     </PanelPopover>
   );
 };
