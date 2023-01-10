@@ -83,12 +83,14 @@ export const Avatar = forwardRef(
                 ) : (
                   <rect fill='white' width='100%' height='100%' />
                 )}
-                <circle
-                  fill='black'
-                  cx={`${(100 * maskCenter) / imageSizeNumber}%`}
-                  cy={`${(100 * maskCenter) / imageSizeNumber}%`}
-                  r={`${(50 * maskSize) / imageSizeNumber}%`}
-                />
+                {status && (
+                  <circle
+                    fill='black'
+                    cx={`${(100 * maskCenter) / imageSizeNumber}%`}
+                    cy={`${(100 * maskCenter) / imageSizeNumber}%`}
+                    r={`${(50 * maskSize) / imageSizeNumber}%`}
+                  />
+                )}
               </mask>
             </defs>
             {mediaSrc && (
