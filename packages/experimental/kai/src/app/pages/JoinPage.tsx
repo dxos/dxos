@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
 import { Bug } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,6 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Trigger } from '@dxos/async';
 import { Invitation, InvitationEncoder, PublicKey, Space } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
+import { mx } from '@dxos/react-components';
 
 /**
  * Join space via invitation URL.
@@ -63,7 +63,7 @@ export const JoinPage = () => {
     <div className='full-screen'>
       <div className='flex flex-1 items-center'>
         <div className='flex flex-1 flex-col items-center'>
-          <Bug style={{ width: 160, height: 160 }} className={clsx(error ? 'text-red-500' : 'text-gray-400')} />
+          <Bug style={{ width: 160, height: 160 }} className={mx(error ? 'text-red-500' : 'text-gray-400')} />
         </div>
       </div>
     </div>

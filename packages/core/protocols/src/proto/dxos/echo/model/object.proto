@@ -108,11 +108,18 @@ message ObjectMutation {
 //  ARRAY_DELETE                      = 3;    // TODO(burdon): Identify by value.
     SET_ADD                           = 4;    // TODO(burdon): Identify by value.
     SET_DELETE                        = 5;
+    YJS                               = 6;
   }
 
   Operation operation                 = 1;
   string key                          = 2;
   optional Value value                = 3;
+  optional YJS mutation               = 4;
+}
+
+message YJS {
+  bytes id = 1;
+  bytes payload = 2;
 }
 
 /**

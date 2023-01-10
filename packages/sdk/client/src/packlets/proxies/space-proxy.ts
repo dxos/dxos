@@ -166,6 +166,7 @@ export class SpaceProxy implements Space {
     return this._database;
   }
 
+  // TODO(burdon): Add deprecated property.
   get experimental(): Experimental {
     if (!this._experimental) {
       throw new ApiError('Space not open.');

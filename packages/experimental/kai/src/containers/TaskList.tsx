@@ -2,27 +2,51 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
 import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { useQuery, useReactor } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
+import { getSize, mx } from '@dxos/react-components';
 
-import { Card, Input, TableRow } from '../components';
+import { Button, Card, Input, CardRow, CardMenu } from '../components';
 import { useOptions, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
-/**
- * Sortable task list.
- * https://docs.dndkit.com/presets/sortable
- */
-export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
+// TODO(burdon): Generic header with create.
+
+export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
   completed = undefined,
   readonly = false,
   title = 'Tasks'
+}) => {
+  const { space } = useSpace();
+
+  const handleGenerateTask = async () => {
+    await createTask(space.experimental.db);
+  };
+
+  const Header = () => (
+    <CardMenu title={title}>
+      {!readonly && (
+        <Button onClick={handleGenerateTask}>
+          <PlusCircle className={getSize(5)} />
+        </Button>
+      )}
+    </CardMenu>
+  );
+
+  return (
+    <Card fade scrollbar header={<Header />}>
+      <TaskList completed={completed} readonly={readonly} />
+    </Card>
+  );
+};
+
+export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
+  completed = undefined,
+  readonly = false
 }) => {
   const { space } = useSpace();
   const tasks = useQuery(space, Task.filter({ completed }));
@@ -49,10 +73,6 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     }
   }, []);
 
-  const handleGenerateTask = async () => {
-    await createTask(space.experimental.db);
-  };
-
   const handleCreateTask = async (task: Task) => {
     if (task.title.length) {
       await space.experimental.db.save(task);
@@ -68,14 +88,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
     setSaving(true);
   };
 
-  const Menubar = () => (
-    <button onClick={handleGenerateTask}>
-      <PlusCircle className={getSize(6)} />
-    </button>
-  );
-
   return (
-    <Card title={title} fade className='bg-teal-400' menubar={!readonly && <Menubar />}>
+    <div className='flex flex-col flex-1'>
       <div className='flex flex-col flex-1 overflow-y-scroll scrollbar-thin'>
         <div className={'mt-2'}>
           {tasks?.map((task) => (
@@ -97,7 +111,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; title?: str
           <Spinner />
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 
@@ -106,7 +120,7 @@ export const NewTaskItem: FC<{
   onEnter?: (task: Task) => void;
 }> = ({ task, onEnter }) => {
   return (
-    <TableRow
+    <CardRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6 invisible'>
           <input type='checkbox' autoFocus disabled />
@@ -136,16 +150,16 @@ export const TaskItem: FC<{
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
-}> = ({ task, readonly, onEnter, onDelete, onSave }) => {
+}> = withReactor(({ task, readonly, onEnter, onDelete, onSave }) => {
   const { debug } = useOptions();
-  const { render } = useReactor({
+  useReactorContext({
     onChange: () => {
       onSave?.(task);
     }
   });
 
-  return render(
-    <TableRow
+  return (
+    <CardRow
       sidebar={
         <div className='flex flex-shrink-0 justify-center w-6'>
           <input
@@ -158,14 +172,14 @@ export const TaskItem: FC<{
       }
       action={
         onDelete && (
-          <button className='text-gray-300' onClick={() => onDelete(task)}>
-            <XCircle className={clsx(getSize(6), 'hover:text-red-400')} />
-          </button>
+          <Button className='text-gray-300' onClick={() => onDelete(task)}>
+            <XCircle className={mx(getSize(6), 'hover:text-red-400')} />
+          </Button>
         )
       }
       header={
         <Input
-          className={clsx('w-full outline-0 bg-white', task[deleted] && 'text-red-300')}
+          className={mx('w-full outline-0', task[deleted] && 'text-red-300')}
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
@@ -183,6 +197,6 @@ export const TaskItem: FC<{
         {debug && <div>{PublicKey.from(task[id]).truncate()}</div>}
         <div>{task.assignee?.name}</div>
       </div>
-    </TableRow>
+    </CardRow>
   );
-};
+});

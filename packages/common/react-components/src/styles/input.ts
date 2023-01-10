@@ -16,7 +16,7 @@ export const defaultInput = ({
 }: {
   disabled?: boolean;
   validationValence?: MessageValence;
-}) => {
+} = {}) => {
   return mx(
     'text-base border rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
     defaultFocus,

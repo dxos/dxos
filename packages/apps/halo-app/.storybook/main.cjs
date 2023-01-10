@@ -30,7 +30,6 @@ module.exports = {
           '@dxos/react-async',
           '@dxos/react-client',
           '@dxos/react-ui',
-          '@dxos/react-uikit',
           '@dxos/rpc',
           '@dxos/rpc-tunnel',
           '@dxos/sentry',

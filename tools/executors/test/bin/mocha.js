@@ -25,8 +25,13 @@ const getArg = (flag) => {
   }
 };
 
+// TODO(burdon): Match project from workspace.json.
 const project = getArg('--project');
 const reporter = getArg('--reporter');
+
+// TODO(burdon): Detect grep.
+// const grep = getArg('--grep');
+/*, '--grep', `"${grep}"` */
 
 spawnSync('pnpm', ['-w', 'nx', 'test', project, '--reporter', `"${reporter}"`], {
   shell: true,

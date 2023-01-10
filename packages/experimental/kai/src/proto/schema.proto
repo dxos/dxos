@@ -4,14 +4,18 @@
 
 syntax = "proto3";
 
-// TODO(burdon): Rename file and package.
+package dxos.experimental.kai;
 
-package kai.example.tasks;
+message LatLng {
+  fixed32 lat = 1;
+  fixed32 lng = 2;
+}
 
 message Address {
   string city = 1;
   string state = 2;
   string zip = 3;
+  LatLng coordinates = 4;
 }
 
 message Contact {
@@ -40,6 +44,17 @@ message Project {
   TextObject description = 2;
   repeated Contact team = 3;
   repeated Task tasks = 4;
+//  repeated string tags = 5; // TODO(burdon): Broken.
+  string tag = 5;
+}
+
+message Organization {
+  option (object) = true;
+
+  string name = 1;
+  repeated Project projects = 2;
+  repeated Contact team = 3;
+  Address address = 4;
 }
 
 // TODO(dmaretskyi): Move to separate file.

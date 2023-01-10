@@ -2,27 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
 import React, { FC, ReactNode } from 'react';
 
+import { mx } from '@dxos/react-components';
+
+export const CardMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
+  return (
+    <div className='flex w-full p-1 items-center bg-slate-200 rounded-t'>
+      <h2>{title}</h2>
+      <div className='flex-1' />
+      {children}
+    </div>
+  );
+};
+
 export const Card: FC<{
-  title: string;
-  className?: string;
-  menubar?: ReactNode;
   children?: ReactNode;
   scrollbar?: boolean;
   fade?: boolean;
-}> = ({ title, className = 'bg-gray-400', menubar, scrollbar, fade, children }) => {
+  header?: JSX.Element;
+}> = ({ scrollbar, fade, header, children }) => {
   return (
-    <div className='flex flex-1 flex-col overflow-hidden drop-shadow-md'>
-      <div className={clsx('flex p-2', className)}>
-        <h2 className='text-lg'>{title}</h2>
-        <div className='flex-1' />
-        {menubar}
-      </div>
+    <div className='flex flex-col w-full bg-white overflow-hidden drop-shadow-md'>
+      {header}
 
       <div
-        className={clsx(
+        className={mx(
           'flex flex-1 flex-col bg-white',
           scrollbar ? 'overflow-auto scrollbar-thin' : 'overflow-hidden',
           fade && 'fade'

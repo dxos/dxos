@@ -26,6 +26,9 @@
       "path": "../../apps/patterns/react-list"
     },
     {
+      "path": "../../apps/patterns/react-ui"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -65,6 +68,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../chess-app"
+    },
+    {
       "path": "../client-testing"
     },
     {
@@ -73,5 +79,12 @@
     {
       "path": "../gem-spore"
     }
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    },
+    "files": true,
+    "transpileOnly": true
+  }
 }

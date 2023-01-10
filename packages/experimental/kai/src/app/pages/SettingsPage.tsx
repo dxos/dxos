@@ -16,8 +16,8 @@ export const SettingsPage = () => {
   return (
     <div className='full-screen'>
       <div className='flex flex-1 drop-shadow-md justify-center'>
-        <div className='flex flex-1 overflow-y-scroll bg-white text-sm p-4' style={{ width: 700, maxWidth: 700 }}>
-          <SyntaxHighlighter language='json' style={style}>
+        <div className='flex flex-1 overflow-y-scroll bg-gray-50 text-sm p-4' style={{ width: 700, maxWidth: 700 }}>
+          <SyntaxHighlighter className='flex flex-1' language='json' style={style}>
             {JSON.stringify(client.config.values, undefined, 2)}
           </SyntaxHighlighter>
         </div>
