@@ -20,7 +20,7 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
 
     ${!dxosUi && text`
     // include any css files directly
-    import 'index.css';`}
+    import './index.css';`}
 
     import { App } from './App';
 

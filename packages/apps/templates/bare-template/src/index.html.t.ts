@@ -18,6 +18,7 @@ export default defineTemplate(
         </head>
         <body>
           ${react && '<div id="root"></div>'}
+          ${render.body()}
           <script type="module" src="/src/main.ts${react ? 'x' : ''}"></script>
         </body>
       </html>
@@ -26,7 +27,8 @@ export default defineTemplate(
   {
     config,
     slots: {
-      head: ''
+      head: '',
+      body: ''
     }
   }
 );

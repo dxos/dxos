@@ -12,14 +12,20 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     import { Client } from '@dxos/client';
     import { Config, Defaults, Dynamics } from '@dxos/config';
 
-    ${dxosUi && text`
+    ${
+      dxosUi &&
+      text`
     // this includes css styles from @dxos/react-components
     // this must precede all other style imports in the app
-    import '@dxosTheme';`}
+    import '@dxosTheme';`
+    }
 
-    ${!dxosUi && text`
+    ${
+      !dxosUi &&
+      text`
     // include any css files directly
-    import 'index.css';`}
+    import './index.css';`
+    }
     
     void (async () => {
       // grab a configuration with defaults and dynamic values from KUBE
@@ -29,9 +35,12 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
       // initialize before using
       await client.initialize();
     
-      // usage: 
-      const element = document.createElement('pre');
+      // usage:
+      console.log(client.toJSON());
+
+      const element = document.getElementById('output') ?? document.createElement('pre');
       element.innerText = JSON.stringify(client.toJSON(), null, 2);
-      document.body.appendChild(element);
-    })();` : null;
+      if (element.getRootNode() === element) document.body.appendChild(element);
+    })();`
+    : null;
 });

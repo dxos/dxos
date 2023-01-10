@@ -28,6 +28,70 @@
     </script>
   </head>
   <body>
+    <div class="flex justify-center align-middle">
+      <div
+        class="max-w-md bg-zinc-100 dark:bg-zinc-800 p-6 m-8 rounded-md shadow-lg"
+      >
+        <img src="dxos-white.svg" class="mb-10 dark" />
+        <img src="dxos.svg" class="mb-10 no-dark" />
+        <h1>@dxos/hello-template-min</h1>
+        <p>Your new DXOS app works.</p>
+        <p>See <code>index.html</code> and <code>src/main.ts</code></p>
+
+        <p>
+          Add your <code>css</code> to <code>src/index.css</code> or import
+          <code>.css</code> files from your <code>.ts</code> files directly.
+        </p>
+        <p>Create a <code>Client</code>:</p>
+        <pre>
+    import { Client } from '@dxos/client';
+    const client = new Client();
+    await client.initialize();
+    console.log(client.toJSON());
+    </pre
+        >
+        <p>Result:</p>
+        <pre id="output"></pre>
+        <p>
+          When you are ready you can deploy this app to your
+          <a
+            href="https://docs.dxos.org/guide/kube"
+            target="_blank"
+            rel="noreferrer"
+          >
+            KUBE
+          </a>
+          .
+        </p>
+        <pre>pnpm run deploy</pre>
+        <h2>Learn more:</h2>
+        <ul>
+          <li>
+            <a
+              href="https://docs.dxos.org/guide/echo/react"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Using ECHO with React
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://docs.dxos.org/guide/kube/dx-yml-file"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Deploying to KUBE
+            </a>
+          </li>
+          <li>
+            <a href="https://docs.dxos.org" target="_blank" rel="noreferrer">
+              DXOS Documentation
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
