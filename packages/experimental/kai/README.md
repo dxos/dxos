@@ -33,7 +33,7 @@ The word kai (貝) is the Japanese word for shell.
 - [ ] Styling slots.
 - [ ] i18n Text properties (e.g., placeholder)
 
-### Framerwork/ECHO Issues
+### Framework/ECHO Issues
 
 - [ ] dxtype build rule.
 - [ ] Reset.

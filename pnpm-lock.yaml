@@ -2833,6 +2833,7 @@ importers:
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
       '@types/faker': ^5.5.9
+      '@types/leaflet': ^1.9.0
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^18.0.6
@@ -2840,11 +2841,13 @@ importers:
       '@types/react-table': ^7.7.14
       '@vitejs/plugin-react': ^3.0.1
       faker: ^5.5.3
+      leaflet: ^1.9.3
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
+      react-leaflet: ^4.2.0
       react-resize-detector: ^7.1.2
       react-router-dom: ^6.3.0
       react-syntax-highlighter: ^15.5.0
@@ -2880,10 +2883,12 @@ importers:
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../apps/patterns/react-ui
+      leaflet: 1.9.3
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-leaflet: 4.2.0_yydtlhsdonbqao6vgvkwhv2zki
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-syntax-highlighter: 15.5.0_react@18.2.0
@@ -2894,6 +2899,7 @@ importers:
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21
       '@types/faker': 5.5.9
+      '@types/leaflet': 1.9.0
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
       '@types/react-dom': 18.0.6
@@ -9831,6 +9837,18 @@ packages:
       react: 18.2.0
     dev: false
 
+  /@react-leaflet/core/2.1.0_yydtlhsdonbqao6vgvkwhv2zki:
+    resolution: {integrity: sha512-Qk7Pfu8BSarKGqILj4x7bCSZ1pjuAPZ+qmRwH5S7mDS91VSbVVsJSrW4qA+GPrro8t69gFYVMWb1Zc4yFmPiVg==}
+    peerDependencies:
+      leaflet: ^1.9.0
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      leaflet: 1.9.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
   /@react-pdf/fns/2.0.0:
     resolution: {integrity: sha512-PMFQVjlxA4wwrKd5eiQiAcVi1fllv8qTPcLLvY0kzJeHQBKLP0ZzDRLbLptPY3LR5yjpLhdf2MfJbb4Bd9mmjA==}
     dev: true
@@ -12655,6 +12673,12 @@ packages:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
       '@types/node': 18.11.9
+
+  /@types/leaflet/1.9.0:
+    resolution: {integrity: sha512-7LeOSj7EloC5UcyOMo+1kc3S1UT3MjJxwqsMT1d2PTyvQz53w0Y0oSSk9nwZnOZubCmBvpSNGceucxiq+ZPEUw==}
+    dependencies:
+      '@types/geojson': 7946.0.10
+    dev: true
 
   /@types/less/3.0.3:
     resolution: {integrity: sha512-1YXyYH83h6We1djyoUEqTlVyQtCfJAFXELSKW2ZRtjHD4hQ82CC4lvrv5D0l0FLcKBaiPbXyi3MpMsI9ZRgKsw==}
@@ -24214,6 +24238,10 @@ packages:
       invert-kv: 3.0.1
     dev: true
 
+  /leaflet/1.9.3:
+    resolution: {integrity: sha512-iB2cR9vAkDOu5l3HAay2obcUHZ7xwUBBjph8+PGtmW/2lYhbLizWtG7nTeYht36WfOslixQF9D/uSIzhZgGMfQ==}
+    dev: false
+
   /level-codec/9.0.2:
     resolution: {integrity: sha512-UyIwNb1lJBChJnGfjmO0OR+ezh2iVu1Kas3nvBS/BzGnx79dv6g7unpKIDNPMhfdTEGoc7mC8uAu51XEtX+FHQ==}
     engines: {node: '>=6'}
@@ -28766,6 +28794,19 @@ packages:
 
   /react-is/18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
+
+  /react-leaflet/4.2.0_yydtlhsdonbqao6vgvkwhv2zki:
+    resolution: {integrity: sha512-9d8T7hzYrQA5GLe3vn0qtRLJzQKgjr080NKa45yArGwuSl1nH/6aK9gp7DeYdktpdO1vKGSUTGW5AsUS064X0A==}
+    peerDependencies:
+      leaflet: ^1.9.0
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      '@react-leaflet/core': 2.1.0_yydtlhsdonbqao6vgvkwhv2zki
+      leaflet: 1.9.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
 
   /react-native-fetch-api/2.0.0:
     resolution: {integrity: sha512-GOA8tc1EVYLnHvma/TU9VTgLOyralO7eATRuCDchQveXW9Fr9vXygyq9iwqmM7YRZ8qRJfEt9xOS7OYMdJvRFw==}
