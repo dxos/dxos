@@ -111,7 +111,7 @@ describe('ObjectModel', () => {
     expect(peer1.model.get('title')).toEqual(peer2.model.get('title'));
   });
 
-  test.only('reference', async () => {
+  test('reference', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const peer1 = rig.createPeer();
 
