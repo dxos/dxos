@@ -15,7 +15,7 @@ import { ClientContext } from '@dxos/react-client';
  * Main app container with routes.
  */
 export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = false, demo = true }) => {
-  const [value, setValue] = useState<ClientAndServices | undefined>(undefined);
+  const [value, setValue] = useState<ClientAndServices>();
 
   // Auto-create client and profile.
   useEffect(() => {
