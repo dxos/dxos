@@ -43,9 +43,15 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
     <div className='full-screen bg-gray-50'>
       <AppBar />
 
+      {showSidebar && (
+        <div className='flex absolute z-40 pt-[84px] h-full lg:hidden' style={{ width: sidebarWidth }}>
+          <Sidebar />
+        </div>
+      )}
+
       <div className='flex flex-1 overflow-hidden'>
         {showSidebar && (
-          <div className='flex flex-shrink-0' style={{ width: sidebarWidth }}>
+          <div className='hidden lg:flex flex-shrink-0' style={{ width: sidebarWidth }}>
             <Sidebar />
           </div>
         )}

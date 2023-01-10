@@ -4,6 +4,7 @@
 
 import { Bug, List, User } from 'phosphor-react';
 import React, { FC } from 'react';
+import { useMediaQuery } from 'react-responsive';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
@@ -52,12 +53,16 @@ export const AppBar = () => {
   const { spaceKey: currentSpaceKey, view: currentView } = useParams();
   const setAppState = useAppStateDispatch();
 
+  useMediaQuery({ minWidth: 1024 }, undefined, (isLarge) => {
+    setAppState((state) => ({ ...state, showSidebar: isLarge }));
+  });
+
   const setView = (spaceKey: string, view: string) => {
     navigate(`/${spaceKey}/${view}`);
   };
 
   return (
-    <div className='flex flex-col flex-shrink-0'>
+    <div className='flex flex-col flex-shrink-0 z-50'>
       <div className='flex items-center bg-orange-400 pl-2 pr-2' style={{ height: 48 }}>
         <div className='flex ml-2'>
           <button onClick={() => setAppState(({ showSidebar, ...rest }) => ({ showSidebar: !showSidebar, ...rest }))}>
