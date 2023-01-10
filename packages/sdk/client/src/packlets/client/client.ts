@@ -60,7 +60,7 @@ export class Client {
   }: ClientOptions = {}) {
     this._config = config ?? new Config();
     this._services =
-      services ?? (config?.values.runtime?.client?.remoteSource && typeof window === 'object') // Use fromIframe only in browsers.
+      services ?? (config?.values.runtime?.client?.remoteSource && typeof window === 'object') // Use fromIframe only in browsers for remote clients.
         ? fromIFrame(this._config)
         : fromHost(this._config);
 
