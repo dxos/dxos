@@ -16,6 +16,18 @@
         "{options.outputPath}"
       ]
     },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/deprecated/react-components-deprecated/src/index.ts"
+        ],
+        "outputPath": "packages/deprecated/react-components-deprecated/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {

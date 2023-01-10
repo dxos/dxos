@@ -19,7 +19,7 @@ import { PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
-export type ClientAndServices = { client: Client; services: ClientServices }
+export type ClientAndServices = { client: Client; services: ClientServices };
 
 const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices> }) => {
   const [value, setValue] = useState<ClientAndServices>();
