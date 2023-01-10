@@ -12,6 +12,7 @@ import { IdentityPanel } from '../../panels';
 
 export interface IdentityPopoverProps extends Partial<ComponentProps<typeof PanelPopover>> {
   identity: Profile;
+  onClickManageProfile?: () => void;
 }
 
 export const IdentityPopover = ({
@@ -19,6 +20,7 @@ export const IdentityPopover = ({
   openTrigger,
   slots,
   triggerIsInToolbar = true,
+  onClickManageProfile,
   ...popoverProps
 }: IdentityPopoverProps) => {
   return (
@@ -46,7 +48,7 @@ export const IdentityPopover = ({
       }}
       triggerIsInToolbar={triggerIsInToolbar}
     >
-      <IdentityPanel identity={identity} />
+      <IdentityPanel {...{ identity, onClickManageProfile }} />
     </PanelPopover>
   );
 };

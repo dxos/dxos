@@ -4,6 +4,7 @@
 import React from 'react';
 
 import type { Profile } from '@dxos/client';
+import { useClient } from '@dxos/react-client';
 import { Avatar, Button, ThemeContext, useTranslation } from '@dxos/react-components';
 
 export const IdentityPanel = ({
@@ -11,9 +12,15 @@ export const IdentityPanel = ({
   onClickManageProfile
 }: {
   identity: Profile;
-  onClickManageProfile: () => void;
+  onClickManageProfile?: () => void;
 }) => {
   const { t } = useTranslation('os');
+  const client = useClient();
+  const defaultManageProfile = () => {
+    const remoteSource = new URL(client?.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
+    const tab = window.open(remoteSource.origin, '_blank');
+    tab?.focus();
+  };
   return (
     <ThemeContext.Provider value={{ themeVariant: 'os' }}>
       <div className='flex flex-col gap-2 justify-center items-center'>
@@ -23,7 +30,7 @@ export const IdentityPanel = ({
           fallbackValue={identity.identityKey.toHex()}
           label={identity.displayName ?? ''}
         />
-        <Button compact onClick={onClickManageProfile} className='is-full'>
+        <Button compact onClick={onClickManageProfile ?? defaultManageProfile} className='is-full'>
           {t('manage profile label')}
         </Button>
       </div>

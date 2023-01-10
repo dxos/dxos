@@ -16,6 +16,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-composer": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@sentry/react": "^7.17.2",

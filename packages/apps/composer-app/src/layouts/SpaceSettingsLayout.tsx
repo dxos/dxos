@@ -6,8 +6,9 @@ import React from 'react';
 import { generatePath, Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/client';
-import { Menubar, ProfileMenu, Separator, SpaceLink } from '@dxos/react-appkit';
+import { Menubar, Separator, SpaceLink } from '@dxos/react-appkit';
 import { useIdentity, useSpace } from '@dxos/react-client';
+import { IdentityPopover } from '@dxos/react-ui';
 
 import { Main } from '../components';
 
@@ -22,7 +23,7 @@ export const SpaceSettingsLayout = () => {
       <Menubar>
         <Separator className='grow' />
         {space && <SpaceLink onClickGoToSpace={() => navigate(generatePath('/spaces/:space', { space: spaceHex! }))} />}
-        {identity && <ProfileMenu profile={identity} />}
+        {identity && <IdentityPopover {...{ identity }} />}
       </Menubar>
       <Main>
         <Outlet context={{ space }} />
