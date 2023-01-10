@@ -26,6 +26,12 @@ To disable the tunnel:
 dx tunnel set --app "name-of-your-app" --disabled
 ```
 
+To list active tunnels:
+
+```bash
+dx tunnel list
+```
+
 :::tip
 Tunnel will be open while KUBE service is running. Tunnel URLs are persistent, so after KUBE restart or stop/start previously tunneled applications will be available on same public URLs.
 :::
