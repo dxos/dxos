@@ -6,10 +6,7 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/deprecated/react-components-deprecated/src/index.ts",
-        "outputPath": "packages/deprecated/react-components-deprecated/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/deprecated/react-components-deprecated/dist/types",
         "tsConfig": "packages/deprecated/react-components-deprecated/tsconfig.json"
       },
       "outputs": [

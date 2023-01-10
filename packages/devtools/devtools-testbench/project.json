@@ -16,7 +16,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/devtools/devtools-testbench/**/*.{ts,js}"
+          "packages/devtools/devtools-testbench/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
