@@ -21,6 +21,7 @@ import {
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
+import { osTranslations } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';
@@ -48,7 +49,7 @@ export const App = () => {
   return (
     <ThemeProvider
       appNs='halo'
-      resourceExtensions={[appkitTranslations, tasksTranslations]}
+      resourceExtensions={[appkitTranslations, osTranslations, tasksTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
       <ErrorProvider>

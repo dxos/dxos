@@ -2,28 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { UserCircleGear } from 'phosphor-react';
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 
 import { Profile as ProfileType } from '@dxos/client';
-import { useClient } from '@dxos/react-client';
-import { Avatar, Button, getSize, Popover, useTranslation } from '@dxos/react-components';
+import { Avatar, Popover } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 export interface ProfileMenuProps {
   profile: ProfileType;
-  onClickManageProfile?: () => void;
 }
 
-export const ProfileMenu = (props: ProfileMenuProps) => {
-  const client = useClient();
-  const defaultManageProfile = () => {
-    const remoteSource = new URL(client?.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
-    const tab = window.open(remoteSource.origin, '_blank');
-    tab?.focus();
-  };
-  const { profile, onClickManageProfile = defaultManageProfile } = props;
-  const { t } = useTranslation('appkit');
+export const ProfileMenu = (props: PropsWithChildren<ProfileMenuProps>) => {
+  const { profile } = props;
   return (
     <Popover
       openTrigger={
@@ -43,13 +33,7 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
       }}
       triggerIsInToolbar
     >
-      <p>{profile.displayName ?? humanize(profile.identityKey.toHex())}</p>
-      {onClickManageProfile && (
-        <Button className='flex w-full gap-2' onClick={onClickManageProfile}>
-          <UserCircleGear className={getSize(5)} />
-          <span>{t('manage profile label')}</span>
-        </Button>
-      )}
+      {props.children}
     </Popover>
   );
 };

@@ -4,4 +4,4 @@
 
 import * as enUS from './locales/en-US';
 
-export const resources = { 'en-US': enUS };
+export const osTranslations = { 'en-US': enUS };
