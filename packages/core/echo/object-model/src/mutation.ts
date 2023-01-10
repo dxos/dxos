@@ -17,6 +17,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 import { removeKey } from './util';
+import { Reference } from './reference';
 
 /**
  * @typedef {Object} Value
@@ -37,6 +38,7 @@ enum Type {
   TIMESTAMP = 'timestamp',
   DATETIME = 'datetime',
 
+  REFERENCE = 'reference',
   OBJECT = 'object'
 }
 
@@ -80,6 +82,8 @@ export class ValueUtil {
       return ValueUtil.string(value);
     } else if (value instanceof Uint8Array || Buffer.isBuffer(value)) {
       return ValueUtil.bytes(value);
+    } else if (value instanceof Reference) {
+      return ValueUtil.reference(value);
     } else if (typeof value === 'object') {
       return ValueUtil.object(value);
     } else {
@@ -132,6 +136,10 @@ export class ValueUtil {
     return { [Type.DATETIME]: value };
   }
 
+  static reference(value: Reference): Value {
+    return { [Type.REFERENCE]: { itemId: value.itemId } };
+  }
+
   static object(value: Record<string, any>): Value {
     return {
       [Type.OBJECT]: {
@@ -178,6 +186,13 @@ export class ValueUtil {
     // Remove property.
     if (value[Type.NULL]) {
       set(object, key, null);
+      return object;
+    }
+
+    // Apply references.
+    const refValue = value[Type.REFERENCE];
+    if (refValue !== undefined) {
+      set(object, key, new Reference(refValue.itemId));
       return object;
     }
 
