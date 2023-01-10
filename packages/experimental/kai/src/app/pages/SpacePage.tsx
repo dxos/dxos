@@ -10,6 +10,7 @@ import { useSpaces } from '@dxos/react-client';
 import {
   ChessGrid,
   ContactTable,
+  MapView,
   OrganizationHierarchy,
   ProjectEditor,
   ProjectGraph,
@@ -30,7 +31,7 @@ import { AppBar } from './AppBar';
 import { Dashboard } from './Dashboard';
 import { Sidebar } from './Sidebar';
 
-const sidebarWidth = 6 * (24 + 8) + 16;
+const sidebarWidth = 240;
 
 /**
  * Main grid layout.
@@ -58,6 +59,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
           {view === AppView.TASKS && <TaskList />}
           {view === AppView.EDITOR && <ProjectEditor />}
           {view === AppView.GRAPH && <ProjectGraph />}
+          {view === AppView.MAP && <MapView />}
           {view === AppView.GAME && <ChessGrid />}
         </div>
       </div>

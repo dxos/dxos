@@ -7,7 +7,6 @@ import { Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
 import { EchoObject } from '@dxos/echo-schema';
 
-// https://react-table-v7.tanstack.com/docs/overview
 // https://github.com/TanStack/table/blob/v7/examples/full-width-resizable-table/src/App.js
 
 // TODO(burdon): Adapter for Project type.
@@ -29,7 +28,8 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
 /**
- *
+ * Virtual table.
+ * https://react-table-v7.tanstack.com/docs/overview
  */
 export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = ({ columns, data }) => {
   const defaultColumn = useMemo(
@@ -49,7 +49,8 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
   );
 
   return (
-    <div {...getTableProps()} className='table flex flex-1'>
+    // TODO(burdon): Remove table class to force scrolling.
+    <div {...getTableProps()} className='__table flex flex-col flex-1'>
       {/* Header */}
       <div>
         {headerGroups.map((headerGroup) => (
@@ -77,23 +78,25 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
       </div>
 
       {/* Body */}
-      <div className='tbody'>
-        {rows.map((row, i) => {
-          prepareRow(row);
-          return (
-            // eslint-disable-next-line react/jsx-key
-            <div {...row.getRowProps()} className='tr'>
-              {row.cells.map((cell) => {
-                return (
-                  // eslint-disable-next-line react/jsx-key
-                  <div {...cell.getCellProps(cellProps)} className='td pl-2 pr-2 overflow-hidden text-ellipsis'>
-                    {cell.render('Cell')}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+      <div className='tbody overflow-y-scroll'>
+        <div>
+          {rows.map((row, i) => {
+            prepareRow(row);
+            return (
+              // eslint-disable-next-line react/jsx-key
+              <div {...row.getRowProps()} className='tr'>
+                {row.cells.map((cell) => {
+                  return (
+                    // eslint-disable-next-line react/jsx-key
+                    <div {...cell.getCellProps(cellProps)} className='td pl-2 pr-2 overflow-hidden text-ellipsis'>
+                      {cell.render('Cell')}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

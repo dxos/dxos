@@ -6,6 +6,7 @@ export * from './ChessGame';
 export * from './ContactList';
 export * from './ContactTable';
 export * from './DraggableTaskList';
+export * from './Map';
 export * from './MemberList';
 export * from './OrganizationHierarchy';
 export * from './ProjectEditor';
