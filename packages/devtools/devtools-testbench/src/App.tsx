@@ -6,15 +6,19 @@ import React, { FC, useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { Client, fromHost } from '@dxos/client';
+import { Config, Defaults } from '@dxos/config';
 import { ClientAndServices, PanelsContainer, sections } from '@dxos/devtools';
 import { AppView, OptionsContext, Routes as KaiRoutes } from '@dxos/kai';
-import { Config, Defaults } from '@dxos/config';
 import { ClientContext } from '@dxos/react-client';
 
 /**
  * Main app container with routes.
  */
-export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = false, demo = true }) => {
+export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
+  views,
+  debug = false,
+  demo = true
+}) => {
   const [value, setValue] = useState<ClientAndServices>();
 
   // Auto-create client and profile.

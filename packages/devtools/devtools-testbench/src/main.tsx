@@ -7,9 +7,9 @@ import { createRoot } from 'react-dom/client';
 
 import { AppView } from '@dxos/kai';
 
-import { App } from './app';
+import { App } from './App';
 
-import '@dxos/kai/src/style.css';
+import '@dxos/kai/style.css';
 import './style.css';
 
 // TODO(burdon): Get debug from config.
