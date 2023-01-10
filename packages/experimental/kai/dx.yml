@@ -7,7 +7,7 @@ package:
       displayName: kai
       description: Kai Demo.
       build:
-        command: pnpm -w nx bundle kai-app
+        command: pnpm -w nx bundle kai
 
 runtime:
   client:
