@@ -8,6 +8,7 @@ import stylePlugin from 'esbuild-style-plugin';
 import { mkdir, cp } from 'node:fs/promises';
 import { resolve, relative, join, basename } from 'node:path';
 import tailwindcss from 'tailwindcss';
+import { AcceptedPlugin } from 'postcss';
 
 import { tailwindConfig } from './config';
 
@@ -35,7 +36,10 @@ export const ThemePlugins = (options: { content: string[]; outdir: string }): Pl
     // TODO (thure): Note also that because it is an entryPoint, the developer has to reference the built theme.css from `index.html`, which is inflexible and possibly inconvenient.
     stylePlugin({
       postcss: {
-        plugins: [tailwindcss(tailwindConfig({ env: process.env.NODE_ENV, content: options.content })), autoprefixer]
+        plugins: [
+          tailwindcss(tailwindConfig({ env: process.env.NODE_ENV, content: options.content })) as AcceptedPlugin,
+          autoprefixer
+        ]
       }
     })
   ];
