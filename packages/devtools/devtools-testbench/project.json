@@ -29,8 +29,5 @@
         "buildTarget": "devtools:bundle"
       }
     }
-  },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  }
 }
