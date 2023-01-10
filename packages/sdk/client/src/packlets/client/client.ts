@@ -53,7 +53,11 @@ export class Client {
   private _initialized = false;
 
   // prettier-ignore
-  constructor({ config, modelFactory, services }: ClientOptions = {}) {
+  constructor({
+    config,
+    modelFactory,
+    services
+  }: ClientOptions = {}) {
     this._config = config ?? new Config();
     this._services = services ?? typeof window === 'object' ? fromIFrame(this._config) : fromHost(this._config); // Use fromIframe only in browsers for remote clients.
 
@@ -66,10 +70,7 @@ export class Client {
 
     // TODO(burdon): Reconcile with Config.sanitizer.
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigError('Invalid config version', {
-        current: this._config.values.version,
-        expected: EXPECTED_CONFIG_VERSION
-      });
+      throw new InvalidConfigError('Invalid config version', { current: this._config.values.version, expected: EXPECTED_CONFIG_VERSION });
     }
   }
 
