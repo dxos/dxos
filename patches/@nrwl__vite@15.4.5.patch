@@ -1,5 +1,5 @@
 diff --git a/src/executors/build/build.impl.js b/src/executors/build/build.impl.js
-index 65a222d798d60f32dffe0736dc8692abfd85ccdd..460ab35b43e99e0d170d914c21906695ccb88340 100644
+index f2d15f94e84b5369d0c52c4b163b1fecb81429ea..460ab35b43e99e0d170d914c21906695ccb88340 100644
 --- a/src/executors/build/build.impl.js
 +++ b/src/executors/build/build.impl.js
 @@ -7,27 +7,8 @@ const _extends = require("@swc/helpers/lib/_extends.js").default;
@@ -10,7 +10,7 @@ index 65a222d798d60f32dffe0736dc8692abfd85ccdd..460ab35b43e99e0d170d914c21906695
 -const _fs = require("fs");
 -const _path = require("path");
  async function viteBuildExecutor(options, context) {
--    const projectRoot = context.workspace.projects[context.projectName].root;
+-    const projectRoot = context.projectsConfigurations.projects[context.projectName].root;
      await runInstance(await (0, _optionsUtils.getBuildAndSharedConfig)(options, context));
 -    const libraryPackageJson = (0, _path.resolve)(projectRoot, 'package.json');
 -    const rootPackageJson = (0, _path.resolve)(context.root, 'package.json');
@@ -20,7 +20,7 @@ index 65a222d798d60f32dffe0736dc8692abfd85ccdd..460ab35b43e99e0d170d914c21906695
 -            outputPath: options.outputPath,
 -            assets: [
 -                {
--                    input: '.',
+-                    input: projectRoot,
 -                    output: '.',
 -                    glob: 'package.json'
 -                }
