@@ -8,7 +8,7 @@ import { useRoutes } from 'react-router-dom';
 import { ManageSpacePage, RequireIdentity, useTelemetry } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
 
-import { AppLayout, SpaceLayout, SpaceSettingsLayout } from './layouts';
+import { SpacesLayout, SpaceLayout, SpaceSettingsLayout } from './layouts';
 import { SpacePage, SpacesPage } from './pages';
 
 export const Routes = () => {
@@ -36,7 +36,7 @@ export const Routes = () => {
       children: [
         {
           path: '/',
-          element: <AppLayout />,
+          element: <SpacesLayout />,
           children: [
             {
               path: '/',

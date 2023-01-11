@@ -46,25 +46,10 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/echo/echo-typegen"
     },
     {
-      "path": "../../core/mesh/messaging"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
       "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client"

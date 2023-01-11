@@ -3,13 +3,11 @@
 //
 
 import React, { ReactNode, useCallback } from 'react';
-import { generatePath, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { Menubar, useSafeSpaceKey, StatusIndicator, Separator, ProfileMenu, SpacesLink } from '@dxos/react-appkit';
 import { useClient, useIdentity, useSpace, useStatus } from '@dxos/react-client';
-
-import { useSafeSpaceKey } from '../../hooks';
-import { Menubar } from '../Menubar';
-import { StatusIndicator } from '../StatusIndicator';
+import { Button, useTranslation } from '@dxos/react-components';
 
 const StatusContainer = () => {
   const status = useStatus();
@@ -18,31 +16,23 @@ const StatusContainer = () => {
 
 export interface AppLayoutProps {
   spacesPath?: string;
-  spacePath?: string;
-  manageSpacePath?: string;
   manageProfilePath?: string;
   menubarContent?: ReactNode;
-  suppressSpaceMenu?: boolean;
 }
 
-export const AppLayout = ({
-  spacesPath = '/spaces',
-  spacePath = '/spaces/:space',
-  manageSpacePath = '/spaces/:space/settings',
-  manageProfilePath,
-  suppressSpaceMenu,
-  menubarContent
-}: AppLayoutProps) => {
+export const AppLayout = ({ spacesPath = '/spaces', manageProfilePath, menubarContent }: AppLayoutProps) => {
   const client = useClient();
   const identity = useIdentity();
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate(spacesPath));
   const space = useSpace(spaceKey);
 
+  const { t } = useTranslation('appkit');
+
   const navigate = useNavigate();
   const location = useLocation();
   const pathSegments = location.pathname.split('/').length;
-  const isManagingSpace = !!spaceHex && pathSegments > 3;
+  const isManagingSpace = !!spaceHex && pathSegments > 2;
 
   const handleManageProfile = useCallback(() => {
     if (manageProfilePath) {
@@ -54,29 +44,24 @@ export const AppLayout = ({
     }
   }, [client, navigate, manageProfilePath]);
 
-  const handleGoToSpace = useCallback(
-    () => navigate(generatePath(spacePath, { space: spaceHex })),
-    [navigate, spaceHex]
-  );
-
-  const handleManageSpace = useCallback(
-    () => navigate(generatePath(manageSpacePath, { space: spaceHex })),
-    [navigate, spaceHex]
-  );
-
   const handleGoToSpaces = useCallback(() => navigate(spacesPath), [navigate]);
 
   return (
     <>
-      <Menubar
-        profile={identity!}
-        space={space}
-        {...(isManagingSpace && { onClickGoToSpace: handleGoToSpace })}
-        {...(space && { onClickGoToSpaces: handleGoToSpaces })}
-        {...(!suppressSpaceMenu && { onClickManageSpace: handleManageSpace })}
-        onClickManageProfile={handleManageProfile}
-      >
+      <Menubar>
+        {isManagingSpace && <SpacesLink onClickGoToSpaces={handleGoToSpaces} />}
+        <Separator className='grow' />
+        {identity && (
+          <ProfileMenu profile={identity}>
+            <Button onClick={handleManageProfile}>{t('manage profile label')}</Button>
+          </ProfileMenu>
+        )}
+      </Menubar>
+      {/* todo(thure): multiple Menubars messes up keyboard a11y */}
+      <Menubar>
+        <Separator className='grow' />
         {menubarContent}
+        <Separator className='grow' />
       </Menubar>
       <StatusContainer />
       <main className='max-is-5xl mli-auto pli-7 pbs-16'>

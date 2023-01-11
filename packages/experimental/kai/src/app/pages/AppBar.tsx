@@ -58,8 +58,8 @@ export const AppBar = () => {
 
   return (
     <div className='flex flex-col flex-shrink-0'>
-      <div className='flex items-center bg-orange-400 pl-2 pr-2' style={{ height: 48 }}>
-        <div className='flex ml-2'>
+      <div className='flex items-center bg-orange-400 pl-4 pr-4' style={{ height: 48 }}>
+        <div className='flex'>
           <button onClick={() => setAppState(({ showSidebar, ...rest }) => ({ showSidebar: !showSidebar, ...rest }))}>
             <List className={getSize(6)} />
           </button>

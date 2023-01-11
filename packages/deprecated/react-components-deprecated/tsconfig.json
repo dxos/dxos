@@ -1,13 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "emitDeclarationOnly": false,
     "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "exclude": [
     "/node_modules/"

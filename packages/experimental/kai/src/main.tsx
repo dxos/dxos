@@ -8,7 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app';
 import { AppView } from './hooks';
 
-import './style.css';
+import '../style.css';
 
 (() => {
   // TODO(burdon): Get debug from config.

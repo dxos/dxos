@@ -7,6 +7,11 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
   "scripts": {
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
@@ -36,6 +41,7 @@
     "@dxos/react-composer": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "chess.js": "^1.0.0-alpha.0",
     "leaflet": "^1.9.3",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",

@@ -291,6 +291,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-composer': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
       '@sentry/react': ^7.17.2
@@ -311,6 +312,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-composer': link:../patterns/react-composer
+      '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@sentry/react': 7.20.0_react@18.2.0
@@ -724,6 +726,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-list': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
       '@sentry/react': ^7.17.2
       '@types/react': ^18.0.21
@@ -744,6 +747,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-list': link:../patterns/react-list
+      '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/sentry': link:../../common/sentry
       '@sentry/react': 7.20.0_react@18.2.0
       phosphor-react: 1.4.1_react@18.2.0
@@ -2085,6 +2089,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
       '@dxos/keys': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -2118,6 +2123,7 @@ importers:
       uuid: ^8.3.2
     dependencies:
       '@dxos/debug': link:../../common/debug
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-registry-client': link:../../experimental/react-registry-client
@@ -2603,6 +2609,51 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
 
+  packages/devtools/devtools-testbench:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/devtools': workspace:*
+      '@dxos/kai': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^3.0.1
+      postcss: ^8.4.17
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-router-dom: ^6.3.0
+      tailwindcss: ^3.1.8
+      vite: 4.0.4
+      vite-plugin-fonts: ^0.7.0
+      vite-plugin-pwa: ^0.14.1
+      workbox-window: ^6.5.4
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/devtools': link:../devtools
+      '@dxos/kai': link:../../experimental/kai
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@babel/core': 7.20.12
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 3.0.1_vite@4.0.4
+      postcss: 8.4.21
+      tailwindcss: 3.1.8
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite-plugin-fonts: 0.7.0_vite@4.0.4
+      vite-plugin-pwa: 0.14.1_vite@4.0.4
+      workbox-window: 6.5.4
+
   packages/e2e/rpc-tunnel-e2e:
     specifiers:
       '@babel/core': ^7.18.13
@@ -2663,15 +2714,13 @@ importers:
       '@dxos/echo-typegen': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
+      '@types/chess.js': ^0.13.4
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chess.js: ^1.0.0-alpha.0
@@ -2683,7 +2732,6 @@ importers:
       typescript: ^4.8.4
       vite: 4.0.4
     dependencies:
-      '@dxos/client': link:../../sdk/client
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       chess.js: 1.0.0-alpha.0
       react: 18.2.0
@@ -2694,6 +2742,7 @@ importers:
     devDependencies:
       '@babel/core': 7.20.12
       '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
@@ -2701,15 +2750,13 @@ importers:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-ui': link:../../apps/patterns/react-ui
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
+      '@types/chess.js': 0.13.4
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       typescript: 4.8.4
@@ -2872,6 +2919,7 @@ importers:
       '@types/react-syntax-highlighter': ^15.5.5
       '@types/react-table': ^7.7.14
       '@vitejs/plugin-react': ^3.0.1
+      chess.js: ^1.0.0-alpha.0
       faker: ^5.5.3
       leaflet: ^1.9.3
       phosphor-react: ^1.4.1
@@ -2915,6 +2963,7 @@ importers:
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../apps/patterns/react-ui
+      chess.js: 1.0.0-alpha.0
       leaflet: 1.9.3
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
@@ -12265,6 +12314,10 @@ packages:
 
   /@types/chai/4.3.3:
     resolution: {integrity: sha512-hC7OMnszpxhZPduX+m+nrx+uFoLkWOMiR4oa/AZF3MuSETYTZmFfJAHqZEM8MVlvfG7BEUcgvtwoCTxBp6hm3g==}
+    dev: true
+
+  /@types/chess.js/0.13.4:
+    resolution: {integrity: sha512-rPmTVffnepx/TVe9ZzOf8bXxyCkYQ+h+VTSiI4JKjoKWzCFkPgPRJL7Cz15qslksOcVGEYCPYLbG0NLO4yzbrg==}
     dev: true
 
   /@types/chrome/0.0.125:
@@ -33119,7 +33172,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_pftdh3zqu4qevmbqg2nu3a7f3e
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

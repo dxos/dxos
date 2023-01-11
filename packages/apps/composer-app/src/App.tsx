@@ -21,6 +21,7 @@ import {
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
+import { osTranslations } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';
@@ -45,7 +46,7 @@ export const App = () => {
 
   return (
     <ThemeProvider
-      resourceExtensions={[appkitTranslations, composerTranslations]}
+      resourceExtensions={[osTranslations, appkitTranslations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='composer'
     >

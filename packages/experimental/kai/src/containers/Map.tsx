@@ -48,6 +48,7 @@ export const PlaceList: FC<{ items: Organization[]; onSelect: (object?: Organiza
   const [selected, setSelected] = useState<string>();
   const handleSelect = useCallback(
     (objectId: string) => {
+      console.log('>>>>>>>>', objectId, selected);
       if (objectId === selected) {
         setSelected(undefined);
         onSelect(undefined);

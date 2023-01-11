@@ -6,6 +6,7 @@ APPS=(
   ./packages/apps/composer-app
   ./packages/apps/todomvc
   ./packages/devtools/devtools
+  ./packages/experimental/kai
   ./docs
 );
 
