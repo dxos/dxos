@@ -148,6 +148,28 @@ describe('RpcPeer', () => {
       await alice.close();
       await bob.close();
     });
+
+    test('can close while opening', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice: RpcPeer = new RpcPeer({
+        callHandler: async (msg) => createPayload(),
+        port: {
+          send: (msg) => {},
+          subscribe: alicePort.subscribe
+        }
+      });
+
+      const bob = new RpcPeer({
+        callHandler: async (msg) => createPayload(),
+        port: bobPort
+      });
+
+      const openPromise = Promise.all([alice.open(), bob.open()]);
+      await sleep(5);
+      await Promise.all([alice.close(), bob.close()]);
+      await openPromise;
+    });
   });
 
   describe('one-off requests', () => {

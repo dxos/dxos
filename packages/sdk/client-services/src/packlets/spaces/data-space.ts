@@ -4,21 +4,24 @@
 
 import assert from 'node:assert';
 
+import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
+import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, SnapshotManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Presence } from '@dxos/teleport-extension-presence';
 
 export type DataSpaceParams = {
   inner: Space;
   modelFactory: ModelFactory;
-  memberKey: PublicKey;
+  metadataStore: MetadataStore;
+  snapshotManager: SnapshotManager;
   presence: Presence;
-  snapshot?: SpaceSnapshot | undefined;
+  memberKey: PublicKey;
+  snapshotId?: string | undefined;
 };
 
+@trackLeaks('open', 'close')
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;
@@ -28,13 +31,15 @@ export class DataSpace implements ISpace {
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
     this._presence = params.presence;
-    this._dataPipelineController = new DataPipelineControllerImpl(
-      params.modelFactory,
-      params.memberKey,
-      (feedKey) => this._inner.spaceState.feeds.get(feedKey),
-      this._inner.key,
-      params.snapshot
-    );
+    this._dataPipelineController = new DataPipelineControllerImpl({
+      modelFactory: params.modelFactory,
+      metadataStore: params.metadataStore,
+      snapshotManager: params.snapshotManager,
+      memberKey: params.memberKey,
+      spaceKey: this._inner.key,
+      feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
+      snapshotId: params.snapshotId
+    });
   }
 
   get key() {
@@ -68,6 +73,7 @@ export class DataSpace implements ISpace {
 
   async open() {
     await this._inner.open();
+    await this._inner.initDataPipeline(this._dataPipelineController);
   }
 
   async close() {
