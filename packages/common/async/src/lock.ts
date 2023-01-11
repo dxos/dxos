@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { warnAfterTimeout } from "@dxos/debug";
+
 /**
  * A locking mechanism to ensure that a given section of the code is executed by only one single "thread" at a time.
  *
@@ -75,8 +77,9 @@ export const synchronized = (
 ) => {
   const method = descriptor.value!;
   descriptor.value = async function (this: any & LockableClass, ...args: any) {
-    const lock = (this[classLockSymbol] ??= new Lock());
-    const release = await lock.acquire();
+    const lock: Lock = (this[classLockSymbol] ??= new Lock());
+
+    const release = await warnAfterTimeout(500, `lock on ${target.constructor.name}.${propertyName}`, () => lock.acquire());
 
     try {
       return await method.apply(this, args);
