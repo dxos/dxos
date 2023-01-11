@@ -68,6 +68,8 @@ export class RpcPeer {
   private readonly _localStreams = new Map<number, Stream<any>>();
   private readonly _remoteOpenTrigger = new Trigger();
 
+  private readonly _closeTrigger = new Trigger();
+
   private _nextId = 0;
   private _open = false;
   private _unsubscribe: (() => void) | undefined;
@@ -112,9 +114,16 @@ export class RpcPeer {
       void this._sendMessage({ open: true }).catch((err) => log.warn(err));
     }, 50);
 
-    await this._remoteOpenTrigger.wait();
+    await Promise.race([
+      this._remoteOpenTrigger.wait(),
+      this._closeTrigger.wait(),
+    ]);
 
     this._clearOpenInterval?.();
+
+    if(!this._open) { // Closed while opening.
+      return; // TODO(dmaretskyi): Throw error?
+    }
 
     // TODO(burdon): This seems error prone.
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
@@ -128,6 +137,7 @@ export class RpcPeer {
   async close() {
     this._unsubscribe?.();
     this._clearOpenInterval?.();
+    this._closeTrigger.wake();
     for (const req of this._outgoingRequests.values()) {
       req.reject(new RpcClosedError());
     }
