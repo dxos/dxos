@@ -268,7 +268,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   debounce(timeout = 0) {
     const debouncedEvent = new Event<void>();
 
-    let firing: NodeJS.Timeout | undefined = undefined;
+    let firing: NodeJS.Timeout | undefined;
 
     debouncedEvent.addEffect(() => {
       const unsubscribe = this.on(() => {
@@ -278,12 +278,12 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
             debouncedEvent.emit();
           }, timeout);
         }
-      })
+      });
 
       return () => {
         unsubscribe();
         clearTimeout(firing);
-      }
+      };
     });
 
     return debouncedEvent;

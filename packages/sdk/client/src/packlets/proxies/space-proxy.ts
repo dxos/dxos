@@ -5,7 +5,6 @@
 import { Event, synchronized, Trigger } from '@dxos/async';
 import {
   ClientServicesProvider,
-  ClientServicesProxy,
   CancellableInvitationObservable,
   SpaceInvitationsProxy,
   InvitationsOptions

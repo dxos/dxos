@@ -4,12 +4,12 @@
 
 import assert from 'node:assert';
 
+import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, SnapshotManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { Presence } from '@dxos/teleport-extension-presence';
-import { trackLeaks } from '@dxos/async';
 
 export type DataSpaceParams = {
   inner: Space;

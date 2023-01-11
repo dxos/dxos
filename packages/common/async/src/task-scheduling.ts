@@ -5,6 +5,7 @@
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { MaybePromise } from '@dxos/util';
+
 import { trackResource } from './track-leaks';
 
 export type ClearCallback = () => void;
@@ -18,7 +19,7 @@ export class DeferredTask {
   private _scheduled = false;
   private _promise: Promise<void> | null = null; // Can't be rejected.
 
-  constructor(private readonly _ctx: Context, private readonly _callback: () => Promise<void>) { }
+  constructor(private readonly _ctx: Context, private readonly _callback: () => Promise<void>) {}
 
   schedule() {
     if (this._scheduled) {
@@ -58,7 +59,7 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
   const clearTracking = trackResource({
     name: `task (${fn.name || 'anonymous'})`,
     openStack: new StackTrace()
-  })
+  });
 
   const timeout = setTimeout(async () => {
     await runInContextAsync(ctx, fn);
@@ -78,7 +79,7 @@ export const scheduleTaskInterval = (ctx: Context, task: () => Promise<void>, in
   const clearTracking = trackResource({
     name: `repeating task (${task.name || 'anonymous'})`,
     openStack: new StackTrace()
-  })
+  });
 
   let timeoutId: NodeJS.Timeout;
 
