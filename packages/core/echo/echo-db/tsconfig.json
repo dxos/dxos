@@ -72,6 +72,9 @@
       "path": "../../mesh/teleport"
     },
     {
+      "path": "../../mesh/teleport-extension-object-sync"
+    },
+    {
       "path": "../../mesh/teleport-extension-presence"
     },
     {

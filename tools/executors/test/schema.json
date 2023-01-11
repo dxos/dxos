@@ -81,6 +81,11 @@
       "description": "Mocha timeout in ms",
       "default": 15000
     },
+    "trackLeakedResource": {
+      "type": "boolean",
+      "description": "Track resources that are not cleaned up after tests",
+      "default": false
+    },
     "checkLeaks": {
       "type": "boolean",
       "description": "Check for global variable leaks",
