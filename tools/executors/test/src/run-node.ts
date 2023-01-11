@@ -30,10 +30,12 @@ export type NodeOptions = {
   browserArgs?: string[];
   reporter?: string;
   inspect?: boolean;
+  trackLeakedResources: boolean;
   grep?: string;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
+
   const args = await getNodeArgs(context, options);
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
   const exitCode = await execTool(mocha, args, {
@@ -44,6 +46,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
       STAY_OPEN: String(options.stayOpen),
       MOCHA_TAGS: options.tags.join(','),
       MOCHA_ENV: options.browser ?? 'nodejs',
+      DX_TRACK_LEAKS: options.trackLeakedResources ? '1' : undefined,
 
       // Patch in ts-node will read this.
       // https://github.com/TypeStrong/ts-node/issues/1937
@@ -57,7 +60,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
 const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
-  const setupArgs = getSetupArgs(context.root, options.domRequired, options.playwright, options.checkLeaks);
+  const setupArgs = getSetupArgs(context.root, options.domRequired, options.playwright, options.trackLeakedResources);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
@@ -123,12 +126,12 @@ const getIgnoreArgs = async (testPatterns: string[]) => {
     .flat();
 };
 
-const getSetupArgs = (root: string, domRequired: boolean, playwright: boolean, checkLeaks: boolean) => {
+const getSetupArgs = (root: string, domRequired: boolean, playwright: boolean, trackLeakedResources: boolean) => {
   const scripts = [
     'colors',
     'mocha-env',
     'catch-unhandled-rejections',
-    ...(checkLeaks ? ['wtfnode'] : []),
+    ...(trackLeakedResources ? ['trackLeakedResources'] : []),
     ...(domRequired ? ['react-setup'] : []),
     ...(playwright ? ['playwright'] : [])
   ];
