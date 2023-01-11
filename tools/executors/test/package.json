@@ -11,12 +11,12 @@
   "scripts": {
     "test": "mocha -r @swc-node/register ./src/**/*.test.ts"
   },
-  "devDependencies": {
-    "@types/mocha": "^8.2.2"
-  },
-  "executors": "./executor.json",
   "dependencies": {
     "@types/wtfnode": "^0.7.0",
     "wtfnode": "^0.9.1"
-  }
+  },
+  "devDependencies": {
+    "@types/mocha": "^8.2.2"
+  },
+  "executors": "./executor.json"
 }

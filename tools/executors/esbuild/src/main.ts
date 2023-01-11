@@ -33,7 +33,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     await rm(options.outputPath, { recursive: true });
   } catch {}
 
-  const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
+  // TODO(wittjosiah): Workspace from context is deprecated.
+  const packagePath = join(context.workspace!.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
   const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
