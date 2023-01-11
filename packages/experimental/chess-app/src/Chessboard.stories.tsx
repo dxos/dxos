@@ -13,6 +13,6 @@ export default {
 
 export const Default = {
   render: () => {
-    return <div>sss</div>;
+    return <div>Chessboard</div>;
   }
 };
