@@ -8,7 +8,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { AppView, useAppStateDispatch, useOptions, viewConfig } from '../../hooks';
+import { AppView, useAppStateDispatch, useOptions, useSpace, viewConfig } from '../../hooks';
+import { createSpacePath } from '../Routes';
 
 export const Menu = () => {
   return (
@@ -18,6 +19,7 @@ export const Menu = () => {
   );
 };
 
+// TODO(burdon): Collapse tabs into hamburger if narrow.
 // TODO(burdon): Change view type from string to AppView.
 export const ViewSelector: FC<{ views: AppView[]; view?: string; onChange: (view: AppView) => void }> = ({
   views,
@@ -38,7 +40,7 @@ export const ViewSelector: FC<{ views: AppView[]; view?: string; onChange: (view
             onClick={() => onChange(view)}
           >
             <Icon weight='light' className={getSize(6)} />
-            <div>{String(view)}</div>
+            <div className='ml-1'>{String(view)}</div>
           </a>
         );
       })}
@@ -49,12 +51,9 @@ export const ViewSelector: FC<{ views: AppView[]; view?: string; onChange: (view
 export const AppBar = () => {
   const { views } = useOptions();
   const navigate = useNavigate();
-  const { spaceKey: currentSpaceKey, view: currentView } = useParams();
+  const { view: currentView } = useParams();
+  const { space } = useSpace();
   const setAppState = useAppStateDispatch();
-
-  const setView = (spaceKey: string, view: string) => {
-    navigate(`/${spaceKey}/${view}`);
-  };
 
   return (
     <div className='flex flex-col flex-shrink-0'>
@@ -78,7 +77,7 @@ export const AppBar = () => {
             <ViewSelector
               view={currentView}
               views={views}
-              onChange={(view: AppView) => setView(currentSpaceKey!, view)}
+              onChange={(view: AppView) => navigate(createSpacePath(space.key, view))}
             />
           </div>
           <div className='bg-white' style={{ height: 4 }} />

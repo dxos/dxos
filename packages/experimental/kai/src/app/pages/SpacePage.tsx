@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState, FC } from 'react';
+import React, { useEffect, useState, FC, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
@@ -27,6 +27,7 @@ import {
   useOptions,
   viewConfig
 } from '../../hooks';
+import { createSpacePath, matchSpaceKey } from '../Routes';
 import { AppBar } from './AppBar';
 import { Dashboard } from './Dashboard';
 import { Sidebar } from './Sidebar';
@@ -71,31 +72,31 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
  * Home page with current space.
  */
 export const SpacePage = () => {
+  const [context, setContext] = useState<SpaceContextType | undefined>();
   const navigate = useNavigate();
   const { views } = useOptions();
   const { spaceKey: currentSpaceKey, view } = useParams();
   const spaces = useSpaces();
-  const [context, setContext] = useState<SpaceContextType | undefined>();
+  const space = useMemo(
+    () => (currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined),
+    [spaces, currentSpaceKey]
+  );
 
+  // Change space.
   useEffect(() => {
-    if (!view || !viewConfig[view]) {
-      navigate(`/${currentSpaceKey}/${views[0]}`);
-    }
-  }, [view, currentSpaceKey]);
-
-  useEffect(() => {
-    if (!spaces.length) {
-      navigate('/');
-      return;
-    }
-
-    const space = spaces.find((space) => space.key.truncate() === currentSpaceKey);
     if (space) {
       setContext({ space });
     } else {
       navigate('/');
     }
-  }, [spaces, currentSpaceKey]);
+  }, [space]);
+
+  // Change view.
+  useEffect(() => {
+    if (space && (!view || !viewConfig[view])) {
+      navigate(createSpacePath(space.key, views[0]));
+    }
+  }, [view, currentSpaceKey]);
 
   if (!context) {
     return null;

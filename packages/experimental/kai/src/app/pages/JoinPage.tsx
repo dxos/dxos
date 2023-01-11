@@ -11,6 +11,8 @@ import { Invitation, InvitationEncoder, PublicKey, Space } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 
+import { createSpacePath } from '../Routes';
+
 /**
  * Join space via invitation URL.
  */
@@ -41,7 +43,7 @@ export const JoinPage = () => {
     const unsubscribe = observable.subscribe({
       onSuccess: async () => {
         // TODO(burdon): Space key missing from returned invitation.
-        navigate(`/${invitation.spaceKey!.truncate()}`);
+        navigate(createSpacePath(invitation.spaceKey!));
       },
       onTimeout: () => {
         console.error('timeout');

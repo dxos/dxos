@@ -9,6 +9,7 @@ import { useClient, useSpaces } from '@dxos/react-client';
 
 import { useOptions } from '../../hooks';
 import { Generator } from '../../proto';
+import { createSpacePath } from '../Routes';
 
 /**
  * Selects or creates an initial space.
@@ -26,7 +27,7 @@ export const InitPage = () => {
     }
 
     if (spaces.length) {
-      navigate('/' + spaces[0].key.truncate());
+      navigate(createSpacePath(spaces[0].key));
     } else {
       setInit(true); // Make idempotent.
       setTimeout(async () => {
@@ -35,7 +36,7 @@ export const InitPage = () => {
           await new Generator(space.experimental.db).generate();
         }
 
-        navigate('/' + space.key.truncate());
+        navigate(createSpacePath(space.key));
       });
     }
   }, [spaces, init]);

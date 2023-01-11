@@ -3,44 +3,14 @@
 //
 
 import React, { FC, useEffect, useState } from 'react';
-import { HashRouter, useRoutes } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 
 import { Client, fromHost } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
 import { AppView, OptionsContext } from '../hooks';
-import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
-
-/**
- * Main app routes.
- */
-export const Routes = () => {
-  return useRoutes([
-    {
-      path: '/',
-      element: <InitPage />
-    },
-    {
-      path: '/settings',
-      element: <SettingsPage />
-    },
-    {
-      path: '/join/:invitation',
-      element: <JoinPage />
-    },
-    {
-      path: '/:spaceKey',
-      element: <SpacePage />,
-      children: [
-        {
-          path: '/:spaceKey/:view',
-          element: <SpacePage />
-        }
-      ]
-    }
-  ]);
-};
+import { Routes } from './Routes';
 
 /**
  * Main app container with routes.
