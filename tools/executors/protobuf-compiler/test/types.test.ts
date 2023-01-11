@@ -91,7 +91,7 @@ describe('Schema', () => {
         foo: 'foo'
       },
       googleAny: {
-        '@type': 'example.testing.Task',
+        '@type': 'example.testing.types.Task',
         id: 'baz',
         title: 'Baz',
         key: new MyKey(Buffer.from('foo')),
@@ -123,7 +123,7 @@ describe('Schema', () => {
         foo: 'foo'
       },
       googleAny: {
-        '@type': 'example.testing.Task',
+        '@type': 'example.testing.types.Task',
         id: 'baz',
         title: 'Baz',
         key: new MyKey(Buffer.from('foo')),
