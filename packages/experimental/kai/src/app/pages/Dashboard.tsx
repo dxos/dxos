@@ -20,7 +20,10 @@ export const Dashboard: FC = () => {
   const props = height ? { minHeight: (height - 8) / 2 } : {};
 
   return (
-    <div ref={ref} className='flex flex-1 grid grid-cols-5 grid-flow-row gap-4 p-2 pt-0 overflow-y-scroll scrollbar'>
+    <div
+      ref={ref}
+      className='flex flex-1 flex-col gap-2 p-2 lg:grid lg:grid-cols-5 lg:grid-flow-row lg:gap-4 overflow-y-scroll scrollbar'
+    >
       <div className='flex flex-shrink-0 col-span-2' style={props}>
         <ProjectListCard />
       </div>
