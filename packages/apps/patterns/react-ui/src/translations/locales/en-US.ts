@@ -4,5 +4,6 @@
 
 export const os = {
   'manage profile label': 'Manage identity',
-  'identity offline description': 'Offline'
+  'identity offline description': 'Offline',
+  'sidebar label': 'DXOS sidebar'
 };
