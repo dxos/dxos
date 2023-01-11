@@ -1,5 +1,5 @@
 diff --git a/src/executors/tsc/tsc.impl.js b/src/executors/tsc/tsc.impl.js
-index 160a75e458a71ce0bd7bbb2cffe3d163604607c5..e8977baac33e617562e172b4436a6751979603c8 100644
+index 4b7ef0f023042622abb1cb48ee8eccea17456165..a7cd25919bc23b7b53769a4f47ae9e5e5d08b95a 100644
 --- a/src/executors/tsc/tsc.impl.js
 +++ b/src/executors/tsc/tsc.impl.js
 @@ -8,10 +8,8 @@ const copy_assets_handler_1 = require("../../utils/assets/copy-assets-handler");
