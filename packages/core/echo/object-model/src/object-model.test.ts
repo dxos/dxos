@@ -8,6 +8,7 @@ import { ModelFactory, TestBuilder } from '@dxos/model-factory';
 import { describe, test } from '@dxos/test';
 
 import { ObjectModel } from './object-model';
+import { Reference } from './reference';
 import { validateKey } from './util';
 
 describe('ObjectModel', () => {
@@ -108,5 +109,20 @@ describe('ObjectModel', () => {
 
     // Peer states have converged to a single value.
     expect(peer1.model.get('title')).toEqual(peer2.model.get('title'));
+  });
+
+  test('reference', async () => {
+    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
+
+    const reference = new Reference('<reference id>');
+    await peer1.model.set('anotherItem', reference);
+    expect(peer1.model.get('anotherItem')).toEqual(reference);
+
+    rig.configureReplication(true);
+    await rig.waitForReplication();
+
+    expect(peer2.model.get('anotherItem')).toEqual(reference);
   });
 });
