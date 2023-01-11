@@ -8,6 +8,7 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { ThemePlugin } from '@dxos/react-components/plugin';
 
 import packageJson from './package.json';
 
@@ -37,6 +38,7 @@ export default defineConfig({
       '@dxos/debug',
       '@dxos/devtools-mesh',
       '@dxos/feed-store',
+      '@dxos/kai',
       '@dxos/keys',
       '@dxos/messaging',
       '@dxos/messenger-model',
@@ -44,9 +46,11 @@ export default defineConfig({
       '@dxos/network-manager',
       '@dxos/object-model',
       '@dxos/protocols',
+      '@dxos/protocols/proto/dxos/client/services.ts',
       '@dxos/react-appkit',
       '@dxos/react-async',
       '@dxos/react-client',
+      '@dxos/react-components-deprecated',
       '@dxos/react-components-deprecated',
       '@dxos/react-registry-client',
       '@dxos/react-toolkit',
@@ -63,6 +67,17 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin(),
+
+    ThemePlugin({
+      content: [
+        resolve(__dirname, './index.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')
+      ]
+    }),
     ReactPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
