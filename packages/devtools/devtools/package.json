@@ -20,6 +20,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/devtools-mesh": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/kai": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/messenger-model": "workspace:*",
@@ -30,6 +31,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/react-registry-client": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
@@ -47,8 +49,10 @@
     "color-hash": "^1.0.3",
     "jdenticon": "^3.2.0",
     "moment": "^2.24.0",
+    "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
