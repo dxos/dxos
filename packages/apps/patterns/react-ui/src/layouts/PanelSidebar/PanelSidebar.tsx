@@ -15,7 +15,7 @@ import React, {
   useState
 } from 'react';
 
-import { defaultOverlay, mx, useTranslation } from '@dxos/react-components';
+import { defaultOverlay, mx, useMediaQuery, useTranslation } from '@dxos/react-components';
 
 export type PanelSidebarState = 'show' | 'hide';
 
@@ -56,6 +56,9 @@ export const PanelSidebarProvider = ({
   const [displayState, setInternalDisplayState] = useState<PanelSidebarState>('hide');
   const [transitionShow, setTransitionShow] = useState(false);
   const isOpen = displayState === 'show';
+
+  const [isLg] = useMediaQuery('lg');
+
   const internalHide = () => {
     setTransitionShow(false);
     setTimeout(() => {
@@ -72,11 +75,9 @@ export const PanelSidebarProvider = ({
   const setDisplayState = (displayState: SetStateAction<PanelSidebarState>) =>
     displayState === 'show' ? internalShow() : internalHide();
 
-  console.log('[states]', displayState, transitionShow, isOpen);
-
   return (
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
-      <DialogPrimitive.Root open={isOpen}>
+      <DialogPrimitive.Root open={isOpen} modal={!isLg}>
         <DialogPrimitive.Content
           className={mx(
             'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
@@ -92,7 +93,7 @@ export const PanelSidebarProvider = ({
             role='none'
             {...slots?.fixedBlockStart}
             className={mx(
-              'fixed is-[100vw] block-start-0 z-[49] transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
+              'fixed inline-end-0 block-start-0 z-[49] transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
               transitionShow ? 'inline-start-[272px]' : 'inline-start-0',
               slots?.fixedBlockStart?.className
             )}
@@ -100,15 +101,25 @@ export const PanelSidebarProvider = ({
             {slots?.fixedBlockStart?.children}
           </div>
         )}
-        <DialogPrimitive.Overlay
+        {!isLg && (
+          <DialogPrimitive.Overlay
+            className={mx(
+              defaultOverlay,
+              'transition-opacity duration-200 ease-in-out',
+              transitionShow ? 'opacity-100' : 'opacity-0'
+            )}
+            onClick={internalHide}
+          />
+        )}
+        <div
+          role='none'
           className={mx(
-            defaultOverlay,
-            'transition-opacity duration-200 ease-in-out',
-            transitionShow ? 'opacity-100' : 'opacity-0'
+            'bs-full transition-[padding-inline-start] duration-200 ease-in-out',
+            isLg && isOpen ? 'pis-[272px]' : 'pis-0'
           )}
-          onClick={internalHide}
-        />
-        {children}
+        >
+          {children}
+        </div>
       </DialogPrimitive.Root>
     </PanelSidebarContext.Provider>
   );

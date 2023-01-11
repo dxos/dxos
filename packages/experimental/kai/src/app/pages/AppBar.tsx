@@ -3,11 +3,11 @@
 //
 
 import { Bug, List, User } from 'phosphor-react';
-import React, { FC } from 'react';
+import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/react-components';
-import { useTogglePanelSidebar } from '@dxos/react-ui';
+import { getSize, mx, useMediaQuery } from '@dxos/react-components';
+import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { useOptions, viewConfig } from '../../hooks';
 
@@ -25,13 +25,21 @@ export const ViewSelector: FC<{}> = () => {
 
   const { views } = useOptions();
   const { spaceKey: currentSpaceKey, view: currentView } = useParams();
+  const { displayState } = useContext(PanelSidebarContext);
+  const [isLg] = useMediaQuery('lg');
+  const isOpen = displayState === 'show';
 
   const setView = (spaceKey: string, view: string) => {
     navigate(`/${spaceKey}/${view}`);
   };
 
   return (
-    <div className='flex flex-1 items-center bg-orange-500 pt-1 pl-2 pr-2 fixed inline-start-0 inline-end-0 block-start-[48px] z-[1]'>
+    <div
+      className={mx(
+        'flex flex-1 items-center bg-orange-500 pt-1 pl-2 pr-2 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
+        isLg && isOpen ? 'inline-start-[272px]' : 'inline-start-0'
+      )}
+    >
       {views.map((view) => {
         const { Icon } = viewConfig[view];
         return (
