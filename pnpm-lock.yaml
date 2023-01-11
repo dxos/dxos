@@ -291,6 +291,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-composer': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
       '@sentry/react': ^7.17.2
@@ -311,6 +312,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-composer': link:../patterns/react-composer
+      '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@sentry/react': 7.20.0_react@18.2.0
@@ -724,6 +726,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-list': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/sentry': workspace:*
       '@sentry/react': ^7.17.2
       '@types/react': ^18.0.21
@@ -744,6 +747,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-list': link:../patterns/react-list
+      '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/sentry': link:../../common/sentry
       '@sentry/react': 7.20.0_react@18.2.0
       phosphor-react: 1.4.1_react@18.2.0
@@ -2087,6 +2091,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
       '@dxos/keys': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -2120,6 +2125,7 @@ importers:
       uuid: ^8.3.2
     dependencies:
       '@dxos/debug': link:../../common/debug
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-registry-client': link:../../experimental/react-registry-client
@@ -2605,6 +2611,51 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
 
+  packages/devtools/devtools-testbench:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/devtools': workspace:*
+      '@dxos/kai': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^3.0.1
+      postcss: ^8.4.17
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-router-dom: ^6.3.0
+      tailwindcss: ^3.1.8
+      vite: 4.0.4
+      vite-plugin-fonts: ^0.7.0
+      vite-plugin-pwa: ^0.14.1
+      workbox-window: ^6.5.4
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/devtools': link:../devtools
+      '@dxos/kai': link:../../experimental/kai
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@babel/core': 7.20.12
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 3.0.1_vite@4.0.4
+      postcss: 8.4.21
+      tailwindcss: 3.1.8
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite-plugin-fonts: 0.7.0_vite@4.0.4
+      vite-plugin-pwa: 0.14.1_vite@4.0.4
+      workbox-window: 6.5.4
+
   packages/e2e/rpc-tunnel-e2e:
     specifiers:
       '@babel/core': ^7.18.13
@@ -2650,6 +2701,67 @@ importers:
       '@types/debug': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+
+  packages/experimental/chess-app:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/util': workspace:*
+      '@types/chess.js': ^0.13.4
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      chess.js: ^1.0.0-alpha.0
+      react: ^18.2.0
+      react-chessboard: ^2.0.7
+      react-dom: ^18.2.0
+      react-resize-detector: ^7.1.2
+      react-router-dom: ^6.3.0
+      typescript: ^4.8.4
+      vite: 4.0.4
+    dependencies:
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      chess.js: 1.0.0-alpha.0
+      react: 18.2.0
+      react-chessboard: 2.0.7_rj7ozvcq3uehdlnj3cbwzbi5ce
+      react-dom: 18.2.0_react@18.2.0
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@babel/core': 7.20.12
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
+      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/util': link:../../common/util
+      '@types/chess.js': 0.13.4
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      typescript: 4.8.4
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
 
   packages/experimental/client-testing:
@@ -2779,6 +2891,7 @@ importers:
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/async': workspace:*
+      '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
@@ -2801,18 +2914,22 @@ importers:
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
       '@types/faker': ^5.5.9
+      '@types/leaflet': ^1.9.0
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^18.0.6
       '@types/react-syntax-highlighter': ^15.5.5
       '@types/react-table': ^7.7.14
       '@vitejs/plugin-react': ^3.0.1
+      chess.js: ^1.0.0-alpha.0
       faker: ^5.5.3
+      leaflet: ^1.9.3
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
+      react-leaflet: ^4.2.0
       react-resize-detector: ^7.1.2
       react-router-dom: ^6.3.0
       react-syntax-highlighter: ^15.5.0
@@ -2829,6 +2946,7 @@ importers:
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
+      '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
@@ -2847,10 +2965,13 @@ importers:
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../apps/patterns/react-ui
+      chess.js: 1.0.0-alpha.0
+      leaflet: 1.9.3
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-leaflet: 4.2.0_yydtlhsdonbqao6vgvkwhv2zki
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-syntax-highlighter: 15.5.0_react@18.2.0
@@ -2861,6 +2982,7 @@ importers:
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21
       '@types/faker': 5.5.9
+      '@types/leaflet': 1.9.0
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
       '@types/react-dom': 18.0.6
@@ -9740,6 +9862,18 @@ packages:
       '@babel/runtime': 7.19.4
     dev: false
 
+  /@react-dnd/asap/5.0.2:
+    resolution: {integrity: sha512-WLyfoHvxhs0V9U+GTsGilGgf2QsPl6ZZ44fnv0/b8T3nQyvzxidxsg/ZltbWssbsRDlYW8UKSQMTGotuTotZ6A==}
+    dev: false
+
+  /@react-dnd/invariant/4.0.2:
+    resolution: {integrity: sha512-xKCTqAK/FFauOM9Ta2pswIyT3D8AQlfrYdOi/toTPEhqCuAs1v5tcJ3Y08Izh1cJ5Jchwy9SeAXmMg6zrKs2iw==}
+    dev: false
+
+  /@react-dnd/shallowequal/4.0.2:
+    resolution: {integrity: sha512-/RVXdLvJxLg4QKvMoM5WlwNR9ViO9z8B/qPcc+C0Sa/teJY7QG7kJ441DwzOjMYEY7GmU4dj5EcGHIkKZiQZCA==}
+    dev: false
+
   /@react-hook/async/3.1.1_react@18.2.0:
     resolution: {integrity: sha512-C9KoDSIjhmVwm6jXPnWfVqqrdPvqOnvUrkUStkUUODV4F1GfNlyVdmYx/54HsgMlham61xEF6UvScqiLTaHYeQ==}
     peerDependencies:
@@ -9755,6 +9889,18 @@ packages:
       react: '>=16.8'
     dependencies:
       react: 18.2.0
+    dev: false
+
+  /@react-leaflet/core/2.1.0_yydtlhsdonbqao6vgvkwhv2zki:
+    resolution: {integrity: sha512-Qk7Pfu8BSarKGqILj4x7bCSZ1pjuAPZ+qmRwH5S7mDS91VSbVVsJSrW4qA+GPrro8t69gFYVMWb1Zc4yFmPiVg==}
+    peerDependencies:
+      leaflet: ^1.9.0
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      leaflet: 1.9.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /@react-pdf/fns/2.0.0:
@@ -12162,6 +12308,10 @@ packages:
     resolution: {integrity: sha512-hC7OMnszpxhZPduX+m+nrx+uFoLkWOMiR4oa/AZF3MuSETYTZmFfJAHqZEM8MVlvfG7BEUcgvtwoCTxBp6hm3g==}
     dev: true
 
+  /@types/chess.js/0.13.4:
+    resolution: {integrity: sha512-rPmTVffnepx/TVe9ZzOf8bXxyCkYQ+h+VTSiI4JKjoKWzCFkPgPRJL7Cz15qslksOcVGEYCPYLbG0NLO4yzbrg==}
+    dev: true
+
   /@types/chrome/0.0.125:
     resolution: {integrity: sha512-WBbihYza9NNaE/rlIpBiSE9o2MfLN1GMltDoW6rgaDDIZL+1z08ii2ZAsDbvnrkrG2ohVyQjLODG3IbzakEvGA==}
     dependencies:
@@ -12600,6 +12750,12 @@ packages:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
       '@types/node': 18.11.9
+
+  /@types/leaflet/1.9.0:
+    resolution: {integrity: sha512-7LeOSj7EloC5UcyOMo+1kc3S1UT3MjJxwqsMT1d2PTyvQz53w0Y0oSSk9nwZnOZubCmBvpSNGceucxiq+ZPEUw==}
+    dependencies:
+      '@types/geojson': 7946.0.10
+    dev: true
 
   /@types/less/3.0.3:
     resolution: {integrity: sha512-1YXyYH83h6We1djyoUEqTlVyQtCfJAFXELSKW2ZRtjHD4hQ82CC4lvrv5D0l0FLcKBaiPbXyi3MpMsI9ZRgKsw==}
@@ -16072,6 +16228,10 @@ packages:
       parse5-htmlparser2-tree-adapter: 7.0.0
     dev: true
 
+  /chess.js/1.0.0-alpha.0:
+    resolution: {integrity: sha512-nwEDlNEOZR/FaKW1DZLYtjgJrtAlxBW/6Fp4Hk8QXqpCCLrXweOU6/vKfJ/jNHT2gPqasxi0/ZPslcWAAdzozg==}
+    dev: false
+
   /chokidar/2.1.8:
     resolution: {integrity: sha512-ZmZUazfOzf0Nve7duiCKD23PFSCs4JPoYyccjUFF3aQkQadqBhfzhjkwBH2mNOG9cTBwhamM37EIsIkZw3nRgg==}
     deprecated: Chokidar 2 does not receive security updates since 2019. Upgrade to chokidar 3 with 15x fewer dependencies
@@ -18081,6 +18241,14 @@ packages:
 
   /dlv/1.1.3:
     resolution: {integrity: sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==}
+
+  /dnd-core/16.0.1:
+    resolution: {integrity: sha512-HK294sl7tbw6F6IeuK16YSBUoorvHpY8RHO+9yFfaJyCDVb6n7PRcezrOEOa2SBCqiYpemh5Jx20ZcjKdFAVng==}
+    dependencies:
+      '@react-dnd/asap': 5.0.2
+      '@react-dnd/invariant': 4.0.2
+      redux: 4.2.0
+    dev: false
 
   /dns-over-http-resolver/1.2.3_node-fetch@2.6.7:
     resolution: {integrity: sha512-miDiVSI6KSNbi4SVifzO/reD8rMnxgrlnkrlkugOLQpWQTe2qMdHsZp5DmfKjxNE+/T3VAAYLQUZMv9SMr6+AA==}
@@ -24149,6 +24317,10 @@ packages:
       invert-kv: 3.0.1
     dev: true
 
+  /leaflet/1.9.3:
+    resolution: {integrity: sha512-iB2cR9vAkDOu5l3HAay2obcUHZ7xwUBBjph8+PGtmW/2lYhbLizWtG7nTeYht36WfOslixQF9D/uSIzhZgGMfQ==}
+    dev: false
+
   /level-codec/9.0.2:
     resolution: {integrity: sha512-UyIwNb1lJBChJnGfjmO0OR+ezh2iVu1Kas3nvBS/BzGnx79dv6g7unpKIDNPMhfdTEGoc7mC8uAu51XEtX+FHQ==}
     engines: {node: '>=6'}
@@ -28502,6 +28674,23 @@ packages:
       use-code-input: 0.0.2_biqbaboplfbrettd7655fr4n2y
     dev: false
 
+  /react-chessboard/2.0.7_rj7ozvcq3uehdlnj3cbwzbi5ce:
+    resolution: {integrity: sha512-RUtLb6GlNGMyuA8kPvUHywDEAwoIu94+2dhx4dfY6vay1WzLj8aCGGqG8OlnUD2VjC2QLDb/x8RIy1WMeYl3pQ==}
+    peerDependencies:
+      react: '>=16.14.0'
+      react-dom: '>=16.14.0'
+    dependencies:
+      react: 18.2.0
+      react-dnd: 16.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      react-dnd-html5-backend: 16.0.1
+      react-dnd-touch-backend: 16.0.1
+      react-dom: 18.2.0_react@18.2.0
+    transitivePeerDependencies:
+      - '@types/hoist-non-react-statics'
+      - '@types/node'
+      - '@types/react'
+    dev: false
+
   /react-colorful/5.6.1_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-1exovf0uGTGyq5mXQT0zgQ80uvj2PCwvF8zY1RN9/vbJVSjSo3fsB/4L3ObbF7u70NduSiK4xu4Y6q1MHoUGEw==}
     peerDependencies:
@@ -28530,6 +28719,43 @@ packages:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+    dev: false
+
+  /react-dnd-html5-backend/16.0.1:
+    resolution: {integrity: sha512-Wu3dw5aDJmOGw8WjH1I1/yTH+vlXEL4vmjk5p+MHxP8HuHJS1lAGeIdG/hze1AvNeXWo/JgULV87LyQOr+r5jw==}
+    dependencies:
+      dnd-core: 16.0.1
+    dev: false
+
+  /react-dnd-touch-backend/16.0.1:
+    resolution: {integrity: sha512-NonoCABzzjyWGZuDxSG77dbgMZ2Wad7eQiCd/ECtsR2/NBLTjGksPUx9UPezZ1nQ/L7iD130Tz3RUshL/ClKLA==}
+    dependencies:
+      '@react-dnd/invariant': 4.0.2
+      dnd-core: 16.0.1
+    dev: false
+
+  /react-dnd/16.0.1_iapumuv4e6jcjznwuxpf4tt22e:
+    resolution: {integrity: sha512-QeoM/i73HHu2XF9aKksIUuamHPDvRglEwdHL4jsp784BgUuWcg6mzfxT0QDdQz8Wj0qyRKx2eMg8iZtWvU4E2Q==}
+    peerDependencies:
+      '@types/hoist-non-react-statics': '>= 3.3.1'
+      '@types/node': '>= 12'
+      '@types/react': '>= 16'
+      react: '>= 16.14'
+    peerDependenciesMeta:
+      '@types/hoist-non-react-statics':
+        optional: true
+      '@types/node':
+        optional: true
+      '@types/react':
+        optional: true
+    dependencies:
+      '@react-dnd/invariant': 4.0.2
+      '@react-dnd/shallowequal': 4.0.2
+      '@types/react': 18.0.21
+      dnd-core: 16.0.1
+      fast-deep-equal: 3.1.3
+      hoist-non-react-statics: 3.3.2
+      react: 18.2.0
     dev: false
 
   /react-docgen-typescript/2.2.2_typescript@4.8.4:
@@ -28622,6 +28848,19 @@ packages:
 
   /react-is/18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
+
+  /react-leaflet/4.2.0_yydtlhsdonbqao6vgvkwhv2zki:
+    resolution: {integrity: sha512-9d8T7hzYrQA5GLe3vn0qtRLJzQKgjr080NKa45yArGwuSl1nH/6aK9gp7DeYdktpdO1vKGSUTGW5AsUS064X0A==}
+    peerDependencies:
+      leaflet: ^1.9.0
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      '@react-leaflet/core': 2.1.0_yydtlhsdonbqao6vgvkwhv2zki
+      leaflet: 1.9.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
 
   /react-native-fetch-api/2.0.0:
     resolution: {integrity: sha512-GOA8tc1EVYLnHvma/TU9VTgLOyralO7eATRuCDchQveXW9Fr9vXygyq9iwqmM7YRZ8qRJfEt9xOS7OYMdJvRFw==}
@@ -28954,6 +29193,12 @@ packages:
     resolution: {integrity: sha512-FNpGGo1DycYAdnrKFxCMmKYgo/mILAqtRYbkdQD8Ep/Hk2PQ5+aEAEx+IU713RTDmuBaH0c8P5ZozurNu5ObRQ==}
     dependencies:
       esprima: 4.0.1
+
+  /redux/4.2.0:
+    resolution: {integrity: sha512-oSBmcKKIuIR4ME29/AeNUnl5L+hvBq7OaJWzaptTQJAntaPvxIJqfnjbaEiCzzaIz+XmVILfqAM3Ob0aXLPfjA==}
+    dependencies:
+      '@babel/runtime': 7.19.4
+    dev: false
 
   /refractor/3.6.0:
     resolution: {integrity: sha512-MY9W41IOWxxk31o+YvFCNyNzdkc9M20NoZK5vq6jkv4I/uh2zkWcfudj0Q1fovjUQJrNewS9NMzeTtqPf+n5EA==}
@@ -32898,7 +33143,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

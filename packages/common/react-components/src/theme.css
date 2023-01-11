@@ -35,6 +35,34 @@
   .font-black {
     font-variation-settings: 'wght' 900;
   }
+  /* System font weights */
+  .font-system-thin {
+    font-variation-settings: 'wght' 100, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
+  .font-system-extralight {
+    font-variation-settings: 'wght' 200, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
+  .font-system-light {
+    font-variation-settings: 'wght' 300, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
+  .font-system-normal {
+    font-variation-settings: 'wght' 400, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
+  .font-system-medium {
+    font-variation-settings: 'wght' 500, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
+  .font-system-semibold {
+    font-variation-settings: 'wght' 600, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
+  .font-system-bold {
+    font-variation-settings: 'wght' 700, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
+  .font-system-extrabold {
+    font-variation-settings: 'wght' 800, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
+  .font-system-black {
+    font-variation-settings: 'wght' 900, 'wdth' 112, 'opsz' 64, 'GRAD' 50;
+  }
   /* Elevations */
   .button-elevation {
     box-shadow: var(--button-elevation)

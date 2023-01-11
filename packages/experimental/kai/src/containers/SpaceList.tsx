@@ -54,12 +54,12 @@ export const SpaceList = () => {
       {spaces.map((space) => (
         <div
           key={space.key.toHex()}
-          className={mx('flex p-2 pl-3 pr-4 items-center', space.key.truncate() === currentSpaceKey && 'bg-slate-600')}
+          className={mx('flex p-2 pl-3 pr-4 items-center', space.key.truncate() === currentSpaceKey && 'bg-orange-200')}
         >
-          <div className={mx('mr-3', space.key.truncate() === currentSpaceKey ? 'text-orange-500' : 'text-slate-500')}>
+          <div className={mx('mr-3', space.key.truncate() === currentSpaceKey && 'text-orange-500')}>
             <Planet className={getSize(6)} />
           </div>
-          <div className='flex flex-1 font-mono text-slate-300 cursor-pointer'>
+          <div className='flex flex-1 font-mono cursor-pointer'>
             <Link to={`/${space.key.truncate()}/${view}`}>{space.key.truncate()}</Link>
           </div>
           {space.key.truncate() === currentSpaceKey && (

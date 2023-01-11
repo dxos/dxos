@@ -68,6 +68,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../chess-app"
+    },
+    {
       "path": "../client-testing"
     },
     {

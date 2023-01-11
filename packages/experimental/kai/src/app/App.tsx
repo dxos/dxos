@@ -15,7 +15,7 @@ import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
 /**
  * Main app routes.
  */
-const Routes = () => {
+export const Routes = () => {
   return useRoutes([
     {
       path: '/',
@@ -45,7 +45,11 @@ const Routes = () => {
 /**
  * Main app container with routes.
  */
-export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = false }) => {
+export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
+  views,
+  debug = false,
+  demo = true
+}) => {
   const [client, setClient] = useState<Client | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -74,7 +78,7 @@ export const App: FC<{ views: AppView[]; debug?: boolean }> = ({ views, debug = 
   // TODO(burdon): Error boundary and indicator.
   return (
     <ClientProvider client={client}>
-      <OptionsContext.Provider value={{ debug, views }}>
+      <OptionsContext.Provider value={{ debug, demo, views }}>
         <HashRouter>
           <Routes />
         </HashRouter>

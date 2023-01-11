@@ -8,11 +8,25 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app';
 import { AppView } from './hooks';
 
-import './style.css';
+import '../style.css';
 
 (() => {
   // TODO(burdon): Get debug from config.
   createRoot(document.getElementById('root')!).render(
-    <App views={[AppView.CARDS, AppView.PROJECTS, AppView.TASKS, AppView.EDITOR, AppView.TEST]} debug={false} />
+    <App
+      debug={false}
+      views={[
+        AppView.DASHBOARD,
+        AppView.ORGS,
+        AppView.PROJECTS,
+        AppView.CONTACTS,
+        AppView.KANBAN,
+        AppView.TASKS,
+        AppView.GRAPH,
+        AppView.EDITOR,
+        AppView.MAP,
+        AppView.GAME
+      ]}
+    />
   );
 })();

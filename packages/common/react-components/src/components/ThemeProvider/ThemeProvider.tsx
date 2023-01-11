@@ -9,18 +9,25 @@ import {
   ToastViewportProps
 } from '@radix-ui/react-toast';
 import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/react-tooltip';
-import React, { PropsWithChildren } from 'react';
+import React, { createContext, PropsWithChildren } from 'react';
 
 import { defaultFocus } from '../../styles';
 import { mx } from '../../util';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
+
+export interface ThemeContextValue {
+  themeVariant: 'app' | 'os';
+}
 
 export type ThemeProviderProps = PropsWithChildren<{
   tooltipProviderProps?: TooltipProviderProps;
   toastProviderProps?: ToastProviderProps;
   toastViewportProps?: ToastViewportProps;
 }> &
-  Omit<TranslationsProviderProps, 'children'>;
+  Omit<TranslationsProviderProps, 'children'> &
+  Partial<ThemeContextValue>;
+
+export const ThemeContext = createContext<ThemeContextValue>({ themeVariant: 'app' });
 
 export const ThemeProvider = ({
   children,
@@ -29,29 +36,32 @@ export const ThemeProvider = ({
   toastViewportProps,
   fallback,
   resourceExtensions,
-  appNs
+  appNs,
+  themeVariant = 'app'
 }: ThemeProviderProps) => {
   return (
-    <TranslationsProvider
-      {...{
-        fallback,
-        resourceExtensions,
-        appNs
-      }}
-    >
-      <ToastProvider {...toastProviderProps}>
-        <TooltipProvider delayDuration={0} {...tooltipProviderProps}>
-          {children}
-        </TooltipProvider>
-        <ToastViewport
-          {...toastViewportProps}
-          className={mx(
-            'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
-            defaultFocus,
-            toastViewportProps?.className
-          )}
-        />
-      </ToastProvider>
-    </TranslationsProvider>
+    <ThemeContext.Provider value={{ themeVariant }}>
+      <TranslationsProvider
+        {...{
+          fallback,
+          resourceExtensions,
+          appNs
+        }}
+      >
+        <ToastProvider {...toastProviderProps}>
+          <TooltipProvider delayDuration={0} {...tooltipProviderProps}>
+            {children}
+          </TooltipProvider>
+          <ToastViewport
+            {...toastViewportProps}
+            className={mx(
+              'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
+              defaultFocus,
+              toastViewportProps?.className
+            )}
+          />
+        </ToastProvider>
+      </TranslationsProvider>
+    </ThemeContext.Provider>
   );
 };

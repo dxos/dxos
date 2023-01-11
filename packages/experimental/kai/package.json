@@ -7,6 +7,11 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
   "scripts": {
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
@@ -17,6 +22,7 @@
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/async": "workspace:*",
+    "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
@@ -35,10 +41,13 @@
     "@dxos/react-composer": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "chess.js": "^1.0.0-alpha.0",
+    "leaflet": "^1.9.3",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
+    "react-leaflet": "^4.2.0",
     "react-resize-detector": "^7.1.2",
     "react-router-dom": "^6.3.0",
     "react-syntax-highlighter": "^15.5.0",
@@ -50,6 +59,7 @@
     "@swc-node/register": "^1.5.4",
     "@swc/core": "^1.3.21",
     "@types/faker": "^5.5.9",
+    "@types/leaflet": "^1.9.0",
     "@types/react": "^18.0.21",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^18.0.6",

@@ -1,0 +1,53 @@
+{
+  "name": "@dxos/chess-app",
+  "version": "0.1.20",
+  "description": "Chess app.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
+  },
+  "dependencies": {
+    "@dxos/echo-schema": "workspace:*",
+    "chess.js": "^1.0.0-alpha.0",
+    "react": "^18.2.0",
+    "react-chessboard": "^2.0.7",
+    "react-dom": "^18.2.0",
+    "react-resize-detector": "^7.1.2",
+    "react-router-dom": "^6.3.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-typegen": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-async": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@types/chess.js": "^0.13.4",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "typescript": "^4.8.4",
+    "vite": "4.0.4"
+  }
+}

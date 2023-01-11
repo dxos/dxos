@@ -6,10 +6,16 @@ syntax = "proto3";
 
 package example.test;
 
+message LatLng {
+  fixed32 lat = 1;
+  fixed32 lng = 2;
+}
+
 message Address {
   string city = 1;
   string state = 2;
   string zip = 3;
+  LatLng coordinates = 4;
 }
 
 message Contact {
