@@ -4,7 +4,7 @@
 
 import React, { ChangeEvent, InputHTMLAttributes, FC, useEffect, useRef, useState, KeyboardEvent } from 'react';
 
-interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onBlur'> {
+export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onBlur'> {
   onChange?: (value: string) => void;
   onEnter?: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
