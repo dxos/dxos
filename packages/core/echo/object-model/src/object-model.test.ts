@@ -114,10 +114,15 @@ describe('ObjectModel', () => {
   test('reference', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
 
     const reference = new Reference('<reference id>');
     await peer1.model.set('anotherItem', reference);
-
     expect(peer1.model.get('anotherItem')).toEqual(reference);
+
+    rig.configureReplication(true);
+    await rig.waitForReplication();
+
+    expect(peer2.model.get('anotherItem')).toEqual(reference);
   });
 });
