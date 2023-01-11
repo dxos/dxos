@@ -13,6 +13,7 @@ p serve
 
 - Published when committed to `main`.
 - TODO(burdon): How to manually publish?
+- TODO(burdon): Publish to local machine (or dxos.net? later). With tunneling.
 
 ```bash
 dx app publish
