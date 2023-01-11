@@ -81,6 +81,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   // TODO(burdon): Option to reference objects by ID, and/or specify depth.
   _json(visited: Set<DocumentBase>) {
+    // TODO(burdon): Serialize if no schema.
     // TODO(burdon): Important: do breadth first recursion to stabilize cycle detection/depth.
     return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
       const value = this._get(name);
