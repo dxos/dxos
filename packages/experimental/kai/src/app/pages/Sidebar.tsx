@@ -54,7 +54,7 @@ export const Sidebar = () => {
   return (
     <div className='flex flex-1 flex-col overflow-auto min-bs-full'>
       {/* Spaces */}
-      <div className='flex flex-shrink-0 flex-col overflow-y-scroll mt-2'>
+      <div className='flex flex-shrink-0 flex-col overflow-y-scroll'>
         <SpaceList />
         <div className='p-3'>
           <Button className='flex' title='Create new space' onClick={handleCreateSpace}>

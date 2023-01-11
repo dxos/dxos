@@ -5,20 +5,20 @@
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 import { LatLngExpression } from 'leaflet';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
-import { EchoObject, id } from '@dxos/echo-schema';
+import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
-import { mx } from '@dxos/react-components';
 
+import { List, ListItemButton } from '../components';
 import { useSpace } from '../hooks';
 import { Organization } from '../proto';
 
 /**
  * https://react-leaflet.js.org/docs/api-map
  */
-export const Map: FC<{ center?: LatLngExpression }> = ({ center }) => {
+export const Map: FC<{ items: Organization[]; center?: LatLngExpression }> = ({ items, center }) => {
   const map = useMap();
   useEffect(() => {
     if (center) {
@@ -28,56 +28,82 @@ export const Map: FC<{ center?: LatLngExpression }> = ({ center }) => {
 
   return (
     <>
-      <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
-      {center && <Marker position={center} />}
+      {items.map((item) => {
+        // TODO(burdon): Dereference fails.
+        const { lat, lng } = item.address?.coordinates ?? {};
+        if (lat === undefined || lng === undefined) {
+          return null;
+        }
+
+        return <Marker key={item[id]} position={{ lat, lng }} />;
+      })}
     </>
   );
 };
 
-// TODO(burdon): Generic list class.
-export const PlaceList: FC<{ onSelect: (object: EchoObject) => void }> = ({ onSelect }) => {
+export const PlaceList: FC<{ items: Organization[]; onSelect: (object?: Organization) => void }> = ({
+  items,
+  onSelect
+}) => {
   const [selected, setSelected] = useState<string>();
-  const { space } = useSpace();
-  const organizations = useQuery(space, Organization.filter());
-
-  const handleSelect = (object: EchoObject) => {
-    setSelected(object[id]);
-    onSelect(object);
-  };
+  const handleSelect = useCallback(
+    (objectId: string) => {
+      console.log('>>>>>>>>', objectId, selected);
+      if (objectId === selected) {
+        setSelected(undefined);
+        onSelect(undefined);
+      } else {
+        setSelected(objectId);
+        onSelect(items?.find((organization: Organization) => organization[id] === objectId));
+      }
+    },
+    [items]
+  );
 
   return (
-    <div className='flex flex-col w-full overflow-hidden pt-2 pb-2 select-none text-sm'>
-      {organizations.map((organization) => (
-        <div
-          key={organization[id]}
-          className={mx(
-            'pl-4 pr-4 overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:bg-sky-100',
-            selected === organization[id] && 'bg-sky-200'
-          )}
-          onClick={() => handleSelect(organization)}
-        >
-          {organization.name}
-        </div>
-      ))}
+    <div className='flex flex-col w-full overflow-hidden pt-2 pb-2 select-none'>
+      <List>
+        {items.map((organization) => (
+          <ListItemButton
+            key={organization[id]}
+            selected={organization[id] === selected}
+            onClick={() => handleSelect(organization[id])}
+            classes={{
+              root: 'p-1 text-sm',
+              hover: 'bg-sky-100',
+              selected: 'bg-sky-200'
+            }}
+          >
+            {organization.name}
+          </ListItemButton>
+        ))}
+      </List>
     </div>
   );
 };
 
 export const MapView = () => {
   const [center, setCenter] = useState({ lng: -0.118, lat: 51.501 });
+  const { space } = useSpace();
+  const organizations = useQuery(space, Organization.filter());
 
-  const handleSelect = (organization: EchoObject) => {
-    const { lat, lng } = (organization as Organization).address?.coordinates ?? {};
-    setCenter({ lat, lng });
+  const handleSelect = (organization?: Organization) => {
+    if (organization) {
+      const { lat, lng } = organization.address?.coordinates ?? {};
+      if (lat !== undefined && lng !== undefined) {
+        setCenter({ lat, lng });
+      }
+    }
   };
 
   return (
     <div className='flex flex-1 relative'>
       <MapContainer className='w-full' center={center} zoom={11}>
-        <Map center={center} />
+        <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
+        <Map items={organizations} center={center} />
         <div className='flex flex-col absolute top-4 bottom-4 right-4 overflow-hidden' style={{ zIndex: 1000 }}>
           <div className='flex bg-white border rounded-md overflow-y-scroll' style={{ width: 240 }}>
-            <PlaceList onSelect={handleSelect} />
+            <PlaceList items={organizations} onSelect={handleSelect} />
           </div>
         </div>
       </MapContainer>

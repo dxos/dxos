@@ -20,7 +20,7 @@ export const Menu = () => {
 };
 
 // TODO(burdon): Change view type from string to AppView.
-export const ViewSelector: FC<{}> = ({}) => {
+export const ViewSelector: FC<{}> = () => {
   const navigate = useNavigate();
 
   const { views } = useOptions();
@@ -44,7 +44,7 @@ export const ViewSelector: FC<{}> = ({}) => {
             onClick={() => setView(currentSpaceKey!, view)}
           >
             <Icon weight='light' className={getSize(6)} />
-            <div className={mx('pl-1 pr-1', view === currentView && 'bg-gray-50')}>{String(view)}</div>
+            <div>{String(view)}</div>
           </a>
         );
       })}
