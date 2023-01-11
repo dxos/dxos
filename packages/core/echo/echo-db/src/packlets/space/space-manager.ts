@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { synchronized } from '@dxos/async';
+import { synchronized, trackLeaks } from '@dxos/async';
 import { CredentialSigner } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
@@ -51,6 +51,7 @@ export type ConstructSpaceParams = {
 /**
  * Manages a collection of ECHO (Data) Spaces.
  */
+@trackLeaks('open', 'close')
 export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _feedStore: FeedStore<FeedMessage>;

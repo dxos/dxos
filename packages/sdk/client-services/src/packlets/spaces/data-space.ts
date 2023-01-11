@@ -9,6 +9,7 @@ import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, Sna
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { Presence } from '@dxos/teleport-extension-presence';
+import { trackLeaks } from '@dxos/async';
 
 export type DataSpaceParams = {
   inner: Space;
@@ -20,6 +21,7 @@ export type DataSpaceParams = {
   snapshotId?: string | undefined;
 };
 
+@trackLeaks('open', 'close')
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;

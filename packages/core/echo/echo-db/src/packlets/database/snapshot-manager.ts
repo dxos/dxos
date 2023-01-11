@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { trackLeaks } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
@@ -12,6 +13,7 @@ import { SnapshotStore } from './snapshot-store';
 /**
  * Snapshot manager for a specific space.
  */
+@trackLeaks('open', 'close')
 export class SnapshotManager {
   private readonly _objectSync: ObjectSync;
 

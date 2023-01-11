@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask } from '@dxos/async';
+import { Event, scheduleTask, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -66,6 +66,12 @@ const AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL = 5000;
  */
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 
+/**
+ * Controls data pipeline in the space.
+ * Consumes the pipeline and updates the database.
+ * Reacts to new epochs to restart the pipeline.
+ */
+@trackLeaks('open', 'close')
 export class DataPipelineControllerImpl implements DataPipelineController {
   private _ctx = new Context();
   private _spaceContext!: DataPipelineControllerContext;
@@ -130,10 +136,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
   private _createPeriodicSnapshots() {
     // Record last timeframe.
     this.onTimeframeReached.debounce(TIMEFRAME_SAVE_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
-      const latestTimeframe = this._pipeline?.state.timeframe;
-      if (latestTimeframe) {
-        await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
-      }
+      await this._saveLatestTimeframe();
     });
 
     this.onTimeframeReached.debounce(AUTOMATIC_SNAPSHOT_DEBOUNCE_INTERVAL).on(this._ctx, async () => {
@@ -163,8 +166,16 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     return snapshot;
   }
 
+  private async _saveLatestTimeframe() {
+    const latestTimeframe = this._pipeline?.state.timeframe;
+    if (latestTimeframe) {
+      await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, latestTimeframe);
+    }
+  }
+
   async close() {
     try {
+      await this._saveLatestTimeframe();
       await this._saveSnapshot();
     } catch (err) {
       log.catch(err);

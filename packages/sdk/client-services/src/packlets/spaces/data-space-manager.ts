@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
   AcceptSpaceOptions,
@@ -25,6 +25,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { DataSpace } from './data-space';
 
+@trackLeaks('open', 'close')
 export class DataSpaceManager {
   private readonly _ctx = new Context();
 
@@ -66,16 +67,14 @@ export class DataSpaceManager {
   async close() {
     await this._ctx.dispose();
     for (const space of this._spaces.values()) {
-      const latestTimeframe = space.dataPipelineController.pipelineState?.timeframe;
-      if (latestTimeframe) {
-        await this._metadataStore.setSpaceLatestTimeframe(space.key, latestTimeframe);
-      }
+      await space.close();
     }
   }
 
   /**
    * Creates a new space writing the genesis credentials to the control feed.
    */
+  @synchronized
   async createSpace() {
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
@@ -98,6 +97,7 @@ export class DataSpaceManager {
   }
 
   // TODO(burdon): Rename join space.
+  @synchronized
   async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,

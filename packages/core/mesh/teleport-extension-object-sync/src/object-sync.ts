@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTask, Trigger } from '@dxos/async';
+import { scheduleTask, trackLeaks, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
@@ -15,6 +15,7 @@ export type ObjectSyncParams = {
   setObject: (data: DataObject) => Promise<void>;
 };
 
+@trackLeaks('open', 'close')
 export class ObjectSync {
   private readonly _ctx = new Context();
 

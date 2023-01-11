@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
@@ -49,6 +49,7 @@ export interface ISpace {
 /**
  * Spaces are globally addressable databases with access control.
  */
+@trackLeaks('open', 'close')
 export class Space {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
