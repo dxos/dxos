@@ -4,19 +4,7 @@
 
 import React from 'react';
 
-// https://mui.com/components/material-icons
-import {
-  AccountCircle as IdentityIcon,
-  Grain as ItemsIcon,
-  FilterTiltShift as SwarmIcon,
-  Group as SpacesIcon,
-  List as FeedsIcon,
-  List as CredentialsIcon,
-  // AppRegistration as RegistryIcon,
-  Router as SignalIcon,
-  Settings as ConfigIcon,
-  VpnKey as KeyIcon
-} from '@mui/icons-material';
+import { Gear, Users } from 'phosphor-react';
 
 import {
   ConfigPanel,
@@ -36,104 +24,107 @@ import {
 export const sections: Section[] = [
   {
     title: 'CLIENT',
+    id: 'client',
+    Icon: Users,
     items: [
       {
         id: 'config',
         title: 'Config',
-        icon: <ConfigIcon />,
+        Icon: Gear,
         panel: <ConfigPanel />
       }
-      // {
-      //   id: 'storage',
-      //   title: 'Storage',
-      //   icon: <StorageIcon />,
-      //   panel: <StoragePanel />
-      // }
-    ]
-  },
-  {
-    title: 'HALO',
-    items: [
-      {
-        id: 'halo.identity',
-        title: 'Identity',
-        icon: <IdentityIcon />,
-        panel: <IdentityPanel />
-      },
-      {
-        id: 'halo.keyring',
-        title: 'Keyring',
-        icon: <KeyIcon />,
-        panel: <KeyringPanel />
-      },
-      {
-        id: 'halo.credentials',
-        title: 'Credentials',
-        icon: <CredentialsIcon />,
-        panel: <CredentialsPanel />
-      }
-    ]
-  },
-  {
-    title: 'ECHO',
-    items: [
-      {
-        id: 'echo.spaces',
-        title: 'Spaces',
-        icon: <SpacesIcon />,
-        panel: <SpacesPanel />
-      },
-      {
-        id: 'echo.feeds',
-        title: 'Feeds',
-        icon: <FeedsIcon />,
-        panel: <FeedsPanel />
-      },
-      {
-        id: 'echo.items',
-        title: 'Items',
-        icon: <ItemsIcon />,
-        panel: <ItemsPanel />
-      }
-      // {
-      //   id: 'echo.snapshots',
-      //   title: 'Snapshots',
-      //   icon: <SnapshotsIcon />,
-      //   panel: <SnapshotsPanel />
-      // }
-    ]
-  },
-  {
-    title: 'MESH',
-    items: [
-      /*
-      {
-        id: 'mesh.network',
-        title: 'Network Graph',
-        icon: SwarmIcon,
-        panel: NetworkPanel
-      },
-      */
-      {
-        id: 'mesh.members',
-        title: 'Members',
-        icon: <IdentityIcon />,
-        panel: <MembersPanel />
-      },
-      {
-        id: 'mesh.swarminfo',
-        title: 'Swarm',
-        icon: <SwarmIcon />,
-        panel: <SwarmPanel />
-      },
-      {
-        id: 'mesh.signal',
-        title: 'Signal',
-        icon: <SignalIcon />,
-        panel: <SignalPanel />
-      }
+      // // {
+      // //   id: 'storage',
+      // //   title: 'Storage',
+      // //   icon: <StorageIcon />,
+      // //   panel: <StoragePanel />
+      // // }
     ]
   }
+  // {
+  //   title: 'HALO',
+  //   id: 'halo',
+  //   items: [
+  //     {
+  //       id: 'halo.identity',
+  //       title: 'Identity',
+  //       // Icon: <IdentityIcon />,
+  //       panel: <IdentityPanel />
+  //     },
+  //     {
+  //       id: 'halo.keyring',
+  //       title: 'Keyring',
+  //       // Icon: <KeyIcon />,
+  //       panel: <KeyringPanel />
+  //     },
+  //     {
+  //       id: 'halo.credentials',
+  //       title: 'Credentials',
+  //       // Icon: <CredentialsIcon />,
+  //       panel: <CredentialsPanel />
+  //     }
+  //   ]
+  // },
+  // {
+  //   title: 'ECHO',
+  //   items: [
+  //     {
+  //       id: 'echo.spaces',
+  //       title: 'Spaces',
+  //       icon: <SpacesIcon />,
+  //       panel: <SpacesPanel />
+  //     },
+  //     {
+  //       id: 'echo.feeds',
+  //       title: 'Feeds',
+  //       icon: <FeedsIcon />,
+  //       panel: <FeedsPanel />
+  //     },
+  //     {
+  //       id: 'echo.items',
+  //       title: 'Items',
+  //       icon: <ItemsIcon />,
+  //       panel: <ItemsPanel />
+  //     }
+  //     // {
+  //     //   id: 'echo.snapshots',
+  //     //   title: 'Snapshots',
+  //     //   icon: <SnapshotsIcon />,
+  //     //   panel: <SnapshotsPanel />
+  //     // }
+  //   ]
+  // },
+  // {
+  //   title: 'MESH',
+  //   items: [
+  //     /*
+  //     {
+  //       id: 'mesh.network',
+  //       title: 'Network Graph',
+  //       icon: SwarmIcon,
+  //       panel: NetworkPanel
+  //     },
+  //     */
+  //     {
+  //       id: 'mesh.members',
+  //       title: 'Members',
+  //       icon: <IdentityIcon />,
+  //       panel: <MembersPanel />
+  //     },
+  //     {
+  //       id: 'mesh.swarminfo',
+  //       title: 'Swarm',
+  //       icon: <SwarmIcon />,
+  //       panel: <SwarmPanel />
+  //     },
+  //     {
+  //       id: 'mesh.signal',
+  //       title: 'Signal',
+  //       icon: <SignalIcon />,
+  //       panel: <SignalPanel />
+  //     }
+  //   ]
+  // }
   // {
   //   title: 'DXNS',
   //   items: [
