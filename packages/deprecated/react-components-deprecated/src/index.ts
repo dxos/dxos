@@ -6,7 +6,6 @@ export * from './BoxContainer';
 export * from './Clipboard';
 export * from './CustomTextField';
 export * from './Dialog';
-export * from './FullScreen'; // TODO(burdon): Move components from Braneframe.
 export * from './Files';
 export * from './HashIcon';
 export * from './Icons';
