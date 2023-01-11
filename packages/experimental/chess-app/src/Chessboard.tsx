@@ -13,16 +13,33 @@ const props = {
   customLightSquareStyle: { backgroundColor: '#f5f5f5' }
 };
 
+export type ChessboardProps = {
+  game: Game;
+  readonly?: boolean;
+  orientation?: 'white' | 'black';
+  onUpdate?: (game: Chess) => void;
+  onSelect?: () => void;
+};
+
 /**
  * https://www.npmjs.com/package/chess.js
  * https://www.npmjs.com/package/react-chessboard
  */
-export const Chessboard: FC<{ game: Game }> = ({ game }) => {
-  // TODO(burdon): Process game.
+export const Chessboard: FC<ChessboardProps> = ({
+  game,
+  readonly = false,
+  orientation = 'white',
+  onUpdate,
+  onSelect
+}) => {
   const [chess, setChess] = useState(new Chess());
   useEffect(() => {
     if (chess.fen() !== game.fen) {
-      setChess(new Chess(game.fen));
+      const newChess = new Chess(game.fen);
+      setChess(newChess);
+      onUpdate?.(newChess);
+    } else {
+      onUpdate?.(chess);
     }
   }, [chess.fen(), game.fen]);
 
@@ -40,19 +57,30 @@ export const Chessboard: FC<{ game: Game }> = ({ game }) => {
   };
 
   const handleDrop = (source: any, target: any, piece: any) => {
-    const move = makeMove({ from: source, to: target }); // TODO(burdon): Auto-promote.
-    if (!move) {
-      return false;
-    }
-
-    return true;
+    // TODO(burdon): Select promotion piece.
+    const promotion =
+      piece[1] === 'P' && ((piece[0] === 'w' && target[1] === '8') || (piece[0] === 'b' && target[1] === '1'))
+        ? 'q'
+        : undefined;
+    const move = makeMove({ from: source, to: target, promotion });
+    return !!move;
   };
 
-  // TODO(burdon): boardOrientation, boardWidth.
+  const handleSelect = () => {
+    onSelect?.();
+  };
+
   // https://react-chessboard.com/?path=/story/example-chessboard--configurable-board
   return (
-    <div>
-      <ReactChessboard position={chess.fen()} onPieceDrop={handleDrop} {...props} />
+    <div className='select-none' onClick={handleSelect}>
+      <ReactChessboard
+        position={chess.fen()}
+        boardOrientation={orientation}
+        arePiecesDraggable={!readonly}
+        onPieceDrop={handleDrop}
+        customSquareStyles={{ e1: { color: 'red' }, e8: { color: 'red' } }}
+        {...props}
+      />
     </div>
   );
 };

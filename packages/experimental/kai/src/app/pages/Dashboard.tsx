@@ -10,8 +10,8 @@ import {
   ContactsListCard,
   ProjectEditor,
   ProjectGraph,
-  ProjectListCard,
   ProjectHierarchy,
+  ProjectListCard,
   TaskListCard
 } from '../../containers';
 
@@ -22,7 +22,7 @@ export const Dashboard: FC = () => {
   return (
     <div
       ref={ref}
-      className='flex flex-1 grid grid-cols-5 grid-flow-row gap-4 p-4 overflow-y-scroll scrollbar bg-white'
+      className='flex flex-1 grid grid-cols-5 grid-flow-row gap-4 p-2 pt-0 overflow-y-scroll scrollbar bg-white'
     >
       <div className='flex flex-shrink-0 col-span-2' style={props}>
         <ProjectListCard />

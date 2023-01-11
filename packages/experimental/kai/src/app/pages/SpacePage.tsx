@@ -50,7 +50,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
           </div>
         )}
 
-        <div className='flex flex-1 overflow-y-scroll bg-white'>
+        <div className='flex flex-1 overflow-hidden bg-white'>
           {view === AppView.DASHBOARD && <Dashboard />}
           {view === AppView.ORGS && <OrganizationHierarchy />}
           {view === AppView.PROJECTS && <ProjectList />}
