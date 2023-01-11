@@ -63,10 +63,6 @@ export default defineConfig({
       include: [/packages/, /node_modules/]
     },
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        projects: resolve(__dirname, 'projects.html')
-      },
       output: {
         manualChunks: {
           vendor: ['react', 'react-router-dom', 'react-dom']
