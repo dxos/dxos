@@ -35,7 +35,6 @@ export type NodeOptions = {
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
-
   const args = await getNodeArgs(context, options);
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
   const exitCode = await execTool(mocha, args, {
@@ -77,9 +76,9 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
     {
       '--checkLeaks': options.checkLeaks,
       '--exit': options.forceExit,
-      '--inspect': options.inspect,
+      '--inspect': options.inspect
     },
-    options.grep && ['--grep', options.grep],
+    options.grep && ['--grep', options.grep]
   ]);
 };
 
