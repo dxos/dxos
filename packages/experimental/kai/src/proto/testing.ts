@@ -6,6 +6,7 @@ import faker from 'faker';
 
 import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 
+import { cities } from './data';
 import { Contact, Organization, Project, Task } from './gen/schema';
 
 // TODO(burdon): Don't save inside utils.
@@ -35,6 +36,19 @@ export class Generator {
     await Promise.all(
       Array.from({ length: faker.datatype.number(this._options.organizations) }).map(async () => {
         const organization = await createOrganization(this._db);
+
+        // Address.
+        const city = faker.random.arrayElement(cities);
+        organization.address = {
+          city: city.name,
+          coordinates: {
+            lat: city.coordinates[1],
+            lng: city.coordinates[0]
+          },
+          // TODO (mykola): Add zip and state.
+          zip: '????',
+          state: '????'
+        };
 
         // Contacts.
         await Promise.all(
@@ -123,7 +137,8 @@ export const createContact = async (db: EchoDatabase) => {
       ? {
           city: faker.address.city(),
           state: faker.address.stateAbbr(),
-          zip: faker.address.zipCode()
+          zip: faker.address.zipCode(),
+          coordinates: { lat: Number(faker.address.latitude()), lng: Number(faker.address.longitude()) }
         }
       : undefined
   });

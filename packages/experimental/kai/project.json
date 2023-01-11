@@ -2,10 +2,33 @@
   "sourceRoot": "packages/experimental/kai/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/kai/src/index.ts",
+        "outputPath": "packages/experimental/kai/dist/types",
+        "tsConfig": "packages/experimental/kai/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "bundle": {
       "executor": "@nrwl/vite:build",
       "options": {
         "outputPath": "packages/experimental/kai/out/kai"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/kai/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/kai/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

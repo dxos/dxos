@@ -3,3 +3,4 @@
 //
 
 export * from './object-sync-extension';
+export * from './object-sync';

@@ -3,7 +3,10 @@
 //
 
 import { Context } from '@dxos/context';
+import { StackTrace } from '@dxos/debug';
 import { MaybePromise } from '@dxos/util';
+
+import { trackResource } from './track-leaks';
 
 export type ClearCallback = () => void;
 
@@ -53,11 +56,18 @@ export const runInContextAsync = async (ctx: Context, fn: () => MaybePromise<voi
 };
 
 export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs?: number) => {
+  const clearTracking = trackResource({
+    name: `task (${fn.name || 'anonymous'})`,
+    openStack: new StackTrace()
+  });
+
   const timeout = setTimeout(async () => {
     await runInContextAsync(ctx, fn);
+    clearTracking();
   }, afterMs);
 
   ctx.onDispose(() => {
+    clearTracking();
     clearTimeout(timeout);
   });
 };
@@ -66,10 +76,21 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
  * Run the task in the next event loop iteration, and then repeat in `interval` ms after the previous iteration completes.
  */
 export const scheduleTaskInterval = (ctx: Context, task: () => Promise<void>, interval: number) => {
+  const clearTracking = trackResource({
+    name: `repeating task (${task.name || 'anonymous'})`,
+    openStack: new StackTrace()
+  });
+
+  let timeoutId: NodeJS.Timeout;
+
   const run = async () => {
-    await task();
-    scheduleTask(ctx, run, interval);
+    await runInContextAsync(ctx, task);
+    timeoutId = setTimeout(run, interval);
   };
 
-  scheduleTask(ctx, run, interval);
+  timeoutId = setTimeout(run, interval);
+  ctx.onDispose(() => {
+    clearTracking();
+    clearTimeout(timeoutId);
+  });
 };

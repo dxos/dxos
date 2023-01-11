@@ -29,7 +29,7 @@ export const Kanban: FC<{
   onCreate?: (column: KanbanColumnDef) => void;
 }> = ({ objects, columns, columnWidth = 300, onCreate }) => {
   return (
-    <div className='flex flex-1 p-3 overflow-x-scroll overflow-y-hidden'>
+    <div className='flex flex-1 overflow-x-scroll overflow-y-hidden p-3 pb-5'>
       <div className='flex'>
         {columns.map((column, i) => {
           const filtered = objects.filter(column.filter);
@@ -40,9 +40,9 @@ export const Kanban: FC<{
               className='flex flex-col ml-4 first:ml-0 drop-shadow-md bg-gray-100'
               style={{ width: columnWidth }}
             >
-              <div className='p-2 rounded-t'>{column.header}</div>
-              <div className='flex flex-1 flex-col pl-2 pr-2 overflow-y-scroll'>
-                <div>
+              <div className='pl-3 pr-3 pt-2 rounded-t'>{column.header}</div>
+              <div className='flex overflow-hidden fade'>
+                <div className='flex flex-1 flex-col pl-3 pr-3 overflow-y-scroll'>
                   {filtered.map((object) => {
                     const Content = column.Content;
                     return (
@@ -53,6 +53,7 @@ export const Kanban: FC<{
                   })}
                 </div>
               </div>
+
               {onCreate && (
                 <div className='flex flex-shrink-0 items-center p-2'>
                   <div className='text-sm'>

@@ -15,7 +15,7 @@ import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
 /**
  * Main app routes.
  */
-const Routes = () => {
+export const Routes = () => {
   return useRoutes([
     {
       path: '/',

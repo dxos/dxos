@@ -35,8 +35,15 @@ export const Sidebar = () => {
     await generator?.generate();
   };
 
-  // TODO(burdon): Clear database.
-  const handleReset = () => {};
+  const handleReset = async () => {
+    await client.reset();
+    await client.initialize();
+    // TODO(burdon): Hangs (no error) if profile not created?
+    if (!client.halo.profile) {
+      await client.halo.createProfile();
+    }
+    location.reload(); // TODO(mykola): Client is not re-entrant after reset.
+  };
 
   const handleToggleConnection = async () => {
     switch (connectionState) {
@@ -54,7 +61,7 @@ export const Sidebar = () => {
   return (
     <div className='flex flex-1 flex-col bg-gray-50 overflow-hidden border-r'>
       {/* Spaces */}
-      <div className='flex flex-shrink-0 flex-col overflow-y-scroll mt-2'>
+      <div className='flex flex-shrink-0 flex-col overflow-y-scroll'>
         <SpaceList />
         <div className='p-3'>
           <Button className='flex' title='Create new space' onClick={handleCreateSpace}>

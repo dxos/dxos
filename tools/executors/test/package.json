@@ -14,5 +14,9 @@
   "devDependencies": {
     "@types/mocha": "^8.2.2"
   },
-  "executors": "./executor.json"
+  "executors": "./executor.json",
+  "dependencies": {
+    "@types/wtfnode": "^0.7.0",
+    "wtfnode": "^0.9.1"
+  }
 }

@@ -26,6 +26,7 @@
     "devtools": "packages/devtools/devtools",
     "devtools-extension": "packages/devtools/devtools-extension",
     "devtools-mesh": "packages/devtools/devtools-mesh",
+    "devtools-testbench": "packages/devtools/devtools-testbench",
     "docs": "docs",
     "echo-db": "packages/core/echo/echo-db",
     "echo-schema": "packages/core/echo/echo-schema",
