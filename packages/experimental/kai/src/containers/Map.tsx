@@ -90,7 +90,9 @@ export const MapView = () => {
   const handleSelect = (organization?: Organization) => {
     if (organization) {
       const { lat, lng } = organization.address?.coordinates ?? {};
-      setCenter({ lat, lng });
+      if (lat !== undefined && lng !== undefined) {
+        setCenter({ lat, lng });
+      }
     }
   };
 
