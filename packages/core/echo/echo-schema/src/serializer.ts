@@ -6,7 +6,10 @@ import { EchoDatabase } from './database';
 import { base, id, schema } from './defs';
 import { strip } from './util';
 
-export type SerializedObject = {};
+export type SerializedObject = {
+  '@id': string;
+  '@type'?: string;
+};
 
 export type SerializedSpace = {
   objects: SerializedObject[];
@@ -34,6 +37,9 @@ export class Serializer {
 
   // TODO(burdon): Implement.
   async import(database: EchoDatabase, data: SerializedSpace) {
-    console.log(data);
+    const { objects } = data;
+    objects.forEach((object: SerializedObject) => {
+      console.log(object);
+    });
   }
 }
