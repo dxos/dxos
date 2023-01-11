@@ -55,7 +55,7 @@ export const ViewSelector: FC<{}> = ({}) => {
 export const AppBar = () => {
   const toggleSidebar = useTogglePanelSidebar();
   return (
-    <div className='flex items-center bg-orange-400 pl-2 pr-2' style={{ height: 48 }}>
+    <div className='flex items-center pl-2 pr-2' style={{ height: 48 }}>
       <div className='flex ml-2'>
         <button onClick={toggleSidebar}>
           <List className={getSize(6)} />

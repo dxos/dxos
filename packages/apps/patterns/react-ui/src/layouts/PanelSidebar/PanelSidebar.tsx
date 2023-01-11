@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Transition } from '@headlessui/react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import React, {
+  ComponentProps,
   createContext,
   Dispatch,
   Fragment,
   PropsWithChildren,
-  ReactNode,
   SetStateAction,
   useCallback,
   useContext,
@@ -37,64 +36,78 @@ export const useTogglePanelSidebar = () => {
   }, [displayState]);
 };
 
+export interface PanelSidebarProviderSlots {
+  content?: ComponentProps<typeof Fragment>;
+  fixedBlockStart?: ComponentProps<'div'>;
+  fixedBlockEnd?: ComponentProps<'div'>;
+}
+
 export interface PanelSidebarProviderProps {
   inlineStart?: boolean;
-  fixedBlockStartChildren?: ReactNode;
-  fixedBlockEndChildren?: ReactNode;
+  slots?: PanelSidebarProviderSlots;
 }
 
 export const PanelSidebarProvider = ({
   children,
   inlineStart,
-  fixedBlockStartChildren,
-  fixedBlockEndChildren
+  slots
 }: PropsWithChildren<PanelSidebarProviderProps>) => {
   const { t } = useTranslation('os');
-  const [displayState, setDisplayState] = useState<PanelSidebarState>('hide');
+  const [displayState, setInternalDisplayState] = useState<PanelSidebarState>('hide');
+  const [transitionShow, setTransitionShow] = useState(false);
   const isOpen = displayState === 'show';
+  const internalHide = () => {
+    setTransitionShow(false);
+    setTimeout(() => {
+      setInternalDisplayState('hide');
+    }, 200);
+  };
+  const internalShow = () => {
+    setInternalDisplayState('show');
+    setTimeout(() => {
+      setTransitionShow(true);
+      // todo (thure): this may be a race condition in certain situations
+    }, 0);
+  };
+  const setDisplayState = (displayState: SetStateAction<PanelSidebarState>) =>
+    displayState === 'show' ? internalShow() : internalHide();
+
+  console.log('[states]', displayState, transitionShow, isOpen);
+
   return (
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
       <DialogPrimitive.Root open={isOpen}>
-        <Transition
-          show={isOpen}
-          as={Fragment}
-          enter='ease-in-out duration-200'
-          enterFrom='inline-start-[-272px]'
-          enterTo='inline-start-0'
-          leave='ease-in-out duration-200'
-          leaveFrom='inline-start-0'
-          leaveTo='inline-start-[-272px]'
+        <DialogPrimitive.Content
+          className={mx(
+            'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
+            'bg-neutral-50 dark:bg-neutral-950',
+            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]'
+          )}
         >
-          <DialogPrimitive.Content
-            className={mx('fixed block-start-0 block-end-0 is-[272px] z-50', 'bg-neutral-50 dark:bg-neutral-950')}
-          >
-            <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
-            Hello this is sidebar
-          </DialogPrimitive.Content>
-        </Transition>
-        {fixedBlockStartChildren && (
+          <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
+          <Fragment {...slots?.content} />
+        </DialogPrimitive.Content>
+        {slots?.fixedBlockStart && (
           <div
             role='none'
+            {...slots?.fixedBlockStart}
             className={mx(
               'fixed is-[100vw] block-start-0 z-[49] transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
-              isOpen ? 'inline-start-[272px]' : 'inline-start-0'
+              transitionShow ? 'inline-start-[272px]' : 'inline-start-0',
+              slots?.fixedBlockStart?.className
             )}
           >
-            {fixedBlockStartChildren}
+            {slots?.fixedBlockStart?.children}
           </div>
         )}
-        <Transition
-          show={isOpen}
-          as={Fragment}
-          enter='linear duration-200'
-          enterFrom='opacity-0'
-          enterTo='opacity-100'
-          leave='linear duration-200'
-          leaveFrom='opacity-100'
-          leaveTo='opacity-0'
-        >
-          <DialogPrimitive.Overlay className={defaultOverlay} onClick={() => setDisplayState('hide')} />
-        </Transition>
+        <DialogPrimitive.Overlay
+          className={mx(
+            defaultOverlay,
+            'transition-opacity duration-200 ease-in-out',
+            transitionShow ? 'opacity-100' : 'opacity-0'
+          )}
+          onClick={internalHide}
+        />
         {children}
       </DialogPrimitive.Root>
     </PanelSidebarContext.Provider>

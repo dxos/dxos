@@ -28,7 +28,7 @@ import { Dashboard } from './Dashboard';
  */
 const ViewContainer: FC<{ view: string }> = ({ view }) => {
   return (
-    <PanelSidebarProvider inlineStart fixedBlockStartChildren={<AppBar />}>
+    <PanelSidebarProvider inlineStart slots={{ fixedBlockStart: { children: <AppBar />, className: 'bg-orange-400' } }}>
       <ViewSelector />
       <div className='pbs-[84px]'>
         {view === AppView.DASHBOARD && <Dashboard />}
