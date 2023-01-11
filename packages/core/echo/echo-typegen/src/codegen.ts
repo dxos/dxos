@@ -171,7 +171,7 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
  */
 export const createPlainInterface = (builder: SourceBuilder, type: pb.Type) => {
   const name = type.name;
-  const fields = type.fieldsArray.map((field) => `${field.name}: ${createType(field)};`);
+  const fields = type.fieldsArray.map((field) => `${field.name}?: ${createType(field)};`);
 
   // prettier-ignore
   builder
