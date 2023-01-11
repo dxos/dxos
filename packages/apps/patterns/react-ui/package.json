@@ -20,6 +20,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@radix-ui/react-dialog": "^1.0.0",
     "@react-hook/async": "^3.1.1",
     "debug": "^4.3.3",
     "url-join": "^5.0.0"
