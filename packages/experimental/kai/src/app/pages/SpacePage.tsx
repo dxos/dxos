@@ -22,13 +22,20 @@ import {
 import { AppStateProvider, AppView, SpaceContext, SpaceContextType, useOptions, viewConfig } from '../../hooks';
 import { AppBar, ViewSelector } from './AppBar';
 import { Dashboard } from './Dashboard';
+import { Sidebar } from './Sidebar';
 
 /**
  * Main grid layout.
  */
 const ViewContainer: FC<{ view: string }> = ({ view }) => {
   return (
-    <PanelSidebarProvider inlineStart slots={{ fixedBlockStart: { children: <AppBar />, className: 'bg-orange-400' } }}>
+    <PanelSidebarProvider
+      inlineStart
+      slots={{
+        fixedBlockStart: { children: <AppBar />, className: 'bg-orange-400' },
+        content: { children: <Sidebar /> }
+      }}
+    >
       <ViewSelector />
       <div className='pbs-[84px]'>
         {view === AppView.DASHBOARD && <Dashboard />}
