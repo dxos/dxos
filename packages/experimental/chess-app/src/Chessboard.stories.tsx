@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Chessboard } from './Chessboard';
+import { Game } from './proto';
 
 export default {
   component: Chessboard,
@@ -13,6 +14,6 @@ export default {
 
 export const Default = {
   render: () => {
-    return <div>Chessboard</div>;
+    return <Chessboard game={new Game()} />;
   }
 };

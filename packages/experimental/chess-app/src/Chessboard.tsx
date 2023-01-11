@@ -14,7 +14,7 @@ const props = {
 };
 
 export type ChessboardProps = {
-  game: Game;
+  game?: Game;
   readonly?: boolean;
   orientation?: 'white' | 'black';
   onUpdate?: (game: Chess) => void;
