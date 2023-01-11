@@ -173,6 +173,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     await this._pipeline?.stop();
     await this.databaseBackend?.close();
     await this.database?.destroy();
+    await this._params.snapshotManager.close();
   }
 
   createSnapshot(): SpaceSnapshot {
