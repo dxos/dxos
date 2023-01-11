@@ -5,7 +5,6 @@
 import { Event, synchronized, Trigger } from '@dxos/async';
 import {
   ClientServicesProvider,
-  ClientServicesProxy,
   CancellableInvitationObservable,
   SpaceInvitationsProxy,
   InvitationsOptions
@@ -124,7 +123,6 @@ export class SpaceProxy implements Space {
       return;
     }
 
-    // if (true) { // TODO(dima?): Always run database in remote mode for now.
     this._database = new Database(
       this._modelFactory,
       new DatabaseBackendProxy(this._clientServices.services.DataService, this._key),
@@ -136,13 +134,6 @@ export class SpaceProxy implements Space {
     };
 
     databaseRouter.register(this._key, this._experimental.db);
-    // } else if (false) {
-    //   // TODO(wittjosiah): Reconcile service provider host with interface.
-    //   const space = (this._serviceProvider as any).echo.getSpace(this._key) ?? failUndefined();
-    //   this._database = space.database;
-    // } else {
-    //   throw new Error('Unrecognized service provider.');
-    // }
   }
 
   get key() {
@@ -220,9 +211,7 @@ export class SpaceProxy implements Space {
   @synchronized
   async destroy() {
     log('destroying...');
-    if (this._database && this._clientServices instanceof ClientServicesProxy) {
-      await this.database.destroy();
-    }
+    await this.database.destroy();
 
     log('destroyed');
   }

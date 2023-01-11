@@ -16,7 +16,6 @@ import {
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
-import { Presence } from '@dxos/teleport-extension-presence';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
@@ -36,7 +35,11 @@ export type SpaceProtocolOptions = {
   topic: PublicKey; // TODO(burdon): Rename?
   swarmIdentity: SwarmIdentity;
   networkManager: NetworkManager;
-  presence: Presence;
+  /**
+   * Called when new session is authenticated.
+   * Additional extensions can be added here.
+   */
+  onSessionAuth?: (session: Teleport) => void;
 };
 
 /**
@@ -45,7 +48,7 @@ export type SpaceProtocolOptions = {
 export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
-  private readonly _presence: Presence;
+  private readonly _onSessionAuth?: (session: Teleport) => void;
 
   private readonly _topic: PublicKey;
 
@@ -58,10 +61,10 @@ export class SpaceProtocol {
     return this._sessions;
   }
 
-  constructor({ topic, swarmIdentity, networkManager, presence }: SpaceProtocolOptions) {
+  constructor({ topic, swarmIdentity, networkManager, onSessionAuth }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = swarmIdentity;
-    this._presence = presence;
+    this._onSessionAuth = onSessionAuth;
 
     this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
   }
@@ -105,7 +108,6 @@ export class SpaceProtocol {
     if (this._connection) {
       log('stopping...');
       await this._connection.close();
-      await this._presence.destroy();
       log('stopped');
     }
   }
@@ -115,7 +117,7 @@ export class SpaceProtocol {
       const session = new SpaceProtocolSession({
         wireParams,
         swarmIdentity: this._swarmIdentity,
-        presence: this._presence
+        onSessionAuth: this._onSessionAuth
       });
       this._sessions.set(wireParams.remotePeerId, session);
 
@@ -131,7 +133,11 @@ export class SpaceProtocol {
 export type SpaceProtocolSessionParams = {
   wireParams: WireProtocolParams;
   swarmIdentity: SwarmIdentity;
-  presence: Presence;
+  /**
+   * Called when new session is authenticated.
+   * Additional extensions can be added here.
+   */
+  onSessionAuth?: (session: Teleport) => void;
 };
 
 export enum AuthStatus {
@@ -148,7 +154,7 @@ export class SpaceProtocolSession implements WireProtocol {
   @logInfo
   private readonly _wireParams: WireProtocolParams;
 
-  private readonly _presence: Presence;
+  private readonly _onSessionAuth?: (session: Teleport) => void;
   private readonly _swarmIdentity: SwarmIdentity;
 
   private readonly _teleport: Teleport;
@@ -164,10 +170,10 @@ export class SpaceProtocolSession implements WireProtocol {
   }
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.
-  constructor({ wireParams, swarmIdentity, presence }: SpaceProtocolSessionParams) {
+  constructor({ wireParams, swarmIdentity, onSessionAuth }: SpaceProtocolSessionParams) {
     this._wireParams = wireParams;
     this._swarmIdentity = swarmIdentity;
-    this._presence = presence;
+    this._onSessionAuth = onSessionAuth;
 
     this._teleport = new Teleport(wireParams);
   }
@@ -186,7 +192,7 @@ export class SpaceProtocolSession implements WireProtocol {
         onAuthSuccess: () => {
           this._authStatus = AuthStatus.SUCCESS;
           log('Peer authenticated');
-          // TODO(dmaretskyi): Add auth-only plugins: Presence, Greeter (feed admission).
+          this._onSessionAuth?.(this._teleport);
           // TODO(dmaretskyi): Configure replicator to upload.
         },
         onAuthFailure: () => {
@@ -194,10 +200,6 @@ export class SpaceProtocolSession implements WireProtocol {
           this._authStatus = AuthStatus.FAILURE;
         }
       })
-    );
-    this._teleport.addExtension(
-      'dxos.mesh.teleport.presence',
-      this._presence.createExtension({ remotePeerId: this._teleport.remotePeerId })
     );
     this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
