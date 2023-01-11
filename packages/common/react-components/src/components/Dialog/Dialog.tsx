@@ -10,6 +10,7 @@ import React, { ComponentProps, Fragment, ReactNode, useState } from 'react';
 import { defaultDescription, defaultFocus, defaultHover, getSize } from '../../styles';
 import { mx } from '../../util';
 import { Tooltip } from '../Tooltip';
+import { defaultOverlay } from './dialogStyles';
 
 export interface DialogSlots {
   overlay?: Pick<ComponentProps<typeof DialogPrimitive.Overlay>, 'className'>;
@@ -62,7 +63,7 @@ export const Dialog = ({
         <DialogPrimitive.Overlay
           forceMount
           {...slots.overlay}
-          className={mx('fixed inset-0 z-20 bg-black/50', slots.overlay?.className)}
+          className={mx(defaultOverlay, slots.overlay?.className)}
         />
       </Transition.Child>
       <Transition.Child
