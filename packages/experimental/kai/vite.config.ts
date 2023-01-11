@@ -95,6 +95,7 @@ export default defineConfig({
     ReactPlugin(),
 
     // TODO(burdon): Document.
+    // To reset, unregister service worker using devtools.
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
