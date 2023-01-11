@@ -5,7 +5,6 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { ConfigPlugin } = require('@dxos/config/vite-plugin');
 const { ThemePlugin } = require('@dxos/react-components/plugin');
 
 module.exports = {
@@ -25,21 +24,6 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
-          // TODO(burdon): Why are these necessary?
-          '@dxos/config',
-          '@dxos/keys',
-          '@dxos/log',
-          '@dxos/protocols',
-          '@dxos/protocols/proto/dxos/client',
-          '@dxos/protocols/proto/dxos/client/services',
-          '@dxos/protocols/proto/dxos/config',
-          '@dxos/protocols/proto/dxos/echo/feed',
-          '@dxos/protocols/proto/dxos/echo/model/object',
-          '@dxos/protocols/proto/dxos/halo/credentials',
-          '@dxos/protocols/proto/dxos/halo/invitations',
-          '@dxos/protocols/proto/dxos/halo/keys',
-          '@dxos/protocols/proto/dxos/mesh/bridge',
-          '@dxos/protocols/proto/dxos/rpc',
           'storybook-dark-mode'
         ]
       },
@@ -49,7 +33,6 @@ module.exports = {
         }
       },
       plugins: [
-        ConfigPlugin(),
         ThemePlugin({
           content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
         })
