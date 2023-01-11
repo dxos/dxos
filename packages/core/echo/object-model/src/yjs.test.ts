@@ -5,7 +5,7 @@ import * as Y from 'yjs'
 describe('yjs', () => {
   test('basic', () => {
     const ydoc = new Y.Doc()
-    const yarray = ydoc.getArray('a') 
+    const yarray = ydoc.getArray('a')
 
     yarray.insert(0, [1, 2, 3]) // insert three elements
     yarray.delete(1, 1) // delete second element 
@@ -14,14 +14,14 @@ describe('yjs', () => {
 
   test('send as snapshot', () => {
     const ydoc1 = new Y.Doc()
-    const yarray1 = ydoc1.getArray('a') 
+    const yarray1 = ydoc1.getArray('a')
     yarray1.insert(0, [1, 2])
 
     const snapshot = Y.encodeStateAsUpdateV2(ydoc1)
 
     const ydoc2 = new Y.Doc()
     Y.applyUpdateV2(ydoc2, snapshot)
-    const yarray2 = ydoc1.getArray('a') 
+    const yarray2 = ydoc1.getArray('a')
     expect(yarray2.toArray()).to.deep.equal([1, 2])
   })
 
@@ -31,9 +31,9 @@ describe('yjs', () => {
     ydoc1.on('updateV2', (update, origin) => {
       Y.applyUpdateV2(ydoc2, update)
     })
-    
-    const yarray1 = ydoc1.getArray('a') 
-    const yarray2 = ydoc2.getArray('a') 
+
+    const yarray1 = ydoc1.getArray('a')
+    const yarray2 = ydoc2.getArray('a')
 
     yarray1.insert(0, [1, 2])
     expect(yarray2.toArray()).to.deep.equal([1, 2])
@@ -42,8 +42,8 @@ describe('yjs', () => {
   test('apply update to different instance', () => {
     const ydoc1 = new Y.Doc()
     const ydoc2 = new Y.Doc()
-    const yarray1 = ydoc1.getArray('a') 
-    const yarray2 = ydoc2.getArray('a') 
+    const yarray1 = ydoc1.getArray('a')
+    const yarray2 = ydoc2.getArray('a')
 
     // peer1 = [1]
     yarray1.insert(0, [1])
@@ -60,5 +60,25 @@ describe('yjs', () => {
     yarray1.push([3])
 
     expect(yarray2.toArray()).to.deep.equal([2]) // Push 3 is discarded when array is reset
+  })
+
+  test('transactions', () => {
+    const ydoc = new Y.Doc()
+    const yarray = ydoc.getArray('a')
+
+    const cb = (update: any) => {
+      // console.log({ update })
+    }
+    try {
+      ydoc.once('updateV2', cb)
+      ydoc.transact(() => {
+        yarray.insert(0, [1, 2, 3]) // insert three elements
+        yarray.delete(1, 1) // delete second element 
+        // console.log('before end')
+      })
+      // console.log('end')
+    } finally {
+      ydoc.off('updateV2', cb)
+    }
   })
 })
