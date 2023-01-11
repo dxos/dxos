@@ -277,6 +277,15 @@ export class MutationUtil {
         break;
       }
 
+      case ObjectMutation.Operation.YJS: {
+        const array = get(object, key!, undefined);
+        if (!(array instanceof OrderedArray)) {
+          break;
+        }
+        array.apply(mutation.mutation!);
+        break;
+      }
+
       // TODO(burdon): Other mutation types.
       default: {
         throw new Error(`Operation not implemented: ${operation}`);

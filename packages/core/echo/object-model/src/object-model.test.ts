@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DXOS.org
+// CopytestBuilderht 2020 DXOS.org
 //
 
 import expect from 'expect';
@@ -26,8 +26,8 @@ describe('ObjectModel', () => {
   });
 
   test('can set a property', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const { model } = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const { model } = testBuilder.createPeer();
 
     await model.set('foo', 'bar');
     expect(model.get('foo')).toEqual('bar');
@@ -37,16 +37,16 @@ describe('ObjectModel', () => {
   });
 
   test('can set a dot property', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const { model } = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const { model } = testBuilder.createPeer();
 
     await model.set('foo.bar', 100);
     expect(model.get('foo')).toEqual({ bar: 100 });
   });
 
   test('can remove a property', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const { model } = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const { model } = testBuilder.createPeer();
 
     await model.set('foo', 'bar');
     expect(model.get('foo')).toEqual('bar');
@@ -56,8 +56,8 @@ describe('ObjectModel', () => {
   });
 
   test('can set multiple properties using the builder pattern', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const { model } = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const { model } = testBuilder.createPeer();
 
     await model.builder().set('foo', 100).set('bar', true).commit();
 
@@ -66,8 +66,8 @@ describe('ObjectModel', () => {
   });
 
   test('property updates are optimistically applied', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const { model } = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const { model } = testBuilder.createPeer();
 
     const promise = model.set('foo', 'bar');
     expect(model.get('foo')).toEqual('bar');
@@ -76,8 +76,8 @@ describe('ObjectModel', () => {
   });
 
   test('timeframe is updated after a mutation', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const peer = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const peer = testBuilder.createPeer();
 
     expect(peer.timeframe.get(peer.key)).toEqual(undefined);
 
@@ -86,60 +86,89 @@ describe('ObjectModel', () => {
   });
 
   test('two peers', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const peer1 = rig.createPeer();
-    const peer2 = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
 
     await peer1.model.set('foo', 'bar');
-    await rig.waitForReplication();
+    await testBuilder.waitForReplication();
     expect(peer2.model.get('foo')).toEqual('bar');
   });
 
   test('consistency', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const peer1 = rig.createPeer();
-    const peer2 = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
 
-    rig.configureReplication(false);
+    testBuilder.configureReplication(false);
 
     await peer1.model.set('title', 'DXOS');
     await peer2.model.set('title', 'Braneframe');
 
-    rig.configureReplication(true);
-    await rig.waitForReplication();
+    testBuilder.configureReplication(true);
+    await testBuilder.waitForReplication();
 
     // Peer states have converged to a single value.
     expect(peer1.model.get('title')).toEqual(peer2.model.get('title'));
   });
 
   test('reference', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const peer1 = rig.createPeer();
-    const peer2 = rig.createPeer();
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
 
     const reference = new Reference('<reference id>');
     await peer1.model.set('anotherItem', reference);
     expect(peer1.model.get('anotherItem')).toEqual(reference);
 
-    rig.configureReplication(true);
-    await rig.waitForReplication();
+    testBuilder.configureReplication(true);
+    await testBuilder.waitForReplication();
 
     expect(peer2.model.get('anotherItem')).toEqual(reference);
   });
 
-  test('ordered array', async () => {
-    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const peer1 = rig.createPeer();
-    const peer2 = rig.createPeer();
+  describe('ordered array', () => {
+    test('assign', async () => {
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const peer1 = testBuilder.createPeer();
+      const peer2 = testBuilder.createPeer();
+  
+      await peer1.model.set('array', OrderedArray.fromValues([1, 3]));
+      expect(peer1.model.get('array') instanceof OrderedArray).toBeTruthy()
+      expect(peer1.model.get('array').toArray()).toEqual([1, 3])
+  
+      testBuilder.configureReplication(true);
+      await testBuilder.waitForReplication();
+  
+      expect(peer2.model.get('array') instanceof OrderedArray).toBeTruthy()
+      expect(peer2.model.get('array').toArray()).toEqual([1, 3])
+    });
 
-    await peer1.model.set('array', OrderedArray.fromValues([1, 3]));
-    expect(peer1.model.get('array') instanceof OrderedArray).toBeTruthy()
-    expect(peer1.model.get('array').toArray()).toEqual([1, 3])
+    test('mutate', async () => {
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const peer1 = testBuilder.createPeer();
+      const peer2 = testBuilder.createPeer();
+  
+      await peer1.model.set('tags', OrderedArray.fromValues(['red', 'green', 'blue']));
+  
+      testBuilder.configureReplication(true);
+      await testBuilder.waitForReplication();
+      expect(peer2.model.get('tags') instanceof OrderedArray).toBeTruthy()
+      expect(peer2.model.get('tags').toArray()).toEqual(['red', 'green', 'blue'])
 
-    rig.configureReplication(true);
-    await rig.waitForReplication();
+      await peer2.model
+        .builder()
+        .arrayDelete('tags', 1)
+        .arrayInsert('tags', 0, ['green'])
+        .commit()
 
-    expect(peer2.model.get('array') instanceof OrderedArray).toBeTruthy()
-    expect(peer2.model.get('array').toArray()).toEqual([1, 3])
-  });
+      await testBuilder.waitForReplication();
+      expect(peer2.model.get('tags') instanceof OrderedArray).toBeTruthy()
+      expect(peer2.model.get('tags').toArray()).toEqual(['green', 'red', 'blue'])
+    })
+
+    test('references inside arrays')
+
+    test('arrays of objects')
+  })
 });

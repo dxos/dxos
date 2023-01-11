@@ -1,4 +1,5 @@
 import { YJS } from '@dxos/protocols/proto/dxos/echo/model/object'
+import assert from 'assert'
 import * as Y from 'yjs'
 
 const ARRAY_KEY = 'a'
@@ -32,5 +33,31 @@ export class OrderedArray {
 
   toArray() {
     return this.array.toArray() 
+  }
+
+  transact(tx: () => void): YJS {
+    let updateReceived: YJS | undefined
+    const cb = (update: any) => {
+      updateReceived = {
+        id: new Uint8Array(),
+        payload: update
+      }
+    }
+    
+    try {
+      this.doc.once('updateV2', cb)
+      this.doc.transact(() => {
+        tx()
+      })
+    } finally {
+      this.doc.off('updateV2', cb)
+    }
+
+    assert(updateReceived)
+    return updateReceived
+  }
+
+  apply(mutation: YJS) {
+    Y.applyUpdateV2(this.doc, mutation.payload)
   }
 }
