@@ -165,11 +165,11 @@ describe('RpcPeer', () => {
         port: bobPort
       });
 
-      const openPromise = Promise.all([alice.open(), bob.open()])
+      const openPromise = Promise.all([alice.open(), bob.open()]);
       await sleep(5);
       await Promise.all([alice.close(), bob.close()]);
       await openPromise;
-    })
+    });
   });
 
   describe('one-off requests', () => {

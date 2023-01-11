@@ -114,14 +114,12 @@ export class RpcPeer {
       void this._sendMessage({ open: true }).catch((err) => log.warn(err));
     }, 50);
 
-    await Promise.race([
-      this._remoteOpenTrigger.wait(),
-      this._closeTrigger.wait(),
-    ]);
+    await Promise.race([this._remoteOpenTrigger.wait(), this._closeTrigger.wait()]);
 
     this._clearOpenInterval?.();
 
-    if(!this._open) { // Closed while opening.
+    if (!this._open) {
+      // Closed while opening.
       return; // TODO(dmaretskyi): Throw error?
     }
 
