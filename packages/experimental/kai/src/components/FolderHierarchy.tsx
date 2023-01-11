@@ -61,15 +61,18 @@ export type FolderHierarchyItem = {
 // TODO(burdon): Slots.
 // TODO(burdon): Navigate up/down.
 // TODO(burdon): Unselect on Escape.
-// TODO(burdon): onSelect.
 
-export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassName?: string }> = ({
-  items,
-  highlightClassName = 'bg-gray-300'
-}) => {
-  // TODO(burdon): Externalize.
-  const [selected, setSelected] = useState<string>();
-  const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>({});
+export const FolderHierarchy: FC<{
+  items: FolderHierarchyItem[];
+  highlightClassName?: string;
+  onSelect?: (item: FolderHierarchyItem) => void;
+  selectedId?: () => string;
+  expandedIds?: string[];
+}> = ({ items, highlightClassName = 'bg-gray-300', onSelect, selectedId, expandedIds = [] }) => {
+  const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>(
+    expandedIds?.reduce((map, id) => ({ ...map, [id]: true }), {})
+  );
+
   const handleToggle = (item: FolderHierarchyItem) => {
     setOpenMap((map) => {
       if (map[item.id]) {
@@ -82,6 +85,10 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
     });
   };
 
+  const handleSelection = (item: FolderHierarchyItem) => {
+    onSelect?.(item);
+  };
+
   const Item = ({ item, depth = 0 }: { item: FolderHierarchyItem; depth?: number }) => {
     const open = openMap[item.id];
     const sub = item.items && item.items.length > 0;
@@ -90,8 +97,8 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
     return (
       <div className='flex flex-1 flex-col'>
         <div
-          className={mx('flex select-none cursor-pointer pl-3', item.id === selected && highlightClassName)}
-          onClick={() => setSelected(item.id)}
+          className={mx('flex select-none cursor-pointer pl-3', item.id === selectedId?.() && highlightClassName)}
+          onClick={() => handleSelection(item)}
         >
           <div className='flex items-center' style={{ marginLeft: depth * 16 }}>
             <div style={{ width: 20 }} onClick={() => handleToggle(item)}>
