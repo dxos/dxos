@@ -2,41 +2,6 @@
  * Copyright 2022 DXOS.org
  */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/**
- * Base Style.
- * https://tailwindcss.com/docs/adding-base-styles
- */
-@layer base {
-  html {
-    font-family: Montserrat, ui-sans-serif, sans-serif;
-    font-weight: 400;
-    @apply text-gray-800;
-  }
-
-  body {
-    /* Prevent bounce. */
-    overflow: hidden;
-    background-color: #DDD;
-  }
-}
-
-/* TODO(burdon): Remove custom CSS. */
-
-.full-screen {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
 .logo {
   transform: rotate(300deg);
   transition: transform 750ms ease-in-out;

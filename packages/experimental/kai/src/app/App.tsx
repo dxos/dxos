@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
 import React, { FC, useEffect, useState } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 
 import { Client, fromHost } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
+import { ThemeProvider } from '@dxos/react-components';
 
 import { AppView, OptionsContext } from '../hooks';
 import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
@@ -79,9 +81,11 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
   return (
     <ClientProvider client={client}>
       <OptionsContext.Provider value={{ debug, demo, views }}>
-        <HashRouter>
-          <Routes />
-        </HashRouter>
+        <ThemeProvider>
+          <HashRouter>
+            <Routes />
+          </HashRouter>
+        </ThemeProvider>
       </OptionsContext.Provider>
     </ClientProvider>
   );
