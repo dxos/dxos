@@ -33,7 +33,7 @@ export const ChessGrid: FC = () => {
   const games = useQuery(space, Game.filter());
   const [game, setGame] = useState<Game | undefined>();
   const [chess, setChess] = useState<Chess | undefined>();
-  const [orientation, setOrientation] = useState('white');
+  const [orientation, setOrientation] = useState<'white' | 'black'>('white');
 
   const handleCreate = async () => {
     const game = new Game();
