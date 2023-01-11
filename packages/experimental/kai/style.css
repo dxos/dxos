@@ -51,6 +51,7 @@
   flex: 1;
 }
 
+/** TODO(burdon): Currently bleeds outside of content to fade. */
 .fade:after {
   content: '';
   display: block;
