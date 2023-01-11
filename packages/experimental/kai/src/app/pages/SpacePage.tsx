@@ -37,7 +37,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
       }}
     >
       <ViewSelector />
-      <div className='pbs-[84px]'>
+      <div className='pbs-[84px] flex h-screen bg-white'>
         {view === AppView.DASHBOARD && <Dashboard />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.PROJECTS && <ProjectList />}

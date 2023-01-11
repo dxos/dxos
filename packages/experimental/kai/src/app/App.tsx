@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
 import React, { FC, useEffect, useState } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 
