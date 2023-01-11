@@ -4,18 +4,13 @@
 
 import React, { FC, useEffect, useState } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Client, fromHost } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
-import { log } from '@dxos/log';
-import { appkitTranslations, Fallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 
 import { AppView, OptionsContext } from '../hooks';
 import { schema } from '../proto';
-import kaiTranslations from '../translations';
 import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
 
 /**
@@ -56,16 +51,6 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
   debug = false,
   demo = true
 }) => {
-  const {
-    offlineReady: [offlineReady, _setOfflineReady],
-    needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker
-  } = useRegisterSW({
-    onRegisterError: (err) => {
-      log.error(err);
-    }
-  });
-
   const [client, setClient] = useState<Client | undefined>(undefined);
 
   // Auto-create client and profile.
@@ -94,23 +79,12 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
 
   // TODO(burdon): Error boundary and indicator.
   return (
-    <ThemeProvider
-      appNs='kai'
-      resourceExtensions={[appkitTranslations, kaiTranslations]}
-      fallback={<Fallback message='Loading...' />}
-    >
-      <ClientProvider client={client}>
-        <OptionsContext.Provider value={{ debug, demo, views }}>
-          <HashRouter>
-            <Routes />
-            {needRefresh ? (
-              <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
-            ) : offlineReady ? (
-              <ServiceWorkerToast variant='offlineReady' />
-            ) : null}
-          </HashRouter>
-        </OptionsContext.Provider>
-      </ClientProvider>
-    </ThemeProvider>
+    <ClientProvider client={client}>
+      <OptionsContext.Provider value={{ debug, demo, views }}>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
+      </OptionsContext.Provider>
+    </ClientProvider>
   );
 };
