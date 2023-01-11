@@ -7,6 +7,7 @@
 import get from 'lodash.get';
 import set from 'lodash.set';
 import assert from 'node:assert';
+import * as Y from 'yjs'
 
 import {
   KeyValue,
@@ -18,6 +19,7 @@ import {
 
 import { Reference } from './reference';
 import { removeKey } from './util';
+import { OrderedArray } from './yjs-container';
 
 /**
  * @typedef {Object} Value
@@ -39,7 +41,9 @@ enum Type {
   DATETIME = 'datetime',
 
   REFERENCE = 'reference',
-  OBJECT = 'object'
+  OBJECT = 'object',
+
+  YJS = 'yjs',
 }
 
 const SCALAR_TYPES = [Type.BOOLEAN, Type.INTEGER, Type.FLOAT, Type.STRING, Type.BYTES, Type.TIMESTAMP, Type.DATETIME];
@@ -84,6 +88,10 @@ export class ValueUtil {
       return ValueUtil.bytes(value);
     } else if (value instanceof Reference) {
       return ValueUtil.reference(value);
+    } else if(value instanceof OrderedArray) {
+      return ValueUtil.orderedArray(value);
+    } else if(Array.isArray(value)){
+      throw new Error('Array scalars are not supported');
     } else if (typeof value === 'object') {
       return ValueUtil.object(value);
     } else {
@@ -138,6 +146,10 @@ export class ValueUtil {
 
   static reference(value: Reference): Value {
     return { [Type.REFERENCE]: { itemId: value.itemId } };
+  }
+
+  static orderedArray(value: OrderedArray): Value {
+    return { [Type.YJS]: value.encodeSnapshot() };
   }
 
   static object(value: Record<string, any>): Value {
@@ -207,6 +219,11 @@ export class ValueUtil {
     const scalar = ValueUtil.getScalarValue(value);
     if (scalar !== undefined) {
       set(object, key, scalar);
+      return object;
+    }
+
+    if(value[Type.YJS]) {
+      set(object, key, OrderedArray.fromSnapshot(value[Type.YJS]!));
       return object;
     }
 

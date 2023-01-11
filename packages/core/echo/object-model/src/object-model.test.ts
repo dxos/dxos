@@ -10,6 +10,7 @@ import { describe, test } from '@dxos/test';
 import { ObjectModel } from './object-model';
 import { Reference } from './reference';
 import { validateKey } from './util';
+import { OrderedArray } from './yjs-container';
 
 describe('ObjectModel', () => {
   test('checks valid keys', () => {
@@ -124,5 +125,21 @@ describe('ObjectModel', () => {
     await rig.waitForReplication();
 
     expect(peer2.model.get('anotherItem')).toEqual(reference);
+  });
+
+  test('ordered array', async () => {
+    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
+
+    await peer1.model.set('array', OrderedArray.fromValues([1, 3]));
+    expect(peer1.model.get('array') instanceof OrderedArray).toBeTruthy()
+    expect(peer1.model.get('array').toArray()).toEqual([1, 3])
+
+    rig.configureReplication(true);
+    await rig.waitForReplication();
+
+    expect(peer2.model.get('array') instanceof OrderedArray).toBeTruthy()
+    expect(peer2.model.get('array').toArray()).toEqual([1, 3])
   });
 });

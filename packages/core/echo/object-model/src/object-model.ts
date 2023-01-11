@@ -96,7 +96,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
    * Returns an immutable object.
    */
   toObject() {
-    return cloneDeep(this._getState());
+    return this._getState();
   }
 
   builder() {
@@ -105,7 +105,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
 
   get(key: string, defaultValue?: unknown) {
     validateKey(key);
-    return cloneDeep(get(this._getState(), key, defaultValue));
+    return get(this._getState(), key, defaultValue);
   }
 
   async set(key: string, value: unknown) {
