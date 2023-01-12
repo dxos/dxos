@@ -4,38 +4,22 @@
 
 import { UserPlus } from 'phosphor-react';
 import React, { useCallback, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import urlJoin from 'url-join';
 
 import type { Profile } from '@dxos/client';
-import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
+import { HeadingWithActions, InvitationList, ProfileList } from '@dxos/react-appkit';
+import { useMembers, useSpaceInvitations } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-components';
 
-import { useSafeSpaceKey } from '../../hooks';
-import { HeadingWithActions } from '../HeadingWithActions';
-import { InvitationList } from '../InvitationList';
-import { ProfileList } from '../ProfileList';
+import { useSpace } from '../../hooks';
+import { createInvitationUrl } from '../../util';
 
-const defaultCreateInvitationUrl = (invitationCode: string) => {
-  const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/#?invitation=${invitationCode}`);
-};
+// NOTE: Copied from react-appkit.
+// TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export interface ManageSpacePageProps {
-  spacesPath?: string;
-  createInvitationUrl?: (invitationCode: string) => string;
-}
-
-export const ManageSpacePage = ({
-  createInvitationUrl = defaultCreateInvitationUrl,
-  spacesPath = '/'
-}: ManageSpacePageProps) => {
+export const ManageSpacePage = () => {
   const { t } = useTranslation('appkit');
-  const navigate = useNavigate();
-  const { spaceKey: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate(spacesPath));
-  const space = useSpace(spaceKey);
-  const members = useMembers(spaceKey);
+  const { space } = useSpace();
+  const members = useMembers(space.key);
   const memberProfiles = useMemo(
     () => members.map(({ profile }) => profile).filter((profile): profile is Profile => !!profile),
     [members]
@@ -51,7 +35,7 @@ export const ManageSpacePage = ({
   const handleRemove = useCallback((id: string) => space?.removeInvitation(id), [space]);
 
   return (
-    <>
+    <div className='my-8 mx-auto p-2 w-screen md:w-2/3 lg:w-1/2'>
       <HeadingWithActions
         heading={{
           level: 2,
@@ -74,9 +58,9 @@ export const ManageSpacePage = ({
       <ProfileList profiles={memberProfiles} />
       <InvitationList
         invitations={invitations}
-        createInvitationUrl={createInvitationUrl}
+        createInvitationUrl={(invitationCode) => createInvitationUrl('/space/join', invitationCode)}
         onClickRemove={handleRemove}
       />
-    </>
+    </div>
   );
 };

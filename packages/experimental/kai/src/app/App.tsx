@@ -16,7 +16,7 @@ import {
   CreateIdentityPage,
   InitPage,
   JoinIdentityPage,
-  JoinPage,
+  JoinSpacePage,
   RecoverIdentityPage,
   SettingsPage,
   SpacePage
@@ -52,8 +52,8 @@ export const Routes = () => {
           element: <SettingsPage />
         },
         {
-          path: '/join/:invitation',
-          element: <JoinPage />
+          path: '/space/join',
+          element: <JoinSpacePage />
         },
         {
           path: '/:spaceKey',
