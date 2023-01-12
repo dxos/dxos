@@ -171,7 +171,6 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     } else if (value instanceof EchoArray) {
       value._bind(this[base], prop);
     } else if(Array.isArray(value)) {
-      void this._item!.model.set(`${prop}$type`, 'array');
       void this._item!.model.set(prop, OrderedArray.fromValues(value));
     } else if (typeof value === 'object' && value !== null) {
       void this._item!.model.set(`${prop}$type`, 'object');
