@@ -32,6 +32,11 @@ export const Actions = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const serializer = useMemo(() => new Serializer(), []);
 
+  const handleExportSpace = async () => {
+    const json = await serializer.export(space.experimental.db);
+    download(new Blob([JSON.stringify(json, undefined, 2)], { type: 'text/plain' }), 'data.json');
+  };
+
   const handleImportSpace = async (files: File[]) => {
     if (files.length) {
       const data = new Uint8Array(await files[0].arrayBuffer());
@@ -84,10 +89,7 @@ export const Actions = () => {
     {
       Icon: DownloadSimple,
       title: 'Export data',
-      handler: async () => {
-        const json = await serializer.export(space.experimental.db);
-        download(new Blob([JSON.stringify(json, undefined, 2)], { type: 'text/plain' }), 'data.json');
-      }
+      handler: () => handleExportSpace()
     },
     {
       Icon: UploadSimple,
