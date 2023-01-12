@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
 import { Document } from './document';
-import { OrderedSet } from './ordered-set';
+import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
 import { TextObject } from './text-object';
 
@@ -78,7 +78,7 @@ describe('EchoDatabase', () => {
     const task = new Document({ title: 'Main task' });
     await db.save(task);
 
-    task.subtasks = new OrderedSet();
+    task.subtasks = new EchoArray();
     task.subtasks.push(new Document({ title: 'Subtask 1' }));
     task.subtasks.push(new Document({ title: 'Subtask 2' }));
     task.subtasks.push(new Document({ title: 'Subtask 3' }));

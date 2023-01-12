@@ -6,7 +6,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { base, deleted, id } from './defs';
 import { EchoObject } from './object';
-import { OrderedSet } from './ordered-set';
+import { EchoArray } from './echo-array';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { strip } from './util';
 
@@ -47,7 +47,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     if (this._schemaType) {
       for (const field of this._schemaType.fields) {
         if (field.isOrderedSet && !this._uninitialized![field.name]) {
-          this._uninitialized![field.name] = new OrderedSet();
+          this._uninitialized![field.name] = new EchoArray();
         }
       }
     }
@@ -153,7 +153,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       case 'object':
         return this._createProxy({}, prop);
       case 'array':
-        return new OrderedSet()._bind(this[base], prop);
+        return new EchoArray()._bind(this[base], prop);
       default:
         return value;
     }
@@ -164,7 +164,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       void this._item!.model.set(`${prop}$type`, 'ref');
       void this._item!.model.set(prop, value[base]._id);
       void this._database!.save(value);
-    } else if (value instanceof OrderedSet) {
+    } else if (value instanceof EchoArray) {
       void this._item!.model.set(`${prop}$type`, 'array');
       value._bind(this[base], prop);
     } else if (typeof value === 'object' && value !== null) {

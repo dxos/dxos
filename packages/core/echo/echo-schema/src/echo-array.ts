@@ -14,7 +14,7 @@ const isIndex = (property: string | symbol): property is string =>
 /**
  *
  */
-export class OrderedSet<T extends DocumentBase> implements Array<T> {
+export class EchoArray<T extends DocumentBase> implements Array<T> {
   static get [Symbol.species]() {
     return Array;
   }
@@ -24,7 +24,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   private _object?: Document;
   private _property?: string;
 
-  [base]: OrderedSet<T> = this;
+  [base]: EchoArray<T> = this;
 
   [n: number]: T;
 
@@ -293,7 +293,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
       assert(this._uninitialized);
       this._uninitialized.push(...items);
     }
-    
+
     return this.length;
   }
 
