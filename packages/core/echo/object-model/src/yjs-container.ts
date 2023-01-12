@@ -77,6 +77,22 @@ export class OrderedArray {
     public readonly array: Y.Array<any>
   ) {}
 
+  insert(index: number, content: unknown[]) {
+    this.array.insert(index, encodeValues(content));
+  }
+
+  delete(index: number, length?: number) {
+    this.array.delete(index, length);
+  }
+
+  push(content: unknown[]) {
+    this.array.push(encodeValues(content));
+  }
+
+  unshift(content: unknown[]) {
+    this.array.unshift(encodeValues(content));
+  }
+
   encodeSnapshot(): YJS {
     return {
       id: new Uint8Array(),

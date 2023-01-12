@@ -77,25 +77,25 @@ export class MutationBuilder {
 
   arrayInsert(key: string, index: number, content: any[]): this {
     return this._yjsTransact(key, (arrayInstance) => {
-      arrayInstance.array.insert(index, content);
+      arrayInstance.insert(index, content);
     });
   }
 
   arrayDelete(key: string, index: number, length?: number): this {
     return this._yjsTransact(key, (arrayInstance) => {
-      arrayInstance.array.delete(index, length);
+      arrayInstance.delete(index, length);
     });
   }
 
   arrayPush(key: string, content: any[]): this {
     return this._yjsTransact(key, (arrayInstance) => {
-      arrayInstance.array.push(content);
+      arrayInstance.push(content);
     });
   }
 
   arrayUnshift(key: string, content: any[]): this {
     return this._yjsTransact(key, (arrayInstance) => {
-      arrayInstance.array.unshift(content);
+      arrayInstance.unshift(content);
     });
   }
 

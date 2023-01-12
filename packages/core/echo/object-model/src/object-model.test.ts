@@ -173,10 +173,17 @@ describe('ObjectModel', () => {
       await peer1.model.set('tags', OrderedArray.fromValues(array));
       expect(peer1.model.get('tags').toArray()).toEqual(array);
 
+      const newReference = new Reference('456');
       testBuilder.configureReplication(true);
       await testBuilder.waitForReplication();
 
       expect(peer2.model.get('tags').toArray()).toEqual(array);
+
+      await peer2.model.builder().arrayPush('tags', [newReference]).commit();
+      await peer2.model.builder().arrayInsert('tags', 0, [newReference]).commit();
+      await testBuilder.waitForReplication();
+
+      expect(peer1.model.get('tags').toArray()).toEqual([newReference, ...array, newReference]);
     });
 
     test('arrays of objects', async () => {
