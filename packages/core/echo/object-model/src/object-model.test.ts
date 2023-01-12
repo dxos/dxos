@@ -205,8 +205,7 @@ describe('ObjectModel', () => {
       expect(peer2.model.get('tags').toArray()).toEqual(array);
     });
 
-    // Not deterministic. TODO (mykola): fix.
-    test.skip('conflicts resolution', async () => {
+    test('conflicts resolution', async () => {
       const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
@@ -238,10 +237,11 @@ describe('ObjectModel', () => {
       testBuilder.configureReplication(true);
       await testBuilder.waitForReplication();
 
-      const expectedArray = [1, 2.2, 2.1, 3.2];
-
-      expect(peer1.model.get('tags').toArray()).toEqual(expectedArray);
-      expect(peer2.model.get('tags').toArray()).toEqual(expectedArray);
+      // The output will either be [1, 2.2, 2.1, 3.2] or [ 1, 2.1, 2.2, 3.2 ].
+      // This is because the mutation ordering depends on feed keys, which are randomly generated in this test.
+      // Both variants are a valid way to resolve the conflict.
+      // What's important is that the final state is consistent between peers.
+      expect(peer1.model.get('tags').toArray()).toEqual(peer2.model.get('tags').toArray());
     });
   });
 });
