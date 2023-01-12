@@ -24,6 +24,8 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
+          '@dxos/protocols',
+          '@dxos/protocols/proto/dxos/echo/model/object',
           'storybook-dark-mode'
         ]
       },
