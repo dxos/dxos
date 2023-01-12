@@ -13,43 +13,35 @@ const ARRAY_KEY = 'a';
 
 const REFERENCE_KEY = '@reference';
 
-const encodeValues = (values: unknown[]): unknown[] => {
-  const encodeValue = (value: unknown): unknown => {
-    if (value instanceof Reference) {
-      return Object.fromEntries([[REFERENCE_KEY, value.encode()]]);
-    } else if (Array.isArray(value)) {
-      return encodeValues(value);
-    } else if (typeof value === 'object' && value !== null) {
-      return Object.fromEntries(
-        Object.entries(value).map(([key, value]) => {
-          return [key, encodeValue(value)];
-        })
-      );
-    }
-    return value;
-  };
-
-  return values.map((value) => encodeValue(value));
+const encodeValue = (value: unknown): any => {
+  if (value instanceof Reference) {
+    return Object.fromEntries([[REFERENCE_KEY, value.encode()]]);
+  } else if (Array.isArray(value)) {
+    return value.map((value) => encodeValue(value));
+  } else if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, value]) => {
+        return [key, encodeValue(value)];
+      })
+    );
+  }
+  return value;
 };
 
-const decodeValues = (values: unknown[]): unknown[] => {
-  const decodeValue = (value: unknown): unknown => {
-    if (Array.isArray(value)) {
-      return decodeValues(value);
-    } else if (typeof value === 'object' && value !== null) {
-      if (REFERENCE_KEY in value) {
-        return Reference.fromValue(value[REFERENCE_KEY] as any);
-      }
-      return Object.fromEntries(
-        Object.entries(value).map(([key, value]) => {
-          return [key, decodeValue(value)];
-        })
-      );
+const decodeValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map((value) => decodeValue(value));
+  } else if (typeof value === 'object' && value !== null) {
+    if (REFERENCE_KEY in value) {
+      return Reference.fromValue(value[REFERENCE_KEY] as any);
     }
-    return value;
-  };
-
-  return values.map((value) => decodeValue(value));
+    return Object.fromEntries(
+      Object.entries(value).map(([key, value]) => {
+        return [key, decodeValue(value)];
+      })
+    );
+  }
+  return value;
 };
 
 export class OrderedArray {
@@ -63,7 +55,7 @@ export class OrderedArray {
     const doc = new Y.Doc();
     const array = doc.getArray(ARRAY_KEY);
 
-    array.insert(0, encodeValues(values));
+    array.insert(0, encodeValue(values));
     return new OrderedArray(doc, array);
   }
 
@@ -74,7 +66,7 @@ export class OrderedArray {
   ) {}
 
   insert(index: number, content: unknown[]) {
-    this.array.insert(index, encodeValues(content));
+    this.array.insert(index, encodeValue(content));
   }
 
   delete(index: number, length?: number) {
@@ -82,11 +74,11 @@ export class OrderedArray {
   }
 
   push(content: unknown[]) {
-    this.array.push(encodeValues(content));
+    this.array.push(encodeValue(content));
   }
 
   unshift(content: unknown[]) {
-    this.array.unshift(encodeValues(content));
+    this.array.unshift(encodeValue(content));
   }
 
   encodeSnapshot(): YJS {
@@ -97,7 +89,7 @@ export class OrderedArray {
   }
 
   toArray() {
-    return decodeValues(this.array.toArray());
+    return decodeValue(this.array.toArray());
   }
 
   transact(tx: () => void): YJS {
