@@ -14,6 +14,11 @@ export default {
 
 export const Default = {
   render: () => {
-    return <Chessboard game={new Game()} />;
+    // TODO(burdon): Make responsive.
+    return (
+      <div style={{ width: 600 }}>
+        <Chessboard game={new Game()} />
+      </div>
+    );
   }
 };
