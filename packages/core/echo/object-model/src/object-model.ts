@@ -11,7 +11,7 @@ import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protoco
 
 import { MutationUtil, ValueUtil } from './mutation';
 import { validateKey } from './util';
-import { OrderedArray } from './yjs-container';
+import { OrderedArray } from './ordered-array';
 
 export type ObjectModelState = Record<string, any>;
 

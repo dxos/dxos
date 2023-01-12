@@ -18,7 +18,7 @@ import {
 
 import { Reference } from './reference';
 import { removeKey } from './util';
-import { OrderedArray } from './yjs-container';
+import { OrderedArray } from './ordered-array';
 
 /**
  * @typedef {Object} Value

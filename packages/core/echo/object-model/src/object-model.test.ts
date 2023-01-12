@@ -10,7 +10,7 @@ import { describe, test } from '@dxos/test';
 import { ObjectModel } from './object-model';
 import { Reference } from './reference';
 import { validateKey } from './util';
-import { OrderedArray } from './yjs-container';
+import { OrderedArray } from './ordered-array';
 import { PublicKey } from 'packages/common/keys/src';
 
 describe('ObjectModel', () => {

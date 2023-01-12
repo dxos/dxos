@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { MutationUtil, ValueUtil } from './mutation';
 import { inspect } from 'util';
-import { OrderedArray } from './yjs-container';
+import { OrderedArray } from './ordered-array';
 
 describe('Mutations', () => {
   test('ValueUtil', () => {
