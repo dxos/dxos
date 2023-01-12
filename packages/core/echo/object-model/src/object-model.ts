@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import cloneDeep from 'lodash.clonedeep';
 import get from 'lodash.get';
 import assert from 'node:assert';
 
@@ -11,6 +10,7 @@ import { schema } from '@dxos/protocols';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 import { MutationUtil, ValueUtil } from './mutation';
+import { OrderedArray } from './ordered-array';
 import { validateKey } from './util';
 
 export type ObjectModelState = Record<string, any>;
@@ -52,11 +52,51 @@ export class MutationBuilder {
   // prettier-ignore
   constructor(
     private readonly _model: ObjectModel
-  ) {}
+  ) { }
 
   set(key: string, value: any) {
     this._mutations.push(MutationUtil.createFieldMutation(key, value));
     return this;
+  }
+
+  private _yjsTransact(key: string, tx: (arr: OrderedArray) => void): this {
+    const arrayInstance = this._model.get(key);
+    assert(arrayInstance instanceof OrderedArray);
+    const mutation = arrayInstance.transact(() => {
+      tx(arrayInstance);
+    });
+
+    this._mutations.push({
+      operation: ObjectMutation.Operation.YJS,
+      key,
+      mutation
+    });
+
+    return this;
+  }
+
+  arrayInsert(key: string, index: number, content: any[]): this {
+    return this._yjsTransact(key, (arrayInstance) => {
+      arrayInstance.insert(index, content);
+    });
+  }
+
+  arrayDelete(key: string, index: number, length?: number): this {
+    return this._yjsTransact(key, (arrayInstance) => {
+      arrayInstance.delete(index, length);
+    });
+  }
+
+  arrayPush(key: string, content: any[]): this {
+    return this._yjsTransact(key, (arrayInstance) => {
+      arrayInstance.push(content);
+    });
+  }
+
+  arrayUnshift(key: string, content: any[]): this {
+    return this._yjsTransact(key, (arrayInstance) => {
+      arrayInstance.unshift(content);
+    });
   }
 
   async commit() {
@@ -96,7 +136,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
    * Returns an immutable object.
    */
   toObject() {
-    return cloneDeep(this._getState());
+    return this._getState();
   }
 
   builder() {
@@ -105,7 +145,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
 
   get(key: string, defaultValue?: unknown) {
     validateKey(key);
-    return cloneDeep(get(this._getState(), key, defaultValue));
+    return get(this._getState(), key, defaultValue);
   }
 
   async set(key: string, value: unknown) {

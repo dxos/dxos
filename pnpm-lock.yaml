@@ -1544,6 +1544,7 @@ importers:
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       minisearch: ^3.0.2
+      yjs: ^13.5.41
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -1556,6 +1557,7 @@ importers:
       lodash.get: 4.4.2
       lodash.set: 4.3.2
       minisearch: 3.3.0
+      yjs: 13.5.41
     devDependencies:
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
@@ -11766,7 +11768,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       deepmerge: 4.2.2
@@ -11779,7 +11781,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@styled-system/color': 5.1.2
       '@styled-system/should-forward-prop': 5.1.5
       '@styled-system/space': 5.1.2
@@ -11794,7 +11796,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       '@theme-ui/parse-props': 0.14.7_gyryel6m34lsxtsejhafetjriq
       deepmerge: 4.2.2
@@ -11806,7 +11808,7 @@ packages:
     peerDependencies:
       '@emotion/react': ^11
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       csstype: 3.1.1
     dev: true
 
@@ -11817,7 +11819,7 @@ packages:
       '@mdx-js/react': ^1 || ^2
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -11830,7 +11832,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       react: 18.2.0
     dev: true
@@ -11841,7 +11843,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/color-modes': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
