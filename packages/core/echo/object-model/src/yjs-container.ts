@@ -7,7 +7,54 @@ import * as Y from 'yjs';
 
 import { YJS } from '@dxos/protocols/proto/dxos/echo/model/object';
 
+import { Reference } from './reference';
+
 const ARRAY_KEY = 'a';
+
+const REFERENCE_KEY = '@reference';
+
+const encodeValues = (values: unknown[]): unknown[] => {
+  const encodeValue = (value: unknown): unknown => {
+    if (value === null) {
+      return value;
+    } else if (value instanceof Reference) {
+      return Object.fromEntries([[REFERENCE_KEY, value.encode()]]);
+    } else if (Array.isArray(value)) {
+      return encodeValues(value);
+    } else if (typeof value === 'object') {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, value]) => {
+          return [key, encodeValue(value)];
+        })
+      );
+    }
+    return value;
+  };
+
+  return values.map((value) => encodeValue(value));
+};
+
+const decodeValues = (values: unknown[]): unknown[] => {
+  const decodeValue = (value: unknown): unknown => {
+    if (value === null) {
+      return value;
+    } else if (Array.isArray(value)) {
+      return decodeValues(value);
+    } else if (typeof value === 'object') {
+      if (REFERENCE_KEY in value) {
+        return Reference.fromValue(value[REFERENCE_KEY] as any);
+      }
+      return Object.fromEntries(
+        Object.entries(value).map(([key, value]) => {
+          return [key, decodeValue(value)];
+        })
+      );
+    }
+    return value;
+  };
+
+  return values.map((value) => decodeValue(value));
+};
 
 export class OrderedArray {
   static fromSnapshot(snapshot: YJS) {
@@ -19,7 +66,8 @@ export class OrderedArray {
   static fromValues(values: any[]) {
     const doc = new Y.Doc();
     const array = doc.getArray(ARRAY_KEY);
-    array.insert(0, values);
+
+    array.insert(0, encodeValues(values));
     return new OrderedArray(doc, array);
   }
 
@@ -37,7 +85,7 @@ export class OrderedArray {
   }
 
   toArray() {
-    return this.array.toArray();
+    return decodeValues(this.array.toArray());
   }
 
   transact(tx: () => void): YJS {

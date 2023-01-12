@@ -163,7 +163,20 @@ describe('ObjectModel', () => {
       expect(peer2.model.get('tags').toArray()).toEqual(['green', 'red', 'blue']);
     });
 
-    test('references inside arrays');
+    test.only('references inside arrays', async () => {
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const peer1 = testBuilder.createPeer();
+      const peer2 = testBuilder.createPeer();
+
+      const array = ['red', new Reference('123')];
+      await peer1.model.set('tags', OrderedArray.fromValues(array));
+      expect(peer1.model.get('tags').toArray()).toEqual(array);
+
+      testBuilder.configureReplication(true);
+      await testBuilder.waitForReplication();
+
+      expect(peer2.model.get('tags').toArray()).toEqual(['red', new Reference('123')]);
+    });
 
     test('arrays of objects');
   });
