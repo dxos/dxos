@@ -12,6 +12,7 @@ export const IdentityListItem = ({ identity, presence }: { identity: Profile; pr
     <li className='flex gap-2 items-center'>
       <Avatar
         {...{
+          variant: 'circle',
           size: 9,
           fallbackValue: identity.identityKey.toHex(),
           label: <p className='text-sm truncate'>{identity.displayName ?? identity.identityKey.truncate()}</p>,

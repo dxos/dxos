@@ -62,7 +62,10 @@ export const Avatar = forwardRef(
     const maskId = useId('mask');
     const svgId = useId('mask');
     const fallbackSrc = useMemo(
-      () => `data:image/svg+xml;utf8,${encodeURIComponent(toSvg(fallbackValue, size === 'px' ? 1 : size * 4))}`,
+      () =>
+        `data:image/svg+xml;utf8,${encodeURIComponent(
+          toSvg(fallbackValue, size === 'px' ? 1 : size * 4, { padding: 0 })
+        )}`,
       [fallbackValue]
     );
 

@@ -14,7 +14,7 @@ export interface SpaceMemberListProps {
 
 export const SpaceMemberList = ({ spaceMembers }: SpaceMemberListProps) => {
   return (
-    <ul>
+    <ul className='flex flex-col gap-2'>
       {spaceMembers
         .filter((spaceMember) => spaceMember.profile)
         .map((spaceMember) => {

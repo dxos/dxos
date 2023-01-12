@@ -9,6 +9,7 @@ import { Client, fromHost } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
+import { osTranslations } from '@dxos/react-ui';
 
 import { AppView, OptionsContext } from '../hooks';
 import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
@@ -80,7 +81,7 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
   return (
     <ClientProvider client={client}>
       <OptionsContext.Provider value={{ debug, demo, views }}>
-        <ThemeProvider>
+        <ThemeProvider resourceExtensions={[osTranslations]}>
           <HashRouter>
             <Routes />
           </HashRouter>
