@@ -4,8 +4,7 @@
 
 import React, { createElement, useEffect } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
-
-import { UiKitProvider } from '../src';
+import { ThemeProvider } from '@dxos/react-components';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -28,7 +27,7 @@ const ThemeWrapper = ({ children }) => {
 
 export const decorators = [
   (Story) => (
-    createElement(UiKitProvider, {
+    createElement(ThemeProvider, {
       children: createElement(ThemeWrapper, {
         children: createElement(Story)
       })
