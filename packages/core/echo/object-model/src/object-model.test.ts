@@ -203,5 +203,38 @@ describe('ObjectModel', () => {
 
       expect(peer2.model.get('tags').toArray()).toEqual(array);
     });
+
+    test('conflicts resolution', async () => {
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const peer1 = testBuilder.createPeer();
+      const peer2 = testBuilder.createPeer();
+
+      const array = [1, 2, 3];
+      await peer1.model.set('tags', OrderedArray.fromValues(array));
+      testBuilder.configureReplication(true);
+      await testBuilder.waitForReplication();
+      expect(peer1.model.get('tags').toArray()).toEqual(array);
+      expect(peer2.model.get('tags').toArray()).toEqual(array);
+
+      testBuilder.configureReplication(false);
+
+      await peer1.model.builder().arrayDelete('tags', 1).arrayInsert('tags', 1, [2.1]).arrayDelete('tags', 2).commit();
+
+      await peer2.model
+        .builder()
+        .arrayDelete('tags', 1)
+        .arrayInsert('tags', 1, [2.2])
+        .arrayInsert('tags', 2, [3.2])
+        .commit();
+
+      testBuilder.configureReplication(true);
+      await testBuilder.waitForReplication();
+
+      const expectedArray = [1, 2.1, 2.2, 3.2];
+      console.log(peer1.model.get('tags').toArray())
+      console.log(peer2.model.get('tags').toArray())
+      expect(peer1.model.get('tags').toArray()).toEqual(expectedArray);
+      expect(peer2.model.get('tags').toArray()).toEqual(expectedArray);
+    });
   });
 });
