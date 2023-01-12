@@ -117,7 +117,7 @@ In order to display the correct theme, you need to mark `<html>` with the correc
 </head>
 ```
 
-If you want to keep up with `prevers-color-scheme`, add:
+If you want to keep up with `prefers-color-scheme`, add:
 
 ```js
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e){ if(e.matches){
