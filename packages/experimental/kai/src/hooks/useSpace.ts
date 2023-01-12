@@ -12,6 +12,7 @@ export type SpaceContextType = {
   space: Space;
 };
 
+// TODO(wittjosiah): Consider using react router outlet context (see tasks app).
 export const SpaceContext: Context<SpaceContextType | null> = createContext<SpaceContextType | null>(null);
 
 export const useSpace = (): SpaceContextType => {

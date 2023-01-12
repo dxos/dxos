@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 
-import { Client, fromHost } from '@dxos/client';
+import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
 import { RequireIdentity } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
@@ -74,7 +74,7 @@ const clientProvider = async () => {
   const config = new Config(Defaults());
   const client = new Client({
     config,
-    services: fromHost(config)
+    services: process.env.DX_VAULT === 'true' ? fromIFrame(config) : fromHost(config)
   });
 
   client.echo.dbRouter.setSchema(schema);

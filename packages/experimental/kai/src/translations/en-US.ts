@@ -5,5 +5,6 @@
 export const kai = {
   'current app name': 'Kai',
   'identities empty message': 'There are no identities on this device yet.',
-  'join space label': 'Join Space'
+  'join space label': 'Join Space',
+  'back to space label': 'Done'
 };
