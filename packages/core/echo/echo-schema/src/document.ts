@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ObjectModel } from '@dxos/object-model';
+import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, deleted, id } from './defs';
+import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
-import { OrderedSet } from './ordered-set';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { strip } from './util';
 
@@ -32,7 +32,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
    * Pending values before committed to model.
    * @internal
    */
-  private _uninitialized?: Record<keyof any, any> = {};
+  _uninitialized?: Record<keyof any, any> = {};
 
   override _modelConstructor = ObjectModel;
 
@@ -47,7 +47,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     if (this._schemaType) {
       for (const field of this._schemaType.fields) {
         if (field.isOrderedSet && !this._uninitialized![field.name]) {
-          this._uninitialized![field.name] = new OrderedSet();
+          this._uninitialized![field.name] = new EchoArray();
         }
       }
     }
@@ -137,7 +137,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   }
 
   private _getModelProp(prop: string): any {
-    let type = this._item!.model.get(`${prop}$type`);
+    let type;
     const value = this._item!.model.get(prop);
 
     if (!type && this._schemaType) {
@@ -147,13 +147,25 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       }
     }
 
+    if (!type && value instanceof OrderedArray) {
+      type = 'array';
+    }
+
+    if (!type && value instanceof Reference) {
+      type = 'ref';
+    }
+
+    if (!type && typeof value === 'object' && value !== null) {
+      type = 'object';
+    }
+
     switch (type) {
       case 'ref':
-        return this._database!.getObjectById(value);
+        return this._database!.getObjectById((value as Reference).itemId);
       case 'object':
         return this._createProxy({}, prop);
       case 'array':
-        return new OrderedSet()._bind(this[base], prop);
+        return new EchoArray()._bind(this[base], prop);
       default:
         return value;
     }
@@ -161,20 +173,18 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   private _setModelProp(prop: string, value: any): any {
     if (value instanceof EchoObject) {
-      void this._item!.model.set(`${prop}$type`, 'ref');
-      void this._item!.model.set(prop, value[base]._id);
+      void this._item!.model.set(prop, new Reference(value[id]));
       void this._database!.save(value);
-    } else if (value instanceof OrderedSet) {
-      void this._item!.model.set(`${prop}$type`, 'array');
+    } else if (value instanceof EchoArray) {
       value._bind(this[base], prop);
+    } else if (Array.isArray(value)) {
+      void this._item!.model.set(prop, OrderedArray.fromValues(value));
     } else if (typeof value === 'object' && value !== null) {
-      void this._item!.model.set(`${prop}$type`, 'object');
       const sub = this._createProxy({}, prop);
       for (const [subKey, subValue] of Object.entries(value)) {
         sub[subKey] = subValue;
       }
     } else {
-      void this._item!.model.set(`${prop}$type`, 'primitive');
       void this._item!.model.set(prop, value);
     }
   }
