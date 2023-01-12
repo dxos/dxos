@@ -1,5 +1,5 @@
 //
-// CopytestBuilderht 2020 DXOS.org
+// Copyright 2020 DXOS.org
 //
 
 import expect from 'expect';
@@ -132,43 +132,39 @@ describe('ObjectModel', () => {
       const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
-  
+
       await peer1.model.set('array', OrderedArray.fromValues([1, 3]));
-      expect(peer1.model.get('array') instanceof OrderedArray).toBeTruthy()
-      expect(peer1.model.get('array').toArray()).toEqual([1, 3])
-  
+      expect(peer1.model.get('array') instanceof OrderedArray).toBeTruthy();
+      expect(peer1.model.get('array').toArray()).toEqual([1, 3]);
+
       testBuilder.configureReplication(true);
       await testBuilder.waitForReplication();
-  
-      expect(peer2.model.get('array') instanceof OrderedArray).toBeTruthy()
-      expect(peer2.model.get('array').toArray()).toEqual([1, 3])
+
+      expect(peer2.model.get('array') instanceof OrderedArray).toBeTruthy();
+      expect(peer2.model.get('array').toArray()).toEqual([1, 3]);
     });
 
     test('mutate', async () => {
       const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
-  
+
       await peer1.model.set('tags', OrderedArray.fromValues(['red', 'green', 'blue']));
-  
+
       testBuilder.configureReplication(true);
       await testBuilder.waitForReplication();
-      expect(peer2.model.get('tags') instanceof OrderedArray).toBeTruthy()
-      expect(peer2.model.get('tags').toArray()).toEqual(['red', 'green', 'blue'])
+      expect(peer2.model.get('tags') instanceof OrderedArray).toBeTruthy();
+      expect(peer2.model.get('tags').toArray()).toEqual(['red', 'green', 'blue']);
 
-      await peer2.model
-        .builder()
-        .arrayDelete('tags', 1)
-        .arrayInsert('tags', 0, ['green'])
-        .commit()
+      await peer2.model.builder().arrayDelete('tags', 1).arrayInsert('tags', 0, ['green']).commit();
 
       await testBuilder.waitForReplication();
-      expect(peer2.model.get('tags') instanceof OrderedArray).toBeTruthy()
-      expect(peer2.model.get('tags').toArray()).toEqual(['green', 'red', 'blue'])
-    })
+      expect(peer2.model.get('tags') instanceof OrderedArray).toBeTruthy();
+      expect(peer2.model.get('tags').toArray()).toEqual(['green', 'red', 'blue']);
+    });
 
-    test('references inside arrays')
+    test('references inside arrays');
 
-    test('arrays of objects')
-  })
+    test('arrays of objects');
+  });
 });

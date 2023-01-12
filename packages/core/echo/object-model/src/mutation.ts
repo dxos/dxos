@@ -7,7 +7,6 @@
 import get from 'lodash.get';
 import set from 'lodash.set';
 import assert from 'node:assert';
-import * as Y from 'yjs'
 
 import {
   KeyValue,
@@ -43,7 +42,7 @@ enum Type {
   REFERENCE = 'reference',
   OBJECT = 'object',
 
-  YJS = 'yjs',
+  YJS = 'yjs'
 }
 
 const SCALAR_TYPES = [Type.BOOLEAN, Type.INTEGER, Type.FLOAT, Type.STRING, Type.BYTES, Type.TIMESTAMP, Type.DATETIME];
@@ -88,9 +87,9 @@ export class ValueUtil {
       return ValueUtil.bytes(value);
     } else if (value instanceof Reference) {
       return ValueUtil.reference(value);
-    } else if(value instanceof OrderedArray) {
+    } else if (value instanceof OrderedArray) {
       return ValueUtil.orderedArray(value);
-    } else if(Array.isArray(value)){
+    } else if (Array.isArray(value)) {
       throw new Error('Array scalars are not supported');
     } else if (typeof value === 'object') {
       return ValueUtil.object(value);
@@ -145,7 +144,7 @@ export class ValueUtil {
   }
 
   static reference(value: Reference): Value {
-    return { [Type.REFERENCE]: { itemId: value.itemId } };
+    return { [Type.REFERENCE]: value.encode() };
   }
 
   static orderedArray(value: OrderedArray): Value {
@@ -204,7 +203,7 @@ export class ValueUtil {
     // Apply references.
     const refValue = value[Type.REFERENCE];
     if (refValue !== undefined) {
-      set(object, key, new Reference(refValue.itemId));
+      set(object, key, Reference.fromValue(refValue));
       return object;
     }
 
@@ -222,7 +221,7 @@ export class ValueUtil {
       return object;
     }
 
-    if(value[Type.YJS]) {
+    if (value[Type.YJS]) {
       set(object, key, OrderedArray.fromSnapshot(value[Type.YJS]!));
       return object;
     }
