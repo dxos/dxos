@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import cloneDeep from 'lodash.clonedeep';
 import get from 'lodash.get';
 import assert from 'node:assert';
 
@@ -12,7 +11,6 @@ import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protoco
 
 import { MutationUtil, ValueUtil } from './mutation';
 import { validateKey } from './util';
-import * as Y from 'yjs';
 import { OrderedArray } from './yjs-container';
 
 export type ObjectModelState = Record<string, any>;
@@ -66,36 +64,39 @@ export class MutationBuilder {
     assert(arrayInstance instanceof OrderedArray);
     const mutation = arrayInstance.transact(() => {
       tx(arrayInstance);
-    })
+    });
 
     this._mutations.push({
       operation: ObjectMutation.Operation.YJS,
       key,
       mutation
-    })
+    });
 
-    return this
+    return this;
   }
 
   arrayInsert(key: string, index: number, content: any[]): this {
-    return this._yjsTransact(key, arrayInstance => {
+    return this._yjsTransact(key, (arrayInstance) => {
       arrayInstance.array.insert(index, content);
-    })
+    });
   }
+
   arrayDelete(key: string, index: number, length?: number): this {
-    return this._yjsTransact(key, arrayInstance => {
+    return this._yjsTransact(key, (arrayInstance) => {
       arrayInstance.array.delete(index, length);
-    })
+    });
   }
+
   arrayPush(key: string, content: any[]): this {
-    return this._yjsTransact(key, arrayInstance => {
+    return this._yjsTransact(key, (arrayInstance) => {
       arrayInstance.array.push(content);
-    })
+    });
   }
+
   arrayUnshift(key: string, content: any[]): this {
-    return this._yjsTransact(key, arrayInstance => {
+    return this._yjsTransact(key, (arrayInstance) => {
       arrayInstance.array.unshift(content);
-    })
+    });
   }
 
   async commit() {

@@ -11,6 +11,7 @@ import { ObjectModel } from './object-model';
 import { Reference } from './reference';
 import { validateKey } from './util';
 import { OrderedArray } from './yjs-container';
+import { PublicKey } from 'packages/common/keys/src';
 
 describe('ObjectModel', () => {
   test('checks valid keys', () => {
@@ -163,7 +164,7 @@ describe('ObjectModel', () => {
       expect(peer2.model.get('tags').toArray()).toEqual(['green', 'red', 'blue']);
     });
 
-    test.only('references inside arrays', async () => {
+    test('references inside arrays', async () => {
       const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
@@ -175,9 +176,25 @@ describe('ObjectModel', () => {
       testBuilder.configureReplication(true);
       await testBuilder.waitForReplication();
 
-      expect(peer2.model.get('tags').toArray()).toEqual(['red', new Reference('123')]);
+      expect(peer2.model.get('tags').toArray()).toEqual(array);
     });
 
-    test('arrays of objects');
+    test('arrays of objects', async () => {
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const peer1 = testBuilder.createPeer();
+      const peer2 = testBuilder.createPeer();
+
+      const array = [
+        { foo: 'bar' },
+        { nested: { foo: 'bar', bar: 2, ref: new Reference('123'), none: null, zero: 0 } } // TODO (mykola): new Date() fails.
+      ];
+      await peer1.model.set('tags', OrderedArray.fromValues(array));
+      expect(peer1.model.get('tags').toArray()).toEqual(array);
+
+      testBuilder.configureReplication(true);
+      await testBuilder.waitForReplication();
+
+      expect(peer2.model.get('tags').toArray()).toEqual(array);
+    });
   });
 });
