@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ObjectModel, OrderedArray } from '@dxos/object-model';
+import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 import assert from 'node:assert';
 
 import { base, id } from './defs';
-import { Document, DocumentBase } from './document';
+import { Document } from './document';
+import { EchoObject } from './object';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -14,7 +15,7 @@ const isIndex = (property: string | symbol): property is string =>
 /**
  *
  */
-export class EchoArray<T extends DocumentBase> implements Array<T> {
+export class EchoArray<T> implements Array<T> {
   static get [Symbol.species]() {
     return Array;
   }
@@ -114,7 +115,7 @@ export class EchoArray<T extends DocumentBase> implements Array<T> {
   }
 
   slice(start?: number | undefined, end?: number | undefined): T[] {
-    throw new Error('Method not implemented.');
+    return Array.from(this.values()).slice(start, end);
   }
 
   sort(compareFn?: ((a: T, b: T) => number) | undefined): this {
@@ -129,13 +130,9 @@ export class EchoArray<T extends DocumentBase> implements Array<T> {
 
       const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
 
-      for(const item of items) {
-        void this._object!._database!.save(item);
-      }
-
       void model.builder()
         .arrayDelete(this._property!, start, deleteCount)
-        .arrayInsert(this._property!, start, items.map(item => item[id]))
+        .arrayInsert(this._property!, start, items.map(item => this._encode(item)))
         .commit()
 
       return deletedItems;
@@ -249,7 +246,7 @@ export class EchoArray<T extends DocumentBase> implements Array<T> {
       assert(array instanceof OrderedArray);
 
       return array.toArray()
-        .map((id: string) => this._object!._database!.getObjectById(id) as T)
+        .map((value: string) => this._decode(value))
         .filter(Boolean)
         .values();
     } else {
@@ -281,13 +278,9 @@ export class EchoArray<T extends DocumentBase> implements Array<T> {
   push(...items: T[]) {
     const model = this._getBackingModel();
     if (model) {
-      for (const item of items) {
-        void this._object!._database!.save(item)
-      }
-
       void model
         .builder()
-        .arrayPush(this._property!, items.map((item) => item[base]._id))
+        .arrayPush(this._property!, items.map((item) => this._encode(item)))
         .commit()
     } else {
       assert(this._uninitialized);
@@ -305,6 +298,23 @@ export class EchoArray<T extends DocumentBase> implements Array<T> {
     return this._object?._item?.model;
   }
 
+  private _decode(value: any): T | undefined {
+    if(value instanceof Reference) {
+      return this._object!._database!.getObjectById(value.itemId) as T | undefined; 
+    } else {
+      return value;
+    }
+  }
+
+  private _encode(value: T) {
+    if(value instanceof EchoObject) {
+      void this._object!._database!.save(value);
+      return new Reference(value[id]);
+    } else {
+      return value;
+    }
+  }
+
   /**
    * @internal
    */
@@ -313,13 +323,9 @@ export class EchoArray<T extends DocumentBase> implements Array<T> {
     this._property = property;
     assert(this._uninitialized);
 
-    for (const item of this._uninitialized ?? []) {
-      void this._object!._database!.save(item);
-    }
-
     const model = this._getBackingModel()!;
     if (!(model.get(this._property!) instanceof OrderedArray)) {
-      model.set(this._property!, OrderedArray.fromValues(this._uninitialized))
+      model.set(this._property!, OrderedArray.fromValues(this._uninitialized.map(value => this._encode(value))))
     }
 
     return this;
@@ -347,22 +353,16 @@ export class EchoArray<T extends DocumentBase> implements Array<T> {
     const model = this._getBackingModel()!;
     const array = model.get(this._property!);
     assert(array instanceof OrderedArray);
-    const id = array.get(index);
-    if (!id) {
-      return undefined;
-    }
 
-    return this._object!._database!.getObjectById(id) as T | undefined;
+    return this._decode(array.get(index)) as T | undefined;
   }
 
   private _setModel(index: number, value: T) {
-    void this._object!._database!.save(value);
-
     const model = this._getBackingModel()!;
     void model
       .builder()
       .arrayDelete(this._property!, index)
-      .arrayInsert(this._property!, index, [value[base]._id])
+      .arrayInsert(this._property!, index, [this._encode(value)])
       .commit()
   }
 }

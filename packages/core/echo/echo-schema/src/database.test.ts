@@ -127,6 +127,34 @@ describe('EchoDatabase', () => {
   });
 
   describe('ordered arrays', async () => {
+    test('array of tags', async () => {
+      const db = await createDatabase();
+
+      const task = new Document({ title: 'Main task' });
+      await db.save(task);
+
+      task.tags = new EchoArray();
+      task.tags.push('red');
+      task.tags.push('green');
+      task.tags.push('blue');
+      expect(task.tags.length).toEqual(3);
+      expect(task.tags.slice()).toEqual(['red', 'green', 'blue']);
+      expect(task.tags[0]).toEqual('red');
+      expect(task.tags[1]).toEqual('green');
+
+      task.tags[1] = 'yellow';
+      expect(task.tags.slice()).toEqual(['red', 'yellow', 'blue']);
+
+      task.tags.splice(1, 0, 'magenta');
+      expect(task.tags.slice()).toEqual(['red', 'magenta', 'yellow', 'blue']);
+
+
+      // Move yellow before magenta
+      task.tags.splice(2, 1);
+      task.tags.splice(1, 0, 'yellow');
+      expect(task.tags.slice()).toEqual(['red', 'yellow', 'magenta',  'blue']);
+    });
+
     test('array of sub documents', async () => {
       const db = await createDatabase();
 

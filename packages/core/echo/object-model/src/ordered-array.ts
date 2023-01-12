@@ -118,11 +118,19 @@ export class OrderedArray {
       this.doc.off('updateV2', cb);
     }
 
-    assert(updateReceived);
-    return updateReceived;
+    if(updateReceived) {
+      return updateReceived;
+    } else { // The transaction was a no-op.
+      return {
+        id: new Uint8Array(),
+        payload: new Uint8Array(),
+      };
+    }
   }
 
   apply(mutation: YJS) {
-    Y.applyUpdateV2(this.doc, mutation.payload);
+    if(mutation.payload.byteLength > 0) {
+      Y.applyUpdateV2(this.doc, mutation.payload);
+    }
   }
 }
