@@ -24,7 +24,7 @@ export const ProjectEditor: FC = withReactor(() => {
 
   return (
     <div className='flex flex-col flex-1'>
-      <div className='flex p-2' style={{ width: 300 }}>
+      <div className='flex p-3' style={{ width: 300 }}>
         <Selector
           placeholder='Project'
           options={projects.map((project) => ({ id: project[id], title: project.title }))}

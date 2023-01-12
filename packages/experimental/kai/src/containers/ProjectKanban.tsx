@@ -36,8 +36,8 @@ export const ProjectKanban: FC = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-2'>
-        <div className='ml-1 mr-1' style={{ width: 300 }}>
+      <div className='flex p-3'>
+        <div style={{ width: 300 }}>
           <Searchbar />
         </div>
       </div>
