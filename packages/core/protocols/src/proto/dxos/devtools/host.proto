@@ -66,6 +66,7 @@ service DevtoolsHost {
   rpc SubscribeToNetworkTopics(google.protobuf.Empty) returns (stream SubscribeToNetworkTopicsResponse);
   rpc SubscribeToSignalStatus(google.protobuf.Empty) returns (stream SubscribeToSignalStatusResponse);
   rpc SubscribeToSignal(google.protobuf.Empty) returns (stream SignalResponse);
+  rpc SubscribeToSwarmInfo(SubscribeToSwarmInfoRequest) returns (stream SubscribeToSwarmInfoResponse);
 }
 
 message Event {
