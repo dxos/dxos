@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { YJS } from '@dxos/protocols/proto/dxos/echo/model/object';
 import assert from 'assert';
 import * as Y from 'yjs';
+
+import { YJS } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 const ARRAY_KEY = 'a';
 
