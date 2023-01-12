@@ -5,6 +5,7 @@
 import React, { useEffect, useState, FC, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { ManageSpacePage } from '@dxos/react-appkit';
 import { useSpaces } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
@@ -42,6 +43,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
     >
       {views.length > 1 && <ViewSelector />}
       <div className={mx(views.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex h-screen bg-white')}>
+        {view === AppView.SETTINGS && <ManageSpacePage />}
         {view === AppView.DASHBOARD && <Dashboard />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.PROJECTS && <ProjectList />}

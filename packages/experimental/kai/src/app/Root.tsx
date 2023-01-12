@@ -14,7 +14,7 @@ import kaiTranslations from '../translations';
 import { App } from './App';
 
 const views =
-  process.env.DEMO === 'true'
+  process.env.DEMO === 'true' /* || window.location.protocol === 'http:' */
     ? [
         AppView.DASHBOARD,
         AppView.ORGS,

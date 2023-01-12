@@ -12,7 +12,7 @@ import { useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button } from '../../components';
 import { MemberList, SpaceList } from '../../containers';
-import { AppView, useSpace } from '../../hooks';
+import { useSpace } from '../../hooks';
 import { createSpacePath } from '../Routes';
 import { Actions } from './Actions';
 
@@ -27,15 +27,15 @@ export const Sidebar = () => {
   const [prevSpace, setPrevSpace] = useState(space);
 
   // TODO(wittjosiah): Find a better way to do this.
-  if (prevSpace !== space) {
-    setPrevSpace(space);
-    toggleSidebar();
-  }
+  // if (prevSpace !== space) {
+  //   setPrevSpace(space);
+  //   toggleSidebar();
+  // }
 
-  if (prevView !== view) {
-    setPrevView(view);
-    view === AppView.SETTINGS && toggleSidebar();
-  }
+  // if (prevView !== view) {
+  //   setPrevView(view);
+  //   view === AppView.SETTINGS && toggleSidebar();
+  // }
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
