@@ -113,9 +113,11 @@ export default defineTemplate(
       dxosUi && Features.dxosUi(context),
       tailwind && Features.tailwind(),
       storybook && Features.storybook(),
-      monorepo && {
+      !monorepo && {
         pnpm: {
-          patchedDependencies
+          patchedDependencies: {
+            "vite@4.0.4": "patches/vite@4.0.4.patch"
+          }
         }
       }
     ].filter(Boolean);

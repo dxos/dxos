@@ -58,21 +58,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/samples/bare-sample/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/samples/hello-sample/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/samples/tasks-sample/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/tasks-app/package.json",
           "jsonpath": "$.version"
         },
@@ -83,82 +68,12 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/dxosui/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/max/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/min/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/pwa/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/react/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/react-tailwind/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/storybook/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/bare-template/test/variants/tailwind/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/templates/hello-template/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/hello-template/test/variants/dxosui/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/hello-template/test/variants/max/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/hello-template/test/variants/min/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/hello-template/test/variants/tailwind/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/templates/tasks-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/tasks-template/test/variants/complete/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/tasks-template/test/variants/min/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -1,5 +1,6 @@
 {
   "name": "@dxos/bare-template",
+  "version": "0.1.20",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -7,6 +8,7 @@
   "main": "dist/src/config.t.js",
   "scripts": {
     "build": "tsc",
+    "clean": "rm -rf test/out",
     "gen": "test/generate"
   },
   "dependencies": {

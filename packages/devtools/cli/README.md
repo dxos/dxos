@@ -27,7 +27,7 @@ $ npm install -g @dxos/cli
 $ dx COMMAND
 running command...
 $ dx (--version)
-@dxos/cli/0.1.2 darwin-arm64 node-v16.14.0
+@dxos/cli/0.1.22 darwin-arm64 node-v16.15.1
 $ dx --help [COMMAND]
 USAGE
   $ dx COMMAND
@@ -38,11 +38,15 @@ USAGE
 # Commands
 
 <!-- commands -->
+* [`dx app create NAME`](#dx-app-create-name)
+* [`dx app list`](#dx-app-list)
+* [`dx app publish`](#dx-app-publish)
 * [`dx config`](#dx-config)
 * [`dx halo`](#dx-halo)
-* [`dx halo create [USERNAME]`](#dx-halo-create-username)
+* [`dx halo create [DISPLAYNAME]`](#dx-halo-create-displayname)
 * [`dx halo recover [SEEDPHRASE]`](#dx-halo-recover-seedphrase)
 * [`dx help [COMMAND]`](#dx-help-command)
+* [`dx kube deploy`](#dx-kube-deploy)
 * [`dx plugins`](#dx-plugins)
 * [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin)
 * [`dx plugins:inspect PLUGIN...`](#dx-pluginsinspect-plugin)
@@ -52,9 +56,78 @@ USAGE
 * [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-1)
 * [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-2)
 * [`dx plugins update`](#dx-plugins-update)
+* [`dx reset`](#dx-reset)
 * [`dx shell`](#dx-shell)
 * [`dx space`](#dx-space)
-* [`dx space create`](#dx-space-create)
+* [`dx space create [NAME]`](#dx-space-create-name)
+* [`dx space invite [KEY]`](#dx-space-invite-key)
+* [`dx space join`](#dx-space-join)
+* [`dx space list`](#dx-space-list)
+* [`dx space members [KEY]`](#dx-space-members-key)
+
+## `dx app create NAME`
+
+Create a DXOS project.
+
+```
+USAGE
+  $ dx app create [NAME] [--config <value>] [--timeout <value>] [--tag <value>] [-t hello|bare|tasks] [-i]
+
+ARGUMENTS
+  NAME  Name of the project
+
+FLAGS
+  -i, --interactive        Customize app template options via interactive prompt
+  -t, --template=<option>  [default: hello] Template to use when creating the project.
+                           <options: hello|bare|tasks>
+  --config=<value>         Specify config file
+  --tag=<value>            Git tag or branch of the DXOS repo to checkout.
+  --timeout=<value>        [default: 30] Timeout in seconds
+
+DESCRIPTION
+  Create a DXOS project.
+```
+
+## `dx app list`
+
+List apps.
+
+```
+USAGE
+  $ dx app list [--config <value>] [--timeout <value>] [--json]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List apps.
+```
+
+## `dx app publish`
+
+Publish apps.
+
+```
+USAGE
+  $ dx app publish [--config <value>] [--timeout <value>] [--configPath <value>] [--accessToken <value>]
+    [--skipExisting] [--verbose] [--version <value>]
+
+FLAGS
+  --accessToken=<value>  Access token for publishing
+  --config=<value>       Specify config file
+  --configPath=<value>   Path to dx.yml
+  --skipExisting         Do not update content on KUBE if version already exists
+  --timeout=<value>      [default: 30] Timeout in seconds
+  --verbose              Verbose output
+  --version=<value>      Version of modules to publish
+
+DESCRIPTION
+  Publish apps.
+```
 
 ## `dx config`
 
@@ -62,11 +135,14 @@ Show config file.
 
 ```
 USAGE
-  $ dx config [--config <value>] [--json]
+  $ dx config [--config <value>] [--timeout <value>] [--json]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
 
 GLOBAL FLAGS
-  --config=<value>  Specify config file
-  --json            Format output as json.
+  --json  Format output as json.
 
 DESCRIPTION
   Show config file.
@@ -78,27 +154,33 @@ Show HALO profile.
 
 ```
 USAGE
-  $ dx halo [--config <value>] [--json]
+  $ dx halo [--config <value>] [--timeout <value>] [--json]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
 
 GLOBAL FLAGS
-  --config=<value>  Specify config file
-  --json            Format output as json.
+  --json  Format output as json.
 
 DESCRIPTION
   Show HALO profile.
 ```
 
-## `dx halo create [USERNAME]`
+## `dx halo create [DISPLAYNAME]`
 
 Create HALO.
 
 ```
 USAGE
-  $ dx halo create [USERNAME] [--config <value>] [--json]
+  $ dx halo create [DISPLAYNAME] [--config <value>] [--timeout <value>] [--json]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
 
 GLOBAL FLAGS
-  --config=<value>  Specify config file
-  --json            Format output as json.
+  --json  Format output as json.
 
 DESCRIPTION
   Create HALO.
@@ -110,11 +192,14 @@ Recover HALO.
 
 ```
 USAGE
-  $ dx halo recover [SEEDPHRASE] [--config <value>] [--json]
+  $ dx halo recover [SEEDPHRASE] [--config <value>] [--timeout <value>] [--json]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
 
 GLOBAL FLAGS
-  --config=<value>  Specify config file
-  --json            Format output as json.
+  --json  Format output as json.
 
 DESCRIPTION
   Recover HALO.
@@ -138,7 +223,28 @@ DESCRIPTION
   Display help for dx.
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.1.12/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.1.15/src/commands/help.ts)_
+
+## `dx kube deploy`
+
+Deploy KUBE.
+
+```
+USAGE
+  $ dx kube deploy --hostname <value> [--config <value>] [--timeout <value>] [--provider <value>] [--accessToken
+    <value>] [--dev]
+
+FLAGS
+  --accessToken=<value>  Access token for seeding admin identity
+  --config=<value>       Specify config file
+  --dev                  Deploy latest version from dev channel
+  --hostname=<value>     (required) Hostname
+  --provider=<value>     [default: digitalocean] Cloud Provider
+  --timeout=<value>      [default: 30] Timeout in seconds
+
+DESCRIPTION
+  Deploy KUBE.
+```
 
 ## `dx plugins`
 
@@ -158,7 +264,7 @@ EXAMPLES
   $ dx plugins
 ```
 
-_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v2.1.0/src/commands/plugins/index.ts)_
+_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v2.1.4/src/commands/plugins/index.ts)_
 
 ## `dx plugins:install PLUGIN...`
 
@@ -178,7 +284,6 @@ FLAGS
 
 DESCRIPTION
   Installs a plugin into the CLI.
-
   Can be installed from npm or a git url.
 
   Installation of a user-installed plugin will override a core plugin.
@@ -186,6 +291,7 @@ DESCRIPTION
   e.g. If you have a core plugin that has a 'hello' command, installing a user-installed plugin with a 'hello' command
   will override the core plugin implementation. This is useful if a user needs to update core plugin functionality in
   the CLI without the need to patch and update the whole CLI.
+
 
 ALIASES
   $ dx plugins add
@@ -238,7 +344,6 @@ FLAGS
 
 DESCRIPTION
   Installs a plugin into the CLI.
-
   Can be installed from npm or a git url.
 
   Installation of a user-installed plugin will override a core plugin.
@@ -246,6 +351,7 @@ DESCRIPTION
   e.g. If you have a core plugin that has a 'hello' command, installing a user-installed plugin with a 'hello' command
   will override the core plugin implementation. This is useful if a user needs to update core plugin functionality in
   the CLI without the need to patch and update the whole CLI.
+
 
 ALIASES
   $ dx plugins add
@@ -275,11 +381,11 @@ FLAGS
 
 DESCRIPTION
   Links a plugin into the CLI for development.
-
   Installation of a linked plugin will override a user-installed or core plugin.
 
   e.g. If you have a user-installed or core plugin that has a 'hello' command, installing a linked plugin with a 'hello'
   command will override the user-installed or core plugin implementation. This is useful for development work.
+
 
 EXAMPLES
   $ dx plugins:link myplugin
@@ -370,16 +476,33 @@ DESCRIPTION
   Update installed plugins.
 ```
 
+## `dx reset`
+
+Reset all data.
+
+```
+USAGE
+  $ dx reset [--config <value>] [--timeout <value>]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
+
+DESCRIPTION
+  Reset all data.
+```
+
 ## `dx shell`
 
 Interactive shell.
 
 ```
 USAGE
-  $ dx shell [--config <value>]
+  $ dx shell [--config <value>] [--timeout <value>]
 
-GLOBAL FLAGS
-  --config=<value>  Specify config file
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
 
 DESCRIPTION
   Interactive shell.
@@ -387,62 +510,131 @@ DESCRIPTION
 
 ## `dx space`
 
-Show Spaces.
+List spaces.
 
 ```
 USAGE
-  $ dx space [--config <value>]
-
-GLOBAL FLAGS
-  --config=<value>  Specify config file
-
-DESCRIPTION
-  Show Spaces.
-```
-
-## `dx space create`
-
-Create spaces.
-
-```
-USAGE
-  $ dx space create [--config <value>]
-
-GLOBAL FLAGS
-  --config=<value>  Specify config file
-
-DESCRIPTION
-  Create spaces.
-```
-
-## `dx app list`
-
-List apps.
-
-USAGE
-  $ dx app list [--config <value>]
+  $ dx space [--config <value>] [--timeout <value>]
 
 FLAGS
   --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
+
+DESCRIPTION
+  List spaces.
+```
+
+## `dx space create [NAME]`
+
+Create space.
+
+```
+USAGE
+  $ dx space create [NAME] [--config <value>] [--timeout <value>] [--json]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
 
 GLOBAL FLAGS
   --json  Format output as json.
 
 DESCRIPTION
-  List apps.
+  Create space.
+```
 
-## `dx app publish`
+## `dx space invite [KEY]`
 
-Publish apps.
+Create space invitation.
 
+```
 USAGE
-  $ dx app publish [--config <value>] [--configPath <value>] [--verbose]
+  $ dx space invite [KEY] [--config <value>] [--timeout <value>]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
+
+DESCRIPTION
+  Create space invitation.
+```
+
+## `dx space join`
+
+Join space invitation
+
+```
+USAGE
+  $ dx space join [--config <value>] [--timeout <value>] [--json] [--invitation <value>] [--secret <value>]
 
 FLAGS
   --config=<value>      Specify config file
-  --configPath=<value>  Path to dx.yml
-  --verbose             Verbose output
+  --invitation=<value>  Invitation code
+  --secret=<value>      Invitation secret
+  --timeout=<value>     [default: 30] Timeout in seconds
+
+GLOBAL FLAGS
+  --json  Format output as json.
 
 DESCRIPTION
-  Publish apps.
+  Join space invitation
+```
+
+## `dx space list`
+
+List spaces.
+
+```
+USAGE
+  $ dx space list [--config <value>] [--timeout <value>] [--json] [--columns <value> | -x] [--sort <value>]
+    [--filter <value>] [--output csv|json|yaml |  | [--csv | --no-truncate]] [--no-header | ]
+
+FLAGS
+  -x, --extended     show extra columns
+  --columns=<value>  only show provided columns (comma-separated)
+  --config=<value>   Specify config file
+  --csv              output is csv format [alias: --output=csv]
+  --filter=<value>   filter property by partial string matching, ex: name=foo
+  --no-header        hide table header from output
+  --no-truncate      do not truncate output to fit screen
+  --output=<option>  output in a more machine friendly format
+                     <options: csv|json|yaml>
+  --sort=<value>     property to sort by (prepend '-' for descending)
+  --timeout=<value>  [default: 30] Timeout in seconds
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List spaces.
+```
+
+## `dx space members [KEY]`
+
+List space members.
+
+```
+USAGE
+  $ dx space members [KEY] [--config <value>] [--timeout <value>] [--json] [--columns <value> | -x] [--sort
+    <value>] [--filter <value>] [--output csv|json|yaml |  | [--csv | --no-truncate]] [--no-header | ]
+
+FLAGS
+  -x, --extended     show extra columns
+  --columns=<value>  only show provided columns (comma-separated)
+  --config=<value>   Specify config file
+  --csv              output is csv format [alias: --output=csv]
+  --filter=<value>   filter property by partial string matching, ex: name=foo
+  --no-header        hide table header from output
+  --no-truncate      do not truncate output to fit screen
+  --output=<option>  output in a more machine friendly format
+                     <options: csv|json|yaml>
+  --sort=<value>     property to sort by (prepend '-' for descending)
+  --timeout=<value>  [default: 30] Timeout in seconds
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List space members.
+```
 <!-- commandsstop -->

@@ -27,7 +27,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/templates/tasks-template/src/**/*.{ts,js,tsx,jsx}"
+          "packages/apps/templates/tasks-template/{src,test}/**/*.{ts,js,tsx,jsx}"
         ]
       },
       "outputs": [

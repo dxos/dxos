@@ -1,4 +1,4 @@
-import { defineTemplate, text } from '@dxos/plate';
+import { defineTemplate } from '@dxos/plate';
 import { PackageJson } from 'types-package-json';
 import config from './config.t';
 

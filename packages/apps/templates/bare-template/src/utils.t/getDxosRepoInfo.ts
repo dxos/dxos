@@ -11,7 +11,7 @@ import { exists } from '@dxos/plate';
 export const isDxosMonorepoSync = () => {
   try {
     const gitRemoteResult = execSync('git remote --v', { stdio: 'pipe' }).toString();
-    const isDxosMonorepo = /\:dxos\//.test(gitRemoteResult);
+    const isDxosMonorepo = /:dxos\//.test(gitRemoteResult);
     return isDxosMonorepo;
   } catch {
     return false;

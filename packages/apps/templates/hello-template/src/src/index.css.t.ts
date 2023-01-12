@@ -3,7 +3,7 @@ import config from '../config.t';
 
 export default defineTemplate(
   async ({ input }) => {
-    const { dxosUi, tailwind } = input;
+    const { dxosUi, react, tailwind } = input;
     const content = (dxosUi: boolean, tailwind: boolean) => text`
     ${
       !dxosUi &&
@@ -11,15 +11,45 @@ export default defineTemplate(
       text`
     @tailwind base;
     @tailwind components;
-    @tailwind utilities;`
+    @tailwind utilities;
+    
+    `
     }
+    ${!react && text`
+    .dark img.no-dark {
+      display: none;
+    }
+
+    img.dark {
+      display: none;
+    }
+    
+    .dark img.dark {
+      display: block;
+    }
+    `}
     ${(dxosUi || tailwind) && text`
+
+    ${!dxosUi && text`
+    body {
+      @apply dark:bg-zinc-900 dark:text-zinc-300 bg-zinc-200 text-zinc-800;
+    }
+    `}
+
     h1, p, pre {
       @apply my-6;
     }
 
     h1 {
       @apply text-2xl text-emerald-500;
+    }
+
+    code {
+      @apply bg-zinc-200;
+    }
+    
+    pre {
+      @apply bg-zinc-800;
     }
 
     code, pre {
@@ -43,18 +73,6 @@ export default defineTemplate(
     .dark body {
       background-color: #18181B;
       color: #E4E4E7;
-    }
-    
-    img.dark {
-      display: none;
-    }
-    
-    .dark img.dark {
-      display: block;
-    }
-    
-    .dark img.no-dark {
-      display: none;
     }
     
     .max-w-md {

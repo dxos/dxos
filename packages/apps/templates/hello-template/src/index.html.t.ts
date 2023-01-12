@@ -41,8 +41,7 @@ export default defineTemplate(
         ${tailwind && `<p>
           <a href='https://tailwindcss.com/docs' target='_blank' rel='noreferrer'>
             Tailwind
-          </a>{' '}
-          is available.
+          </a> is available.
         </p>`}
         <p>
           Add your <code>css</code> to <code>src/index.css</code> or import <code>.css</code> files from your 
@@ -50,10 +49,10 @@ export default defineTemplate(
         </p>
         <p>Create a <code>Client</code>:
         <pre>
-        import { Client } from '@dxos/client';
-        const client = new Client();
-        await client.initialize();
-        console.log(client.toJSON());
+import { Client } from '@dxos/client';
+const client = new Client();
+await client.initialize();
+console.log(client.toJSON());
         </pre>
         <p>Result:</p>
         <pre id='output'>
