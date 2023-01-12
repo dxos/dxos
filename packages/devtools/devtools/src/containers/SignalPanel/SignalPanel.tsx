@@ -61,8 +61,10 @@ export const SignalPanel = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-auto'>
-      {servers.length >= 1 && <SignalStatusComp status={servers.map(signalStatus)} />}
-      <JsonTreeView data={signalResponses} />
+      <div className='flex m-2'>{servers.length >= 1 && <SignalStatusComp status={servers.map(signalStatus)} />}</div>
+      <div className='flex m-2'>
+        <JsonTreeView data={signalResponses} />
+      </div>
     </div>
   );
 };
