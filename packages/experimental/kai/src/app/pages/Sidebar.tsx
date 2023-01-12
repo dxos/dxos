@@ -3,24 +3,41 @@
 //
 
 import { PlusCircle, Gear, Robot, Trash, WifiHigh, WifiSlash } from 'phosphor-react';
-import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
+import { useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button } from '../../components';
 import { MemberList, SpaceList } from '../../containers';
-import { useSpace } from '../../hooks';
+import { AppView, useSpace } from '../../hooks';
 import { Generator } from '../../proto';
 
 export const Sidebar = () => {
+  const toggleSidebar = useTogglePanelSidebar();
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
   const { state: connectionState } = useNetworkStatus();
   const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
+
+  const { view } = useParams();
+  const [prevView, setPrevView] = useState(view);
+  const [prevSpace, setPrevSpace] = useState(space);
+
+  // TODO(wittjosiah): Find a better way to do this.
+  if (prevSpace !== space) {
+    setPrevSpace(space);
+    toggleSidebar();
+  }
+
+  if (prevView !== view) {
+    setPrevView(view);
+    view === AppView.SETTINGS && toggleSidebar();
+  }
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
