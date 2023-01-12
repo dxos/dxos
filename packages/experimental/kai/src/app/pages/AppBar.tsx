@@ -7,10 +7,9 @@ import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx, useMediaQuery } from '@dxos/react-components';
-import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
+import { PanelSidebarContext, sidebarWidth, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { useOptions, useSpace, viewConfig } from '../../hooks';
-import { createSpacePath } from '../Routes';
+import { useOptions, viewConfig } from '../../hooks';
 
 export const Menu = () => {
   return (
@@ -21,15 +20,14 @@ export const Menu = () => {
 };
 
 // TODO(burdon): Collapse tabs into hamburger if narrow.
-// TODO(burdon): Change view type from string to AppView.
-export const ViewSelector: FC<{}> = () => {
+export const ViewSelector: FC = () => {
   const navigate = useNavigate();
 
   const { views } = useOptions();
   const { spaceKey: currentSpaceKey, view: currentView } = useParams();
-  const { displayState } = useContext(PanelSidebarContext);
-  const [isLg] = useMediaQuery('lg');
+  const { displayState } = useContext(PanelSidebarContext); // TODO(burdon): Context lags.
   const isOpen = displayState === 'show';
+  const [isLg] = useMediaQuery('lg');
 
   const setView = (spaceKey: string, view: string) => {
     navigate(`/${spaceKey}/${view}`);
@@ -38,26 +36,29 @@ export const ViewSelector: FC<{}> = () => {
   return (
     <div
       className={mx(
-        'flex flex-1 items-center bg-orange-500 pt-1 pl-2 pr-2 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
-        isLg && isOpen ? 'inline-start-[272px]' : 'inline-start-0'
+        'flex flex-col flex-1 bg-orange-500 pt-1 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
+        isLg && isOpen ? `inline-start-[${sidebarWidth}px]` : 'inline-start-0'
       )}
     >
-      {views.map((view) => {
-        const { Icon } = viewConfig[view];
-        return (
-          <a
-            key={view}
-            className={mx(
-              'flex p-1 pl-2 pr-2 mr-2 items-center cursor-pointer rounded-t text-black text-sm',
-              view === currentView && 'bg-white'
-            )}
-            onClick={() => setView(currentSpaceKey!, view)}
-          >
-            <Icon weight='light' className={getSize(6)} />
-            <div className='ml-1'>{String(view)}</div>
-          </a>
-        );
-      })}
+      <div className='flex pl-2'>
+        {views.map((view) => {
+          const { Icon } = viewConfig[view];
+          return (
+            <a
+              key={view}
+              className={mx(
+                'flex p-1 pl-2 pr-2 mr-2 items-center cursor-pointer rounded-t text-black text-sm',
+                view === currentView && 'bg-white'
+              )}
+              onClick={() => setView(currentSpaceKey!, view)}
+            >
+              <Icon weight='light' className={getSize(6)} />
+              <div className='ml-1'>{String(view)}</div>
+            </a>
+          );
+        })}
+      </div>
+      <div className='flex flex-shrink-0 h-2 bg-white' />
     </div>
   );
 };
@@ -72,10 +73,12 @@ export const AppBar = () => {
           <List className={getSize(6)} />
         </button>
       </div>
+
       <div className='flex items-center ml-4'>
         <Bug className={mx('logo', getSize(8))} />
         <div className='ml-1'>KAI</div>
       </div>
+
       <div className='flex-1' />
       <Menu />
     </div>

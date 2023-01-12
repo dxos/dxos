@@ -17,7 +17,7 @@ import {
 
 export const Dashboard: FC = () => {
   const { ref, height } = useResizeDetector();
-  const props = height ? { minHeight: (height - 20) / 2 } : {};
+  const props = height ? { minHeight: (height - 16) / 2 } : {};
 
   return (
     <div

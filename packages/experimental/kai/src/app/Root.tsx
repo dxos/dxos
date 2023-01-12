@@ -35,10 +35,10 @@ export const Root = () => {
         views={[
           AppView.DASHBOARD,
           AppView.ORGS,
-          AppView.PROJECTS,
           AppView.CONTACTS,
-          AppView.KANBAN,
+          AppView.PROJECTS,
           AppView.TASKS,
+          AppView.KANBAN,
           AppView.GRAPH,
           AppView.EDITOR,
           AppView.MAP,
