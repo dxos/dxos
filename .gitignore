@@ -112,3 +112,6 @@ packages/devtools/cli/src/util/telemetryrc.json
 
 # SWC temp files
 .swc
+
+# Custom certificates
+*.pem

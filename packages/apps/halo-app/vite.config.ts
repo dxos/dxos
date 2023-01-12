@@ -21,7 +21,11 @@ export default defineConfig({
   base: '', // Ensure relative path to assets.
   server: {
     host: true,
-    port: 3967
+    port: 3967,
+    https: process.env.HTTPS === 'true' ? {
+      key: './key.pem',
+      cert: './cert.pem'
+    } : false
   },
   define: {
     'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
