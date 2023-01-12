@@ -66,11 +66,11 @@ export const FolderHierarchy: FC<{
   items: FolderHierarchyItem[];
   highlightClassName?: string;
   onSelect?: (item: FolderHierarchyItem) => void;
-  selectedId?: () => string;
-  expandedIds?: string[];
-}> = ({ items, highlightClassName = 'bg-gray-300', onSelect, selectedId, expandedIds = [] }) => {
+  selected?: string;
+  expanded?: string[];
+}> = ({ items, highlightClassName = 'bg-gray-300', onSelect, selected, expanded = [] }) => {
   const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>(
-    expandedIds?.reduce((map, id) => ({ ...map, [id]: true }), {})
+    expanded?.reduce((map, id) => ({ ...map, [id]: true }), {})
   );
 
   const handleToggle = (item: FolderHierarchyItem) => {
@@ -97,7 +97,7 @@ export const FolderHierarchy: FC<{
     return (
       <div className='flex flex-1 flex-col'>
         <div
-          className={mx('flex select-none cursor-pointer pl-3', item.id === selectedId?.() && highlightClassName)}
+          className={mx('flex select-none cursor-pointer pl-3', item.id === selected && highlightClassName)}
           onClick={() => handleSelection(item)}
         >
           <div className='flex items-center' style={{ marginLeft: depth * 16 }}>

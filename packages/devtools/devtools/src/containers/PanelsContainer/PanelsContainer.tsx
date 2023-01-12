@@ -50,8 +50,8 @@ export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
               setSelected(newSelected);
             }
           }}
-          selectedId={() => selected?.id ?? ''}
-          expandedIds={[sections[0].id]}
+          selected={selected?.id}
+          expanded={[sections[0].id]}
         />
       </div>
 
