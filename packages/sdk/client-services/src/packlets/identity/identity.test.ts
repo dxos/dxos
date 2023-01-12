@@ -5,14 +5,7 @@
 import expect from 'expect';
 
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
-import {
-  MOCK_AUTH_PROVIDER,
-  MOCK_AUTH_VERIFIER,
-  NoopDataPipelineController,
-  Space,
-  SpaceProtocol,
-  valueEncoding
-} from '@dxos/echo-db';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol, valueEncoding } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -21,7 +14,6 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { Presence } from '@dxos/teleport-extension-presence';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Identity } from './identity';
@@ -61,12 +53,6 @@ describe('identity/identity', () => {
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory
-      }),
-      presence: new Presence({
-        localPeerId: deviceKey,
-        announceInterval: 30,
-        offlineTimeout: 200,
-        identityKey
       })
     });
 
@@ -76,8 +62,7 @@ describe('identity/identity', () => {
       genesisFeed: controlFeed,
       controlFeed,
       dataFeed,
-      feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-      dataPipelineControllerProvider: () => new NoopDataPipelineController()
+      feedProvider: (feedKey) => feedStore.openFeed(feedKey)
     });
 
     const identity = new Identity({
@@ -174,12 +159,6 @@ describe('identity/identity', () => {
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
-        }),
-        presence: new Presence({
-          localPeerId: deviceKey,
-          announceInterval: 30,
-          offlineTimeout: 200,
-          identityKey
         })
       });
 
@@ -189,8 +168,7 @@ describe('identity/identity', () => {
         genesisFeed: controlFeed,
         controlFeed,
         dataFeed,
-        feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        dataPipelineControllerProvider: () => new NoopDataPipelineController()
+        feedProvider: (feedKey) => feedStore.openFeed(feedKey)
       });
 
       const identity = (identity1 = new Identity({
@@ -261,12 +239,6 @@ describe('identity/identity', () => {
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
-        }),
-        presence: new Presence({
-          localPeerId: deviceKey,
-          announceInterval: 30,
-          offlineTimeout: 200,
-          identityKey
         })
       });
 
@@ -276,8 +248,7 @@ describe('identity/identity', () => {
         genesisFeed: await feedStore.openFeed(genesisFeedKey),
         controlFeed,
         dataFeed,
-        feedProvider: (feedKey) => feedStore.openFeed(feedKey),
-        dataPipelineControllerProvider: () => new NoopDataPipelineController()
+        feedProvider: (feedKey) => feedStore.openFeed(feedKey)
       });
 
       const identity = (identity2 = new Identity({

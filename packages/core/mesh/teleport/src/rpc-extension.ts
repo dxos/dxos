@@ -4,7 +4,6 @@
 
 import assert from 'node:assert';
 
-import { synchronized } from '@dxos/async';
 import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
 
 import { ExtensionContext, TeleportExtension } from './teleport';
@@ -12,6 +11,8 @@ import { ExtensionContext, TeleportExtension } from './teleport';
 export abstract class RpcExtension<Client, Server> implements TeleportExtension {
   private _extensionContext!: ExtensionContext;
   private _rpc?: ProtoRpcPeer<Client>;
+
+  private _isClosed = false;
 
   constructor(private readonly _params: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
 
@@ -34,11 +35,14 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
 
   protected abstract getHandlers(): Promise<Server>;
 
-  @synchronized
   async onOpen(context: ExtensionContext): Promise<void> {
     this._extensionContext = context;
 
     const handlers = await this.getHandlers();
+
+    if (this._isClosed) {
+      return;
+    }
 
     const port = context.createPort('rpc', {
       contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
@@ -52,8 +56,8 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
     await this._rpc.open();
   }
 
-  @synchronized
   async onClose(err?: Error | undefined): Promise<void> {
+    this._isClosed = true;
     await this._rpc?.close();
   }
 

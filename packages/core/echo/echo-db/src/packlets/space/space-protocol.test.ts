@@ -8,7 +8,6 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { Presence } from '@dxos/teleport-extension-presence';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -55,12 +54,6 @@ describe('space/space-protocol', () => {
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory
-      }),
-      presence: new Presence({
-        localPeerId: peerId1,
-        announceInterval: 100,
-        offlineTimeout: 1_000,
-        identityKey: PublicKey.random()
       })
     });
 
@@ -74,12 +67,6 @@ describe('space/space-protocol', () => {
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory
-      }),
-      presence: new Presence({
-        localPeerId: peerId2,
-        announceInterval: 100,
-        offlineTimeout: 1_000,
-        identityKey: PublicKey.random()
       })
     });
 

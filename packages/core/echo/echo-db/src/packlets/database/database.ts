@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -44,6 +44,7 @@ export enum State {
 /**
  * Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
  */
+@trackLeaks('initialize', 'destroy')
 export class Database {
   private readonly _itemManager: ItemManager;
 

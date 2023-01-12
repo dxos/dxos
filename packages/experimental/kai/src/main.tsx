@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app';
 import { AppView } from './hooks';
 
+import '@dxosTheme';
 import '../style.css';
 
 (() => {
