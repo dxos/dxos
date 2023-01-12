@@ -14,7 +14,7 @@ const style = {
  * https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
  * By Cburnett
  */
-export const pieces: Record<string, (style: any) => ReactNode> = {
+const pieces: Record<string, (style: any) => ReactNode> = {
   p: (style) => (
     <svg fill='#000000' width='45px' height='45px' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'>
       <path

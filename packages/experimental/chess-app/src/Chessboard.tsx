@@ -6,7 +6,7 @@ import { Chess } from 'chess.js';
 import React, { FC, useEffect, useState } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
 
-import { customPieces } from './custom';
+import { phosphorPieces } from './media';
 import { Game } from './proto';
 
 const props = {
@@ -79,7 +79,7 @@ export const Chessboard: FC<ChessboardProps> = ({
         boardOrientation={orientation}
         arePiecesDraggable={!readonly}
         onPieceDrop={handleDrop}
-        customPieces={customPieces}
+        customPieces={phosphorPieces}
         {...props}
       />
     </div>

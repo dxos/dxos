@@ -2714,6 +2714,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chess.js: ^1.0.0-alpha.0
+      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-chessboard: ^2.0.7
       react-dom: ^18.2.0
@@ -2724,6 +2725,7 @@ importers:
     dependencies:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       chess.js: 1.0.0-alpha.0
+      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-chessboard: 2.0.7_rj7ozvcq3uehdlnj3cbwzbi5ce
       react-dom: 18.2.0_react@18.2.0
