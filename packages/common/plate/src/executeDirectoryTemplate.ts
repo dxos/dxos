@@ -89,6 +89,7 @@ export const executeDirectoryTemplate = async <TInput>(
     exclude,
     transform: (s) => s.replace(templateDirectory, '').replace(/^\//, '')
   });
+  debug(`${filteredFiles.length} included files total`);
   const ignoredFiles = allFiles.filter((f) => filteredFiles.indexOf(f) < 0);
   const templateFiles = filteredFiles.filter(isTemplateFile);
   const regularFiles = filteredFiles.filter((file) => !isTemplateFile(file));
@@ -98,18 +99,16 @@ export const executeDirectoryTemplate = async <TInput>(
   debug(templateFiles.join('\n'));
   debug(`${regularFiles.length} regular files:`);
   debug(regularFiles.join('\n'));
-  debug(`getting ready to execute ${templateFiles.length} template files ...`);
+  debug(`executing ${templateFiles.length} template files ${parallel ? 'in parallel' : 'sequentially'}...`);
   const templatingPromises = templateFiles?.map((t) => {
-    const templateFile = path.relative(templateDirectory, t);
-    const result = executeFileTemplate({
+    return executeFileTemplate({
       ...restOptions,
-      templateFile,
+      templateFile: path.relative(templateDirectory, t),
       templateRelativeTo: templateDirectory,
       input,
       // inherited: inherits ? inherited?.filter((result) => result.metadata.templateFile === templateFile) : undefined,
       overwrite
     });
-    return result;
   });
   const runner = runPromises({
     before: (_p, i) => {
@@ -119,7 +118,6 @@ export const executeDirectoryTemplate = async <TInput>(
       debug(`${templateFiles[Number(i)]} done`);
     }
   });
-  debug(`executing template files ${parallel ? 'in parallel' : 'sequentially'} ...`);
   const templateOutputs = await (parallel
     ? runner.inParallel(templatingPromises)
     : runner.inSequence(templatingPromises));
@@ -127,7 +125,6 @@ export const executeDirectoryTemplate = async <TInput>(
   const isWithinTemplateOutput = (f: string): boolean => {
     return templateOutputs.some((files) => files.some((file) => !!file && stringPath(file.path) === f));
   };
-  debug(`template files executed : ${templateDirectory}`);
   const flatOutput = [
     ...regularFiles
       ?.filter((f) => !isWithinTemplateOutput(f))
@@ -140,11 +137,12 @@ export const executeDirectoryTemplate = async <TInput>(
           })
       ),
     ...flatten(templateOutputs)
-  ];
+  ].filter(Boolean);
+  debug(`${flatOutput.length} templating results`);
   const inheritedOutputMinusFlatOutput = inherited
     ? inherited.filter((inheritedOut) => {
         return !flatOutput.find((existing) => existing.path === inheritedOut.path);
       })
-    : flatOutput;
+    : [];
   return [...flatOutput, ...inheritedOutputMinusFlatOutput];
 };

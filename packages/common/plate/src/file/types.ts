@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { CSSFile } from './CSSFile';
 import { File } from './File';
 import { HTMLFile } from './HTMLFile';
 import { JSFile } from './JSFile';
@@ -17,7 +18,10 @@ export const fileTypes: {
   '.js': JSFile,
   '.jsx': JSFile,
   '.html': HTMLFile,
-  '.htm': HTMLFile
+  '.htm': HTMLFile,
+  '.css': CSSFile,
+  '.scss': CSSFile,
+  '.less': CSSFile
 };
 
 export const getFileType = (path: string) => {

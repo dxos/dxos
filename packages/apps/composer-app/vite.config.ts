@@ -40,7 +40,7 @@ export default defineConfig({
       '@dxos/react-appkit',
       '@dxos/react-client',
       '@dxos/react-composer',
-      '@@dxos/react-components',
+      '@dxos/react-components',
       '@dxos/sentry',
       '@dxos/text-model'
     ],
