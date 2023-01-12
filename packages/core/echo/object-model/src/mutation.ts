@@ -16,9 +16,9 @@ import {
   Value
 } from '@dxos/protocols/proto/dxos/echo/model/object';
 
+import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
 import { removeKey } from './util';
-import { OrderedArray } from './ordered-array';
 
 /**
  * @typedef {Object} Value

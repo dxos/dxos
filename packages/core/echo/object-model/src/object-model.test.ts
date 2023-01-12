@@ -8,10 +8,9 @@ import { ModelFactory, TestBuilder } from '@dxos/model-factory';
 import { describe, test } from '@dxos/test';
 
 import { ObjectModel } from './object-model';
+import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
 import { validateKey } from './util';
-import { OrderedArray } from './ordered-array';
-import { PublicKey } from 'packages/common/keys/src';
 
 describe('ObjectModel', () => {
   test('checks valid keys', () => {
