@@ -21,7 +21,7 @@ export const HeadingWithActions = ({ heading, actions, compact, spacer, ...divPr
       className={mx('flex flex-wrap items-center', compact ? 'gap-2' : 'gap-x-2 gap-y-4', divProps.className)}
     >
       <Heading {...heading} />
-      {typeof spacer === 'undefined' ? <div role='none' className='grow-[99] min-w-[2rem]' /> : spacer}
+      {typeof spacer === 'undefined' ? <div role='none' className='grow-[99] min-w-[1rem]' /> : spacer}
       <div role='none' className='flex grow gap-2 items-center'>
         {actions}
       </div>

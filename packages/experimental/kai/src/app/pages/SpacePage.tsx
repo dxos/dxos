@@ -6,6 +6,7 @@ import React, { useEffect, useState, FC } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
+import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
 import {
@@ -29,6 +30,8 @@ import { Sidebar } from './Sidebar';
  * Main grid layout.
  */
 const ViewContainer: FC<{ view: string }> = ({ view }) => {
+  const { views } = useOptions();
+
   return (
     <PanelSidebarProvider
       inlineStart
@@ -37,8 +40,8 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
         content: { children: <Sidebar /> }
       }}
     >
-      <ViewSelector />
-      <div className='pbs-[84px] flex h-screen bg-white'>
+      {views.length > 1 && <ViewSelector />}
+      <div className={mx(views.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex h-screen bg-white')}>
         {view === AppView.SETTINGS && <ManageSpacePage />}
         {view === AppView.DASHBOARD && <Dashboard />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
