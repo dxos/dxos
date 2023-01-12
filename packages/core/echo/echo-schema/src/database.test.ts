@@ -126,7 +126,7 @@ describe('EchoDatabase', () => {
     });
   });
 
-  describe('ordered arrays', async () => {
+  describe('ordered arrays', () => {
     test('array of tags', async () => {
       const db = await createDatabase();
 
@@ -148,11 +148,10 @@ describe('EchoDatabase', () => {
       task.tags.splice(1, 0, 'magenta');
       expect(task.tags.slice()).toEqual(['red', 'magenta', 'yellow', 'blue']);
 
-
       // Move yellow before magenta
       task.tags.splice(2, 1);
       task.tags.splice(1, 0, 'yellow');
-      expect(task.tags.slice()).toEqual(['red', 'yellow', 'magenta',  'blue']);
+      expect(task.tags.slice()).toEqual(['red', 'yellow', 'magenta', 'blue']);
     });
 
     test('array of sub documents', async () => {
@@ -189,13 +188,13 @@ describe('EchoDatabase', () => {
       await db.save(task);
 
       task.tags = ['red', 'green', 'blue'];
-      expect(task.tags instanceof EchoArray).toBeTruthy()
+      expect(task.tags instanceof EchoArray).toBeTruthy();
       expect(task.tags.length).toEqual(3);
       expect(task.tags.slice()).toEqual(['red', 'green', 'blue']);
 
       task.tags[1] = 'yellow';
       expect(task.tags.slice()).toEqual(['red', 'yellow', 'blue']);
-    })
+    });
 
     test('empty array', async () => {
       const db = await createDatabase();
@@ -204,9 +203,9 @@ describe('EchoDatabase', () => {
       await db.save(task);
 
       task.tags = [];
-      expect(task.tags instanceof EchoArray).toBeTruthy()
+      expect(task.tags instanceof EchoArray).toBeTruthy();
       expect(task.tags.length).toEqual(0);
-    })
+    });
   });
 
   describe('text', () => {

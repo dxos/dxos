@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 import assert from 'node:assert';
+
+import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, id } from './defs';
 import { Document } from './document';
@@ -70,13 +71,13 @@ export class EchoArray<T> implements Array<T> {
   }
 
   get length(): number {
-    const model = this._getBackingModel()
+    const model = this._getBackingModel();
     if (model) {
-      const array = model.get(this._property!)
+      const array = model.get(this._property!);
       if (!array) {
-        return 0
+        return 0;
       }
-      assert(array instanceof OrderedArray)
+      assert(array instanceof OrderedArray);
       return array.array.length;
     } else {
       assert(this._uninitialized);
@@ -125,15 +126,19 @@ export class EchoArray<T> implements Array<T> {
   splice(start: number, deleteCount?: number | undefined): T[];
   splice(start: number, deleteCount: number, ...items: T[]): T[];
   splice(start: number, deleteCount?: number | undefined, ...items: T[]): T[] {
-    const model = this._getBackingModel()
+    const model = this._getBackingModel();
     if (model) {
-
       const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
 
-      void model.builder()
+      void model
+        .builder()
         .arrayDelete(this._property!, start, deleteCount)
-        .arrayInsert(this._property!, start, items.map(item => this._encode(item)))
-        .commit()
+        .arrayInsert(
+          this._property!,
+          start,
+          items.map((item) => this._encode(item))
+        )
+        .commit();
 
       return deletedItems;
     } else {
@@ -245,7 +250,8 @@ export class EchoArray<T> implements Array<T> {
       }
       assert(array instanceof OrderedArray);
 
-      return array.toArray()
+      return array
+        .toArray()
         .map((value: string) => this._decode(value))
         .filter(Boolean)
         .values();
@@ -280,8 +286,11 @@ export class EchoArray<T> implements Array<T> {
     if (model) {
       void model
         .builder()
-        .arrayPush(this._property!, items.map((item) => this._encode(item)))
-        .commit()
+        .arrayPush(
+          this._property!,
+          items.map((item) => this._encode(item))
+        )
+        .commit();
     } else {
       assert(this._uninitialized);
       this._uninitialized.push(...items);
@@ -299,15 +308,15 @@ export class EchoArray<T> implements Array<T> {
   }
 
   private _decode(value: any): T | undefined {
-    if(value instanceof Reference) {
-      return this._object!._database!.getObjectById(value.itemId) as T | undefined; 
+    if (value instanceof Reference) {
+      return this._object!._database!.getObjectById(value.itemId) as T | undefined;
     } else {
       return value;
     }
   }
 
   private _encode(value: T) {
-    if(value instanceof EchoObject) {
+    if (value instanceof EchoObject) {
       void this._object!._database!.save(value);
       return new Reference(value[id]);
     } else {
@@ -325,7 +334,7 @@ export class EchoArray<T> implements Array<T> {
 
     const model = this._getBackingModel()!;
     if (!(model.get(this._property!) instanceof OrderedArray)) {
-      model.set(this._property!, OrderedArray.fromValues(this._uninitialized.map(value => this._encode(value))))
+      void model.set(this._property!, OrderedArray.fromValues(this._uninitialized.map((value) => this._encode(value))));
     }
 
     return this;
@@ -363,6 +372,6 @@ export class EchoArray<T> implements Array<T> {
       .builder()
       .arrayDelete(this._property!, index)
       .arrayInsert(this._property!, index, [this._encode(value)])
-      .commit()
+      .commit();
   }
 }

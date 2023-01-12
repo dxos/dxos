@@ -5,8 +5,8 @@
 import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, deleted, id } from './defs';
-import { EchoObject } from './object';
 import { EchoArray } from './echo-array';
+import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
 import { strip } from './util';
 
@@ -137,7 +137,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   }
 
   private _getModelProp(prop: string): any {
-    let type = undefined;
+    let type;
     const value = this._item!.model.get(prop);
 
     if (!type && this._schemaType) {
@@ -147,15 +147,15 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       }
     }
 
-    if(!type && value instanceof OrderedArray) {
+    if (!type && value instanceof OrderedArray) {
       type = 'array';
     }
 
-    if(!type && value instanceof Reference) {
+    if (!type && value instanceof Reference) {
       type = 'ref';
     }
 
-    if(!type && typeof value === 'object' && value !== null) {
+    if (!type && typeof value === 'object' && value !== null) {
       type = 'object';
     }
 
@@ -177,7 +177,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       void this._database!.save(value);
     } else if (value instanceof EchoArray) {
       value._bind(this[base], prop);
-    } else if(Array.isArray(value)) {
+    } else if (Array.isArray(value)) {
       void this._item!.model.set(prop, OrderedArray.fromValues(value));
     } else if (typeof value === 'object' && value !== null) {
       const sub = this._createProxy({}, prop);
