@@ -147,6 +147,10 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       }
     }
 
+    if(value instanceof OrderedArray) {
+      type = 'array';
+    }
+
     switch (type) {
       case 'ref':
         return this._database!.getObjectById(value);
@@ -165,7 +169,6 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       void this._item!.model.set(prop, value[base]._id);
       void this._database!.save(value);
     } else if (value instanceof EchoArray) {
-      void this._item!.model.set(`${prop}$type`, 'array');
       value._bind(this[base], prop);
     } else if(Array.isArray(value)) {
       void this._item!.model.set(`${prop}$type`, 'array');

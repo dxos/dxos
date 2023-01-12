@@ -196,6 +196,17 @@ describe('EchoDatabase', () => {
       task.tags[1] = 'yellow';
       expect(task.tags.slice()).toEqual(['red', 'yellow', 'blue']);
     })
+
+    test('empty array', async () => {
+      const db = await createDatabase();
+
+      const task = new Document({ title: 'Main task' });
+      await db.save(task);
+
+      task.tags = [];
+      expect(task.tags instanceof EchoArray).toBeTruthy()
+      expect(task.tags.length).toEqual(0);
+    })
   });
 
   describe('text', () => {
