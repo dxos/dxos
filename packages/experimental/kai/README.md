@@ -3,6 +3,22 @@
 A simple DXOS progressive web app (PWA).
 The word kai (貝) is the Japanese word for shell.
 
+## Development
+
+```bash
+p serve
+```
+
+## Deploying the App
+
+- Published when committed to `main`.
+- TODO(burdon): How to manually publish?
+- TODO(burdon): Publish to local machine (or dxos.net? later). With tunneling.
+
+```bash
+dx app publish
+```
+
 ## Roadmap
 
 - [ ] Deprecate Kitchen Sink.

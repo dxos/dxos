@@ -5,7 +5,7 @@
 import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
-import { deleted, id } from '@dxos/echo-schema';
+import { base, deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
@@ -89,8 +89,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   };
 
   return (
-    <div className='flex flex-col flex-1'>
-      <div className='flex flex-col flex-1 overflow-y-scroll scrollbar-thin'>
+    <div className='flex flex-1 justify-center bg-gray-100'>
+      <div className='flex flex-col overflow-y-scroll pl-3 pr-3 pt-2 pb-8 bg-white is-full md:is-[400px]'>
         <div className={'mt-2'}>
           {tasks?.map((task) => (
             <TaskItem
@@ -103,6 +103,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
           ))}
         </div>
 
+        {/* TODO(burdon): Keep pinned to bottom on create. */}
         <div>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} />}</div>
       </div>
 
@@ -194,8 +195,13 @@ export const TaskItem: FC<{
       }
     >
       <div className='ml-8 text-sm text-blue-800'>
-        {debug && <div>{PublicKey.from(task[id]).truncate()}</div>}
         <div>{task.assignee?.name}</div>
+        {debug && (
+          <div>
+            <div>{PublicKey.from(task[id]).truncate()}</div>
+            <div>{(task[base] as any)._schemaType?.name}</div>
+          </div>
+        )}
       </div>
     </CardRow>
   );

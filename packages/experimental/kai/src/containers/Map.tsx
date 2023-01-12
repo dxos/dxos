@@ -101,11 +101,14 @@ export const MapView = () => {
       <MapContainer className='w-full' center={center} zoom={11}>
         <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
         <Map items={organizations} center={center} />
-        <div className='flex flex-col absolute top-4 bottom-4 right-4 overflow-hidden' style={{ zIndex: 1000 }}>
-          <div className='flex bg-white border rounded-md overflow-y-scroll' style={{ width: 240 }}>
-            <PlaceList items={organizations} onSelect={handleSelect} />
+
+        {organizations.length && (
+          <div className='flex flex-col absolute top-4 bottom-4 right-4 overflow-hidden' style={{ zIndex: 1000 }}>
+            <div className='flex bg-white border rounded-md overflow-y-scroll' style={{ width: 240 }}>
+              <PlaceList items={organizations} onSelect={handleSelect} />
+            </div>
           </div>
-        </div>
+        )}
       </MapContainer>
     </div>
   );

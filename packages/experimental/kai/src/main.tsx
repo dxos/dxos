@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app';
 import { AppView } from './hooks';
 
+import '@dxosTheme';
 import '../style.css';
 
 (() => {
@@ -17,11 +18,11 @@ import '../style.css';
       debug={false}
       views={[
         AppView.DASHBOARD,
+        AppView.TASKS,
         AppView.ORGS,
         AppView.PROJECTS,
         AppView.CONTACTS,
         AppView.KANBAN,
-        AppView.TASKS,
         AppView.GRAPH,
         AppView.EDITOR,
         AppView.MAP,

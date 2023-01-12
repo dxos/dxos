@@ -27,11 +27,7 @@ export const Card: FC<{
       {header}
 
       <div
-        className={mx(
-          'flex flex-1 flex-col bg-white',
-          scrollbar ? 'overflow-auto scrollbar-thin' : 'overflow-hidden',
-          fade && 'fade'
-        )}
+        className={mx('flex flex-1 flex-col bg-white', scrollbar ? 'overflow-auto' : 'overflow-hidden', fade && 'fade')}
       >
         {children}
       </div>

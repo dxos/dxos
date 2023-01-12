@@ -8,8 +8,10 @@ import { HashRouter } from 'react-router-dom';
 import { Client, fromHost } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
+import { ThemeProvider } from '@dxos/react-components';
 
 import { AppView, OptionsContext } from '../hooks';
+import { schema } from '../proto';
 import { Routes } from './Routes';
 
 /**
@@ -31,6 +33,7 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
         services: fromHost(config)
       });
 
+      client.echo.dbRouter.setSchema(schema);
       await client.initialize();
       // TODO(burdon): Hangs (no error) if profile not created?
       if (!client.halo.profile) {
@@ -49,9 +52,11 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
   return (
     <ClientProvider client={client}>
       <OptionsContext.Provider value={{ debug, demo, views }}>
-        <HashRouter>
-          <Routes />
-        </HashRouter>
+        <ThemeProvider>
+          <HashRouter>
+            <Routes />
+          </HashRouter>
+        </ThemeProvider>
       </OptionsContext.Provider>
     </ClientProvider>
   );

@@ -116,7 +116,7 @@ export class Client {
    * ECHO database.
    */
   get echo(): EchoProxy {
-    assert(this._initialized, 'Client not initialized.');
+    // assert(this._initialized, 'Client not initialized.');
     return this._echo;
   }
 

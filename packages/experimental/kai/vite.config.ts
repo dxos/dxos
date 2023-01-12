@@ -81,9 +81,11 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
       ]
     }),
 
@@ -91,6 +93,7 @@ export default defineConfig({
     ReactPlugin(),
 
     // TODO(burdon): Document.
+    // To reset, unregister service worker using devtools.
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
