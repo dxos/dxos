@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import * as Y from 'yjs';
 
 import { YJS } from '@dxos/protocols/proto/dxos/echo/model/object';
