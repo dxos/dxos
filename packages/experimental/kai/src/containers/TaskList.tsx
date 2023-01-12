@@ -5,14 +5,14 @@
 import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
-import { deleted, id } from '@dxos/echo-schema';
+import { base, deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { Button, Card, Input, CardRow, CardMenu } from '../components';
 import { useOptions, useSpace } from '../hooks';
-import { createTask, Task } from '../proto';
+import { createTask, schema, Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
 
@@ -196,6 +196,7 @@ export const TaskItem: FC<{
       <div className='ml-8 text-sm text-blue-800'>
         {debug && <div>{PublicKey.from(task[id]).truncate()}</div>}
         <div>{task.assignee?.name}</div>
+        <pre>{(task[base] as any)._schemaType?.name}</pre>
       </div>
     </CardRow>
   );

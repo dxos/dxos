@@ -42,10 +42,17 @@ export class EchoSchemaType {
   }
 }
 
+type Prototype = {
+  new (...args: any): any;
+  type: EchoSchemaType 
+}
+
 /**
  * Constructed via generated protobuf class.
  */
 export class EchoSchema {
+  private readonly _prototypes = new Map<string, Prototype>();
+
   static fromJson(json: string): EchoSchema {
     return new EchoSchema(pb.Root.fromJSON(JSON.parse(json)));
   }
@@ -62,5 +69,11 @@ export class EchoSchema {
   /**
    * Called from generated code.
    */
-  registerPrototype(proto: any) {}
+  registerPrototype(proto: Prototype) {
+    this._prototypes.set(proto.type.name, proto);
+  }
+
+  getPrototype(name: string): Prototype | undefined {
+    return this._prototypes.get(name);
+  }
 }

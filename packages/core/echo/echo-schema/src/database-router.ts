@@ -6,10 +6,12 @@ import { Event } from '@dxos/async';
 import { Entity } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
+import assert from 'node:assert';
 
 import { EchoDatabase, Selection, SubscriptionHandle } from './database';
 import { base } from './defs';
 import { EchoObject } from './object';
+import { EchoSchema } from './schema';
 
 /**
  * Manages cross-space databases.
@@ -18,6 +20,18 @@ export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
   private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Entity<any>[] }>();
+
+  private _schema?: EchoSchema;
+
+  get schema(): EchoSchema | undefined {
+    return this._schema;
+  }
+
+  setSchema(schema: EchoSchema) {
+    assert(!this._schema);
+    this._schema = schema;
+  }
+
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);

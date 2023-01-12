@@ -12,6 +12,7 @@ import { ThemeProvider } from '@dxos/react-components';
 
 import { AppView, OptionsContext } from '../hooks';
 import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
+import { schema } from '../proto';
 
 /**
  * Main app routes.
@@ -61,7 +62,8 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
         config,
         services: fromHost(config)
       });
-
+      
+      client.echo.dbRouter.setSchema(schema);
       await client.initialize();
       // TODO(burdon): Hangs (no error) if profile not created?
       if (!client.halo.profile) {
