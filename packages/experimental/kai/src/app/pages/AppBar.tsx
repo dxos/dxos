@@ -81,7 +81,7 @@ export const AppBar = () => {
               onChange={(view: AppView) => setView(currentSpaceKey!, view)}
             />
           </div>
-          <div className='bg-white' style={{ height: 4 }} />
+          <div className='bg-white' style={{ height: 8 }} />
         </>
       )}
     </div>

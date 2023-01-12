@@ -96,7 +96,7 @@ export const ChessGrid: FC = () => {
   }
 
   return (
-    <div className='flex flex-1 justify-center bg-gray-200'>
+    <div className='flex flex-1 justify-center'>
       <div className='bg-white overflow-y-scroll scrollbar'>
         <div className='flex grid grid-cols-3 grid-flow-row gap-4 m-6'>
           {games.map((game) => (

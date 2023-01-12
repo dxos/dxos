@@ -17,12 +17,12 @@ import {
 
 export const Dashboard: FC = () => {
   const { ref, height } = useResizeDetector();
-  const props = height ? { minHeight: (height - 8) / 2 } : {};
+  const props = height ? { minHeight: (height - 20) / 2 } : {};
 
   return (
     <div
       ref={ref}
-      className='flex flex-1 grid grid-cols-5 grid-flow-row gap-4 p-2 pt-0 overflow-y-scroll scrollbar bg-white'
+      className='flex flex-1 grid grid-cols-5 grid-flow-row gap-4 pl-6 pr-6 pt-0 overflow-y-scroll scrollbar bg-white'
     >
       <div className='flex flex-shrink-0 col-span-2' style={props}>
         <ProjectListCard />

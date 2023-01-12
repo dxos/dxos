@@ -52,7 +52,7 @@ export const Sidebar = () => {
   };
 
   return (
-    <div className='flex flex-1 flex-col bg-gray-50 overflow-hidden border-r'>
+    <div className='flex flex-1 flex-col bg-gray-50 overflow-hidden'>
       {/* Spaces */}
       <div className='flex flex-shrink-0 flex-col overflow-y-scroll'>
         <SpaceList />
