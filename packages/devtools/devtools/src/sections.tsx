@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Gear, Users } from 'phosphor-react';
+import { Gear, Users, Graph, PaperPlane } from 'phosphor-react';
 
 import {
   ConfigPanel,
@@ -40,7 +40,7 @@ export const sections: Section[] = [
       // //   panel: <StoragePanel />
       // // }
     ]
-  }
+  },
   // {
   //   title: 'HALO',
   //   id: 'halo',
@@ -94,37 +94,37 @@ export const sections: Section[] = [
   //     // }
   //   ]
   // },
-  // {
-  //   title: 'MESH',
-  //   items: [
-  //     /*
-  //     {
-  //       id: 'mesh.network',
-  //       title: 'Network Graph',
-  //       icon: SwarmIcon,
-  //       panel: NetworkPanel
-  //     },
-  //     */
-  //     {
-  //       id: 'mesh.members',
-  //       title: 'Members',
-  //       icon: <IdentityIcon />,
-  //       panel: <MembersPanel />
-  //     },
-  //     {
-  //       id: 'mesh.swarminfo',
-  //       title: 'Swarm',
-  //       icon: <SwarmIcon />,
-  //       panel: <SwarmPanel />
-  //     },
-  //     {
-  //       id: 'mesh.signal',
-  //       title: 'Signal',
-  //       icon: <SignalIcon />,
-  //       panel: <SignalPanel />
-  //     }
-  //   ]
-  // }
+  {
+    id: 'mesh',
+    title: 'MESH',
+    Icon: Graph,
+    items: [
+      // {
+      //   id: 'mesh.network',
+      //   title: 'Network Graph',
+      //   icon: SwarmIcon,
+      //   panel: NetworkPanel
+      // },
+      // {
+      //   id: 'mesh.members',
+      //   title: 'Members',
+      //   icon: <IdentityIcon />,
+      //   panel: <MembersPanel />
+      // },
+      // {
+      //   id: 'mesh.swarminfo',
+      //   title: 'Swarm',
+      //   icon: <SwarmIcon />,
+      //   panel: <SwarmPanel />
+      // },
+      {
+        id: 'mesh.signal',
+        title: 'Signal',
+        Icon: PaperPlane,
+        panel: <SignalPanel />
+      }
+    ]
+  }
   // {
   //   title: 'DXNS',
   //   items: [

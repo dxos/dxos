@@ -2,14 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { SignalStatusComp, SignalTrace } from '@dxos/devtools-mesh';
+import { SignalStatusComp } from '@dxos/devtools-mesh';
 import { SignalState, SignalStatus } from '@dxos/messaging';
-import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { SignalResponse, SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 const stringToState = (state: string): SignalState => {
   const dict: Record<string, SignalState> = {
@@ -39,25 +40,29 @@ export const SignalPanel = () => {
   }
 
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), {});
-  const { events } = useStream(() => devtoolsHost.subscribeToSignalTrace(), {});
-  if (!servers || !events) {
+  const [signalResponses, setSignalResponses] = useState<SignalResponse[]>([]);
+
+  useEffect(() => {
+    const signalOutput = devtoolsHost.subscribeToSignal();
+    const signalResponses: SignalResponse[] = [];
+    signalOutput.subscribe((response: SignalResponse) => {
+      signalResponses.push(response);
+      setSignalResponses([...signalResponses]);
+    });
+
+    return () => {
+      signalOutput.close();
+    };
+  }, []);
+
+  if (!servers) {
     return null;
   }
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        padding: 1,
-        overflow: 'hidden',
-        overflowY: 'auto',
-        overflowX: 'auto'
-      }}
-    >
+    <div className='flex flex-col flex-1 overflow-auto'>
       {servers.length >= 1 && <SignalStatusComp status={servers.map(signalStatus)} />}
-      {events.length < 1 && <SignalTrace trace={events?.map((event) => JSON.parse(event))} />}
-    </Box>
+      <JsonTreeView data={signalResponses} />
+    </div>
   );
 };
