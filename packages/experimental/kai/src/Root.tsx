@@ -9,12 +9,12 @@ import { log } from '@dxos/log';
 import { appkitTranslations, Fallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { ThemeProvider } from '@dxos/react-components';
 
-import { AppView } from '../hooks';
-import kaiTranslations from '../translations';
-import { App } from './App';
+import { App } from './app';
+import { AppView } from './hooks';
+import kaiTranslations from './translations';
 
 const views =
-  process.env.DEMO === 'true' /* || window.location.protocol === 'http:' */
+  process.env.DEMO === 'true' || window.location.protocol === 'http:'
     ? [
         AppView.DASHBOARD,
         AppView.ORGS,

@@ -5,7 +5,6 @@
 import React, { useEffect, useState, FC, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { ManageSpacePage } from '@dxos/react-appkit';
 import { useSpaces } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
@@ -25,6 +24,7 @@ import { AppStateProvider, AppView, SpaceContext, SpaceContextType, useOptions, 
 import { createSpacePath, matchSpaceKey } from '../Routes';
 import { AppBar, ViewSelector } from './AppBar';
 import { Dashboard } from './Dashboard';
+import { ManageSpacePage } from './ManageSpacePage';
 import { Sidebar } from './Sidebar';
 
 /**

@@ -8,6 +8,8 @@ import { createRoot } from 'react-dom/client';
 import '@dxosTheme';
 
 import '../style.css';
-import { Root } from './app';
+
+// TODO(burdon): Must be at the top-level for vite.
+import { Root } from './Root';
 
 createRoot(document.getElementById('root')!).render(<Root />);
