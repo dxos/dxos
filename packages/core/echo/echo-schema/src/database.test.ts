@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
 import { Document } from './document';
-import { OrderedSet } from './ordered-set';
+import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
 import { TextObject } from './text-object';
 
@@ -72,33 +72,6 @@ describe('EchoDatabase', () => {
     expect(task.details.deadline).toEqual('2021-01-01');
   });
 
-  test('ordered arrays', async () => {
-    const db = await createDatabase();
-
-    const task = new Document({ title: 'Main task' });
-    await db.save(task);
-
-    task.subtasks = new OrderedSet();
-    task.subtasks.push(new Document({ title: 'Subtask 1' }));
-    task.subtasks.push(new Document({ title: 'Subtask 2' }));
-    task.subtasks.push(new Document({ title: 'Subtask 3' }));
-
-    expect(task.subtasks.length).toEqual(3);
-    expect(task.subtasks[0].title).toEqual('Subtask 1');
-    expect(task.subtasks[1].title).toEqual('Subtask 2');
-    expect(task.subtasks[2].title).toEqual('Subtask 3');
-
-    const titles = task.subtasks.map((subtask: Document) => subtask.title);
-    expect(titles).toEqual(['Subtask 1', 'Subtask 2', 'Subtask 3']);
-
-    task.subtasks[0] = new Document({ title: 'New subtask 1' });
-    expect(task.subtasks.map((subtask: Document) => subtask.title)).toEqual([
-      'New subtask 1',
-      'Subtask 2',
-      'Subtask 3'
-    ]);
-  });
-
   test('select', async () => {
     const router = new DatabaseRouter();
     const db = await createDatabase(router);
@@ -150,6 +123,88 @@ describe('EchoDatabase', () => {
     await waitForExpect(() => {
       expect(query.getObjects()).toEqual([task1, task2]);
       expect(counter).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('ordered arrays', () => {
+    test('array of tags', async () => {
+      const db = await createDatabase();
+
+      const task = new Document({ title: 'Main task' });
+      await db.save(task);
+
+      task.tags = new EchoArray();
+      task.tags.push('red');
+      task.tags.push('green');
+      task.tags.push('blue');
+      expect(task.tags.length).toEqual(3);
+      expect(task.tags.slice()).toEqual(['red', 'green', 'blue']);
+      expect(task.tags[0]).toEqual('red');
+      expect(task.tags[1]).toEqual('green');
+
+      task.tags[1] = 'yellow';
+      expect(task.tags.slice()).toEqual(['red', 'yellow', 'blue']);
+
+      task.tags.splice(1, 0, 'magenta');
+      expect(task.tags.slice()).toEqual(['red', 'magenta', 'yellow', 'blue']);
+
+      // Move yellow before magenta
+      task.tags.splice(2, 1);
+      task.tags.splice(1, 0, 'yellow');
+      expect(task.tags.slice()).toEqual(['red', 'yellow', 'magenta', 'blue']);
+    });
+
+    test('array of sub documents', async () => {
+      const db = await createDatabase();
+
+      const task = new Document({ title: 'Main task' });
+      await db.save(task);
+
+      task.subtasks = new EchoArray();
+      task.subtasks.push(new Document({ title: 'Subtask 1' }));
+      task.subtasks.push(new Document({ title: 'Subtask 2' }));
+      task.subtasks.push(new Document({ title: 'Subtask 3' }));
+
+      expect(task.subtasks.length).toEqual(3);
+      expect(task.subtasks[0].title).toEqual('Subtask 1');
+      expect(task.subtasks[1].title).toEqual('Subtask 2');
+      expect(task.subtasks[2].title).toEqual('Subtask 3');
+
+      const titles = task.subtasks.map((subtask: Document) => subtask.title);
+      expect(titles).toEqual(['Subtask 1', 'Subtask 2', 'Subtask 3']);
+
+      task.subtasks[0] = new Document({ title: 'New subtask 1' });
+      expect(task.subtasks.map((subtask: Document) => subtask.title)).toEqual([
+        'New subtask 1',
+        'Subtask 2',
+        'Subtask 3'
+      ]);
+    });
+
+    test('assign a plain array', async () => {
+      const db = await createDatabase();
+
+      const task = new Document({ title: 'Main task' });
+      await db.save(task);
+
+      task.tags = ['red', 'green', 'blue'];
+      expect(task.tags instanceof EchoArray).toBeTruthy();
+      expect(task.tags.length).toEqual(3);
+      expect(task.tags.slice()).toEqual(['red', 'green', 'blue']);
+
+      task.tags[1] = 'yellow';
+      expect(task.tags.slice()).toEqual(['red', 'yellow', 'blue']);
+    });
+
+    test('empty array', async () => {
+      const db = await createDatabase();
+
+      const task = new Document({ title: 'Main task' });
+      await db.save(task);
+
+      task.tags = [];
+      expect(task.tags instanceof EchoArray).toBeTruthy();
+      expect(task.tags.length).toEqual(0);
     });
   });
 

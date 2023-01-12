@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Chess } from 'chess.js';
-import { ArrowURightDown, ArrowUUpLeft, PlusCircle } from 'phosphor-react';
+import { Chess, Color } from 'chess.js';
+import { ArrowURightDown, ArrowUUpLeft, Circle, PlusCircle } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
-import { Game, Chessboard } from '@dxos/chess-app';
+import { Game, Chessboard, ChessPieces } from '@dxos/chess-app';
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
@@ -27,13 +27,15 @@ const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
   </div>
 );
 
+// TODO(burdon): Determine player.
 // TODO(burdon): Move to @dxos/chess-app.
 export const ChessGrid: FC = () => {
   const { space } = useSpace();
   const games = useQuery(space, Game.filter());
   const [game, setGame] = useState<Game | undefined>();
   const [chess, setChess] = useState<Chess | undefined>();
-  const [orientation, setOrientation] = useState<'white' | 'black'>('white');
+  const [orientation, setOrientation] = useState<Color>('w');
+  const [style] = useState(ChessPieces.RIOHACHA);
 
   const handleCreate = async () => {
     const game = new Game();
@@ -46,7 +48,7 @@ export const ChessGrid: FC = () => {
   };
 
   const handleFlip = () => {
-    setOrientation((orientation) => (orientation === 'white' ? 'black' : 'white'));
+    setOrientation((orientation) => (orientation === 'w' ? 'b' : 'w'));
   };
 
   if (game) {
@@ -56,9 +58,43 @@ export const ChessGrid: FC = () => {
         : chess!.isStalemate()
         ? 'STALEMATE'
         : 'DRAW'
-      : chess?.inCheck()
+      : chess?.isCheck()
       ? 'CHECK'
       : '';
+
+    const Player = ({ color }: { color: Color }) => {
+      const turn = color === chess?.turn();
+
+      return (
+        <div className='flex items-center'>
+          <Circle
+            className={mx(getSize(4), turn && (chess!.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
+            weight={turn ? 'fill' : 'thin'}
+          />
+        </div>
+      );
+    };
+
+    const Panel = () => {
+      return (
+        <div className='flex flex-col bg-gray-50 shadow'>
+          <div className='flex items-center justify-between pl-2 pr-2 border-b' style={{ height: 32 }}>
+            <Player color={orientation === 'w' ? 'b' : 'w'} />
+            <button onClick={handleFlip}>
+              <ArrowURightDown weight='thin' className={getSize(6)} />
+            </button>
+          </div>
+
+          <div className='flex flex-col justify-center pl-2 font-thin' style={{ height: 40 }}>
+            {label}
+          </div>
+
+          <div className='flex items-center justify-between pl-2 pr-2 border-t' style={{ height: 32 }}>
+            <Player color={orientation} />
+          </div>
+        </div>
+      );
+    };
 
     return (
       <>
@@ -71,24 +107,18 @@ export const ChessGrid: FC = () => {
         </div>
 
         <div className='flex flex-1 flex-col justify-center'>
-          <div style={{ height: 40 }} />
-
           <div className='flex justify-center'>
             <div style={{ width: panelWidth }} />
 
             <div className='bg-gray-100' style={{ width: boardSize, height: boardSize }}>
-              <Chessboard game={game} onUpdate={setChess} orientation={orientation} />
+              <Chessboard game={game} onUpdate={setChess} style={style} orientation={orientation} />
             </div>
 
-            <div className='flex flex-col ml-4' style={{ width: panelWidth }}>
-              <button onClick={handleFlip}>
-                <ArrowURightDown weight='thin' className={getSize(8)} />
-              </button>
+            <div className='flex flex-col ml-6 justify-between' style={{ width: panelWidth }}>
+              <div style={{ height: 40 }}></div>
+              <Panel />
+              <div style={{ height: 40 }} />
             </div>
-          </div>
-
-          <div className='flex justify-center p-6' style={{ height: 40 }}>
-            {label}
           </div>
         </div>
       </>
@@ -101,7 +131,7 @@ export const ChessGrid: FC = () => {
         <div className='flex grid grid-cols-3 grid-flow-row gap-4 m-6'>
           {games.map((game) => (
             <div key={game[id]} className='border-2' style={{ width: smallSize, height: smallSize }}>
-              <Chessboard game={game} readonly onSelect={() => handleSelect(game)} />
+              <Chessboard game={game} readonly style={style} onSelect={() => handleSelect(game)} />
             </div>
           ))}
 

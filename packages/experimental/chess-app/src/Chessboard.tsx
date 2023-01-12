@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chess } from 'chess.js';
+import { Chess, Color } from 'chess.js';
 import React, { FC, useEffect, useState } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
 
-import { phosphorPieces } from './media';
+import { customPieces, phosphorPieces, riohachaPieces } from './media';
 import { Game } from './proto';
 
 const props = {
@@ -14,10 +14,25 @@ const props = {
   customLightSquareStyle: { backgroundColor: '#f5f5f5' }
 };
 
+export enum ChessPieces {
+  STANDARD = 0,
+  CUSTOM = 1,
+  FUTURE = 2,
+  RIOHACHA = 3
+}
+
+const chessPieces = {
+  [ChessPieces.STANDARD]: undefined,
+  [ChessPieces.CUSTOM]: customPieces,
+  [ChessPieces.FUTURE]: phosphorPieces,
+  [ChessPieces.RIOHACHA]: riohachaPieces
+};
+
 export type ChessboardProps = {
   game?: Game;
   readonly?: boolean;
-  orientation?: 'white' | 'black';
+  orientation?: Color;
+  style?: ChessPieces;
   onUpdate?: (game: Chess) => void;
   onSelect?: () => void;
 };
@@ -29,7 +44,8 @@ export type ChessboardProps = {
 export const Chessboard: FC<ChessboardProps> = ({
   game,
   readonly = false,
-  orientation = 'white',
+  orientation = 'w',
+  style = ChessPieces.STANDARD,
   onUpdate,
   onSelect
 }) => {
@@ -76,10 +92,10 @@ export const Chessboard: FC<ChessboardProps> = ({
     <div className='select-none' onClick={handleSelect}>
       <ReactChessboard
         position={chess.fen()}
-        boardOrientation={orientation}
+        boardOrientation={orientation === 'w' ? 'white' : 'black'}
         arePiecesDraggable={!readonly}
         onPieceDrop={handleDrop}
-        customPieces={phosphorPieces}
+        customPieces={chessPieces[style]}
         {...props}
       />
     </div>

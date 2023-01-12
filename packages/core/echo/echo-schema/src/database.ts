@@ -86,9 +86,14 @@ export class EchoDatabase {
     obj[base]._isBound = true;
     this._objects.set(obj[base]._id, obj);
 
+    let props;
+    if (obj instanceof DocumentBase) {
+      props = { '@type': obj[base]._uninitialized?.['@type'] };
+    }
     const item = (await this._db.createItem({
       id: obj[base]._id,
-      model: obj[base]._modelConstructor
+      model: obj[base]._modelConstructor,
+      props
     })) as Item<any>;
 
     obj[base]._bind(item, this);
@@ -185,8 +190,11 @@ export class EchoDatabase {
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
     if (item.model instanceof ObjectModel) {
       const type = item.model.get('@type');
-      const Proto = this._router.schema?.getPrototype(type);
+      if (!type) {
+        return new Document();
+      }
 
+      const Proto = this._router.schema?.getPrototype(type);
       if (!Proto) {
         log.warn('Unknown schema type', { type });
         return new Document();

@@ -5,29 +5,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { App } from './app';
-import { AppView } from './hooks';
+import { Root } from './app';
 
 import '@dxosTheme';
 import '../style.css';
 
-(() => {
-  // TODO(burdon): Get debug from config.
-  createRoot(document.getElementById('root')!).render(
-    <App
-      debug={false}
-      views={[
-        AppView.DASHBOARD,
-        AppView.TASKS,
-        AppView.ORGS,
-        AppView.PROJECTS,
-        AppView.CONTACTS,
-        AppView.KANBAN,
-        AppView.GRAPH,
-        AppView.EDITOR,
-        AppView.MAP,
-        AppView.GAME
-      ]}
-    />
-  );
-})();
+createRoot(document.getElementById('root')!).render(<Root />);
