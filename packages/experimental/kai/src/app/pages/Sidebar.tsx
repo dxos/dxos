@@ -9,9 +9,10 @@ import { useNavigate } from 'react-router-dom';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
+import { SpaceMemberListContainer } from '@dxos/react-ui';
 
 import { Button } from '../../components';
-import { MemberList, SpaceList } from '../../containers';
+import { SpaceList } from '../../containers';
 import { useSpace } from '../../hooks';
 import { Generator } from '../../proto';
 
@@ -76,7 +77,7 @@ export const Sidebar = () => {
       <div className='flex flex-col flex-shrink-0 mt-6'>
         <div className='flex p-1 pl-3 mb-2 text-xs'>Members</div>
         <div className='flex flex-shrink-0 pl-3'>
-          <MemberList spaceKey={space.key} />
+          <SpaceMemberListContainer spaceKey={space.key} includeSelf />
         </div>
       </div>
 
