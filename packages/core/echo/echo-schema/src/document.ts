@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ObjectModel, OrderedArray } from '@dxos/object-model';
+import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, deleted, id } from './defs';
 import { EchoObject } from './object';
@@ -137,7 +137,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   }
 
   private _getModelProp(prop: string): any {
-    let type = this._item!.model.get(`${prop}$type`);
+    let type = undefined;
     const value = this._item!.model.get(prop);
 
     if (!type && this._schemaType) {
@@ -147,13 +147,21 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       }
     }
 
-    if(value instanceof OrderedArray) {
+    if(!type && value instanceof OrderedArray) {
       type = 'array';
+    }
+
+    if(!type && value instanceof Reference) {
+      type = 'ref';
+    }
+
+    if(!type && typeof value === 'object' && value !== null) {
+      type = 'object';
     }
 
     switch (type) {
       case 'ref':
-        return this._database!.getObjectById(value);
+        return this._database!.getObjectById((value as Reference).itemId);
       case 'object':
         return this._createProxy({}, prop);
       case 'array':
@@ -165,21 +173,18 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   private _setModelProp(prop: string, value: any): any {
     if (value instanceof EchoObject) {
-      void this._item!.model.set(`${prop}$type`, 'ref');
-      void this._item!.model.set(prop, value[base]._id);
+      void this._item!.model.set(prop, new Reference(value[id]));
       void this._database!.save(value);
     } else if (value instanceof EchoArray) {
       value._bind(this[base], prop);
     } else if(Array.isArray(value)) {
       void this._item!.model.set(prop, OrderedArray.fromValues(value));
     } else if (typeof value === 'object' && value !== null) {
-      void this._item!.model.set(`${prop}$type`, 'object');
       const sub = this._createProxy({}, prop);
       for (const [subKey, subValue] of Object.entries(value)) {
         sub[subKey] = subValue;
       }
     } else {
-      void this._item!.model.set(`${prop}$type`, 'primitive');
       void this._item!.model.set(prop, value);
     }
   }
