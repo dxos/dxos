@@ -2,9 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Article, Compass, Graph, Kanban, ListChecks, Sword, Table, TreeStructure, Users, Wall } from 'phosphor-react';
+import {
+  Article,
+  Compass,
+  Gear,
+  Graph,
+  Kanban,
+  ListChecks,
+  Sword,
+  Table,
+  TreeStructure,
+  Users,
+  Wall
+} from 'phosphor-react';
 
 export enum AppView {
+  SETTINGS = 'settings',
   DASHBOARD = 'dashboard',
   PROJECTS = 'projects',
   CONTACTS = 'contacts',
@@ -19,6 +32,7 @@ export enum AppView {
 
 // TODO(burdon): Types?
 export const viewConfig: { [key: string]: { Icon: any } } = {
+  [AppView.SETTINGS]: { Icon: Gear },
   [AppView.DASHBOARD]: { Icon: Wall },
   [AppView.PROJECTS]: { Icon: Table },
   [AppView.CONTACTS]: { Icon: Users },
