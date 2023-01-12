@@ -8,7 +8,6 @@ import { HashRouter, useRoutes } from 'react-router-dom';
 import { Client, fromHost } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 
 import { AppView, OptionsContext } from '../hooks';
 import { schema } from '../proto';
@@ -82,11 +81,9 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
   return (
     <ClientProvider client={client}>
       <OptionsContext.Provider value={{ debug, demo, views }}>
-        <ThemeProvider>
-          <HashRouter>
-            <Routes />
-          </HashRouter>
-        </ThemeProvider>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
       </OptionsContext.Provider>
     </ClientProvider>
   );

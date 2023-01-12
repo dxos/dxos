@@ -95,7 +95,6 @@ export default defineConfig({
     // TODO(burdon): Document.
     // To reset, unregister service worker using devtools.
     VitePWA({
-      registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },
