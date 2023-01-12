@@ -125,6 +125,7 @@ describe('ObjectModel', () => {
     testBuilder.configureReplication(true);
     await testBuilder.waitForReplication();
 
+    expect(peer2.model.get('anotherItem') instanceof Reference).toBeTruthy();
     expect(peer2.model.get('anotherItem')).toEqual(reference);
   });
 
