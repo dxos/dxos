@@ -104,7 +104,7 @@ export const createType = (field: pb.Field): string => {
   field.resolve();
   if (field.repeated) {
     if (field.resolvedType) {
-      return `OrderedSet<${scalar()}>`;
+      return `${scalar()}[]`;
     } else {
       return `Set<${scalar()}>`;
     }
