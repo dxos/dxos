@@ -11,6 +11,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 
 import { AppView, OptionsContext } from '../hooks';
+import { schema } from '../proto';
 import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
 
 /**
@@ -62,6 +63,7 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
         services: fromHost(config)
       });
 
+      client.echo.dbRouter.setSchema(schema);
       await client.initialize();
       // TODO(burdon): Hangs (no error) if profile not created?
       if (!client.halo.profile) {
