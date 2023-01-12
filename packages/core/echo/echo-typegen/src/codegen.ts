@@ -6,7 +6,7 @@ import * as pb from 'protobufjs';
 
 const packageName = '@dxos/echo-schema';
 
-const types = ['EchoSchema', 'DocumentBase', 'TypeFilter', 'OrderedSet', 'TextObject'];
+const types = ['EchoSchema', 'DocumentBase', 'TypeFilter', 'TextObject'];
 
 /**
  * Source builder and formatter.
@@ -104,7 +104,7 @@ export const createType = (field: pb.Field): string => {
   field.resolve();
   if (field.repeated) {
     if (field.resolvedType) {
-      return `OrderedSet<${scalar()}>`;
+      return `${scalar()}[]`;
     } else {
       return `Set<${scalar()}>`;
     }

@@ -4,13 +4,11 @@
 
 import assert from 'node:assert';
 
-import { OrderedList } from '@dxos/object-model';
+import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, id } from './defs';
-import { Document, DocumentBase } from './document';
-
-// TODO(burdon): Remove?
-const EMPTY = '__EMPTY__';
+import { Document } from './document';
+import { EchoObject } from './object';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -18,8 +16,7 @@ const isIndex = (property: string | symbol): property is string =>
 /**
  *
  */
-// TODO(burdon): Implement subset of Array.
-export class OrderedSet<T extends DocumentBase> implements Array<T> {
+export class EchoArray<T> implements Array<T> {
   static get [Symbol.species]() {
     return Array;
   }
@@ -29,10 +26,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   private _object?: Document;
   private _property?: string;
 
-  // TODO(burdon): Rename/move OrderedList to this module as util (deprecate from object-model?)
-  private _orderedList?: OrderedList;
-
-  [base]: OrderedSet<T> = this;
+  [base]: EchoArray<T> = this;
 
   [n: number]: T;
 
@@ -77,8 +71,14 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   get length(): number {
-    if (this._orderedList) {
-      return Math.max(this._orderedList.values.length - 1, 0); // Account for empty item.
+    const model = this._getBackingModel();
+    if (model) {
+      const array = model.get(this._property!);
+      if (!array) {
+        return 0;
+      }
+      assert(array instanceof OrderedArray);
+      return array.array.length;
     } else {
       assert(this._uninitialized);
       return this._uninitialized.length;
@@ -116,7 +116,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   slice(start?: number | undefined, end?: number | undefined): T[] {
-    throw new Error('Method not implemented.');
+    return Array.from(this.values()).slice(start, end);
   }
 
   sort(compareFn?: ((a: T, b: T) => number) | undefined): this {
@@ -126,34 +126,25 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   splice(start: number, deleteCount?: number | undefined): T[];
   splice(start: number, deleteCount: number, ...items: T[]): T[];
   splice(start: number, deleteCount?: number | undefined, ...items: T[]): T[] {
-    if (this._orderedList) {
-      if (deleteCount !== undefined && deleteCount > 0) {
-        throw new Error('deleteCount not supported.');
-      }
+    const model = this._getBackingModel();
+    if (model) {
+      const deletedItems = deleteCount !== undefined ? this.slice(start, start + deleteCount) : [];
 
-      // TODO(burdon): Replace list.
-      void this._orderedList.init([...items.map((item) => item[id]), EMPTY]);
+      void model
+        .builder()
+        .arrayDelete(this._property!, start, deleteCount)
+        .arrayInsert(
+          this._property!,
+          start,
+          items.map((item) => this._encode(item))
+        )
+        .commit();
 
-      /*
-      for (let i = 0; i < items.length; i++) {
-        const idx = start + i;
-        const itemId = typeof items[i] === 'string' ? items[i] : (items[i] as any)[id];
-        if (idx === 0) {
-          // console.log('insert', itemId, this._orderedList.values[0])
-          void this._orderedList.insert(itemId, this._orderedList.values[0]);
-        } else {
-          // console.log('insert', this._orderedList.values[idx - 1], itemId)
-          void this._orderedList.insert(this._orderedList.values[idx - 1], itemId);
-        }
-      }
-      */
-
-      return [];
+      return deletedItems;
     } else {
       assert(this._uninitialized);
       // TODO(burdon): Check param types.
-      this._uninitialized.splice(start as number, deleteCount as number, ...(items as any[]));
-      return this._uninitialized;
+      return this._uninitialized.splice(start as number, deleteCount as number, ...(items as any[]));
     }
 
     // console.log({
@@ -167,52 +158,42 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   indexOf(searchElement: T, fromIndex?: number | undefined): number {
-    if (this._orderedList) {
-      const itemId = typeof searchElement === 'string' ? searchElement : (searchElement as any)[id];
-      if (!itemId) {
-        return -1;
-      }
-
-      return this._orderedList.values.indexOf(itemId);
-    } else {
-      assert(this._uninitialized);
-      return this._uninitialized.indexOf(searchElement);
-    }
+    return Array.from(this.values()).indexOf(searchElement, fromIndex);
   }
 
   lastIndexOf(searchElement: T, fromIndex?: number | undefined): number {
-    throw new Error('Method not implemented.');
+    return Array.from(this.values()).lastIndexOf(searchElement, fromIndex);
   }
 
   every<S extends T>(predicate: (value: T, index: number, array: T[]) => value is S, thisArg?: any): this is S[];
   every(predicate: (value: T, index: number, array: T[]) => unknown, thisArg?: any): boolean;
-  every(predicate: unknown, thisArg?: unknown): boolean {
-    throw new Error('Method not implemented.');
+  every(predicate: any, thisArg?: unknown): boolean {
+    return Array.from(this.values()).every(predicate, thisArg);
   }
 
   some(predicate: (value: T, index: number, array: T[]) => unknown, thisArg?: any): boolean {
-    throw new Error('Method not implemented.');
+    return Array.from(this.values()).some(predicate, thisArg);
   }
 
   forEach(callbackfn: (value: T, index: number, array: T[]) => void, thisArg?: any): void {
-    Array.from(this[Symbol.iterator]()).forEach(callbackfn, thisArg);
+    Array.from(this.values()).forEach(callbackfn, thisArg);
   }
 
   map<U>(callbackfn: (value: T, index: number, array: T[]) => U, thisArg?: any): U[] {
-    return Array.from(this[Symbol.iterator]()).map(callbackfn, thisArg);
+    return Array.from(this.values()).map(callbackfn, thisArg);
   }
 
   filter<S extends T>(predicate: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
   filter(predicate: (value: T, index: number, array: T[]) => unknown, thisArg?: any): T[];
-  filter<S extends T>(predicate: unknown, thisArg?: unknown): T[] | S[] {
-    throw new Error('Method not implemented.');
+  filter<S extends T>(predicate: any, thisArg?: unknown): T[] | S[] {
+    return Array.from(this.values()).filter(predicate, thisArg);
   }
 
   reduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T): T;
   reduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue: T): T;
   reduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue: U): U;
-  reduce<U>(callbackfn: unknown, initialValue?: unknown): T | U {
-    throw new Error('Method not implemented.');
+  reduce<U>(callbackfn: any, initialValue?: any): T | U {
+    return Array.from(this.values()).reduce(callbackfn, initialValue);
   }
 
   reduceRight(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T): T;
@@ -226,8 +207,8 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
     initialValue: U
   ): U;
 
-  reduceRight<U>(callbackfn: unknown, initialValue?: unknown): T | U {
-    throw new Error('Method not implemented.');
+  reduceRight<U>(callbackfn: any, initialValue?: any): T | U {
+    return Array.from(this.values()).reduceRight(callbackfn, initialValue);
   }
 
   find<S extends T>(
@@ -236,12 +217,12 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   ): S | undefined;
 
   find(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): T | undefined;
-  find<S extends T>(predicate: unknown, thisArg?: unknown): T | S | undefined {
-    throw new Error('Method not implemented.');
+  find<S extends T>(predicate: any, thisArg?: any): T | S | undefined {
+    return Array.from(this.values()).find(predicate, thisArg);
   }
 
   findIndex(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): number {
-    return Array.from(this[Symbol.iterator]()).findIndex(predicate, thisArg);
+    return Array.from(this.values()).findIndex(predicate, thisArg);
   }
 
   fill(value: T, start?: number | undefined, end?: number | undefined): this {
@@ -261,10 +242,17 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   values(): IterableIterator<T> {
-    if (this._orderedList) {
-      return this._orderedList.values
-        .filter((x) => x !== '__EMPTY__')
-        .map((id) => this._object!._database!.getObjectById(id) as T)
+    const model = this._getBackingModel();
+    if (model) {
+      const array = model.get(this._property!);
+      if (!array) {
+        return [][Symbol.iterator]();
+      }
+      assert(array instanceof OrderedArray);
+
+      return array
+        .toArray()
+        .map((value: string) => this._decode(value))
         .filter(Boolean)
         .values();
     } else {
@@ -274,14 +262,14 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   includes(searchElement: T, fromIndex?: number | undefined): boolean {
-    throw new Error('Method not implemented.');
+    return Array.from(this.values()).includes(searchElement, fromIndex);
   }
 
   flatMap<U, This = undefined>(
     callback: (this: This, value: T, index: number, array: T[]) => U | readonly U[],
     thisArg?: This | undefined
   ): U[] {
-    throw new Error('Method not implemented.');
+    return Array.from(this.values()).flatMap(callback, thisArg);
   }
 
   flat<A, D extends number = 1>(this: A, depth?: D | undefined): FlatArray<A, D>[] {
@@ -289,23 +277,24 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   at(index: number): T | undefined {
-    throw new Error('Method not implemented.');
+    const trueIndex = index < 0 ? this.length + index : index;
+    return this._get(trueIndex);
   }
 
   push(...items: T[]) {
-    if (this._orderedList) {
-      for (const item of items) {
-        this._setModel(this.length, item);
-      }
+    const model = this._getBackingModel();
+    if (model) {
+      void model
+        .builder()
+        .arrayPush(
+          this._property!,
+          items.map((item) => this._encode(item))
+        )
+        .commit();
     } else {
       assert(this._uninitialized);
       this._uninitialized.push(...items);
     }
-
-    // console.log({
-    //   links: (this._orderedList as any)._model.get((this._orderedList as any)._property) ?? {},
-    //   values: this._orderedList!.values
-    // })
 
     return this.length;
   }
@@ -314,21 +303,45 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   // Impl.
   //
 
+  private _getBackingModel(): ObjectModel | undefined {
+    return this._object?._item?.model;
+  }
+
+  private _decode(value: any): T | undefined {
+    if (value instanceof Reference) {
+      return this._object!._database!.getObjectById(value.itemId) as T | undefined;
+    } else {
+      return value;
+    }
+  }
+
+  private _encode(value: T) {
+    if (value instanceof EchoObject) {
+      void this._object!._database!.save(value);
+      return new Reference(value[id]);
+    } else {
+      return value;
+    }
+  }
+
+  /**
+   * @internal
+   */
   _bind(object: Document, property: string) {
     this._object = object;
     this._property = property;
-    this._orderedList = new OrderedList(this._object!._item!.model, this._property!);
-    this._orderedList.refresh();
     assert(this._uninitialized);
-    for (const item of this._uninitialized) {
-      this.push(item);
+
+    const model = this._getBackingModel()!;
+    if (!(model.get(this._property!) instanceof OrderedArray)) {
+      void model.set(this._property!, OrderedArray.fromValues(this._uninitialized.map((value) => this._encode(value))));
     }
 
     return this;
   }
 
   private _get(index: number): T | undefined {
-    if (this._orderedList) {
+    if (this._getBackingModel()) {
       return this._getModel(index);
     } else {
       assert(this._uninitialized);
@@ -337,7 +350,7 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   private _set(index: number, value: T) {
-    if (this._orderedList) {
+    if (this._getBackingModel()) {
       this._setModel(index, value);
     } else {
       assert(this._uninitialized);
@@ -346,36 +359,19 @@ export class OrderedSet<T extends DocumentBase> implements Array<T> {
   }
 
   private _getModel(index: number): T | undefined {
-    const id = this._orderedList!.values[index];
-    if (!id) {
-      return undefined;
-    }
+    const model = this._getBackingModel()!;
+    const array = model.get(this._property!);
+    assert(array instanceof OrderedArray);
 
-    return this._object!._database!.getObjectById(id) as T | undefined;
+    return this._decode(array.get(index)) as T | undefined;
   }
 
   private _setModel(index: number, value: T) {
-    void this._object!._database!.save(value);
-
-    if (this._orderedList!.values.length === 0) {
-      void this._orderedList!.init([value[base]._id, EMPTY]);
-    } else {
-      const prev = this._orderedList?.values[index - 1];
-      if (prev) {
-        void this._orderedList!.insert(prev, value[base]._id);
-      } else {
-        const next = this._orderedList?.values[index + 1];
-        if (!next) {
-          throw new Error();
-        }
-
-        const item = this._orderedList?.values[index];
-        if (item) {
-          void this._orderedList!.remove([item]);
-        }
-
-        void this._orderedList!.insert(value[base]._id, next);
-      }
-    }
+    const model = this._getBackingModel()!;
+    void model
+      .builder()
+      .arrayDelete(this._property!, index)
+      .arrayInsert(this._property!, index, [this._encode(value)])
+      .commit();
   }
 }
