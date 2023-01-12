@@ -32,6 +32,9 @@ message Value {
     Array array                       = 21;
 
     Reference reference               = 30;
+
+    // YJS state snapshot.
+    YJS yjs                           = 40;
   }
 }
 
