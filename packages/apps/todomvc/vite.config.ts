@@ -13,7 +13,11 @@ const env = (value?: string) => (value ? `"${value}"` : undefined);
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
-    host: true
+    host: true,
+    https: process.env.HTTPS === 'true' ? {
+      key: './key.pem',
+      cert: './cert.pem'
+    } : false
   },
   define: {
     'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
