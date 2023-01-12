@@ -13,7 +13,7 @@ const ARRAY_KEY = 'a';
 
 const REFERENCE_KEY = '@reference';
 
-const encodeValue = (value: unknown): any => {
+const encodeValue = (value: any): any => {
   if (value instanceof Reference) {
     return Object.fromEntries([[REFERENCE_KEY, value.encode()]]);
   } else if (Array.isArray(value)) {
@@ -28,12 +28,12 @@ const encodeValue = (value: unknown): any => {
   return value;
 };
 
-const decodeValue = (value: unknown): unknown => {
+const decodeValue = (value: any): any => {
   if (Array.isArray(value)) {
     return value.map((value) => decodeValue(value));
   } else if (typeof value === 'object' && value !== null) {
     if (REFERENCE_KEY in value) {
-      return Reference.fromValue(value[REFERENCE_KEY] as any);
+      return Reference.fromValue(value[REFERENCE_KEY]);
     }
     return Object.fromEntries(
       Object.entries(value).map(([key, value]) => {
