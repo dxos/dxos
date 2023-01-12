@@ -562,6 +562,7 @@ importers:
       '@vitejs/plugin-react': ^3.0.1
       debug: ^4.3.3
       phosphor-react: ^1.4.1
+      qrcode.react: ^3.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
       storybook-dark-mode: ^1.1.2
@@ -579,6 +580,7 @@ importers:
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@react-hook/async': 3.1.1_react@18.2.0
       debug: 4.3.4
+      qrcode.react: 3.1.0_react@18.2.0
       url-join: 5.0.0
     devDependencies:
       '@types/debug': 4.1.7

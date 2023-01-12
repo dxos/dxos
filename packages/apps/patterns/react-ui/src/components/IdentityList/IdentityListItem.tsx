@@ -25,7 +25,7 @@ export const IdentityListItem = ({ identity, presence }: { identity: Profile; pr
             )
           }),
           ...(presence === SpaceMember.PresenceState.ONLINE && { status: 'active' }),
-          slots: { labels: { className: 'block' } }
+          slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } }
         }}
       />
     </li>

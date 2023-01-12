@@ -5,5 +5,7 @@
 export const os = {
   'manage profile label': 'Manage identity',
   'identity offline description': 'Offline',
-  'sidebar label': 'DXOS sidebar'
+  'sidebar label': 'DXOS sidebar',
+  'copy invitation code label': 'Copy code',
+  'open share panel label': 'Share'
 };

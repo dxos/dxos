@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defaultDisabled, defaultFocus, defaultHover, defaultActive } from '../../styles';
+import { defaultDisabled, defaultFocus, defaultHover, defaultActive, osActive } from '../../styles';
 import { mx } from '../../util';
 import { ThemeContextValue } from '../ThemeProvider';
 import { ButtonProps } from './ButtonProps';
@@ -37,6 +37,6 @@ export const buttonStyles = (
       : !isOsTheme && resolvedVariant !== 'outline' && resolvedVariant !== 'ghost' && 'button-elevation',
     // Register all radix states
     'group',
-    defaultActive
+    isOsTheme ? osActive('be') : defaultActive
   );
 };

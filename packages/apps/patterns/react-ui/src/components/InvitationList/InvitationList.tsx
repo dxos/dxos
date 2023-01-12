@@ -6,18 +6,18 @@ import React from 'react';
 
 import type { CancellableInvitationObservable } from '@dxos/client';
 
-import { InvitationListItem } from './InvitationListItem';
+import { InvitationListItem, InvitationListItemProps } from './InvitationListItem';
 
-export interface InvitationListProps {
+export interface InvitationListProps extends Omit<InvitationListItemProps, 'invitation' | 'value'> {
   invitations: CancellableInvitationObservable[];
 }
 
-export const InvitationList = ({ invitations }: InvitationListProps) => {
+export const InvitationList = ({ invitations, ...invitationProps }: InvitationListProps) => {
   return (
     <AccordionRoot type='single' collapsible>
       {invitations.map((invitation, index) => {
         const value = invitation.invitation?.invitationId ?? `inv_${index}`;
-        return <InvitationListItem key={value} value={value} invitation={invitation} />;
+        return <InvitationListItem key={value} value={value} invitation={invitation} {...invitationProps} />;
       })}
     </AccordionRoot>
   );

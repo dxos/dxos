@@ -3,8 +3,8 @@
 //
 
 import { PlusCircle, Gear, Robot, Trash, WifiHigh, WifiSlash, UserPlus } from 'phosphor-react';
-import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useCallback, useMemo } from 'react';
+import { useHref, useNavigate } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
@@ -22,6 +22,10 @@ export const Sidebar = () => {
   const { space } = useSpace();
   const { state: connectionState } = useNetworkStatus();
   const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
+
+  const joinPath = useHref('/join');
+  const createInvitationUrl = (invitationCode: string) =>
+    `${document.defaultView?.origin}/${joinPath}/${invitationCode}`;
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -59,32 +63,39 @@ export const Sidebar = () => {
     }
   };
 
+  const handleCreateInvitation = useCallback(() => {
+    console.log('[handle create invitation]', space);
+    space.createInvitation();
+  }, [space]);
+
   return (
-    <div className='flex grow flex-col gap-2 overflow-auto min-bs-full'>
+    <div className='flex flex-col min-bs-full max-bs-full'>
       <ThemeContext.Provider value={{ themeVariant: 'os' }}>
         {/* Spaces */}
-        <div className='flex flex-shrink-0 flex-col overflow-y-scroll'>
+        <div className='shrink flex flex-col overflow-y-auto'>
           <SpaceList />
-          <div className='p-3'>
-            <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
-              <PlusCircle className={getSize(6)} />
-            </Button>
-          </div>
         </div>
+        <Button className='flex m-2' title='Create new space' onClick={handleCreateSpace}>
+          <PlusCircle className={getSize(6)} />
+        </Button>
 
         <div role='none' className='grow' />
 
-        <div role='none' className='pli-2'>
-          <InvitationListContainer spaceKey={space.key} />
-          <PanelSeparator />
-          <NaturalButton compact className='is-full flex gap-2'>
+        <div role='none' className='shrink pli-2 overflow-y-auto'>
+          <InvitationListContainer spaceKey={space.key} {...{ createInvitationUrl }} />
+        </div>
+        <PanelSeparator className='mli-2' />
+        <div role='none' className='mli-2'>
+          <NaturalButton compact className='flex gap-2 is-full' onClick={handleCreateInvitation}>
             <span>Invite</span>
             <UserPlus className={getSize(4)} weight='bold' />
           </NaturalButton>
-          <PanelSeparator />
-          <SpaceMemberListContainer spaceKey={space.key} includeSelf />
-          <PanelSeparator />
         </div>
+        <PanelSeparator className='mli-2' />
+        <div role='none' className='shrink pli-2 overflow-y-auto'>
+          <SpaceMemberListContainer spaceKey={space.key} includeSelf />
+        </div>
+        <PanelSeparator className='mli-2' />
 
         {/* Footer */}
         <div className='flex shrink-0 justify-center gap-2 pli-2 pbe-2'>
