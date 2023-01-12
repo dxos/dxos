@@ -181,6 +181,21 @@ describe('EchoDatabase', () => {
         'Subtask 3'
       ]);
     });
+
+    test('assign a plain array', async () => {
+      const db = await createDatabase();
+
+      const task = new Document({ title: 'Main task' });
+      await db.save(task);
+
+      task.tags = ['red', 'green', 'blue'];
+      expect(task.tags instanceof EchoArray).toBeTruthy()
+      expect(task.tags.length).toEqual(3);
+      expect(task.tags.slice()).toEqual(['red', 'green', 'blue']);
+
+      task.tags[1] = 'yellow';
+      expect(task.tags.slice()).toEqual(['red', 'yellow', 'blue']);
+    })
   });
 
   describe('text', () => {

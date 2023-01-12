@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ObjectModel } from '@dxos/object-model';
+import { ObjectModel, OrderedArray } from '@dxos/object-model';
 
 import { base, deleted, id } from './defs';
 import { EchoObject } from './object';
@@ -167,6 +167,9 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     } else if (value instanceof EchoArray) {
       void this._item!.model.set(`${prop}$type`, 'array');
       value._bind(this[base], prop);
+    } else if(Array.isArray(value)) {
+      void this._item!.model.set(`${prop}$type`, 'array');
+      void this._item!.model.set(prop, OrderedArray.fromValues(value));
     } else if (typeof value === 'object' && value !== null) {
       void this._item!.model.set(`${prop}$type`, 'object');
       const sub = this._createProxy({}, prop);
