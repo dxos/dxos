@@ -1,45 +1,42 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2021 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { useClient, useSpaces } from '@dxos/react-client';
+import { AuthChoices } from '@dxos/react-appkit';
+import { useIdentity, useSpaces } from '@dxos/react-client';
+import { Heading, useTranslation } from '@dxos/react-components';
 
-import { useOptions } from '../../hooks';
-import { Generator } from '../../proto';
-import { createSpacePath } from '../Routes';
+// NOTE: Copied from halo-app.
+// TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-/**
- * Selects or creates an initial space.
- */
 export const InitPage = () => {
+  const { t } = useTranslation('kai');
   const navigate = useNavigate();
-  const { demo } = useOptions();
-  const client = useClient();
+  const [searchParams] = useSearchParams();
+  const redirect = encodeURIComponent(searchParams.get('redirect') ?? '');
+  const profile = useIdentity();
   const spaces = useSpaces();
-  const [init, setInit] = useState(false);
 
-  useEffect(() => {
-    if (init) {
-      return;
-    }
+  if (profile) {
+    return <Navigate to={`/${spaces[0].key.truncate()}`} />;
+  }
 
-    if (spaces.length) {
-      navigate(createSpacePath(spaces[0].key));
-    } else {
-      setInit(true); // Make idempotent.
-      setTimeout(async () => {
-        const space = await client.echo.createSpace();
-        if (demo && !client.config.values.runtime?.client?.storage?.persistent) {
-          await new Generator(space.experimental.db).generate();
-        }
-
-        navigate(createSpacePath(space.key));
-      });
-    }
-  }, [spaces, init]);
-
-  return null;
+  return (
+    <main className='max-is-lg mli-auto pli-7 mbs-7 space-b-6'>
+      <div role='none' className='flex flex-col gap-2 items-center'>
+        <Heading className='text-center'>{t('current app name')}</Heading>
+        <p className='text-center'>{t('identities empty message')}</p>
+        <AuthChoices
+          {...{
+            onJoin: () => navigate(`/identity/join?redirect=${redirect}`),
+            onCreate: () => navigate(`/identity/create?redirect=${redirect}`),
+            onRecover: () => navigate(`/identity/recover?redirect=${redirect}`)
+          }}
+        />
+      </div>
+    </main>
+  );
 };

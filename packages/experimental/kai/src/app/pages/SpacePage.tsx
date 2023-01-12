@@ -6,6 +6,7 @@ import React, { useEffect, useState, FC, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
+import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
 import {
@@ -25,12 +26,12 @@ import { AppBar, ViewSelector } from './AppBar';
 import { Dashboard } from './Dashboard';
 import { Sidebar } from './Sidebar';
 
-const appBarHeight = 84;
-
 /**
  * Main grid layout.
  */
 const ViewContainer: FC<{ view: string }> = ({ view }) => {
+  const { views } = useOptions();
+
   return (
     <PanelSidebarProvider
       inlineStart
@@ -39,9 +40,8 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
         content: { children: <Sidebar /> }
       }}
     >
-      {/* TODO(burdon): Disable scrollbar. */}
-      <ViewSelector />
-      <div className={`pbs-[${appBarHeight}px] flex h-screen bg-white`}>
+      {views.length > 1 && <ViewSelector />}
+      <div className={mx(views.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex h-screen bg-white')}>
         {view === AppView.DASHBOARD && <Dashboard />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.PROJECTS && <ProjectList />}

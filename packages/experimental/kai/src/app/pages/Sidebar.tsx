@@ -3,22 +3,39 @@
 //
 
 import { PlusCircle } from 'phosphor-react';
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
+import { useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button } from '../../components';
 import { MemberList, SpaceList } from '../../containers';
-import { useSpace } from '../../hooks';
+import { AppView, useSpace } from '../../hooks';
 import { createSpacePath } from '../Routes';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
+  const toggleSidebar = useTogglePanelSidebar();
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
+
+  const { view } = useParams();
+  const [prevView, setPrevView] = useState(view);
+  const [prevSpace, setPrevSpace] = useState(space);
+
+  // TODO(wittjosiah): Find a better way to do this.
+  if (prevSpace !== space) {
+    setPrevSpace(space);
+    toggleSidebar();
+  }
+
+  if (prevView !== view) {
+    setPrevView(view);
+    view === AppView.SETTINGS && toggleSidebar();
+  }
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();

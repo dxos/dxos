@@ -7,8 +7,17 @@ import { useRoutes } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
+import { RequireIdentity } from '@dxos/react-appkit';
 
-import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
+import {
+  CreateIdentityPage,
+  InitPage,
+  JoinIdentityPage,
+  JoinSpacePage,
+  RecoverIdentityPage,
+  SettingsPage,
+  SpacePage
+} from './pages';
 
 export const matchSpaceKey = (spaces: Space[], spaceKey: string) =>
   spaces.find((space) => space.key.truncate() === spaceKey);
@@ -26,20 +35,38 @@ export const Routes = () => {
       element: <InitPage />
     },
     {
-      path: '/settings',
-      element: <SettingsPage />
+      path: '/identity/create',
+      element: <CreateIdentityPage />
     },
     {
-      path: '/join/:invitation',
-      element: <JoinPage />
+      path: '/identity/recover',
+      element: <RecoverIdentityPage />
     },
     {
-      path: '/:spaceKey',
-      element: <SpacePage />,
+      path: '/identity/join',
+      element: <JoinIdentityPage />
+    },
+    {
+      path: '/',
+      element: <RequireIdentity redirect='/' />,
       children: [
         {
-          path: '/:spaceKey/:view',
-          element: <SpacePage />
+          path: '/settings',
+          element: <SettingsPage />
+        },
+        {
+          path: '/space/join',
+          element: <JoinSpacePage />
+        },
+        {
+          path: '/:spaceKey',
+          element: <SpacePage />,
+          children: [
+            {
+              path: '/:spaceKey/:view',
+              element: <SpacePage />
+            }
+          ]
         }
       ]
     }

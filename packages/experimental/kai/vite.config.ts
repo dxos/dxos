@@ -27,6 +27,8 @@ export default defineConfig({
   },
 
   define: {
+    'process.env.DEBUG': env(process.env.DEBUG),
+    'process.env.DEMO': env(process.env.DEMO),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
     'process.env.DX_VAULT': env(process.env.DX_VAULT),

@@ -19,5 +19,9 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../node-std"
+    }
+  ]
 }

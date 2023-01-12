@@ -13,6 +13,22 @@ import { AppView } from '../hooks';
 import kaiTranslations from '../translations';
 import { App } from './App';
 
+const views =
+  process.env.DEMO === 'true'
+    ? [
+        AppView.DASHBOARD,
+        AppView.ORGS,
+        AppView.PROJECTS,
+        AppView.CONTACTS,
+        AppView.KANBAN,
+        AppView.TASKS,
+        AppView.GRAPH,
+        AppView.EDITOR,
+        AppView.MAP,
+        AppView.GAME
+      ]
+    : [AppView.TASKS];
+
 // TODO(burdon): Get debug from config.
 export const Root = () => {
   const {
@@ -24,28 +40,14 @@ export const Root = () => {
       log.error(err);
     }
   });
+
   return (
     <ThemeProvider
       appNs='kai'
       resourceExtensions={[appkitTranslations, kaiTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
-      <App
-        debug={false}
-        views={[
-          AppView.DASHBOARD,
-          AppView.ORGS,
-          AppView.CONTACTS,
-          AppView.PROJECTS,
-          AppView.TASKS,
-          AppView.KANBAN,
-          AppView.GRAPH,
-          AppView.EDITOR,
-          AppView.MAP,
-          AppView.GAME
-        ]}
-      />
-
+      <App debug={process.env.DEBUG === 'true'} views={views} />
       {needRefresh ? (
         <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
       ) : offlineReady ? (
