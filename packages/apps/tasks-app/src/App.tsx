@@ -46,6 +46,7 @@ export const App = () => {
       log.error(err);
     }
   });
+
   return (
     <ThemeProvider
       appNs='halo'
