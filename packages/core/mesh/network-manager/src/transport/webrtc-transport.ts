@@ -72,7 +72,7 @@ export class WebRTCTransport implements Transport {
   }
 
   signal(signal: Signal) {
-    if(this._closed) {
+    if (this._closed) {
       return; // Ignore signals after close.
     }
 
