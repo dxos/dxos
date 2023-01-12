@@ -25,6 +25,7 @@ export type WebRTCTransportParams = {
  */
 export class WebRTCTransport implements Transport {
   private readonly _peer: SimplePeer;
+  private _closed = false;
 
   readonly closed = new Event();
   readonly connected = new Event();
@@ -63,6 +64,7 @@ export class WebRTCTransport implements Transport {
 
   async destroy() {
     log('closing...');
+    this._closed = true;
     await this._disconnectStreams();
     this._peer!.destroy();
     this.closed.emit();
@@ -70,7 +72,10 @@ export class WebRTCTransport implements Transport {
   }
 
   signal(signal: Signal) {
-    assert(this._peer, 'Connection not ready to accept signals.');
+    if (this._closed) {
+      return; // Ignore signals after close.
+    }
+
     assert(signal.payload.data, 'Signal message must contain signal data.');
     this._peer.signal(signal.payload.data);
   }
