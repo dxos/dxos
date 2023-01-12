@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
 import * as Y from 'yjs';
 
 import { YJS } from '@dxos/protocols/proto/dxos/echo/model/object';
@@ -118,18 +117,19 @@ export class OrderedArray {
       this.doc.off('updateV2', cb);
     }
 
-    if(updateReceived) {
+    if (updateReceived) {
       return updateReceived;
-    } else { // The transaction was a no-op.
+    } else {
+      // The transaction was a no-op.
       return {
         id: new Uint8Array(),
-        payload: new Uint8Array(),
+        payload: new Uint8Array()
       };
     }
   }
 
   apply(mutation: YJS) {
-    if(mutation.payload.byteLength > 0) {
+    if (mutation.payload.byteLength > 0) {
       Y.applyUpdateV2(this.doc, mutation.payload);
     }
   }
