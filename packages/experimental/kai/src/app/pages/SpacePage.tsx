@@ -25,6 +25,8 @@ import { AppBar, ViewSelector } from './AppBar';
 import { Dashboard } from './Dashboard';
 import { Sidebar } from './Sidebar';
 
+const appBarHeight = 84;
+
 /**
  * Main grid layout.
  */
@@ -37,8 +39,9 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
         content: { children: <Sidebar /> }
       }}
     >
+      {/* TODO(burdon): Disable scrollbar. */}
       <ViewSelector />
-      <div className='pbs-[84px] flex h-screen bg-white'>
+      <div className={`pbs-[${appBarHeight}px] flex h-screen bg-white`}>
         {view === AppView.DASHBOARD && <Dashboard />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.PROJECTS && <ProjectList />}

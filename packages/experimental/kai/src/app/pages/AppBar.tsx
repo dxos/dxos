@@ -19,10 +19,31 @@ export const Menu = () => {
   );
 };
 
+export const AppBar = () => {
+  const toggleSidebar = useTogglePanelSidebar();
+
+  return (
+    <div className='flex items-center pl-2 pr-2' style={{ height: 48 }}>
+      <div className='flex ml-2'>
+        <button onClick={toggleSidebar}>
+          <List className={getSize(6)} />
+        </button>
+      </div>
+
+      <div className='flex items-center ml-4'>
+        <Bug className={mx('logo', getSize(8))} />
+        <div className='ml-1'>KAI</div>
+      </div>
+
+      <div className='flex-1' />
+      <Menu />
+    </div>
+  );
+};
+
 // TODO(burdon): Collapse tabs into hamburger if narrow.
 export const ViewSelector: FC = () => {
   const navigate = useNavigate();
-
   const { views } = useOptions();
   const { spaceKey: currentSpaceKey, view: currentView } = useParams();
   const { displayState } = useContext(PanelSidebarContext); // TODO(burdon): Context lags.
@@ -58,29 +79,6 @@ export const ViewSelector: FC = () => {
           );
         })}
       </div>
-      <div className='flex flex-shrink-0 h-2 bg-white' />
-    </div>
-  );
-};
-
-export const AppBar = () => {
-  const toggleSidebar = useTogglePanelSidebar();
-
-  return (
-    <div className='flex items-center pl-2 pr-2' style={{ height: 48 }}>
-      <div className='flex ml-2'>
-        <button onClick={toggleSidebar}>
-          <List className={getSize(6)} />
-        </button>
-      </div>
-
-      <div className='flex items-center ml-4'>
-        <Bug className={mx('logo', getSize(8))} />
-        <div className='ml-1'>KAI</div>
-      </div>
-
-      <div className='flex-1' />
-      <Menu />
     </div>
   );
 };

@@ -10,7 +10,8 @@ const tailwindcss = require('tailwindcss/plugin');
 module.exports = {
   content: [
     './index.html',
-    './src/**/*.{js,jsx,ts,tsx}'
+    './src/**/*.{js,jsx,ts,tsx}',
+    './src/**/*.stories.{jsx,tsx}'
   ],
 
   // https://tailwindcss.com/docs/scroll-margin#customizing-your-theme

@@ -97,7 +97,7 @@ export const MapView = () => {
   };
 
   return (
-    <div className='flex flex-1 relative'>
+    <div className='flex flex-1 overflow-hidden __relative'>
       <MapContainer className='w-full' center={center} zoom={11}>
         <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
         <Map items={organizations} center={center} />
