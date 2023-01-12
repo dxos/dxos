@@ -2,22 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import { UserPlus } from 'phosphor-react';
+import { UserPlus, XCircle } from 'phosphor-react';
 import React, { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import type { Profile } from '@dxos/client';
 import { HeadingWithActions, InvitationList, ProfileList } from '@dxos/react-appkit';
 import { useMembers, useSpaceInvitations } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-components';
 
-import { useSpace } from '../../hooks';
+import { useOptions, useSpace } from '../../hooks';
 import { createInvitationUrl } from '../../util';
 
 // NOTE: Copied from react-appkit.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
 export const ManageSpacePage = () => {
-  const { t } = useTranslation('appkit');
+  const { t } = useTranslation('kai');
+  const navigate = useNavigate();
+  const { views } = useOptions();
   const { space } = useSpace();
   const members = useMembers(space.key);
   const memberProfiles = useMemo(
@@ -49,8 +52,16 @@ export const ManageSpacePage = () => {
               className='flex gap-1 items-center'
               disabled={!space}
             >
-              <span>{t('create invitation label')}</span>
+              <span>{t('create invitation label', { ns: 'appkit' })}</span>
               <UserPlus className={getSize(5)} />
+            </Button>
+            <Button
+              variant='primary'
+              onClick={() => navigate(`/${space.key.truncate()}/${views[0]}`)}
+              className='flex gap-1 items-center'
+            >
+              <span>{t('back to space label')}</span>
+              <XCircle className={getSize(5)} />
             </Button>
           </>
         }
