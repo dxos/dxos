@@ -33,7 +33,6 @@ export const JoinPage = () => {
     const observable = client.echo.acceptInvitation({
       invitationId: PublicKey.random().toHex(), // TODO(dmaretskyi): Why is this required?
       swarmKey: invitation.swarmKey,
-      type: Invitation.Type.MULTIUSE_TESTING,
       timeout: 2000 // TODO(dmaretskyi): Doesn't work.
     });
 
@@ -59,6 +58,7 @@ export const JoinPage = () => {
     };
   }, [invitationCode]);
 
+  // TODO(wittjosiah): Render pin input flow.
   return (
     <div className='full-screen'>
       <div className='flex flex-1 items-center'>
