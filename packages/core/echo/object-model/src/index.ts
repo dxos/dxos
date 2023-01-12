@@ -10,3 +10,4 @@ export * from './object-model';
 export * from './ordered-list';
 export * from './text-index';
 export * from './util';
+export * from './ordered-array';

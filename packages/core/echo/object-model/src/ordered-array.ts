@@ -96,6 +96,10 @@ export class OrderedArray {
     return decodeValue(this.array.toArray());
   }
 
+  get(index: number) {
+    return decodeValue(this.array.get(index));
+  }
+
   transact(tx: () => void): YJS {
     let updateReceived: YJS | undefined;
     const cb = (update: any) => {
