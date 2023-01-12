@@ -6,7 +6,7 @@ export * from './database';
 export * from './database-router';
 export * from './defs';
 export * from './object';
-export * from './ordered-set';
+export * from './echo-array';
 export * from './document';
 export * from './schema';
 export * from './text-object';
