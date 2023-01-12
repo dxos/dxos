@@ -3,20 +3,21 @@
 //
 
 import { PlusCircle, Gear, Robot, Trash, WifiHigh, WifiSlash, UserPlus } from 'phosphor-react';
-import React, { useCallback, useMemo } from 'react';
-import { useHref, useNavigate } from 'react-router-dom';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useHref, useNavigate, useParams } from 'react-router-dom';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx, ThemeContext, Button as NaturalButton } from '@dxos/react-components';
-import { InvitationListContainer, PanelSeparator, SpaceMemberListContainer } from '@dxos/react-ui';
+import { InvitationListContainer, PanelSeparator, SpaceMemberListContainer, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button } from '../../components';
 import { SpaceList } from '../../containers';
-import { useSpace } from '../../hooks';
+import { AppView, useSpace } from '../../hooks';
 import { Generator } from '../../proto';
 
 export const Sidebar = () => {
+  const toggleSidebar = useTogglePanelSidebar();
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
@@ -26,6 +27,21 @@ export const Sidebar = () => {
   const joinPath = useHref('/join');
   const createInvitationUrl = (invitationCode: string) =>
     `${document.defaultView?.origin}/${joinPath}/${invitationCode}`;
+
+  const { view } = useParams();
+  const [prevView, setPrevView] = useState(view);
+  const [prevSpace, setPrevSpace] = useState(space);
+
+  // TODO(wittjosiah): Find a better way to do this.
+  if (prevSpace !== space) {
+    setPrevSpace(space);
+    toggleSidebar();
+  }
+
+  if (prevView !== view) {
+    setPrevView(view);
+    view === AppView.SETTINGS && toggleSidebar();
+  }
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();

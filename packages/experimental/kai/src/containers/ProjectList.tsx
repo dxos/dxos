@@ -66,9 +66,9 @@ export const ProjectItem: FC<{ project: Project }> = withReactor(({ project }) =
 
   // TODO(burdon): Pass in Task1, Task2.
   const handleDrag = (active: number, over: number) => {
-    const task1 = project.tasks[active];
-    const task2 = project.tasks[over];
-    project.tasks.splice(project.tasks.indexOf(task2), 0, task1);
+    const task = project.tasks[active];
+    project.tasks.splice(active, 1);
+    project.tasks.splice(over, 0, task);
   };
 
   return (

@@ -1,8 +1,11 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-// const { ConfigPlugin } = require('@dxos/config/vite-plugin');
-// const { ThemePlugin } = require('@dxos/react-components/plugin');
+const { ThemePlugin } = require('@dxos/react-components/plugin');
 
 module.exports = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
@@ -21,11 +24,8 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
-          '@dxos/client',
-          '@dxos/config',
-          '@dxos/debug',
-          '@dxos/log',
-          '@dxos/react-components',
+          '@dxos/protocols',
+          '@dxos/protocols/proto/dxos/echo/model/object',
           'storybook-dark-mode'
         ]
       },
@@ -35,10 +35,9 @@ module.exports = {
         }
       },
       plugins: [
-        // ConfigPlugin(),
-        // ThemePlugin({
-        //   content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
-        // })
+        ThemePlugin({
+          content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
+        })
       ]
     })
 };

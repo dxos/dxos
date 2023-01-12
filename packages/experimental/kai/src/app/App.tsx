@@ -2,17 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 
-import { Client, fromHost } from '@dxos/client';
+import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
+import { RequireIdentity } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { osTranslations } from '@dxos/react-ui';
 
 import { AppView, OptionsContext } from '../hooks';
-import { InitPage, JoinPage, SettingsPage, SpacePage } from './pages';
+import { schema } from '../proto';
+import {
+  CreateIdentityPage,
+  InitPage,
+  JoinIdentityPage,
+  JoinSpacePage,
+  RecoverIdentityPage,
+  SettingsPage,
+  SpacePage
+} from './pages';
 
 /**
  * Main app routes.
@@ -24,24 +34,54 @@ export const Routes = () => {
       element: <InitPage />
     },
     {
-      path: '/settings',
-      element: <SettingsPage />
+      path: '/identity/create',
+      element: <CreateIdentityPage />
     },
     {
-      path: '/join/:invitation',
-      element: <JoinPage />
+      path: '/identity/recover',
+      element: <RecoverIdentityPage />
     },
     {
-      path: '/:spaceKey',
-      element: <SpacePage />,
+      path: '/identity/join',
+      element: <JoinIdentityPage />
+    },
+    {
+      path: '/',
+      element: <RequireIdentity redirect='/' />,
       children: [
         {
-          path: '/:spaceKey/:view',
-          element: <SpacePage />
+          path: '/settings',
+          element: <SettingsPage />
+        },
+        {
+          path: '/space/join',
+          element: <JoinSpacePage />
+        },
+        {
+          path: '/:spaceKey',
+          element: <SpacePage />,
+          children: [
+            {
+              path: '/:spaceKey/:view',
+              element: <SpacePage />
+            }
+          ]
         }
       ]
     }
   ]);
+};
+
+const clientProvider = async () => {
+  const config = new Config(Defaults());
+  const client = new Client({
+    config,
+    services: process.env.DX_VAULT === 'true' ? fromIFrame(config) : fromHost(config)
+  });
+
+  client.echo.dbRouter.setSchema(schema);
+  await client.initialize();
+  return client;
 };
 
 /**
@@ -52,34 +92,9 @@ export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
   debug = false,
   demo = true
 }) => {
-  const [client, setClient] = useState<Client | undefined>(undefined);
-
-  // Auto-create client and profile.
-  useEffect(() => {
-    setTimeout(async () => {
-      const config = new Config(Defaults());
-      const client = new Client({
-        config,
-        services: fromHost(config)
-      });
-
-      await client.initialize();
-      // TODO(burdon): Hangs (no error) if profile not created?
-      if (!client.halo.profile) {
-        await client.halo.createProfile();
-      }
-
-      setClient(client);
-    });
-  }, []);
-
-  if (!client) {
-    return null;
-  }
-
   // TODO(burdon): Error boundary and indicator.
   return (
-    <ClientProvider client={client}>
+    <ClientProvider client={clientProvider}>
       <OptionsContext.Provider value={{ debug, demo, views }}>
         <ThemeProvider resourceExtensions={[osTranslations]}>
           <HashRouter>

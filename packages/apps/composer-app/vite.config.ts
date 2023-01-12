@@ -40,7 +40,7 @@ export default defineConfig({
       '@dxos/react-appkit',
       '@dxos/react-client',
       '@dxos/react-composer',
-      '@@dxos/react-components',
+      '@dxos/react-components',
       '@dxos/sentry',
       '@dxos/text-model'
     ],
@@ -78,7 +78,6 @@ export default defineConfig({
     }),
     ReactPlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },

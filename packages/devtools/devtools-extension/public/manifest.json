@@ -22,9 +22,6 @@
       "sandbox.html"
     ]
   },
-  "permissions": [
-    "activeTab"
-  ],
   "devtools_page": "main.html",
   "background": {
     "service_worker": "background.js"

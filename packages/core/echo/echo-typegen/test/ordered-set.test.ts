@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { id, OrderedSet } from '@dxos/echo-schema';
+import { id, EchoArray } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Task } from './proto';
@@ -32,13 +32,13 @@ describe('ordered-set', () => {
 
     // TODO(burdon): Implement assignment = []?
     // root.subTasks = [];
-    root.subTasks = new OrderedSet([new Task(), new Task(), new Task()]);
+    root.subTasks = new EchoArray([new Task(), new Task(), new Task()]);
     expect(root.subTasks.length).to.eq(3);
   });
 
   test('splice', () => {
     const root = new Task();
-    root.subTasks = new OrderedSet([new Task(), new Task(), new Task()]);
+    root.subTasks = new EchoArray([new Task(), new Task(), new Task()]);
     root.subTasks.splice(0, 2, new Task());
     expect(root.subTasks).to.have.length(2);
   });

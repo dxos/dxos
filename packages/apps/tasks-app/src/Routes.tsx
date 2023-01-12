@@ -45,21 +45,21 @@ export const Routes = () => {
           ]
         },
         {
-          path: '/spaces/:space',
+          path: '/spaces/:spaceKey',
           element: <SpaceLayout />,
           children: [
             {
-              path: '/spaces/:space',
+              path: '/spaces/:spaceKey',
               element: <SpacePage />
             }
           ]
         },
         {
-          path: '/spaces/:space/settings',
+          path: '/spaces/:spaceKey/settings',
           element: <SpaceSettingsLayout />,
           children: [
             {
-              path: '/spaces/:space/settings',
+              path: '/spaces/:spaceKey/settings',
               element: <ManageSpacePage />
             }
           ]

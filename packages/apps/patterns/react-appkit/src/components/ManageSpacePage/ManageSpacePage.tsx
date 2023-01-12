@@ -32,7 +32,7 @@ export const ManageSpacePage = ({
 }: ManageSpacePageProps) => {
   const { t } = useTranslation('appkit');
   const navigate = useNavigate();
-  const { space: spaceHex } = useParams();
+  const { spaceKey: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate(spacesPath));
   const space = useSpace(spaceKey);
   const members = useMembers(spaceKey);

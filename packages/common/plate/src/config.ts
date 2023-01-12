@@ -39,6 +39,8 @@ export type StripDefaults<T extends InquirableZodType> = T extends InquirablePri
 export const unDefault = <T extends InquirableZodType = InquirableZodType>(shape: T): InquirableZodType => {
   if (shape instanceof z.ZodIntersection) {
     return z.intersection(unDefault(shape._def.left), unDefault(shape._def.right));
+  } else if (shape instanceof z.ZodEffects) {
+    return shape;
   } else {
     const undefshape = { ...shape._def.shape() };
     for (const i in undefshape) {
