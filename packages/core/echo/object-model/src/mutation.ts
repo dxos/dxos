@@ -89,9 +89,8 @@ export class ValueUtil {
       return ValueUtil.reference(value);
     } else if (value instanceof OrderedArray) {
       return ValueUtil.orderedArray(value);
-    } else if (Array.isArray(value)) {
-      throw new Error('Array scalars are not supported');
     } else if (typeof value === 'object') {
+      // TODO(mykola): Delete support for arrays of scalars.
       return ValueUtil.object(value);
     } else {
       throw new Error(`Invalid value: ${value}`);
