@@ -72,33 +72,6 @@ describe('EchoDatabase', () => {
     expect(task.details.deadline).toEqual('2021-01-01');
   });
 
-  test('ordered arrays', async () => {
-    const db = await createDatabase();
-
-    const task = new Document({ title: 'Main task' });
-    await db.save(task);
-
-    task.subtasks = new EchoArray();
-    task.subtasks.push(new Document({ title: 'Subtask 1' }));
-    task.subtasks.push(new Document({ title: 'Subtask 2' }));
-    task.subtasks.push(new Document({ title: 'Subtask 3' }));
-
-    expect(task.subtasks.length).toEqual(3);
-    expect(task.subtasks[0].title).toEqual('Subtask 1');
-    expect(task.subtasks[1].title).toEqual('Subtask 2');
-    expect(task.subtasks[2].title).toEqual('Subtask 3');
-
-    const titles = task.subtasks.map((subtask: Document) => subtask.title);
-    expect(titles).toEqual(['Subtask 1', 'Subtask 2', 'Subtask 3']);
-
-    task.subtasks[0] = new Document({ title: 'New subtask 1' });
-    expect(task.subtasks.map((subtask: Document) => subtask.title)).toEqual([
-      'New subtask 1',
-      'Subtask 2',
-      'Subtask 3'
-    ]);
-  });
-
   test('select', async () => {
     const router = new DatabaseRouter();
     const db = await createDatabase(router);
@@ -150,6 +123,35 @@ describe('EchoDatabase', () => {
     await waitForExpect(() => {
       expect(query.getObjects()).toEqual([task1, task2]);
       expect(counter).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('ordered arrays', async () => {
+    test('array of sub documents', async () => {
+      const db = await createDatabase();
+
+      const task = new Document({ title: 'Main task' });
+      await db.save(task);
+
+      task.subtasks = new EchoArray();
+      task.subtasks.push(new Document({ title: 'Subtask 1' }));
+      task.subtasks.push(new Document({ title: 'Subtask 2' }));
+      task.subtasks.push(new Document({ title: 'Subtask 3' }));
+
+      expect(task.subtasks.length).toEqual(3);
+      expect(task.subtasks[0].title).toEqual('Subtask 1');
+      expect(task.subtasks[1].title).toEqual('Subtask 2');
+      expect(task.subtasks[2].title).toEqual('Subtask 3');
+
+      const titles = task.subtasks.map((subtask: Document) => subtask.title);
+      expect(titles).toEqual(['Subtask 1', 'Subtask 2', 'Subtask 3']);
+
+      task.subtasks[0] = new Document({ title: 'New subtask 1' });
+      expect(task.subtasks.map((subtask: Document) => subtask.title)).toEqual([
+        'New subtask 1',
+        'Subtask 2',
+        'Subtask 3'
+      ]);
     });
   });
 
