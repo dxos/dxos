@@ -186,7 +186,7 @@ export class EchoDatabase {
       const type = item.model.get('@type');
       const proto = this._router.schema?.getPrototype(type);
 
-      if(!proto) {
+      if (!proto) {
         log.warn('Unknown schema type', { type });
         return new Document();
       } else {

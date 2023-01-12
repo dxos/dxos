@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Event } from '@dxos/async';
 import { Entity } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
-import assert from 'node:assert';
 
 import { EchoDatabase, Selection, SubscriptionHandle } from './database';
 import { base } from './defs';
@@ -31,7 +32,6 @@ export class DatabaseRouter {
     assert(!this._schema);
     this._schema = schema;
   }
-
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);

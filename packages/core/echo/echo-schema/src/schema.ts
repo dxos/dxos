@@ -44,8 +44,8 @@ export class EchoSchemaType {
 
 type Prototype = {
   new (...args: any): any;
-  type: EchoSchemaType 
-}
+  type: EchoSchemaType;
+};
 
 /**
  * Constructed via generated protobuf class.

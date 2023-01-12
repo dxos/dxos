@@ -12,7 +12,7 @@ import { getSize, mx } from '@dxos/react-components';
 
 import { Button, Card, Input, CardRow, CardMenu } from '../components';
 import { useOptions, useSpace } from '../hooks';
-import { createTask, schema, Task } from '../proto';
+import { createTask, Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
 
