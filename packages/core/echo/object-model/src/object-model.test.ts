@@ -183,6 +183,7 @@ describe('ObjectModel', () => {
       await peer2.model.builder().arrayInsert('tags', 0, [newReference]).commit();
       await testBuilder.waitForReplication();
 
+      expect(peer1.model.get('tags').toArray()[0] instanceof Reference).toBeTruthy();
       expect(peer1.model.get('tags').toArray()).toEqual([newReference, ...array, newReference]);
     });
 
