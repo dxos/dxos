@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Chessboard } from './Chessboard';
+import { Game } from './proto';
 
 export default {
   component: Chessboard,
@@ -13,6 +14,11 @@ export default {
 
 export const Default = {
   render: () => {
-    return <div>sss</div>;
+    // TODO(burdon): Make responsive.
+    return (
+      <div style={{ width: 600 }}>
+        <Chessboard game={new Game()} />
+      </div>
+    );
   }
 };

@@ -55,7 +55,7 @@ export const Kanban: FC<{
               </div>
 
               {onCreate && (
-                <div className='flex flex-shrink-0 items-center p-2'>
+                <div className='flex flex-shrink-0 items-center p-3'>
                   <div className='text-sm'>
                     {filtered.length} record{filtered.length === 1 ? '' : 's'}
                   </div>
