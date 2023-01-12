@@ -44,6 +44,10 @@ const decodeValue = (value: unknown): unknown => {
   return value;
 };
 
+/**
+ * OrderedArray is a wrapper around Y.Array that provides a more convenient API.
+ * It also encodes and decodes payload that otherwise cannot be processed by Y.
+ */
 export class OrderedArray {
   static fromSnapshot(snapshot: YJS) {
     const doc = new Y.Doc();
