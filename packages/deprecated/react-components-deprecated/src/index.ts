@@ -7,6 +7,7 @@ export * from './Clipboard';
 export * from './CustomTextField';
 export * from './Dialog';
 export * from './Files';
+export * from './FullScreen';
 export * from './HashIcon';
 export * from './Icons';
 export * from './JsonTree';
