@@ -184,13 +184,13 @@ export class EchoDatabase {
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
     if (item.model instanceof ObjectModel) {
       const type = item.model.get('@type');
-      const proto = this._router.schema?.getPrototype(type);
+      const Proto = this._router.schema?.getPrototype(type);
 
       if (!proto) {
         log.warn('Unknown schema type', { type });
         return new Document();
       } else {
-        return new proto();
+        return new Proto();
       }
     } else if (item.model instanceof TextModel) {
       return new TextObject();
