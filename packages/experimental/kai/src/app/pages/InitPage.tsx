@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { AuthChoices } from '@dxos/react-appkit';
 import { useIdentity, useSpaces } from '@dxos/react-client';
@@ -15,6 +15,8 @@ import { Heading, useTranslation } from '@dxos/react-components';
 export const InitPage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = encodeURIComponent(searchParams.get('redirect') ?? '');
   const profile = useIdentity();
   const spaces = useSpaces();
 
@@ -29,9 +31,9 @@ export const InitPage = () => {
         <p className='text-center'>{t('identities empty message')}</p>
         <AuthChoices
           {...{
-            onJoin: () => navigate('/identity/join'),
-            onCreate: () => navigate('/identity/create'),
-            onRecover: () => navigate('/identity/recover')
+            onJoin: () => navigate(`/identity/join?redirect=${redirect}`),
+            onCreate: () => navigate(`/identity/create?redirect=${redirect}`),
+            onRecover: () => navigate(`/identity/recover?redirect=${redirect}`)
           }}
         />
       </div>

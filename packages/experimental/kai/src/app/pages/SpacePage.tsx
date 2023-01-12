@@ -22,6 +22,7 @@ import {
 import { AppStateProvider, AppView, SpaceContext, SpaceContextType, useOptions, viewConfig } from '../../hooks';
 import { AppBar, ViewSelector } from './AppBar';
 import { Dashboard } from './Dashboard';
+import { ManageSpacePage } from './ManageSpacePage';
 import { Sidebar } from './Sidebar';
 
 /**
@@ -38,6 +39,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
     >
       <ViewSelector />
       <div className='pbs-[84px] flex h-screen bg-white'>
+        {view === AppView.SETTINGS && <ManageSpacePage />}
         {view === AppView.DASHBOARD && <Dashboard />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.PROJECTS && <ProjectList />}
