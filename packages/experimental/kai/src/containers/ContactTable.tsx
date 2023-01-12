@@ -27,7 +27,7 @@ export const ContactTable = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-2'>
+      <div className='flex p-3'>
         <div>
           <Searchbar />
         </div>
