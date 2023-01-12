@@ -6,7 +6,7 @@ import * as pb from 'protobufjs';
 
 const packageName = '@dxos/echo-schema';
 
-const types = ['EchoSchema', 'DocumentBase', 'TypeFilter',  'TextObject'];
+const types = ['EchoSchema', 'DocumentBase', 'TypeFilter', 'TextObject'];
 
 /**
  * Source builder and formatter.
