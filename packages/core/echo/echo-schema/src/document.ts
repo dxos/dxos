@@ -32,7 +32,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
    * Pending values before committed to model.
    * @internal
    */
-  private _uninitialized?: Record<keyof any, any> = {};
+  _uninitialized?: Record<keyof any, any> = {};
 
   override _modelConstructor = ObjectModel;
 
