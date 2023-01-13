@@ -4,7 +4,7 @@
 
 import { Bug, List, User } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx, useMediaQuery } from '@dxos/react-components';
 import { PanelSidebarContext, sidebarWidth, useTogglePanelSidebar } from '@dxos/react-ui';
@@ -13,9 +13,9 @@ import { useOptions, viewConfig } from '../../hooks';
 
 export const Menu = () => {
   return (
-    <button>
+    <Link to='/identity'>
       <User className={getSize(6)} />
-    </button>
+    </Link>
   );
 };
 

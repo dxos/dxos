@@ -14,7 +14,7 @@ export interface DeviceProps {
 }
 
 export const Device = (props: DeviceProps) => {
-  const { t } = useTranslation('halo');
+  const { t } = useTranslation('appkit');
   return (
     <Group
       label={{
