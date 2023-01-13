@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "0.1.21",
+  "version": "0.1.22",
   "author": "DXOS.org",
   "name": "DXOS Client Developer Tools",
   "short_name": "DXOS DevTools",
