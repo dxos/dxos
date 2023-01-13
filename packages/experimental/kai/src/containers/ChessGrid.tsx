@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
 import { Chess, Color } from 'chess.js';
 import { ArrowUUpLeft, PlusCircle } from 'phosphor-react';
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
-import { Game, Chessboard, ChessPanel, ChessPieces } from '@dxos/chess-app';
+import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
@@ -17,25 +18,11 @@ const smallSize = 300;
 const boardSize = 640;
 const panelWidth = 160;
 
-const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
-  <div className='flex justify-center items-center bg-gray-100' style={{ width: smallSize, height: smallSize }}>
-    {onClick && (
-      <button onClick={onClick}>
-        <PlusCircle className={mx(getSize(16), 'text-gray-300')} />
-      </button>
-    )}
-  </div>
-);
-
-// TODO(burdon): Determine player.
-// TODO(burdon): Move to @dxos/chess-app.
+// TODO(burdon): Invite/determine player.
 export const ChessGrid: FC = () => {
-  const { space } = useSpace();
-  const games = useQuery(space, Game.filter());
-  const [game, setGame] = useState<Game | undefined>();
-  const [chess, setChess] = useState<Chess | undefined>();
-  const [orientation, setOrientation] = useState<Color>('w');
   const [style] = useState(ChessPieces.RIOHACHA);
+  const [game, setGame] = useState<Game | undefined>();
+  const { space } = useSpace();
 
   const handleCreate = async () => {
     const game = new Game();
@@ -43,41 +30,94 @@ export const ChessGrid: FC = () => {
     handleSelect(game);
   };
 
-  const handleSelect = (game: Game) => {
+  const handleSelect = (game?: Game) => {
     setGame(game);
   };
+
+  if (game) {
+    return <Play game={game} style={style} onClose={handleSelect} />;
+  } else {
+    return <Grid style={style} onSelect={handleSelect} onCreate={handleCreate} />;
+  }
+};
+
+/**
+ * Active game.
+ */
+// TODO(burdon): Updated frequently; even after peer disconnects.
+// TODO(burdon): Presence extension throws exception (sendAnnounce).
+const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ game, style, onClose }) => {
+  const [orientation, setOrientation] = useState<Color>('w');
+  const [model, setModel] = useState<ChessModel>({ chess: new Chess(game.fen) });
+  useEffect(() => {
+    if (game.fen !== model.chess.fen()) {
+      setModel({ chess: new Chess(game.fen) });
+    }
+  }, [game.fen]);
+
+  console.log('Updated', model.chess.fen(), model.chess.history());
 
   const handleFlip = () => {
     setOrientation((orientation) => (orientation === 'w' ? 'b' : 'w'));
   };
 
-  if (game) {
-    return (
-      <>
-        <div className='absolute'>
-          <div className='flex p-2'>
-            <button onClick={() => setGame(undefined)}>
-              <ArrowUUpLeft weight='thin' className={getSize(6)} />
-            </button>
+  const handleUpdate = (move: ChessMove) => {
+    assert(model);
+    if (model.chess.move(move)) {
+      // TODO(burdon): Add move (requires array of scalars).
+      game!.fen = model.chess.fen();
+      setModel({ ...model });
+    }
+  };
+
+  // TODO(burdon): Show captured pieces.
+  return (
+    <>
+      <div className='absolute'>
+        <div className='flex p-2'>
+          <button onClick={() => onClose()}>
+            <ArrowUUpLeft weight='thin' className={getSize(6)} />
+          </button>
+        </div>
+      </div>
+
+      <div className='flex flex-1 flex-col justify-center'>
+        <div className='flex justify-center'>
+          <div style={{ width: panelWidth }} />
+
+          <div className='bg-gray-100' style={{ width: boardSize, height: boardSize }}>
+            <Chessboard model={model} orientation={orientation} style={style} onUpdate={handleUpdate} />
+          </div>
+
+          <div className='flex flex-col ml-6 justify-center' style={{ width: panelWidth }}>
+            <ChessPanel model={model} orientation={orientation} onFlip={handleFlip} />
           </div>
         </div>
+      </div>
+    </>
+  );
+};
 
-        <div className='flex flex-1 flex-col justify-center'>
-          <div className='flex justify-center'>
-            <div style={{ width: panelWidth }} />
+/**
+ * Grid
+ */
+const Grid: FC<{ style: ChessPieces; onSelect: (game: Game) => void; onCreate: () => void }> = ({
+  style,
+  onSelect,
+  onCreate
+}) => {
+  const { space } = useSpace();
+  const games = useQuery(space, Game.filter());
 
-            <div className='bg-gray-100' style={{ width: boardSize, height: boardSize }}>
-              <Chessboard game={game} orientation={orientation} style={style} onUpdate={setChess} />
-            </div>
-
-            <div className='flex flex-col ml-6 justify-center' style={{ width: panelWidth }}>
-              {chess && <ChessPanel chess={chess} orientation={orientation} onFlip={handleFlip} />}
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
+  const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
+    <div className='flex justify-center items-center bg-gray-100' style={{ width: smallSize, height: smallSize }}>
+      {onClick && (
+        <button onClick={onClick}>
+          <PlusCircle className={mx(getSize(16), 'text-gray-300')} />
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className='flex flex-1 justify-center'>
@@ -88,13 +128,13 @@ export const ChessGrid: FC = () => {
               key={game[id]}
               className='border-2'
               style={{ width: smallSize, height: smallSize }}
-              onClick={() => handleSelect(game)}
+              onClick={() => onSelect(game)}
             >
-              <Chessboard game={game} readonly style={style} />
+              <Chessboard model={{ chess: new Chess(game.fen) }} style={style} readonly />
             </div>
           ))}
 
-          <Placeholder onClick={handleCreate} />
+          <Placeholder onClick={onCreate} />
         </div>
       </div>
     </div>
