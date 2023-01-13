@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { PublicKey } from '@dxos/protocols';
-import { FullScreen } from '@dxos/react-components';
+import { PublicKey } from '@dxos/keys';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
-import { KeyRecord, KeyType } from '../../proto/gen/dxos/halo/keys';
 import { KeyTable } from './KeyTable';
 
 export default {
@@ -17,18 +17,12 @@ export default {
 export const Primary = () => {
   // TODO(burdon): Factor out.
   const keys: KeyRecord[] = [...new Array(20)].map(() => ({
-    type: KeyType.FEED,
-    publicKey: PublicKey.random(),
-    added: new Date().toUTCString(),
-    own: Boolean(Math.random() > 0.3),
-    trusted: Boolean(Math.random() > 0.5)
+    publicKey: PublicKey.random().asUint8Array()
   }));
 
   return (
     <FullScreen>
-      <KeyTable
-        keys={keys}
-      />
+      <KeyTable keys={keys} />
     </FullScreen>
   );
 };

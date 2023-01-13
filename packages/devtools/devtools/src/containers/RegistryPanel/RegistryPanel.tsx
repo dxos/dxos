@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { useAsyncEffect } from '@dxos/react-async';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { useRegistry } from '@dxos/react-registry-client';
 import { RegistrySearchPanel, useRegistrySearchModel } from '@dxos/react-toolkit';
 import { CID, RegistryRecord, ResourceSet } from '@dxos/registry-client';
@@ -33,15 +33,7 @@ export const RegistryPanel = () => {
   };
 
   return (
-    <Panel
-      controls={(
-        <RegistrySearchPanel
-          model={model}
-          versions
-          onSelect={handleSelect}
-        />
-      )}
-    >
+    <Panel controls={<RegistrySearchPanel model={model} versions onSelect={handleSelect} />}>
       <JsonTreeView data={selectedRecord} />
     </Panel>
   );

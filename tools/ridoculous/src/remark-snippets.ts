@@ -11,9 +11,9 @@ import { u } from 'unist-builder';
 import { removeTrailing, visitDirectives } from './util.js';
 
 type Type = {
-  lang: string
-  parser?: (content: string, options: { hash?: string }) => string
-}
+  lang: string;
+  parser?: (content: string, options: { hash?: string }) => string;
+};
 
 const langType: { [key: string]: Type } = {
   '.sh': {
@@ -70,11 +70,12 @@ const langType: { [key: string]: Type } = {
  * Snippets are contains within comment blocks.
  * The resulting code snippet is inserted above or replaces an existing block.
  */
-// eslint-disable-next-line
-export function remarkSnippets () {
+export function remarkSnippets() {
+  // eslint-disable-next-line
+  // @ts-ignore
   const { config } = this.data() ?? {};
 
-  return (tree: any, inputFile) => {
+  return (tree: any, inputFile: any) => {
     // visit(tree, 'code', (node, i, parent) => {
     //   console.log('>>>', node);
     // });
@@ -101,9 +102,11 @@ export function remarkSnippets () {
 
               // Check if the link node already exists.
               const linkNode = parent.children[i! + 1];
-              if (linkNode?.type === 'paragraph' &&
+              if (
+                linkNode?.type === 'paragraph' &&
                 linkNode.children[0]?.type === 'html' &&
-                linkNode.children[0]?.value === '<sub>') {
+                linkNode.children[0]?.value === '<sub>'
+              ) {
                 existing++;
               }
 
@@ -124,10 +127,7 @@ export function remarkSnippets () {
                     const match = filePath.match(/(.+)\/(src\/.+\/.+)/);
                     const [, pkgDir, relPath] = match ?? [];
                     const { name } = JSON.parse(fs.readFileSync(`${pkgDir}/package.json`, 'utf8'));
-                    return [
-                      name,
-                      relPath
-                    ];
+                    return [name, relPath];
                   } catch (err) {
                     return [];
                   }
@@ -136,14 +136,22 @@ export function remarkSnippets () {
                 // Get package name.
                 const [pkgName, relPath] = getNodePackage();
 
-                nodes.push(u('paragraph', {}, [
-                  u('html', { value: '<sub>' }),
-                  pkgName ? u('inlineCode', { value: pkgName }) : null,
-                  u('link', { url: path.relative(rootDir, filePath) }, [
-                    u('inlineCode', { value: `[${relPath ?? path.basename(filePath)}]` })
-                  ]),
-                  u('html', { value: '</sub>' })
-                ].filter(Boolean)));
+                nodes.push(
+                  u(
+                    'paragraph',
+                    {},
+                    [
+                      u('html', { value: '<sub>' }),
+                      pkgName ? u('inlineCode', { value: pkgName }) : null,
+                      u('link', { url: path.relative(rootDir, filePath) }, [
+                        u('inlineCode', {
+                          value: `[${relPath ?? path.basename(filePath)}]`
+                        })
+                      ]),
+                      u('html', { value: '</sub>' })
+                    ].filter(Boolean) as any[]
+                  )
+                );
               }
 
               nodes.push(u('code', { lang, value: content }));

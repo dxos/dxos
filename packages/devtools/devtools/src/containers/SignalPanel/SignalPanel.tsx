@@ -7,10 +7,9 @@ import React from 'react';
 import { Box } from '@mui/material';
 
 import { SignalStatusComp, SignalTrace } from '@dxos/devtools-mesh';
-import { SignalState, SignalStatus } from '@dxos/network-manager';
+import { SignalState, SignalStatus } from '@dxos/messaging';
+import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client';
-
-import { SubscribeToSignalStatusResponse } from '../../proto';
 
 const stringToState = (state: string): SignalState => {
   const dict: Record<string, SignalState> = {
@@ -35,6 +34,10 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 
 export const SignalPanel = () => {
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), {});
   const { events } = useStream(() => devtoolsHost.subscribeToSignalTrace(), {});
   if (!servers || !events) {
@@ -42,21 +45,19 @@ export const SignalPanel = () => {
   }
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      padding: 1,
-      overflow: 'hidden',
-      overflowY: 'auto',
-      overflowX: 'auto'
-    }}>
-      {servers.length >= 1 && (
-        <SignalStatusComp status={servers.map(signalStatus)} />
-      )}
-      {events.length < 1 && (
-        <SignalTrace trace={events?.map(event => JSON.parse(event))} />
-      )}
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        padding: 1,
+        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'auto'
+      }}
+    >
+      {servers.length >= 1 && <SignalStatusComp status={servers.map(signalStatus)} />}
+      {events.length < 1 && <SignalTrace trace={events?.map((event) => JSON.parse(event))} />}
     </Box>
   );
 };

@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+
+//
+// Copyright 2022 DXOS.org
+//
+
+const { spawnSync } = require('child_process');
+
+//
+// Script called by IDE to run mocha executor with custom reporter.
+//
+
+const getArg = (flag) => {
+  // TODO(burdon): Extract project from args if not reported directly.
+  const idx = process.argv.findIndex((arg) => arg.startsWith(flag));
+  if (idx === -1) {
+    return undefined;
+  }
+
+  const value = process.argv[idx].split('=');
+  if (value.length === 2) {
+    return value[1];
+  } else {
+    return process.argv[idx + 1];
+  }
+};
+
+// TODO(burdon): Match project from workspace.json.
+const project = getArg('--project');
+const reporter = getArg('--reporter');
+
+// TODO(burdon): Detect grep.
+// const grep = getArg('--grep');
+/*, '--grep', `"${grep}"` */
+
+spawnSync('pnpm', ['-w', 'nx', 'test', project, '--reporter', `"${reporter}"`], {
+  shell: true,
+  stdio: 'inherit',
+  env: {
+    ...process.env
+  }
+});

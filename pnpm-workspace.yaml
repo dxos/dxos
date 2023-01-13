@@ -1,15 +1,7 @@
 packages:
-  - apps/experimental/*
-  - apps/*
-  - e2e/*
-  - packages/bot/*
-  - packages/common/*
-  - packages/devtools/*
-  - packages/echo/*
-  - packages/gravity/*
-  - packages/halo/*
-  - packages/mesh/*
-  - packages/sdk/*
-  - tools/deprecated/*
-  - tools/executors/*
-  - tools/*
+  - docs
+  - packages/**/*
+  - tools/**/*
+  # TODO(wittjosiah): Stop builds from copying package.json into dist (i.e., kodama).
+  - '!**/dist/**'
+  - '!**/out/**'

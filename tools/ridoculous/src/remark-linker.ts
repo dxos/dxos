@@ -5,7 +5,7 @@
 import { visit } from 'unist-util-visit';
 
 // TODO(burdon): Link line number in Github?
-// https://github.com/dxos/protocols/blob/main/packages/common/protocols/src/proto/dxos/client.proto#L28
+// https://github.com/dxos/dxos/blob/main/packages/common/protocols/src/proto/dxos/client.proto#L28
 
 /**
  * Validate links.

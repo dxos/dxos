@@ -1,0 +1,71 @@
+{
+  "sourceRoot": "packages/core/mesh/teleport-extension-presence/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/teleport-extension-presence/src/index.ts",
+        "outputPath": "packages/core/mesh/teleport-extension-presence/dist/types",
+        "tsConfig": "packages/core/mesh/teleport-extension-presence/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/mesh/teleport-extension-presence/src/index.ts"
+        ],
+        "outputPath": "packages/core/mesh/teleport-extension-presence/dist/lib",
+        "platforms": [
+          "browser",
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/mesh/teleport-extension-presence/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/core/mesh/teleport-extension-presence",
+        "outputPath": "tmp/mocha/packages/core/mesh/teleport-extension-presence",
+        "resultsPath": "test-results/packages/core/mesh/teleport-extension-presence",
+        "testPatterns": [
+          "packages/core/mesh/teleport-extension-presence/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/mesh/teleport-extension-presence/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

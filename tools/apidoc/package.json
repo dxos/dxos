@@ -1,0 +1,43 @@
+{
+  "name": "@dxos/apidoc",
+  "version": "0.1.22",
+  "description": "Generate nice API documentation",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "bin": {
+    "apidoc": "bin/apidoc.js"
+  },
+  "scripts": {
+    "plate": "plate src/templates/api --input docs/api.json --output docs/api",
+    "remark": "node dist/src/scripts/apidoc.js",
+    "typedoc": "typedoc"
+  },
+  "devDependencies": {
+    "@dxos/plate": "workspace:*",
+    "@linkedmd/markdown-it-directive": "^1.0.1",
+    "@types/lodash.memoize": "^4.1.7",
+    "@types/markdown-it": "^12.2.3",
+    "@types/minimatch": "^5.1.2",
+    "@types/recursive-readdir": "^2.2.0",
+    "lodash.memoize": "^4.1.2",
+    "markdown-it": "^13.0.1",
+    "minimatch": "^5.1.0",
+    "prettier": "^2.7.1",
+    "recursive-readdir": "^2.2.2",
+    "remark-code-import": "^1.1.1",
+    "remark-directive": "^2.0.1",
+    "remark-frontmatter": "^4.0.1",
+    "remark-parse": "^10.0.1",
+    "remark-prettier": "^2.0.0",
+    "remark-stringify": "^10.0.2",
+    "typedoc": "^0.23.22",
+    "typescript": "^4.8.4",
+    "unified": "^10.1.2",
+    "unist-util-visit": "^4.1.0",
+    "vfile": "^5.3.6"
+  }
+}

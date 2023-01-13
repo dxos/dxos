@@ -5,10 +5,10 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "node",
-      "mocha",
+      "@dxos/test",
+      "node"
     ]
   },
   "include": [
@@ -19,49 +19,70 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../common/keys"
     },
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/rpc"
+      "path": "../../common/node-std"
     },
     {
-      "path": "../../common/testutils"
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/echo-protocol"
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../echo/feed-store"
+      "path": "../../core/echo/model-factory"
     },
     {
-      "path": "../../echo/model-factory"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/echo/text-model"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/messaging"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../client-services"
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../errors"
     }
   ]
 }

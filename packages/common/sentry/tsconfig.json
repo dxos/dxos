@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test",
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "testing"
+  ],
+  "references": []
+}

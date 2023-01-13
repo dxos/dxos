@@ -1,46 +1,55 @@
 {
   "name": "@dxos/config",
-  "version": "2.33.8",
+  "version": "0.1.22",
   "description": "Config utilities",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "./dist/src/loaders/index.js": "./dist/src/loaders/browser.js",
-    "node:assert": "assert"
+    "./src/loaders/index.ts": "./src/loaders/browser.js",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "esbuild-plugin.js",
+    "esbuild-plugin.d.ts",
     "rollup-plugin.js",
-    "webpack-plugin.js"
+    "rollup-plugin.d.ts",
+    "vite-plugin.js",
+    "vite-plugin.d.ts"
   ],
   "scripts": {
-    "check": "true"
+    "test-build": "node ./src/testing/build.js"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
     "boolean": "^3.0.1",
     "debug": "^4.3.3",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2",
-    "node-fetch": "^2.6.0"
+    "lodash.set": "^4.3.2"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.get": "^4.4.6",
-    "@types/lodash.set": "^4.3.6"
+    "@types/lodash.get": "^4.4.7",
+    "@types/lodash.set": "^4.3.7"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typedoc": {
+    "entryPoint": "src/index.ts"
   }
 }

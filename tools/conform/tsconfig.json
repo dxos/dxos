@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "include": [
+    "./src/**/*.ts",
+    "src/template/LICENSE"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/plate"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/telemetry",
+  "version": "0.1.22",
+  "description": "Telemetry logging for product usage statistics",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./src/node.ts": "./src/browser.ts",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/sentry": "workspace:*",
+    "@segment/snippet": "^4.15.3",
+    "analytics-node": "^6.2.0"
+  },
+  "devDependencies": {
+    "@types/analytics-node": "^3.1.9"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

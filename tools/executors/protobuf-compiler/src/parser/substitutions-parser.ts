@@ -8,21 +8,23 @@ import * as ts from 'typescript';
 import { ModuleSpecifier } from '../module-specifier';
 
 export interface ImportDescriptor {
-  clause: ts.ImportClause
-  module: ModuleSpecifier
+  clause: ts.ImportClause;
+  module: ModuleSpecifier;
 }
 
 /**
- * Protobuf FQN => Typescript identifier mapping
+ * Protobuf FQN => Typescript identifier mapping.
  */
-export type SubstitutionsMap = Partial<Record<string, string>>
+export type SubstitutionsMap = Partial<Record<string, string>>;
 
 const getSubstitutionType = (substitutionProperty: Symbol, typeChecker: TypeChecker) => {
-  const substitutionType = typeChecker.getTypeOfSymbolAtLocation(substitutionProperty, substitutionProperty.getValueDeclarationOrThrow());
+  const substitutionType = typeChecker.getTypeOfSymbolAtLocation(
+    substitutionProperty,
+    substitutionProperty.getValueDeclarationOrThrow()
+  );
 
   const decode = substitutionType.getPropertyOrThrow('decode');
   const decodeType = typeChecker.getTypeOfSymbolAtLocation(decode, decode.getValueDeclarationOrThrow());
-
   return decodeType.getCallSignatures()[0].getReturnType();
 };
 
@@ -33,6 +35,7 @@ export const parseSubstitutionsFile = (fileName: string): SubstitutionsMap => {
   const project = new Project({
     tsConfigFilePath: ts.findConfigFile(fileName, ts.sys.fileExists)
   });
+
   const sourceFile = project.addSourceFileAtPath(fileName);
   project.resolveSourceFileDependencies();
   const typeChecker = project.getTypeChecker();

@@ -1,0 +1,34 @@
+[//]: # (Demo Presentation)
+
+import { Presentation } from '../components';
+
+import CoverFront from './cover-front.mdx';
+import CoverBack from './cover-back.mdx';
+
+import Slide1 from './slide-image.mdx';
+import Slide2 from './slide-snippet.mdx';
+import Slide3 from './slide-graph.mdx';
+import Slide4 from './slide-halo.mdx';
+import Slide5 from './slide-kube.mdx';
+import Slide6 from './slide-dmg.mdx';
+import Slide7 from './slide-echo-list.mdx';
+import Slide8 from './slide-columns.mdx';
+import Slide9 from './slide-tailwind.mdx';
+
+<Presentation
+  title='DXOS'
+  slides={[
+    <CoverFront />,
+    <Slide1 />,
+    <Slide2 />,
+    <Slide3 />,
+    <Slide4 />,
+    <Slide5 />,
+    <Slide6 />,
+    <Slide7 />,
+    <Slide8 />,
+    <Slide9 />,
+    <CoverBack />,
+  ]}
+/>
+

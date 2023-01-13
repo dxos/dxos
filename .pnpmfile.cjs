@@ -8,22 +8,19 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // TODO(burdon): Can be removed once tutorials-tasks-app is removed or upgraded to MUI5.
-    case '@mui/styles': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
-      packageJson.peerDependencies['@types/react'] = '^18.0.0'
-      break;
-    }
-
     // https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
     case '@nrwl/nx-cloud': {
       packageJson.dependencies['dotenv'] = '*'
       break;
     }
 
-    // https://github.com/nxext/nx-extensions/issues/755
-    case '@nxext/vite': {
-      packageJson.peerDependencies['vite'] = '3.0.9'
+    case '@nrwl/vite': {
+      // Ensure nx uses patched vite.
+      packageJson.peerDependencies['vite'] = '4.0.4'
+
+      // We don't use vitest.
+      delete packageJson.peerDependencies['vitest']
+
       break;
     }
 
@@ -38,8 +35,13 @@ function readPackage(packageJson, context) {
     case 'ink-syntax-highlight':
     case 'ink-text-input':
     case 'react-reconciler': {
-      packageJson.peerDependencies['react'] = '>=16.0.0'
+      packageJson.peerDependencies['react'] = '^18.0.0'
       break;
+    }
+
+    // @dxos/presenter
+    case '@react-pdf/renderer': {
+      packageJson.peerDependencies['react'] = '^18.0.0'
     }
 
     // @storybook/react transitive dep
@@ -55,6 +57,26 @@ function readPackage(packageJson, context) {
     // https://github.com/FezVrasta/react-resize-aware/issues/59
     case 'react-resize-aware': {
       packageJson.peerDependencies['react'] = '^18.0.0'
+      break;
+    }
+
+    case 'storybook-dark-mode': {
+      packageJson.dependencies['@storybook/addons'] = '^7.0.0-beta'
+      packageJson.dependencies['@storybook/api'] = '^7.0.0-beta'
+      packageJson.dependencies['@storybook/components'] = '^7.0.0-beta'
+      packageJson.dependencies['@storybook/core-events'] = '^7.0.0-beta'
+      packageJson.dependencies['@storybook/theming'] = '^7.0.0-beta'
+    }
+
+    // Ensure vuepress uses patched vite.
+    case '@vuepress/bundler-vite': {
+      packageJson.dependencies['vite'] = '4.0.4'
+      break;
+    }
+    
+    // Ensure vuepress uses patched vite.
+    case '@vitejs/plugin-vue': {
+      packageJson.peerDependencies['vite'] = '4.0.4'
       break;
     }
   }

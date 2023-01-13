@@ -1,0 +1,12 @@
+diff --git a/dist/transpilers/swc.js b/dist/transpilers/swc.js
+index eeddd4fbb2f18a7e8b20bb628d5f5c806ae20594..882d10888a2d064a183da36351a0df4fd79d24db 100644
+--- a/dist/transpilers/swc.js
++++ b/dist/transpilers/swc.js
+@@ -191,6 +191,7 @@ function createSwcOptions(compilerOptions, nodeModuleEmitKind, swcInstance, swcD
+                 keepClassNames,
+                 experimental: {
+                     keepImportAssertions: true,
++                    plugins: JSON.parse(process.env.SWC_PLUGINS || '[]')
+                 },
+             },
+         };

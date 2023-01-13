@@ -4,25 +4,38 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/devtools/devtools-mesh/src/index.ts",
+        "outputPath": "packages/devtools/devtools-mesh/dist/types",
+        "tsConfig": "packages/devtools/devtools-mesh/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "outputPath": "packages/devtools/devtools-mesh/dist",
-        "tsConfig": "packages/devtools/devtools-mesh/tsconfig.json",
-        "main": "packages/devtools/devtools-mesh/src/index.ts"
-      }
+        "entryPoints": [
+          "packages/devtools/devtools-mesh/src/index.ts"
+        ],
+        "outputPath": "packages/devtools/devtools-mesh/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/devtools/devtools-mesh/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     }
   }
 }

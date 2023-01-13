@@ -1,0 +1,35 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/feed-store"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/node-std"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../echo-db"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../object-model"
+    }
+  ]
+}

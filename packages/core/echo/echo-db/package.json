@@ -1,0 +1,71 @@
+{
+  "name": "@dxos/echo-db",
+  "version": "0.1.22",
+  "description": "ECHO database.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/hypercore": "workspace:*",
+    "@dxos/keyring": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/messaging": "workspace:*",
+    "@dxos/model-factory": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/object-model": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/teleport": "workspace:*",
+    "@dxos/teleport-extension-object-sync": "workspace:*",
+    "@dxos/teleport-extension-presence": "workspace:*",
+    "@dxos/teleport-extension-replicator": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "debug": "^4.3.3"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "hypercore-protocol": "^8.0.7",
+    "source-map-support": "^0.5.12",
+    "wait-for-expect": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/space/space.ts"
+      },
+      {
+        "root": "src/packlets/database/database.ts"
+      },
+      {
+        "root": "src/packlets/database/database-backend.ts"
+      }
+    ]
+  }
+}

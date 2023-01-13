@@ -1,0 +1,66 @@
+{
+  "sourceRoot": "packages/common/feed-store/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/feed-store/src/index.ts",
+        "outputPath": "packages/common/feed-store/dist/types",
+        "tsConfig": "packages/common/feed-store/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/feed-store/src/index.ts",
+          "packages/common/feed-store/src/testing/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/feed-store/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/feed-store/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/common/feed-store",
+        "outputPath": "tmp/mocha/packages/common/feed-store",
+        "resultsPath": "test-results/packages/common/feed-store",
+        "testPatterns": [
+          "packages/common/feed-store/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/feed-store/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

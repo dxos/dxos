@@ -1,0 +1,64 @@
+{
+  "sourceRoot": "packages/core/echo/messenger-model/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/echo/messenger-model/src/index.ts",
+        "outputPath": "packages/core/echo/messenger-model/dist/types",
+        "tsConfig": "packages/core/echo/messenger-model/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/messenger-model/src/index.ts"
+        ],
+        "outputPath": "packages/core/echo/messenger-model/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/echo/messenger-model/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/core/echo/messenger-model",
+        "outputPath": "tmp/mocha/packages/core/echo/messenger-model",
+        "resultsPath": "test-results/packages/core/echo/messenger-model",
+        "testPatterns": [
+          "packages/core/echo/messenger-model/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/echo/messenger-model/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

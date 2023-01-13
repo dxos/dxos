@@ -1,0 +1,42 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../codec-protobuf"
+    },
+    {
+      "path": "../crypto"
+    },
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../random-access-storage"
+    },
+    {
+      "path": "../util"
+    }
+  ]
+}

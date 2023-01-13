@@ -1,0 +1,59 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+import "dxos/config.proto";
+
+package dxos.service.publisher;
+
+option go_package = "github.com/dxos/kube/publisher/pb";
+
+message PublishRequest {
+  dxos.config.Package package = 1;
+  bool skip_existing = 2;
+  // TODO(egorgripasov): Move to a dxrpc layer.
+  optional string access_token = 3;
+}
+
+message PublishResponse {
+  message PublishedModule {
+    dxos.config.Module module = 1;
+    repeated string urls = 2;
+  }
+  repeated PublishedModule modules = 1;
+}
+
+message ListResponse {
+  repeated dxos.config.Module modules = 1;
+}
+
+message ResetResponse {
+  int32 count = 1;
+}
+
+message TunnelRequest {
+  string name = 1;
+  bool enabled = 2;
+}
+
+message TunnelResponse {
+  string name = 1;
+  bool enabled = 2;
+  string url = 3;
+}
+
+message ListTunnelsResponse {
+  repeated TunnelResponse tunnels = 1;
+}
+
+service Publisher {
+  rpc Publish(PublishRequest) returns (PublishResponse);
+  rpc List(google.protobuf.Empty) returns (ListResponse);
+  rpc Reset(google.protobuf.Empty) returns (ResetResponse);
+  rpc Tunnel(TunnelRequest) returns (TunnelResponse);
+  rpc ListTunnels(google.protobuf.Empty) returns (ListTunnelsResponse);
+}

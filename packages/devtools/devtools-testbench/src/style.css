@@ -1,0 +1,14 @@
+/**
+ * Copyright 2022 DXOS.org
+ */
+
+/* Overriding kai/src/styles.css .full-screen to make kai render only for top half of the screen. */
+.full-screen {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 50%;
+  display: flex;
+  overflow: hidden;
+}

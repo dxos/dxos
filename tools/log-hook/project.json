@@ -1,0 +1,29 @@
+{
+  "sourceRoot": "tools/log-hook/src",
+  "projectType": "library",
+  "targets": {
+    "compile": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/log-hook/src/index.ts",
+        "outputPath": "tools/log-hook/dist",
+        "tsConfig": "tools/log-hook/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "tools/log-hook/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

@@ -1,17 +1,21 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "declarationDir": "dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
   "include": [
     "src"
   ],
   "references": [
     {
-      "path": "../protocols"
+      "path": "../keys"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../node-std"
     }
   ]
 }

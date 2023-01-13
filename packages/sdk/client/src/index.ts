@@ -2,10 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+export { Config } from '@dxos/config';
+
+// TODO(burdon): Remove (create wrapper class).
 export { generateSeedPhrase } from '@dxos/credentials';
 
 export {
-  PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   TYPE_SCHEMA,
   Entity,
   Item,
@@ -14,42 +16,45 @@ export {
   Selection,
   SelectionResult,
   ItemFilterDeleted,
-  InvitationDescriptor,
-  InvitationDescriptorType,
-  OpenProgress,
-  PartyMember,
   ResultSet,
   Schema,
-  SchemaDef,
-  SchemaField,
-  SchemaRef
+  type SchemaDef,
+  type SchemaField,
+  type SchemaRef
 } from '@dxos/echo-db';
 
-export {
-  ItemID,
-  PartyKey
-} from '@dxos/echo-protocol';
+export { PublicKey } from '@dxos/keys';
+
+// TODO(burdon): Export form `@dxos/echo-db`.
+export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 
 export {
-  ObjectModel,
-  OrderedList
-} from '@dxos/object-model';
+  type InvitationEvents,
+  InvitationEncoder,
+  type CancellableInvitationObservable,
+  type AuthenticatingInvitationObservable,
+  // TODO(wittjosiah): Remove.
+  ClientServicesHost,
+  type ClientServicesProvider,
+  IFrameRuntime,
+  WorkerRuntime,
+  WorkerSession
+} from '@dxos/client-services';
 
-// TODO(wittjosiah): Remove.
-export {
-  NetworkManager
-} from '@dxos/network-manager';
+export { ApiError } from '@dxos/errors';
 
-export {
-  proto,
-  KeyRecord,
-  KeyType,
-  Profile,
-  SignRequest,
-  SignResponse
-} from './packlets/proto';
+export { Contact, SpaceMember, Profile } from '@dxos/protocols/proto/dxos/client';
+export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-export * from './packlets/api';
+// TODO(burdon): Remove.
+export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
+
+// TODO(burdon): Cherry-pick developer-facings APIs.
+export * from './packlets/client';
+
+// TODO(burdon): Remove (currently required for @dxos/client-testing).
+export * from './packlets/proxies';
+
+// TODO(burdon): Create separate export like testing?
 export * from './packlets/devtools';
-export * from './packlets/proxy';
-export * from './packlets/services';

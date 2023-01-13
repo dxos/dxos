@@ -1,0 +1,32 @@
+{
+  "name": "@dxos/node-std",
+  "version": "0.1.22",
+  "description": "Simple wrapper for browser replacements of node stdlib modules within the DXOS codebase.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    "./assert": "./dist/lib/browser/assert.mjs",
+    "./events": "./dist/lib/browser/events.mjs",
+    "./globals": "./dist/lib/browser/globals.mjs",
+    "./path": "./dist/lib/browser/path.mjs",
+    "./stream": "./dist/lib/browser/stream.mjs",
+    "./util": "./dist/lib/browser/util.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "assert": "^2.0.0",
+    "buffer": "^6.0.3",
+    "events": "^3.3.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "readable-stream": "^3.6.0",
+    "util": "^0.12.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

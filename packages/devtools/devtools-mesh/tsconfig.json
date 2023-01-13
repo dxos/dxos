@@ -4,7 +4,7 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
     "src",
@@ -15,22 +15,34 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../common/esbuild-plugins"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/messaging"
     },
     {
-      "path": "../../mesh/protocol-plugin-presence"
+      "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../sdk/react-components"
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../sdk/react-toolkit"
+      "path": "../../deprecated/react-components-deprecated"
+    },
+    {
+      "path": "../../deprecated/react-toolkit"
+    },
+    {
+      "path": "../../experimental/gem-core"
+    },
+    {
+      "path": "../../experimental/gem-spore"
     }
   ]
 }

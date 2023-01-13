@@ -6,37 +6,30 @@ import React from 'react';
 
 // https://mui.com/components/material-icons
 import {
-  AccountCircle as ProfileIcon,
+  AccountCircle as IdentityIcon,
   Grain as ItemsIcon,
-  Dns as StorageIcon,
-  List as MessagesIcon,
   FilterTiltShift as SwarmIcon,
-  Group as PartiesIcon,
+  Group as SpacesIcon,
   List as FeedsIcon,
-  AppRegistration as RegistryIcon,
+  List as CredentialsIcon,
+  // AppRegistration as RegistryIcon,
   Router as SignalIcon,
   Settings as ConfigIcon,
-  SettingsBackupRestore as SnapshotsIcon,
-  Subject as LoggingIcon,
   VpnKey as KeyIcon
 } from '@mui/icons-material';
 
 import {
   ConfigPanel,
-  CredentialMessagesPanel,
+  CredentialsPanel,
   FeedsPanel,
+  IdentityPanel,
   ItemsPanel,
-  KeyringPanel,
-  LoggingPanel,
+  MembersPanel,
   // NetworkPanel,
-  PartiesPanel,
-  ProfilePanel,
-  RegistryPanel,
-  RpcTracePanel,
+  KeyringPanel,
+  SpacesPanel,
   Section,
   SignalPanel,
-  SnapshotsPanel,
-  StoragePanel,
   SwarmPanel
 } from './containers';
 
@@ -49,23 +42,23 @@ export const sections: Section[] = [
         title: 'Config',
         icon: <ConfigIcon />,
         panel: <ConfigPanel />
-      },
-      {
-        id: 'storage',
-        title: 'Storage',
-        icon: <StorageIcon />,
-        panel: <StoragePanel />
       }
+      // {
+      //   id: 'storage',
+      //   title: 'Storage',
+      //   icon: <StorageIcon />,
+      //   panel: <StoragePanel />
+      // }
     ]
   },
   {
     title: 'HALO',
     items: [
       {
-        id: 'halo.profile',
-        title: 'Profile',
-        icon: <ProfileIcon />,
-        panel: <ProfilePanel />
+        id: 'halo.identity',
+        title: 'Identity',
+        icon: <IdentityIcon />,
+        panel: <IdentityPanel />
       },
       {
         id: 'halo.keyring',
@@ -74,10 +67,10 @@ export const sections: Section[] = [
         panel: <KeyringPanel />
       },
       {
-        id: 'halo.messagess',
-        title: 'Messages',
-        icon: <MessagesIcon />,
-        panel: <CredentialMessagesPanel />
+        id: 'halo.credentials',
+        title: 'Credentials',
+        icon: <CredentialsIcon />,
+        panel: <CredentialsPanel />
       }
     ]
   },
@@ -85,10 +78,10 @@ export const sections: Section[] = [
     title: 'ECHO',
     items: [
       {
-        id: 'echo.parties',
-        title: 'Parties',
-        icon: <PartiesIcon />,
-        panel: <PartiesPanel />
+        id: 'echo.spaces',
+        title: 'Spaces',
+        icon: <SpacesIcon />,
+        panel: <SpacesPanel />
       },
       {
         id: 'echo.feeds',
@@ -101,13 +94,13 @@ export const sections: Section[] = [
         title: 'Items',
         icon: <ItemsIcon />,
         panel: <ItemsPanel />
-      },
-      {
-        id: 'echo.snapshots',
-        title: 'Snapshots',
-        icon: <SnapshotsIcon />,
-        panel: <SnapshotsPanel />
       }
+      // {
+      //   id: 'echo.snapshots',
+      //   title: 'Snapshots',
+      //   icon: <SnapshotsIcon />,
+      //   panel: <SnapshotsPanel />
+      // }
     ]
   },
   {
@@ -122,6 +115,12 @@ export const sections: Section[] = [
       },
       */
       {
+        id: 'mesh.members',
+        title: 'Members',
+        icon: <IdentityIcon />,
+        panel: <MembersPanel />
+      },
+      {
         id: 'mesh.swarminfo',
         title: 'Swarm',
         icon: <SwarmIcon />,
@@ -134,33 +133,33 @@ export const sections: Section[] = [
         panel: <SignalPanel />
       }
     ]
-  },
-  {
-    title: 'DXNS',
-    items: [
-      {
-        id: 'dxns.registry',
-        title: 'Registry',
-        icon: <RegistryIcon />,
-        panel: <RegistryPanel />
-      }
-    ]
-  },
-  {
-    title: 'DEBUG',
-    items: [
-      {
-        id: 'debug.logging',
-        title: 'Logging',
-        icon: <LoggingIcon />,
-        panel: <LoggingPanel />
-      },
-      {
-        id: 'rpc',
-        title: 'RPC Trace',
-        icon: <MessagesIcon />,
-        panel: <RpcTracePanel />
-      }
-    ]
   }
+  // {
+  //   title: 'DXNS',
+  //   items: [
+  //     {
+  //       id: 'dxns.registry',
+  //       title: 'Registry',
+  //       icon: <RegistryIcon />,
+  //       panel: <RegistryPanel />
+  //     }
+  //   ]
+  // },
+  // {
+  //   title: 'DEBUG',
+  //   items: [
+  //     {
+  //       id: 'debug.logging',
+  //       title: 'Logging',
+  //       icon: <LoggingIcon />,
+  //       panel: <LoggingPanel />
+  //     },
+  //     {
+  //       id: 'rpc',
+  //       title: 'RPC Trace',
+  //       icon: <MessagesIcon />,
+  //       panel: <RpcTracePanel />
+  //     }
+  //   ]
+  // }
 ];

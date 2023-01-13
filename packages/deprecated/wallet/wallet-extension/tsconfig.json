@@ -1,0 +1,63 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
+    "noEmit": true,
+    "outDir": "dist",
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo",
+    "types": [
+      "node",
+      "webpack-env"
+    ]
+  },
+  "include": [
+    "__src",
+    "__stories",
+    "scripts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/esbuild-plugins"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/echo-db"
+    },
+    {
+      "path": "../../../core/mesh/rpc"
+    },
+    {
+      "path": "../../../core/protocols"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/client-services"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../react-components-deprecated"
+    },
+    {
+      "path": "../../react-toolkit"
+    }
+  ]
+}

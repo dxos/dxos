@@ -9,7 +9,7 @@ import { isAbsolute, resolve, relative } from 'path';
  * Represents a reference to a module, either as an relative path with the cwd or as a global module specifier.
  */
 export class ModuleSpecifier {
-  static resolveFromFilePath (path: string, context: string) {
+  static resolveFromFilePath(path: string, context: string) {
     // Normalize path.
     const relativePath = relative(context, resolve(context, path));
     const pathWithDot = relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
@@ -17,18 +17,15 @@ export class ModuleSpecifier {
     return new ModuleSpecifier(pathWithDot, context);
   }
 
-  constructor (
-    public readonly name: string,
-    public readonly contextPath: string
-  ) {
+  constructor(public readonly name: string, public readonly contextPath: string) {
     assert(isAbsolute(contextPath));
   }
 
-  isAbsolute () {
+  isAbsolute() {
     return !this.name.startsWith('.');
   }
 
-  importSpecifier (importContext: string) {
+  importSpecifier(importContext: string) {
     if (this.isAbsolute()) {
       return this.name;
     } else {
@@ -42,7 +39,7 @@ export class ModuleSpecifier {
     }
   }
 
-  resolve () {
+  resolve() {
     return require.resolve(this.name, { paths: [this.contextPath] });
   }
 }

@@ -1,0 +1,38 @@
+{
+  "name": "@dxos/random-access-storage",
+  "version": "0.1.22",
+  "description": "Multiple random storage types.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "./dist/lib/node/index.cjs",
+  "browser": {
+    "./src/index.ts": "./src/browser/index.ts",
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "./dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "del": "^5.1.0",
+    "pify": "~5.0.0",
+    "random-access-file": "^2.2.1",
+    "random-access-idb": "^1.2.2",
+    "random-access-memory": "^4.1.0",
+    "random-access-storage": "^3.0.0",
+    "random-access-web": "^2.0.3"
+  },
+  "devDependencies": {
+    "@types/pify": "^3.0.2",
+    "source-map-support": "^0.5.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

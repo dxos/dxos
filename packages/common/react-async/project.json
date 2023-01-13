@@ -4,37 +4,63 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/react-async/src/index.ts",
+        "outputPath": "packages/common/react-async/dist/types",
+        "tsConfig": "packages/common/react-async/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "outputPath": "packages/common/react-async/dist",
-        "tsConfig": "packages/common/react-async/tsconfig.json",
-        "main": "packages/common/react-async/src/index.ts"
-      }
+        "entryPoints": [
+          "packages/common/react-async/src/index.ts"
+        ],
+        "outputPath": "packages/common/react-async/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/common/react-async/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
+        "coveragePath": "coverage/packages/common/react-async",
+        "domRequired": true,
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/common/react-async",
+        "resultsPath": "test-results/packages/common/react-async",
         "testPatterns": [
           "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
         ],
-        "jsdom": true
-      }
+        "watchPatterns": [
+          "packages/common/react-async/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "esbuild",
+    "test"
   ]
 }

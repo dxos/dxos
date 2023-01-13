@@ -1,0 +1,30 @@
+{
+  "name": "@dxos/protocols",
+  "version": "0.1.22",
+  "description": "Protobuf definitions for DXOS protocols.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "proto",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/hypercore": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/timeframe": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "debug": "^4.3.3",
+    "glob": "~7.1.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

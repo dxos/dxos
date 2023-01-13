@@ -1,3 +1,0 @@
-<component name="DependencyValidationManager">
-  <scope name="Without Tests" pattern="file[protocols]:packages//*&amp;&amp;!file[protocols]:packages//**/gen//**&amp;&amp;!file[protocols]:packages//*.test.ts" />
-</component>

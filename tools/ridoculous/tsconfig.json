@@ -1,20 +1,29 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "module": "ES2020",
+    "composite": true,
+    "emitDeclarationOnly": false,
+    "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "dist",
-    "types": [
-      "mocha"
-    ]
+    "target": "ESNext"
   },
   "exclude": [
-    "node_modules",
     "dist",
+    "node_modules",
     "out"
   ],
   "include": [
     "src/**/*",
     "testing/**/*"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/esbuild-plugins"
+    },
+    {
+      "path": "../executors/protobuf-compiler"
+    }
   ]
 }

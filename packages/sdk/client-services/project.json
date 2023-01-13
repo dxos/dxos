@@ -1,0 +1,72 @@
+{
+  "sourceRoot": "packages/sdk/client-services/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/client-services/src/index.ts",
+        "outputPath": "packages/sdk/client-services/dist/types",
+        "tsConfig": "packages/sdk/client-services/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/sdk/client-services/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/sdk/client-services/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/sdk/client-services/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "chromium",
+          "firefox",
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/sdk/client-services",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/sdk/client-services",
+        "resultsPath": "test-results/packages/sdk/client-services",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "testPatterns": [
+          "packages/sdk/client-services/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/client-services/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

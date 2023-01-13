@@ -1,0 +1,65 @@
+{
+  "sourceRoot": "packages/apps/todomvc/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/todomvc/src/index.ts",
+        "outputPath": "packages/apps/todomvc/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/apps/todomvc/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "outputPath": "packages/apps/todomvc/out/todomvc"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/todomvc/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "todomvc:bundle"
+      }
+    },
+    "serve-with-halo": {
+      "dependsOn": [
+        "^build",
+        "^bundle"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx serve halo-app"
+          },
+          {
+            "command": "nx serve todomvc"
+          }
+        ],
+        "parallel": true
+      }
+    }
+  }
+}

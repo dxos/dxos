@@ -1,0 +1,25 @@
+version: 1
+
+package:
+  modules:
+    - name: tasks
+      type: dxos:type/app
+      displayName: Tasks
+      description: Simple task management.
+      tags:
+        - showcase
+      build:
+        command: pnpm -w nx bundle tasks-app
+
+runtime:
+  client:
+    storage:
+      persistent: true
+
+  services:
+    signal:
+      server: wss://kube.dxos.org/.well-known/dx/signal
+    ice:
+      - urls: turn:kube.dxos.org:3478
+        username: dxos
+        credential: dxos

@@ -1,16 +1,27 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
   },
   "include": [
-    "scripts",
     "src",
     "test"
   ],
   "references": [
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../async"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
     }
   ]
 }

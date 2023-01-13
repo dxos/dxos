@@ -6,11 +6,17 @@
     }
   ],
   "cSpell.words": [
-    "burdon"
+    "burdon",
+    "dxos",
+    "DXOS",
+    "protobuf",
+    "testutils"
   ],
   "files.associations": {
+    "nx.json": "jsonc",
     "workspace.json": "jsonc",
     "project.json": "jsonc",
+    "schema.json": "jsonc",
     "eslintConfig.json": "jsonc",
     ".eslintrc.json": "jsonc",
     "rush.json": "jsonc",
@@ -21,10 +27,13 @@
     "build-cache.json": "jsonc",
     "command-versions.json": "jsonc",
   },
+  "typescript.preferences.importModuleSpecifier": "relative",
   "search.followSymlinks": false,
   "editor.tabSize": 2,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "hediet.vscode-drawio.theme": "Kennedy",
   "eslint.workingDirectories": [
     { "mode": "auto" }
-  ]
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

@@ -1,0 +1,62 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.experimental.kai;
+
+message LatLng {
+  fixed32 lat = 1;
+  fixed32 lng = 2;
+}
+
+message Address {
+  string city = 1;
+  string state = 2;
+  string zip = 3;
+  LatLng coordinates = 4;
+}
+
+message Contact {
+  option (object) = true;
+
+  string name = 1;
+  string username = 2;
+  string email = 3;
+  Address address = 4;
+}
+
+message Task {
+  option (object) = true;
+
+  string title = 1;
+  bool completed = 2;
+  Contact assignee = 3;
+  Task previous = 4;
+  repeated Task sub_tasks = 5;
+}
+
+message Project {
+  option (object) = true;
+
+  string title = 1;
+  TextObject description = 2;
+  repeated Contact team = 3;
+  repeated Task tasks = 4;
+//  repeated string tags = 5; // TODO(burdon): Broken.
+  string tag = 5;
+}
+
+message Organization {
+  option (object) = true;
+
+  string name = 1;
+  repeated Project projects = 2;
+  repeated Contact team = 3;
+  Address address = 4;
+}
+
+// TODO(dmaretskyi): Move to separate file.
+/// Special object type for text object references.
+message TextObject {}

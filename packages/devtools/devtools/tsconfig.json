@@ -5,69 +5,80 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
-    "src",
-    "stories"
+    "src"
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../apps/patterns/react-appkit"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/async"
     },
     {
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../common/feed-store"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/rpc"
+      "path": "../../common/timeframe"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-protocol"
+      "path": "../../core/echo/messenger-model"
     },
     {
-      "path": "../../echo/messenger-model"
+      "path": "../../core/echo/model-factory"
     },
     {
-      "path": "../../echo/model-factory"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/echo/text-model"
     },
     {
-      "path": "../../echo/text-model"
+      "path": "../../core/mesh/messaging"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../deprecated/react-components-deprecated"
+    },
+    {
+      "path": "../../deprecated/react-toolkit"
+    },
+    {
+      "path": "../../experimental/react-registry-client"
+    },
+    {
+      "path": "../../experimental/registry-client"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-components"
-    },
-    {
-      "path": "../../sdk/react-toolkit"
     },
     {
       "path": "../devtools-mesh"

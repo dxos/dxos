@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test"
+    ]
   },
   "include": [
     "src",
@@ -15,13 +18,10 @@
       "path": "../debug"
     },
     {
-      "path": "../protocols"
+      "path": "../keys"
     },
     {
-      "path": "../protocols"
-    },
-    {
-      "path": "./tsconfig.spec.json"
+      "path": "../node-std"
     }
   ]
 }
