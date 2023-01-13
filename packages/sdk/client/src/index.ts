@@ -36,6 +36,7 @@ export {
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
   type ClientServicesProvider,
+  IFrameCompatibilityRuntime,
   IFrameRuntime,
   WorkerRuntime,
   WorkerSession

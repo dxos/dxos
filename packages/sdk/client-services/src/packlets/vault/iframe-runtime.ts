@@ -9,7 +9,7 @@ import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { iframeServiceBundle, WorkerServiceBundle, workerServiceBundle } from './services';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
-export type IframeRuntimeParams = {
+export type IFrameRuntimeParams = {
   systemPort: RpcPort;
   workerAppPort: RpcPort;
   windowAppPort: RpcPort;
@@ -25,7 +25,7 @@ export class IFrameRuntime {
   private readonly _systemRpc: ProtoRpcPeer<WorkerServiceBundle>;
   private readonly _transportService = new WebRTCTransportService();
 
-  constructor({ systemPort, workerAppPort, windowAppPort }: IframeRuntimeParams) {
+  constructor({ systemPort, workerAppPort, windowAppPort }: IFrameRuntimeParams) {
     this._systemPort = systemPort;
     this._windowAppPort = windowAppPort;
     this._workerAppPort = workerAppPort;
