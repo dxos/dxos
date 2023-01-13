@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Chess } from 'chess.js';
 import React from 'react';
 
 import { Chessboard } from './Chessboard';
-import { Game } from './proto';
 
 export default {
   component: Chessboard,
@@ -17,7 +17,7 @@ export const Default = {
     // TODO(burdon): Make responsive.
     return (
       <div style={{ width: 600 }}>
-        <Chessboard game={new Game()} />
+        <Chessboard model={{ chess: new Chess() }} />
       </div>
     );
   }

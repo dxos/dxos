@@ -4,10 +4,11 @@
 
 import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
-import { base, deleted, id } from './defs';
+import { base, deleted, id, proxy, schema } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
+import { TextObject } from './text-object';
 import { strip } from './util';
 
 const isValidKey = (key: string | symbol) =>
@@ -59,7 +60,13 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     return this[base]?._schemaType?.name ?? 'Document';
   }
 
+  // TODO(burdon): Method on Document vs EchoObject?
+  get [schema](): EchoSchemaType | undefined {
+    return this[base]?._schemaType;
+  }
+
   /** Deletion. */
+  // TODO(burdon): Move to base.
   get [deleted](): boolean {
     return this[base]._get(DELETED) ?? false;
   }
@@ -74,11 +81,12 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   // TODO(burdon): Option to reference objects by ID, and/or specify depth.
   _json(visited: Set<DocumentBase>) {
+    // TODO(burdon): Serialize if no schema.
     // TODO(burdon): Important: do breadth first recursion to stabilize cycle detection/depth.
     return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
       const value = this._get(name);
       if (value !== undefined) {
-        // TODO(burdon): Handle ordered sets and other types (change field to type).
+        // TODO(burdon): Handle ordered sets and other types (change field to type). Not special case.
         if (isOrderedSet) {
           // TODO(burdon): Check if undefined; otherwise don't add if length 0.
           if (value.length) {
@@ -87,7 +95,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
               const item = value[i];
               if (item instanceof DocumentBase) {
                 // if (visited.has(item)) {
-                values.push(strip({ id: item[id] })); // TODO(burdon): Option to reify object.1
+                values.push(strip({ '@id': item[id] })); // TODO(burdon): Option to reify object.1
                 // } else {
                 //   visited.add(value);
                 //   values.push(item[object]._json(visited));
@@ -100,14 +108,20 @@ export class DocumentBase extends EchoObject<ObjectModel> {
             result[name] = values;
           }
         } else {
-          if (value instanceof DocumentBase) {
+          if (value instanceof TextObject) {
+            // TODO(burdon): Encode.
+            // result[name] = (value as TextObject).model?.content.toJSON();
+          } else if (value instanceof DocumentBase) {
             // Detect cycles.
             // if (!visited.has(value)) {
-            result[name] = { id: value[id] };
+            result[name] = { '@id': value[id] };
             // } else {
             //   visited.add(value);
             //   result[name] = value[object]._json(visited);
             // }
+          } else if (value[proxy]) {
+            // TODO(burdon): Call JSON on proxy.
+            console.log('Skipping Proxy');
           } else {
             result[name] = value;
           }
@@ -218,6 +232,11 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       },
 
       get: (target, property, receiver) => {
+        // Enable detection of proxy objects.
+        if (property === proxy) {
+          return true;
+        }
+
         if (!isValidKey(property)) {
           switch (property) {
             case 'toJSON': {

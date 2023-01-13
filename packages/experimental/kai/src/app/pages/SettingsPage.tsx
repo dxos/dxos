@@ -15,7 +15,7 @@ export const SettingsPage = () => {
   // https://www.npmjs.com/package/react-syntax-highlighter
   return (
     <div className='full-screen'>
-      <div className='flex flex-1 drop-shadow-md justify-center'>
+      <div className='flex flex-1 overflow-hidden drop-shadow-md justify-center'>
         <div className='flex flex-1 overflow-y-scroll bg-gray-50 text-sm p-4' style={{ width: 700, maxWidth: 700 }}>
           <SyntaxHighlighter className='flex flex-1' language='json' style={style}>
             {JSON.stringify(client.config.values, undefined, 2)}

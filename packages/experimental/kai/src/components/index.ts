@@ -5,6 +5,7 @@
 export * from './Button';
 export * from './Card';
 export * from './CardRow';
+export * from './FileUploadDialog';
 export * from './FolderHierarchy';
 export * from './Input';
 export * from './Kanban';

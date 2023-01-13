@@ -14,7 +14,6 @@ type UseQuery = {
 
 /**
  * Create subscription.
- * https://beta.reactjs.org/reference/react/useSyncExternalStore
  */
 export const useQuery: UseQuery = (space: Space, filter?: Filter) => {
   const query = useMemo(
@@ -22,6 +21,7 @@ export const useQuery: UseQuery = (space: Space, filter?: Filter) => {
     [space.experimental.db, ...filterToDepsArray(filter)]
   );
 
+  // https://beta.reactjs.org/reference/react/useSyncExternalStore
   return useSyncExternalStore(
     (cb) => query.subscribe(cb),
     () => query.getObjects()

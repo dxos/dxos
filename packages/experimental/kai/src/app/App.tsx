@@ -3,72 +3,15 @@
 //
 
 import React, { FC } from 'react';
-import { HashRouter, useRoutes } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 
 import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults } from '@dxos/config';
-import { RequireIdentity } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 
 import { AppView, OptionsContext } from '../hooks';
 import { schema } from '../proto';
-import {
-  CreateIdentityPage,
-  InitPage,
-  JoinIdentityPage,
-  JoinSpacePage,
-  RecoverIdentityPage,
-  SettingsPage,
-  SpacePage
-} from './pages';
-
-/**
- * Main app routes.
- */
-export const Routes = () => {
-  return useRoutes([
-    {
-      path: '/',
-      element: <InitPage />
-    },
-    {
-      path: '/identity/create',
-      element: <CreateIdentityPage />
-    },
-    {
-      path: '/identity/recover',
-      element: <RecoverIdentityPage />
-    },
-    {
-      path: '/identity/join',
-      element: <JoinIdentityPage />
-    },
-    {
-      path: '/',
-      element: <RequireIdentity redirect='/' />,
-      children: [
-        {
-          path: '/settings',
-          element: <SettingsPage />
-        },
-        {
-          path: '/space/join',
-          element: <JoinSpacePage />
-        },
-        {
-          path: '/:spaceKey',
-          element: <SpacePage />,
-          children: [
-            {
-              path: '/:spaceKey/:view',
-              element: <SpacePage />
-            }
-          ]
-        }
-      ]
-    }
-  ]);
-};
+import { Routes } from './Routes';
 
 const clientProvider = async () => {
   const config = new Config(Defaults());
