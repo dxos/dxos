@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InspectOptionsStylized, inspect } from 'util';
+import { InspectOptionsStylized, inspect } from 'node:util';
 
 import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
