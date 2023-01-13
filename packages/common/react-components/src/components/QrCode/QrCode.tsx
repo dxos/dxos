@@ -98,7 +98,7 @@ export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact,
                 role='none'
                 {...slots.qrSvg}
                 value={value}
-                className={mx(getSize(32), slots.qrSvg?.className)}
+                className={mx(getSize(64), slots.qrSvg?.className)}
               />
             </div>
           }
@@ -134,7 +134,7 @@ export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact,
                 role='none'
                 {...slots.qrSvg}
                 value={value}
-                className={mx(getSize(32), slots.qrSvg?.className)}
+                className={mx(getSize(64), slots.qrSvg?.className)}
               />
             </div>
           }
