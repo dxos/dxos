@@ -13,6 +13,9 @@ import { Heading, Button, useTranslation, getSize } from '@dxos/react-components
 
 import { createInvitationUrl } from '../../util';
 
+// NOTE: Copied from halo-app.
+// TODO(wittjosiah): Utilize @dxos/react-ui patterns.
+
 export const IdentityPage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
