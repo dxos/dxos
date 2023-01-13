@@ -7,7 +7,7 @@ import React, { FC, useContext } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx, useMediaQuery } from '@dxos/react-components';
-import { PanelSidebarContext, sidebarWidth, useTogglePanelSidebar } from '@dxos/react-ui';
+import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { useOptions, viewConfig } from '../../hooks';
 
@@ -58,7 +58,7 @@ export const ViewSelector: FC = () => {
     <div
       className={mx(
         'flex flex-col flex-1 bg-orange-500 pt-1 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
-        isLg && isOpen ? `inline-start-[${sidebarWidth}px]` : 'inline-start-0'
+        isLg && isOpen ? 'inline-start-[272px]' : 'inline-start-0'
       )}
     >
       <div className='flex pl-2'>
