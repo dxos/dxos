@@ -327,7 +327,7 @@ export class Swarm {
    * Creates a connection then sends message over signal network.
    */
   private async _initiateConnection(remoteId: PublicKey) {
-    const ctx = this._ctx // Copy to avoid getting reset while sleeping.
+    const ctx = this._ctx; // Copy to avoid getting reset while sleeping.
 
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
