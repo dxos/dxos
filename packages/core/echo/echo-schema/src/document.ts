@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { InspectOptionsStylized, inspect } from 'util';
+
 import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
-import { InspectOptionsStylized } from 'util';
-import { inspect, InspectOptions } from 'util';
 
 import { base, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
@@ -136,50 +136,52 @@ export class DocumentBase extends EchoObject<ObjectModel> {
         }
 
         return result;
-      }, { });
+      }, {});
     } else {
       const convert = (value: any): any => {
         if (value instanceof EchoObject) {
           return { '@id': value[id] };
-        } else if(value instanceof Reference) {
+        } else if (value instanceof Reference) {
           return { '@id': value.itemId };
         } else if (value instanceof OrderedArray) {
           return value.toArray().map(convert);
-        } else if(Array.isArray(value)) {
+        } else if (Array.isArray(value)) {
           return value.map(convert);
-        } else if(typeof value === 'object' && value !== null) {
+        } else if (typeof value === 'object' && value !== null) {
           const result: any = {};
-          for(const key of Object.keys(value)) {
+          for (const key of Object.keys(value)) {
             result[key] = convert(value[key]);
           }
           return result;
         } else {
           return value;
         }
-      }
-      if(this._uninitialized) {
+      };
+      if (this._uninitialized) {
         return {
           '@id': this[id],
           '@type': this[type],
-          ...convert(this._uninitialized),
-        }
+          ...convert(this._uninitialized)
+        };
       } else {
         return {
           '@id': this[id],
           '@type': this[type],
-          ...convert(this._item?.model.toObject()),
-        }
+          ...convert(this._item?.model.toObject())
+        };
       }
     }
   }
 
-  [inspect.custom](depth: number, options: InspectOptionsStylized, inspect: (value: any, options?: InspectOptionsStylized) => string) {
-    
-
+  [inspect.custom](
+    depth: number,
+    options: InspectOptionsStylized,
+    inspect: (value: any, options?: InspectOptionsStylized) => string
+  ) {
     return `${this[Symbol.toStringTag]} ${inspect({
       '@id': this[id],
       '@type': this[type],
-      ...this[base]._json(new Set()),
+      ...this[base]._json(new Set())
     })}`;
   }
 

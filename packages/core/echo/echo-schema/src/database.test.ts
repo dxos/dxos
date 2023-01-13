@@ -8,12 +8,11 @@ import waitForExpect from 'wait-for-expect';
 import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
+import { id } from './defs';
 import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
 import { TextObject } from './text-object';
-import { id } from './defs';
-import { type } from 'process';
 
 describe('EchoDatabase', () => {
   test('get/set properties', async () => {
@@ -142,12 +141,12 @@ describe('EchoDatabase', () => {
       '@id': task[id],
       '@type': null,
       title: 'Main task',
-      tags: [ 'red', 'green' ],
+      tags: ['red', 'green'],
       assignee: {
-        '@id': task.assignee[id],
+        '@id': task.assignee[id]
       }
-    })
-  })
+    });
+  });
 
   test('inspect', async () => {
     const db = await createDatabase();
@@ -159,8 +158,8 @@ describe('EchoDatabase', () => {
     });
     await db.save(task);
 
-    console.log(task)
-  })
+    console.log(task);
+  });
 
   describe('ordered arrays', () => {
     test('array of tags', async () => {
