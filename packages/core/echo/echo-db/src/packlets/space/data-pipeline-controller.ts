@@ -152,9 +152,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       ) {
         const snapshot = await this._saveSnapshot();
         this._lastAutomaticSnapshotTimeframe = snapshot.timeframe ?? failUndefined();
-        console.log('save', {
-          snapshot
-        });
+        log('save', { snapshot });
       }
     });
   }

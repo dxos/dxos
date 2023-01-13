@@ -3,14 +3,58 @@
 //
 
 import { CaretDown, CaretRight } from 'phosphor-react';
-import React, { FC, useState } from 'react';
+import React, { FC, ReactNode, useState } from 'react';
 
 import { getSize, mx } from '@dxos/react-components';
 
+const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
+const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);
+
+export const mapJsonToHierarchy = (data: any, prefix?: string): FolderHierarchyItem[] => {
+  if (Array.isArray(data)) {
+    return Object.values(data).map((value, i) => {
+      const key = String(i);
+      const item: FolderHierarchyItem = {
+        id: createKey(key, prefix)
+      };
+
+      if (isScalar(value)) {
+        item.title = String(value);
+      } else {
+        item.title = String(i);
+        item.items = mapJsonToHierarchy(value, key);
+      }
+
+      return item;
+    });
+  }
+
+  return Object.entries(data).map(([key, value]) => {
+    const item: FolderHierarchyItem = {
+      id: createKey(key, prefix),
+      title: key,
+      items: isScalar(value) ? undefined : mapJsonToHierarchy(value, key)
+    };
+
+    if (isScalar(value)) {
+      item.value = value;
+      // item.Element = (
+      //   <div>
+      //     <span>{key}</span>: <span>{String(value)}</span>
+      //   </div>
+      // );
+    }
+
+    return item;
+  });
+};
+
 export type FolderHierarchyItem = {
   id: string;
+  title?: string; // TODO(burdon): Rename label; optional component.
+  value?: any;
+  Element?: ReactNode;
   Icon?: FC;
-  title: string;
   items?: FolderHierarchyItem[];
 };
 
@@ -41,7 +85,7 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
   const Item = ({ item, depth = 0 }: { item: FolderHierarchyItem; depth?: number }) => {
     const open = openMap[item.id];
     const sub = item.items && item.items.length > 0;
-    const { Icon } = item;
+    const { Element, Icon } = item;
 
     return (
       <div className='flex flex-1 flex-col'>
@@ -58,7 +102,12 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
                 <Icon />
               </div>
             )}
-            <div style={{ lineHeight: 1.6 }}>{item.title}</div>
+            {Element || (
+              <div style={{ lineHeight: 1.6 }}>
+                <span className='text-blue-600 text-sm'>{item.title}</span>
+                {!item.items && item.value !== undefined && <span className='pl-2'>{String(item.value)}</span>}
+              </div>
+            )}
           </div>
         </div>
 

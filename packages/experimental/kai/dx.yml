@@ -12,7 +12,7 @@ package:
 runtime:
   client:
     storage:
-      persistent: true
+      persistent: false
 
   services:
     signal:

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import expect from 'expect'; // TODO(burdon): Convert to chai.
 import waitForExpect from 'wait-for-expect';
 
 import { describe, test } from '@dxos/test';

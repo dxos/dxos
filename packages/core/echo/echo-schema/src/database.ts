@@ -118,13 +118,13 @@ export class EchoDatabase {
    */
   // TODO(burdon): Additional filters?
   query<T extends Document>(filter: TypeFilter<T>): Query<T>;
-  query(filter: Filter): Query;
+  query(filter?: Filter): Query;
   query(filter: Filter): Query {
     // TODO(burdon): Create separate test.
     const matchObject = (object: EchoObject): object is DocumentBase =>
       object instanceof DocumentBase &&
       !object[deleted] &&
-      Object.entries(filter).every(([key, value]) => (object as any)[key] === value);
+      (!filter || Object.entries(filter).every(([key, value]) => (object as any)[key] === value));
 
     // Current result.
     let cache: Document[] | undefined;
@@ -139,6 +139,7 @@ export class EchoDatabase {
         return cache;
       },
 
+      // TODO(burdon): Trigger callback on call (not just update).
       subscribe: (callback: () => void) => {
         return this._db.update.on((updatedObjects) => {
           const changed = updatedObjects.some((object) => {

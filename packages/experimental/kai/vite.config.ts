@@ -24,10 +24,13 @@ export default defineConfig({
 
   server: {
     host: true,
-    https: process.env.HTTPS === 'true' ? {
-      key: './key.pem',
-      cert: './cert.pem'
-    } : false
+    https:
+      process.env.HTTPS === 'true'
+        ? {
+            key: './key.pem',
+            cert: './cert.pem'
+          }
+        : false
   },
 
   define: {
@@ -77,7 +80,6 @@ export default defineConfig({
     }
   },
 
-  // TODO(burdon): Document.
   plugins: [
     // TODO(burdon): Document.
     ConfigPlugin(),
@@ -87,6 +89,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
