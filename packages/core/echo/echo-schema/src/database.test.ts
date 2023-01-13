@@ -12,6 +12,8 @@ import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
 import { TextObject } from './text-object';
+import { id } from './defs';
+import { type } from 'process';
 
 describe('EchoDatabase', () => {
   test('get/set properties', async () => {
@@ -125,6 +127,28 @@ describe('EchoDatabase', () => {
       expect(counter).toBeGreaterThanOrEqual(2);
     });
   });
+
+  test('toJSON', async () => {
+    const db = await createDatabase();
+
+    const task = new Document({
+      title: 'Main task',
+      tags: ['red', 'green'],
+      assignee: new Document({ name: 'Bob' })
+    });
+    await db.save(task);
+
+    expect(task.toJSON()).toEqual({
+      '@id': task[id],
+      '@type': null,
+      title: 'Main task',
+      tags: [ 'red', 'green' ],
+      assignee: {
+        '@id': task.assignee[id],
+      }
+    })
+  })
+
 
   describe('ordered arrays', () => {
     test('array of tags', async () => {
