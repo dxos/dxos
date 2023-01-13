@@ -9,7 +9,12 @@ import { useHref, useNavigate, useParams } from 'react-router-dom';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx, ThemeContext, Button as NaturalButton } from '@dxos/react-components';
-import { InvitationListContainer, PanelSeparator, SpaceMemberListContainer, useTogglePanelSidebar } from '@dxos/react-ui';
+import {
+  InvitationListContainer,
+  PanelSeparator,
+  SpaceMemberListContainer,
+  useTogglePanelSidebar
+} from '@dxos/react-ui';
 
 import { Button } from '../../components';
 import { SpaceList } from '../../containers';
@@ -24,9 +29,9 @@ export const Sidebar = () => {
   const { state: connectionState } = useNetworkStatus();
   const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
 
-  const joinPath = useHref('/join');
+  const joinPath = useHref('/space/join');
   const createInvitationUrl = (invitationCode: string) =>
-    `${document.defaultView?.origin}/${joinPath}/${invitationCode}`;
+    `${document.defaultView?.origin}/${joinPath}?invitation=${invitationCode}`;
 
   const { view } = useParams();
   const [prevView, setPrevView] = useState(view);
@@ -79,10 +84,7 @@ export const Sidebar = () => {
     }
   };
 
-  const handleCreateInvitation = useCallback(() => {
-    console.log('[handle create invitation]', space);
-    space.createInvitation();
-  }, [space]);
+  const handleCreateInvitation = useCallback(() => space.createInvitation(), [space]);
 
   return (
     <div className='flex flex-col min-bs-full max-bs-full'>
