@@ -15,7 +15,7 @@ import { ComplexMap } from '@dxos/util';
 import { Message, SignalMethods } from '../signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 
-const DEFAULT_RECONNECT_TIMEOUT = 1000;
+const DEFAULT_RECONNECT_TIMEOUT = 100;
 
 export enum SignalState {
   /** Connection is being established. */
