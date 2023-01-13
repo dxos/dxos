@@ -18,6 +18,15 @@ const smallSize = 300;
 const boardSize = 640;
 const panelWidth = 160;
 
+const createChess = (game: Game) => {
+  const chess = new Chess();
+  if (game.fen) {
+    chess.loadPgn(game.fen);
+  }
+
+  return chess;
+};
+
 // TODO(burdon): Invite/determine player.
 // TODO(burdon): Move to @dxos/chess-app (stand-alone app).
 export const ChessGrid: FC = () => {
@@ -49,14 +58,14 @@ export const ChessGrid: FC = () => {
 // TODO(burdon): Presence extension throws exception (sendAnnounce).
 const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ game, style, onClose }) => {
   const [orientation, setOrientation] = useState<Color>('w');
-  const [model, setModel] = useState<ChessModel>({ chess: new Chess(game.fen) });
+  const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
-    if (game.fen !== model.chess.fen()) {
-      setModel({ chess: new Chess(game.fen) });
+    if (!model || game.fen !== model?.chess.pgn()) {
+      setModel({ chess: createChess(game) });
     }
   }, [game.fen]);
 
-  console.log('Updated', model.chess.fen(), model.chess.history());
+  console.log('Updated', model?.chess.pgn(), model?.chess.history().length);
 
   const handleFlip = () => {
     setOrientation((orientation) => (orientation === 'w' ? 'b' : 'w'));
@@ -66,10 +75,14 @@ const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ gam
     assert(model);
     if (model.chess.move(move)) {
       // TODO(burdon): Add move (requires array of scalars).
-      game!.fen = model.chess.fen();
+      game!.fen = model.chess.pgn();
       setModel({ ...model });
     }
   };
+
+  if (!model) {
+    return null;
+  }
 
   // TODO(burdon): Show captured pieces.
   return (
@@ -131,7 +144,7 @@ const Grid: FC<{ style: ChessPieces; onSelect: (game: Game) => void; onCreate: (
               style={{ width: smallSize, height: smallSize }}
               onClick={() => onSelect(game)}
             >
-              <Chessboard model={{ chess: new Chess(game.fen) }} style={style} readonly />
+              <Chessboard model={{ chess: createChess(game) }} style={style} readonly />
             </div>
           ))}
 
