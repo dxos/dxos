@@ -11,6 +11,7 @@ import { RequireIdentity } from '@dxos/react-appkit';
 
 import {
   CreateIdentityPage,
+  IdentityPage,
   InitPage,
   JoinIdentityPage,
   JoinSpacePage,
@@ -50,6 +51,11 @@ export const Routes = () => {
       path: '/',
       element: <RequireIdentity redirect='/' />,
       children: [
+        // TODO(wittjosiah): Factor out appbar to a layout.
+        {
+          path: '/identity',
+          element: <IdentityPage />
+        },
         {
           path: '/settings',
           element: <SettingsPage />

@@ -4,5 +4,4 @@
 
 export * from './AlertDialog';
 export * from './AppList';
-export * from './DeviceList';
 export * from './NavMenu';

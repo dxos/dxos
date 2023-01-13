@@ -3,6 +3,7 @@
 //
 
 export * from './AuthChoices';
+export * from './DeviceList';
 export * from './ErrorProvider';
 export * from './Fallback';
 export * from './FatalError';
