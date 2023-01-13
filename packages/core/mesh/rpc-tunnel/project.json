@@ -1,0 +1,44 @@
+{
+  "sourceRoot": "packages/core/mesh/rpc-tunnel/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/rpc-tunnel/src/index.ts",
+        "outputPath": "packages/core/mesh/rpc-tunnel/dist/types",
+        "tsConfig": "packages/core/mesh/rpc-tunnel/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/mesh/rpc-tunnel/src/index.ts"
+        ],
+        "outputPath": "packages/core/mesh/rpc-tunnel/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/mesh/rpc-tunnel/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

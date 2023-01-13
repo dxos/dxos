@@ -4,14 +4,14 @@
 
 import { inspect } from 'node:util';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 import { humanize } from './human-hash';
 
 /**
  * JSON.stringify replacer.
  */
-export function jsonReplacer (this: any, key: string, value: any): any {
+export function jsonReplacer(this: any, key: string, value: any): any {
   // TODO(burdon): Why is this represented as `{ type: 'Buffer', data }`.
   if (value !== null && typeof value === 'object' && typeof value[inspect.custom] === 'function') {
     return value[inspect.custom]();

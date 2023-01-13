@@ -1,0 +1,43 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "outDir": "dist",
+    "types": [
+      "@vuepress/client/types",
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "typings.d.ts",
+    "vuepress.config.ts"
+  ],
+  "references": [
+    {
+      "path": "../packages/common/telemetry"
+    },
+    {
+      "path": "../packages/sdk/client"
+    },
+    {
+      "path": "../packages/sdk/config"
+    },
+    {
+      "path": "../packages/sdk/react-client"
+    },
+    {
+      "path": "../tools/apidoc"
+    }
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "allowJs": true
+    },
+    "esm": true
+  }
+}

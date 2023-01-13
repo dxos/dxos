@@ -1,0 +1,65 @@
+{
+  "sourceRoot": "packages/common/hypercore/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/hypercore/src/index.ts",
+        "outputPath": "packages/common/hypercore/dist/types",
+        "tsConfig": "packages/common/hypercore/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/hypercore/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/hypercore/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/hypercore/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/common/hypercore",
+        "outputPath": "tmp/mocha/packages/common/hypercore",
+        "resultsPath": "test-results/packages/common/hypercore",
+        "testPatterns": [
+          "packages/common/hypercore/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/hypercore/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "stripInternal": true,
+    "types": [
+      "@dxos/test",
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
+    },
+    {
+      "path": "../echo-db"
+    },
+    {
+      "path": "../echo-schema"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../object-model"
+    }
+  ]
+}

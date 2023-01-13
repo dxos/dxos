@@ -1,16 +1,18 @@
 # DXOS DevTools browser extension
 
-TODO(wittjosiah): Upgrade to manifest v3.
+WARNING: This package is currently outdated and unmaintained.
 
 The DevTools extension provides debugging information about all aspects of the currently loaded DXOS app.
 
-<img width="640" alt="Screen Shot 2022-01-26 at 7 04 10 PM" src="https://user-images.githubusercontent.com/3523355/151267314-12169bab-8e45-4662-aa67-57128313ebb7.png">
+[![Watch the video](https://user-images.githubusercontent.com/36420699/210833098-ea42d197-0c4e-4b71-a83c-de2649c1a5cb.png)](https://github.com/dxos/dxos/pull/2193#issue-1512878065)
+
+Demo https://github.com/dxos/dxos/pull/2193#issue-1512878065
 
 ## Installation
 
-The Devtools zip file is created during the [Publish](https://github.com/dxos/protocols/blob/main/.github/workflows/publish.yaml) CI action.
+The Devtools zip file is created during the [Publish](https://github.com/dxos/dxos/blob/main/.github/workflows/publish.yaml) CI action.
 
-1. Go to: https://github.com/dxos/protocols/actions/workflows/publish.yaml
+1. Go to: https://github.com/dxos/dxos/actions/workflows/publish.yaml
 1. Click on the latest successful workflow run (look for the green check mark).
 1. Click on `Artifacts`, then download and uncompress the zip file.
 1. Go to `chrome://extensions`, then click `Load unpacked` and select the folder (make sure developer mode is enabled).
@@ -19,30 +21,20 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/pr
 
 ### General
 
-1. Clone this repo then install dependencies and build:
+1. Clone this repo then install dependencies
+2. Then to build the extension:
 
 ```
-rushx build --to rush build --to @dxos/devtools
+pnpm -w nx bundle devtools-extension
 ```
 
-2. Then to build the extension.
-
-```
-rushx build
-```
-
-3. (Optional) Run the `rushx build:watch` for both `devtools-extension` and `devtools` and open the devtools in your browser.
-
-TODO(burdon): `build:watch` not configured.
-
-### Chrome
+### Chromium
 
 4. Open the __extensions__ manager in your browser: 
 
 - [brave://extensions](brave://extensions)
 - [chrome://extensions](chrome://extensions)
 - Edge (Not Supported Yet)
-- Safari (Not Supported Yet)
 
 5. Make sure you have the `developer` toggle __on__ and click on `Load Unpacked Extension` button.
 6. Search for the extension __dist__ folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
@@ -55,13 +47,17 @@ TODO(burdon): `build:watch` not configured.
 
 An alternative method is to run `rushx start:firefox` which will run a temporary firefox instance with the extension installed. Running this way allows for integration with watch tools and reloading the extension by pressing `r` in the terminal.
 
+### Safari
+
+- Not yet supported.
+
 ## Troubleshooting
 
 - Remove all tabs that contain the extension then remove the extension and reload it.
 
 ## Design
 
-![devtools-architecture](../../../docs/design/diagrams/devtools.drawio.svg)
+![devtools-architecture](../../../docs/docs/design/diagrams/devtools-architecture.drawio.svg)
 
 The injected script attempts to detect the an object exposed by the SDK's client (`window.__DXOS__`).
 A channel is then setup to forward messages between the devtools panel and app client following the client RPC interface.
@@ -74,9 +70,9 @@ The injected script sends messages through the content script via window events 
 1. Content script is injected into the page automatically by browser.
     1. Allows messaging with the page.
 1. Devtools page is created.
-    1. Waits for `window.__DXOS__` hook to appear.
     1. Creates devtools panel.
 1. Devtools panel is loaded.
+    1. Waits for `window.__DXOS__` hook to appear.
     1. Renders the devtools application.
     1. Client API connects via the `window.__DXOS__` hook.
 1. Devtools panel is ready.
@@ -85,4 +81,3 @@ The injected script sends messages through the content script via window events 
 
 - Anatomy of an extension: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Background_pages
 - This package is loosely based on the [Apollo DevTools](https://github.com/apollographql/apollo-client-devtools).
-

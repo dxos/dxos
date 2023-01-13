@@ -1,0 +1,22 @@
+{
+  "name": "@dxos/hello-template",
+  "version": "0.1.22",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/config.t.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf test/out",
+    "gen": "test/generate"
+  },
+  "dependencies": {
+    "@dxos/bare-template": "workspace:*",
+    "postcss": "^8.4.17",
+    "tailwindcss": "^3.1.8"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  }
+}

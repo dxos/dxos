@@ -4,19 +4,26 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useClient } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { useClient, useClientServices } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { Panel } from '../../components';
-import { RpcMessage } from '../../proto/gen/dxos/rpc';
 
 export const RpcTracePanel = () => {
   const client = useClient();
   const [messages, setMessages] = useState<RpcMessage[]>([]);
+  const services = useClientServices();
+  if (!services) {
+    return null;
+  }
 
   useEffect(() => {
-    const stream = client.services.TracingService.subscribeToRpcTrace();
-    stream.subscribe(msg => setMessages(messages => [...messages, msg]), () => {});
+    const stream = services.TracingService.subscribeToRpcTrace();
+    stream.subscribe(
+      (msg: any) => setMessages((messages) => [...messages, msg]),
+      () => {}
+    );
 
     return () => stream.close();
   }, [client]);

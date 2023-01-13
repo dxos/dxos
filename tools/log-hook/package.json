@@ -1,0 +1,30 @@
+{
+  "name": "@dxos/log-hook",
+  "version": "0.1.22",
+  "private": true,
+  "description": "Logger",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "browser": {
+    "node:util": "util"
+  },
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@swc-node/sourcemap-support": "^0.2.0",
+    "@swc/core": "~1.2.248",
+    "pirates": "~4.0.5",
+    "sorcery": "^0.10.0",
+    "source-map": "^0.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "typescript": "^4.8.4"
+  }
+}

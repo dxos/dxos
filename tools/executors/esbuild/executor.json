@@ -1,9 +1,9 @@
 {
   "executors": {
-    "bundle": {
+    "build": {
       "implementation": "./dist/src/main",
       "schema": "./schema.json",
-      "description": "Runs esbuild bundler."
+      "description": "Runs esbuild."
     }
   }
 }

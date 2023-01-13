@@ -4,47 +4,102 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/react-client/src/index.ts",
+        "outputPath": "packages/sdk/react-client/dist/types",
+        "tsConfig": "packages/sdk/react-client/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "outputPath": "packages/sdk/react-client/dist",
-        "tsConfig": "packages/sdk/react-client/tsconfig.json",
-        "main": "packages/sdk/react-client/src/index.ts"
-      }
+        "entryPoints": [
+          "packages/sdk/react-client/src/index.ts"
+        ],
+        "outputPath": "packages/sdk/react-client/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/sdk/react-client/playwright",
+        "outputPath": "tmp/mocha/packages/sdk/react-client/playwright",
+        "playwright": true,
+        "resultsPath": "test-results/packages/sdk/react-client/playwright",
+        "serve": "react-client:storybook",
+        "testPatterns": [
+          "packages/sdk/react-client/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/react-client/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/react-client/**/*.{ts,tsx,js,jsx}"
         ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/sdk/react-client/.storybook"
+        },
+        "open": false,
+        "uiFramework": "@storybook/react"
       }
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/sdk/react-client",
+        "domRequired": true,
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/sdk/react-client",
+        "resultsPath": "test-results/packages/sdk/react-client",
         "testPatterns": [
           "packages/sdk/react-client/src/**/*.test.{ts,tsx,js,jsx}"
         ],
-        "jsdom": true
-      }
-    },
-    "e2e": {
-      "executor": "@dxos/playwright:playwright",
-      "options": {
-        "testPatterns": [
-          "packages/sdk/react-client/playwright/tests/*.test.ts"
-        ],
-        "config": "packages/sdk/react-client/playwright/config.ts"
-      }
+        "watchPatterns": [
+          "packages/sdk/react-client/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
   },
   "implicitDependencies": [
-    "mocha",
-    "playwright"
+    "esbuild",
+    "test"
   ]
 }

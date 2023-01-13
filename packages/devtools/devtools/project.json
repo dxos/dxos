@@ -1,40 +1,113 @@
 {
   "sourceRoot": "packages/devtools/devtools/src",
-  "projectType": "library",
+  "projectType": "application",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/devtools/devtools/src/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/devtools/devtools/src/index.ts",
+        "outputPath": "packages/devtools/devtools/dist/types",
+        "tsConfig": "packages/devtools/devtools/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
+      ]
+    },
+    "build-storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:build",
+      "options": {
+        "config": {
+          "configFolder": "packages/devtools/devtools/.storybook"
+        },
+        "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
+        "uiFramework": "@storybook/react"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        {
+          "env": "IPDATA_API_KEY"
+        },
+        "^production",
+        "production"
       ],
       "options": {
-        "outputPath": "packages/devtools/devtools/dist",
-        "tsConfig": "packages/devtools/devtools/tsconfig.json",
-        "main": "packages/devtools/devtools/src/index.ts"
-      }
+        "outputPath": "packages/devtools/devtools/out/devtools"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/devtools/devtools/src/index.ts"
+        ],
+        "outputPath": "packages/devtools/devtools/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/devtools/devtools/**/*.{ts,js}"
+        ]
+      },
       "outputs": [
         "{options.outputFile}"
-      ],
+      ]
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
       "options": {
-        "lintFilePatterns": [
-          "packages/devtools/devtools/**/*.{ts,tsx,js,jsx}"
-        ]
+        "buildTarget": "devtools:bundle"
+      }
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/devtools/devtools/.storybook"
+        },
+        "uiFramework": "@storybook/react"
       }
     }
   },
   "implicitDependencies": [
-    "protobuf-compiler"
+    "esbuild"
   ]
 }

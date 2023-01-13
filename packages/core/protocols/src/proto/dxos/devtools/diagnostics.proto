@@ -1,0 +1,28 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/keys.proto";
+
+package dxos.devtools.host;
+
+message Services {
+  repeated SpaceStats spaces = 1;
+}
+
+message SpaceStats {
+  dxos.keys.PublicKey key = 1;
+  repeated PeerStats peers = 2;
+}
+
+message PeerStats {
+  FeedStats control_feed = 1;
+  FeedStats data_feed = 2;
+}
+
+message FeedStats {
+  dxos.keys.PublicKey key = 1;
+  int32 length = 2;
+}

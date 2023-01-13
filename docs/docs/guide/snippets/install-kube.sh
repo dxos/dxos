@@ -1,0 +1,1 @@
+sudo bash -c "$(curl -fsSL https://install-kube.dxos.org)"

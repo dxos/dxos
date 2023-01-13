@@ -1,15 +1,15 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "allowJs": true,
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
-    "src",
-    "src/**/*.json"
+    "src"
   ],
   "references": [
     {
@@ -19,10 +19,19 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../errors"
     }
   ]
 }

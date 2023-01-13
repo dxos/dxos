@@ -1,0 +1,28 @@
+import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { FullScreen } from '@dxos/react-components';
+import { GraphShowcase } from './GraphShowcase';
+
+# ECHO Graph
+
+The component below implements a dynamic graph view of an ECHO database.
+<br/>
+
+<div style={{ display: 'flex', height: 480 }}>
+  <GraphShowcase grid={false} />
+</div>
+
+## Try it out.
+
+This can be generated using simple hooks to create the model.
+
+```tsx
+export const App = () => {
+  const client = useClient();
+  const [space, setspace] = useState<space>();
+  const model = useGraphModel(space);
+
+  return (
+    <EchoGraph model={model} />
+  );
+};
+```

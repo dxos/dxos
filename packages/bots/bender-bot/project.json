@@ -1,0 +1,29 @@
+{
+  "sourceRoot": "packages/bots/bender-bot/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/bots/bender-bot/src/index.ts",
+        "outputPath": "packages/bots/bender-bot/dist/types",
+        "tsConfig": "packages/bots/bender-bot/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/bots/bender-bot/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

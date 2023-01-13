@@ -9,5 +9,5 @@ export * from './KeyTable';
 export * from './Loader';
 export * from './MessageTable';
 export * from './Panel';
-export * from './PartyTable';
+export * from './SpaceTable';
 export * from './Table';

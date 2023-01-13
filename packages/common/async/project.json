@@ -4,35 +4,61 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/async/src/index.ts",
+        "outputPath": "packages/common/async/dist/types",
+        "tsConfig": "packages/common/async/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "outputPath": "packages/common/async/dist",
-        "tsConfig": "packages/common/async/tsconfig.json",
-        "main": "packages/common/async/src/index.ts"
-      }
+        "entryPoints": [
+          "packages/common/async/src/index.ts"
+        ],
+        "outputPath": "packages/common/async/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/common/async/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "packages/common/async/coverage"
-      ],
+      "executor": "@dxos/test:run",
       "options": {
-        "jestConfig": "packages/common/async/jest.config.ts",
-        "passWithNoTests": true
-      }
+        "coveragePath": "coverage/packages/common/async",
+        "outputPath": "tmp/mocha/packages/common/async",
+        "resultsPath": "test-results/packages/common/async",
+        "testPatterns": [
+          "packages/common/async/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/async/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }

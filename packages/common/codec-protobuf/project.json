@@ -4,53 +4,62 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/codec-protobuf/src/index.ts",
+        "outputPath": "packages/common/codec-protobuf/dist/types",
+        "tsConfig": "packages/common/codec-protobuf/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/codec-protobuf/dist",
-        "tsConfig": "packages/common/codec-protobuf/tsconfig.json",
-        "main": "packages/common/codec-protobuf/src/index.ts"
-      }
+      ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
-      "outputs": [
-        "{options.outfile}"
-      ],
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
           "packages/common/codec-protobuf/src/index.ts"
         ],
-        "outfile": "packages/common/codec-protobuf/dist/browser.js",
-        "bundlePackages": [
-          "protobufjs"
-        ]
-      }
+        "injectGlobals": true,
+        "outputPath": "packages/common/codec-protobuf/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/common/codec-protobuf/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/packages/common/codec-protobuf"
-      ],
+      "executor": "@dxos/test:run",
       "options": {
-        "jestConfig": "packages/common/codec-protobuf/jest.config.ts",
-        "passWithNoTests": true
-      }
+        "coveragePath": "coverage/packages/common/codec-protobuf",
+        "outputPath": "tmp/mocha/packages/common/codec-protobuf",
+        "resultsPath": "test-results/packages/common/codec-protobuf",
+        "testPatterns": [
+          "packages/common/codec-protobuf/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/codec-protobuf/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "test"
   ]
 }

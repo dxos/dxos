@@ -1,0 +1,93 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test",
+      "@dxos/typings"
+    ]
+  },
+  "exclude": [],
+  "include": [
+    "src/index.ts",
+    "src/packlets",
+    "src/packlets/api"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/feed-store"
+    },
+    {
+      "path": "../../../common/hypercore"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
+    },
+    {
+      "path": "../../../common/random-access-storage"
+    },
+    {
+      "path": "../../../common/timeframe"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../halo/keyring"
+    },
+    {
+      "path": "../../mesh/messaging"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../mesh/rpc"
+    },
+    {
+      "path": "../../mesh/teleport"
+    },
+    {
+      "path": "../../mesh/teleport-extension-object-sync"
+    },
+    {
+      "path": "../../mesh/teleport-extension-presence"
+    },
+    {
+      "path": "../../mesh/teleport-extension-replicator"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../object-model"
+    }
+  ]
+}

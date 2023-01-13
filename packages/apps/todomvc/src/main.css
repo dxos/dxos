@@ -1,0 +1,59 @@
+div#spaces {
+  position: absolute;
+  width: 272px;
+  top: 8px;
+  bottom: 8px;
+  left: -300px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #eaeaea;
+  z-index: 100;
+  transition-property: left;
+  transition-duration: 500ms;
+}
+
+div#spaces.show {
+  left: 8px;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-grow {
+  flex: 1;
+}
+
+button#open, button#close {
+  font-size: 22px;
+  color: #949494;
+}
+
+button#open {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+}
+
+button#close {
+  transform: rotate(180deg);
+}
+
+button#add {
+  margin-right: 5px;
+}
+
+button#share {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 65px;
+  position: absolute;
+  right: 0;
+  top: -65px
+}
+
+button#join {
+  margin-left: 5px;
+}

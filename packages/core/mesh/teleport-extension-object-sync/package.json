@@ -1,0 +1,39 @@
+{
+  "name": "@dxos/teleport-extension-object-sync",
+  "version": "0.1.22",
+  "description": "Teleport extension to synchronize opaque data objects.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/teleport": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,47 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+
+package example.testing.rpc;
+
+message TestRpcRequest {
+  string data = 1;
+}
+
+message TestRpcResponse {
+  string data = 1;
+}
+
+service TestService {
+  rpc TestCall (TestRpcRequest) returns (TestRpcResponse);
+  rpc VoidCall (google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+service TestStreamService {
+  rpc TestCall (TestRpcRequest) returns (stream TestRpcResponse);
+}
+
+message PingRequest {
+  int32 nonce = 1;
+}
+
+message PingReponse {
+  int32 nonce = 1;
+}
+
+service PingService {
+  rpc Ping (PingRequest) returns (PingReponse);
+}
+
+message MessageWithAny {
+  google.protobuf.Any payload = 1;
+}
+
+service TestAnyService {
+  rpc TestCall (MessageWithAny) returns (MessageWithAny);
+}

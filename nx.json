@@ -1,4 +1,5 @@
 {
+  // https://nx.dev/reference/nx-json
   "extends": "nx/presets/npm.json",
   "npmScope": "dxos",
   "affected": {
@@ -11,11 +12,13 @@
         "cacheableOperations": [
           "build",
           "bundle",
-          "check",
+          "compile",
+          "compile-lib",
+          "compile-node",
           "e2e",
           "lint",
           "prebuild",
-          "proto",
+          "prerelease",
           "test"
         ],
         "parallel": 6,
@@ -23,59 +26,110 @@
       }
     }
   },
+  // Named inputs explained here: https://nx.dev/more-concepts/customizing-inputs
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    // Nx assumes the use of tsconfig.base.json.
+    // https://nx.dev/more-concepts/customizing-inputs#global-settings.
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/.eslintrc*.js"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/**/*.md",
+      "!{projectRoot}/eslintConfig.json",
+      "!{workspaceRoot}/.eslintrc*.js"
+    ]
+  },
   "targetDefaults": {
     "build": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
         "^build",
-        "^bundle",
-        "proto",
-        "prebuild"
+        "prebuild",
+        "compile"
       ]
     },
     "bundle": {
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "env": "CONFIG_DYNAMIC"
+        }
+      ],
       "dependsOn": [
-        "^bundle",
-        "build",
-        "proto",
+        // TODO(wittjosiah): This might be able to be ^compile to speed up deploys.
+        //   Some experimental/deprecated projects still depend on build for transpiling.
+        "^build",
         "prebuild"
       ]
     },
-    "check": {
+    "compile": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
-        "lint",
-        "test",
-        "proto",
-        "build"
+        "^compile",
+        "prebuild"
       ]
     },
     "e2e": {
+      "inputs": ["default", "^production"],
       "dependsOn": [
-        "proto",
         "build",
         "bundle"
       ]
     },
+    "lint": {
+      "inputs": ["default"]
+    },
     "prebuild": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^compile"
+      ]
+    },
+    "prerelease": {
+      "inputs": ["default", "^production"],
       "dependsOn": [
         "^build"
       ]
     },
-    "proto": {
+    "preview": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build"
+        "bundle"
       ]
     },
     "serve": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build",
-        "^bundle",
-        "proto"
+        "^compile",
+        "prebuild"
       ]
     },
     "test": {
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "CI"
+        },
+        {
+          "env": "LOG_LEVEL"
+        },
+        {
+          "env": "LOG_PROCESSOR"
+        }
+      ],
       "dependsOn": [
-        "^build",
-        "proto"
+        "prebuild",
+        "^compile"
       ]
     }
   },

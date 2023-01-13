@@ -1,0 +1,26 @@
+{
+  "project": {
+    "ignored": [
+      "@dxos/dxos"
+    ],
+    "fixedKeys": [
+      "sourceRoot",
+      "projectType",
+      "targets"
+    ]
+  },
+  "package": {
+    "commonKeys": [
+      "license",
+      "author",
+      "homepage",
+      "bugs"
+    ]
+  },
+  "tsconfig": {
+    "fixedKeys": [
+      "extends",
+      "compilerOptions"
+    ]
+  }
+}

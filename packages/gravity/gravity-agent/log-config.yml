@@ -1,0 +1,8 @@
+formatter:
+  column: 100
+
+depth: 2
+
+filter:
+  - gravity:debug
+#  - client-services:debug

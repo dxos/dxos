@@ -14,7 +14,10 @@ import { getTypeReference } from './types';
 
 const f = ts.factory;
 
-export function * createDeclarations (types: protobufjs.ReflectionObject[], ctx: GeneratorContext): Generator<ts.Statement> {
+export function* createDeclarations(
+  types: protobufjs.ReflectionObject[],
+  ctx: GeneratorContext
+): Generator<ts.Statement> {
   for (const obj of types) {
     if (obj instanceof protobufjs.Enum) {
       yield createEnumDeclaration(obj, ctx);
@@ -34,36 +37,39 @@ export function * createDeclarations (types: protobufjs.ReflectionObject[], ctx:
         );
       }
     } else if (obj instanceof protobufjs.Namespace) {
-      yield * createDeclarations(obj.nestedArray, ctx);
+      yield* createDeclarations(obj.nestedArray, ctx);
     }
   }
 }
 
-function * getRegisteredTypes (root: protobufjs.NamespaceBase): Generator<protobufjs.Enum | protobufjs.Type> {
+function* getRegisteredTypes(root: protobufjs.NamespaceBase): Generator<protobufjs.Enum | protobufjs.Type> {
   for (const obj of root.nestedArray) {
     if (obj instanceof protobufjs.Enum) {
       yield obj;
     } else if (obj instanceof protobufjs.Type) {
       yield obj;
-      yield * getRegisteredTypes(obj);
+      yield* getRegisteredTypes(obj);
     } else if (obj instanceof protobufjs.Namespace) {
-      yield * getRegisteredTypes(obj);
+      yield* getRegisteredTypes(obj);
     }
   }
 }
 
-export const createTypeDictionary = (root: protobufjs.NamespaceBase) => f.createInterfaceDeclaration(
-  undefined,
-  [f.createToken(ts.SyntaxKind.ExportKeyword)],
-  'TYPES',
-  undefined,
-  undefined,
-  Array.from(getRegisteredTypes(root))
-    .sort((b, a) => b.fullName.localeCompare(a.fullName))
-    .map(type => f.createPropertySignature(
-      undefined,
-      f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
-      undefined,
-      getTypeReference(type)
-    ))
-);
+export const createTypeDictionary = (root: protobufjs.NamespaceBase) =>
+  f.createInterfaceDeclaration(
+    undefined,
+    [f.createToken(ts.SyntaxKind.ExportKeyword)],
+    'TYPES',
+    undefined,
+    undefined,
+    Array.from(getRegisteredTypes(root))
+      .sort((b, a) => b.fullName.localeCompare(a.fullName))
+      .map((type) =>
+        f.createPropertySignature(
+          undefined,
+          f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
+          undefined,
+          getTypeReference(type)
+        )
+      )
+  );

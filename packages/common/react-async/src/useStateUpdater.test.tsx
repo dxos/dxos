@@ -9,6 +9,8 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
+import { afterEach, beforeEach, describe, test } from '@dxos/test';
+
 import { useStateUpdater } from './useStateUpdater';
 
 // Expensive object to copy.
@@ -19,7 +21,7 @@ const complex = {
 };
 
 const Test = () => {
-  const [value,, updateValue] = useStateUpdater({ complex, items: [] });
+  const [value, , updateValue] = useStateUpdater({ complex, items: [] });
   useEffect(() => {
     // https://github.com/kolodny/immutability-helper
     updateValue({
@@ -29,25 +31,23 @@ const Test = () => {
     });
   }, []);
 
-  return (
-    <pre>{JSON.stringify(value)}</pre>
-  );
+  return <pre>{JSON.stringify(value)}</pre>;
 };
 
 let rootContainer: HTMLElement;
 
-beforeEach(() => {
-  rootContainer = document.createElement('div');
-  document.body.appendChild(rootContainer);
-});
-
-afterEach(() => {
-  document.body.removeChild(rootContainer);
-});
-
 describe('useStateMutator', () => {
-  it('udpates the value.', async () => {
-    act(() => {
+  beforeEach(() => {
+    rootContainer = document.createElement('div');
+    document.body.appendChild(rootContainer);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(rootContainer);
+  });
+
+  test('udpates the value.', async () => {
+    void act(() => {
       createRoot(rootContainer).render(<Test />);
     });
 

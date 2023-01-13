@@ -1,0 +1,61 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types"
+  },
+  "include": [
+    "src",
+    "tests-setup.js"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../messaging"
+    },
+    {
+      "path": "../rpc"
+    },
+    {
+      "path": "../signal"
+    },
+    {
+      "path": "../teleport"
+    }
+  ]
+}

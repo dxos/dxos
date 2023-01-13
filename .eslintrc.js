@@ -7,27 +7,28 @@ require('@rushstack/eslint-patch/modern-module-resolution');
 module.exports = {
   root: true,
   ignorePatterns: [
-    // Binaries
-    'bin',
-    'main.js',
-
     // Build Artifacts
     'dist',
     'out',
     '**/proto/gen/*',
-    'packages/sdk/client/src/packlets/proxy/version.ts',
+    'packages/core/protocols/proto/**/*',
+    'packages/sdk/client/src/version.ts',
 
     // Config
     '.eslintrc.js',
     '.mocharc.js',
-    'jest.config.js',
-    'jest.config.ts',
     'esbuild-server.config.js',
     'webpack.config.js',
     'vite.config.ts',
 
     // Dependencies
-    'node_modules'
+    'node_modules',
+
+    // Templates
+    // TODO(wittjosiah): Fix lint config to lint these files.
+    '*.t.ts',
+    // Docs snippets
+    'docs/docs/**/*',
   ],
   overrides: [
     {

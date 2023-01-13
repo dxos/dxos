@@ -1,0 +1,14 @@
+formatter:
+  column: 100
+
+depth: 1
+
+filter:
+  - client:debug
+  - test-suite:debug
+  - memory-transport:debug
+#  - swarm:debug
+#  - network-manager:debug
+#  - test-protocol:debug
+#  - mesh-protocol:debug
+#  - protocol:debug

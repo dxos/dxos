@@ -1,0 +1,89 @@
+{
+  "sourceRoot": "packages/apps/composer-app/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/composer-app/src/index.ts",
+        "outputPath": "packages/apps/composer-app/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/apps/composer-app/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_RELEASE"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        {
+          "env": "IPDATA_API_KEY"
+        },
+        "^production",
+        "production"
+      ],
+      "options": {
+        "outputPath": "packages/apps/composer-app/out/composer"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/composer-app/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "composer-app:bundle"
+      }
+    },
+    "serve-with-halo": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx serve halo-app"
+          },
+          {
+            "command": "nx serve composer-app"
+          }
+        ],
+        "parallel": true
+      }
+    }
+  }
+}

@@ -1,9 +1,0 @@
-//
-// Copyright 2021 DXOS.org
-//
-
-syntax = "proto3";
-
-package dxos.halo;
-
-import "@dxos/protocols/src/proto/dxos/halo/keys.proto";

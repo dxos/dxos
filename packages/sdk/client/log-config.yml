@@ -1,0 +1,7 @@
+formatter:
+  column: 100
+
+filter:
+  - client:debug
+  - client-services:debug
+  - invitations:debug

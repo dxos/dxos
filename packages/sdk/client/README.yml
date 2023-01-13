@@ -1,0 +1,11 @@
+usage: |
+  Create a client object like this:
+
+  ```ts
+  import { Client } from "@dxos/client";
+  const client = new Client();
+  ```
+quickStartUrl: https://docs.dxos.org/guide/quick-start
+guideUrl: https://docs.dxos.org/guide/echo/
+apiReferenceUrl: true
+

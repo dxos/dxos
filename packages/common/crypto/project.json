@@ -4,35 +4,62 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/crypto/src/index.ts",
+        "outputPath": "packages/common/crypto/dist/types",
+        "tsConfig": "packages/common/crypto/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "outputPath": "packages/common/crypto/dist",
-        "tsConfig": "packages/common/crypto/tsconfig.json",
-        "main": "packages/common/crypto/src/index.ts"
-      }
+        "entryPoints": [
+          "packages/common/crypto/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/crypto/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/common/crypto/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/packages/common/crypto"
-      ],
+      "executor": "@dxos/test:run",
       "options": {
-        "jestConfig": "packages/common/crypto/jest.config.ts",
-        "passWithNoTests": true
-      }
+        "coveragePath": "coverage/packages/common/crypto",
+        "outputPath": "tmp/mocha/packages/common/crypto",
+        "resultsPath": "test-results/packages/common/crypto",
+        "testPatterns": [
+          "packages/common/crypto/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/crypto/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }

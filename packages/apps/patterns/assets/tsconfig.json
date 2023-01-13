@@ -1,0 +1,15 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist"
+  },
+  "include": [
+    "src"
+  ],
+  "references": []
+}

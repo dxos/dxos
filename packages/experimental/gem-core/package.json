@@ -1,0 +1,49 @@
+{
+  "name": "@dxos/gem-core",
+  "version": "0.1.22",
+  "description": "Gem core components and utils.",
+  "homepage": "https://github.com/dxos",
+  "bugs": "https://github.com/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "book": "esbuild-server book"
+  },
+  "dependencies": {
+    "@emotion/css": "^11.7.1",
+    "@emotion/react": "^11.9.0",
+    "assert": "^2.0.0",
+    "csstype": "^3.0.10",
+    "d3": "^7.4.4",
+    "lodash.defaultsdeep": "^4.6.1",
+    "react-resize-detector": "^7.1.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/esbuild-book-knobs": "~2.28.3",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~2.29.0",
+    "@types/d3": "^7.1.0",
+    "@types/faker": "^5.5.9",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "faker": "^5.5.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-dom": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

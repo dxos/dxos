@@ -1,0 +1,46 @@
+{
+  "name": "@dxos/gem-spore",
+  "version": "0.1.22",
+  "description": "Gem spore.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "dxos/gem.git",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "book": "esbuild-server book"
+  },
+  "dependencies": {
+    "@dxos/gem-core": "workspace:*",
+    "@emotion/css": "^11.7.1",
+    "@emotion/react": "^11.9.0",
+    "clsx": "^1.1.1",
+    "d3": "^7.4.4",
+    "d3-force": "~3.0.0",
+    "immutability-helper": "^3.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/esbuild-book-knobs": "~2.28.3",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~2.29.0",
+    "@types/d3": "^7.1.0",
+    "@types/faker": "^5.5.9",
+    "@types/lodash": "^4.14.182",
+    "faker": "^5.5.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

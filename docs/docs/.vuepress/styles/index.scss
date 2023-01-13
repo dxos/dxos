@@ -1,0 +1,143 @@
+@use "sass:map";
+@import './tailwind-colors.scss';
+@import './palette.scss';
+
+.page {
+  transition: none;
+}
+
+html[data-theme=light] {
+  th, td {
+    border-color: $zinc-200;
+  }
+}
+
+html[data-theme=dark] {
+  th, td {
+    border-color: $zinc-700;
+  }
+}
+
+html[data-theme=dark] tr:nth-child(2n) {
+  background-color: transparent;
+}
+
+// TODO(wittjosiah): Can the plugin add this?
+.showcase-preview {
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  padding: 1em;
+}
+
+.home.project .feature:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+div[class^="language-"] {
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+}
+
+html[data-theme=dark] div[class^="language-"] {
+  background-color: $zinc-900;
+}
+
+div[class^="language-error"] code {
+  color: $red-600;
+  html[data-theme=dark] & {
+    color: $red-400;
+  }
+}
+
+#message-container .message {
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+}
+
+.custom-container .custom-container-title {
+  font-weight: 500;
+}
+
+.custom-container {
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+}
+
+.home.project .feature h2 {
+  font-weight: 500;
+}
+
+.home.project .hero {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.home.project .hero img {
+  opacity: 0.8 !important;
+}
+
+.home.project .hero .description {
+  max-width: 40rem;
+}
+
+.navbar nav.nav-links {
+  margin-left: 2rem !important;
+}
+
+code {
+  background-color: $zinc-200;
+}
+
+html[data-theme=light] {
+  div[class*=language-] > button.copy:not(.pure) {
+    background-color: $zinc-300;
+    box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
+    &:hover {
+      background-color: map.get($theme-color, 'light');
+    }
+  }
+}
+
+html[data-theme=dark] {
+  div[class*=language-] > button.copy:not(.pure) {
+    background-color: $zinc-700;
+    .copy-icon {
+      color: $zinc-400;
+    }
+    box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
+    &:hover {
+      background-color: map.get($theme-color, 'dark');
+      .copy-icon {
+        color: $zinc-800;
+      }
+    }
+  }
+}
+
+.navbar .nav-item > .nav-link:hover::after, .navbar .nav-item > .nav-link.active::after {
+  bottom: -16px;
+}
+
+html[data-theme=dark] .home.project .hero {
+  img.dark {
+    // opacity: 0.8 !important;
+  }
+  h1 {
+    color: white;
+  }
+}
+
+html[data-theme=light] .home.project .hero {
+  img.dark {
+    // opacity: 0.8 !important;
+  }
+  h1 {
+    color: black;
+  }
+}
+
+html[data-theme=dark] .custom-container.note {
+  background-color: darken($zinc-800, 3%);
+}
+

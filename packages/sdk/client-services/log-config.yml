@@ -1,0 +1,12 @@
+formatter:
+  column: 100
+
+# depth: 0
+
+# TODO(burdon): Logging stopped working?
+
+filter:
+  - warn
+  - client-services:debug
+# - credentials:debug
+# - identity-manager:debug

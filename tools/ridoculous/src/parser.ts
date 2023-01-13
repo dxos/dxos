@@ -14,21 +14,16 @@ import { remarkLinker } from './remark-linker.js';
 import { remarkSnippets } from './remark-snippets.js';
 
 interface Options {
-  autoNumber?: boolean
-  baseDir?: string
-  html?: boolean
-  verbose?: boolean
+  autoNumber?: boolean;
+  baseDir?: string;
+  html?: boolean;
+  verbose?: boolean;
 }
 
 /**
  * Create remark parser with plugins.
  */
-export const createParser = ({
-  autoNumber,
-  baseDir,
-  html,
-  verbose
-}: Options): any => {
+export const createParser = ({ autoNumber, baseDir, html, verbose }: Options): any => {
   // https://github.com/remarkjs/awesome-remark
   const unified = remark()
     // https://github.com/remarkjs/remark-gfm
@@ -52,12 +47,12 @@ export const createParser = ({
     .use(remarkHeadings, { autoNumber });
 
   if (html) {
-    unified
-      .use(remarkRehype as any)
-      .use(rehypeStringify as any);
+    unified.use(remarkRehype as any).use(rehypeStringify as any);
   }
 
-  return unified
-    // Custom options available to plugins.
-    .data('config', { baseDir, verbose });
+  return (
+    unified
+      // Custom options available to plugins.
+      .data('config', { baseDir, verbose })
+  );
 };

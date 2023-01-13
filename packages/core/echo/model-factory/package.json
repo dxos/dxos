@@ -1,0 +1,34 @@
+{
+  "name": "@dxos/model-factory",
+  "version": "0.1.22",
+  "description": "ECHO model factory.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "debug": "^4.3.3"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

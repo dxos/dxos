@@ -2,14 +2,31 @@
   "sourceRoot": "tools/ridoculous/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/ridoculous/src/index.ts",
+        "outputPath": "tools/ridoculous/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "tools/ridoculous/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "tools/ridoculous/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     }
   }
 }

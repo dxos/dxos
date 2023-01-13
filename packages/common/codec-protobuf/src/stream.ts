@@ -5,55 +5,72 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
+import { Context } from '@dxos/context';
+
 const log = debug('dxos:codec-protobuf:stream');
 
-type Producer<T> = (callbacks: {
+type Callbacks<T> = {
+  ctx: Context;
+
   /**
    * Advises that the producer is ready to stream the data.
    * Called automatically with the first call to `next`.
    */
-  ready: () => void
+  ready: () => void;
 
   /**
    * Sends a message into the stream.
    */
-  next: (message: T) => void
+  next: (message: T) => void;
 
   /**
    * Closes the stream.
    * Optional error can be provided.
    */
-  close: (error?: Error) => void
-}) => (() => void) | void
+  close: (err?: Error) => void;
+};
 
-export type StreamItem<T> =
-  | { ready: true }
-  | { data: T }
-  | { closed: true, error?: Error }
+type Producer<T> = (callbacks: Callbacks<T>) => ((err?: Error) => void) | void;
+
+export type StreamItem<T> = { ready: true } | { data: T } | { closed: true; error?: Error };
+
+// TODO(burdon): Implement Observable<T> pattern to simplify callbacks.
+// stream.subscribe({
+//   onData: (data: CustomData) => {
+//   },
+//   onOpen: () => {
+//   },
+//   onClose: () => {
+//   },
+//   onError: () => {
+//   }
+// });
+//
+// stream.unsubscribe();
+// await stream.close90:
 
 /**
  * Represents a typed stream of data.
- *
+ * In concept it's a Promise that can resolve multiple times.
  * Can only have one subscriber.
- *
  * `close` must be called to clean-up the resources.
  */
 export class Stream<T> {
   /**
    * Consumes the entire stream to the end until it closes and returns a promise with the resulting items.
    */
-  static consume <T> (stream: Stream<T>): Promise<StreamItem<T>[]> {
-    return new Promise(resolve => {
+  static consume<T>(stream: Stream<T>): Promise<StreamItem<T>[]> {
+    return new Promise((resolve) => {
       const items: StreamItem<T>[] = [];
 
       stream.onReady(() => {
         items.push({ ready: true });
       });
       stream.subscribe(
-        data => {
+        (data) => {
           items.push({ data });
         },
-        error => {
+        (error) => {
           if (error) {
             items.push({ closed: true, error });
           } else {
@@ -68,22 +85,53 @@ export class Stream<T> {
   /**
    * Maps all data coming through the stream.
    */
-  static map<T, U> (source: Stream<T>, map: (data: T) => U): Stream<U> {
+  static map<T, U>(source: Stream<T>, map: (data: T) => U): Stream<U> {
     return new Stream(({ ready, next, close }) => {
       source.onReady(ready);
-      source.subscribe(data => next(map(data)), close);
+      source.subscribe((data) => next(map(data)), close);
 
       return () => source.close();
     });
   }
 
+  /**
+   * Converts Promise<Stream<T>> to Stream<T>.
+   */
+  static unwrapPromise<T>(streamPromise: Promise<Stream<T>>): Stream<T> {
+    if (streamPromise instanceof Stream) {
+      return streamPromise;
+    }
+
+    return new Stream(({ ready, next, close }) => {
+      streamPromise.then(
+        (stream) => {
+          stream.onReady(ready);
+          stream.subscribe(next, close);
+        },
+        (err) => {
+          close(err);
+        }
+      );
+      return () => {
+        streamPromise.then(
+          (stream) => stream.close(),
+          // eslint-disable-next-line n/handle-callback-err
+          (err) => {
+            /* already handled */
+          }
+        );
+      };
+    });
+  }
+
+  private readonly _ctx: Context;
   private _messageHandler?: (msg: T) => void;
   private _closeHandler?: (error?: Error) => void;
   private _readyHandler?: () => void;
 
   private _isClosed = false;
   private _closeError: Error | undefined;
-  private _dispose: (() => void) | undefined;
+  private _producerCleanup: ((err?: Error) => void) | undefined;
   private _readyPromise: Promise<void>;
   private _resolveReadyPromise!: () => void;
   private _isReady = false;
@@ -93,60 +141,84 @@ export class Stream<T> {
    */
   private _buffer: T[] | null = [];
 
-  constructor (producer: Producer<T>) {
-    this._readyPromise = new Promise(resolve => {
+  constructor(producer: Producer<T>) {
+    this._readyPromise = new Promise((resolve) => {
       this._resolveReadyPromise = resolve;
     });
 
-    const disposeCallback = producer({
-      ready: () => {
-        this._markAsReady();
-      },
-
-      next: msg => {
-        if (this._isClosed) {
-          log('Stream is closed, dropping message.');
-          return;
-        }
-
-        this._markAsReady();
-
-        if (this._messageHandler) {
-          try {
-            this._messageHandler(msg);
-          } catch (error: any) {
-            // Stop error propagation.
-            throwUnhandledRejection(error);
-          }
-        } else {
-          assert(this._buffer);
-          this._buffer.push(msg);
-        }
-      },
-
-      close: err => {
+    this._ctx = new Context({
+      onError: (err) => {
         if (this._isClosed) {
           return;
         }
 
         this._isClosed = true;
         this._closeError = err;
-        this._dispose?.();
-        try {
-          this._closeHandler?.(err);
-        } catch (error: any) {
-          // Stop error propagation.
-          throwUnhandledRejection(error);
-        }
+        this._producerCleanup?.(err);
+        this._closeHandler?.(err);
+        void this._ctx.dispose();
       }
     });
+    this._ctx.onDispose(() => {
+      this.close();
+    });
 
-    if (disposeCallback) {
-      this._dispose = disposeCallback;
+    try {
+      const producerCleanup = producer({
+        ctx: this._ctx,
+
+        ready: () => {
+          this._markAsReady();
+        },
+
+        next: (msg) => {
+          if (this._isClosed) {
+            log('Stream is closed, dropping message.');
+            return;
+          }
+
+          this._markAsReady();
+
+          if (this._messageHandler) {
+            try {
+              this._messageHandler(msg);
+            } catch (err: any) {
+              // Stop error propagation.
+              throwUnhandledRejection(err);
+            }
+          } else {
+            assert(this._buffer);
+            this._buffer.push(msg);
+          }
+        },
+
+        close: (err) => {
+          if (this._isClosed) {
+            return;
+          }
+
+          this._isClosed = true;
+          this._closeError = err;
+          this._producerCleanup?.(err);
+          try {
+            this._closeHandler?.(err);
+          } catch (err: any) {
+            // Stop error propagation.
+            throwUnhandledRejection(err);
+          }
+          void this._ctx.dispose();
+        }
+      });
+
+      if (producerCleanup) {
+        this._producerCleanup = producerCleanup;
+      }
+    } catch (err: any) {
+      this._ctx.raise(err);
     }
   }
 
-  private _markAsReady () {
+  private _markAsReady() {
     if (!this._isReady) {
       this._isReady = true;
       this._readyHandler?.();
@@ -154,7 +226,7 @@ export class Stream<T> {
     }
   }
 
-  subscribe (onMessage: (msg: T) => void, onClose?: (error?: Error) => void) {
+  subscribe(onMessage: (msg: T) => void, onClose?: (err?: Error) => void) {
     assert(!this._messageHandler, 'Stream is already subscribed to.');
     assert(!this._closeHandler, 'Stream is already subscribed to.');
     assert(this._buffer); // Must be not-null.
@@ -162,9 +234,9 @@ export class Stream<T> {
     for (const message of this._buffer) {
       try {
         onMessage(message);
-      } catch (error: any) {
+      } catch (err: any) {
         // Stop error propagation.
-        throwUnhandledRejection(error);
+        throwUnhandledRejection(err);
       }
     }
 
@@ -183,14 +255,15 @@ export class Stream<T> {
   /**
    * Resolves when stream is ready.
    */
-  waitUntilReady (): Promise<void> {
+  // TODO(burdon): Gather all callbacks into single observer.
+  waitUntilReady(): Promise<void> {
     return this._readyPromise;
   }
 
   /**
    * Registers a callback to be called when stream is ready.
    */
-  onReady (onReady: () => void): void {
+  onReady(onReady: () => void): void {
     assert(!this._readyHandler, 'Stream already has a handler for the ready event.');
     this._readyHandler = onReady;
 
@@ -202,19 +275,21 @@ export class Stream<T> {
   /**
    * Close the stream and dispose of any resources.
    */
-  close () {
+  // TODO(burdon): Make async.
+  close() {
     if (this._isClosed) {
       return;
     }
 
     this._isClosed = true;
-    this._dispose?.();
+    this._producerCleanup?.();
     this._closeHandler?.(undefined);
+    void this._ctx.dispose();
 
     // Clear function pointers.
     this._messageHandler = undefined;
     this._closeHandler = undefined;
-    this._dispose = undefined;
+    this._producerCleanup = undefined;
   }
 }
 

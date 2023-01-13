@@ -1,0 +1,52 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "../patterns/react-appkit/src/components/AppShell/pwa.d.ts",
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/react-components"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../core/echo/text-model"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../patterns/react-appkit"
+    },
+    {
+      "path": "../patterns/react-composer"
+    },
+    {
+      "path": "../patterns/react-ui"
+    }
+  ]
+}

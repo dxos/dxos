@@ -1,0 +1,20 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../model-factory"
+    }
+  ]
+}

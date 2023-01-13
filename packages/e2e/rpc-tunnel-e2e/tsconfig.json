@@ -1,0 +1,43 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "noEmit": true,
+    "outDir": "dist",
+    "types": [
+      "sharedworker"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../deprecated/react-components-deprecated"
+    }
+  ]
+}
