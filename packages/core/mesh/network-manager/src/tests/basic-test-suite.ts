@@ -110,42 +110,36 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   });
 
-  Array(10000)
-    .fill(0)
-    .forEach((_, i) => {
-      test
-        .only('going offline and back online', async () => {
-          const peer1 = testBuilder.createPeer();
-          const peer2 = testBuilder.createPeer();
-          await openAndCloseAfterTest([peer1, peer2]);
+  test('going offline and back online', async () => {
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
+    await openAndCloseAfterTest([peer1, peer2]);
 
-          const topic = PublicKey.random();
+    const topic = PublicKey.random();
 
-          const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
-          await exchangeMessages(swarm1, swarm2);
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
+    await exchangeMessages(swarm1, swarm2);
 
-          //
-          // Going offline and back online
-          //
-          const connectionDropped = peer2._networkManager
-            .getSwarm(topic)
-            ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
+    //
+    // Going offline and back online
+    //
+    const connectionDropped = peer2._networkManager
+      .getSwarm(topic)
+      ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
-          await peer1.goOffline();
-          await connectionDropped;
-          await peer1.goOnline();
+    await peer1.goOffline();
+    await connectionDropped;
+    await peer1.goOnline();
 
-          await waitForExpect(() => {
-            expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
+    await waitForExpect(() => {
+      expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
 
-            expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
-          }, 1_000);
+      expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
+    }, 1_000);
 
-          await exchangeMessages(swarm1, swarm2);
-          await leaveSwarm([peer1, peer2], topic);
-        })
-        .timeout(2_000);
-    });
+    await exchangeMessages(swarm1, swarm2);
+    await leaveSwarm([peer1, peer2], topic);
+  }).timeout(2_000);
 
   // TODO(mykola): broken.
   test.skip('many peers and connections', async () => {
