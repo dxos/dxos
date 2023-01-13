@@ -220,20 +220,13 @@ export class Swarm {
   @synchronized
   async goOffline() {
     await this._ctx.dispose();
-    [...this._peers.values()].forEach((peer) => {
-      peer.advertizing = false;
-    });
-    await Promise.all([...this._peers.keys()].map((peerId) => this._closeConnection(peerId)));
+    await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(peerId)));
   }
 
   // For debug purposes
   @synchronized
   async goOnline() {
     this._ctx = new Context();
-
-    [...this._peers.values()].forEach((peer) => {
-      peer.advertizing = true;
-    });
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
