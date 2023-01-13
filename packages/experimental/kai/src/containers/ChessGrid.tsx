@@ -15,9 +15,10 @@ import { getSize, mx } from '@dxos/react-components';
 import { useSpace } from '../hooks';
 
 const smallSize = 300;
-const boardSize = 640;
+const boardSize = 600;
 const panelWidth = 160;
 
+// TODO(burdon): Factor out.
 const createChess = (game: Game) => {
   const chess = new Chess();
   if (game.fen) {
@@ -65,8 +66,6 @@ const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ gam
     }
   }, [game.fen]);
 
-  console.log('Updated', model?.chess.pgn(), model?.chess.history().length);
-
   const handleFlip = () => {
     setOrientation((orientation) => (orientation === 'w' ? 'b' : 'w'));
   };
@@ -85,6 +84,7 @@ const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ gam
   }
 
   // TODO(burdon): Show captured pieces.
+  // TODO(burdon): Shrink board if small.
   return (
     <>
       <div className='absolute'>
@@ -97,13 +97,13 @@ const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ gam
 
       <div className='flex flex-1 flex-col justify-center'>
         <div className='flex justify-center'>
-          <div style={{ width: panelWidth }} />
+          <div className='hidden lg:flex' style={{ width: panelWidth }} />
 
           <div className='bg-gray-100' style={{ width: boardSize, height: boardSize }}>
             <Chessboard model={model} orientation={orientation} style={style} onUpdate={handleUpdate} />
           </div>
 
-          <div className='flex flex-col ml-6 justify-center' style={{ width: panelWidth }}>
+          <div className='hidden lg:flex flex-col ml-6 justify-center' style={{ width: panelWidth }}>
             <ChessPanel model={model} orientation={orientation} onFlip={handleFlip} />
           </div>
         </div>

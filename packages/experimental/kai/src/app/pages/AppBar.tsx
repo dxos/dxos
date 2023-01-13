@@ -41,7 +41,6 @@ export const AppBar = () => {
   );
 };
 
-// TODO(burdon): Collapse tabs into hamburger if narrow.
 export const ViewSelector: FC = () => {
   const navigate = useNavigate();
   const { views } = useOptions();
@@ -57,7 +56,7 @@ export const ViewSelector: FC = () => {
   return (
     <div
       className={mx(
-        'flex flex-col flex-1 bg-orange-500 pt-1 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
+        'flex-col flex-1 bg-orange-500 pt-1 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
         isLg && isOpen ? `inline-start-[${sidebarWidth}px]` : 'inline-start-0'
       )}
     >
@@ -68,13 +67,13 @@ export const ViewSelector: FC = () => {
             <a
               key={view}
               className={mx(
-                'flex p-1 pl-2 pr-2 mr-2 items-center cursor-pointer rounded-t text-black text-sm',
+                'flex p-1 pl-2 pr-2 lg:mr-2 items-center cursor-pointer rounded-t text-black text-sm',
                 view === currentView && 'bg-white'
               )}
               onClick={() => setView(currentSpaceKey!, view)}
             >
               <Icon weight='light' className={getSize(6)} />
-              <div className='ml-1'>{String(view)}</div>
+              <div className='hidden lg:flex ml-1'>{String(view)}</div>
             </a>
           );
         })}

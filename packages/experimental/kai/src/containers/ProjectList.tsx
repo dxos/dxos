@@ -81,13 +81,13 @@ export const ProjectItem: FC<{ project: Project }> = withReactor(({ project }) =
           <Archive className={getSize(6)} />
         </div>
         <Input
-          className='w-full p-1 text-lg outline-0'
+          className='w-full p-1 text-lg'
           spellCheck={false}
           value={project.title}
           onChange={(value) => (project.title = value)}
         />
         <Button className='mr-2 text-gray-500' onClick={handleGenerateTask}>
-          <Plus className={getSize(6)} />
+          <Plus className={getSize(5)} />
         </Button>
       </div>
 

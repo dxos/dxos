@@ -78,7 +78,7 @@ export const DraggableTaskListContainer: FC<{
 }> = withReactor(({ tasks, newTask, onCreate, onDelete }) => {
   const { active } = useDndContext();
 
-  // TODO(burdon): NewTaskItem doesn't update on create.
+  // TODO(burdon): Order isn't reliable after dragging.
   return (
     <div>
       {tasks.map((task) => (
@@ -108,12 +108,10 @@ export const DraggableTaskItem: FC<{
   };
 
   return (
-    <div ref={setNodeRef} className='flex flex-1 ml-3' style={style}>
-      <div className='pt-1'>
-        <Button className='w-4' {...listeners} {...attributes}>
-          <DotsSixVertical />
-        </Button>
-      </div>
+    <div ref={setNodeRef} className='flex flex-1 items-center ml-3' style={style}>
+      <Button className='w-4' {...listeners} {...attributes}>
+        <DotsSixVertical />
+      </Button>
 
       <TaskItem task={task} onEnter={onEnter} onDelete={onDelete} />
     </div>
