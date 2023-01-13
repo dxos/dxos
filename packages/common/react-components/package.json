@@ -33,6 +33,7 @@
     "autoprefixer": "^10.4.12",
     "i18next": "^21.10.0",
     "jdenticon": "^3.2.0",
+    "lodash.merge": "^4.6.2",
     "postcss": "^8.4.17",
     "qrcode.react": "^3.1.0",
     "rci": "^0.0.3",
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@dxos/node-std": "workspace:*",
+    "@types/lodash.merge": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
