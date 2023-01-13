@@ -109,30 +109,36 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   });
 
-  test('going offline and back online', async () => {
-    const peer1 = testBuilder.createPeer();
-    const peer2 = testBuilder.createPeer();
-    await openAndCloseAfterTest([peer1, peer2]);
+  Array(1000)
+    .fill(0)
+    .forEach((_, i) => {
+      test
+        .only('going offline and back online', async () => {
+          const peer1 = testBuilder.createPeer();
+          const peer2 = testBuilder.createPeer();
+          await openAndCloseAfterTest([peer1, peer2]);
 
-    const topic1 = PublicKey.random();
+          const topic1 = PublicKey.random();
 
-    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
-    await exchangeMessages(swarm1, swarm2);
+          const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
+          await exchangeMessages(swarm1, swarm2);
 
-    //
-    // Going offline and back online
-    //
-    const connectionDropped = peer2._networkManager
-      .getSwarm(topic1)
-      ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
+          //
+          // Going offline and back online
+          //
+          const connectionDropped = peer2._networkManager
+            .getSwarm(topic1)
+            ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
-    await peer1.goOffline();
-    await connectionDropped;
-    await peer1.goOnline();
+          await peer1.goOffline();
+          await connectionDropped;
+          await peer1.goOnline();
 
-    await exchangeMessages(swarm1, swarm2);
-    await leaveSwarm([peer1, peer2], topic1);
-  }).timeout(2_000);
+          await exchangeMessages(swarm1, swarm2);
+          await leaveSwarm([peer1, peer2], topic1);
+        })
+        .timeout(2_000);
+    });
 
   // TODO(mykola): broken.
   test.skip('many peers and connections', async () => {
