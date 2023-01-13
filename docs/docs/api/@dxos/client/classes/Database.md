@@ -1,5 +1,5 @@
 # Class `Database`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/database.d.ts:33]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/database.d.ts:34]()</sub>
 
 
 Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
