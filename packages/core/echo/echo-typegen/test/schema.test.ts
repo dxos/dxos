@@ -39,8 +39,8 @@ describe('schema', () => {
 
     task1.assignee = contact;
     expect(task1.assignee.name).to.eq('User 1');
-    expect(task1.toJSON()).to.deep.eq({ title: 'Task 1', assignee: { id: contact[id] } });
-    expect(JSON.stringify(task1)).to.eq(JSON.stringify({ title: 'Task 1', assignee: { id: contact[id] } }));
+    expect(task1.toJSON()).to.deep.eq({ title: 'Task 1', assignee: { '@id': contact[id] } });
+    expect(JSON.stringify(task1)).to.eq(JSON.stringify({ title: 'Task 1', assignee: { '@id': contact[id] } }));
   });
 
   test('json with recursion', () => {
@@ -52,10 +52,10 @@ describe('schema', () => {
       name: 'User 1',
       tasks: [
         {
-          id: contact.tasks[0][id]
+          '@id': contact.tasks[0][id]
         },
         {
-          id: contact.tasks[1][id]
+          '@id': contact.tasks[1][id]
         }
       ]
     });

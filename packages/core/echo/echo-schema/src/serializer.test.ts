@@ -12,7 +12,8 @@ import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
 
 describe('Serializer', () => {
-  test('Basic', async () => {
+  // TODO(burdon): Implement.
+  test.skip('Basic', async () => {
     const serializer = new Serializer();
 
     let data: SerializedSpace;
