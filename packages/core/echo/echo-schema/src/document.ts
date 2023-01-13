@@ -3,8 +3,10 @@
 //
 
 import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
+import { InspectOptionsStylized } from 'util';
+import { inspect, InspectOptions } from 'util';
 
-import { base, deleted, id, proxy, schema } from './defs';
+import { base, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -58,6 +60,10 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   get [Symbol.toStringTag]() {
     return this[base]?._schemaType?.name ?? 'Document';
+  }
+
+  get [type](): string | null {
+    return this[base]?._schemaType?.name ?? this[base]._get('@type') ?? null;
   }
 
   // TODO(burdon): Method on Document vs EchoObject?
@@ -154,17 +160,27 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       if(this._uninitialized) {
         return {
           '@id': this[id],
-          '@type': this._uninitialized['@type'] ?? null,
+          '@type': this[type],
           ...convert(this._uninitialized),
         }
       } else {
         return {
           '@id': this[id],
-          '@type': this._getModelProp('@type') ?? null,
+          '@type': this[type],
           ...convert(this._item?.model.toObject()),
         }
       }
     }
+  }
+
+  [inspect.custom](depth: number, options: InspectOptionsStylized, inspect: (value: any, options?: InspectOptionsStylized) => string) {
+    
+
+    return `${this[Symbol.toStringTag]} ${inspect({
+      '@id': this[id],
+      '@type': this[type],
+      ...this[base]._json(new Set()),
+    })}`;
   }
 
   private _get(key: string) {

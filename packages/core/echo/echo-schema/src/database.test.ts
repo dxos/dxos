@@ -149,6 +149,18 @@ describe('EchoDatabase', () => {
     })
   })
 
+  test('inspect', async () => {
+    const db = await createDatabase();
+
+    const task = new Document({
+      title: 'Main task',
+      tags: ['red', 'green'],
+      assignee: new Document({ name: 'Bob' })
+    });
+    await db.save(task);
+
+    console.log(task)
+  })
 
   describe('ordered arrays', () => {
     test('array of tags', async () => {
