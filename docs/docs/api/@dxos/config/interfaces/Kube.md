@@ -6,6 +6,11 @@ Defined in:
 ## Properties
 ### [alias]()
 Type: <code>string[]</code>
+### [appTunneling]()
+Type: <code>[AppTunneling](/api/@dxos/config/interfaces/AppTunneling)</code>
+
+Options:
+  - proto3_optional = true
 ### [autoupdate]()
 Type: <code>[Autoupdate](/api/@dxos/config/interfaces/Autoupdate)</code>
 
@@ -18,6 +23,11 @@ Options:
   - proto3_optional = true
 ### [env]()
 Type: <code>string[]</code>
+### [gravity]()
+Type: <code>[Gravity](/api/@dxos/config/interfaces/Gravity)</code>
+
+Options:
+  - proto3_optional = true
 ### [host]()
 Type: <code>string</code>
 

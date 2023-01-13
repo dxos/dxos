@@ -24,13 +24,13 @@ Arguments:
 ### [_getState]()
 Type: <code>function</code>
 ### [update]()
-Type: <code>Event&lt;Model&lt;Doc, Mutation&gt;&gt;</code>
+Type: <code>Event&lt;Model&lt;[Doc](/api/@dxos/text-model/classes/Doc), Mutation&gt;&gt;</code>
 ### [meta](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L42)
 Type: <code>ModelMeta&lt;any, any, any&gt;</code>
 ### [content](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L68)
 Type: <code>YXmlFragment</code>
 ### [doc](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L64)
-Type: <code>Doc</code>
+Type: <code>[Doc](/api/@dxos/text-model/classes/Doc)</code>
 ### [itemId]()
 Type: <code>string</code>
 ### [modelMeta]()
