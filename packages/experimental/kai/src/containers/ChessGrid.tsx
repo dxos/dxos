@@ -3,10 +3,10 @@
 //
 
 import { Chess, Color } from 'chess.js';
-import { ArrowURightDown, ArrowUUpLeft, Circle, PlusCircle } from 'phosphor-react';
+import { ArrowUUpLeft, PlusCircle } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
-import { Game, Chessboard, ChessPieces } from '@dxos/chess-app';
+import { Game, Chessboard, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
@@ -52,50 +52,6 @@ export const ChessGrid: FC = () => {
   };
 
   if (game) {
-    const label = chess?.isGameOver()
-      ? chess!.isCheckmate()
-        ? 'CHECKMATE'
-        : chess!.isStalemate()
-        ? 'STALEMATE'
-        : 'DRAW'
-      : chess?.isCheck()
-      ? 'CHECK'
-      : '';
-
-    const Player = ({ color }: { color: Color }) => {
-      const turn = color === chess?.turn();
-
-      return (
-        <div className='flex items-center'>
-          <Circle
-            className={mx(getSize(4), turn && (chess!.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
-            weight={turn ? 'fill' : 'thin'}
-          />
-        </div>
-      );
-    };
-
-    const Panel = () => {
-      return (
-        <div className='flex flex-col bg-gray-50 shadow'>
-          <div className='flex items-center justify-between pl-2 pr-2 border-b' style={{ height: 32 }}>
-            <Player color={orientation === 'w' ? 'b' : 'w'} />
-            <button onClick={handleFlip}>
-              <ArrowURightDown weight='thin' className={getSize(6)} />
-            </button>
-          </div>
-
-          <div className='flex flex-col justify-center pl-2 font-thin' style={{ height: 40 }}>
-            {label}
-          </div>
-
-          <div className='flex items-center justify-between pl-2 pr-2 border-t' style={{ height: 32 }}>
-            <Player color={orientation} />
-          </div>
-        </div>
-      );
-    };
-
     return (
       <>
         <div className='absolute'>
@@ -111,13 +67,11 @@ export const ChessGrid: FC = () => {
             <div style={{ width: panelWidth }} />
 
             <div className='bg-gray-100' style={{ width: boardSize, height: boardSize }}>
-              <Chessboard game={game} onUpdate={setChess} style={style} orientation={orientation} />
+              <Chessboard game={game} orientation={orientation} style={style} onUpdate={setChess} />
             </div>
 
-            <div className='flex flex-col ml-6 justify-between' style={{ width: panelWidth }}>
-              <div style={{ height: 40 }}></div>
-              <Panel />
-              <div style={{ height: 40 }} />
+            <div className='flex flex-col ml-6 justify-center' style={{ width: panelWidth }}>
+              {chess && <ChessPanel chess={chess} orientation={orientation} onFlip={handleFlip} />}
             </div>
           </div>
         </div>
@@ -130,8 +84,13 @@ export const ChessGrid: FC = () => {
       <div className='bg-white overflow-y-scroll scrollbar'>
         <div className='flex grid grid-cols-3 grid-flow-row gap-4 m-6'>
           {games.map((game) => (
-            <div key={game[id]} className='border-2' style={{ width: smallSize, height: smallSize }}>
-              <Chessboard game={game} readonly style={style} onSelect={() => handleSelect(game)} />
+            <div
+              key={game[id]}
+              className='border-2'
+              style={{ width: smallSize, height: smallSize }}
+              onClick={() => handleSelect(game)}
+            >
+              <Chessboard game={game} readonly style={style} />
             </div>
           ))}
 
