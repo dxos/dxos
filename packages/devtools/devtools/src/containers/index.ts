@@ -3,15 +3,16 @@
 //
 
 export * from './ConfigPanel';
-export * from './CredentialMessagesPanel';
+export * from './CredentialsPanel';
 export * from './FeedsPanel';
+export * from './IdentityPanel';
 export * from './ItemsPanel';
 export * from './KeyringPanel';
 export * from './LoggingPanel';
+export * from './MembersPanel';
 export * from './NetworkPanel';
 export * from './PanelsContainer';
-export * from './PartiesPanel';
-export * from './ProfilePanel';
+export * from './SpacesPanel';
 export * from './RegistryPanel';
 export * from './SignalPanel';
 export * from './SnapshotsPanel';

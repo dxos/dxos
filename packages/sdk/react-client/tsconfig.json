@@ -6,17 +6,13 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
-    "src",
-    "stories",
-    "playwright"
+    "playwright",
+    "src"
   ],
   "references": [
-    {
-      "path": "../../bot/bot-factory-client"
-    },
     {
       "path": "../../common/async"
     },
@@ -27,22 +23,40 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/react-async"
     },
     {
+      "path": "../../common/react-components"
+    },
+    {
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/messaging"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../client"
+    },
+    {
+      "path": "../client-services"
     },
     {
       "path": "../config"

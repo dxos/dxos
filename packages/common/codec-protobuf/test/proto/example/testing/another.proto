@@ -1,0 +1,11 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package example.testing.another;
+
+message AnotherMessage {
+  string foo = 1;
+}

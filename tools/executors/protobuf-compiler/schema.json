@@ -4,23 +4,26 @@
   "cli": "nx",
   "properties": {
     "basePath": {
-      "type": "string",
-      "description": ""
+      "type": "string"
     },
     "srcPath": {
       "type": "string",
-      "description": "",
       "default": "**/*.proto"
     },
     "outputPath": {
       "type": "string",
-      "description": "",
       "default": "gen"
     },
     "substitutionsPath": {
       "type": "string",
-      "description": "",
       "default": "substitutions.ts"
+    },
+    "exportPath": {
+      "type": "string",
+      "description": "Directory for compiled proto definitions.",
+      "examples": [
+        "dist/src/proto/gen"
+      ]
     }
   },
   "required": ["basePath"]

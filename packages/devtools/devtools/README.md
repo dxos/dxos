@@ -1,7 +1,11 @@
-# DevTools components
+# DXOS Devtools
 
-TODO(burdon): Rename @dxos/devtools-components
+Package with standalone DEVTOOLS vite app. 
+It listens for client in shared worker started by some app. 
 
-Contains all of the devtools components (separate from the browser extension).
+'dx.yml' contains `runtime.client.remoteSource` default endpoint with remote client. 
+it is setup to listen for halo-app shared worker (`pnpm nx serve halo-app`).
 
-Please refer to [DevTools Extension](../devtools-extension) readme.
+
+## Start
+`pnpm nx serve devtools`

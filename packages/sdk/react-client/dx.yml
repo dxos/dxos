@@ -1,9 +1,18 @@
 version: 1
 
-package:
-  modules:
-    - name: dxos:story/react-client
-      type: dxos:type/app
-      build:
-        command: npm run build:book
-        outdir: out/book
+runtime:
+  client:
+    mode: local
+
+  services:
+    signal:
+      server: wss://kube.dxos.org/.well-known/dx/signal
+    ice:
+      - urls: stun:dev.kube.dxos.org:3478
+      - urls: turn:dev.kube.dxos.org:3478
+        username: dxos
+        credential: dxos
+      - urls: stun:kube.dxos.org:3478
+      - urls: turn:kube.dxos.org:3478
+        username: dxos
+        credential: dxos

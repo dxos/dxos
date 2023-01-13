@@ -1,0 +1,30 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+package example.testing.extensions;
+
+extend google.protobuf.FieldOptions {
+  string defaultValue = 5001;
+  OptionsObject optionsObj = 5002;
+}
+
+message OptionsObject {
+  int32 field = 1;
+}
+
+message WithDefaultField {
+  /// Tag
+  string tag = 1 [(defaultValue) = "latest", (optionsObj) = { field: 3 }];
+}
+
+message ContainingMessageWithExtensions {
+  oneof kind {
+    string str = 1;
+    WithDefaultField msg = 2;
+  }
+}

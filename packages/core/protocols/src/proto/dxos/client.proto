@@ -1,0 +1,258 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+import "dxos/client/services.proto";
+import "dxos/config.proto";
+import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
+import "dxos/halo/keys.proto";
+import "dxos/keys.proto";
+
+package dxos.client;
+
+//
+// SYSTEM
+//
+
+message Status {
+  string message = 1;
+}
+
+service SystemService {
+  /// Called at the start of the session. Service should block until it is fully initialized.
+  rpc InitSession (google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
+  rpc GetStatus (google.protobuf.Empty) returns (Status);
+  rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+//
+// Invitations shared across HALO and ECHO.
+//
+
+enum InvitationState {
+  WAITING_FOR_CONNECTION = 0;
+  CONNECTED = 1;
+  SUCCESS = 2;
+  ERROR = 3;
+}
+
+/// Invitation process created by sender.
+message InvitationRequest {
+  optional dxos.client.services.Invitation descriptor = 1;
+
+  InvitationState state = 2;
+
+  /// Only if state == ERROR.
+  optional string error = 3;
+}
+
+/// Invitation that is being redeemed.
+message RedeemedInvitation {
+  string id = 1;
+
+  InvitationState state = 2;
+
+  /// Only if state == ERROR.
+  optional string error = 3;
+
+  /// Only on space invitations that are finished.
+  optional dxos.keys.PublicKey space_key = 4;
+}
+
+message AuthenticateInvitationRequest {
+  /// Id from corresponding RedeemedInvitation.
+  string process_id = 1;
+  bytes secret = 2;
+}
+
+//
+// HALO
+//
+
+message Profile {
+  // TODO(burdon): Remove identity from Profile (space of identity).
+  dxos.keys.PublicKey identity_key = 1;
+  optional string displayName = 2;
+  // TODO(mykola): Factor out. It was added to make deviceKey available in the HaloProxy.
+  optional dxos.keys.PublicKey device_key = 3;
+}
+
+message SubscribeProfileResponse {
+  optional Profile profile = 1;
+}
+
+message CreateProfileRequest {
+  optional bytes public_key = 1;
+  optional bytes secret_key = 2;
+  // TODO(burdon): Profile.
+  optional string displayName = 3;
+}
+
+message RecoverProfileRequest {
+  string seed_phrase = 1;
+}
+
+message Contact {
+  dxos.keys.PublicKey public_key = 1;
+  optional string display_name = 2;
+}
+
+message Contacts {
+  repeated Contact contacts = 1;
+}
+
+service ProfileService {
+  rpc CreateProfile(CreateProfileRequest) returns (Profile);
+  rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
+  rpc SubscribeProfile(google.protobuf.Empty) returns (stream SubscribeProfileResponse);
+}
+
+message AddKeyRecordRequest {
+  dxos.halo.keys.KeyRecord key_record = 1;
+}
+
+message SignRequest {
+  /// The public key of the key that is supposed to be used for signing.
+  dxos.keys.PublicKey public_key = 1;
+
+  bytes payload = 2;
+}
+
+message SignResponse {
+  bytes signed = 2;
+}
+
+message SetPreferenceRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message GetPreferenceRequest {
+  string key = 1;
+}
+
+message GetPreferenceResponse {
+  string value = 1;
+}
+
+service HaloService {
+  rpc Sign(SignRequest) returns (SignResponse);
+  rpc AddKeyRecord(AddKeyRecordRequest) returns (google.protobuf.Empty);
+
+  rpc SubscribeContacts(google.protobuf.Empty) returns (stream Contacts);
+
+  rpc SetGlobalPreference(SetPreferenceRequest) returns (google.protobuf.Empty);
+  rpc GetGlobalPreference(GetPreferenceRequest) returns (GetPreferenceResponse);
+
+  rpc SetDevicePreference(SetPreferenceRequest) returns (google.protobuf.Empty);
+  rpc GetDevicePreference(GetPreferenceRequest) returns (GetPreferenceResponse);
+}
+
+//
+// Spaces
+//
+
+// TODO(burdon): Rename Space.
+message Space {
+  dxos.keys.PublicKey public_key = 1;
+  bool is_open = 2;
+  bool is_active = 3;
+
+  repeated SpaceMember members = 4;
+}
+
+message SubscribeSpaceRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
+message GetSpaceDetailsRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
+message SpaceDetails {
+  /// The timeframe of mutations processed by the client.
+  dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
+}
+
+// TODO(burdon): Reconcile with dxos.halo.credentials.SpaceMember.
+// TODO(burdon): Reconcile with Profile.
+message SpaceMember {
+  enum PresenceState {
+    OFFLINE = 0;
+    ONLINE = 1;
+  }
+
+  dxos.keys.PublicKey identity_key = 1;
+  optional Profile profile = 2;
+  PresenceState presence = 3;
+}
+
+message SubscribeSpaceResponse {
+  optional Space space = 1;
+}
+
+message SubscribeSpacesResponse {
+  repeated Space spaces = 1;
+}
+
+message CreateInvitationRequest {
+  dxos.keys.PublicKey space_key = 1;
+
+  /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
+  optional dxos.keys.PublicKey invitee_key = 2;
+}
+
+message SpaceActivationOptions {
+  bool global = 1;
+  bool device = 2;
+}
+
+message SetSpaceStateRequest {
+  dxos.keys.PublicKey space_key = 1;
+
+  optional bool open = 2;
+  optional bool active_global = 3;
+  optional bool active_device = 4;
+}
+
+message SubscribeMembersRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
+message SubscribeMembersResponse {
+  repeated SpaceMember members = 1;
+}
+
+message CreateSnapshotRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
+//
+// Service definition
+//
+
+service SpaceService {
+  // TODO(burdon): SubscribeSpace (standard).
+  rpc SubscribeToSpace (SubscribeSpaceRequest) returns (stream SubscribeSpaceResponse);
+  rpc SubscribeSpaces (google.protobuf.Empty) returns (stream SubscribeSpacesResponse);
+
+  rpc GetSpaceDetails(GetSpaceDetailsRequest) returns (SpaceDetails);
+
+  rpc CreateSpace(google.protobuf.Empty) returns (Space);
+  rpc CloneSpace(dxos.echo.snapshot.SpaceSnapshot) returns (Space);
+
+  /// Open and close or activate and deactivate a space.
+  rpc SetSpaceState(SetSpaceStateRequest) returns (Space);
+
+  // TODO(rzadp): Remove and join with Subscribing to Space.
+  // Deprecated.
+  rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
+
+  rpc CreateSnapshot(CreateSnapshotRequest) returns (echo.snapshot.SpaceSnapshot);
+}

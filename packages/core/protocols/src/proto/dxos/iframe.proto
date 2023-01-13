@@ -1,0 +1,24 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package dxos.iframe;
+
+message StartRequest {
+  string origin = 1;
+}
+
+/// Worker-to-iframe RPCs.
+service IframeService {
+  rpc Heartbeat(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+/// Iframe-to-worker RPCs.
+service WorkerService {
+  rpc Start(StartRequest) returns (google.protobuf.Empty);
+  rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

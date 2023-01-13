@@ -7,17 +7,17 @@ import React, { useState } from 'react';
 import { Box } from '@mui/material';
 
 import { PeerGraph } from '@dxos/devtools-mesh';
+import { PublicKey } from '@dxos/keys';
 import { PeerInfo } from '@dxos/network-manager';
-import { PublicKey } from '@dxos/protocols';
+import { SubscribeToNetworkTopicsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 import { Autocomplete } from '../../components';
-import { SubscribeToNetworkTopicsResponse } from '../../proto';
 
 interface Topic {
-  topic: string
-  label: string
+  topic: string;
+  label: string;
 }
 
 const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => ({
@@ -27,6 +27,10 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => (
 
 export const NetworkPanel = () => {
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+
   const [selectedTopic, setSelectedTopic] = useState<string>();
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
@@ -40,11 +44,14 @@ export const NetworkPanel = () => {
 
     const updatePeers = async () => {
       const { peers } = await devtoolsHost.getNetworkPeers({ topic: PublicKey.from(selectedTopic).asUint8Array() });
-      peers && setPeers(peers.map((peer: any) => ({
-        ...peer,
-        id: PublicKey.from(peer.id),
-        connections: peer.connections.map((connection: any) => PublicKey.from(connection))
-      })));
+      peers &&
+        setPeers(
+          peers.map((peer: any) => ({
+            ...peer,
+            id: PublicKey.from(peer.id),
+            connections: peer.connections.map((connection: any) => PublicKey.from(connection))
+          }))
+        );
     };
 
     await updatePeers();
@@ -55,37 +62,34 @@ export const NetworkPanel = () => {
   const options = (topics ?? []).map(networkTopic);
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      padding: 2,
-      fontSize: '1.5em',
-      overflow: 'hidden',
-      overflowY: 'auto',
-      overflowX: 'auto'
-    }}>
-      <Box sx={{
+    <Box
+      sx={{
         display: 'flex',
-        flexShrink: 0,
-        padding: 1,
-        paddingTop: 2
-      }}>
+        flexDirection: 'column',
+        flex: 1,
+        padding: 2,
+        fontSize: '1.5em',
+        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'auto'
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexShrink: 0,
+          padding: 1,
+          paddingTop: 2
+        }}
+      >
         <Autocomplete
           label='Topic'
-          options={options.map(topic => topic.topic)}
+          options={options.map((topic) => topic.topic)}
           value={selectedTopic as any}
           onUpdate={setSelectedTopic}
         />
       </Box>
-      {selectedTopic ? (
-        <PeerGraph
-          peers={peers}
-          size={{ width: 400, height: 400 }}
-        />
-      ) : (
-        <div>Topic not selected.</div>
-      )}
+      {selectedTopic ? <PeerGraph peers={peers} size={{ width: 400, height: 400 }} /> : <div>Topic not selected.</div>}
     </Box>
   );
 };

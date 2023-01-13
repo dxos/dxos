@@ -1,0 +1,43 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/react-async"
+    },
+    {
+      "path": "../../../common/react-components"
+    },
+    {
+      "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    }
+  ]
+}

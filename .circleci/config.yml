@@ -1,7 +1,12 @@
+#
+# CircleCI configuration
+# https://circleci.com/docs/configuration-reference
+#
+
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.5.1
+  nx: nrwl/nx@1.6.1
 
 aliases:
   - &docker_image
@@ -19,64 +24,126 @@ aliases:
       paths:
         - ~/.local/share/pnpm/store/v3
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+  - &ram_cache_configure
+    run: pnpm config set store-dir /mnt/ramdisk/pnpm-store
+  - &ram_cache_restore
+    restore_cache:
+      keys:
+        - pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - pnpm-store-ram-v1-{{ arch }}-
+  - &ram_cache_save
+    save_cache:
+      paths:
+        - /mnt/ramdisk/pnpm-store
+      key: pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+  - &codecov_upload
+    run:
+      name: Upload to codecov.com
+      command: ./.circleci/scripts/upload-codecov.sh
+  - &store_test_results
+    store_test_results:
+      path: test-results
 
 jobs:
+  #
+  # NOTE: This job is required to complete before ALL PRs can be merged to main.
+  #
   check:
     docker:
       - *docker_image
+    # https://circleci.com/docs/configuration-reference/#docker-execution-environment
+    resource_class: xlarge
+    environment:
+      DX_ENVIRONMENT: circleci
+    
+    # Run the job on ramdisk for optimal performance.
+    # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
+    working_directory: /mnt/ramdisk/work
+
     steps:
+      - *ram_cache_configure
       - checkout
-      - *cache_restore
-      - run: pnpm install
-      - run: pnpx playwright install
-      - *cache_save
+      - *ram_cache_restore
+      - run: pnpm install --prefer-offline
+      - run: pnpm install-playwright
+      - *ram_cache_save
       - nx/set-shas
+      - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
-          environment:
-            # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
-            NODE_OPTIONS: --max_old_space_size=8198
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - when:
           condition:
-            equal: [ production, <<pipeline.git.branch>> ]
+            equal: [ main, <<pipeline.git.branch>> ]
           steps:
-            - persist_to_workspace:
-                root: apps/halo/out
-                paths:
-                  - halo
+            - run: pnpm nx run-many --target=lint
+            - run: pnpm nx run-many --target=build
+            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
+      - *codecov_upload
+      - *store_test_results
 
-  deploy:
+  #
+  # Heavier checks which don't block PR merges.
+  #
+  e2e:
     docker:
       - *docker_image
     steps:
-      - attach_workspace:
-          at: /tmp/out
       - checkout
       - *cache_restore
       - run: pnpm install
+      - run: pnpm install-playwright
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1
+      # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       - run:
-          name: Deploy HALO
-          command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir /tmp/out/halo
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
-            NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
+            # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
+            NODE_OPTIONS: --max_old_space_size=8198
+      - *codecov_upload
+      - *store_test_results
+
+  #
+  # Publish applications.
+  #
+  publish:
+    docker:
+      - *docker_image
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - *cache_save
+      - run: pnpm nx build cli
+      - run:
+          command: ./.circleci/scripts/publish.sh
+          environment:
+            NODE_ENV: production
+            NODE_OPTIONS: --max_old_space_size=4096
 
 workflows:
-  main:
+  default:
     jobs:
       - check:
           context:
             - Github
-      - deploy:
-          requires:
-            - check
+      - e2e:
+          context:
+            - Github
+
+  deploy:
+    jobs:
+      - publish:
           filters:
             branches:
               only:
+                - main
                 - production
+                - staging
           context:
             - Github
-            - Netlify
+
+# VS Code Extension Version: 1.5.1

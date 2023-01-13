@@ -1,0 +1,25 @@
+{
+  "name": "@dxos/rpc-tunnel",
+  "version": "0.1.22",
+  "description": "RPC ports over various transports.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/rpc": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -22,8 +22,9 @@ export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorCo
     type.name,
     undefined,
     undefined,
-    type.fieldsArray.map(field => {
-      const isRequired = field.required || (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf);
+    type.fieldsArray.map((field) => {
+      const isRequired =
+        field.required || (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf);
 
       const signature = f.createPropertySignature(
         undefined,
@@ -57,7 +58,12 @@ const getFieldDocComment = (field: protobufjs.Field) => {
   }
 
   if (field.options) {
-    sections.push('Options:\n' + Object.entries(field.options).map(([key, value]) => `  - ${key} = ${JSON.stringify(value)}`).join('\n'));
+    sections.push(
+      'Options:\n' +
+        Object.entries(field.options)
+          .map(([key, value]) => `  - ${key} = ${JSON.stringify(value)}`)
+          .join('\n')
+    );
   }
 
   if (sections.length === 0) {

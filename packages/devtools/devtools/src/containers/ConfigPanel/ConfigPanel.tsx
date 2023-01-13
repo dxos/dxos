@@ -4,24 +4,20 @@
 
 import React, { useState } from 'react';
 
+import { Config } from '@dxos/protocols/proto/dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
-import { useDevtools } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { useClientServices } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 export const ConfigPanel = () => {
-  const devtoolsHost = useDevtools();
-  const [config, setConfig] = useState<any>(undefined);
+  const services = useClientServices();
+  if (!services) {
+    return null;
+  }
 
+  const [config, setConfig] = useState<Config>({});
   useAsyncEffect(async () => {
-    const config = await devtoolsHost.getConfig();
-    config.config && setConfig(JSON.parse(config.config));
+    setConfig(await services.SystemService.getConfig());
   }, []);
-
-  return (
-    <JsonTreeView
-      size='small'
-      depth={4}
-      data={config}
-    />
-  );
+  return <JsonTreeView size='small' depth={4} data={config} />;
 };

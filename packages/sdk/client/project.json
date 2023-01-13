@@ -2,70 +2,67 @@
   "sourceRoot": "packages/sdk/client/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/sdk/client/src/packlets/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/client/src/index.ts",
+        "outputPath": "packages/sdk/client/dist/types",
+        "tsConfig": "packages/sdk/client/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/sdk/client/dist",
-        "tsConfig": "packages/sdk/client/tsconfig.json",
-        "main": "packages/sdk/client/src/index.ts"
-      }
+      ]
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
-      "outputs": [
-        "{options.outdir}"
-      ],
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/sdk/client/src/index.ts"
+          "packages/sdk/client/src/index.ts",
+          "packages/sdk/client/src/packlets/testing/index.ts"
         ],
-        "outdir": "packages/sdk/client/dist/browser",
-        "bundlePackages": [
-          "@dxos/credentials",
-          "@dxos/crypto",
-          "@dxos/echo-db",
-          "@dxos/echo-protocol",
-          "@dxos/feed-store",
-          "@dxos/network-manager",
-          "@dxos/object-model"
-        ]
-      }
+        "outputPath": "packages/sdk/client/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
+        "checkLeaks": false,
+        "coveragePath": "coverage/packages/sdk/client",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/sdk/client",
+        "resultsPath": "test-results/packages/sdk/client",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
         "testPatterns": [
           "packages/sdk/client/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/client/src/**/*"
         ]
-      }
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha",
-    "protobuf-compiler"
+    "test"
   ]
 }

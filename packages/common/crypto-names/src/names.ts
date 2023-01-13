@@ -9,11 +9,12 @@ import crypto from 'hypercore-crypto';
 // https://github.com/skjorrface/animals.txt/blob/master/animals.txt (500 animals)
 // https://gist.github.com/Xeoncross/5381806b18de1f395187 (900 positive adjectives)
 
-import words from '../data/words.json';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const words = require('../data/words.json');
 
 // TODO(burdon): Make exensible without breaking existing words (e.g., add byte and word).
 // TODO(burdon): Store hash of words and check consistent in code.
-const data: { [key: string ]: string[] } = words;
+const data: { [key: string]: string[] } = words;
 
 // 256 ^ 3 ~= 16M.
 const bits = 8; // Bits per section.
@@ -54,10 +55,19 @@ export const generateName = (key: Buffer): string => {
  * @param name
  */
 export const parseName = (name: string): Buffer => {
-  const binary = name.split('-').map((word, i) => {
-    const list = data[types[i]];
-    return list.indexOf(word);
-  }).map(n => n.toString(2).padStart(bits, '0')).join('');
+  const binary = name
+    .split('-')
+    .map((word, i) => {
+      const list = data[types[i]];
+      return list.indexOf(word);
+    })
+    .map((n) => n.toString(2).padStart(bits, '0'))
+    .join('');
 
-  return Buffer.from(parseInt(binary, 2).toString(16).padStart(2 * types.length * bits / 8, '0'), 'hex');
+  return Buffer.from(
+    parseInt(binary, 2)
+      .toString(16)
+      .padStart((2 * types.length * bits) / 8, '0'),
+    'hex'
+  );
 };

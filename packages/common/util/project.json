@@ -4,35 +4,62 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/util/src/index.ts",
+        "outputPath": "packages/common/util/dist/types",
+        "tsConfig": "packages/common/util/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
       "options": {
-        "outputPath": "packages/common/util/dist",
-        "tsConfig": "packages/common/util/tsconfig.json",
-        "main": "packages/common/util/src/index.ts"
-      }
+        "entryPoints": [
+          "packages/common/util/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/util/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/common/util/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "packages/common/util/coverage"
-      ],
+      "executor": "@dxos/test:run",
       "options": {
-        "jestConfig": "packages/common/util/jest.config.ts",
-        "passWithNoTests": true
-      }
+        "coveragePath": "coverage/packages/common/util",
+        "outputPath": "tmp/mocha/packages/common/util",
+        "resultsPath": "test-results/packages/common/util",
+        "testPatterns": [
+          "packages/common/util/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/util/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }

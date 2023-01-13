@@ -1,0 +1,64 @@
+{
+  "sourceRoot": "packages/common/sentry/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/sentry/src/index.ts",
+        "outputPath": "packages/common/sentry/dist/types",
+        "tsConfig": "packages/common/sentry/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/sentry/src/index.ts"
+        ],
+        "outputPath": "packages/common/sentry/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/sentry/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/common/sentry",
+        "outputPath": "tmp/mocha/packages/common/sentry",
+        "resultsPath": "test-results/packages/common/sentry",
+        "testPatterns": [
+          "packages/common/sentry/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/sentry/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

@@ -11,18 +11,16 @@ const log = debug('dxos:extension:panel');
 
 log('Initialize panel starting...');
 
-const port = browser.runtime.connect({ name: `panel-${browser.devtools.inspectedWindow.tabId}` });
+const port = browser.runtime.connect({
+  name: `panel-${browser.devtools.inspectedWindow.tabId}`
+});
 const sandbox = document.createElement('iframe');
 sandbox.src = `${window.location.origin}/sandbox.html`;
 window.document.body.appendChild(sandbox);
 
-window.addEventListener('message', async event => {
+window.addEventListener('message', async (event) => {
   const message = event.data;
-  if (
-    typeof message !== 'object' ||
-    message === null ||
-    message.source !== 'sandbox'
-  ) {
+  if (typeof message !== 'object' || message === null || message.source !== 'sandbox') {
     return;
   }
 
@@ -31,10 +29,13 @@ window.addEventListener('message', async event => {
     await waitForDXOS();
     await browser.devtools.inspectedWindow.eval('window.__DXOS__.openClientRpcServer()');
 
-    sandbox.contentWindow?.postMessage({
-      data: 'open-rpc',
-      source: 'panel'
-    }, '*');
+    sandbox.contentWindow?.postMessage(
+      {
+        data: 'open-rpc',
+        source: 'panel'
+      },
+      '*'
+    );
 
     return;
   }
@@ -43,13 +44,16 @@ window.addEventListener('message', async event => {
   port.postMessage(message);
 });
 
-port.onMessage.addListener(message => {
+port.onMessage.addListener((message) => {
   log('Received message from background:', message);
 
-  sandbox.contentWindow?.postMessage({
-    data: message.data,
-    source: 'panel'
-  }, '*');
+  sandbox.contentWindow?.postMessage(
+    {
+      data: message.data,
+      source: 'panel'
+    },
+    '*'
+  );
 });
 
 browser.devtools.network.onNavigated.addListener(() => {

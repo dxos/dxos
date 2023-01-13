@@ -1,0 +1,87 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
+
+package dxos.halo.invitations;
+
+// TODO(burdon): Reconcile with client.services.Invitation. Merge files.
+
+message AuthenticationRequest {
+  string authentication_code = 1;
+}
+
+message AuthenticationResponse {
+  enum Status {
+    OK = 0;
+    INVALID_OTP = 1;
+    INVALID_OPT_ATTEMPTS = 2;
+  }
+
+  optional Status status = 1;
+}
+
+//
+// HALO device invitations.
+//
+
+message HaloAdmissionOffer {
+  dxos.keys.PublicKey identity_key = 1;
+  dxos.keys.PublicKey halo_space_key = 2;
+  dxos.keys.PublicKey genesis_feed_key = 3;
+}
+
+message HaloAdmissionCredentials {
+  dxos.keys.PublicKey device_key = 1;
+  dxos.keys.PublicKey control_feed_key = 2;
+  dxos.keys.PublicKey data_feed_key = 3;
+}
+
+service HaloHostService {
+  /// Process admission offer from host.
+  rpc RequestAdmission(google.protobuf.Empty) returns (HaloAdmissionOffer);
+
+  /// Authenticate request.
+  rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
+
+  /// Process admission request from guest.
+  rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
+}
+
+//
+// Space agent invitations.
+//
+
+message Introduction {
+  /// Guest's profile.
+  optional halo.credentials.ProfileDocument profile = 1;
+}
+
+message SpaceAdmissionRequest {
+  dxos.keys.PublicKey identity_key = 1;
+  dxos.keys.PublicKey device_key = 2;
+  dxos.keys.PublicKey control_feed_key = 3;
+  dxos.keys.PublicKey data_feed_key = 4;
+}
+
+message SpaceAdmissionCredentials {
+  /// Credential of type `SpaceMember` that grants Guest's identity access to the space.
+  dxos.halo.credentials.Credential credential = 1;
+}
+
+service SpaceHostService {
+  /// Introduce Guest to the host.
+  rpc Introduce(Introduction) returns (google.protobuf.Empty);
+
+  /// Authenticate request.
+  rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
+
+  /// Process admission credentials.
+  rpc RequestAdmission(SpaceAdmissionRequest) returns (SpaceAdmissionCredentials);
+}

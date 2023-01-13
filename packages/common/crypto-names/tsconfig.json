@@ -1,17 +1,20 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "resolveJsonModule": true
+    "outDir": "dist/types",
+    "resolveJsonModule": true,
+    "types": [
+      "@dxos/test",
+      "@dxos/typings"
+    ]
   },
   "include": [
-    "data/**/*.json",
     "scripts",
     "src"
   ],
   "references": [
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../node-std"
     }
   ]
 }

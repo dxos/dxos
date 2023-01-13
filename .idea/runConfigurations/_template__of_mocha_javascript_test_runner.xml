@@ -2,14 +2,13 @@
   <configuration default="true" type="mocha-javascript-test-runner">
     <node-interpreter>project</node-interpreter>
     <node-options />
-    <mocha-package>$PROJECT_DIR$/toolchains/node-library/node_modules/mocha</mocha-package>
-    <working-directory />
+    <mocha-package>$PROJECT_DIR$/tools/executors/mocha</mocha-package>
+    <working-directory>$PROJECT_DIR$</working-directory>
     <pass-parent-env>true</pass-parent-env>
-    <ui />
-    <extra-mocha-options>-r @swc-node/register</extra-mocha-options>
-    <test-kind>DIRECTORY</test-kind>
-    <test-directory />
-    <recursive>false</recursive>
+    <ui>bdd</ui>
+    <extra-mocha-options>--project=xxx</extra-mocha-options>
+    <test-kind>PATTERN</test-kind>
+    <test-pattern />
     <method v="2" />
   </configuration>
 </component>

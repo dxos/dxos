@@ -1,0 +1,79 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+import "dxos/keys.proto";
+
+package dxos.gravity;
+
+/// Root specification for Agent.
+message AgentSpec {
+  optional int32 version = 1;
+  optional string state_machine = 2;
+  optional CommandSequence start_sequence = 3;
+  optional CommandSequence stop_sequence = 4;
+  repeated CommandSequence test_sequences = 5;
+}
+
+/// Commands that must be run sequentially.
+message CommandSequence {
+  repeated Command commands = 1;
+}
+
+/// Atomic async command.
+message Command {
+  // TODO(burdon): oneof vs. any?
+  oneof Cmd {
+    CreateProfileCommand create_profile = 1;
+    CreateSpaceCommand create_space = 2;
+    CreateSpaceInvitationCommand create_space_invitation = 3;
+    AcceptSpaceInvitationCommand accept_space_invitation = 4;
+    SyncServer sync_server = 5;
+    SyncClient sync_client = 6;
+    TearDown tear_down = 7;
+  }
+}
+
+//
+// Commands.
+//
+
+message CreateProfileCommand {
+  optional bool _noop_ = 1;
+}
+
+message CreateSpaceCommand {
+  optional string id = 1;
+}
+
+message CreateSpaceInvitationCommand {
+  string id = 1;
+  string swarm_key = 2;
+}
+
+message AcceptSpaceInvitationCommand {
+  string swarm_key = 1;
+}
+
+message SyncServer {
+  string id = 1; // server id
+  string host = 2; // host name the sync server is running on
+  uint32 port = 3; // port number to bind to
+  bool verbose = 4;
+}
+
+message SyncClient {
+  string id = 1;
+  string srv_id = 2;
+  string host = 3;
+  uint32 port = 4;
+  bool verbose = 5;
+}
+
+message TearDown {
+  optional bool _noop_ = 1;
+}

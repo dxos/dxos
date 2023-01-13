@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="feed-store benchmark" type="NodeJSConfigurationType" path-to-js-file="dist/src/tests/benchmark.js" working-dir="$PROJECT_DIR$/packages/common/feed-store">
+    <method v="2" />
+  </configuration>
+</component>

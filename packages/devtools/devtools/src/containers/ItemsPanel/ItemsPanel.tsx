@@ -10,12 +10,12 @@ import { Box } from '@mui/material';
 
 import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
-import { useParties, useParty, useSelection } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { useSpace, useSelection, useDevtools, useStream } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { TextModel } from '@dxos/text-model';
 
 import { KeySelect, Panel } from '../../components';
@@ -24,7 +24,7 @@ const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
   const children = useSelection(item.select().children()) ?? [];
 
   return (
-    <TreeItem nodeId={item.id} label={item.type} onClick={() => onSelect(item)}>
+    <TreeItem nodeId={item.id} label={item.type ?? item.modelType ?? 'undefined'} onClick={() => onSelect(item)}>
       {children.map((child) => (
         <ItemNode key={child.id} item={child} onSelect={onSelect} />
       ))}
@@ -33,22 +33,30 @@ const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
 };
 
 export const ItemsPanel = () => {
-  const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
+  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
-  const parties = useParties();
-  const party = useParty(selectedPartyKey);
-  const items = useSelection(party?.select().filter(item => !item.parent)) ?? [];
+  const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+  const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
+
+  const space = useSpace(selectedSpaceKey);
+  const items = useSelection(space?.select()) ?? [];
 
   return (
-    <Panel controls={(
-      <KeySelect
-        label='Party'
-        keys={parties.map(({ key }) => key)}
-        selected={selectedPartyKey}
-        onChange={key => setSelectedPartyKey(key)}
-      />
-    )}>
+    <Panel
+      controls={
+        <KeySelect
+          label='Space'
+          keys={spaces.map(({ key }) => key)}
+          selected={selectedSpaceKey}
+          onChange={(key) => setSelectedSpaceKey(key)}
+          humanize={true}
+        />
+      }
+    >
       <Box display='flex' height='100%'>
         <TreeView
           defaultCollapseIcon={<CollapseIcon />}
@@ -60,38 +68,36 @@ export const ItemsPanel = () => {
             height: '100%'
           }}
         >
-          {items.map(item => (
-            <ItemNode
-              key={item.id}
-              item={item}
-              onSelect={setSelectedItem}
-            />
-          ))}
+          {items
+            .filter((item) => !item.parent)
+            .map((item) => (
+              <ItemNode key={item.id} item={item} onSelect={setSelectedItem} />
+            ))}
         </TreeView>
 
-        <Box flex={1}>
-          {selectedItem && <ItemDetails item={selectedItem} />}
-        </Box>
+        <Box flex={1}>{selectedItem && <ItemDetails item={selectedItem} />}</Box>
       </Box>
     </Panel>
   );
 };
 
 interface ItemNodeProps {
-  item: Item<any>
-  onSelect: (item: Item<any>) => void
+  item: Item<any>;
+  onSelect: (item: Item<any>) => void;
 }
 
 interface ItemDetailsProps {
-  item: Item<Model<any>>
+  item: Item<Model<any>>;
 }
 
 const ItemDetails = ({ item }: ItemDetailsProps) => (
-  <Box sx={{
-    '& td': {
-      verticalAlign: 'top'
-    }
-  }}>
+  <Box
+    sx={{
+      '& td': {
+        verticalAlign: 'top'
+      }
+    }}
+  >
     <table>
       <tbody>
         <tr>

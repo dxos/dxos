@@ -1,0 +1,33 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "es2019"
+    ],
+    "outDir": "dist/types",
+    "skipLibCheck": true,
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "exclude": [
+    "/dist/",
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    }
+  ]
+}

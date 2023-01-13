@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gravity
+spec:
+  volumes:
+    - name: gravity-pv-storage
+      persistentVolumeClaim:
+        claimName: gravity-pv-claim
+  containers:
+  - name: dxos-kube
+    image: dxos-kube
+    terminationMessagePath: "/tmp/dxos-kube"
+    imagePullPolicy: Never
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    ports:
+      - containerPort: 4317
+      - containerPort: 10000
+      - containerPort: 9003
+      - containerPort: 3478
+      - containerPort: 4001
+      - containerPort: 5001
+      - containerPort: 8888
+
+  - name: dxos-agent-host
+    image: dxos-agent
+    terminationMessagePath: "/tmp/dxos-agent-host"
+    imagePullPolicy: Never
+    resources:
+      limits:
+        memory: "2048Mi"
+        cpu: "500m"
+    env:
+    - name: GRAVITY_TEST_SCENARIO
+      value: "host"
+    command: ["/dxos/dxos/packages/gravity/gravity-agent/run_agent.sh"]
+    ports:
+      - containerPort: 43430
+    volumeMounts:
+      - mountPath: "/tmp/gravity-results"
+        name: gravity-pv-storage
+  - name: dxos-agent-guest
+    image: dxos-agent
+    terminationMessagePath: "/tmp/dxos-agent-guest"
+    imagePullPolicy: Never
+    resources:
+      limits:
+        memory: "2048Mi"
+        cpu: "500m"
+    env:
+    - name: GRAVITY_TEST_SCENARIO
+      value: "guest"
+    command: ["/dxos/dxos/packages/gravity/gravity-agent/run_agent.sh"]
+    volumeMounts:
+      - mountPath: "/tmp/gravity-results"
+        name: gravity-pv-storage
+  restartPolicy: Always

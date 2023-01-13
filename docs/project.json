@@ -1,0 +1,100 @@
+{
+  "projectType": "application",
+  "targets": {
+    "apidoc": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "apidoc"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "bundle": {
+      "dependsOn": [
+        "^build",
+        "^bundle"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "bundle"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "generate:api": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "generate:api"
+      },
+      "outputs": [
+        "docs/docs/api"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "docs/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "prerelease": {
+      "executor": "nx:run-script",
+      "inputs": [
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        "^production",
+        "default"
+      ],
+      "options": {
+        "script": "prerelease"
+      },
+      "outputs": [
+        "docs/docs",
+        "docs/docs/.vuepress/dist"
+      ]
+    },
+    "serve": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "serve"
+      }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    },
+    "typedoc": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "typedoc"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "root": "docs"
+}

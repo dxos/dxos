@@ -1,0 +1,32 @@
+{
+  "sourceRoot": "packages/deprecated/wallet/wallet-playground/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/deprecated/wallet/wallet-playground/src/index.ts",
+        "outputPath": "packages/deprecated/wallet/wallet-playground/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/deprecated/wallet/wallet-playground/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/deprecated/wallet/wallet-playground/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

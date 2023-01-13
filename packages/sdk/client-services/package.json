@@ -1,0 +1,71 @@
+{
+  "name": "@dxos/client-services",
+  "version": "0.1.22",
+  "description": "DXOS client services implementation",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "jsondown": false,
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/packlets/testing/index.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/keyring": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/messaging": "workspace:*",
+    "@dxos/model-factory": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/object-model": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/teleport": "workspace:*",
+    "@dxos/teleport-extension-presence": "workspace:*",
+    "@dxos/text-model": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "base-x": "~3.0.9"
+  },
+  "devDependencies": {
+    "@dxos/signal": "workspace:*",
+    "@types/readable-stream": "^2.3.9"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/services/service-host.ts",
+        "dependencies": [
+          "@dxos/echo-db"
+        ]
+      }
+    ]
+  },
+  "typedoc": {
+    "entryPoint": "src/index.ts"
+  }
+}

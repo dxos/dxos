@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export function logMethod (
+export function logMethod(
   target: any,
   propertyName: string,
   descriptor: TypedPropertyDescriptor<(...args: any) => any>

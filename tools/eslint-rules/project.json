@@ -4,12 +4,15 @@
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "tools/eslint-rules/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     }
   }
 }

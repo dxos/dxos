@@ -1,25 +1,21 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "allowJs": true,
     "lib": [
       "DOM"
     ],
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
-      "jest",
       "node"
     ]
   },
   "include": [
-    "src",
-    "test"
+    "src"
   ],
   "references": [
     {
-      "path": "../protocols"
-    },
-    {
-      "path": "./tsconfig.spec.json"
+      "path": "../node-std"
     }
   ]
 }

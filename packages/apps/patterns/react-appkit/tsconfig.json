@@ -1,0 +1,58 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "../../composer-app/src/pwa.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/react-async"
+    },
+    {
+      "path": "../../../common/react-components"
+    },
+    {
+      "path": "../../../common/sentry"
+    },
+    {
+      "path": "../../../common/telemetry"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../experimental/react-client-testing"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    }
+  ]
+}

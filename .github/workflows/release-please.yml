@@ -1,0 +1,113 @@
+on:
+  push:
+    branches:
+      - rc-*
+      - hotfix-*
+
+name: release-please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Github Release
+        id: release
+        uses: google-github-actions/release-please-action@v3
+        with:
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+          default-branch: ${{ github.ref_name }}
+          release-type: node
+          command: github-release
+
+      - name: Version Bump
+        uses: google-github-actions/release-please-action@v3
+        with:
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+          default-branch: ${{ github.ref_name }}
+          release-type: node
+          command: manifest-pr
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Checkout all branches
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config user.name "dxos-bot"
+          git config user.email "bot@dxos.org"
+
+      - name: Install system dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: sudo apt-get install libxtst-dev libpng++-dev
+
+      - name: Install Node.js
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install pnpm
+        if: ${{ steps.release.outputs.release_created }}
+        uses: pnpm/action-setup@v2.2.4
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        if: ${{ steps.release.outputs.release_created }}
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: pnpm install
+
+      # TODO(wittjosiah): Is there a release please hook to have this happen before tagging the release?
+      - name: Run and commit prerelease updates
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          pnpm nx run-many --target=prerelease
+          git add .
+          git commit -m "Release update for ${{ steps.release.outputs.tag_name }}"
+
+      - name: Merge with production
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git switch production
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into production"
+          git push
+
+      - name: Merge with main
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git switch main
+          git merge --no-ff ${{ github.ref_name }} -m "Merge ${{ github.ref_name }} into main"
+          git push
+
+      - name: Fast-forward main
+        if: ${{ !steps.release.outputs.release_created }}
+        run: |
+          git switch main
+          git merge --ff-only ${{ github.ref_name }}
+          git push
+
+      - name: Delete release branch
+        if: ${{ steps.release.outputs.release_created }}
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.CREATE_PR_TOKEN }}
+          branches: ${{ github.ref_name }}

@@ -1,0 +1,25 @@
+{
+  "name": "@dxos/messenger-model",
+  "version": "0.1.22",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/model-factory": "workspace:*",
+    "@dxos/protocols": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

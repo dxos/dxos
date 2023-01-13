@@ -5,8 +5,6 @@
 import debug from 'debug';
 import browser from 'webextension-polyfill';
 
-import { waitForDXOS } from './utils';
-
 const log = debug('dxos:extension:devtools');
 
 let panelCreated = false;
@@ -18,7 +16,6 @@ const createPanel = async () => {
   }
 
   log('Attempting to create panel...');
-  await waitForDXOS();
   await browser.devtools.panels.create('DXOS', '', 'panel.html');
   panelCreated = true;
   log('Panel created.');

@@ -6,27 +6,27 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { defs } from '@dxos/config';
-import { initializeDevtools } from '@dxos/devtools';
+import { ClientServicesProxy } from '@dxos/client-services';
+import { ClientAndServices, initializeDevtools } from '@dxos/devtools';
 import { RpcPort } from '@dxos/rpc';
 
 const log = debug('dxos:extension:sandbox');
 
-const clientReady = new Event<Client>();
+const clientReady = new Event<ClientAndServices>();
 
 const windowPort = (): RpcPort => ({
-  send: async message => window.parent.postMessage({
-    data: Array.from(message),
-    source: 'sandbox'
-  }, window.location.origin),
-  subscribe: callback => {
+  send: async (message) =>
+    window.parent.postMessage(
+      {
+        data: Array.from(message),
+        source: 'sandbox'
+      },
+      window.location.origin
+    ),
+  subscribe: (callback) => {
     const handler = (event: MessageEvent<any>) => {
       const message = event.data;
-      if (
-        typeof message !== 'object' ||
-          message === null ||
-          message.source !== 'panel'
-      ) {
+      if (typeof message !== 'object' || message === null || message.source !== 'panel') {
         return;
       }
 
@@ -39,57 +39,48 @@ const windowPort = (): RpcPort => ({
   }
 });
 
-const waitForRpc = async () => new Promise<void>(resolve => {
-  const handler = (event: MessageEvent) => {
-    const message = event.data;
-    if (
-      typeof message !== 'object' ||
-        message === null ||
-        message.source !== 'panel'
-    ) {
-      return;
-    }
+const waitForRpc = async () =>
+  new Promise<void>((resolve) => {
+    const handler = (event: MessageEvent) => {
+      const message = event.data;
+      if (typeof message !== 'object' || message === null || message.source !== 'panel') {
+        return;
+      }
 
-    if (message.data === 'open-rpc') {
-      log('Panel RPC port ready.');
-      window.removeEventListener('message', handler);
-      resolve();
-    }
-  };
+      if (message.data === 'open-rpc') {
+        log('Panel RPC port ready.');
+        window.removeEventListener('message', handler);
+        resolve();
+      }
+    };
 
-  window.addEventListener('message', handler);
+    window.addEventListener('message', handler);
 
-  log('Sandbox RPC port ready.');
+    log('Sandbox RPC port ready.');
 
-  window.parent.postMessage({
-    data: 'open-rpc',
-    source: 'sandbox'
-  }, window.location.origin);
-});
+    window.parent.postMessage(
+      {
+        data: 'open-rpc',
+        source: 'sandbox'
+      },
+      window.location.origin
+    );
+  });
 
 const init = async () => {
   initializeDevtools(clientReady);
 
   log('Initialize client RPC server starting...');
   const rpcPort = windowPort();
-  const client = new Client({
-    runtime: {
-      client: {
-        mode: defs.Runtime.Client.Mode.REMOTE
-      },
-      // TODO(wittjosiah): Missing config in local client should fallback to remote client.
-      services: {
-        dxns: {
-          server: 'wss://node1.devnet.dxos.network/dxns/ws'
-        }
-      }
-    }
-  }, { rpcPort });
+  const servicesProvider = new ClientServicesProxy(rpcPort);
 
   await waitForRpc();
+
+  const client = new Client({ services: servicesProvider });
+
   await client.initialize();
   log('Initialized client RPC server finished.');
-  clientReady.emit(client);
+  clientReady.emit({ client, services: servicesProvider.services });
 };
 
 void init();

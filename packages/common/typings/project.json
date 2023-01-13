@@ -1,0 +1,4 @@
+{
+  "sourceRoot": "packages/common/typings/src",
+  "projectType": "library"
+}

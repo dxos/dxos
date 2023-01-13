@@ -2,31 +2,35 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(dmaretskyi): Re-enable once we fix this story.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 import React, { useState, useEffect } from 'react';
-import useResizeAware from 'react-resize-aware';
+import useResizeAware from 'react-resize-aware'; // TODO(burdon): Change to react-resize-detector.
 import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
+import { PublicKey } from '@dxos/keys';
+import { SignalManager, CommandTrace, SignalStatus, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  FullyConnectedTopology,
-  Swarm,
-  MMSTTopology,
-  StarTopology,
-  NetworkManager,
-  SignalManager,
-  SwarmMapper,
-  transportProtocolProvider,
-  PeerInfo,
-  Topology,
-  SwarmInfo,
   ConnectionLog,
-  CommandTrace,
-  SignalStatus
+  FullyConnectedTopology,
+  MMSTTopology,
+  NetworkManager,
+  PeerInfo,
+  StarTopology,
+  Swarm,
+  SwarmMapper,
+  Topology,
+  adaptProtocolProvider,
+  createWebRTCTransportFactory,
+  transportProtocolProvider
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { PublicKey } from '@dxos/protocols';
-import { FullScreen } from '@dxos/react-components';
+import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
 
@@ -35,16 +39,23 @@ export default {
 };
 
 const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {
+  // TODO(burdon): Remove hard-coded deps.
+  const signalManager = new WebsocketSignalManager(['wss://apollo3.kube.moon.dxos.network/dxos/signal']);
+  await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({
-    signal: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'],
+    signalManager,
+    transportFactory: createWebRTCTransportFactory(),
     log: true
   });
+
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
-  networkManager.joinProtocolSwarm({
+  await networkManager.joinSwarm({
     topic: controlTopic,
     peerId,
     topology: topologyFactory(),
-    protocol: transportProtocolProvider(controlTopic.asBuffer(), peerId.asBuffer(), presencePlugin),
+    protocolProvider: adaptProtocolProvider(
+      transportProtocolProvider(controlTopic.asBuffer(), peerId.asBuffer(), presencePlugin)
+    ),
     presence: presencePlugin
   });
 
@@ -53,14 +64,14 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
     swarm: networkManager.getSwarm(controlTopic)!,
     map: networkManager.getSwarmMap(controlTopic)!,
     log: networkManager.connectionLog!,
-    signal: networkManager.signal
+    signal: networkManager.signalManager
   };
 };
 
 const topologyMap: Record<string, (topic: PublicKey) => any> = {
   'Fully-connected': () => new FullyConnectedTopology(),
-  'MMST': () => new MMSTTopology(),
-  'Star': (topic) => new StarTopology(topic)
+  MMST: () => new MMSTTopology(),
+  Star: (topic) => new StarTopology(topic)
 };
 
 const GraphDemo = ({ topic }: { topic: PublicKey }) => {
@@ -68,10 +79,10 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
   const [topology, setTopology] = useState<() => Topology>(() => () => new FullyConnectedTopology());
 
   const [controlPeer, setControlPeer] = useState<{
-    swarm: Swarm
-    map: SwarmMapper
-    signal: SignalManager
-    log: ConnectionLog
+    swarm: Swarm;
+    map: SwarmMapper;
+    signal: SignalManager;
+    log: ConnectionLog;
   }>();
 
   useEffect(() => {
@@ -79,7 +90,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
   }, [topologyType]);
 
   useEffect(() => {
-    void createPeer(topic, topic, topology).then(peer => setControlPeer(peer));
+    void createPeer(topic, topic, topology).then((peer) => setControlPeer(peer));
   }, []);
 
   const [peers, setPeers] = useState<any[]>([]);
@@ -93,33 +104,41 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
   const addPeers = async (n: number) => {
     for (let i = 0; i < n; i++) {
       const peer = await createPeer(topic, PublicKey.random(), topology);
-      setPeers(peers => [...peers, peer]);
+      setPeers((peers) => [...peers, peer]);
     }
   };
 
   const killPeer = (id: PublicKey) => {
-    const peer = peers.find(peer => peer.swarm.ownPeerId.equals(id));
+    const peer = peers.find((peer) => peer.swarm.ownPeerId.equals(id));
     console.log('leave', peer);
     peer && peer.networkManager.leaveProtocolSwarm(topic);
   };
 
   const [peerMap, setPeerMap] = useState<PeerInfo[]>([]);
   useEffect(() => {
-    controlPeer?.map.mapUpdated.on(peers => {
+    controlPeer?.map.mapUpdated.on((peers) => {
       setPeerMap(peers);
     });
     controlPeer && setPeerMap(controlPeer.map.peers);
   }, [controlPeer]);
 
   const [signalStatus, setSignalStatus] = useState<SignalStatus[]>([]);
-  useEffect(() => controlPeer?.signal.statusChanged.on(status => {
-    setSignalStatus(status);
-  }), [controlPeer]);
+  useEffect(
+    () =>
+      controlPeer?.signal.statusChanged.on((status) => {
+        setSignalStatus(status);
+      }),
+    [controlPeer]
+  );
 
   const [signalTrace, setSignalTrace] = useState<CommandTrace[]>([]);
-  useEffect(() => controlPeer?.signal.commandTrace.on(msg => {
-    setSignalTrace(msgs => [...msgs, msg]);
-  }), [controlPeer]);
+  useEffect(
+    () =>
+      controlPeer?.signal.commandTrace.on((msg) => {
+        setSignalTrace((msgs) => [...msgs, msg]);
+      }),
+    [controlPeer]
+  );
 
   const [swarmInfo, setSwarmInfo] = useState<SwarmInfo[]>([]);
   useEffect(() => {
@@ -138,12 +157,11 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
     <FullScreen>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
         <div>
-          <Select
-            value={topologyType}
-            onChange={(event: SelectChangeEvent) => setTopologyType(event.target.value)}
-          >
+          <Select value={topologyType} onChange={(event: SelectChangeEvent) => setTopologyType(event.target.value)}>
             {Object.keys(topologyType).map((topologyType) => (
-              <MenuItem key={topologyType} value={topologyType}>{topologyType}</MenuItem>
+              <MenuItem key={topologyType} value={topologyType}>
+                {topologyType}
+              </MenuItem>
             ))}
           </Select>
 
@@ -154,11 +172,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
           </div>
 
           {resizeListener}
-          <PeerGraph
-            peers={peerMap}
-            size={{ width: 500, height }}
-            onClick={killPeer}
-          />
+          <PeerGraph peers={peerMap} size={{ width: 500, height }} onClick={killPeer} />
         </div>
 
         <div>

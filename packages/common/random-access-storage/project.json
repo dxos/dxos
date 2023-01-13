@@ -1,0 +1,65 @@
+{
+  "sourceRoot": "packages/common/random-access-storage/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/random-access-storage/src/index.ts",
+        "outputPath": "packages/common/random-access-storage/dist/types",
+        "tsConfig": "packages/common/random-access-storage/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/random-access-storage/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/common/random-access-storage/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/random-access-storage/**/*.ts"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/common/random-access-storage",
+        "outputPath": "tmp/mocha/packages/common/random-access-storage",
+        "resultsPath": "test-results/packages/common/random-access-storage",
+        "testPatterns": [
+          "packages/common/random-access-storage/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/random-access-storage/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

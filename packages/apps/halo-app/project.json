@@ -1,0 +1,133 @@
+{
+  "sourceRoot": "packages/apps/halo-app/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/halo-app/src/index.ts",
+        "outputPath": "packages/apps/halo-app/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/apps/halo-app/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "build-storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:build",
+      "options": {
+        "config": {
+          "configFolder": "packages/apps/halo-app/.storybook"
+        },
+        "outputPath": "packages/apps/halo-app/out/dxos/storybook/halo",
+        "uiFramework": "@storybook/react"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_RELEASE"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        {
+          "env": "IPDATA_API_KEY"
+        },
+        "^production",
+        "production"
+      ],
+      "options": {
+        "outputPath": "packages/apps/halo-app/out/halo"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/halo-app",
+        "outputPath": "tmp/mocha/packages/apps/halo-app",
+        "playwright": true,
+        "resultsPath": "test-results/packages/apps/halo-app",
+        "serve": "halo-app:preview",
+        "testPatterns": [
+          "packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/halo-app/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/halo-app/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "pnpm -w serve -L packages/apps/halo-app/out/halo"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "halo-app:bundle"
+      }
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/apps/halo-app/.storybook"
+        },
+        "uiFramework": "@storybook/react"
+      }
+    }
+  }
+}

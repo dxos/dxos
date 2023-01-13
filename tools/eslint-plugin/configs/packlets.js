@@ -8,9 +8,7 @@ module.exports = {
   // TODO(wittjosiah): Phase out usage?
   //   Nx recommends splitting into packages earlier to take more advantage of computation caching.
   //   https://nx.dev/structure/creating-libraries
-  extends: [
-    'plugin:@rushstack/eslint-plugin-packlets/recommended'
-  ],
+  extends: ['plugin:@rushstack/eslint-plugin-packlets/recommended'],
   overrides: [
     {
       files: ['**/*.{ts,tsx,js,jsx}'],

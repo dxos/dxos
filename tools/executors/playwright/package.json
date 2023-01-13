@@ -1,5 +1,0 @@
-{
-  "name": "@dxos/playwright",
-  "private": true,
-  "executors": "./executor.json"
-}

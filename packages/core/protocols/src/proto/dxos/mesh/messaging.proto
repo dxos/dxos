@@ -1,0 +1,24 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+import "dxos/keys.proto";
+
+package dxos.mesh.messaging;
+
+message ReliablePayload {
+  /// Unique message identifier. Used for Acknolegment.
+  dxos.keys.PublicKey message_id = 1;
+
+  /// Payload for signal server netwrok.
+  google.protobuf.Any payload = 2;
+}
+
+message Acknowledgement {
+  /// MessageId of the Message that is being acknowledged.
+  dxos.keys.PublicKey message_id = 1;
+}
