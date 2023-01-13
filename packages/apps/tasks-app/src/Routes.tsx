@@ -18,18 +18,7 @@ export const Routes = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace: 'tasks-app' });
 
-  // Allow the client to auto-create an identity if env DX_VAULT=false
-  useEffect(() => {
-    if (process.env.DX_VAULT === 'false' && !identity) {
-      void client.halo.createProfile();
-    }
-  }, []);
-
-  if (process.env.DX_VAULT === 'false' && !identity) {
-    return null;
-  }
-
-  return useRoutes([
+  const routes = useRoutes([
     {
       path: '/',
       element: <RequireIdentity />,
@@ -67,4 +56,17 @@ export const Routes = () => {
       ]
     }
   ]);
+
+  // Allow the client to auto-create an identity if env DX_VAULT=false
+  useEffect(() => {
+    if (process.env.DX_VAULT === 'false' && !identity) {
+      void client.halo.createProfile();
+    }
+  }, []);
+
+  if (process.env.DX_VAULT === 'false' && !identity) {
+    return null;
+  }
+
+  return routes;
 };
