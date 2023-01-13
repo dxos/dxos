@@ -19,6 +19,7 @@ const boardSize = 640;
 const panelWidth = 160;
 
 // TODO(burdon): Invite/determine player.
+// TODO(burdon): Move to @dxos/chess-app (stand-alone app).
 export const ChessGrid: FC = () => {
   const [style] = useState(ChessPieces.RIOHACHA);
   const [game, setGame] = useState<Game | undefined>();
