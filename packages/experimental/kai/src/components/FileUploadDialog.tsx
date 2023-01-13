@@ -16,6 +16,8 @@ export const FileUploadDialog: FC<{
 }> = ({ open = false, onClose, onUpload, accept, multiple = false }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // TODO(burdon): Context object.
+
   useEffect(() => {
     const listener = () => {
       onClose();
@@ -34,16 +36,16 @@ export const FileUploadDialog: FC<{
       // - Try with onInputCapture and onChangeCapture.
       // Adding the event listener on the 'change' event fixed the issue.
       inputRef?.current?.addEventListener('change', handleUpload);
-      document.body.addEventListener('focus', listener, {
-        capture: true,
-        once: true
-      });
+      // document.body.addEventListener('focus', listener, {
+      //   capture: true,
+      //   once: true
+      // });
 
       inputRef.current!.click();
     }
 
     return () => {
-      inputRef?.current?.addEventListener('change', handleUpload);
+      inputRef?.current?.removeEventListener('change', handleUpload);
       document.body.removeEventListener('focus', listener);
     };
   }, [open]);

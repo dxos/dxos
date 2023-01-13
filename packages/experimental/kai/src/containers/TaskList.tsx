@@ -44,6 +44,8 @@ export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?:
   );
 };
 
+const width = 400;
+
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   completed = undefined,
   readonly = false
@@ -90,7 +92,9 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 
   return (
     <div className='flex flex-1 justify-center bg-gray-50'>
-      <div className='flex flex-col overflow-y-scroll pl-3 pr-3 pt-2 pb-8 bg-white w-screen max-w-[400px]'>
+      <div
+        className={`flex flex-col overflow-y-scroll pl-3 pr-3 pt-2 pb-8 bg-white w-screen is-full md:is-[${width}px]`}
+      >
         <div className={'mt-2'}>
           {tasks?.map((task) => (
             <TaskItem
@@ -195,9 +199,13 @@ export const TaskItem: FC<{
       }
     >
       <div className='ml-8 text-sm text-blue-800'>
-        {debug && <div>{PublicKey.from(task[id]).truncate()}</div>}
         <div>{task.assignee?.name}</div>
-        <pre>{(task[base] as any)._schemaType?.name}</pre>
+        {debug && (
+          <div>
+            <div>{PublicKey.from(task[id]).truncate()}</div>
+            <div>{(task[base] as any)._schemaType?.name}</div>
+          </div>
+        )}
       </div>
     </CardRow>
   );
