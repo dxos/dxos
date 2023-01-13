@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-registry-client",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "private": true,
   "description": "React registry client API",
   "homepage": "https://dxos.org",
