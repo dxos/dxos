@@ -22,7 +22,7 @@ import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
 import { Peer } from './peer';
 
-const INITIATION_DELAY = 500; // It should be at least twice the latency between peers.
+const INITIATION_DELAY = 100;
 
 // TODO(burdon): Factor out.
 const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
