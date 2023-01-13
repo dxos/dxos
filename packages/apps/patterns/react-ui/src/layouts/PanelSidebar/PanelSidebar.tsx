@@ -19,8 +19,6 @@ import { defaultOverlay, mx, useMediaQuery, useTranslation } from '@dxos/react-c
 
 export type PanelSidebarState = 'show' | 'hide';
 
-export const sidebarWidth = 272;
-
 export interface PanelSidebarContextValue {
   setDisplayState: Dispatch<SetStateAction<PanelSidebarState>>;
   displayState: PanelSidebarState;
@@ -49,40 +47,44 @@ export interface PanelSidebarProviderProps {
   slots?: PanelSidebarProviderSlots;
 }
 
-export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<PanelSidebarProviderProps>) => {
+export const PanelSidebarProvider = ({
+  children,
+  inlineStart,
+  slots
+}: PropsWithChildren<PanelSidebarProviderProps>) => {
   const { t } = useTranslation('os');
-  const [displayState, setInternalDisplayState] = useState<PanelSidebarState>('hide');
-  const [transitionShow, setTransitionShow] = useState(false);
-  const isOpen = displayState === 'show';
-
   const [isLg] = useMediaQuery('lg');
+  const [displayState, setInternalDisplayState] = useState<PanelSidebarState>(isLg ? 'show' : 'hide');
+  const isOpen = displayState === 'show';
+  const [transitionShow, setTransitionShow] = useState(isOpen);
+  const [domShow, setDomShow] = useState(isOpen);
 
   const internalHide = () => {
     setTransitionShow(false);
+    setInternalDisplayState('hide');
     setTimeout(() => {
-      setInternalDisplayState('hide');
+      setDomShow(false);
     }, 200);
   };
-
   const internalShow = () => {
+    setDomShow(true);
     setInternalDisplayState('show');
     setTimeout(() => {
       setTransitionShow(true);
       // todo (thure): this may be a race condition in certain situations
     }, 0);
   };
-
   const setDisplayState = (displayState: SetStateAction<PanelSidebarState>) =>
     displayState === 'show' ? internalShow() : internalHide();
 
   return (
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
-      <DialogPrimitive.Root open={isOpen} modal={!isLg}>
+      <DialogPrimitive.Root open={domShow} modal={!isLg}>
         <DialogPrimitive.Content
           className={mx(
-            'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
+            'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
             'bg-neutral-50 dark:bg-neutral-950',
-            transitionShow ? 'inline-start-0' : `inline-start-[-${sidebarWidth}px]`
+            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]'
           )}
         >
           <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
