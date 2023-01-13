@@ -1,5 +1,69 @@
 # Changelog
 
+## [0.1.21](https://github.com/dxos/dxos/compare/v0.1.20...v0.1.21) (2023-01-13)
+
+
+### Features
+
+* Add Devtools TestBench ([#2217](https://github.com/dxos/dxos/issues/2217)) ([dd7b91a](https://github.com/dxos/dxos/commit/dd7b91a21b6a51fe0eae23b9f174c928df155567))
+* Chess storybook. ([#2241](https://github.com/dxos/dxos/issues/2241)) ([c28c4ed](https://github.com/dxos/dxos/commit/c28c4ed2a9cd6eb06a70b512b99070e0e5db0dc5))
+* **client-services:** Add NetworkService ([#2185](https://github.com/dxos/dxos/issues/2185)) ([30ad46a](https://github.com/dxos/dxos/commit/30ad46a996ac39ac2f104f511b094b4f5cc09b03))
+* **client:** Add Client API for NetworkService ([#2186](https://github.com/dxos/dxos/issues/2186)) ([5677619](https://github.com/dxos/dxos/commit/5677619cd755b34c1fce03d252690e6588877b77))
+* Configure ts-node for mocha executor ([#2220](https://github.com/dxos/dxos/issues/2220)) ([529ef38](https://github.com/dxos/dxos/commit/529ef384b9417f358c328470ac2b824ac9f99372))
+* Credential query ([#2210](https://github.com/dxos/dxos/issues/2210)) ([988eaec](https://github.com/dxos/dxos/commit/988eaec0c89f15ea7d081bb21198d4019eb239dc))
+* **devtools:** Add Credentials panel ([#2216](https://github.com/dxos/dxos/issues/2216)) ([3db1e36](https://github.com/dxos/dxos/commit/3db1e36f9f0477b55c4292a20101e0f26fb1e90c))
+* Draggable task list. ([#2203](https://github.com/dxos/dxos/issues/2203)) ([1c41bc6](https://github.com/dxos/dxos/commit/1c41bc62cebabd943d272d84b1c1462339c1dedb))
+* ECHO db2 typed schema and KAI demo. ([#2169](https://github.com/dxos/dxos/issues/2169)) ([81a8f3e](https://github.com/dxos/dxos/commit/81a8f3e96f56c4e5c5de5feb3ce000c909ca1d73))
+* Factor out ECHO type generator. ([#2191](https://github.com/dxos/dxos/issues/2191)) ([0cca560](https://github.com/dxos/dxos/commit/0cca560f5d2ec717b62a545c037f4807b54fa4ab))
+* Fix delete and reorder ([#2206](https://github.com/dxos/dxos/issues/2206)) ([6535beb](https://github.com/dxos/dxos/commit/6535beb1abbbd3c2972089ac56a81da520781f0b))
+* HOC to automatically track subscribed objects ([#2187](https://github.com/dxos/dxos/issues/2187)) ([2b9b648](https://github.com/dxos/dxos/commit/2b9b648639d2cda9c3d6a8a4d09ee5b92f5224ea))
+* https app dev servers ([#2243](https://github.com/dxos/dxos/issues/2243)) ([ee542e4](https://github.com/dxos/dxos/commit/ee542e4804c036dd2b77cd258653f704348f172c))
+* Import/export ([#2250](https://github.com/dxos/dxos/issues/2250)) ([cdf82e3](https://github.com/dxos/dxos/commit/cdf82e3fce4cf846bde4cc8c0f28e67336475865))
+* Integrate arrays and refs into the experimental db API ([#2257](https://github.com/dxos/dxos/issues/2257)) ([031708a](https://github.com/dxos/dxos/commit/031708a0a9e27e2e454e9ea438278e4f629202a8))
+* Integrate new database stack into the client ([#2199](https://github.com/dxos/dxos/issues/2199)) ([8748ca2](https://github.com/dxos/dxos/commit/8748ca242cb7e175fcfc8bdf15c6638ccddd1dda))
+* Kai components ([#2221](https://github.com/dxos/dxos/issues/2221)) ([b186a9c](https://github.com/dxos/dxos/commit/b186a9c0891ee2ecfdf09acac25b64c1d81ce597))
+* Kai kanban ([#2223](https://github.com/dxos/dxos/issues/2223)) ([88bc0a9](https://github.com/dxos/dxos/commit/88bc0a9f69bd0880d335932071ecdcd4e5b3a3c2))
+* kai storybooks ([#2245](https://github.com/dxos/dxos/issues/2245)) ([41365dd](https://github.com/dxos/dxos/commit/41365dd464d0c1a2b5a777aa84934306a25c11fe))
+* **kai:** Add Airplane Mode ([#2192](https://github.com/dxos/dxos/issues/2192)) ([a7909da](https://github.com/dxos/dxos/commit/a7909da672a0c58ab90f7416b9b1a9c0ec3a3bbb))
+* **kai:** Add text model ([#2201](https://github.com/dxos/dxos/issues/2201)) ([b2af8f0](https://github.com/dxos/dxos/commit/b2af8f04d741ae9d19f997504324f9d2a172746f))
+* **kai:** Make reset button work ([#2242](https://github.com/dxos/dxos/issues/2242)) ([9aa9f93](https://github.com/dxos/dxos/commit/9aa9f936a3948e88bc64d982322be2aa33f534a5))
+* **kai:** port device invitations from halo ([#2264](https://github.com/dxos/dxos/issues/2264)) ([6b50a9b](https://github.com/dxos/dxos/commit/6b50a9b4828d2a8be67cfc15f71b1f3c25eba975))
+* **kai:** port existing invitations flow ([#2259](https://github.com/dxos/dxos/issues/2259)) ([0a119c1](https://github.com/dxos/dxos/commit/0a119c190f01356da74e9e0a640b97381e374b8a))
+* **kai:** port identity creation over from halo ([#2258](https://github.com/dxos/dxos/issues/2258)) ([8b77fc3](https://github.com/dxos/dxos/commit/8b77fc367010c372894d3351630ba94e63f5d8e7))
+* Local snapshots  ([#2202](https://github.com/dxos/dxos/issues/2202)) ([56e12c1](https://github.com/dxos/dxos/commit/56e12c16020f55a1d12532fcfa75fea19baf4ad9))
+* Map component ([#2229](https://github.com/dxos/dxos/issues/2229)) ([e1b64e7](https://github.com/dxos/dxos/commit/e1b64e74671d670e16fca8b0fa8a8a419bd74432))
+* **messaging:** Make SignalManager re-entrant ([#2163](https://github.com/dxos/dxos/issues/2163)) ([743b951](https://github.com/dxos/dxos/commit/743b951d4c750031b13043e057c5674b8a7a4be3))
+* Multi use test invitations ([#2171](https://github.com/dxos/dxos/issues/2171)) ([73b5d33](https://github.com/dxos/dxos/commit/73b5d333fa9afb634223b767c50d603aa28a8848))
+* multi-party support. ([#2184](https://github.com/dxos/dxos/issues/2184)) ([6154e73](https://github.com/dxos/dxos/commit/6154e73fe17a606a97a4774945428603c5655461))
+* **network-manager:** Add "Airplane mode" ([#2170](https://github.com/dxos/dxos/issues/2170)) ([1e4a9e0](https://github.com/dxos/dxos/commit/1e4a9e0e13803f25a458a618ec2c787928ed40d4))
+* Object sync protocol ([#2218](https://github.com/dxos/dxos/issues/2218)) ([0e97661](https://github.com/dxos/dxos/commit/0e97661e2f4935cd078a416cc4475e0ba923df79))
+* **object-model:** Add Reference ([#2209](https://github.com/dxos/dxos/issues/2209)) ([b2c8739](https://github.com/dxos/dxos/commit/b2c873995bdb6e144ced4d8884d9b62f19ff0e25))
+* Ordered arrays in object model ([#2247](https://github.com/dxos/dxos/issues/2247)) ([058cbb5](https://github.com/dxos/dxos/commit/058cbb5c36cb7b83c02c63793b9cdb49eaf75ec0))
+* OS patterns ([#2230](https://github.com/dxos/dxos/issues/2230)) ([d69f2b0](https://github.com/dxos/dxos/commit/d69f2b0cb280483016022a0d24100dd8408d827c))
+* repository guide ([#2174](https://github.com/dxos/dxos/issues/2174)) ([1e74ebf](https://github.com/dxos/dxos/commit/1e74ebf90fc39ce1f7c3e1bbee61a1161856ced6))
+* simplified, cleaned up app templates  ([#2222](https://github.com/dxos/dxos/issues/2222)) ([9b89a98](https://github.com/dxos/dxos/commit/9b89a9813bbd022ce2d9e2a0b91d2ee2fc73a2f0))
+* Snapshot manager ([#2225](https://github.com/dxos/dxos/issues/2225)) ([80a6b6c](https://github.com/dxos/dxos/commit/80a6b6c855626c0158c86d44bd319a0f025f9eff))
+* Update Kai demo with task list. ([#2190](https://github.com/dxos/dxos/issues/2190)) ([38feea1](https://github.com/dxos/dxos/commit/38feea153f350126ae7df0cc14d2d796248ed2c6))
+* Update kai UX ([#2205](https://github.com/dxos/dxos/issues/2205)) ([8810289](https://github.com/dxos/dxos/commit/8810289ffa6fa2ce2137a0e96ff8650cac9dace8))
+* Use prototypes from schema ([#2251](https://github.com/dxos/dxos/issues/2251)) ([34e4d42](https://github.com/dxos/dxos/commit/34e4d4251c6e2500abdd0a22718ff5d2df8f3251))
+* Wait for prevoiusly reached timeframe when loading spaces ([#2200](https://github.com/dxos/dxos/issues/2200)) ([b34c256](https://github.com/dxos/dxos/commit/b34c256787adbb82678de0cb10b7b8ac0455f31f))
+
+
+### Bug Fixes
+
+* app tunneling. ([#2215](https://github.com/dxos/dxos/issues/2215)) ([9f2c996](https://github.com/dxos/dxos/commit/9f2c9968062ce3b3d1253103eb59dfe5b65ff3dd))
+* **devtools-extension:** Make Devtools Extension work ([#2193](https://github.com/dxos/dxos/issues/2193)) ([44f8cf1](https://github.com/dxos/dxos/commit/44f8cf15ad835ff30441d3738dcc2f007e5e355b))
+* **devtools-testbench:** bundle ([#2234](https://github.com/dxos/dxos/issues/2234)) ([5f60361](https://github.com/dxos/dxos/commit/5f603612890e8534ab2a83089e9b5d313142ba98))
+* Fix non-deterministic test in ObjectModel ([#2256](https://github.com/dxos/dxos/issues/2256)) ([7800518](https://github.com/dxos/dxos/commit/7800518811f54982c932a657840e6f2192c2415f))
+* Ignore signals for closed connections ([#2253](https://github.com/dxos/dxos/issues/2253)) ([55ac62c](https://github.com/dxos/dxos/commit/55ac62cde636f12e13b413b7ec04e9a0f3cb3691))
+* **kai:** don't use autoupdate for service worker ([#2246](https://github.com/dxos/dxos/issues/2246)) ([321bc93](https://github.com/dxos/dxos/commit/321bc9381e9bcc5f8fcacc4ae12c4a6273f5eb9f))
+* **kai:** make dashboard panels stack on small screens ([#2237](https://github.com/dxos/dxos/issues/2237)) ([da74782](https://github.com/dxos/dxos/commit/da7478231ca6f4a9d693964c442da4e1d43b4f6c))
+* **mesh-proxy:** Not Open Error ([#2197](https://github.com/dxos/dxos/issues/2197)) ([37665dd](https://github.com/dxos/dxos/commit/37665dd0a70ac133beeab538bf00bb4635e0316b))
+* Nx config for PR [#2191](https://github.com/dxos/dxos/issues/2191) ([#2196](https://github.com/dxos/dxos/issues/2196)) ([b37d8a0](https://github.com/dxos/dxos/commit/b37d8a05d622be7cf14384cff1a02473e3cc52b9))
+* react hook warning in monolithic apps ([#2249](https://github.com/dxos/dxos/issues/2249)) ([7f92a97](https://github.com/dxos/dxos/commit/7f92a9767de01b5db1580184975b3e8ae2d620b9))
+* react-list and react-composer Storybooks ([#2160](https://github.com/dxos/dxos/issues/2160)) ([8b154cc](https://github.com/dxos/dxos/commit/8b154cc4814792766a03b2aff7b3d18f3b2ef08f))
+* vite injected env vars missing ([#2248](https://github.com/dxos/dxos/issues/2248)) ([a05abc0](https://github.com/dxos/dxos/commit/a05abc05cfa8a536be37c1c739b6aeada72d4368))
+
 ## [0.1.20](https://github.com/dxos/dxos/compare/v0.1.19...v0.1.20) (2022-12-16)
 
 
