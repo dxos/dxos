@@ -33,7 +33,10 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {
-  private readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
+  /**
+   * @internal
+   */
+  readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
 
   private readonly _swarmMessenger: MessageRouter;
 
@@ -324,13 +327,15 @@ export class Swarm {
    * Creates a connection then sends message over signal network.
    */
   private async _initiateConnection(remoteId: PublicKey) {
+    const ctx = this._ctx // Copy to avoid getting reset while sleeping.
+
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     if (remoteId.toHex() < this._ownPeerId.toHex()) {
       log('initiation delay', { remoteId });
       await sleep(INITIATION_DELAY);
     }
-    if (this._ctx.disposed) {
+    if (ctx.disposed) {
       return;
     }
 

@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -109,7 +110,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   });
 
-  Array(1000)
+  Array(10000)
     .fill(0)
     .forEach((_, i) => {
       test
@@ -118,24 +119,30 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
           const peer2 = testBuilder.createPeer();
           await openAndCloseAfterTest([peer1, peer2]);
 
-          const topic1 = PublicKey.random();
+          const topic = PublicKey.random();
 
-          const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
+          const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
           await exchangeMessages(swarm1, swarm2);
 
           //
           // Going offline and back online
           //
           const connectionDropped = peer2._networkManager
-            .getSwarm(topic1)
+            .getSwarm(topic)
             ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
           await peer1.goOffline();
           await connectionDropped;
           await peer1.goOnline();
 
+          await waitForExpect(() => {
+            expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
+
+            expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
+          }, 1_000);
+
           await exchangeMessages(swarm1, swarm2);
-          await leaveSwarm([peer1, peer2], topic1);
+          await leaveSwarm([peer1, peer2], topic);
         })
         .timeout(2_000);
     });
