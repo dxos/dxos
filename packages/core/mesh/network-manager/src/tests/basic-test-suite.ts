@@ -122,9 +122,12 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     //
     // Going offline and back online
     //
-    const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor((event) => !!event.swarmEvent.peerLeft);
+    const connectionDropped = peer2._networkManager
+      .getSwarm(topic1)
+      ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
+
     await peer1.goOffline();
-    await peerLeft;
+    await connectionDropped;
     await peer1.goOnline();
 
     await exchangeMessages(swarm1, swarm2);

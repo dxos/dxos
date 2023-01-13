@@ -22,7 +22,7 @@ import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
 import { Peer } from './peer';
 
-const INITIATION_DELAY = 100;
+const INITIATION_DELAY = 500; // It should be at least twice the latency between peers.
 
 // TODO(burdon): Factor out.
 const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
@@ -163,7 +163,7 @@ export class Swarm {
       const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
       if (peer) {
         peer.advertizing = false;
-        if (!peer.connection || peer.connection.state !== ConnectionState.CONNECTED) {
+        if (peer.connection?.state !== ConnectionState.CONNECTED) {
           // Destroy peer only if there is no p2p-connection established
           void this._destroyPeer(peer.id).catch((err) => log.catch(err));
         }
@@ -198,6 +198,7 @@ export class Swarm {
     return answer;
   }
 
+  @synchronized
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { message });
     if (this._ctx.disposed) {
@@ -216,6 +217,7 @@ export class Swarm {
   }
 
   // For debug purposes
+  @synchronized
   async goOffline() {
     await this._ctx.dispose();
     [...this._peers.values()].forEach((peer) => {
@@ -232,7 +234,6 @@ export class Swarm {
     [...this._peers.values()].forEach((peer) => {
       peer.advertizing = true;
     });
-    this._topology.update();
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
