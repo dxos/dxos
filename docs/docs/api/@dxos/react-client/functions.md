@@ -98,6 +98,53 @@ Returns: <code>SpaceMember[]</code>
 Arguments: 
 
 `spaceKey`: <code>undefined | PublicKey</code>
+### [useNetworkStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/network/useNetworkStatus.ts#L14)
+
+
+Creates a network status subscription.
+
+Returns: <code>NetworkStatus</code>
+
+Arguments: none
+### [useQuery(space, \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L18)
+
+
+Create subscription.
+
+Returns: <code>T[]</code>
+
+Arguments: 
+
+`space`: <code>Space</code>
+
+`filter`: <code>TypeFilter&lt;T&gt;</code>
+Create subscription.
+
+Returns: <code>Document[]</code>
+
+Arguments: 
+
+`space`: <code>Space</code>
+
+`filter`: <code>Filter</code>
+### [useReactor(\[opts\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useRector.tsx#L20)
+
+
+Hook to update components that access the database when modified.
+
+Returns: <code>[UseRector](/api/@dxos/react-client/types/UseRector)</code>
+
+Arguments: 
+
+`opts`: <code>[ReactorProps](/api/@dxos/react-client/types/ReactorProps)</code>
+### [useReactorContext(\[opts\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useRector.tsx#L73)
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`opts`: <code>[ReactorProps](/api/@dxos/react-client/types/ReactorProps)</code>
 ### [useReducer(selection, value, deps)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L53)
 
 
@@ -142,7 +189,7 @@ Arguments:
 ### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
 
 
-Get a specific Space.
+Get a specific Space via its key.
 Requires ClientContext to be set via ClientProvider.
 
 Returns: <code>undefined | Space</code>
@@ -199,3 +246,23 @@ Arguments:
 `defaultValue`: <code>T</code>
 
 `deps`: <code>DependencyList</code>
+### [useSubscription(selection)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSubscription.ts#L14)
+
+
+Create reactive selection.
+
+Returns: <code>SubscriptionHandle</code>
+
+Arguments: 
+
+`selection`: <code>Selection</code>
+### [withReactor(component)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useRector.tsx#L60)
+
+
+Reactive HOC.
+
+Returns: <code>FC&lt;P&gt;</code>
+
+Arguments: 
+
+`component`: <code>FC&lt;P&gt;</code>
