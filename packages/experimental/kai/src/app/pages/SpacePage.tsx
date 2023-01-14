@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState, FC, useMemo } from 'react';
+import React, { useEffect, useState, FC } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
@@ -45,11 +45,11 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
       <div className={mx(views.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex h-screen bg-white')}>
         {view === AppView.SETTINGS && <ManageSpacePage />}
         {view === AppView.DASHBOARD && <Dashboard />}
-        {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.PROJECTS && <ProjectList />}
+        {view === AppView.TASKS && <TaskList />}
+        {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.CONTACTS && <ContactTable />}
         {view === AppView.KANBAN && <ProjectKanban />}
-        {view === AppView.TASKS && <TaskList />}
         {view === AppView.EDITOR && <ProjectEditor />}
         {view === AppView.GRAPH && <ProjectGraph />}
         {view === AppView.MAP && <MapView />}
@@ -59,19 +59,27 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
   );
 };
 
+// let lastSpace;
+
 /**
  * Home page with current space.
  */
 export const SpacePage = () => {
-  const [context, setContext] = useState<SpaceContextType | undefined>();
   const navigate = useNavigate();
   const { views } = useOptions();
+
+  const [context, setContext] = useState<SpaceContextType | undefined>();
+  // const space = useMemo(
+  //   () => (currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined),
+  //   [spaces, currentSpaceKey]
+  // );
+
   const { spaceKey: currentSpaceKey, view } = useParams();
   const spaces = useSpaces();
-  const space = useMemo(
-    () => (currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined),
-    [spaces, currentSpaceKey]
-  );
+  const space = currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined;
+
+  // console.log('>>>>>>>>>>> SpacePage', space?.key.truncate(), space === lastSpace);
+  // lastSpace = space;
 
   // Change space.
   useEffect(() => {

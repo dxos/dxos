@@ -30,7 +30,7 @@ describe('schema', () => {
     const contact = new Contact();
     contact.name = 'User 1';
     expect(contact.name).to.eq('User 1');
-    expect(contact.toJSON()).to.deep.eq({ name: 'User 1' }); // TODO(burdon): Add id.
+    expect(contact.toJSON()).to.deep.eq({ name: 'User 1' });
 
     const task1 = new Task();
     task1.title = 'Task 1';
