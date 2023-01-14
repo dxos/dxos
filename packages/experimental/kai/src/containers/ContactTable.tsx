@@ -15,6 +15,8 @@ import { Contact } from '../proto';
 export const ContactTable = () => {
   const { space } = useSpace();
   const contacts = useQuery(space, Contact.filter());
+
+  // TODO(burdon): Infer columns for generic table container.
   const columns = useMemo<Column<EchoObject>[]>(
     () => [
       { Header: 'Name', accessor: 'name' as any },

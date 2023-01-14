@@ -6,6 +6,10 @@ syntax = "proto3";
 
 package dxos.experimental.kai;
 
+//
+// Types
+//
+
 message LatLng {
   fixed32 lat = 1;
   fixed32 lng = 2;
@@ -16,6 +20,20 @@ message Address {
   string state = 2;
   string zip = 3;
   LatLng coordinates = 4;
+}
+
+//
+// Objects
+//
+
+message Organization {
+  option (object) = true; // TODO(burdon): Fix protobuf plugin.
+
+  string name = 1;
+  string website = 2;
+  repeated Contact people = 3;
+  repeated Project projects = 4;
+  Address address = 5;
 }
 
 message Contact {
@@ -48,13 +66,32 @@ message Project {
   string tag = 5;
 }
 
-message Organization {
+message Document {
   option (object) = true;
 
-  string name = 1;
-  repeated Project projects = 2;
-  repeated Contact team = 3;
-  Address address = 4;
+  TextObject description = 1;
+//  repeated string tags = 2;
+  string tag = 2;
+}
+
+message Message {
+  option (object) = true;
+
+  // TODO(burdon): Timestamp.
+  string from = 1;
+  string to = 2;
+  string text = 3;
+}
+
+// TODO(burdon): First-class typed links?
+message Link {
+  option (object) = true;
+
+  // TODO(burdon): Keys.
+  string source = 1;
+  string target = 2;
+//  repeated string tags = 3;
+  string tag = 3;
 }
 
 // TODO(dmaretskyi): Move to separate file.

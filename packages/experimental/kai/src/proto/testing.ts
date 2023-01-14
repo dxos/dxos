@@ -54,7 +54,7 @@ export class Generator {
         await Promise.all(
           Array.from({ length: faker.datatype.number(this._options.contacts) }).map(async () => {
             const contact = await createContact(this._db);
-            organization.team.push(contact);
+            organization.people.push(contact);
             return contact;
           })
         );
