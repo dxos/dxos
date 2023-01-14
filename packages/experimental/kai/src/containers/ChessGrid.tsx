@@ -15,7 +15,6 @@ import { getSize, mx } from '@dxos/react-components';
 import { useSpace } from '../hooks';
 
 const smallSize = 300;
-const boardSize = 600;
 const panelWidth = 160;
 
 // TODO(burdon): Factor out.
@@ -99,7 +98,7 @@ const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ gam
         <div className='flex justify-center'>
           <div className='hidden lg:flex' style={{ width: panelWidth }} />
 
-          <div className='bg-gray-100' style={{ width: boardSize, height: boardSize }}>
+          <div className='bg-gray-100 w-[380px] md:w-[600px]'>
             <Chessboard model={model} orientation={orientation} style={style} onUpdate={handleUpdate} />
           </div>
 
@@ -136,7 +135,7 @@ const Grid: FC<{ style: ChessPieces; onSelect: (game: Game) => void; onCreate: (
   return (
     <div className='flex flex-1 justify-center'>
       <div className='bg-white overflow-y-scroll scrollbar'>
-        <div className='flex grid grid-cols-3 grid-flow-row gap-4 m-6'>
+        <div className='flex grid grid-cols-1 md:grid-cols-3 grid-flow-row gap-4 m-6'>
           {games.map((game) => (
             <div
               key={game[id]}

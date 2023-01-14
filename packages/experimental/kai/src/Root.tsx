@@ -16,6 +16,7 @@ import kaiTranslations from './translations';
 const getView = (all = false) =>
   all
     ? [
+        AppView.GAME,
         AppView.DASHBOARD,
         AppView.PROJECTS,
         AppView.TASKS,
@@ -24,8 +25,7 @@ const getView = (all = false) =>
         AppView.KANBAN,
         AppView.GRAPH,
         AppView.EDITOR,
-        AppView.MAP,
-        AppView.GAME
+        AppView.MAP
       ]
     : [AppView.TASKS];
 
