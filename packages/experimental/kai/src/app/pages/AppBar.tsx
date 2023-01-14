@@ -7,7 +7,7 @@ import React, { FC, useContext } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx, useMediaQuery } from '@dxos/react-components';
-import { PanelSidebarContext, sidebarWidth, useTogglePanelSidebar } from '@dxos/react-ui';
+import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { useOptions, viewConfig } from '../../hooks';
 
