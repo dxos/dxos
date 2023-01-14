@@ -23,6 +23,25 @@ message Address {
 }
 
 //
+// Internal
+// TODO(dmaretskyi): Move to separate file.
+//
+
+/// Special object type for text object references.
+message TextObject {}
+
+// TODO(burdon): First-class typed links?
+message Link {
+  option (object) = true;
+
+  // TODO(burdon): Keys.
+  string source = 1;
+  string target = 2;
+//  repeated string tags = 3;
+  string tag = 3;
+}
+
+//
 // Objects
 //
 
@@ -59,11 +78,12 @@ message Project {
   option (object) = true;
 
   string title = 1;
-  TextObject description = 2;
-  repeated Contact team = 3;
-  repeated Task tasks = 4;
-//  repeated string tags = 5; // TODO(burdon): Broken.
-  string tag = 5;
+  TextObject description = 2; // TODO(burdon): Change to string (see Document).
+  string url = 3;
+  repeated Contact team = 4;
+  repeated Task tasks = 5;
+//  repeated string tags = 6; // TODO(burdon): Broken.
+  string tag = 6;
 }
 
 message Document {
@@ -78,22 +98,8 @@ message Message {
   option (object) = true;
 
   // TODO(burdon): Timestamp.
-  string from = 1;
-  string to = 2;
-  string text = 3;
+  string date = 1;
+  string from = 2;
+  string to = 3;
+  string text = 4;
 }
-
-// TODO(burdon): First-class typed links?
-message Link {
-  option (object) = true;
-
-  // TODO(burdon): Keys.
-  string source = 1;
-  string target = 2;
-//  repeated string tags = 3;
-  string tag = 3;
-}
-
-// TODO(dmaretskyi): Move to separate file.
-/// Special object type for text object references.
-message TextObject {}
