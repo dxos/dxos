@@ -13,15 +13,16 @@ import { App } from './app';
 import { AppView } from './hooks';
 import kaiTranslations from './translations';
 
+// TODO(burdon): Modes from env.
 const views =
   process.env.DEMO === 'true' /* || window.location.protocol === 'http:' */
     ? [
         AppView.DASHBOARD,
-        AppView.ORGS,
         AppView.PROJECTS,
+        AppView.TASKS,
+        AppView.ORGS,
         AppView.CONTACTS,
         AppView.KANBAN,
-        AppView.TASKS,
         AppView.GRAPH,
         AppView.EDITOR,
         AppView.MAP,
