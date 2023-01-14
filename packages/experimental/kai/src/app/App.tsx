@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { Client, fromHost, fromIFrame } from '@dxos/client';
-import { Config, Defaults } from '@dxos/config';
+import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
 import { AppView, OptionsContext } from '../hooks';
@@ -14,7 +14,7 @@ import { schema } from '../proto';
 import { Routes } from './Routes';
 
 const clientProvider = async (demo: boolean) => {
-  const config = new Config(Defaults());
+  const config = new Config(await Dynamics(), Defaults());
   const client = new Client({
     config,
     services: process.env.DX_VAULT === 'true' ? fromIFrame(config) : fromHost(config)

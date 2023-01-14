@@ -44,6 +44,8 @@ export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?:
   );
 };
 
+const width = 400;
+
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   completed = undefined,
   readonly = false
