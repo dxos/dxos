@@ -9,6 +9,8 @@ import { AuthChoices } from '@dxos/react-appkit';
 import { useIdentity, useSpaces } from '@dxos/react-client';
 import { Heading, useTranslation } from '@dxos/react-components';
 
+import { createSpacePath } from '../Routes';
+
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
@@ -21,7 +23,7 @@ export const InitPage = () => {
   const spaces = useSpaces();
 
   if (profile) {
-    return <Navigate to={`/${spaces[0].key.truncate()}`} />;
+    return <Navigate to={createSpacePath(spaces[0].key)} />;
   }
 
   return (

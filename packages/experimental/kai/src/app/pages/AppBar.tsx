@@ -68,13 +68,13 @@ export const ViewSelector: FC = () => {
             <a
               key={view}
               className={mx(
-                'flex p-1 pl-2 pr-2 mr-2 items-center cursor-pointer rounded-t text-black text-sm',
+                'flex p-1 pl-2 lg:pr-2 lg:mr-2 items-center cursor-pointer rounded-t text-black text-sm',
                 view === currentView && 'bg-white'
               )}
               onClick={() => setView(currentSpaceKey!, view)}
             >
               <Icon weight='light' className={getSize(6)} />
-              <div className='ml-1'>{String(view)}</div>
+              <div className='hidden lg:flex ml-1'>{String(view)}</div>
             </a>
           );
         })}

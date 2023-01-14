@@ -89,8 +89,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   };
 
   return (
-    <div className='flex flex-1 justify-center bg-gray-50'>
-      <div className='flex flex-col overflow-y-scroll pt-2 bg-white w-screen is-full relative md:is-[400px]'>
+    <div className='flex flex-1 justify-center bg-gray-100'>
+      <div className={'flex flex-col overflow-y-scroll pt-2 bg-white w-screen is-full md:is-[400px]'}>
         <div className={'mt-2 pli-3'}>
           {tasks?.map((task, index) => (
             <TaskItem
@@ -136,7 +136,7 @@ export const NewTaskItem: FC<{
       header={
         <Input
           id='new-task'
-          className='w-full outline-0'
+          className='w-full p-1'
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
@@ -156,11 +156,12 @@ export const NewTaskItem: FC<{
 export const TaskItem: FC<{
   task: Task;
   readonly?: boolean;
+  showAssigned?: boolean;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
   isLast?: boolean;
   orderIndex: number;
-}> = withReactor(({ task, readonly, onDelete, onSave, orderIndex, isLast }) => {
+}> = withReactor(({ task, readonly, showAssigned, onDelete, onSave, orderIndex, isLast }) => {
   const { debug } = useOptions();
   useReactorContext({
     onChange: () => {
@@ -216,7 +217,7 @@ export const TaskItem: FC<{
       }
       header={
         <Input
-          className={mx('w-full outline-0', task[deleted] && 'text-red-300')}
+          className={mx('w-full p-1', task[deleted] && 'text-red-300')}
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
@@ -229,15 +230,17 @@ export const TaskItem: FC<{
         />
       }
     >
-      <div className='ml-8 text-sm text-blue-800'>
-        <div>{task.assignee?.name}</div>
-        {debug && (
-          <div>
-            <div>{PublicKey.from(task[id]).truncate()}</div>
-            <div>{(task[base] as any)._schemaType?.name}</div>
-          </div>
-        )}
-      </div>
+      {showAssigned && (
+        <div className='ml-8 pl-1 text-sm text-blue-800'>
+          <div>{task.assignee?.name}</div>
+          {debug && (
+            <div>
+              <div>{PublicKey.from(task[id]).truncate()}</div>
+              <div>{(task[base] as any)._schemaType?.name}</div>
+            </div>
+          )}
+        </div>
+      )}
     </CardRow>
   );
 });
