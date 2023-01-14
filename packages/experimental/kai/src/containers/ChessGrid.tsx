@@ -3,11 +3,11 @@
 //
 
 import assert from 'assert';
-import { Chess, Color } from 'chess.js';
+import { Color } from 'chess.js';
 import { ArrowUUpLeft, PlusCircle } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
+import { createChess, Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
@@ -16,16 +16,6 @@ import { useSpace } from '../hooks';
 
 const smallSize = 300;
 const panelWidth = 160;
-
-// TODO(burdon): Factor out.
-const createChess = (game: Game) => {
-  const chess = new Chess();
-  if (game.fen) {
-    chess.loadPgn(game.fen);
-  }
-
-  return chess;
-};
 
 // TODO(burdon): Invite/determine player.
 // TODO(burdon): Move to @dxos/chess-app (stand-alone app).

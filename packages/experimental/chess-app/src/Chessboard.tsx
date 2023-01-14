@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chess, Color } from 'chess.js';
+import { Chess, Color, Game } from 'chess.js';
 import { ArrowURightDown, Circle } from 'phosphor-react';
 import React, { FC } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
@@ -27,7 +27,17 @@ const chessPieces = {
 
 const props = {
   customDarkSquareStyle: { backgroundColor: '#dcdcdc' },
-  customLightSquareStyle: { backgroundColor: '#f5f5f5' }
+  customLightSquareStyle: { backgroundColor: '#f5f5f5' },
+  customDropSquareStyle: { boxShadow: 'inset 0 0 1px 4px rgba(80, 80, 80, 0.75)' }
+};
+
+export const createChess = (game: Game) => {
+  const chess = new Chess();
+  if (game.fen) {
+    chess.loadPgn(game.fen);
+  }
+
+  return chess;
 };
 
 export type ChessModel = {
@@ -89,9 +99,9 @@ export const Chessboard: FC<ChessboardProps> = ({
 
 export const ChessPanel: FC<{
   model: ChessModel;
-  orientation: Color;
-  onFlip: () => void;
-}> = ({ model: { chess }, orientation, onFlip }) => {
+  orientation?: Color;
+  onFlip?: () => void;
+}> = ({ model: { chess }, orientation = 'w', onFlip }) => {
   const history = chess.history();
   const label = chess.isGameOver()
     ? chess.isCheckmate()
