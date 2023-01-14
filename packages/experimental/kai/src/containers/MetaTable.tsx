@@ -12,7 +12,7 @@ import { Searchbar, Table } from '../components';
 import { useSpace } from '../hooks';
 import { Contact } from '../proto';
 
-export const ContactTable = () => {
+export const MetaTable = () => {
   const { space } = useSpace();
   const contacts = useQuery(space, Contact.filter());
 

@@ -18,10 +18,10 @@ const getView = (all = false) =>
   all
     ? [
         AppView.DASHBOARD,
+        AppView.META,
         AppView.PROJECTS,
         AppView.TASKS,
         AppView.ORGS,
-        AppView.CONTACTS,
         AppView.KANBAN,
         AppView.GRAPH,
         AppView.EDITOR,

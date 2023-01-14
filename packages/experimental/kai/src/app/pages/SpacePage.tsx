@@ -11,7 +11,7 @@ import { PanelSidebarProvider } from '@dxos/react-ui';
 
 import {
   ChessGrid,
-  ContactTable,
+  MetaTable,
   MapView,
   OrganizationHierarchy,
   ProjectEditor,
@@ -45,10 +45,10 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
       <div className={mx(views.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex h-screen bg-white')}>
         {view === AppView.SETTINGS && <ManageSpacePage />}
         {view === AppView.DASHBOARD && <Dashboard />}
+        {view === AppView.META && <MetaTable />}
         {view === AppView.PROJECTS && <ProjectList />}
         {view === AppView.TASKS && <TaskList />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
-        {view === AppView.CONTACTS && <ContactTable />}
         {view === AppView.KANBAN && <ProjectKanban />}
         {view === AppView.EDITOR && <ProjectEditor />}
         {view === AppView.GRAPH && <ProjectGraph />}

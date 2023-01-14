@@ -4,10 +4,10 @@
 
 export * from './ChessGrid';
 export * from './ContactList';
-export * from './ContactTable';
 export * from './DraggableTaskList';
 export * from './Map';
 export * from './MemberList';
+export * from './MetaTable';
 export * from './OrganizationHierarchy';
 export * from './ProjectEditor';
 export * from './ProjectGraph';

@@ -15,14 +15,15 @@ export type SelectorOption = { id: string; title: string };
  * Options selector.
  */
 export const Selector: FC<{
+  value?: string;
   options?: SelectorOption[];
   rows?: number;
   placeholder?: string;
   onSelect?: (id?: string) => void;
   onChange?: (text: string) => void;
-}> = ({ options, rows = 5, placeholder, onSelect, onChange }) => {
+}> = ({ value, options, rows = 5, placeholder, onSelect, onChange }) => {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<string>();
+  const [selected, setSelected] = useState<string | undefined>(value);
   const hasOptions = !!(options?.length ?? 0);
 
   const handleToggleOpen = () => {
