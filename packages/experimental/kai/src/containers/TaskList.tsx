@@ -90,7 +90,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 
   return (
     <div className='flex flex-1 justify-center bg-gray-100'>
-      <div className={'flex flex-col overflow-y-scroll pt-2 bg-white w-screen is-full md:is-[400px]'}>
+      <div className={'flex flex-col overflow-y-scroll pt-2 bg-white w-screen is-full md:is-[400px] relative'}>
         <div className={'mt-2 pli-3'}>
           {tasks?.map((task, index) => (
             <TaskItem
