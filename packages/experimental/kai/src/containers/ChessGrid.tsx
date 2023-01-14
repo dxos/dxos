@@ -98,7 +98,7 @@ const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ gam
         <div className='flex justify-center'>
           <div className='hidden lg:flex' style={{ width: panelWidth }} />
 
-          <div className='bg-gray-100 w-[380px] md:w-[600px]'>
+          <div className='bg-gray-100 w-[380px] md:w-[640px]'>
             <Chessboard model={model} orientation={orientation} style={style} onUpdate={handleUpdate} />
           </div>
 

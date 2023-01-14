@@ -13,6 +13,7 @@ import { App } from './app';
 import { AppView } from './hooks';
 import kaiTranslations from './translations';
 
+// TODO(burdon): Modes from env.
 const getView = (all = false) =>
   all
     ? [
