@@ -60,13 +60,11 @@ export const DraggableTaskList: FC<{
   //  - Split current task if pressing Enter in the middle.
 
   return (
-    <div>
-      <DndContext onDragEnd={onDrag ? handleDragEnd : undefined} modifiers={[restrictToVerticalAxis]}>
-        <SortableContext items={tasks.map((task) => task[id])}>
-          <DraggableTaskListContainer tasks={tasks} newTask={newTask} onCreate={handleCreateTask} />
-        </SortableContext>
-      </DndContext>
-    </div>
+    <DndContext onDragEnd={onDrag ? handleDragEnd : undefined} modifiers={[restrictToVerticalAxis]}>
+      <SortableContext items={tasks.map((task) => task[id])}>
+        <DraggableTaskListContainer tasks={tasks} newTask={newTask} onCreate={handleCreateTask} />
+      </SortableContext>
+    </DndContext>
   );
 });
 
@@ -80,13 +78,22 @@ export const DraggableTaskListContainer: FC<{
 
   // TODO(burdon): NewTaskItem doesn't update on create.
   return (
-    <div>
-      {tasks.map((task) => (
-        <DraggableTaskItem key={task[id]} task={task} onDelete={onDelete} />
+    <div className='relative'>
+      {tasks.map((task, index) => (
+        <DraggableTaskItem
+          key={task[id]}
+          task={task}
+          onDelete={onDelete}
+          orderIndex={index}
+          isLast={index === tasks.length - 1}
+        />
       ))}
 
       {newTask && (
-        <div className='flex ml-7' style={active ? { visibility: 'hidden' } : {}}>
+        <div
+          className='flex ml-7 focus-within:sticky focus-within:block-end-0'
+          style={active ? { visibility: 'hidden' } : {}}
+        >
           <NewTaskItem task={newTask} onEnter={onCreate} />
         </div>
       )}
@@ -96,9 +103,11 @@ export const DraggableTaskListContainer: FC<{
 
 export const DraggableTaskItem: FC<{
   task: Task;
-  onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}> = withReactor(({ task, onEnter, onDelete }) => {
+
+  isLast?: boolean;
+  orderIndex: number;
+}> = withReactor(({ task, onDelete, orderIndex, isLast }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task[id] });
 
   // TODO(burdon): Dragging doesn't handle variable height items?
@@ -115,7 +124,7 @@ export const DraggableTaskItem: FC<{
         </Button>
       </div>
 
-      <TaskItem task={task} onEnter={onEnter} onDelete={onDelete} />
+      <TaskItem {...{ task, onDelete, orderIndex, isLast }} />
     </div>
   );
 });

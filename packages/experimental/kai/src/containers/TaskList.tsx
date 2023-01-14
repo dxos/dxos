@@ -3,7 +3,7 @@
 //
 
 import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
 import { base, deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -43,8 +43,6 @@ export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?:
     </Card>
   );
 };
-
-const width = 400;
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   completed = undefined,
@@ -92,23 +90,27 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 
   return (
     <div className='flex flex-1 justify-center bg-gray-50'>
-      <div
-        className={`flex flex-col overflow-y-scroll pl-3 pr-3 pt-2 pb-8 bg-white w-screen is-full md:is-[${width}px]`}
-      >
-        <div className={'mt-2'}>
-          {tasks?.map((task) => (
+      <div className='flex flex-col overflow-y-scroll pt-2 bg-white w-screen is-full relative md:is-[400px]'>
+        <div className={'mt-2 pli-3'}>
+          {tasks?.map((task, index) => (
             <TaskItem
               key={task[id]}
               task={task}
               onSave={handleSave}
               onDelete={readonly ? undefined : handleDeleteTask}
               readonly={readonly}
+              orderIndex={index}
+              isLast={index === tasks.length - 1}
             />
           ))}
         </div>
 
         {/* TODO(burdon): Keep pinned to bottom on create. */}
-        <div>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} />}</div>
+        {newTask && (
+          <div className='focus-within:sticky focus-within:block-end-0 bg-white pli-3 pbs-2 pbe-4'>
+            <NewTaskItem task={newTask} onEnter={handleCreateTask} />
+          </div>
+        )}
       </div>
 
       {saving && (
@@ -133,6 +135,7 @@ export const NewTaskItem: FC<{
       }
       header={
         <Input
+          id='new-task'
           className='w-full outline-0'
           spellCheck={false}
           value={task.title}
@@ -143,6 +146,7 @@ export const NewTaskItem: FC<{
           onChange={(value) => {
             task.title = value;
           }}
+          autoFocus
         />
       }
     />
@@ -152,16 +156,44 @@ export const NewTaskItem: FC<{
 export const TaskItem: FC<{
   task: Task;
   readonly?: boolean;
-  onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
-}> = withReactor(({ task, readonly, onEnter, onDelete, onSave }) => {
+  isLast?: boolean;
+  orderIndex: number;
+}> = withReactor(({ task, readonly, onDelete, onSave, orderIndex, isLast }) => {
   const { debug } = useOptions();
   useReactorContext({
     onChange: () => {
       onSave?.(task);
     }
   });
+
+  const onKeyUp = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      switch (e.key) {
+        case 'Enter':
+          if (!e.shiftKey) {
+            if (isLast) {
+              (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
+            } else {
+              (
+                document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
+              )?.focus();
+            }
+          }
+          break;
+        case 'PageDown':
+          e.preventDefault();
+          (document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined)?.focus();
+          break;
+        case 'PageUp':
+          e.preventDefault();
+          (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
+          break;
+      }
+    },
+    [task, orderIndex, isLast]
+  );
 
   return (
     <CardRow
@@ -188,13 +220,12 @@ export const TaskItem: FC<{
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
-          onEnter={() => {
-            onEnter?.(task);
-          }}
+          onKeyUp={onKeyUp}
           onChange={(value) => {
             task.title = value;
           }}
           disabled={readonly}
+          data-orderindex={orderIndex}
         />
       }
     >
