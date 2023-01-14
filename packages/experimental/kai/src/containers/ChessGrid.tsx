@@ -17,8 +17,7 @@ import { useSpace } from '../hooks';
 const smallSize = 300;
 const panelWidth = 160;
 
-// TODO(burdon): Factor out.
-const createChess = (game: Game) => {
+export const createChess = (game: Game) => {
   const chess = new Chess();
   if (game.fen) {
     chess.loadPgn(game.fen);
