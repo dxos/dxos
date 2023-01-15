@@ -14,7 +14,7 @@ export async function compile(frame: Frame) {
   const source = frame.content.doc!.getText('monaco').toString();
 
   const output = await build({
-    entryPoints: ['echofs:main.ts'],
+    entryPoints: ['echofs:main.tsx'],
     outdir: 'dist',
     platform: 'browser',
     format: 'esm',

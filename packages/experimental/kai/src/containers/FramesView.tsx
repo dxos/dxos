@@ -13,14 +13,15 @@ export const FramesView = withReactor(() => {
 
   useEffect(() => {
     const id = setInterval(async () => {
-      if(selected) {
+      if (selected) {
         await compile(selected)
-        console.log(selected.compiled.bundle)
+        console.log(selected)
       }
     }, 1000)
 
     return () => clearInterval(id)
   }, [selected])
+
 
 
   return (
@@ -40,6 +41,21 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
   const { space } = useSpace()
   const frames = useQuery(space, Frame.filter())
   const [newFrame, setNewFrame] = useState<string>('')
+
+
+  useEffect(() => {
+    if (frames.length === 0) {
+      setTimeout(async () => {
+        const frame = new Frame({
+          name: 'Example',
+          content: new TextObject()
+        })
+        await space.experimental.db.save(frame)
+        frame.content.doc!.getText('monaco').insert(0, 'Hello World')
+        onSelected(frame)
+      })
+    }
+  }, [])
 
   return (
     <div>
@@ -92,3 +108,11 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
     </div>
   )
 })
+
+const EXAMPLE = `
+import React from 'react'
+
+export default const Frame = () => {
+  return <div>Hello world</div>
+}
+`
