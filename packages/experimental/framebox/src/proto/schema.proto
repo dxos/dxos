@@ -11,6 +11,12 @@ message Frame {
 
   string name = 1;
   TextObject content = 2;
+  Artifact compiled = 3;
+}
+
+message Artifact {
+  bytes sourceHash = 1;
+  string bundle = 2;
 }
 
 // TODO(dmaretskyi): Move to separate file.

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useQuery, withReactor } from "@dxos/react-client"
-import { Editor, Frame } from '@dxos/framebox'
+import { compile, Editor, Frame } from '@dxos/framebox'
 import { useSpace } from "../hooks"
 import { deleted, id, TextObject } from '@dxos/echo-schema'
 import { CardRow } from '../components'
@@ -10,6 +10,19 @@ import { XCircle } from 'phosphor-react'
 
 export const FramesView = withReactor(() => {
   const [selected, setSelected] = useState<Frame | undefined>(undefined)
+
+  useEffect(() => {
+    const id = setInterval(async () => {
+      if(selected) {
+        await compile(selected)
+        console.log(selected.compiled.bundle)
+      }
+    }, 1000)
+
+    return () => clearInterval(id)
+  }, [selected])
+
+
   return (
     <div style={{ display: 'flex', flexDirection: 'row' }}>
       <FrameList selected={selected} onSelected={setSelected} />
