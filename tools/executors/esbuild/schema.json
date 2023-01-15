@@ -49,7 +49,7 @@
       "type": "boolean",
       "description": "Watch mode",
       "default": false
-    },
+    }
   },
   "required": ["entryPoints", "outputPath"]
 }

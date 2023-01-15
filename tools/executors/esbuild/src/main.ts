@@ -5,6 +5,7 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
+import { watch } from 'node:fs';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -107,6 +108,11 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       return result.errors;
     })
   );
+
+
+  if(options.watch) {
+    await new Promise(() => {}) // wait indefinitely
+  }
 
   return { success: errors.flat().length === 0 };
 };

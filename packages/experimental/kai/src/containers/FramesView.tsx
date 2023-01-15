@@ -7,6 +7,7 @@ import { CardRow } from '../components'
 import { Button, getSize, mx } from '@dxos/react-components'
 import { Input } from '../components'
 import { XCircle } from 'phosphor-react'
+import { EmbeddedFrame } from '../frames'
 
 export const FramesView = withReactor(() => {
   const [selected, setSelected] = useState<Frame | undefined>(undefined)
@@ -28,6 +29,7 @@ export const FramesView = withReactor(() => {
     <div style={{ display: 'flex', flexDirection: 'row' }}>
       <FrameList selected={selected} onSelected={setSelected} />
       {selected?.content && <Editor document={selected?.content} />}
+      {selected?.compiled && <EmbeddedFrame frame={selected} />}
     </div>
   )
 })
