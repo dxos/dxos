@@ -1,0 +1,1 @@
+export * from './proto/gen/schema'

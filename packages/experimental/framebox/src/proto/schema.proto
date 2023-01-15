@@ -1,0 +1,18 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.experimental.framebox;
+
+message Frame {
+  option (object) = true;
+
+  string name = 1;
+  TextObject content = 2;
+}
+
+// TODO(dmaretskyi): Move to separate file.
+/// Special object type for text object references.
+message TextObject {}

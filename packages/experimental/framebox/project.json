@@ -1,0 +1,78 @@
+{
+  "sourceRoot": "packages/experimental/framebox/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/framebox/src/index.ts",
+        "outputPath": "packages/experimental/framebox/dist/types",
+        "tsConfig": "packages/experimental/framebox/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/framebox/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/framebox/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/experimental/framebox/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/experimental/framebox/src/proto/gen"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/experimental/framebox",
+        "domRequired": true,
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/experimental/framebox",
+        "resultsPath": "test-results/packages/experimental/framebox",
+        "testPatterns": [
+          "packages/experimental/framebox/src/**/*.test.{ts,tsx,js,jsx}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/framebox/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

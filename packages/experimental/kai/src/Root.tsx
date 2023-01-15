@@ -12,6 +12,23 @@ import { ThemeProvider } from '@dxos/react-components';
 import { App, views } from './app';
 import kaiTranslations from './translations';
 
+const views =
+  process.env.DEMO === 'true' /* || window.location.protocol === 'http:' */
+    ? [
+        AppView.DASHBOARD,
+        AppView.ORGS,
+        AppView.PROJECTS,
+        AppView.CONTACTS,
+        AppView.KANBAN,
+        AppView.TASKS,
+        AppView.GRAPH,
+        AppView.EDITOR,
+        AppView.MAP,
+        AppView.GAME,
+        AppView.FRAMES
+      ]
+    : [AppView.TASKS];
+
 // TODO(burdon): Get debug from config.
 export const Root = () => {
   const {
