@@ -8,6 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
+import { id } from './defs';
 import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
@@ -124,6 +125,40 @@ describe('EchoDatabase', () => {
       expect(query.getObjects()).toEqual([task1, task2]);
       expect(counter).toBeGreaterThanOrEqual(2);
     });
+  });
+
+  test('toJSON', async () => {
+    const db = await createDatabase();
+
+    const task = new Document({
+      title: 'Main task',
+      tags: ['red', 'green'],
+      assignee: new Document({ name: 'Bob' })
+    });
+    await db.save(task);
+
+    expect(task.toJSON()).toEqual({
+      '@id': task[id],
+      '@type': null,
+      title: 'Main task',
+      tags: ['red', 'green'],
+      assignee: {
+        '@id': task.assignee[id]
+      }
+    });
+  });
+
+  test('inspect', async () => {
+    const db = await createDatabase();
+
+    const task = new Document({
+      title: 'Main task',
+      tags: ['red', 'green'],
+      assignee: new Document({ name: 'Bob' })
+    });
+    await db.save(task);
+
+    console.log(task);
   });
 
   describe('ordered arrays', () => {
