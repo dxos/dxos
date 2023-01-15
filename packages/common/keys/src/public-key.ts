@@ -220,11 +220,7 @@ export class PublicKey {
 
   [devtoolsFormatter](): DevtoolsFormatter<PublicKey> {
     return {
-      header(value: PublicKey): JsonML | null {
-        if (!PublicKey.isPublicKey(value)) {
-          return null;
-        }
-    
+      header: () => {
         // NOTE: Keep in sync with inspect colors.
         const colors = [
           'darkred',
@@ -241,13 +237,13 @@ export class PublicKey {
           'darkcyan',
           'black'
         ];
-        const color = colors[value.getInsecureHash(colors.length)];
+        const color = colors[this.getInsecureHash(colors.length)];
     
         return [
           'span',
           {},
           ['span', {}, 'PublicKey('],
-          ['span', { style: `color: ${color};` }, value.truncate()],
+          ['span', { style: `color: ${color};` }, this.truncate()],
           ['span', {}, ')']
         ];
       }

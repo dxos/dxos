@@ -6,7 +6,7 @@ import { InspectOptionsStylized, inspect } from 'node:util';
 
 import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
-import { base, deleted, id, proxy, schema, type } from './defs';
+import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -25,6 +25,14 @@ const isValidKey = (key: string | symbol) =>
 
 // TODO(burdon): Change to underlying item.deleted property.
 export const DELETED = '__deleted';
+
+export type ConvertVisitors = {
+  onRef?: (id: string, obj?: EchoObject) => any;
+}
+
+export const DEFAULT_VISITORS: ConvertVisitors = {
+  onRef: (id, obj) => ({ '@id': id })
+}
 
 /**
  * Base class for generated document types and dynamic objects.
@@ -82,94 +90,52 @@ export class DocumentBase extends EchoObject<ObjectModel> {
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description
    */
   toJSON() {
-    return this._json(new Set());
+    return this[base]._convert();
   }
 
-  // TODO(burdon): Option to reference objects by ID, and/or specify depth.
-  private _json(visited: Set<DocumentBase>) {
-    // TODO(burdon): Serialize if no schema.
-    // TODO(burdon): Important: do breadth first recursion to stabilize cycle detection/depth.
-    if (this._schemaType) {
-      return this._schemaType?.fields.reduce((result: any, { name, isOrderedSet }) => {
-        const value = this._get(name);
-        if (value !== undefined) {
-          // TODO(burdon): Handle ordered sets and other types (change field to type). Not special case.
-          if (isOrderedSet) {
-            // TODO(burdon): Check if undefined; otherwise don't add if length 0.
-            if (value.length) {
-              const values: any[] = [];
-              for (let i = 0; i < value.length; i++) {
-                const item = value[i];
-                if (item instanceof DocumentBase) {
-                  // if (visited.has(item)) {
-                  values.push(strip({ '@id': item[id] })); // TODO(burdon): Option to reify object.1
-                  // } else {
-                  //   visited.add(value);
-                  //   values.push(item[object]._json(visited));
-                  // }
-                } else {
-                  values.push(item);
-                }
-              }
+  get [data]() {
+    return {
+      '@id': this[id],
+      '@type': this[type],
+      ...this[base]._convert({
+        onRef: (id, obj?) => obj ?? { '@id': id }
+      })
+    }
+  }
 
-              result[name] = values;
-            }
-          } else {
-            if (value instanceof TextObject) {
-              // TODO(burdon): Encode.
-              // result[name] = (value as TextObject).model?.content.toJSON();
-            } else if (value instanceof DocumentBase) {
-              // Detect cycles.
-              // if (!visited.has(value)) {
-              result[name] = { '@id': value[id] };
-              // } else {
-              //   visited.add(value);
-              //   result[name] = value[object]._json(visited);
-              // }
-            } else if (value[proxy]) {
-              // TODO(burdon): Call JSON on proxy.
-              console.log('Skipping Proxy');
-            } else {
-              result[name] = value;
-            }
-          }
+  private _convert(visitors: ConvertVisitors = {}) {
+    const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
+    const convert = (value: any): any => {
+      if (value instanceof EchoObject) {
+        return visitorsWithDefaults.onRef!(value[id], value);
+      } else if (value instanceof Reference) {
+        return visitorsWithDefaults.onRef!(value.itemId, this._database?.getObjectById(value.itemId));
+      } else if (value instanceof OrderedArray) {
+        return value.toArray().map(convert);
+      } else if (Array.isArray(value)) {
+        return value.map(convert);
+      } else if (typeof value === 'object' && value !== null) {
+        const result: any = {};
+        for (const key of Object.keys(value)) {
+          result[key] = convert(value[key]);
         }
-
         return result;
-      }, {});
-    } else {
-      const convert = (value: any): any => {
-        if (value instanceof EchoObject) {
-          return { '@id': value[id] };
-        } else if (value instanceof Reference) {
-          return { '@id': value.itemId };
-        } else if (value instanceof OrderedArray) {
-          return value.toArray().map(convert);
-        } else if (Array.isArray(value)) {
-          return value.map(convert);
-        } else if (typeof value === 'object' && value !== null) {
-          const result: any = {};
-          for (const key of Object.keys(value)) {
-            result[key] = convert(value[key]);
-          }
-          return result;
-        } else {
-          return value;
-        }
-      };
-      if (this._uninitialized) {
-        return {
-          '@id': this[id],
-          '@type': this[type],
-          ...convert(this._uninitialized)
-        };
       } else {
-        return {
-          '@id': this[id],
-          '@type': this[type],
-          ...convert(this._item?.model.toObject())
-        };
+        return value;
       }
+    };
+    if (this._uninitialized) {
+      return {
+        '@id': this[id],
+        '@type': this[type],
+        ...convert(this._uninitialized)
+      };
+    } else {
+      return {
+        '@id': this[id],
+        '@type': this[type],
+        ...convert(this._item?.model.toObject())
+      };
     }
   }
 
@@ -178,12 +144,28 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     options: InspectOptionsStylized,
     inspect_: (value: any, options?: InspectOptionsStylized) => string
   ) {
-    return `${this[Symbol.toStringTag]} ${(inspect_ ?? inspect)({
-      '@id': this[id],
-      '@type': this[type],
-      ...this[base]._json(new Set())
-    })}`;
+    return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
   }
+
+  // get [devtoolsFormatter](): DevtoolsFormatter<DocumentBase> {
+  //   return {
+  //     header: () => [
+  //       'span',
+  //       {},
+  //       ['span', {}, `${this[Symbol.toStringTag]}(`],
+  //       ['span', {}, this[id]],
+  //       ['span', {}, ')']
+  //     ],
+  //     hasBody: () => true,
+  //     body: () => {
+  //       const json = this.toJSON();
+
+  //       const 
+
+  //       return null
+  //     }
+  //   };
+  // }
 
   private _get(key: string) {
     if (!this._item) {

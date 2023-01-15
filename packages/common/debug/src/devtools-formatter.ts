@@ -20,9 +20,9 @@ export interface DevtoolsFormatter<T> {
   /**
    * NOTE: Make sure to do an instance check and return null if the object is not of the correct type.
    */
-  header(value: T): JsonML | null;
-  hasBody?(value: T): boolean;
-  body?(value: T): JsonML | null;
+  header: () => JsonML | null;
+  hasBody?: () => boolean;
+  body?: () => JsonML | null;
 }
 
 function register() {
@@ -30,21 +30,24 @@ function register() {
     ((window as any).devtoolsFormatters ??= []).push({
       header(value: any) {
         const formatter = value[devtoolsFormatter];
-        if(!formatter) return null
+        if(formatter === undefined) return null
+        if(typeof formatter !== 'object' || formatter === null || typeof formatter.header !== 'function') {
+          throw new Error(`Invalid devtools formatter for ${value.constructor.name}`);
+        }
 
-        return formatter.header(value);
+        return formatter.header();
       },
       hasBody(value: any) {
         const formatter = value[devtoolsFormatter];
         if(!formatter || !formatter.hasBody) return false
 
-        return formatter.hasBody(value);
+        return formatter.hasBody();
       },
       body(value: any) {
         const formatter = value[devtoolsFormatter];
         if(!formatter || !formatter.body) return null
         
-        return formatter.body(value);
+        return formatter.body();
       }
     });
   }
