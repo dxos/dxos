@@ -1,5 +1,6 @@
 import { Frame } from "./proto/gen/schema";
 import { initialize, build } from 'esbuild-wasm'
+// @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url'
 import { sha256 } from '@dxos/crypto'
 
