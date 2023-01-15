@@ -9,12 +9,14 @@ export type EmbeddedFrameProps = {
 
 export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
 
-  const code = frame.compiled?.bundle;
+  const code = frame.compiled?.bundle ?? 'throw new Error("No bundle")';
 
   const html = frameSrc
     .replace('${importMap}', JSON.stringify({
       imports: {
         '@frame/main': mainUrl,
+        '@frame/bundle': `data:text/javascript;base64,${btoa(code)}`,
+        
       }
     }))
 

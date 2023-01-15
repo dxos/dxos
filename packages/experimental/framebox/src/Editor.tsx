@@ -27,6 +27,7 @@ export const Editor = ({ document }: EditorProps) => {
   return (
     <MonacoEditor
       height="90vh"
+      width="50vw"
       defaultLanguage="typescriptreact"
       defaultValue="// some comment"
       beforeMount={handleEditorWillMount}

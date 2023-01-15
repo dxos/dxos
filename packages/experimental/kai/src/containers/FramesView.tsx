@@ -112,7 +112,7 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
 })
 
 const EXAMPLE = `
-import React from 'react'
+import React from 'https://cdn.jsdelivr.net/npm/@esm-bundle/react@17.0.2-fix.1/esm/react.development.min.js'
 
 const Frame = () => {
   return <div>Hello world</div>
