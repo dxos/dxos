@@ -44,8 +44,6 @@ export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?:
   );
 };
 
-const width = 400;
-
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   completed = undefined,
   readonly = false
@@ -76,6 +74,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   }, []);
 
   const handleCreateTask = async (task: Task) => {
+    console.log('::::::::::::::', task);
     if (task.title.length) {
       await space.experimental.db.save(task);
       setNewTask(new Task());
@@ -91,10 +90,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   };
 
   return (
-    <div className='flex flex-1 justify-center bg-gray-50'>
-      <div
-        className={`flex flex-col overflow-y-scroll pl-3 pr-3 pt-2 pb-8 bg-white w-screen is-full md:is-[${width}px]`}
-      >
+    <div className='flex flex-1 justify-center bg-gray-100'>
+      <div className={'flex flex-col overflow-y-scroll pl-3 pr-3 pt-2 pb-8 bg-white w-screen is-full md:is-[400px]'}>
         <div className={'mt-2'}>
           {tasks?.map((task) => (
             <TaskItem
@@ -133,12 +130,16 @@ export const NewTaskItem: FC<{
       }
       header={
         <Input
-          className='w-full outline-0'
+          className='w-full p-1'
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
-          onEnter={() => {
-            onEnter?.(task);
+          onEnter={(value) => {
+            if (value.length) {
+              task.title = value;
+              onEnter?.(task);
+              return true;
+            }
           }}
           onChange={(value) => {
             task.title = value;
@@ -152,10 +153,11 @@ export const NewTaskItem: FC<{
 export const TaskItem: FC<{
   task: Task;
   readonly?: boolean;
+  showAssigned?: boolean;
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
-}> = withReactor(({ task, readonly, onEnter, onDelete, onSave }) => {
+}> = withReactor(({ task, readonly, showAssigned, onEnter, onDelete, onSave }) => {
   const { debug } = useOptions();
   useReactorContext({
     onChange: () => {
@@ -184,7 +186,7 @@ export const TaskItem: FC<{
       }
       header={
         <Input
-          className={mx('w-full outline-0', task[deleted] && 'text-red-300')}
+          className={mx('w-full p-1', task[deleted] && 'text-red-300')}
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
@@ -198,15 +200,17 @@ export const TaskItem: FC<{
         />
       }
     >
-      <div className='ml-8 text-sm text-blue-800'>
-        <div>{task.assignee?.name}</div>
-        {debug && (
-          <div>
-            <div>{PublicKey.from(task[id]).truncate()}</div>
-            <div>{(task[base] as any)._schemaType?.name}</div>
-          </div>
-        )}
-      </div>
+      {showAssigned && (
+        <div className='ml-8 pl-1 text-sm text-blue-800'>
+          <div>{task.assignee?.name}</div>
+          {debug && (
+            <div>
+              <div>{PublicKey.from(task[id]).truncate()}</div>
+              <div>{(task[base] as any)._schemaType?.name}</div>
+            </div>
+          )}
+        </div>
+      )}
     </CardRow>
   );
 });

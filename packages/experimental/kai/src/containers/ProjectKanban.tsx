@@ -41,6 +41,7 @@ export const ProjectKanban: FC = () => {
           <Searchbar />
         </div>
       </div>
+
       <div className='flex flex-1 overflow-hidden'>
         <Kanban objects={projects} columns={columns} onCreate={handleCreate} />
       </div>
