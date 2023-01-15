@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, withReactor } from "@dxos/react-client"
-import { Frame } from '@dxos/framebox'
+import { Editor, Frame } from '@dxos/framebox'
 import { useSpace } from "../hooks"
 import { deleted, id, TextObject } from '@dxos/echo-schema'
 import { CardRow } from '../components'
@@ -11,8 +11,9 @@ import { XCircle } from 'phosphor-react'
 export const FramesView = withReactor(() => {
   const [selected, setSelected] = useState<Frame | undefined>(undefined)
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'row' }}>
       <FrameList selected={selected} onSelected={setSelected} />
+      {selected?.content && <Editor document={selected?.content} />}
     </div>
   )
 })
@@ -31,6 +32,7 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
     <div>
       {frames.map(frame => (
         <CardRow
+          key={frame[id]}
           action={
             (
               <Button className='text-gray-300' onClick={() => space.experimental.db.delete(frame)}>

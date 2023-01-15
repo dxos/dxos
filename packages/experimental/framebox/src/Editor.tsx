@@ -1,0 +1,36 @@
+import React, { useRef } from 'react'
+import { TextObject } from "@dxos/echo-schema"
+import { default as MonacoEditor } from "@monaco-editor/react";
+import { MonacoBinding } from 'y-monaco'
+
+export type EditorProps = {
+  document: TextObject
+}
+
+export const Editor = ({ document }: EditorProps) => {
+  const monacoRef = useRef(null);
+
+  function handleEditorWillMount(monaco: any) {
+    // here is the monaco instance
+    // do something before editor is mounted
+    // monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
+
+  }
+
+  function handleEditorDidMount(editor: any, monaco: any) {
+    // here is another way to get monaco instance
+    // you can also store it in `useRef` for further usage
+    const binding = new MonacoBinding(document.doc!.getText('monaco'), editor.getModel(), new Set([editor]))
+    monacoRef.current = editor; 
+  }
+
+  return (
+    <MonacoEditor
+      height="90vh"
+      defaultLanguage="javascript"
+      defaultValue="// some comment"
+      beforeMount={handleEditorWillMount}
+      onMount={handleEditorDidMount}
+    />
+  );
+}

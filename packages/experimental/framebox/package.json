@@ -32,7 +32,11 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "use-subscription": "^1.8.0"
+    "@monaco-editor/react": "^4.4.6",
+    "monaco-editor": "^0.25.0",
+    "use-subscription": "^1.8.0",
+    "y-monaco": "^0.1.0",
+    "yjs": "^13.3.1"
   },
   "devDependencies": {
     "@dxos/react-components": "workspace:*",
