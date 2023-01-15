@@ -103,3 +103,13 @@ message Message {
   string to = 3;
   string text = 4;
 }
+
+message Event {
+  option (object) = true;
+
+  // TODO(burdon): Timestamp.
+  string date = 1;
+  Address location = 2;
+  Contact members = 3;
+}
+

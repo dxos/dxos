@@ -10,6 +10,7 @@ import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
 import {
+  Calendar,
   ChessGrid,
   MetaTable,
   MapView,
@@ -48,6 +49,7 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
         {view === AppView.TASKS && <TaskList />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.KANBAN && <ProjectKanban />}
+        {view === AppView.CALENDAR && <Calendar />}
         {view === AppView.EDITOR && <ProjectEditor />}
         {view === AppView.GRAPH && <ProjectGraph />}
         {view === AppView.MAP && <MapView />}

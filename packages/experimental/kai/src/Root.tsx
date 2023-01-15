@@ -17,6 +17,7 @@ import kaiTranslations from './translations';
 const getView = (all = false) =>
   all
     ? [
+        AppView.CALENDAR,
         AppView.DASHBOARD,
         AppView.META,
         AppView.KANBAN,
