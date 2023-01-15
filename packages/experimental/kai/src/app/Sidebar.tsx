@@ -10,11 +10,12 @@ import { useClient } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 import { useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { Button } from '../../components';
-import { MemberList, SpaceList } from '../../containers';
-import { AppView, useSpace } from '../../hooks';
 import { createSpacePath } from '../Routes';
+import { Button } from '../components';
+import { MemberList, SpaceList } from '../containers';
+import { useSpace } from '../hooks';
 import { Actions } from './Actions';
+import { AppView } from './views';
 
 export const Sidebar = () => {
   const navigate = useNavigate();

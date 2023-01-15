@@ -107,9 +107,11 @@ message Message {
 message Event {
   option (object) = true;
 
+  string title = 1;
   // TODO(burdon): Timestamp.
-  string date = 1;
-  Address location = 2;
-  Contact members = 3;
+  string start = 2;
+  string end = 3;
+  Address location = 4;
+  Contact members = 5;
 }
 

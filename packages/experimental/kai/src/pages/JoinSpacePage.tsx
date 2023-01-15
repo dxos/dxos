@@ -10,7 +10,7 @@ import { JoinPanel } from '@dxos/react-appkit';
 import { InvitationResult, useClient } from '@dxos/react-client';
 import { Group, useTranslation } from '@dxos/react-components';
 
-import { invitationCodeFromUrl } from '../../util';
+import { invitationCodeFromUrl } from '../util';
 
 /**
  * Join space via invitation URL.

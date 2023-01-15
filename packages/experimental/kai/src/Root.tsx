@@ -9,8 +9,7 @@ import { log } from '@dxos/log';
 import { appkitTranslations, Fallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { ThemeProvider } from '@dxos/react-components';
 
-import { App } from './app';
-import { AppView } from './hooks';
+import { App, AppView } from './app';
 import kaiTranslations from './translations';
 
 // TODO(burdon): Modes from env.

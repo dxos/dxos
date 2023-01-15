@@ -44,6 +44,8 @@ dx app publish
 - [ ] Super app (WeChat/Twitter) for IPFS:
   https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 
+- [ ] ChatGPT bot.
+
 - [x] Profile.
 - [x] Invitations configuration.
 

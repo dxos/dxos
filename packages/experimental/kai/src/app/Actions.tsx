@@ -11,10 +11,10 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { FileUploadDialog } from '../../components';
-import { useFileDownload, useSpace } from '../../hooks';
-import { Generator } from '../../proto';
 import { createSpacePath } from '../Routes';
+import { FileUploadDialog } from '../components';
+import { useFileDownload, useSpace } from '../hooks';
+import { Generator } from '../proto';
 
 export type Action = {
   Icon: FC<any>; // TODO(burdon): Type.

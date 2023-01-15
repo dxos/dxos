@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Calendar';
-export * from './ChessGrid';
+export * from './CalendarView';
+export * from './ChessView';
 export * from './ContactList';
+export * from './Dashboard';
 export * from './DraggableTaskList';
 export * from './Map';
 export * from './MemberList';

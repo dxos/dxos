@@ -4,18 +4,35 @@
 
 /* TODO(burdon): Remove custom CSS. */
 
+/* RBC Overrides */
+.rbc-calendar, .rbc-month-view, .rbc-header {
+  font-family: sans-serif !important;
+  font-weight: lighter !important;
+}
+.rbc-event {
+  border: 1px solid #333 !important;
+  border-radius: 0 !important;
+  color: #333 !important;
+  background-color: #eee !important;
+  padding: 4px !important;
+}
+
+table {
+  border: none !important;
+}
+table tbody tr {
+  border: none !important;
+}
+table tbody tr td {
+  border: none !important;
+}
+
 .logo {
   transform: rotate(300deg);
   transition: transform 750ms ease-in-out;
 }
 .logo:hover {
   transform: rotate(-300deg);
-}
-
-/** TODO(burdon): Patch containing div of Composer. */
-.editor-container > div {
-  display: flex;
-  flex: 1;
 }
 
 /** TODO(burdon): Currently bleeds outside of content to fade. */

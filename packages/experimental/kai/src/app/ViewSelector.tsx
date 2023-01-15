@@ -2,46 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bug, List, User } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx, useMediaQuery } from '@dxos/react-components';
-import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
+import { PanelSidebarContext } from '@dxos/react-ui';
 
-import { useOptions, viewConfig } from '../../hooks';
+import { useOptions } from '../hooks';
+import { viewConfig } from './views';
 
-export const Menu = () => {
-  return (
-    <Link to='/identity'>
-      <User className={getSize(6)} />
-    </Link>
-  );
-};
-
-export const AppBar = () => {
-  const toggleSidebar = useTogglePanelSidebar();
-
-  return (
-    <div className='flex items-center pl-4 pr-4' style={{ height: 48 }}>
-      <div className='flex'>
-        <button onClick={toggleSidebar}>
-          <List className={getSize(6)} />
-        </button>
-      </div>
-
-      <div className='flex items-center ml-4'>
-        <Bug className={mx('logo', getSize(8))} />
-        <div className='ml-1'>KAI</div>
-      </div>
-
-      <div className='flex-1' />
-      <Menu />
-    </div>
-  );
-};
-
-// TODO(burdon): Collapse tabs into hamburger if narrow.
 export const ViewSelector: FC = () => {
   const navigate = useNavigate();
   const { views } = useOptions();
