@@ -20,6 +20,7 @@ export interface EsbuildExecutorOptions {
   outputPath: string;
   platforms: Platform[];
   sourcemap: boolean;
+  watch: boolean;
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -55,6 +56,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         sourcemap: options.sourcemap,
         metafile: options.metafile,
         bundle: options.bundle,
+        watch: options.watch,
         platform,
         // https://esbuild.github.io/api/#log-override
         logOverride: {

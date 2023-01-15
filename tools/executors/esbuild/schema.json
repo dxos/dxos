@@ -44,7 +44,12 @@
       "type": "boolean",
       "description": "Whether or not to output sourcemaps with the build files",
       "default": true
-    }
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Watch mode",
+      "default": false
+    },
   },
   "required": ["entryPoints", "outputPath"]
 }
