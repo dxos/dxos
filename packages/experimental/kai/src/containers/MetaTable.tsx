@@ -8,7 +8,7 @@ import { Column } from 'react-table';
 import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { Searchbar, Table } from '../components';
+import { Searchbar, Selector, Table } from '../components';
 import { useSpace } from '../hooks';
 import { Contact } from '../proto';
 
@@ -30,7 +30,10 @@ export const MetaTable = () => {
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='flex p-3'>
-        <div>
+        <div className='flex'>
+          <div className='mr-2'>
+            <Selector />
+          </div>
           <Searchbar />
         </div>
       </div>

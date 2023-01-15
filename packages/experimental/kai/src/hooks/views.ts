@@ -2,28 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Article,
-  Compass,
-  Gear,
-  Graph,
-  Kanban,
-  ListChecks,
-  Sword,
-  Table,
-  TreeStructure,
-  Users,
-  Wall
-} from 'phosphor-react';
+import { Article, Compass, Gear, Graph, Kanban, ListChecks, Sword, Table, TreeStructure, Wall } from 'phosphor-react';
 
 export enum AppView {
   SETTINGS = 'settings',
   DASHBOARD = 'dashboard',
-  PROJECTS = 'projects',
-  META = 'contacts',
-  ORGS = 'org',
+  META = 'data',
   KANBAN = 'kanban',
   TASKS = 'tasks',
+  ORGS = 'org',
   EDITOR = 'documents',
   GRAPH = 'graph',
   MAP = 'map',
@@ -34,11 +21,10 @@ export enum AppView {
 export const viewConfig: { [key: string]: { Icon: any } } = {
   [AppView.SETTINGS]: { Icon: Gear },
   [AppView.DASHBOARD]: { Icon: Wall },
-  [AppView.PROJECTS]: { Icon: Table },
-  [AppView.META]: { Icon: Users },
-  [AppView.ORGS]: { Icon: TreeStructure },
+  [AppView.META]: { Icon: Table },
   [AppView.KANBAN]: { Icon: Kanban },
   [AppView.TASKS]: { Icon: ListChecks },
+  [AppView.ORGS]: { Icon: TreeStructure },
   [AppView.EDITOR]: { Icon: Article },
   [AppView.GRAPH]: { Icon: Graph },
   [AppView.MAP]: { Icon: Compass },

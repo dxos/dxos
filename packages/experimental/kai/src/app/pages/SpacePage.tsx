@@ -17,7 +17,6 @@ import {
   ProjectEditor,
   ProjectGraph,
   ProjectKanban,
-  ProjectList,
   TaskList
 } from '../../containers';
 import { AppStateProvider, AppView, SpaceContext, SpaceContextType, useOptions, viewConfig } from '../../hooks';
@@ -46,7 +45,6 @@ const ViewContainer: FC<{ view: string }> = ({ view }) => {
         {view === AppView.SETTINGS && <ManageSpacePage />}
         {view === AppView.DASHBOARD && <Dashboard />}
         {view === AppView.META && <MetaTable />}
-        {view === AppView.PROJECTS && <ProjectList />}
         {view === AppView.TASKS && <TaskList />}
         {view === AppView.ORGS && <OrganizationHierarchy />}
         {view === AppView.KANBAN && <ProjectKanban />}

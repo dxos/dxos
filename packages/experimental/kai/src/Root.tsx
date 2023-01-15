@@ -19,10 +19,9 @@ const getView = (all = false) =>
     ? [
         AppView.DASHBOARD,
         AppView.META,
-        AppView.PROJECTS,
+        AppView.KANBAN,
         AppView.TASKS,
         AppView.ORGS,
-        AppView.KANBAN,
         AppView.GRAPH,
         AppView.EDITOR,
         AppView.MAP,
