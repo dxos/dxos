@@ -13,8 +13,9 @@ export const Editor = ({ document }: EditorProps) => {
   function handleEditorWillMount(monaco: any) {
     // here is the monaco instance
     // do something before editor is mounted
-    // monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
-
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      jsx: "react"
+   });
   }
 
   function handleEditorDidMount(editor: any, monaco: any) {
@@ -28,7 +29,7 @@ export const Editor = ({ document }: EditorProps) => {
     <MonacoEditor
       height="90vh"
       width="50vw"
-      defaultLanguage="typescriptreact"
+      defaultLanguage="typescript"
       defaultValue="// some comment"
       beforeMount={handleEditorWillMount}
       onMount={handleEditorDidMount}
