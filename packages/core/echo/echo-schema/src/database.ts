@@ -96,7 +96,7 @@ export class EchoDatabase {
       props
     })) as Item<any>;
 
-    obj[base]._bind(item, this);
+    await obj[base]._bind(item, this);
     return obj;
   }
 

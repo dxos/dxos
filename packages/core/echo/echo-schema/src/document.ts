@@ -220,10 +220,10 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     }
   }
 
-  private _setModelProp(prop: string, value: any): any {
+  private async _setModelProp(prop: string, value: any) {
     if (value instanceof EchoObject) {
       void this._item!.model.set(prop, new Reference(value[id]));
-      void this._database!.save(value);
+      await this._database!.save(value);
     } else if (value instanceof EchoArray) {
       value._bind(this[base], prop);
     } else if (Array.isArray(value)) {
@@ -304,12 +304,15 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     });
   }
 
-  protected override _onBind(): void {
+  protected override async _onBind() {
+    const promises = [];
     for (const [key, value] of Object.entries(this._uninitialized!)) {
-      this._setModelProp(key, value);
+      promises.push(this._setModelProp(key, value));
     }
 
     this._uninitialized = undefined;
+
+    await Promise.all(promises);
   }
 }
 
