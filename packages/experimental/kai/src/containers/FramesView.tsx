@@ -51,7 +51,7 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
           content: new TextObject()
         })
         await space.experimental.db.save(frame)
-        frame.content.doc!.getText('monaco').insert(0, 'Hello World')
+        frame.content.doc!.getText('monaco').insert(0, EXAMPLE)
         onSelected(frame)
       })
     }
@@ -112,7 +112,9 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
 const EXAMPLE = `
 import React from 'react'
 
-export default const Frame = () => {
+const Frame = () => {
   return <div>Hello world</div>
 }
+
+export default Frame;
 `

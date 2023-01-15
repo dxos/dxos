@@ -26,10 +26,10 @@ export async function compile(frame: Frame) {
             return { path: args.path.slice(7), namespace: 'echofs' }
           })
           build.onLoad({ filter: /.*/, namespace: 'echofs' }, async args => {
-            if (args.path === 'main.ts') {
+            if (args.path === 'main.tsx') {
               return {
                 contents: source,
-                loader: 'ts'
+                loader: 'tsx'
               }
             }
           })
