@@ -17,3 +17,4 @@ export * from './strings';
 export * from './throw';
 export * from './timeout-warning';
 export * from './todo';
+export * from './devtools-formatter';
