@@ -9,9 +9,9 @@ import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { Routes } from '../Routes';
 import { OptionsContext } from '../hooks';
 import { Generator, schema } from '../proto';
+import { Routes } from './Routes';
 import { AppView } from './Views';
 
 const clientProvider = async (demo: boolean) => {

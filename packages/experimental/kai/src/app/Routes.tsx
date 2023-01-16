@@ -18,7 +18,7 @@ import {
   RecoverIdentityPage,
   SettingsPage,
   SpacePage
-} from './pages';
+} from '../pages';
 
 export const matchSpaceKey = (spaces: Space[], spaceKey: string) =>
   spaces.find((space) => space.key.truncate() === spaceKey);
