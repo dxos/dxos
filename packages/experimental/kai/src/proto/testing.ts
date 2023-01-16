@@ -38,6 +38,8 @@ export class Generator {
   ) {}
 
   async generate() {
+    const contacts: Contact[] = [];
+
     // Organizations.
     await Promise.all(
       range(this._options.organizations).map(async () => {
@@ -60,6 +62,7 @@ export class Generator {
         await Promise.all(
           range(this._options.contacts).map(async () => {
             const contact = await createContact(this._db);
+            contacts.push(contact);
             organization.people.push(contact);
             return contact;
           })
@@ -90,7 +93,13 @@ export class Generator {
     );
 
     // Events.
-    await Promise.all(range(this._options.events).map(() => createEvent(this._db)));
+    await Promise.all(
+      range(this._options.events).map(async () => {
+        const event = await createEvent(this._db);
+        event.members.push(...faker.random.arrayElements(contacts, faker.datatype.number(2)));
+        return event;
+      })
+    );
   }
 }
 
@@ -98,7 +107,8 @@ export const tags = ['red', 'green', 'blue', 'orange'];
 
 export const createOrganization = async (db: EchoDatabase) => {
   const organization = new Organization({
-    name: faker.company.companyName()
+    name: faker.company.companyName(),
+    website: faker.internet.url()
   });
 
   const projects = await Promise.all(range(3).map(() => createProject(db)));
@@ -111,6 +121,7 @@ export const createProject = async (db: EchoDatabase, tag?: string) => {
   const project = new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
     description: new TextObject(),
+    url: faker.internet.url(),
     tag: tag ?? faker.random.arrayElement(tags)
     // tags: [faker.random.arrayElement(tags)] // TODO(burdon): Implement constructor.
   });

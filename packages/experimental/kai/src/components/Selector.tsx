@@ -23,6 +23,7 @@ export const Selector: FC<{
   onChange?: (text: string) => void;
 }> = ({ value, options, rows = 5, placeholder, onSelect, onChange }) => {
   const [open, setOpen] = useState(false);
+  const [text, setText] = useState(value);
   const [selected, setSelected] = useState<string | undefined>(value);
   const hasOptions = !!(options?.length ?? 0);
 
@@ -33,6 +34,7 @@ export const Selector: FC<{
   const handleSelect = (id?: string) => {
     setSelected(id);
     setOpen(false);
+    setText(id);
     onSelect?.(id);
   };
 
@@ -68,9 +70,10 @@ export const Selector: FC<{
       <div className={mx('flex flex-1 items-center p-2 border', open ? 'rounded-t' : 'rounded')}>
         <Input
           className='w-full outline-0'
+          value={text}
+          onChange={setText}
           onEnter={() => handleSelect(selected)}
           onKeyDown={handleKeyDown}
-          onChange={onChange}
           onBlur={() => setOpen(false)}
           placeholder={placeholder ?? 'Select...'}
         />

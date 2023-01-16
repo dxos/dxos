@@ -48,14 +48,10 @@
   display: none !important;
 }
 .rbc-agenda-table {
-  display: flex;
   border: none !important;
 }
 .rbc-agenda-time-cell {
   padding: 5px 0 5px 0 !important;
-}
-.rbc-agenda-content {
-  overflow: hidden;
 }
 .rbc-agenda-table td {
   border: none !important;
