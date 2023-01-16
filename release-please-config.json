@@ -348,6 +348,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/framebox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/gem-core/package.json",
           "jsonpath": "$.version"
         },
