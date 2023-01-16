@@ -319,6 +319,8 @@ export class EchoArray<T> implements Array<T> {
     if (value instanceof EchoObject) {
       void this._object!._database!.save(value);
       return new Reference(value[id]);
+    } else if(typeof value === 'object' && value !== null && Object.getOwnPropertyNames(value).length === 1 && (value as any)['@id']) {
+      return new Reference((value as any)['@id']);
     } else {
       return value;
     }
