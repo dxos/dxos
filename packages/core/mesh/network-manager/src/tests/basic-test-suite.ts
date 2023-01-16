@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
+import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { afterTest, test } from '@dxos/test';
@@ -127,15 +128,26 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       .getSwarm(topic)
       ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
+    const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor(
+      (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer)
+    );
+
     await peer1.goOffline();
     await connectionDropped;
+    await peerLeft;
+
+    // Wait for peer to be removed from the swarm.
+    await waitForExpect(() => {
+      expect(!!peer2._networkManager.getSwarm(topic)!._peers.get(peer1.peerId)?.advertizing).to.be.false;
+    }, 1_000);
+
     await peer1.goOnline();
 
     await waitForExpect(() => {
       expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
 
       expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
-    }, 1_000);
+    }, 2_000);
 
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
