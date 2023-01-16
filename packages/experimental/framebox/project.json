@@ -45,12 +45,6 @@
       "outputs": [
         "packages/experimental/framebox/src/proto/gen"
       ]
-    },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
     }
   },
   "implicitDependencies": [
