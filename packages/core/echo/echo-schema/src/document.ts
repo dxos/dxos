@@ -111,6 +111,8 @@ export class DocumentBase extends EchoObject<ObjectModel> {
         return visitorsWithDefaults.onRef!(value.itemId, this._database?.getObjectById(value.itemId));
       } else if (value instanceof OrderedArray) {
         return value.toArray().map(convert);
+      } else if (value instanceof EchoArray) {
+        return value.map(convert);
       } else if (Array.isArray(value)) {
         return value.map(convert);
       } else if (typeof value === 'object' && value !== null) {
