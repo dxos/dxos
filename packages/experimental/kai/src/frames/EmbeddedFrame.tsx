@@ -1,26 +1,31 @@
-import React from "react"
-import { Frame } from "@dxos/framebox"
-import frameSrc from "./frame.html?raw"
-import mainUrl from "./frame-main?url"
+//
+// Copyright 2023 DXOS.org
+//
+
+import React from 'react';
+
+import { Frame } from '@dxos/framebox';
+
+import mainUrl from './frame-main?url';
+import frameSrc from './frame.html?raw';
 
 export type EmbeddedFrameProps = {
-  frame: Frame
-}
+  frame: Frame;
+};
 
 export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
-
   const code = frame.compiled?.bundle ?? 'throw new Error("No bundle")';
 
-  const html = frameSrc
-    .replace('${importMap}', JSON.stringify({
+  const html = frameSrc.replace(
+    // eslint-disable-next-line no-template-curly-in-string
+    '${importMap}',
+    JSON.stringify({
       imports: {
         '@frame/main': mainUrl,
-        '@frame/bundle': `data:text/javascript;base64,${btoa(code)}`,
-        
+        '@frame/bundle': `data:text/javascript;base64,${btoa(code)}`
       }
-    }))
+    })
+  );
 
-  return (
-    <iframe srcDoc={html} />
-  )
-}
+  return <iframe srcDoc={html} />;
+};

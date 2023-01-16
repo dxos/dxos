@@ -1,13 +1,17 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
+//
+// Copyright 2023 DXOS.org
+//
 
-console.log('frame main')
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 
-const Component = Function('React', `return React.lazy(() => import('@frame/bundle'))`)(React);
+console.log('frame main');
 
-createRoot(document.getElementById('root')!)
-  .render(
-    <div>
-      <Component/>
-    </div>
-  )
+// eslint-disable-next-line no-new-func
+const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
+
+createRoot(document.getElementById('root')!).render(
+  <div>
+    <Component />
+  </div>
+);
