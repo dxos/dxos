@@ -4,6 +4,7 @@
 
 import { EchoDatabase } from './database';
 import { base, id, schema } from './defs';
+import { Document } from './document';
 import { strip } from './util';
 
 export type SerializedObject = {
@@ -35,11 +36,18 @@ export class Serializer {
     return data;
   }
 
-  // TODO(burdon): Implement.
   async import(database: EchoDatabase, data: SerializedSpace) {
     const { objects } = data;
-    objects.forEach((object: SerializedObject) => {
-      console.log(object);
-    });
+    for (const object of objects) {
+      const { '@id': id, '@type': type, ...data } = object;
+      const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? Document;
+
+      const obj = new Prototype({
+        '@type': type,
+        ...data
+      });
+      obj[base]._id = id;
+      await database.save(obj);
+    }
   }
 }

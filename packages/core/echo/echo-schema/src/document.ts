@@ -176,9 +176,9 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   [inspect.custom](
     depth: number,
     options: InspectOptionsStylized,
-    inspect: (value: any, options?: InspectOptionsStylized) => string
+    inspect_: (value: any, options?: InspectOptionsStylized) => string
   ) {
-    return `${this[Symbol.toStringTag]} ${inspect({
+    return `${this[Symbol.toStringTag]} ${(inspect_ ?? inspect)({
       '@id': this[id],
       '@type': this[type],
       ...this[base]._json(new Set())
@@ -245,11 +245,17 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     } else if (value instanceof EchoArray) {
       value._bind(this[base], prop);
     } else if (Array.isArray(value)) {
-      void this._item!.model.set(prop, OrderedArray.fromValues(value));
+      void this._item!.model.set(prop, OrderedArray.fromValues([]));
+      this._getModelProp(prop).push(...value);
     } else if (typeof value === 'object' && value !== null) {
-      const sub = this._createProxy({}, prop);
-      for (const [subKey, subValue] of Object.entries(value)) {
-        sub[subKey] = subValue;
+      if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
+        // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+        void this._item!.model.set(prop, new Reference(value['@id']));
+      } else {
+        const sub = this._createProxy({}, prop);
+        for (const [subKey, subValue] of Object.entries(value)) {
+          sub[subKey] = subValue;
+        }
       }
     } else {
       void this._item!.model.set(prop, value);
