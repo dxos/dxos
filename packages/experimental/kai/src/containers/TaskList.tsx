@@ -11,7 +11,7 @@ import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { Button, Card, Input, CardRow, CardMenu } from '../components';
-import { useOptions, useSpace } from '../hooks';
+import { useAppState, useSpace } from '../hooks';
 import { createTask, Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
@@ -74,7 +74,6 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   }, []);
 
   const handleCreateTask = async (task: Task) => {
-    console.log('::::::::::::::', task);
     if (task.title.length) {
       await space.experimental.db.save(task);
       setNewTask(new Task());
@@ -158,7 +157,7 @@ export const TaskItem: FC<{
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
 }> = withReactor(({ task, readonly, showAssigned, onEnter, onDelete, onSave }) => {
-  const { debug } = useOptions();
+  const { debug } = useAppState();
   useReactorContext({
     onChange: () => {
       onSave?.(task);

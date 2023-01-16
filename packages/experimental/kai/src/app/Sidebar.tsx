@@ -12,10 +12,9 @@ import { useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button } from '../components';
 import { MemberList, SpaceList } from '../containers';
-import { useSpace } from '../hooks';
+import { FrameID, useSpace } from '../hooks';
 import { Actions } from './Actions';
 import { createSpacePath } from './Routes';
-import { AppView } from './defs';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -35,7 +34,7 @@ export const Sidebar = () => {
 
   if (prevView !== view) {
     setPrevView(view);
-    view === AppView.SETTINGS && toggleSidebar();
+    view === FrameID.SETTINGS && toggleSidebar();
   }
 
   const handleCreateSpace = async () => {

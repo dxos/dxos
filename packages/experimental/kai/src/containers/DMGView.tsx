@@ -2,92 +2,81 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  AppStoreLogo,
-  Article,
-  Binoculars,
-  Calendar,
-  Compass,
-  Graph,
-  Kanban,
-  ListChecks,
-  Robot,
-  Sword
-} from 'phosphor-react';
+import { AppStoreLogo, Robot } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
 import { createSpacePath } from '../app';
-import { AppView } from '../app/defs';
-import { AIBot, ChessBot } from '../bots';
 import { Searchbar } from '../components';
-import { useSpace } from '../hooks';
+import {
+  BotID,
+  FrameID,
+  useActiveBots,
+  useActiveFrames,
+  useBotDispatch,
+  useBots,
+  useFrameDispatch,
+  useFrames,
+  useSpace
+} from '../hooks';
 
 type ExtensionType = 'app' | 'bot';
 
-type Extension = {
-  id: string;
-  title: string;
-  Icon: FC<any>;
+const Tile: FC<{ id: string; title: string; active: boolean; Icon: FC<any>; onSelect: (id: string) => void }> = ({
+  id,
+  title,
+  active,
+  Icon,
+  onSelect
+}) => {
+  return (
+    <div
+      className={mx(
+        'flex flex-col items-center w-[140px] h-[140px] border-0 rounded-lg p-4 bg-gray-200',
+        '[&>div>svg]:hover:text-black hover:bg-blue-200',
+        active && 'bg-blue-300 text-black'
+      )}
+      onClick={() => onSelect(id)}
+    >
+      <div className='text-xl font-thin text-black'>{title}</div>
+      <div className='mt-5'>
+        <Icon weight='thin' className={mx(getSize(16))} />
+      </div>
+    </div>
+  );
 };
-
-// https://ifttt.com/explore
-const extensions: { [index: string]: { items: Extension[]; classes: string } } = {
-  app: {
-    // TODO(burdon): Reconcile with viewDefs (app/defs).
-    items: [
-      { id: AppView.DOCUMENTS, Icon: Article, title: 'Documents' },
-      { id: AppView.KANBAN, Icon: Kanban, title: 'Kanban' },
-      { id: AppView.TASKS, Icon: ListChecks, title: 'Tasks' },
-      { id: AppView.CALENDAR, Icon: Calendar, title: 'Calendar' },
-      { id: AppView.EXPLORER, Icon: Graph, title: 'Explorer' },
-      { id: AppView.MAPS, Icon: Compass, title: 'Maps' },
-      { id: AppView.CHESS, Icon: Sword, title: 'Chess' }
-    ],
-    classes: 'hover:bg-blue-300'
-  },
-  bot: {
-    items: [
-      { id: 'research-bot', Icon: Binoculars, title: 'ResearchBot' },
-      { id: 'chess-bot', Icon: Sword, title: 'ChessBot' }
-    ],
-    classes: 'hover:bg-teal-300'
-  }
-};
-
-// TODO(burdon): Context.
-const useExtensions = () => {};
 
 /**
  * DMG Explorer.
+ * https://ifttt.com/explore
  */
 export const DMGView = () => {
   const { space } = useSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>('app');
 
+  // TODO(burdon): DMG.
+  const frames = useFrames();
+  const activeFrames = useActiveFrames();
+  const setActiveFrame = useFrameDispatch();
+  const bots = useBots();
+  const activeBots = useActiveBots();
+  const setActiveBot = useBotDispatch();
+
   const handleSelect = (id: string) => {
     switch (type) {
-      // TODO(burdon): Navigate on select.
       case 'app': {
+        // TODO(burdon): Toggle.
+        setActiveFrame(id as FrameID, true);
         navigate(createSpacePath(space.key, id));
         break;
       }
 
       case 'bot': {
-        switch (id) {
-          case 'ai-bot': {
-            new AIBot(space.experimental.db).start();
-            break;
-          }
-          case 'chess-bot': {
-            new ChessBot(space.experimental.db).start();
-            break;
-          }
-        }
-
+        // TODO(burdon): Toggle.
+        setActiveBot(id as BotID, true);
         break;
       }
     }
@@ -118,21 +107,18 @@ export const DMGView = () => {
       <div className='flex justify-center overflow-hidden'>
         <div className='flex flex-col overflow-y-scroll p-4'>
           <div className='flex flex-col grid-cols-1 gap-8 lg:grid lg:grid-cols-3'>
-            {extensions[type].items.map(({ id, title, Icon }) => (
-              <div
-                key={id}
-                className={mx(
-                  'flex flex-col items-center w-[160px] h-[160px] border-0 rounded-lg p-4 bg-gray-200 [&>div>svg]:hover:text-black',
-                  extensions[type].classes
-                )}
-                onClick={() => handleSelect(id)}
-              >
-                <div className='text-xl font-thin text-black'>{title}</div>
-                <div className='mt-5'>
-                  <Icon weight='thin' className={mx(getSize(16), 'text-gray-400')} />
-                </div>
-              </div>
-            ))}
+            {Object.values(type === 'app' ? frames : bots)
+              .filter(({ system }) => !system)
+              .map(({ id, title, Icon }) => (
+                <Tile
+                  key={id}
+                  id={id}
+                  title={title}
+                  Icon={Icon}
+                  onSelect={handleSelect}
+                  active={!!((type === 'app' ? activeFrames : activeBots) as any[]).find((active) => active.id === id)}
+                />
+              ))}
           </div>
         </div>
       </div>

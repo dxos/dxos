@@ -11,7 +11,8 @@ import { HeadingWithActions, InvitationList, ProfileList } from '@dxos/react-app
 import { useMembers, useSpaceInvitations } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-components';
 
-import { useOptions, useSpace } from '../hooks';
+import { createSpacePath } from '../app';
+import { useActiveFrames, useSpace } from '../hooks';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from react-appkit.
@@ -20,8 +21,8 @@ import { createInvitationUrl } from '../util';
 export const ManageSpacePage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
-  const { views } = useOptions();
   const { space } = useSpace();
+  const frames = useActiveFrames();
   const members = useMembers(space.key);
   const memberProfiles = useMemo(
     () => members.map(({ profile }) => profile).filter((profile): profile is Profile => !!profile),
@@ -57,7 +58,7 @@ export const ManageSpacePage = () => {
             </Button>
             <Button
               variant='primary'
-              onClick={() => navigate(`/${space.key.truncate()}/${views[0]}`)}
+              onClick={() => navigate(createSpacePath(space.key, frames[0].id))}
               className='flex gap-1 items-center'
             >
               <span>{t('back to space label')}</span>

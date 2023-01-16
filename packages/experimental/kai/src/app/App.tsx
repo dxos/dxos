@@ -9,10 +9,10 @@ import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { OptionsContext } from '../hooks';
+import { AppStateProvider, BotsProvider, FramesProvider } from '../hooks';
 import { Generator, schema } from '../proto';
+import { frames } from './Frames';
 import { Routes } from './Routes';
-import { AppView } from './defs';
 
 const clientProvider = async (demo: boolean) => {
   const config = new Config(await Dynamics(), Defaults());
@@ -44,19 +44,19 @@ const clientProvider = async (demo: boolean) => {
 /**
  * Main app container with routes.
  */
-export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
-  views,
-  debug = false,
-  demo = true
-}) => {
+export const App: FC<{ debug?: boolean; demo?: boolean }> = ({ debug = false, demo = true }) => {
   // TODO(burdon): Error boundary and indicator.
   return (
     <ClientProvider client={() => clientProvider(demo)}>
-      <OptionsContext.Provider value={{ debug, demo, views }}>
-        <HashRouter>
-          <Routes />
-        </HashRouter>
-      </OptionsContext.Provider>
+      <AppStateProvider value={{ debug, demo }}>
+        <BotsProvider>
+          <FramesProvider frames={frames}>
+            <HashRouter>
+              <Routes />
+            </HashRouter>
+          </FramesProvider>
+        </BotsProvider>
+      </AppStateProvider>
     </ClientProvider>
   );
 };
