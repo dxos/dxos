@@ -6,8 +6,10 @@ import React from 'react';
 
 import { Frame } from '@dxos/framebox';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import mainUrl from './frame-main?url';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import frameSrc from './frame.html?raw';
 
