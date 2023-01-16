@@ -7,8 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
 
-import { createSpacePath, matchSpaceKey } from '../Routes';
-import { ViewContainer, viewConfig } from '../app';
+import { createSpacePath, matchSpaceKey, ViewContainer, viewConfig } from '../app';
 import { AppStateProvider, SpaceContext, SpaceContextType, useOptions } from '../hooks';
 
 /**

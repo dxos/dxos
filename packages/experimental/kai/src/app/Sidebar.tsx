@@ -10,11 +10,11 @@ import { useClient } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 import { useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { createSpacePath } from '../Routes';
 import { Button } from '../components';
 import { MemberList, SpaceList } from '../containers';
 import { useSpace } from '../hooks';
 import { Actions } from './Actions';
+import { createSpacePath } from './Routes';
 import { AppView } from './Views';
 
 export const Sidebar = () => {
