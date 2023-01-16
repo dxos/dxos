@@ -9,18 +9,18 @@ import { SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { Heading, useTranslation } from '@dxos/react-components';
 
-import { useOptions } from '../../hooks';
-import { Generator } from '../../proto';
+import { useOptions } from '../hooks';
+import { Generator } from '../proto';
 
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const RecoverIdentityPage = () => {
+export const CreateIdentityPage = () => {
   const { t } = useTranslation('appkit');
   const { demo } = useOptions();
   const client = useClient();
   const identity = useIdentity();
-  const [seedphrase, setSeedphrase] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [pending, setPending] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -36,7 +36,7 @@ export const RecoverIdentityPage = () => {
   const onNext = useCallback(async () => {
     setPending(true);
     try {
-      await client.halo.createProfile({ seedphrase });
+      await client.halo.createProfile({ displayName });
       const space = await client.echo.createSpace();
       if (demo && !client.config.values.runtime?.client?.storage?.persistent) {
         await new Generator(space.experimental.db).generate();
@@ -45,7 +45,7 @@ export const RecoverIdentityPage = () => {
     } catch {
       setPending(false);
     }
-  }, [seedphrase, redirect, demo]);
+  }, [displayName, redirect, demo]);
 
   useEffect(() => {
     if (identity) {
@@ -54,14 +54,14 @@ export const RecoverIdentityPage = () => {
   }, []);
 
   return (
-    <main className='max-is-5xl mli-auto pli-7 mbs-7'>
-      <Heading>{t('recover identity label')}</Heading>
+    <main className='max-is-lg mli-auto pli-7 mbs-7'>
+      <Heading>{t('create identity label')}</Heading>
       <SingleInputStep
         {...{
           pending,
-          inputLabel: t('seed phrase label'),
-          inputPlaceholder: t('seed phrase placeholder'),
-          onChange: setSeedphrase,
+          inputLabel: t('displayName label'),
+          inputPlaceholder: t('displayName placeholder'),
+          onChange: setDisplayName,
           onNext,
           onBack: () => history.back()
         }}

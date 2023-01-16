@@ -22,32 +22,39 @@ dx app publish
 ## Roadmap
 
 - [ ] Deprecate Kitchen Sink.
-- [ ] Playwright.
-
-- [ ] Profile (App team UX).
-- [ ] Invitations configuration (App team UX).
-- [ ] Project settings.
-- [ ] Saved prefs (e.g., persistent).
-- [ ] Import/export JSON.
+- [ ] Playwright tests/demo.
 - [ ] Deploy mobile app.
-- [ ] Menu.
-- [ ] CRM/KM (Airtable + reusable cards).
-- [ ] Graph control.
+- [ ] Import/export JSON.
+
+- [ ] Kanban column width on mobile (change breakpoint dep on phone).
+- [ ] Kanban card expand.
+- [ ] Data navigation (slide views).
+- [ ] Undo butterbar.
+
 - [x] Selector control.
 - [ ] Search (filtering).
+- [ ] Saved prefs (e.g., persistent).
+- [ ] Menu.
+- [ ] CRM/KM (Airtable + reusable cards).
+- [ ] Graph control with pop-up.
 - [ ] Integrate with Devtools.
-- [ ] Virtual table:
+- [ ] Virtual table (columns, rows):
   - https://react-table-v7.tanstack.com
   - https://bvaughn.github.io/react-virtualized/#/components/Masonry
 - [ ] Super app (WeChat/Twitter) for IPFS:
   https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 
+- [ ] ChatGPT bot.
+
+- [x] Profile.
+- [x] Invitations configuration.
+
 ### UX Issues.
 
-- [ ] Theme (e.g., AppBar colors).
+- [ ] Theme (e.g., AppBar colors). Mobile font size.
 - [ ] Consistent styles for controls (e.g., bg color).
-- [ ] Styling slots.
-- [ ] i18n Text properties (e.g., placeholder)
+- [ ] Styling slots?
+- [ ] i18n Text properties (e.g., placeholder.)
 
 ### Framework/ECHO Issues
 
