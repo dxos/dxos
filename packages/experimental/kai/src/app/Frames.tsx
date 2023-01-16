@@ -30,8 +30,8 @@ import { Sidebar } from './Sidebar';
 
 export const frames: FrameDef[] = [
   { id: FrameID.SETTINGS, title: 'Settings', Icon: Gear, Component: ManageSpacePage, system: true },
-  { id: FrameID.DASHBOARD, title: 'Dashboard', Icon: Wall, Component: Dashboard, system: true },
   { id: FrameID.DMG, title: 'Registry', Icon: Globe, Component: DMGView, system: true },
+  { id: FrameID.DASHBOARD, title: 'Dashboard', Icon: Wall, Component: Dashboard },
   { id: FrameID.TABLE, title: 'Table', Icon: Table, Component: MetaTable },
   { id: FrameID.KANBAN, title: 'Kanban', Icon: Kanban, Component: ProjectKanban },
   { id: FrameID.TASKS, title: 'Tasks', Icon: ListChecks, Component: TaskList },
@@ -62,21 +62,24 @@ export const FrameSelector: FC = () => {
       )}
     >
       <div className='flex pl-2'>
-        {frames.map(({ id, title, Icon }) => {
-          return (
-            <a
-              key={id}
-              className={mx(
-                'flex p-1 pl-2 lg:pr-2 lg:mr-2 items-center cursor-pointer rounded-t text-black text-sm',
-                id === currentFrame && 'bg-white'
-              )}
-              onClick={() => navigate(createSpacePath(space.key, id))}
-            >
-              <Icon weight='light' className={getSize(6)} />
-              <div className='hidden lg:flex ml-1'>{title}</div>
-            </a>
-          );
-        })}
+        {frames
+          .filter(({ system }) => !system)
+          .map(({ id, title, Icon }) => {
+            return (
+              <a
+                key={id}
+                className={mx(
+                  'flex p-1 pl-2 lg:pr-2 lg:mr-2 items-center cursor-pointer rounded-t text-black text-sm',
+                  id === currentFrame && 'bg-white'
+                )}
+                onClick={() => navigate(createSpacePath(space.key, id))}
+              >
+                <Icon weight='light' className={getSize(6)} />
+                <div className='hidden lg:flex ml-1'>{title}</div>
+              </a>
+            );
+          })}
+        <div className='flex-1' />
       </div>
     </div>
   );

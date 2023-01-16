@@ -12,7 +12,7 @@ import { useMembers, useSpaceInvitations } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-components';
 
 import { createSpacePath } from '../app';
-import { useActiveFrames, useSpace } from '../hooks';
+import { FrameID, useSpace } from '../hooks';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from react-appkit.
@@ -22,13 +22,12 @@ export const ManageSpacePage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
   const { space } = useSpace();
-  const frames = useActiveFrames();
+  const invitations = useSpaceInvitations(space?.key);
   const members = useMembers(space.key);
   const memberProfiles = useMemo(
     () => members.map(({ profile }) => profile).filter((profile): profile is Profile => !!profile),
     [members]
   );
-  const invitations = useSpaceInvitations(space?.key);
 
   const handleCreateInvitation = useCallback(() => {
     if (space) {
@@ -58,7 +57,7 @@ export const ManageSpacePage = () => {
             </Button>
             <Button
               variant='primary'
-              onClick={() => navigate(createSpacePath(space.key, frames[0].id))}
+              onClick={() => navigate(createSpacePath(space.key, FrameID.DASHBOARD))}
               className='flex gap-1 items-center'
             >
               <span>{t('back to space label')}</span>

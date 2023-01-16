@@ -18,9 +18,8 @@ export enum FrameID {
   CHESS = 'chess'
 }
 
-const activeFrames = [FrameID.DMG, FrameID.DASHBOARD, FrameID.TABLE, FrameID.TASKS];
+const activeFrames = [FrameID.SETTINGS, FrameID.DMG, FrameID.DASHBOARD, FrameID.TABLE, FrameID.TASKS];
 
-// TODO(burdon): Change type to id.
 export type FrameDef = { id: FrameID; system?: boolean; title: string; Icon: FC<any>; Component: FC<any> };
 
 export type FrameMap = { [index: string]: FrameDef };
