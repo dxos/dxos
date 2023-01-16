@@ -6,7 +6,9 @@ import React from 'react';
 
 import { Frame } from '@dxos/framebox';
 
+// @ts-ignore
 import mainUrl from './frame-main?url';
+// @ts-ignore
 import frameSrc from './frame.html?raw';
 
 export type EmbeddedFrameProps = {
