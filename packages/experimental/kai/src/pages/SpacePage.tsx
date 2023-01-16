@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSpaces } from '@dxos/react-client';
 
 import { createSpacePath, matchSpaceKey, FrameContainer } from '../app';
-import { SpaceContext, SpaceContextType, useActiveFrames } from '../hooks';
+import { FrameID, SpaceContext, SpaceContextType, useActiveFrames } from '../hooks';
 
 /**
  * Home page with current space.
@@ -33,7 +33,7 @@ export const SpacePage = () => {
   // Change to default view.
   useEffect(() => {
     if (space && (!frame || !frames.find(({ id }) => id === frame))) {
-      navigate(createSpacePath(space.key, frames[0].id));
+      navigate(createSpacePath(space.key, FrameID.DASHBOARD));
     }
   }, [currentSpaceKey, frame]);
 

@@ -32,9 +32,10 @@ export const Selector: FC<{
   };
 
   const handleSelect = (id?: string) => {
+    const option = options?.find((option) => option.id === id);
+    setText(option?.title);
     setSelected(id);
     setOpen(false);
-    setText(id);
     onSelect?.(id);
   };
 
