@@ -16,7 +16,7 @@ import { invitationCodeFromUrl } from '../../util';
  * Join space via invitation URL.
  */
 export const JoinSpacePage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('appkit');
   const client = useClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
