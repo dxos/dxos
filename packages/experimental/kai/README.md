@@ -25,6 +25,7 @@ dx app publish
 - [ ] Playwright tests/demo.
 - [ ] Deploy mobile app.
 - [ ] Import/export JSON.
+- [ ] OpenAI bot demo (e.g., fill in background information on Orgs).
 
 - [ ] Kanban column width on mobile (change breakpoint dep on phone).
 - [ ] Kanban card expand.
@@ -44,14 +45,14 @@ dx app publish
 - [ ] Super app (WeChat/Twitter) for IPFS:
   https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 
-- [ ] ChatGPT bot.
-
 - [x] Profile.
 - [x] Invitations configuration.
 
 ### UX Issues.
 
-- [ ] Theme (e.g., AppBar colors). Mobile font size.
+- [ ] Theme: 
+  - [ ] Mobile font size.
+  - [ ] AppBar/Accent colors.
 - [ ] Consistent styles for controls (e.g., bg color).
 - [ ] Styling slots?
 - [ ] i18n Text properties (e.g., placeholder.)

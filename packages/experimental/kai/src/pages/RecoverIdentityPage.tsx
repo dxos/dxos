@@ -9,7 +9,7 @@ import { SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { Heading, useTranslation } from '@dxos/react-components';
 
-import { useOptions } from '../hooks';
+import { useAppState } from '../hooks';
 import { Generator } from '../proto';
 
 // NOTE: Copied from halo-app.
@@ -17,7 +17,7 @@ import { Generator } from '../proto';
 
 export const RecoverIdentityPage = () => {
   const { t } = useTranslation('appkit');
-  const { demo } = useOptions();
+  const { demo } = useAppState();
   const client = useClient();
   const identity = useIdentity();
   const [seedphrase, setSeedphrase] = useState('');

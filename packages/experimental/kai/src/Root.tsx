@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { appkitTranslations, Fallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { ThemeProvider } from '@dxos/react-components';
 
-import { App, views } from './app';
+import { App } from './app';
 import kaiTranslations from './translations';
 
 // TODO(burdon): Get debug from config.
@@ -33,7 +33,7 @@ export const Root = () => {
       resourceExtensions={[appkitTranslations, kaiTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
-      <App debug={process.env.DEBUG === 'true'} views={views} />
+      <App debug={process.env.DEBUG === 'true'} />
       {needRefresh ? (
         <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
       ) : offlineReady ? (
