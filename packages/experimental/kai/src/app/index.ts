@@ -6,6 +6,4 @@ export * from './Actions';
 export * from './App';
 export * from './AppBar';
 export * from './Sidebar';
-export * from './ViewContainer';
-export * from './ViewSelector';
-export * from './views';
+export * from './Views';
