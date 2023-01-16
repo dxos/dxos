@@ -9,6 +9,7 @@ export type ExecOptions = {
   cwd: string;
 };
 
+// TODO (zhenyasav): resolve with executors/.../exec.ts
 export const exec = (command: string, options?: Partial<ExecOptions>): Promise<string> => {
   const { verbose, cwd } = { verbose: false, cwd: process.cwd(), ...options };
   if (verbose) {

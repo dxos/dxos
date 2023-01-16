@@ -1,5 +1,6 @@
 {
   "name": "@dxos/create",
+  "description": "Creates a mostly empty DXOS application",
   "version": "0.1.22",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

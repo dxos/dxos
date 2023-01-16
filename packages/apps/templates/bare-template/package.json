@@ -1,5 +1,6 @@
 {
   "name": "@dxos/bare-template",
+  "description": "An application template for local-first progressive web apps",
   "version": "0.1.22",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
