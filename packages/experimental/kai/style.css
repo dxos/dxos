@@ -4,29 +4,6 @@
 
 /* TODO(burdon): Remove custom CSS. */
 
-/* RBC Overrides */
-.rbc-calendar, .rbc-month-view, .rbc-header {
-  font-family: sans-serif !important;
-  font-weight: lighter !important;
-}
-.rbc-event {
-  border: 1px solid #333 !important;
-  border-radius: 0 !important;
-  color: #333 !important;
-  background-color: #eee !important;
-  padding: 4px !important;
-}
-
-table {
-  border: none !important;
-}
-table tbody tr {
-  border: none !important;
-}
-table tbody tr td {
-  border: none !important;
-}
-
 .logo {
   transform: rotate(300deg);
   transition: transform 750ms ease-in-out;
@@ -44,4 +21,42 @@ table tbody tr td {
   width: 100%;
   height: 62px;
   background-image: linear-gradient(to bottom, rgba(255,255,255,0), white);
+}
+
+/*
+ * TODO(burdon): Custom RBC style
+ * https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-custom-styling--page
+ */
+.rbc-calendar, .rbc-month-view, .rbc-header {
+  font-family: sans-serif !important;
+  font-weight: lighter !important;
+}
+.rbc-event {
+  border: 1px solid #333 !important;
+  border-radius: 0 !important;
+  color: #333 !important;
+  background-color: #eee !important;
+  padding: 2px 6px 2px 6px !important;
+}
+.rbc-event-content > div {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: small;
+}
+.rbc-event-label {
+  display: none !important;
+}
+.rbc-agenda-table {
+  display: flex;
+  border: none !important;
+}
+.rbc-agenda-time-cell {
+  padding: 5px 0 5px 0 !important;
+}
+.rbc-agenda-content {
+  overflow: hidden;
+}
+.rbc-agenda-table td {
+  border: none !important;
 }

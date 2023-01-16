@@ -8,7 +8,7 @@ import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import { Clock, GridFour, List, SquareHalf } from 'phosphor-react';
 import React, { useState } from 'react';
-import { Calendar as ReactBigCalendar, dateFnsLocalizer, Views } from 'react-big-calendar';
+import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 'react-big-calendar';
 
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
@@ -17,7 +17,13 @@ import { getSize, mx } from '@dxos/react-components';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { useSpace } from '../hooks';
-import { Event } from '../proto';
+import { Event as EventType } from '../proto';
+
+const mapEvents = (event: EventType) => ({
+  title: event.title,
+  start: new Date(event.start),
+  end: new Date(event.end)
+});
 
 const locales = {
   'en-US': enUS
@@ -31,34 +37,43 @@ const localizer = dateFnsLocalizer({
   locales
 });
 
-const mapEvents = (event: Event) => ({
-  title: event.title,
-  start: new Date(event.start),
-  end: new Date(event.end)
-});
-
-const styles = {
-  table:
-    '[&>div>div>table]:hidden __[&>div>div>div>table>tbody>tr>td]:text-red-400 [&>div>div>div>table>tbody>tr>td]:border-l-0'
-};
-
 const views = [
   { view: Views.MONTH, Icon: GridFour },
   { view: Views.WEEK, Icon: SquareHalf },
   { view: Views.AGENDA, Icon: List }
 ];
 
+// TODO(burdon): Custom views:
+//  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/examples--example-8
+//  - https://github.com/jquense/react-big-calendar/blob/master/stories/demos/exampleCode/rendering.js
+//  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-creating-custom-views--page
+
+const components: any = {
+  agenda: {
+    event: ({ event }: { event: Event }) => (
+      <div className='flex'>
+        <div>{event.title}</div>
+      </div>
+    )
+  },
+
+  // TODO(burdon): Remove time.
+  event: ({ event }: { event: Event }) => {
+    return <div>{event.title}</div>;
+  }
+};
+
 /**
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/story/about-big-calendar--page
  */
 export const CalendarView = () => {
   const { space } = useSpace();
-  const events = useQuery(space, Event.filter()).map(mapEvents);
-  const [view, setView] = useState<any>(Views.MONTH);
+  const events = useQuery(space, EventType.filter()).map(mapEvents);
+  const [view, setView] = useState<any>(Views.AGENDA);
 
   return (
-    <div className='flex flex-1 flex-col justify-center overflow-hidden m-2'>
-      <div className='flex'>
+    <div className='flex flex-1 flex-col justify-center overflow-hidden'>
+      <div className='flex m-2'>
         <div>
           <button>
             <Clock className={getSize(6)} />
@@ -74,7 +89,7 @@ export const CalendarView = () => {
         </div>
       </div>
 
-      <div className={mx('flex flex-1 overflow-hidden [&>div]:w-full', styles.table)}>
+      <div className={mx('flex flex-1 overflow-hidden [&>div]:w-full', '[&>div>div>table]:hidden')}>
         <ReactBigCalendar
           // date={new Date(2023, 0, 15)}
           view={view}
@@ -84,6 +99,7 @@ export const CalendarView = () => {
           events={events}
           startAccessor='start'
           endAccessor='end'
+          components={components}
         />
       </div>
     </div>

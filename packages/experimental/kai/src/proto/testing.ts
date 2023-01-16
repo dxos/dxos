@@ -157,7 +157,7 @@ export const createContact = async (db: EchoDatabase) => {
 
 export const createEvent = async (db: EchoDatabase) => {
   // TODO(burdon): Round numbers.
-  const start = roundToNearestMinutes(faker.date.soon(14), { nearestTo: 30 });
+  const start = roundToNearestMinutes(faker.date.soon(21, add(new Date(), { days: -7 })), { nearestTo: 30 });
   const end = add(start, { hours: 1 });
 
   const event = new Event({
