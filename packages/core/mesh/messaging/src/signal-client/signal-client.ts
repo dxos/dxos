@@ -15,7 +15,7 @@ import { ComplexMap } from '@dxos/util';
 import { Message, SignalMethods } from '../signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 
-const DEFAULT_RECONNECT_TIMEOUT = 1000;
+const DEFAULT_RECONNECT_TIMEOUT = 100;
 
 export enum SignalState {
   /** Connection is being established. */
@@ -232,49 +232,43 @@ export class SignalClient implements SignalMethods {
       this._reconnect();
     }
 
-    this._ctx.onDispose(
-      this._client.connected.on(() => {
-        this._lastError = undefined;
-        this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
-        this._setState(SignalState.CONNECTED);
-        this._clientReady.wake();
-      })
-    );
+    this._client.connected.on(this._ctx, () => {
+      this._lastError = undefined;
+      this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
+      this._setState(SignalState.CONNECTED);
+      this._clientReady.wake();
+    });
 
-    this._ctx.onDispose(
-      this._client.error.on((error) => {
-        log('socket error', { error });
-        if (this._state === SignalState.CLOSED) {
-          return;
-        }
+    this._client.error.on(this._ctx, (error) => {
+      log('socket error', { error });
+      if (this._state === SignalState.CLOSED) {
+        return;
+      }
 
-        if (this._state === SignalState.RE_CONNECTING) {
-          this._reconnectAfter *= 2;
-        }
+      if (this._state === SignalState.RE_CONNECTING) {
+        this._reconnectAfter *= 2;
+      }
 
-        this._lastError = error;
-        this._setState(SignalState.DISCONNECTED);
+      this._lastError = error;
+      this._setState(SignalState.DISCONNECTED);
 
-        this._reconnect();
-      })
-    );
+      this._reconnect();
+    });
 
-    this._ctx.onDispose(
-      this._client.disconnected.on(() => {
-        log('socket disconnected');
-        // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
-        if (this._state !== SignalState.CONNECTING && this._state !== SignalState.RE_CONNECTING) {
-          return;
-        }
+    this._client.disconnected.on(this._ctx, () => {
+      log('socket disconnected');
+      // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
+      if (this._state !== SignalState.CONNECTING && this._state !== SignalState.RE_CONNECTING) {
+        return;
+      }
 
-        if (this._state === SignalState.RE_CONNECTING) {
-          this._reconnectAfter *= 2;
-        }
+      if (this._state === SignalState.RE_CONNECTING) {
+        this._reconnectAfter *= 2;
+      }
 
-        this._setState(SignalState.DISCONNECTED);
-        this._reconnect();
-      })
-    );
+      this._setState(SignalState.DISCONNECTED);
+      this._reconnect();
+    });
   }
 
   private _reconnect() {
