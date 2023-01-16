@@ -11,17 +11,18 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { createSpacePath } from '../Routes';
 import { FileUploadDialog } from '../components';
 import { useFileDownload, useSpace } from '../hooks';
 import { Generator } from '../proto';
+import { createSpacePath } from './Routes';
 
 export type Action = {
-  Icon: FC<any>; // TODO(burdon): Type.
+  Icon: FC<any>;
   title: string;
   handler: () => void;
 };
 
+// TODO(burdon): Move to Menu.
 export const Actions = () => {
   const navigate = useNavigate();
   const client = useClient();
