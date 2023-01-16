@@ -97,7 +97,23 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             allowList: options.bundlePackages
           }),
           logTransformer.createPlugin(),
-          RawPlugin()
+          RawPlugin(),
+          // Substitute '/*?url' imports with empty string.
+          {
+            name: 'url',
+            setup: ({ onResolve, onLoad }) => {
+              onResolve({ filter: /\?url$/ }, (args) => {
+                return {
+                  path: args.path.replace(/\?url$/, '/empty-url'),
+                  namespace: 'url'
+                };
+              });
+
+              onLoad({ filter: /\/empty-url/, namespace: 'url' }, async (args) => {
+                return { contents: 'export default ""' };
+              });
+            }
+          }
         ]
       });
 
