@@ -5,6 +5,7 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
+import RawPlugin from 'esbuild-plugin-raw';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -95,7 +96,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             packagePath,
             allowList: options.bundlePackages
           }),
-          logTransformer.createPlugin()
+          logTransformer.createPlugin(),
+          RawPlugin()
         ]
       });
 

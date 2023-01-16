@@ -85,6 +85,7 @@ importers:
       chalk: ^4.1.0
       esbuild: ^0.16.14
       esbuild-node-externals: ^1.6.0
+      esbuild-plugin-raw: ^0.1.7
       eslint: ^8.24.0
       execa: ^5.1.0
       expect: ^27.0.2
@@ -180,6 +181,7 @@ importers:
       chalk: 4.1.2
       esbuild: 0.16.14
       esbuild-node-externals: 1.6.0_esbuild@0.16.14
+      esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
       eslint: 8.25.0
       expect: 27.5.1
       fast-xml-parser: 4.0.11
@@ -18818,6 +18820,14 @@ packages:
 
   /esbuild-plugin-alias/0.2.1:
     resolution: {integrity: sha512-jyfL/pwPqaFXyKnj8lP8iLk6Z0m099uXR45aSN8Av1XD4vhvQutxxPzgA2bTcAwQpa1zCXDcWOlhFgyP3GKqhQ==}
+    dev: true
+
+  /esbuild-plugin-raw/0.1.7_esbuild@0.16.14:
+    resolution: {integrity: sha512-kYfu+XBzKm1/ryjjITSMkj/D+JsVHRWD48vM/EWTufUledFlnCw8envwgjz29R3bXj6g+wguhUW8Q2qjxCQNXw==}
+    peerDependencies:
+      esbuild: ^0.14.36 || ^0.15.0
+    dependencies:
+      esbuild: 0.16.14
     dev: true
 
   /esbuild-plugin-yaml/0.0.1:
