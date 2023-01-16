@@ -29,14 +29,6 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
     const inputRef = useForwardedRef(ref);
     const inputFocused = useIsFocused(inputRef);
 
-    // todo (thure): Validate this workaround for iOS: when `autoFocus` is true, iOS focuses the input but does not open the keyboard; this attempts to re-focus the input on touch events.
-    const onTouchUp = useCallback(() => {
-      if (inputRef.current && inputSlot?.autoFocus) {
-        inputRef.current.blur();
-        inputRef.current.focus();
-      }
-    }, [inputRef.current, inputSlot?.autoFocus]);
-
     const renderSegment = useCallback<ComponentProps<typeof CodeInput>['renderSegment']>(
       ({ state, index }) => (
         <div
@@ -53,6 +45,8 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
       [inputFocused, validationValence, validationMessage, disabled]
     );
 
+    console.log('[input slot]', inputSlot);
+
     return (
       <CodeInput
         {...{
@@ -61,7 +55,6 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
           ...inputSlot,
           placeholder,
           onChange,
-          onTouchUp,
           inputRef,
           renderSegment,
           className: mx(
