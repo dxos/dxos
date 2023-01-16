@@ -151,11 +151,12 @@ export class Swarm {
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
+    if (this._ctx.disposed) {
+      log.warn('ignored for offline swarm');
+      return;
+    }
+
     if (swarmEvent.peerAvailable) {
-      if (this._ctx.disposed) {
-        log.warn('ignored for offline swarm');
-        return;
-      }
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
       log('new peer', { peerId });
       if (!peerId.equals(this._ownPeerId)) {
