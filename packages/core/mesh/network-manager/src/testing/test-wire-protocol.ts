@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { asyncTimeout, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TestExtension } from '@dxos/teleport';
@@ -33,7 +33,10 @@ export class TestWireProtocol {
       return this.connections.get(peerId)!;
     }
     log('waitForConnection', { peerId });
-    await this.connected.waitFor((connectedId) => connectedId.equals(peerId));
+    await asyncTimeout(
+      this.connected.waitFor((connectedId) => connectedId.equals(peerId)),
+      1_000
+    );
     return this.connections.get(peerId)!;
   }
 
