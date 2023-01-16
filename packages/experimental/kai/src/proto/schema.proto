@@ -112,6 +112,6 @@ message Event {
   string start = 2;
   string end = 3;
   Address location = 4;
-  Contact members = 5;
+  repeated Contact members = 5;
 }
 

@@ -55,6 +55,19 @@ export enum AppView {
   GAME = 'game'
 }
 
+export const views = [
+  AppView.DASHBOARD,
+  AppView.META,
+  AppView.KANBAN,
+  AppView.CALENDAR,
+  AppView.TASKS,
+  AppView.ORGS,
+  AppView.GRAPH,
+  AppView.EDITOR,
+  AppView.MAP,
+  AppView.GAME
+];
+
 export const viewConfig: { [key: string]: { Icon: FC<any>; Component: FC<any> } } = {
   [AppView.SETTINGS]: { Icon: Gear, Component: ManageSpacePage },
   [AppView.DASHBOARD]: { Icon: Wall, Component: Dashboard },
