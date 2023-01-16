@@ -98,7 +98,7 @@ export class EchoDatabase {
       props
     })) as Item<any>;
 
-    obj[base]._bind(item, this);
+    await obj[base]._bind(item, this);
     return obj;
   }
 
@@ -182,7 +182,7 @@ export class EchoDatabase {
 
         obj[base]._id = object.id;
         this._objects.set(object.id, obj);
-        obj[base]._bind(object, this);
+        obj[base]._bind(object, this).catch((err) => log.catch(err));
         obj[base]._isBound = true;
       }
     }

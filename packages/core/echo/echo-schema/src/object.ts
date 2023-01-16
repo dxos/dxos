@@ -63,15 +63,15 @@ export abstract class EchoObject<T extends Model = any> {
   /**
    * Called after object is bound to database.
    */
-  protected _onBind(): void {}
+  protected async _onBind(): Promise<void> {}
 
   /**
    * @internal
    */
   // TODO(burdon): Document.
-  _bind(item: Item<T>, database: EchoDatabase) {
+  async _bind(item: Item<T>, database: EchoDatabase) {
     this._item = item;
     this._database = database;
-    this._onBind();
+    await this._onBind();
   }
 }
