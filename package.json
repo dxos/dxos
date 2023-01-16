@@ -86,6 +86,7 @@
     "chalk": "^4.1.0",
     "esbuild": "^0.16.14",
     "esbuild-node-externals": "^1.6.0",
+    "esbuild-plugin-raw": "^0.1.7",
     "eslint": "^8.24.0",
     "expect": "^27.0.2",
     "fast-xml-parser": "^4.0.10",

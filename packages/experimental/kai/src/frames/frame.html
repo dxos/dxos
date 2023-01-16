@@ -1,0 +1,28 @@
+<!-- 
+Copyright 2023 DXOS.org
+-->
+
+<html>
+  <head>
+    <script type="importmap">
+      ${importMap}
+    </script>
+
+    <!-- Required for vite -->
+    <script type="module">
+      import RefreshRuntime from "/@react-refresh"
+      RefreshRuntime.injectIntoGlobalHook(window)
+      window.$RefreshReg$ = () => {}
+      window.$RefreshSig$ = () => (type) => type
+      window.__vite_plugin_react_preamble_installed__ = true
+      </script>
+      <script type="module" src="/@vite/client"></script>
+    
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import '@frame/main';
+    </script>
+  </body>
+</html>

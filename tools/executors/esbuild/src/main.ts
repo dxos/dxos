@@ -5,6 +5,7 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
+import RawPlugin from 'esbuild-plugin-raw';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -20,6 +21,7 @@ export interface EsbuildExecutorOptions {
   outputPath: string;
   platforms: Platform[];
   sourcemap: boolean;
+  watch: boolean;
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -55,6 +57,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         sourcemap: options.sourcemap,
         metafile: options.metafile,
         bundle: options.bundle,
+        watch: options.watch,
         platform,
         // https://esbuild.github.io/api/#log-override
         logOverride: {
@@ -93,7 +96,24 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             packagePath,
             allowList: options.bundlePackages
           }),
-          logTransformer.createPlugin()
+          logTransformer.createPlugin(),
+          RawPlugin(),
+          // Substitute '/*?url' imports with empty string.
+          {
+            name: 'url',
+            setup: ({ onResolve, onLoad }) => {
+              onResolve({ filter: /\?url$/ }, (args) => {
+                return {
+                  path: args.path.replace(/\?url$/, '/empty-url'),
+                  namespace: 'url'
+                };
+              });
+
+              onLoad({ filter: /\/empty-url/, namespace: 'url' }, async (args) => {
+                return { contents: 'export default ""' };
+              });
+            }
+          }
         ]
       });
 
@@ -105,6 +125,10 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       return result.errors;
     })
   );
+
+  if (options.watch) {
+    await new Promise(() => {}); // wait indefinitely
+  }
 
   return { success: errors.flat().length === 0 };
 };
