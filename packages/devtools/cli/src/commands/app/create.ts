@@ -113,9 +113,9 @@ export default class Create extends BaseCommand {
         })
       );
     } catch (err: any) {
-      this.log('Unable to create application');
-      this.log(err?.stack);
-      this.error(err, { exit: 1 });
+      this.error(err);
+      this.error(err?.stack);
+      this.error('Unable to create application', { exit: 1 });
     }
   }
 }
