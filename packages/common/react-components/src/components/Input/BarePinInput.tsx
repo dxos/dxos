@@ -45,8 +45,6 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
       [inputFocused, validationValence, validationMessage, disabled]
     );
 
-    console.log('[input slot]', inputSlot);
-
     return (
       <CodeInput
         {...{
