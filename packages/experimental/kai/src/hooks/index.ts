@@ -6,4 +6,3 @@ export * from './useAppState';
 export * from './useFileDownload';
 export * from './useOptions';
 export * from './useSpace';
-export * from './views';

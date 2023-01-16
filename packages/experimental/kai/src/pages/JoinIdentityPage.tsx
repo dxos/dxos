@@ -10,7 +10,7 @@ import { JoinPanel } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 import { Heading, useTranslation } from '@dxos/react-components';
 
-import { invitationCodeFromUrl } from '../../util';
+import { invitationCodeFromUrl } from '../util';
 
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.

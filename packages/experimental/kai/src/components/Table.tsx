@@ -88,7 +88,7 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
                 {row.cells.map((cell) => {
                   return (
                     // eslint-disable-next-line react/jsx-key
-                    <div {...cell.getCellProps(cellProps)} className='td pl-2 pr-2 overflow-hidden text-ellipsis'>
+                    <div {...cell.getCellProps(cellProps)} className='td pl-2 pr-2 overflow-hidden text-ellipsis`'>
                       {cell.render('Cell')}
                     </div>
                   );
