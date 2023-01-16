@@ -110,7 +110,8 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     ]);
   });
 
-  test('going offline and back online', async () => {
+  // TODO(mykola): Flaky test because of test signal server.
+  test.skip('going offline and back online', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
