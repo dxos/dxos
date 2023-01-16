@@ -6,7 +6,7 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
 
-import { truncateKey, devtoolsFormatter, DevtoolsFormatter, JsonML } from '@dxos/debug';
+import { truncateKey, devtoolsFormatter, DevtoolsFormatter } from '@dxos/debug';
 
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
@@ -238,7 +238,7 @@ export class PublicKey {
           'black'
         ];
         const color = colors[this.getInsecureHash(colors.length)];
-    
+
         return [
           'span',
           {},
