@@ -9,9 +9,10 @@ import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { AppView, OptionsContext } from '../hooks';
-import { schema } from '../proto';
-import { Routes } from './Routes';
+import { Routes } from '../Routes';
+import { OptionsContext } from '../hooks';
+import { Generator, schema } from '../proto';
+import { AppView } from './Views';
 
 const clientProvider = async (demo: boolean) => {
   const config = new Config(await Dynamics(), Defaults());
@@ -28,7 +29,10 @@ const clientProvider = async (demo: boolean) => {
   // TODO(burdon): Auto invite/join if demo mode.
   if (demo) {
     await client.halo.createProfile();
-    await client.echo.createSpace();
+    const space = await client.echo.createSpace();
+
+    const generator = new Generator(space.experimental.db);
+    await generator.generate();
 
     // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
     // chrome.windows.create({ '/join', incognito: true });

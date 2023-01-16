@@ -11,7 +11,7 @@ import { DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appk
 import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
 import { Heading, Button, useTranslation, getSize } from '@dxos/react-components';
 
-import { createInvitationUrl } from '../../util';
+import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
