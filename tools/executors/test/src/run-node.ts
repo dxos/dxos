@@ -32,6 +32,7 @@ export type NodeOptions = {
   inspect?: boolean;
   trackLeakedResources: boolean;
   grep?: string;
+  bail?: boolean;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -76,7 +77,8 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
     {
       '--checkLeaks': options.checkLeaks,
       '--exit': options.forceExit,
-      '--inspect': options.inspect
+      '--inspect': options.inspect,
+      '--bail': options.bail
     },
     options.grep && ['--grep', options.grep]
   ]);
