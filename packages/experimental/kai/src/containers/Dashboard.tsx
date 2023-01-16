@@ -5,15 +5,13 @@
 import React, { FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { CardMenu, Card } from '../../components';
-import {
-  ContactsListCard,
-  ProjectEditor,
-  ProjectGraph,
-  ProjectHierarchy,
-  ProjectListCard,
-  TaskListCard
-} from '../../containers';
+import { CardMenu, Card } from '../components';
+import { ContactsListCard } from './ContactList';
+import { ProjectEditor } from './ProjectEditor';
+import { ProjectGraph } from './ProjectGraph';
+import { ProjectHierarchy } from './ProjectHierarchy';
+import { ProjectListCard } from './ProjectList';
+import { TaskListCard } from './TaskList';
 
 export const Dashboard: FC = () => {
   const { ref, height } = useResizeDetector();

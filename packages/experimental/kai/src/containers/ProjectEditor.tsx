@@ -51,7 +51,7 @@ export const ProjectEditor: FC = withReactor(() => {
           {project.description?.doc && (
             <div className='flex flex-col flex-1 m-2'>
               <div className='text-xs pb-1'>Description</div>
-              <div className='flex flex-1 overflow-y-scroll editor-container border'>
+              <div className='flex flex-1 overflow-y-scroll border'>
                 <Composer
                   doc={project.description?.doc}
                   className={mx('z-0 bg-white text-black w-full m-2 p-2 min-bs-[12em]')}

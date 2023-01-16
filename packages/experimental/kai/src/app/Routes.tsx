@@ -18,11 +18,12 @@ import {
   RecoverIdentityPage,
   SettingsPage,
   SpacePage
-} from './pages';
+} from '../pages';
 
 export const matchSpaceKey = (spaces: Space[], spaceKey: string) =>
   spaces.find((space) => space.key.truncate() === spaceKey);
 
+// TODO(burdon): Move to hooks.
 export const createSpacePath = (spaceKey: PublicKey, view?: string) =>
   `/${spaceKey.truncate()}` + (view ? `/${view}` : '');
 
