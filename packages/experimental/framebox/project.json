@@ -46,24 +46,6 @@
         "packages/experimental/framebox/src/proto/gen"
       ]
     },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ],
-        "coveragePath": "coverage/packages/experimental/framebox",
-        "domRequired": true,
-        "forceExit": true,
-        "outputPath": "tmp/mocha/packages/experimental/framebox",
-        "resultsPath": "test-results/packages/experimental/framebox",
-        "testPatterns": [
-          "packages/experimental/framebox/src/**/*.test.{ts,tsx,js,jsx}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/framebox/src/**/*"
-        ]
-      },
       "outputs": [
         "{options.coveragePath}",
         "{options.outputPath}",
