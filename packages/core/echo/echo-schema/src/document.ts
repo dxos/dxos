@@ -10,8 +10,6 @@ import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
-import { TextObject } from './text-object';
-import { strip } from './util';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -28,11 +26,11 @@ export const DELETED = '__deleted';
 
 export type ConvertVisitors = {
   onRef?: (id: string, obj?: EchoObject) => any;
-}
+};
 
 export const DEFAULT_VISITORS: ConvertVisitors = {
   onRef: (id, obj) => ({ '@id': id })
-}
+};
 
 /**
  * Base class for generated document types and dynamic objects.
@@ -100,7 +98,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       ...this[base]._convert({
         onRef: (id, obj?) => obj ?? { '@id': id }
       })
-    }
+    };
   }
 
   private _convert(visitors: ConvertVisitors = {}) {
@@ -160,7 +158,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   //     body: () => {
   //       const json = this.toJSON();
 
-  //       const 
+  //       const
 
   //       return null
   //     }
@@ -181,7 +179,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       this._uninitialized![key] = value;
     } else {
       this._database?._logObjectAccess(this);
-      this._setModelProp(key, value);
+      this._setModelProp(key, value).catch((err) => log.catch(err));
     }
   }
 
