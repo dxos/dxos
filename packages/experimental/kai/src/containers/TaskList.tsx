@@ -109,7 +109,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
         {/* TODO(burdon): Keep pinned to bottom on create. */}
         {newTask && (
           <div className='focus-within:sticky focus-within:block-end-0 bg-white pli-3 pbs-2 pbe-4'>
-            <NewTaskItem task={newTask} onEnter={handleCreateTask} />
+            <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />
           </div>
         )}
       </div>
@@ -126,7 +126,17 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 export const NewTaskItem: FC<{
   task: Task;
   onEnter?: (task: Task) => void;
-}> = ({ task, onEnter }) => {
+  lastIndex?: number;
+}> = ({ task, onEnter, lastIndex }) => {
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent<Element>) => {
+      if (e.key === 'PageUp') {
+        e.preventDefault();
+        (document.querySelector(`input[data-orderindex="${lastIndex ?? 0}"]`) as HTMLElement | undefined)?.focus();
+      }
+    },
+    [lastIndex]
+  );
   return (
     <CardRow
       sidebar={
@@ -141,6 +151,7 @@ export const NewTaskItem: FC<{
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
+          onKeyDown={onKeyDown}
           onEnter={(value) => {
             if (value.length) {
               task.title = value;
@@ -174,11 +185,33 @@ export const TaskItem: FC<{
     }
   });
 
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent<Element>) => {
+      switch (e.key) {
+        case 'PageDown':
+          e.preventDefault();
+          if (isLast) {
+            (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
+          } else {
+            (document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined)?.focus();
+          }
+          break;
+        case 'PageUp':
+          e.preventDefault();
+          (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
+          break;
+      }
+    },
+    [task, orderIndex, isLast]
+  );
+
   const onKeyUp = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
+    (e: KeyboardEvent<Element>) => {
       switch (e.key) {
         case 'Enter':
-          if (!e.shiftKey) {
+          if (e.shiftKey) {
+            (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
+          } else {
             if (isLast) {
               (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
             } else {
@@ -187,14 +220,6 @@ export const TaskItem: FC<{
               )?.focus();
             }
           }
-          break;
-        case 'PageDown':
-          e.preventDefault();
-          (document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined)?.focus();
-          break;
-        case 'PageUp':
-          e.preventDefault();
-          (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
           break;
       }
     },
@@ -226,6 +251,7 @@ export const TaskItem: FC<{
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
+          onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
           onChange={(value) => {
             task.title = value;

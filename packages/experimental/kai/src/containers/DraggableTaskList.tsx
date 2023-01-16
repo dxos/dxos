@@ -94,7 +94,7 @@ export const DraggableTaskListContainer: FC<{
           className='flex ml-7 focus-within:sticky focus-within:block-end-0'
           style={active ? { visibility: 'hidden' } : {}}
         >
-          <NewTaskItem task={newTask} onEnter={onCreate} />
+          <NewTaskItem task={newTask} onEnter={onCreate} lastIndex={tasks.length - 1} />
         </div>
       )}
     </div>
