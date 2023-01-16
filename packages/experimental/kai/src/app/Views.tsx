@@ -5,6 +5,7 @@
 import {
   Article,
   Calendar,
+  Code,
   Compass,
   Gear,
   Graph,
@@ -26,6 +27,7 @@ import {
   CalendarView,
   ChessView,
   Dashboard,
+  FramesView,
   MetaTable,
   MapView,
   OrganizationHierarchy,
@@ -52,7 +54,8 @@ export enum AppView {
   EDITOR = 'documents',
   GRAPH = 'graph',
   MAP = 'map',
-  GAME = 'game'
+  GAME = 'game',
+  FRAMES = 'frames'
 }
 
 export const views = [
@@ -65,7 +68,8 @@ export const views = [
   AppView.GRAPH,
   AppView.EDITOR,
   AppView.MAP,
-  AppView.GAME
+  AppView.GAME,
+  AppView.FRAMES
 ];
 
 export const viewConfig: { [key: string]: { Icon: FC<any>; Component: FC<any> } } = {
@@ -79,7 +83,8 @@ export const viewConfig: { [key: string]: { Icon: FC<any>; Component: FC<any> } 
   [AppView.EDITOR]: { Icon: Article, Component: ProjectEditor },
   [AppView.GRAPH]: { Icon: Graph, Component: ProjectGraph },
   [AppView.MAP]: { Icon: Compass, Component: MapView },
-  [AppView.GAME]: { Icon: Sword, Component: ChessView }
+  [AppView.GAME]: { Icon: Sword, Component: ChessView },
+  [AppView.FRAMES]: { Icon: Code, Component: FramesView }
 };
 
 export const ViewSelector: FC = () => {
