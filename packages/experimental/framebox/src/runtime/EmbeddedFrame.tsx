@@ -1,9 +1,11 @@
-import { Frame } from "../proto/gen/schema"
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Frame } from '../proto/gen/schema';
 
 export type EmbeddedFrameProps = {
-  frame: Frame
-}
+  frame: Frame;
+};
 
-export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
-
-}
+export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {};
