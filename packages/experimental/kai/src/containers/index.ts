@@ -6,6 +6,7 @@ export * from './CalendarView';
 export * from './ChessView';
 export * from './ContactList';
 export * from './Dashboard';
+export * from './DMGView';
 export * from './DraggableTaskList';
 export * from './FramesView';
 export * from './Map';

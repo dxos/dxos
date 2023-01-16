@@ -3,6 +3,7 @@
 //
 
 export * from './app';
+export * from './bots';
 export * from './components';
 export * from './containers';
 export * from './hooks';
