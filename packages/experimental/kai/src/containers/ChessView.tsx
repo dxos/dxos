@@ -9,7 +9,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { id } from '@dxos/echo-schema';
-import { useQuery } from '@dxos/react-client';
+import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { useSpace } from '../hooks';
@@ -55,7 +55,7 @@ export const ChessView: FC = () => {
  */
 // TODO(burdon): Updated frequently; even after peer disconnects.
 // TODO(burdon): Presence extension throws exception (sendAnnounce).
-const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ game, style, onClose }) => {
+const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = withReactor(({ game, style, onClose }) => {
   const [orientation, setOrientation] = useState<Color>('w');
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
@@ -108,7 +108,7 @@ const Play: FC<{ game: Game; style: ChessPieces; onClose: () => void }> = ({ gam
       </div>
     </>
   );
-};
+});
 
 /**
  * Grid

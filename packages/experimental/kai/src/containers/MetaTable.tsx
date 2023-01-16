@@ -46,7 +46,7 @@ const types: ColumnType[] = [
       { Header: 'Name', accessor: 'name' as any },
       { Header: 'Username', accessor: 'username' as any },
       { Header: 'Email', accessor: 'email' as any },
-      { Header: 'ZIP', accessor: 'address.zip' as any, maxWidth: 80 }
+      { Header: 'ZIP', accessor: 'address.zip' as any }
     ]
   }
 ];
@@ -71,7 +71,9 @@ export const MetaTable = () => {
           <div className='mr-2'>
             <Selector options={types} onSelect={handleSelect} />
           </div>
-          <Searchbar />
+          <div>
+            <Searchbar />
+          </div>
         </div>
       </div>
 
