@@ -83,7 +83,8 @@ const components: any = {
 export const CalendarView = () => {
   const { space } = useSpace();
   const events = useQuery(space, EventType.filter()).map(mapEvents);
-  const [view, setView] = useState<any>(Views.AGENDA);
+  // TODO(burdon): Manage global state persistently.
+  const [view, setView] = useState<any>(Views.MONTH);
 
   return (
     <div className='flex flex-1 flex-col justify-center overflow-hidden'>

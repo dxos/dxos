@@ -71,7 +71,9 @@ export const MetaTable = () => {
           <div className='mr-2'>
             <Selector options={types} onSelect={handleSelect} />
           </div>
-          <Searchbar />
+          <div>
+            <Searchbar />
+          </div>
         </div>
       </div>
 

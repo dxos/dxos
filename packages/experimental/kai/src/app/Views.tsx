@@ -2,19 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Article,
-  Calendar,
-  Compass,
-  Gear,
-  Graph,
-  Kanban,
-  ListChecks,
-  Sword,
-  Table,
-  TreeStructure,
-  Wall
-} from 'phosphor-react';
+import { Article, Calendar, Compass, Gear, Globe, Graph, Kanban, ListChecks, Sword, Table, Wall } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -26,9 +14,9 @@ import {
   CalendarView,
   ChessView,
   Dashboard,
+  DMGView,
   MetaTable,
   MapView,
-  OrganizationHierarchy,
   ProjectEditor,
   ProjectGraph,
   ProjectKanban,
@@ -38,50 +26,27 @@ import { useOptions } from '../hooks';
 import { ManageSpacePage } from '../pages';
 import { AppBar } from './AppBar';
 import { Sidebar } from './Sidebar';
+import { AppView } from './defs';
 
-// TODO(burdon): Co-locate with routes.
-
-export enum AppView {
-  SETTINGS = 'settings',
-  DASHBOARD = 'dashboard',
-  META = 'data',
-  KANBAN = 'kanban',
-  TASKS = 'tasks',
-  ORGS = 'org',
-  CALENDAR = 'events',
-  EDITOR = 'documents',
-  GRAPH = 'graph',
-  MAP = 'map',
-  GAME = 'game'
-}
-
-export const views = [
-  AppView.DASHBOARD,
-  AppView.META,
-  AppView.KANBAN,
-  AppView.CALENDAR,
-  AppView.TASKS,
-  AppView.ORGS,
-  AppView.GRAPH,
-  AppView.EDITOR,
-  AppView.MAP,
-  AppView.GAME
-];
-
-export const viewConfig: { [key: string]: { Icon: FC<any>; Component: FC<any> } } = {
+// TODO(burdon): Rename frames.
+// TODO(burdon): Drawing app.
+export const viewDefs: { [key: string]: { Icon: FC<any>; Component: FC<any> } } = {
   [AppView.SETTINGS]: { Icon: Gear, Component: ManageSpacePage },
+  [AppView.DMG]: { Icon: Globe, Component: DMGView },
   [AppView.DASHBOARD]: { Icon: Wall, Component: Dashboard },
   [AppView.META]: { Icon: Table, Component: MetaTable },
   [AppView.KANBAN]: { Icon: Kanban, Component: ProjectKanban },
   [AppView.TASKS]: { Icon: ListChecks, Component: TaskList },
-  [AppView.ORGS]: { Icon: TreeStructure, Component: OrganizationHierarchy },
   [AppView.CALENDAR]: { Icon: Calendar, Component: CalendarView },
-  [AppView.EDITOR]: { Icon: Article, Component: ProjectEditor },
-  [AppView.GRAPH]: { Icon: Graph, Component: ProjectGraph },
-  [AppView.MAP]: { Icon: Compass, Component: MapView },
-  [AppView.GAME]: { Icon: Sword, Component: ChessView }
+  [AppView.DOCUMENTS]: { Icon: Article, Component: ProjectEditor },
+  [AppView.EXPLORER]: { Icon: Graph, Component: ProjectGraph },
+  [AppView.MAPS]: { Icon: Compass, Component: MapView },
+  [AppView.CHESS]: { Icon: Sword, Component: ChessView }
 };
 
+/**
+ * View tabs.
+ */
 export const ViewSelector: FC = () => {
   const navigate = useNavigate();
   const { views } = useOptions();
@@ -103,7 +68,7 @@ export const ViewSelector: FC = () => {
     >
       <div className='flex pl-2'>
         {views.map((view) => {
-          const { Icon } = viewConfig[view];
+          const { Icon } = viewDefs[view];
           return (
             <a
               key={view}
@@ -123,9 +88,12 @@ export const ViewSelector: FC = () => {
   );
 };
 
+/**
+ * View main content.
+ */
 export const ViewContainer: FC<{ view: string }> = ({ view }) => {
   const { views } = useOptions();
-  const { Component } = viewConfig[view];
+  const { Component } = viewDefs[view];
 
   return (
     <PanelSidebarProvider

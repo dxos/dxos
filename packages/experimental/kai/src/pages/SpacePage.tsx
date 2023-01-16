@@ -7,7 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
 
-import { createSpacePath, matchSpaceKey, ViewContainer, viewConfig } from '../app';
+import { createSpacePath, matchSpaceKey, ViewContainer, viewDefs } from '../app';
 import { AppStateProvider, SpaceContext, SpaceContextType, useOptions } from '../hooks';
 
 /**
@@ -32,7 +32,7 @@ export const SpacePage = () => {
 
   // Change view.
   useEffect(() => {
-    if (space && (!view || !viewConfig[view])) {
+    if (space && (!view || !viewDefs[view])) {
       navigate(createSpacePath(space.key, views[0]));
     }
   }, [view, currentSpaceKey]);

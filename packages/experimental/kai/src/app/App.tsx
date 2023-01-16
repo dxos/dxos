@@ -12,7 +12,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { OptionsContext } from '../hooks';
 import { Generator, schema } from '../proto';
 import { Routes } from './Routes';
-import { AppView } from './Views';
+import { AppView } from './defs';
 
 const clientProvider = async (demo: boolean) => {
   const config = new Config(await Dynamics(), Defaults());

@@ -15,7 +15,7 @@ import { MemberList, SpaceList } from '../containers';
 import { useSpace } from '../hooks';
 import { Actions } from './Actions';
 import { createSpacePath } from './Routes';
-import { AppView } from './Views';
+import { AppView } from './defs';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
