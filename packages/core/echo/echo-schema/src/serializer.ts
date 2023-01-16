@@ -38,14 +38,14 @@ export class Serializer {
 
   async import(database: EchoDatabase, data: SerializedSpace) {
     const { objects } = data;
-    for(const object of objects) {
+    for (const object of objects) {
       const { '@id': id, '@type': type, ...data } = object;
       const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? Document;
 
       const obj = new Prototype({
         '@type': type,
-        ...data,
-      })
+        ...data
+      });
       obj[base]._id = id;
       await database.save(obj);
     }

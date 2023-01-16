@@ -248,7 +248,8 @@ export class DocumentBase extends EchoObject<ObjectModel> {
       void this._item!.model.set(prop, OrderedArray.fromValues([]));
       this._getModelProp(prop).push(...value);
     } else if (typeof value === 'object' && value !== null) {
-      if(Object.getOwnPropertyNames(value).length === 1 && value['@id']) { // Special case for assigning unresolved references in the form of { '@id': '0x123' }
+      if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
+        // Special case for assigning unresolved references in the form of { '@id': '0x123' }
         void this._item!.model.set(prop, new Reference(value['@id']));
       } else {
         const sub = this._createProxy({}, prop);
@@ -256,7 +257,6 @@ export class DocumentBase extends EchoObject<ObjectModel> {
           sub[subKey] = subValue;
         }
       }
-
     } else {
       void this._item!.model.set(prop, value);
     }

@@ -4,15 +4,15 @@
 
 import { expect } from 'chai';
 
+import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { id } from './defs';
 import { Document } from './document';
 import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
-import { sleep } from '@dxos/async';
 
-describe.only('Serializer', () => {
+describe('Serializer', () => {
   test('Basic', async () => {
     const serializer = new Serializer();
 
@@ -64,7 +64,7 @@ describe.only('Serializer', () => {
         ]
       });
       await db.save(obj);
-      await sleep(100) // Workaround until https://github.com/dxos/dxos/pull/2280 is merged.
+      await sleep(100); // Workaround until https://github.com/dxos/dxos/pull/2280 is merged.
       expect(db.objects).to.have.length(3);
 
       data = await serializer.export(db);
@@ -78,9 +78,7 @@ describe.only('Serializer', () => {
       const query = db.query();
       const objects = query.getObjects();
       expect(objects).to.have.length(3);
-
-      
-      const main = objects.find(object => object.title === 'Main task')!;
+      const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;
       expect(main.subtasks).to.have.length(2);
       expect(main.subtasks[0]).to.be.instanceOf(Document);
