@@ -41,7 +41,7 @@ const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
 log.config({
-  filter: process.env.LOG_FILTER ?? 'halo-app:debug,client:debug,config:debug,warn',
+  filter: process.env.LOG_FILTER ?? 'warn,useStatus:debug',
   prefix: process.env.LOG_BROWSER_PREFIX
 });
 

@@ -6,30 +6,56 @@ import { Config } from '@dxos/config';
 import { SystemService } from '@dxos/protocols/proto/dxos/client';
 
 import { ServiceContext } from '../services';
+import { LocalStorageResourceManager } from '../vault';
 
 /**
  * @deprecated
  */
 export class SystemServiceImpl implements SystemService {
-  constructor(private readonly _config: Config, private readonly _serviceContext: ServiceContext) {}
+  private readonly _resourceManager = new LocalStorageResourceManager({
+    key: '__DXOSResourceManager',
+    onAcquired: this._onAcquired.bind(this),
+    onReleased: this._onReleased.bind(this)
+  });
 
-  // TODO(burdon): Remove.
-  async initSession() {
-    // Ok.
+  constructor(private readonly _config: Config, private readonly _serviceContext: ServiceContext) {
+    console.log({ _serviceContext });
   }
 
-  async getConfig(request: void) {
+  async initSession() {
+    await this._resourceManager.acquire();
+  }
+
+  async getConfig(_request: void) {
     return this._config.values;
   }
 
   // TODO(burdon): Connect to iframe RPC heartbeat for network status?
-  async getStatus(request: void) {
+  async getStatus(_request: void) {
+    if (!this._serviceContext.isOpen) {
+      return {
+        message: `closed: ${Date.now()}`
+      };
+    }
+
     return {
       message: `ok: ${Date.now()}`
     };
   }
 
-  async reset(request: any) {
+  async reconnect(_request: void) {
+    await this._resourceManager.acquire();
+  }
+
+  async reset(_request: void) {
     await this._serviceContext.reset();
+  }
+
+  private async _onAcquired() {
+    await this._serviceContext.open();
+  }
+
+  private async _onReleased() {
+    await this._serviceContext.close();
   }
 }

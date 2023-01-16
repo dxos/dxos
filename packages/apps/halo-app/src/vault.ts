@@ -10,7 +10,7 @@ import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 import { mobileAndTabletCheck } from './util';
 
 log.config({
-  filter: process.env.LOG_FILTER ?? 'warn',
+  filter: process.env.LOG_FILTER ?? 'warn,localstorage:debug',
   prefix: process.env.LOG_BROWSER_PREFIX
 });
 

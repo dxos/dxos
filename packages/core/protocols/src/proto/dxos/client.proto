@@ -28,6 +28,8 @@ service SystemService {
   rpc InitSession (google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
   rpc GetStatus (google.protobuf.Empty) returns (Status);
+  /// Called when a client running in compatibility mode wants to start a new session. Service should block until it is fully initialized.
+  rpc Reconnect (google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 

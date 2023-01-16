@@ -17,8 +17,10 @@ export const useStatus = (polling = 1_000) => {
     const i = setInterval(async () => {
       try {
         // TODO(burdon): Logging doesn't show up for this class.
-        await asyncTimeout(client.getStatus(), 500);
-        setStatus(true);
+        const { message } = await asyncTimeout(client.getStatus(), 500);
+        log('status', { message });
+        // TODO(wittjosiah): Make status response more structured.
+        setStatus(message.split(':')[0] === 'ok');
       } catch (err) {
         log.error('heartbeat stalled');
         setStatus(false);
