@@ -74,6 +74,9 @@
       "path": "../client-testing"
     },
     {
+      "path": "../framebox"
+    },
+    {
       "path": "../gem-core"
     },
     {
