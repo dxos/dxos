@@ -7,7 +7,7 @@
  * @example
  * ```typescript
  * class MyType {
- *  get [devtoolsFormatter] (): DevtoolsFormatter<MyType> {
+ *  get [devtoolsFormatter] (): DevtoolsFormatter {
  *    ...
  *  }
  * ```
@@ -20,7 +20,7 @@ export const devtoolsFormatter = Symbol.for('devtoolsFormatter');
 
 export type JsonML = [string, { [key: string]: any }?, ...(JsonML | string)[]];
 
-export interface DevtoolsFormatter<_> {
+export interface DevtoolsFormatter {
   /**
    * NOTE: Make sure to do an instance check and return null if the object is not of the correct type.
    */

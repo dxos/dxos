@@ -218,7 +218,7 @@ export class PublicKey {
     )})`;
   }
 
-  [devtoolsFormatter](): DevtoolsFormatter<PublicKey> {
+  [devtoolsFormatter](): DevtoolsFormatter {
     return {
       header: () => {
         // NOTE: Keep in sync with inspect colors.

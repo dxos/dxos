@@ -145,7 +145,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
     return `${this[Symbol.toStringTag]} ${inspect(this[data])}`;
   }
 
-  // get [devtoolsFormatter](): DevtoolsFormatter<DocumentBase> {
+  // get [devtoolsFormatter](): DevtoolsFormatter {
   //   return {
   //     header: () => [
   //       'span',
