@@ -4,6 +4,7 @@
 
 import { InspectOptionsStylized, inspect } from 'node:util';
 
+import { log } from '@dxos/log';
 import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, data, deleted, id, proxy, schema, type } from './defs';
