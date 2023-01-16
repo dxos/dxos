@@ -68,7 +68,7 @@ export const views = [
   AppView.GAME
 ];
 
-export const viewConfig: { [key: string]: { Icon: any; Component: any } } = {
+export const viewConfig: { [key: string]: { Icon: FC<any>; Component: FC<any> } } = {
   [AppView.SETTINGS]: { Icon: Gear, Component: ManageSpacePage },
   [AppView.DASHBOARD]: { Icon: Wall, Component: Dashboard },
   [AppView.META]: { Icon: Table, Component: MetaTable },
