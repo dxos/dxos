@@ -74,6 +74,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   }, []);
 
   const handleCreateTask = async (task: Task) => {
+    console.log('::::::::::::::', task);
     if (task.title.length) {
       await space.experimental.db.save(task);
       setNewTask(new Task());
@@ -140,8 +141,12 @@ export const NewTaskItem: FC<{
           spellCheck={false}
           value={task.title}
           placeholder='Enter text'
-          onEnter={() => {
-            onEnter?.(task);
+          onEnter={(value) => {
+            if (value.length) {
+              task.title = value;
+              onEnter?.(task);
+              return true;
+            }
           }}
           onChange={(value) => {
             task.title = value;

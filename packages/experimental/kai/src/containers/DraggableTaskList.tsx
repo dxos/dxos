@@ -33,7 +33,7 @@ export const DraggableTaskList: FC<{
   }, []);
 
   const handleCreateTask = async (task: Task) => {
-    if (task.title.length) {
+    if (task.title?.length) {
       await space.experimental.db.save(task);
       onCreate?.(task);
       setNewTask(new Task());

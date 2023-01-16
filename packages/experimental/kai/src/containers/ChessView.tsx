@@ -17,8 +17,7 @@ import { useSpace } from '../hooks';
 const smallSize = 300;
 const panelWidth = 160;
 
-// TODO(burdon): Factor out.
-const createChess = (game: Game) => {
+export const createChess = (game: Game) => {
   const chess = new Chess();
   if (game.fen) {
     chess.loadPgn(game.fen);
@@ -29,7 +28,7 @@ const createChess = (game: Game) => {
 
 // TODO(burdon): Invite/determine player.
 // TODO(burdon): Move to @dxos/chess-app (stand-alone app).
-export const ChessGrid: FC = () => {
+export const ChessView: FC = () => {
   const [style] = useState(ChessPieces.RIOHACHA);
   const [game, setGame] = useState<Game | undefined>();
   const { space } = useSpace();
