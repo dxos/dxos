@@ -7,14 +7,20 @@
   "author": "info@dxos.org",
   "main": "dist/src/config.t.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && plate --inheritance=false --executeFileTemplates=false --output=dist/src src",
+    "build-resources": "plate --inheritance=false --executeFileTemplates=false --output=dist/src src",
+    "build-tsc": "tsc",
     "clean": "rm -rf test/out",
     "gen": "test/generate"
   },
   "dependencies": {
-    "@dxos/bare-template": "workspace:*"
+    "@dxos/bare-template": "workspace:*",
+    "@dxos/plate": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^4.8.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

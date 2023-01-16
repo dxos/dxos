@@ -16,10 +16,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/plate"
-    },
-    {
-      "path": "../bare-template"
+      "path": "../../../apps/templates/hello-template"
     }
   ]
 }

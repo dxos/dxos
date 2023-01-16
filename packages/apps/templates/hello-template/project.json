@@ -3,6 +3,26 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "command": "echo build ok",
+      "dependsOn": [
+        "^build",
+        "build-resources",
+        "build-tsc"
+      ]
+    },
+    "build-resources": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "build-resources"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "build-tsc": {
+      "dependsOn": [
+        "^build-tsc"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/apps/templates/hello-template/src/index.ts",
