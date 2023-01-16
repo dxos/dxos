@@ -31,6 +31,7 @@ const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell
  * Virtual table.
  * https://react-table-v7.tanstack.com/docs/overview
  */
+// TODO(burdon): Checkbox in left gutter.
 export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = ({ columns, data }) => {
   const defaultColumn = useMemo(
     () => ({

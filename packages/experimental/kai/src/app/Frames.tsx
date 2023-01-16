@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { mx, getSize, useMediaQuery } from '@dxos/react-components';
 import { PanelSidebarProvider, PanelSidebarContext } from '@dxos/react-ui';
 
-// TODO(burdon): Rename views.
+// TODO(burdon): Rename frames.
 import {
   CalendarView,
   ChessView,
@@ -31,15 +31,63 @@ import { Sidebar } from './Sidebar';
 export const frames: FrameDef[] = [
   { id: FrameID.SETTINGS, title: 'Settings', Icon: Gear, Component: ManageSpacePage, system: true },
   { id: FrameID.DMG, title: 'Registry', Icon: Globe, Component: DMGView, system: true },
-  { id: FrameID.DASHBOARD, title: 'Dashboard', Icon: Wall, Component: Dashboard },
-  { id: FrameID.TABLE, title: 'Table', Icon: Table, Component: MetaTable },
-  { id: FrameID.KANBAN, title: 'Kanban', Icon: Kanban, Component: ProjectKanban },
-  { id: FrameID.TASKS, title: 'Tasks', Icon: ListChecks, Component: TaskList },
-  { id: FrameID.CALENDAR, title: 'Events', Icon: Calendar, Component: CalendarView },
-  { id: FrameID.DOCUMENTS, title: 'Documents', Icon: Article, Component: ProjectEditor },
-  { id: FrameID.EXPLORER, title: 'Explorer', Icon: Graph, Component: ProjectGraph },
-  { id: FrameID.MAPS, title: 'Maps', Icon: Compass, Component: MapView },
-  { id: FrameID.CHESS, title: 'Chess', Icon: Sword, Component: ChessView }
+  {
+    id: FrameID.DASHBOARD,
+    title: 'Dashboard',
+    description: 'Customizable collection of data-bounds control.',
+    Icon: Wall,
+    Component: Dashboard
+  },
+  { id: FrameID.TABLE, title: 'Table', description: 'Generic data browser.', Icon: Table, Component: MetaTable },
+  {
+    id: FrameID.KANBAN,
+    title: 'Kanban',
+    description: 'Card based process management.',
+    Icon: Kanban,
+    Component: ProjectKanban
+  },
+  {
+    id: FrameID.TASKS,
+    title: 'Tasks',
+    description: 'Project and task management tools.',
+    Icon: ListChecks,
+    Component: TaskList
+  },
+  {
+    id: FrameID.CALENDAR,
+    title: 'Events',
+    description: 'Calendar and time management tools.',
+    Icon: Calendar,
+    Component: CalendarView
+  },
+  {
+    id: FrameID.DOCUMENTS,
+    title: 'Documents',
+    description: 'Realtime structured document editing.',
+    Icon: Article,
+    Component: ProjectEditor
+  },
+  {
+    id: FrameID.EXPLORER,
+    title: 'Explorer',
+    description: 'Graphical data navigator.',
+    Icon: Graph,
+    Component: ProjectGraph
+  },
+  {
+    id: FrameID.MAPS,
+    title: 'Maps',
+    description: 'Community contributed street maps.',
+    Icon: Compass,
+    Component: MapView
+  },
+  {
+    id: FrameID.CHESS,
+    title: 'Chess',
+    description: 'Peer-to-peer and engine powered games.',
+    Icon: Sword,
+    Component: ChessView
+  }
 ];
 
 /**
