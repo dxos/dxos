@@ -6,7 +6,7 @@ import { CodeInput, getSegmentCssWidth } from 'rci';
 import React, { forwardRef, useCallback, ComponentProps } from 'react';
 
 import { useForwardedRef, useIsFocused } from '../../hooks';
-import { staticInput } from '../../styles/input';
+import { staticInput } from '../../styles';
 import { mx } from '../../util';
 import { InputProps, InputSlots } from './InputProps';
 
