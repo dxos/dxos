@@ -59,7 +59,6 @@ export class Space {
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _controlFeed: FeedWrapper<FeedMessage>;
   private readonly _feedProvider: FeedProvider;
-  private readonly _onDatabaseTimeframeChanged?: (timeframe: Timeframe) => Promise<void>;
 
   private readonly _genesisFeedKey: PublicKey;
   private readonly _controlPipeline: ControlPipeline;
@@ -140,10 +139,6 @@ export class Space {
    */
   get controlPipeline(): PipelineAccessor {
     return this._controlPipeline.pipeline;
-  }
-
-  get dataPipelineState() {
-    return this._dataPipeline?.state;
   }
 
   @synchronized
