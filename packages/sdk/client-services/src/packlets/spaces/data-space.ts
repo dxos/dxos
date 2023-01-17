@@ -30,20 +30,25 @@ export type DataSpaceParams = {
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;
+  private readonly _inner: Space;
+  private readonly _presence: Presence
   public readonly authVerifier: TrustedKeySetAuthVerifier;
 
-  constructor(
-    private readonly _inner: Space,
-    private readonly _modelFactory: ModelFactory,
-    private readonly _memberKey: PublicKey,
-    private readonly _presence: Presence
-  ) {
-    this._dataPipelineController = new DataPipelineControllerImpl(_modelFactory, _memberKey, (feedKey) =>
-      _inner.spaceState.feeds.get(feedKey)
-    );
+  constructor(params: DataSpaceParams) {
+    this._inner = params.inner;
+    this._presence = params.presence;
+    this._dataPipelineController = new DataPipelineControllerImpl({
+      modelFactory: params.modelFactory,
+      metadataStore: params.metadataStore,
+      snapshotManager: params.snapshotManager,
+      memberKey: params.memberKey,
+      spaceKey: this._inner.key,
+      feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
+      snapshotId: params.snapshotId
+    });
     this.authVerifier = new TrustedKeySetAuthVerifier({
-      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(_inner.spaceState.members.keys())),
-      update: _inner.stateUpdate,
+      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(this._inner.spaceState.members.keys())),
+      update: this._inner.stateUpdate,
       authTimeout: AUTH_TIMEOUT
     });
   }
