@@ -104,12 +104,11 @@ export const FrameSelector: FC = () => {
   return (
     <div
       className={mx(
-        'flex flex-col flex-1 pt-1 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
-        'bg-orange-500',
+        'flex flex-col-reverse bg-orange-500 fixed inline-end-0 block-start-[48px] bs-[36px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
         isOpen ? 'inline-start-0 lg:inline-start-[272px]' : 'inline-start-0'
       )}
     >
-      <div className='flex pl-2'>
+      <div className='flex pl-3'>
         {frames
           .filter(({ system }) => !system)
           .map(({ id, title, Icon }) => {
@@ -117,7 +116,7 @@ export const FrameSelector: FC = () => {
               <a
                 key={id}
                 className={mx(
-                  'flex p-1 pl-2 lg:pr-2 lg:mr-2 items-center cursor-pointer rounded-t text-black text-sm',
+                  'flex lg:pr-2 lg:mr-2 items-center p-1 cursor-pointer rounded-t text-black',
                   id === currentFrame && 'bg-white'
                 )}
                 onClick={() => navigate(createSpacePath(space.key, id))}
@@ -142,14 +141,16 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
   const { Component } = active ?? {};
 
   return (
-    <PanelSidebarProvider inlineStart slots={{ content: { children: <Sidebar />, className: 'block-start-[48px]' } }}>
+    <PanelSidebarProvider
+      inlineStart
+      slots={{
+        content: { children: <Sidebar />, className: 'block-start-[48px]' },
+        main: { className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'bs-screen flex flex-col bg-white') }
+      }}
+    >
       <AppBar />
       <FrameSelector />
-      {Component && (
-        <div className={mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex flex-1 bg-white')}>
-          <Component />
-        </div>
-      )}
+      {Component && <Component />}
     </PanelSidebarProvider>
   );
 };
