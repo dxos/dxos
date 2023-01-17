@@ -82,7 +82,7 @@ jobs:
         run: |
           pnpm nx run-many --target=prerelease
           git add .
-          git commit -m "Release update for ${{ steps.release.outputs.tag_name }}"
+          git commit -m "chore: apidoc update for ${{ steps.release.outputs.tag_name }}"
 
       - name: Merge with production
         if: ${{ steps.release.outputs.release_created }}
