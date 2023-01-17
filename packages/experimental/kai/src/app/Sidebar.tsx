@@ -8,7 +8,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
-import { useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button } from '../components';
 import { MemberList, SpaceList } from '../containers';
@@ -23,17 +22,15 @@ export const Sidebar = () => {
   const { view } = useParams();
   const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);
-  const toggleSidebar = useTogglePanelSidebar();
 
   // TODO(wittjosiah): Find a better way to do this.
   if (prevSpace !== space) {
     setPrevSpace(space);
-    toggleSidebar();
   }
 
   if (prevView !== view) {
     setPrevView(view);
-    view === FrameID.SETTINGS && toggleSidebar();
+    view === FrameID.SETTINGS;
   }
 
   const handleCreateSpace = async () => {
