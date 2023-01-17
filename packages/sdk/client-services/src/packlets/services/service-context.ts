@@ -11,7 +11,8 @@ import {
   DataServiceSubscriptions,
   MetadataStore,
   SpaceManager,
-  SigningContext
+  SigningContext,
+  SnapshotStore
 } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -34,6 +35,7 @@ export class ServiceContext {
   public readonly initialized = new Trigger();
   public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
   public readonly metadataStore: MetadataStore;
+  public readonly snapshotStore: SnapshotStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
@@ -52,6 +54,8 @@ export class ServiceContext {
   ) {
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
+    this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+
     this.keyring = new Keyring(storage.createDirectory('keyring'));
     this.feedStore = new FeedStore<FeedMessage>({
       factory: new FeedFactory<FeedMessage>({
@@ -79,6 +83,7 @@ export class ServiceContext {
 
   async open() {
     log('opening...');
+    await this.networkManager.open();
     await this.spaceManager.open();
     await this.identityManager.open();
     if (this.identityManager.identity) {
@@ -114,6 +119,7 @@ export class ServiceContext {
 
   // Called when identity is created.
   private async _initialize() {
+    log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
       credentialProvider: MOCK_AUTH_PROVIDER,
@@ -130,7 +136,8 @@ export class ServiceContext {
       this.dataServiceSubscriptions,
       this.keyring,
       signingContext,
-      this.modelFactory
+      this.modelFactory,
+      this.snapshotStore
     );
     await this.dataSpaceManager.open();
     this.spaceInvitations = new SpaceInvitationsHandler(

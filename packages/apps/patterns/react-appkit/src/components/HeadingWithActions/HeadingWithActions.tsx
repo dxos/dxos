@@ -4,7 +4,7 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { Heading, HeadingProps, mx } from '@dxos/react-uikit';
+import { Heading, HeadingProps, mx } from '@dxos/react-components';
 
 export interface HeadingWithActionsProps extends ComponentProps<'div'> {
   heading: HeadingProps;
@@ -21,7 +21,7 @@ export const HeadingWithActions = ({ heading, actions, compact, spacer, ...divPr
       className={mx('flex flex-wrap items-center', compact ? 'gap-2' : 'gap-x-2 gap-y-4', divProps.className)}
     >
       <Heading {...heading} />
-      {typeof spacer === 'undefined' ? <div role='none' className='grow-[99] min-w-[2rem]' /> : spacer}
+      {typeof spacer === 'undefined' ? <div role='none' className='grow-[99] min-w-[1rem]' /> : spacer}
       <div role='none' className='flex grow gap-2 items-center'>
         {actions}
       </div>

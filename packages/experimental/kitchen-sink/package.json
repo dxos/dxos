@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kitchen-sink",
-  "version": "0.1.20",
+  "version": "0.1.22",
   "private": true,
   "description": "Comprehensive set of demos.",
   "homepage": "https://dxos.org",
@@ -28,7 +28,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/react-echo-graph": "workspace:*",
     "@dxos/react-ipfs": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",

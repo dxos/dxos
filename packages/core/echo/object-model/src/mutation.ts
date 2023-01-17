@@ -16,6 +16,8 @@ import {
   Value
 } from '@dxos/protocols/proto/dxos/echo/model/object';
 
+import { OrderedArray } from './ordered-array';
+import { Reference } from './reference';
 import { removeKey } from './util';
 
 /**
@@ -37,7 +39,10 @@ enum Type {
   TIMESTAMP = 'timestamp',
   DATETIME = 'datetime',
 
-  OBJECT = 'object'
+  REFERENCE = 'reference',
+  OBJECT = 'object',
+
+  YJS = 'yjs'
 }
 
 const SCALAR_TYPES = [Type.BOOLEAN, Type.INTEGER, Type.FLOAT, Type.STRING, Type.BYTES, Type.TIMESTAMP, Type.DATETIME];
@@ -80,7 +85,12 @@ export class ValueUtil {
       return ValueUtil.string(value);
     } else if (value instanceof Uint8Array || Buffer.isBuffer(value)) {
       return ValueUtil.bytes(value);
+    } else if (value instanceof Reference) {
+      return ValueUtil.reference(value);
+    } else if (value instanceof OrderedArray) {
+      return ValueUtil.orderedArray(value);
     } else if (typeof value === 'object') {
+      // TODO(mykola): Delete support for arrays of scalars.
       return ValueUtil.object(value);
     } else {
       throw new Error(`Invalid value: ${value}`);
@@ -132,6 +142,14 @@ export class ValueUtil {
     return { [Type.DATETIME]: value };
   }
 
+  static reference(value: Reference): Value {
+    return { [Type.REFERENCE]: value.encode() };
+  }
+
+  static orderedArray(value: OrderedArray): Value {
+    return { [Type.YJS]: value.encodeSnapshot() };
+  }
+
   static object(value: Record<string, any>): Value {
     return {
       [Type.OBJECT]: {
@@ -181,6 +199,13 @@ export class ValueUtil {
       return object;
     }
 
+    // Apply references.
+    const refValue = value[Type.REFERENCE];
+    if (refValue !== undefined) {
+      set(object, key, Reference.fromValue(refValue));
+      return object;
+    }
+
     // Apply integers.
     const intValue = value[Type.INTEGER];
     if (intValue !== undefined) {
@@ -192,6 +217,11 @@ export class ValueUtil {
     const scalar = ValueUtil.getScalarValue(value);
     if (scalar !== undefined) {
       set(object, key, scalar);
+      return object;
+    }
+
+    if (value[Type.YJS]) {
+      set(object, key, OrderedArray.fromSnapshot(value[Type.YJS]!));
       return object;
     }
 
@@ -242,6 +272,15 @@ export class MutationUtil {
         const values = new Set(get(object, key!, []));
         values.delete(ValueUtil.valueOf(value!));
         set(object, key!, Array.from(values.values()));
+        break;
+      }
+
+      case ObjectMutation.Operation.YJS: {
+        const array = get(object, key!, undefined);
+        if (!(array instanceof OrderedArray)) {
+          break;
+        }
+        array.apply(mutation.mutation!);
         break;
       }
 

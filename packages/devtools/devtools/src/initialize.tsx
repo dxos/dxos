@@ -9,8 +9,9 @@ import { CssBaseline, ThemeProvider } from '@mui/material';
 
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
+import { ClientServices } from '@dxos/client-services';
+import { ClientContext } from '@dxos/react-client';
+import { FullScreen } from '@dxos/react-components-deprecated';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { Loader } from './components';
@@ -18,11 +19,13 @@ import { PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
-const Devtools = ({ clientReady }: { clientReady: Event<Client> }) => {
-  const [client, setClient] = useState<Client>();
+export type ClientAndServices = { client: Client; services: ClientServices };
+
+const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices> }) => {
+  const [value, setValue] = useState<ClientAndServices>();
 
   useEffect(() => {
-    clientReady.on((client) => setClient(client));
+    clientReady.on((value) => setValue(value));
   }, []);
 
   return (
@@ -30,11 +33,11 @@ const Devtools = ({ clientReady }: { clientReady: Event<Client> }) => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <FullScreen>
-          <Loader loading={!client} label='Loading DXOS Client...' />
-          {client && (
-            <ClientProvider client={client}>
+          <Loader loading={!value} label='Loading DXOS Client...' />
+          {value && (
+            <ClientContext.Provider value={value}>
               <PanelsContainer sections={sections} />
-            </ClientProvider>
+            </ClientContext.Provider>
           )}
         </FullScreen>
       </ThemeProvider>
@@ -42,6 +45,6 @@ const Devtools = ({ clientReady }: { clientReady: Event<Client> }) => {
   );
 };
 
-export const initializeDevtools = (clientReady: Event<Client>) => {
+export const initializeDevtools = (clientReady: Event<ClientAndServices>) => {
   createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
 };

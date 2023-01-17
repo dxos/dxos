@@ -110,7 +110,7 @@ message Contacts {
 service ProfileService {
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
-  rpc SubscribeProfile (google.protobuf.Empty) returns (stream SubscribeProfileResponse);
+  rpc SubscribeProfile(google.protobuf.Empty) returns (stream SubscribeProfileResponse);
 }
 
 message AddKeyRecordRequest {
@@ -190,7 +190,7 @@ message SpaceMember {
 
   dxos.keys.PublicKey identity_key = 1;
   optional Profile profile = 2;
-  PresenceState presence_state = 3;
+  PresenceState presence = 3;
 }
 
 message SubscribeSpaceResponse {
@@ -238,6 +238,7 @@ message CreateSnapshotRequest {
 //
 
 service SpaceService {
+  // TODO(burdon): SubscribeSpace (standard).
   rpc SubscribeToSpace (SubscribeSpaceRequest) returns (stream SubscribeSpaceResponse);
   rpc SubscribeSpaces (google.protobuf.Empty) returns (stream SubscribeSpacesResponse);
 

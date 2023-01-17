@@ -6,12 +6,11 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
-import { MetadataStore, NoopDataPipelineController, SpaceManager, SwarmIdentity } from '@dxos/echo-db';
+import { MetadataStore, SpaceManager, SwarmIdentity } from '@dxos/echo-db';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Presence } from '@dxos/teleport-extension-presence';
 import { deferFunction } from '@dxos/util';
 
 import { Identity } from '../identity';
@@ -55,6 +54,7 @@ export class IdentityManager {
     await this._metadataStore.load();
 
     const identityRecord = this._metadataStore.getIdentityRecord();
+    log('identity record', { identityRecord });
     if (identityRecord) {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open();
@@ -190,14 +190,8 @@ export class IdentityManager {
         controlFeedKey: spaceRecord.writeControlFeedKey,
         dataFeedKey: spaceRecord.writeDataFeedKey
       },
-      dataPipelineControllerProvider: () => new NoopDataPipelineController(),
       swarmIdentity,
-      presence: new Presence({
-        localPeerId: swarmIdentity.peerKey,
-        announceInterval: 1_000,
-        offlineTimeout: 30_000,
-        identityKey
-      })
+      onNetworkConnection: () => {}
     });
   }
 }

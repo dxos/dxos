@@ -8,7 +8,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { ClientProvider, useSpaces, useIdentity } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
-import { CopyText, FullScreen } from '@dxos/react-components';
+import { CopyText, FullScreen } from '@dxos/react-components-deprecated';
 
 import { ErrorBoundary, HaloSharingDialog, JoinHaloDialog } from '../src';
 import { Column } from './helpers';

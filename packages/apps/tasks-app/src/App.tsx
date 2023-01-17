@@ -16,11 +16,12 @@ import {
   FatalError,
   GenericFallback,
   ServiceWorkerToast,
-  translations,
+  appkitTranslations,
   StatusIndicator2
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { UiKitProvider } from '@dxos/react-uikit';
+import { ThemeProvider } from '@dxos/react-components';
+import { osTranslations } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
 
 import { Routes } from './Routes';
@@ -45,10 +46,11 @@ export const App = () => {
       log.error(err);
     }
   });
+
   return (
-    <UiKitProvider
+    <ThemeProvider
       appNs='halo'
-      resourceExtensions={[translations, tasksTranslations]}
+      resourceExtensions={[appkitTranslations, osTranslations, tasksTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
       <ErrorProvider>
@@ -67,6 +69,6 @@ export const App = () => {
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>
-    </UiKitProvider>
+    </ThemeProvider>
   );
 };

@@ -27,7 +27,7 @@ message SpaceSnapshot {
   // TODO(dmaretskyi): Convert to google.protobuf.Timestamp.
   optional int32 timestamp = 3;
 
-  HaloStateSnapshot halo = 11;
+  optional HaloStateSnapshot halo = 11;
   // TODO(dmaretskyi): Rename to EchoSnapshot.
   DatabaseSnapshot database = 12;
 }

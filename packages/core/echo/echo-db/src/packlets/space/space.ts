@@ -4,13 +4,12 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Database, DatabaseBackend } from '../database';
@@ -33,8 +32,6 @@ export type SpaceParams = {
   controlFeed: FeedWrapper<FeedMessage>;
   dataFeed: FeedWrapper<FeedMessage>;
   feedProvider: FeedProvider;
-  initialTimeframe?: Timeframe; // TODO(dmaretskyi): Remove.
-  dataPipelineControllerProvider: () => DataPipelineController;
 };
 
 /**
@@ -49,9 +46,11 @@ export interface ISpace {
   close(): Promise<void>;
 }
 
+// TODO(dmaretskyi): Extract database stuff.
 /**
  * Spaces are globally addressable databases with access control.
  */
+@trackLeaks('open', 'close')
 export class Space {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
@@ -60,7 +59,6 @@ export class Space {
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _controlFeed: FeedWrapper<FeedMessage>;
   private readonly _feedProvider: FeedProvider;
-  private readonly _dataPipelineControllerProvider: () => DataPipelineController;
 
   private readonly _genesisFeedKey: PublicKey;
   private readonly _controlPipeline: ControlPipeline;
@@ -70,29 +68,18 @@ export class Space {
   private _dataPipeline?: Pipeline;
   private _dataPipelineController?: DataPipelineController;
 
-  constructor({
-    spaceKey,
-    protocol,
-    genesisFeed,
-    controlFeed,
-    dataFeed,
-    feedProvider,
-    initialTimeframe,
-    dataPipelineControllerProvider
-  }: SpaceParams) {
+  constructor({ spaceKey, protocol, genesisFeed, controlFeed, dataFeed, feedProvider }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
     this._controlFeed = controlFeed;
     this._dataFeed = dataFeed;
     this._feedProvider = feedProvider;
     this._genesisFeedKey = genesisFeed.key;
-    this._dataPipelineControllerProvider = dataPipelineControllerProvider;
 
     this._controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
-      feedProvider,
-      initialTimeframe
+      feedProvider
     });
 
     this._controlPipeline.setWriteFeed(controlFeed);
@@ -163,7 +150,6 @@ export class Space {
 
     // Order is important.
     await this._controlPipeline.start();
-    await this._openDataPipeline();
     await this.protocol.start();
 
     this._isOpen = true;
@@ -179,36 +165,33 @@ export class Space {
 
     // Closes in reverse order to open.
     await this.protocol.stop();
-    await this._closeDataPipeline();
+    await this._dataPipelineController?.close();
     await this._controlPipeline.stop();
 
     this._isOpen = false;
     log('closed');
   }
 
-  // TODO(burdon): Is this re-entrant? Should objects like Database be reconstructed?
-  private async _openDataPipeline() {
+  async initDataPipeline(controller: DataPipelineController) {
+    assert(this._isOpen, 'Space must be open to initialize data pipeline.');
+    assert(!this._dataPipelineController, 'Data pipeline already initialized.');
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
-    // Create pipeline.
-    {
-      this._dataPipeline = new Pipeline(new Timeframe());
-      this._dataPipeline.setWriteFeed(this._dataFeed);
-      for (const feed of this._controlPipeline.spaceState.feeds.values()) {
-        await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
+    this._dataPipelineController = controller;
+    await this._dataPipelineController.open({
+      openPipeline: async (start) => {
+        assert(!this._dataPipeline, 'Data pipeline already initialized.'); // TODO(dmaretskyi): Allow concurrent pipelines.
+        // Create pipeline.
+        this._dataPipeline = new Pipeline(start);
+        this._dataPipeline.setWriteFeed(this._dataFeed);
+        for (const feed of this._controlPipeline.spaceState.feeds.values()) {
+          await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
+        }
+
+        await this._dataPipeline.start();
+
+        return this._dataPipeline;
       }
-    }
-
-    await this._dataPipeline.start();
-
-    this._dataPipelineController = this._dataPipelineControllerProvider();
-    await this._dataPipelineController.open(this._dataPipeline);
-  }
-
-  private async _closeDataPipeline() {
-    assert(this._dataPipeline, 'Data pipeline not initialized.');
-
-    await this._dataPipelineController?.close();
-    await this._dataPipeline.stop();
+    });
   }
 }

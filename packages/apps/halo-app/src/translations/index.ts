@@ -4,6 +4,6 @@
 
 import * as enUS from './en-US';
 
-export default {
+export const haloTranslations = {
   'en-US': enUS
 };

@@ -1,0 +1,96 @@
+{
+  "sourceRoot": "packages/common/react-components/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/react-components/src/index.ts",
+        "outputPath": "packages/common/react-components/dist/types",
+        "tsConfig": "packages/common/react-components/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/react-components/src/index.ts"
+        ],
+        "outputPath": "packages/common/react-components/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/react-components/src/esbuild-plugin.ts",
+          "packages/common/react-components/src/plugin.ts",
+          "packages/common/react-components/src/theme.css"
+        ],
+        "outputPath": "packages/common/react-components/dist/plugin",
+        "platforms": [
+          "node"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/react-components/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/common/react-components/.storybook"
+        },
+        "uiFramework": "@storybook/react"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

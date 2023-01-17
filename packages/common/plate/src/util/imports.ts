@@ -48,24 +48,42 @@ export class Imports {
       return !!relativeTo && p[0] !== '.' ? (rel[0] === '.' ? rel : './' + rel) : p;
     };
     const stripExt = (file: string) => file.split('.ts')[0];
-    return Object.values(imports)
+
+    const groups = new Map<string, Map<string, Import>>();
+    Object.values(imports)
       .filter((i) => {
         return i.from + '.ts' !== relativeTo;
       })
-      .map(
-        (i) =>
-          `import ${i.isDefault ? '' : '{ '}${i.dealias ? `${i.dealias} as ${i.name}` : i.name}${
-            i.isDefault ? '' : ' }'
-          } from "${
-            /^\.?\//.test(i.from)
-              ? stripExt(
-                  relativeTo
-                    ? relative(i.from, Array.isArray(relativeTo) ? path.join(...relativeTo) : relativeTo)
-                    : i.from
-                )
-              : i.from
-          }";`
-      )
+      .forEach((val) => {
+        const importsByPath = groups.get(val.from) ?? groups.set(val.from, new Map<string, Import>()).get(val.from)!;
+        importsByPath.set(val.name, val);
+      });
+
+    const maybe = {
+      curly: (s: string) => (s ? `{ ${s} }` : ''),
+      any: <T = any>(s?: T, xform?: (val: T) => string) => (s ? (xform ? xform(s) : s) : '')
+    };
+
+    const format = {
+      name: (i: Import) => (i.dealias ? `${i.dealias} as ${i.name}` : i.name),
+      path: (p: string) =>
+        /^\.?\//.test(p)
+          ? stripExt(relativeTo ? relative(p, Array.isArray(relativeTo) ? path.join(...relativeTo) : relativeTo) : p)
+          : p,
+      fromGroup: (from: string, symbols: Import[]) =>
+        `import ${maybe.any(
+          symbols.find((s) => s.isDefault),
+          format.name
+        )}${maybe.curly(
+          symbols
+            .filter((s) => !s.isDefault)
+            .map((i) => format.name(i))
+            .join(', ')
+        )} from '${format.path(from)}';`
+    };
+
+    return Array.from(groups.entries())
+      .map(([key, val]) => format.fromGroup(key, Array.from(val.values())))
       .join(os.EOL);
   }
 

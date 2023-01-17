@@ -6,10 +6,11 @@ import React from 'react';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/client';
+import { Menubar, Separator, SpaceMenu, SpacesLink } from '@dxos/react-appkit';
 import { useIdentity, useSpace } from '@dxos/react-client';
-import { Menubar2, ProfileMenu, Separator, SpaceMenu, SpacesLink } from '@dxos/react-uikit';
+import { IdentityPopover } from '@dxos/react-ui';
 
-import { Main } from '../components/Main';
+import { Main } from '../components';
 
 export const SpaceLayout = () => {
   const { space: spaceHex } = useParams();
@@ -19,12 +20,12 @@ export const SpaceLayout = () => {
   const navigate = useNavigate();
   return (
     <>
-      <Menubar2>
+      <Menubar>
         <SpacesLink onClickGoToSpaces={() => navigate('..')} />
         <Separator className='grow' />
         {space && <SpaceMenu space={space} onClickManageSpace={() => navigate('settings')} />}
-        {identity && <ProfileMenu profile={identity} />}
-      </Menubar2>
+        {identity && <IdentityPopover {...{ identity }} />}{' '}
+      </Menubar>
       <Main>
         <Outlet context={{ space }} />
       </Main>

@@ -14,8 +14,8 @@ import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { useSpaces, useSpace, useSelection } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { useSpace, useSelection, useDevtools, useStream } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { TextModel } from '@dxos/text-model';
 
 import { KeySelect, Panel } from '../../components';
@@ -24,7 +24,7 @@ const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
   const children = useSelection(item.select().children()) ?? [];
 
   return (
-    <TreeItem nodeId={item.id} label={item.type} onClick={() => onSelect(item)}>
+    <TreeItem nodeId={item.id} label={item.type ?? item.modelType ?? 'undefined'} onClick={() => onSelect(item)}>
       {children.map((child) => (
         <ItemNode key={child.id} item={child} onSelect={onSelect} />
       ))}
@@ -36,7 +36,12 @@ export const ItemsPanel = () => {
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
-  const spaces = useSpaces();
+  const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+  const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
+
   const space = useSpace(selectedSpaceKey);
   const items = useSelection(space?.select()) ?? [];
 

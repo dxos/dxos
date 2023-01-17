@@ -14,6 +14,7 @@ import {
 } from '@dxos/client-services';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
+import { DatabaseRouter } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -35,6 +36,8 @@ export interface Echo {
   getSpace(spaceKey: PublicKey): Space | undefined;
   querySpaces(): ResultSet<Space>;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+
+  dbRouter: DatabaseRouter;
 }
 
 export class EchoProxy implements Echo {
@@ -42,6 +45,8 @@ export class EchoProxy implements Echo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event();
   private readonly _spacesInitialized = new Event<PublicKey>();
+
+  public readonly dbRouter = new DatabaseRouter();
 
   private _invitationProxy?: SpaceInvitationsProxy;
   private _destroying = false; // TODO(burdon): Standardize enum.
@@ -51,7 +56,7 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _haloProxy: HaloProxy
-  ) {}
+  ) { }
 
   [inspect.custom]() {
     return inspectObject(this);
@@ -91,9 +96,11 @@ export class EchoProxy implements Echo {
   async open() {
     this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
 
-    const gotSpaces = this._spacesChanged.waitForCount(1);
+    const gotInitialUpdate = new Trigger();
     const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
     spacesStream.subscribe(async (data) => {
+      let emitUpdate = false;
+
       for (const space of data.spaces ?? []) {
         if (!this._spaces.has(space.publicKey)) {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
@@ -105,6 +112,7 @@ export class EchoProxy implements Echo {
             this._serviceProvider,
             this._modelFactory,
             space,
+            this.dbRouter,
             this._haloProxy.profile!.identityKey
           );
 
@@ -119,23 +127,29 @@ export class EchoProxy implements Echo {
           //     this._spacesChanged.emit(); // Trigger for `querySpaces()` when a space is updated.
           //   }
           // });
+
+          emitUpdate = true;
         } else {
           this._spaces.get(space.publicKey)!._processSpaceUpdate(space);
         }
       }
 
-      this._spacesChanged.emit();
+      gotInitialUpdate.wake();
+      if (emitUpdate) {
+        this._spacesChanged.emit();
+      }
     });
 
     this._subscriptions.add(() => spacesStream.close());
 
-    await gotSpaces;
+    await gotInitialUpdate.wait();
   }
 
   async close() {
     for (const space of this._spaces.values()) {
       await space.destroy();
     }
+    this._spaces.clear();
 
     await this._subscriptions.clear();
     this._invitationProxy = undefined;

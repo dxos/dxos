@@ -88,34 +88,20 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
-      // '@dxos/async',
       '@dxos/client',
       '@dxos/client-services',
+      '@dxos/config',
       '@dxos/keys',
       '@dxos/log',
-      '@dxos/config',
       '@dxos/gem-core',
       '@dxos/gem-spore',
-      // '@dxos/metagraph',
-      // '@dxos/protocols',
-      // '@dxos/react-appkit',
-      // '@dxos/react-async',
       '@dxos/react-client'
-      // '@dxos/react-ui',
-      // '@dxos/react-uikit',
-      // '@dxos/rpc',
-      // '@dxos/network-manager',
-      // '@dxos/rpc-tunnel',
-      // '@dxos/sentry',
-      // '@dxos/telemetry',
-      // '@dxos/util'
     ]
   },
 
   // TODO(burdon): dxosPlugin, themePlugin (see halo-app).
   plugins: [
     ConfigPlugin(),
-
     ReactPlugin(),
 
     // https://mdxjs.com/packages/remark-mdx

@@ -52,6 +52,7 @@ message Module {
   optional string description = 4;
   repeated string tags = 5;
   optional bytes bundle = 6;
+  optional bool tunnel = 7;
 
   optional Build build = 100;
   repeated Repo repos = 101;
@@ -71,20 +72,21 @@ message Runtime {
         FIREFOX = 3;
         NODE = 4;
 
-        // Only for key storage:
-
+        // Key storage only
         LEVELJS = 11;
         JSONDOWN = 12;
       }
 
-      optional bool persistent = 1;             // TODO(burdon): Replace with type.
-      optional StorageDriver key_storage = 3;   // TODO(burdon): Rename key_store.
-      optional StorageDriver storage_type = 2;  // TODO(burdon): Rename data_store.
-      optional string path = 4;                 // TODO(burdon): Rename data_path.
+      optional bool persistent = 1;               // TODO(burdon): Replace with type.
+      optional StorageDriver key_storage = 3;     // TODO(burdon): Rename key_store.
+      optional StorageDriver storage_type = 2;    // TODO(burdon): Rename data_store.
+      optional string path = 4;                   // TODO(burdon): Rename data_path.
     }
 
-    optional string debug = 1 [(env) = "DEBUG"];
+    optional string debug = 1 [(env) = "DEBUG"];  // TODO(burdon): Change to LOG.
     optional Storage storage = 2;
+
+    // TODO(burdon): Structure snapshot/epoch related props.
     optional bool enable_snapshots = 3;
 
     /// Milliseconds
@@ -140,6 +142,9 @@ message Runtime {
     optional string debug = 1;
   }
 
+  //
+  // KUBE
+  //
   message Kube {
     message Autoupdate {
       optional bool enabled = 1;
@@ -177,6 +182,19 @@ message Runtime {
       bool disabled = 1;
     }
 
+    message Gravity {
+      bool disabled = 1;
+      string name = 2;
+      optional string log_dir = 3;
+    }
+
+    message AppTunneling {
+      optional bool enabled = 1;
+      optional string command_template = 2;
+      optional string output_re = 3;
+      optional string port = 4;
+    }
+
     optional string host = 1;
     optional string port = 2;
     optional Autoupdate autoupdate = 3;
@@ -188,6 +206,8 @@ message Runtime {
     optional Monitoring monitoring = 9;
     optional Trace trace = 10;
     optional Telemetry telemetry = 11;
+    optional Gravity gravity = 12;
+    optional AppTunneling app_tunneling = 13;
   }
 
   //

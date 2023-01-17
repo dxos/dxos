@@ -12,7 +12,6 @@
     ]
   },
   "include": [
-    "playwright",
     "src"
   ],
   "references": [
@@ -38,7 +37,7 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../deprecated/react-components"
+      "path": "../../deprecated/react-components-deprecated"
     }
   ]
 }

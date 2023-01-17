@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { synchronized } from '@dxos/async';
+import { synchronized, trackLeaks } from '@dxos/async';
 import { CredentialSigner } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
@@ -12,10 +12,11 @@ import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Presence } from '@dxos/teleport-extension-presence';
+import { Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { DataPipelineController } from './data-pipeline-controller';
+import { AuthProvider, AuthVerifier } from './auth';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
@@ -43,13 +44,13 @@ export type SpaceManagerParams = {
 export type ConstructSpaceParams = {
   metadata: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
-  dataPipelineControllerProvider: () => DataPipelineController;
-  presence: Presence;
+  onNetworkConnection: (session: Teleport) => void;
 };
 
 /**
  * Manages a collection of ECHO (Data) Spaces.
  */
+@trackLeaks('open', 'close')
 export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _feedStore: FeedStore<FeedMessage>;
@@ -74,7 +75,7 @@ export class SpaceManager {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  async constructSpace({ metadata, swarmIdentity, dataPipelineControllerProvider, presence }: ConstructSpaceParams) {
+  async constructSpace({ metadata, swarmIdentity, onNetworkConnection }: ConstructSpaceParams) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
@@ -88,7 +89,7 @@ export class SpaceManager {
       topic: spaceKey,
       swarmIdentity,
       networkManager: this._networkManager,
-      presence
+      onSessionAuth: onNetworkConnection
     });
 
     const space = new Space({
@@ -97,8 +98,7 @@ export class SpaceManager {
       genesisFeed,
       controlFeed,
       dataFeed,
-      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
-      dataPipelineControllerProvider
+      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey)
     });
     this._spaces.set(space.key, space);
     return space;

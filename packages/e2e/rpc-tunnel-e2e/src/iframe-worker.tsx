@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 
@@ -32,11 +32,11 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
         channel: Channels.ONE
       });
 
-      parentPort.subscribe(async msg => {
+      parentPort.subscribe(async (msg) => {
         await workerPort.send(msg);
       });
 
-      workerPort.subscribe(async msg => {
+      workerPort.subscribe(async (msg) => {
         await parentPort.send(msg);
       });
     } else {
@@ -56,31 +56,32 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
       await client.open();
 
       const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
-      stream.subscribe(msg => {
-        setValue(msg.data);
-      }, error => {
-        if (error) {
-          setError(error.message);
+      stream.subscribe(
+        (msg) => {
+          setValue(msg.data);
+        },
+        (error) => {
+          if (error) {
+            setError(error.message);
+          }
+          setClosed(true);
         }
-        setClosed(true);
-      });
+      );
     }
 
     setClosed(false);
   }, []);
 
   return (
-    <div style={{
-      display: 'flex'
-    }}>
-      <div style={{
-        flexGrow: 1
-      }}>
-        <JsonTreeView data={{
-          closed,
-          error,
-          value
-        }} />
+    <div style={{ display: 'flex' }}>
+      <div style={{ flexGrow: 1 }}>
+        <JsonTreeView
+          data={{
+            closed,
+            error,
+            value
+          }}
+        />
       </div>
       {!IN_IFRAME && (
         <iframe
@@ -102,12 +103,11 @@ if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = IN_IFRAME ? new SharedWorker() : undefined;
 
-    createRoot(document.getElementById('root')!)
-      .render(
-        <StrictMode>
-          <App worker={worker} />
-        </StrictMode>
-      );
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <App worker={worker} />
+      </StrictMode>
+    );
   })();
 } else {
   throw new Error('Requires a browser with support for shared workers.');

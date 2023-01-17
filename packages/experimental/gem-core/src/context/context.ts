@@ -15,17 +15,21 @@ export class SVGContext {
   readonly resized = new EventEmitter<SVGContext>();
 
   private readonly _ref = createRef<SVGSVGElement>();
-  private _size: Size;
-  private _center: Point;
+  private _size?: Size;
+  private _center?: Point;
 
-  constructor(private readonly _scale: Scale = new Scale(), private readonly _centered: boolean = true) {}
+  // prettier-ignore
+  constructor(
+    private readonly _scale: Scale = new Scale(),
+    private readonly _centered: boolean = true
+  ) {}
 
   get ref(): RefObject<SVGSVGElement> {
     return this._ref;
   }
 
   get svg(): SVGSVGElement {
-    return this._ref.current;
+    return this._ref.current!;
   }
 
   get scale(): Scale {
@@ -33,11 +37,11 @@ export class SVGContext {
   }
 
   get center(): Point {
-    return this._center;
+    return this._center!;
   }
 
   get size(): Size {
-    return this._size;
+    return this._size!;
   }
 
   /**
@@ -45,7 +49,7 @@ export class SVGContext {
    */
   get viewBox() {
     const [x, y] = this.center;
-    return `${x},${y},${this._size.width},${this._size.height}`;
+    return `${x},${y},${this._size!.width},${this._size!.height}`;
   }
 
   setSize(size: Size) {
@@ -67,7 +71,7 @@ export class SVGContext {
    */
   elementFromPoint(point: Point): Element {
     const [x, y] = point;
-    const [cx, cy] = this._center;
-    return document.elementFromPoint(cx + x, cy + y); // TODO(burdon): Scale?
+    const [cx, cy] = this._center!;
+    return document.elementFromPoint(cx + x, cy + y)!; // TODO(burdon): Scale?
   }
 }

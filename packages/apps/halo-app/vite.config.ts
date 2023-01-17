@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
@@ -21,7 +21,11 @@ export default defineConfig({
   base: '', // Ensure relative path to assets.
   server: {
     host: true,
-    port: 3967
+    port: 3967,
+    https: process.env.HTTPS === 'true' ? {
+      key: './key.pem',
+      cert: './cert.pem'
+    } : false
   },
   define: {
     'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
@@ -42,14 +46,13 @@ export default defineConfig({
       '@dxos/log',
       '@dxos/config',
       '@dxos/metagraph',
+      '@dxos/network-manager',
       '@dxos/protocols',
       '@dxos/react-appkit',
       '@dxos/react-async',
       '@dxos/react-client',
-      '@dxos/react-ui',
-      '@dxos/react-uikit',
+      '@dxos/react-components',
       '@dxos/rpc',
-      '@dxos/network-manager',
       '@dxos/rpc-tunnel',
       '@dxos/sentry',
       '@dxos/telemetry',
@@ -57,6 +60,7 @@ export default defineConfig({
     ]
   },
   build: {
+    sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     },
@@ -78,8 +82,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
       ]
     }),

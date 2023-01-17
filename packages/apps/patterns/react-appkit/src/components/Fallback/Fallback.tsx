@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Heading, Loading, useTranslation } from '@dxos/react-uikit';
+import { Heading, Loading, useTranslation } from '@dxos/react-components';
 
 export const Fallback = ({ message }: { message: string }) => (
   <div className='py-8 flex flex-col gap-4' aria-live='polite'>
@@ -16,6 +16,6 @@ export const Fallback = ({ message }: { message: string }) => (
 );
 
 export const GenericFallback = () => {
-  const { t } = useTranslation('uikit');
-  return <Fallback message={t('generic loading label')} />;
+  const { t } = useTranslation('appkit');
+  return <Fallback message={t('generic loading label', { ns: 'appkit' })} />;
 };

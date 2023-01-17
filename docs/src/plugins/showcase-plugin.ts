@@ -28,6 +28,9 @@ const tsConfig = {
   jsx: ts.JsxEmit.Preserve
 };
 
+/**
+ * @deprecated Use @dxos/apidoc showcase directive.
+ */
 export const showcasePlugin = async (): Promise<Plugin> => {
   const demoFileNames = await readdir(join(__dirname, '../demos'));
   const demos = await Promise.all(
@@ -66,7 +69,8 @@ export const showcasePlugin = async (): Promise<Plugin> => {
       return '</Showcase>\n';
     }
 
-    const demo = demos.find(({ name }) => name === tokens[idx + 2].content);
+    const demoName = tokens[idx].info.replace('showcase ', '').replace(' :::', '');
+    const demo = demos.find(({ name }) => name === demoName);
     if (!demo) {
       throw new Error('Demo not found.');
     }

@@ -4,8 +4,9 @@
 
 import assert from 'node:assert';
 
+import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Database, DataPipelineControllerImpl, ISpace, Space } from '@dxos/echo-db';
+import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, SnapshotManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ComplexSet } from '@dxos/util';
@@ -15,6 +16,17 @@ import { TrustedKeySetAuthVerifier } from '../identity';
 
 const AUTH_TIMEOUT = 30000;
 
+export type DataSpaceParams = {
+  inner: Space;
+  modelFactory: ModelFactory;
+  metadataStore: MetadataStore;
+  snapshotManager: SnapshotManager;
+  presence: Presence;
+  memberKey: PublicKey;
+  snapshotId?: string | undefined;
+};
+
+@trackLeaks('open', 'close')
 export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;
@@ -67,6 +79,7 @@ export class DataSpace implements ISpace {
 
   async open() {
     await this._inner.open();
+    await this._inner.initDataPipeline(this._dataPipelineController);
   }
 
   async close() {

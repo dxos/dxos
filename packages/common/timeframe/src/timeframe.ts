@@ -69,6 +69,10 @@ export class Timeframe {
     );
   }
 
+  map(fn: (frame: [key: PublicKey, seq: number]) => [PublicKey, number]): Timeframe {
+    return new Timeframe(this.frames().map(fn));
+  }
+
   /**
    * Returns a total amount of messages represented by this timeframe.
    */

@@ -5,6 +5,8 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
+import { test } from '@dxos/test';
+
 import { TestNode } from '../testing';
 import { GraphBuilder } from './model';
 

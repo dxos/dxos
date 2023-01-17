@@ -1,0 +1,29 @@
+diff --git a/src/executors/storybook/storybook.impl.js b/src/executors/storybook/storybook.impl.js
+index 00abd6ad9571061c3ef6d5a8cecc3203f93c4d9c..6fddd57f22c3f11cd31f5124d9e566fc743fcb02 100644
+--- a/src/executors/storybook/storybook.impl.js
++++ b/src/executors/storybook/storybook.impl.js
+@@ -6,8 +6,13 @@ require("dotenv/config");
+ const utils_1 = require("../utils");
+ function storybookExecutor(options, context) {
+     return tslib_1.__asyncGenerator(this, arguments, function* storybookExecutor_1() {
+-        let frameworkPath = (0, utils_1.getStorybookFrameworkPath)(options.uiFramework);
+-        const frameworkOptions = (yield tslib_1.__await(Promise.resolve().then(() => require(frameworkPath)))).default;
++        // TODO(wittjosiah): This should be coming from storybook but the util for doing is hasn't been properly published yet.
++        // https://github.com/storybookjs/storybook/blob/next/code/lib/core-server/src/standalone.ts
++        const frameworkOptions = {
++            packageJson: {
++                version: '7.0.0-beta'
++            }
++        };
+         const option = storybookOptionMapper(options, frameworkOptions, context);
+         // print warnings
+         (0, utils_1.runStorybookSetupCheck)(options);
+@@ -22,7 +27,7 @@ function runInstance(options) {
+     var _a;
+     const env = (_a = process.env.NODE_ENV) !== null && _a !== void 0 ? _a : 'development';
+     process.env.NODE_ENV = env;
+-    return (0, core_server_1.buildDev)(Object.assign(Object.assign({}, options), { configType: env.toUpperCase() }));
++    return (0, core_server_1.buildDevStandalone)(Object.assign(Object.assign({}, options), { configType: env.toUpperCase() }));
+ }
+ function storybookOptionMapper(builderOptions, frameworkOptions, context) {
+     const storybookOptions = Object.assign(Object.assign(Object.assign({}, builderOptions), (0, utils_1.resolveCommonStorybookOptionMapper)(builderOptions, frameworkOptions, context)), { mode: 'dev', watch: true });

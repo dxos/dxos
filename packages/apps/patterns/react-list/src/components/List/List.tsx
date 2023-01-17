@@ -7,8 +7,7 @@ import React, { useCallback } from 'react';
 import { Item, PublicKey, Space } from '@dxos/client';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, useSpace } from '@dxos/react-client';
-import { Loading } from '@dxos/react-ui';
-import { useTranslation } from '@dxos/react-uikit';
+import { Loading, useTranslation } from '@dxos/react-components';
 
 import { LIST_ITEM_TYPE } from '../../model';
 import {
@@ -97,7 +96,7 @@ const ListLoaded = ({ space, list, listItems: propsListItems }: ListLoadedProps)
 };
 
 export const List = ({ spaceKey, itemId }: ListProps) => {
-  const { t } = useTranslation('uikit');
+  const { t } = useTranslation('appkit');
 
   const space = useSpace(spaceKey);
   const list = (useSelection(space?.database.select({ id: itemId })) ?? [])[0];

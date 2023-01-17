@@ -120,10 +120,18 @@ message QueryMembersResponse {
   dxos.halo.credentials.IdentityProfile members = 1;
 }
 
+message QueryCredentialsRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream Space);
+
+  // TODO(dmaretskyi): I dont think we need a separate method here. We can include members in the Space object.
   rpc QueryMembers(QueryMembersRequest) returns (stream QueryMembersResponse);
+
+  rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 }
 
 //
@@ -216,4 +224,28 @@ service SpaceInvitationsService {
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
+}
+
+//
+// MESH
+//
+
+enum ConnectionState {
+  OFFLINE = 0;
+  ONLINE = 1;
+}
+
+// TODO(mykola): Broden API.
+message NetworkStatus {
+  ConnectionState state = 1;
+}
+
+message SetNetworkOptionsRequest {
+  ConnectionState state = 1;
+}
+
+// TODO(burdon): Widen API (too heavy for single feature: e.g., status).
+service NetworkService {
+  rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+  rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
 }

@@ -9,7 +9,7 @@ import { Button, Toolbar } from '@mui/material';
 import { PublicKey } from '@dxos/keys';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { useDevtools, useSpaces } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { KeySelect, Panel } from '../../components';
 

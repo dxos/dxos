@@ -5,14 +5,14 @@
 import { Gift } from 'phosphor-react';
 import React from 'react';
 
-import { useTranslation, Toast, Button, getSize, mx, useTranslationsContext } from '@dxos/react-uikit';
+import { useTranslation, Toast, Button, getSize, mx, useTranslationsContext } from '@dxos/react-components';
 
-interface NeedRefreshToastProps {
+export interface NeedRefreshToastProps {
   variant: 'needRefresh';
   updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
 }
 
-interface OfflineReadyToastProps {
+export interface OfflineReadyToastProps {
   variant: 'offlineReady';
 }
 
@@ -52,7 +52,7 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
         ]
       })}
       {...(variant === 'offlineReady' && {
-        closeTrigger: <Button>{t('confirm label', { ns: 'uikit' })}</Button>
+        closeTrigger: <Button>{t('confirm label', { ns: 'appkit' })}</Button>
       })}
     />
   );

@@ -5,24 +5,11 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { App } from './components';
+import '@dxosTheme';
 
-if ('serviceWorker' in navigator) {
-  // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register
-  // Must be served from https and have start_url.
-  // Register a service worker hosted at the root of the site using the default scope.
-  navigator.serviceWorker.register('./sw.js').then(
-    (registration) => {
-      console.log('Service worker registration succeeded:', registration);
-    },
-    (error) => {
-      console.error(`Service worker registration failed: ${error}`);
-    }
-  );
-} else {
-  console.error('Service workers are not supported.');
-}
+import '../style.css';
 
-(() => {
-  createRoot(document.getElementById('root')!).render(<App />);
-})();
+// TODO(burdon): Must be at the top-level for vite.
+import { Root } from './Root';
+
+createRoot(document.getElementById('root')!).render(<Root />);

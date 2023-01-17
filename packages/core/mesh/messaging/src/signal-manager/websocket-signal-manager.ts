@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, DeferredTask, synchronized, scheduleTask } from '@dxos/async';
+import { Event, DeferredTask, synchronized } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -31,7 +31,7 @@ export class WebsocketSignalManager implements SignalManager {
   private readonly _subscribedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _ctx!: Context;
-  private _reconcileTask?: DeferredTask;
+  private _reconcileTask!: DeferredTask;
   private _reconcilingLater = false;
   private _closed = false;
 
@@ -68,6 +68,7 @@ export class WebsocketSignalManager implements SignalManager {
     this._initContext();
   }
 
+  @synchronized
   async open() {
     if (!this._closed) {
       return;
@@ -76,13 +77,15 @@ export class WebsocketSignalManager implements SignalManager {
     this._initContext();
 
     await Promise.all([...this._servers.values()].map((server) => server.open()));
+    this._closed = false;
+
     await Promise.all(
       [...this._servers.values()].map((server) =>
         Promise.all([...this._subscribedMessages.values()].map((peerId) => server.subscribeMessages(peerId)))
       )
     );
     this._closed = false;
-    this._scheduleReconcile();
+    this._reconcileTask.schedule();
   }
 
   async close() {
@@ -108,7 +111,7 @@ export class WebsocketSignalManager implements SignalManager {
     assert(!this._closed, 'Closed');
 
     this._topicsJoined.set(topic, peerId);
-    this._scheduleReconcile();
+    this._reconcileTask.schedule();
   }
 
   @synchronized
@@ -118,7 +121,7 @@ export class WebsocketSignalManager implements SignalManager {
     assert(!this._closed, 'Closed');
 
     this._topicsJoined.delete(topic);
-    this._scheduleReconcile();
+    this._reconcileTask.schedule();
   }
 
   async sendMessage({
@@ -162,32 +165,10 @@ export class WebsocketSignalManager implements SignalManager {
     this._ctx = new Context({
       onError: (err) => log.catch(err)
     });
-  }
 
-  @synchronized
-  private _scheduleReconcile() {
-    if (this._closed) {
-      return;
-    }
-
-    if (!this._reconcileTask) {
-      this._reconcileTask = new DeferredTask(this._ctx, async () => {
-        await this._reconcileJoinedTopics();
-        this._reconcileTask = undefined;
-      });
-    } else if (!this._reconcilingLater) {
-      this._reconcilingLater = true;
-      scheduleTask(
-        this._ctx,
-        () => {
-          this._scheduleReconcile();
-          this._reconcilingLater = false;
-        },
-        3_000
-      );
-    }
-
-    this._reconcileTask.schedule();
+    this._reconcileTask = new DeferredTask(this._ctx, async () => {
+      await this._reconcileJoinedTopics();
+    });
   }
 
   private async _reconcileJoinedTopics() {
@@ -206,7 +187,7 @@ export class WebsocketSignalManager implements SignalManager {
           }
         } catch (err) {
           log.error(`Error leaving swarm: ${err}`);
-          this._scheduleReconcile();
+          this._reconcileTask.schedule();
         }
       }
 
@@ -229,7 +210,7 @@ export class WebsocketSignalManager implements SignalManager {
           }
         } catch (err) {
           log.error(`Error joining swarm: ${err}`);
-          this._scheduleReconcile();
+          this._reconcileTask.schedule();
         }
       }
     }

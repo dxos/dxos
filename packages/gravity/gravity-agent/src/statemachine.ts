@@ -1,7 +1,8 @@
 //
 // Copyright 2022 DXOS.org
 //
-import assert from 'assert';
+
+import assert from 'node:assert';
 
 // import { Trigger } from '@dxos/async';
 import { Invitation, Space, Client, PublicKey } from '@dxos/client';

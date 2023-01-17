@@ -22,7 +22,7 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/react-ui"
+      "path": "../../common/react-components"
     },
     {
       "path": "../../common/sentry"
@@ -40,13 +40,13 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-uikit"
-    },
-    {
       "path": "../patterns/react-appkit"
     },
     {
       "path": "../patterns/react-composer"
+    },
+    {
+      "path": "../patterns/react-ui"
     }
   ]
 }

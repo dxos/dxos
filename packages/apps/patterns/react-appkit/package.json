@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-appkit",
-  "version": "0.1.20",
+  "version": "0.1.22",
   "description": "DXOS opinions for building React applications",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,23 +19,26 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-uikit": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@radix-ui/react-toolbar": "^1.0.1",
+    "lodash.throttle": "^4.1.1",
     "url-join": "^5.0.0"
   },
   "devDependencies": {
     "@dxos/react-client-testing": "workspace:*",
+    "@types/lodash.throttle": "^4.1.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^2.0.1",
+    "@vitejs/plugin-react": "^3.0.1",
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
     "storybook-dark-mode": "^1.1.2",
-    "vite": "3.2.5"
+    "vite": "4.0.4"
   },
   "peerDependencies": {
     "phosphor-react": "^1.4.1",

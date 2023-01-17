@@ -17,7 +17,7 @@ import {
   styled
 } from '@mui/material';
 
-import { CopyToClipboard } from '@dxos/react-components';
+import { CopyToClipboard } from '@dxos/react-components-deprecated';
 
 const DEFAULT_TITLE = 'Runtime Error';
 

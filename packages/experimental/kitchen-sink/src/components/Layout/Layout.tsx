@@ -6,7 +6,14 @@ import React, { useState, ReactNode } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { CloseButton, OpenButton, SlidingAppBar, SlidingContent, SlidingDrawer, Toolbar } from '@dxos/react-components';
+import {
+  CloseButton,
+  OpenButton,
+  SlidingAppBar,
+  SlidingContent,
+  SlidingDrawer,
+  Toolbar
+} from '@dxos/react-components-deprecated';
 
 export interface LayoutProps {
   children?: ReactNode;

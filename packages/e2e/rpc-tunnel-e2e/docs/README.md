@@ -69,7 +69,7 @@ end
 
 subgraph deprecated [deprecated]
   style deprecated fill:transparent
-  dxos/react-components("@dxos/react-components"):::def
+  dxos/react-components("@dxos/react-components-deprecated"):::def
   click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
 end
 

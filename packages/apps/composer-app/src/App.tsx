@@ -3,81 +3,34 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React, { useCallback } from 'react';
-import { HashRouter, useRoutes } from 'react-router-dom';
+import React from 'react';
+import { HashRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { fromHost, fromIFrame, Space } from '@dxos/client';
+import { fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
-  AppLayout,
   ErrorProvider,
   Fallback,
   FatalError,
   GenericFallback,
-  ManageSpacePage,
-  RequireIdentity,
   ServiceWorkerToast,
-  SpacesPage,
-  useTelemetry,
-  translations
+  appkitTranslations,
+  StatusIndicator2
 } from '@dxos/react-appkit';
-import { ClientProvider, useConfig } from '@dxos/react-client';
-import { DOCUMENT_TYPE } from '@dxos/react-composer';
-import { UiKitProvider } from '@dxos/react-uikit';
+import { ClientProvider } from '@dxos/react-client';
+import { ThemeProvider } from '@dxos/react-components';
+import { osTranslations } from '@dxos/react-ui';
 import { captureException } from '@dxos/sentry';
-import { TextModel } from '@dxos/text-model';
 
-import { SpacePage } from './pages';
+import { Routes } from './Routes';
 import composerTranslations from './translations';
 
 log.config({ filter: process.env.LOG_FILTER ?? 'client:debug,warn', prefix: process.env.LOG_BROWSER_PREFIX });
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 const servicesProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
-
-const Routes = () => {
-  useTelemetry({ namespace: 'composer-app' });
-  const config = useConfig();
-  // TODO(wittjosiah): Separate config for HALO UI & vault so origin doesn't need to parsed out.
-  // TODO(wittjosiah): Config defaults should be available from the config.
-  const remoteSource = new URL(config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
-
-  const handleSpaceCreate = useCallback(async (space: Space) => {
-    await space.database.createItem({
-      model: TextModel,
-      type: DOCUMENT_TYPE
-    });
-  }, []);
-
-  return useRoutes([
-    {
-      path: '/',
-      element: <RequireIdentity redirect={remoteSource.origin} />,
-      children: [
-        {
-          path: '/',
-          element: <AppLayout spacesPath='/' />,
-          children: [
-            {
-              path: '/',
-              element: <SpacesPage onSpaceCreate={handleSpaceCreate} />
-            },
-            {
-              path: '/spaces/:space',
-              element: <SpacePage />
-            },
-            {
-              path: '/spaces/:space/settings',
-              element: <ManageSpacePage />
-            }
-          ]
-        }
-      ]
-    }
-  ]);
-};
 
 export const App = () => {
   const {
@@ -92,8 +45,8 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider
-      resourceExtensions={[translations, composerTranslations]}
+    <ThemeProvider
+      resourceExtensions={[osTranslations, appkitTranslations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
       appNs='composer'
     >
@@ -101,6 +54,7 @@ export const App = () => {
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={<GenericFallback />}>
+            <StatusIndicator2 />
             <HashRouter>
               <Routes />
               {needRefresh ? (
@@ -112,6 +66,6 @@ export const App = () => {
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>
-    </UiKitProvider>
+    </ThemeProvider>
   );
 };

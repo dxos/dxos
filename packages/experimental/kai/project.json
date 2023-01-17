@@ -2,6 +2,38 @@
   "sourceRoot": "packages/experimental/kai/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/kai/src/index.ts",
+        "outputPath": "packages/experimental/kai/dist/types",
+        "tsConfig": "packages/experimental/kai/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "outputPath": "packages/experimental/kai/out/kai"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/kai/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/kai/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -13,6 +45,35 @@
       "outputs": [
         "{options.outputFile}"
       ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/experimental/kai/src/proto/gen"
+      ]
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "kai:bundle"
+      }
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/experimental/kai/.storybook"
+        },
+        "uiFramework": "@storybook/react"
+      }
     },
     "test": {
       "executor": "@dxos/test:run",

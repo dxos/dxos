@@ -1,6 +1,6 @@
 {
   "name": "@dxos/test",
-  "version": "0.1.20",
+  "version": "0.1.22",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,6 +10,10 @@
   "types": "index.d.ts",
   "scripts": {
     "test": "mocha -r @swc-node/register ./src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@types/wtfnode": "^0.7.0",
+    "wtfnode": "^0.9.1"
   },
   "devDependencies": {
     "@types/mocha": "^8.2.2"

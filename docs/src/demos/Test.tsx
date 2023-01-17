@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
+
+import { useClient } from '@dxos/react-client';
 
 const Test = () => {
-  const [value, setValue] = useState<number | null>(null);
+  const client = useClient();
 
-  return <button onClick={() => setValue((value) => (value ? value + 1 : 1))}>{value ?? 0}</button>;
+  return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
 };
 
 export default Test;
