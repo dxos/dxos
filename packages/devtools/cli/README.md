@@ -27,7 +27,7 @@ $ npm install -g @dxos/cli
 $ dx COMMAND
 running command...
 $ dx (--version)
-@dxos/cli/0.1.22 darwin-arm64 node-v16.15.1
+@dxos/cli/0.1.28 darwin-arm64 node-v16.15.1
 $ dx --help [COMMAND]
 USAGE
   $ dx COMMAND
@@ -64,6 +64,8 @@ USAGE
 * [`dx space join`](#dx-space-join)
 * [`dx space list`](#dx-space-list)
 * [`dx space members [KEY]`](#dx-space-members-key)
+* [`dx tunnel list`](#dx-tunnel-list)
+* [`dx tunnel set`](#dx-tunnel-set)
 
 ## `dx app create NAME`
 
@@ -71,7 +73,7 @@ Create a DXOS project.
 
 ```
 USAGE
-  $ dx app create [NAME] [--config <value>] [--timeout <value>] [--tag <value>] [-t hello|bare|tasks] [-i]
+  $ dx app create [NAME] [--config <value>] [--timeout <value>] [--tag <value>] [-t hello|bare|tasks] [-i] [-v]
 
 ARGUMENTS
   NAME  Name of the project
@@ -80,6 +82,7 @@ FLAGS
   -i, --interactive        Customize app template options via interactive prompt
   -t, --template=<option>  [default: hello] Template to use when creating the project.
                            <options: hello|bare|tasks>
+  -v, --verbose            Verbose output
   --config=<value>         Specify config file
   --tag=<value>            Git tag or branch of the DXOS repo to checkout.
   --timeout=<value>        [default: 30] Timeout in seconds
@@ -636,5 +639,46 @@ GLOBAL FLAGS
 
 DESCRIPTION
   List space members.
+```
+
+## `dx tunnel list`
+
+List tunnels.
+
+```
+USAGE
+  $ dx tunnel list [--config <value>] [--timeout <value>] [--json]
+
+FLAGS
+  --config=<value>   Specify config file
+  --timeout=<value>  [default: 30] Timeout in seconds
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List tunnels.
+```
+
+## `dx tunnel set`
+
+Enable or disable tunnel.
+
+```
+USAGE
+  $ dx tunnel set --app <value> [--config <value>] [--timeout <value>] [--json] [--enabled] [--disabled]
+
+FLAGS
+  --app=<value>      (required) Application name
+  --config=<value>   Specify config file
+  --disabled         Disable tunnel.
+  --enabled          Enable tunnel.
+  --timeout=<value>  [default: 30] Timeout in seconds
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Enable or disable tunnel.
 ```
 <!-- commandsstop -->

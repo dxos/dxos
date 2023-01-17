@@ -11,6 +11,9 @@
       ]
     },
     "build-resources": {
+      "dependsOn": [
+        "build-tsc"
+      ],
       "executor": "nx:run-script",
       "options": {
         "script": "build-resources"

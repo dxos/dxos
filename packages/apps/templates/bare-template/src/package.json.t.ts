@@ -8,6 +8,8 @@ import merge from 'lodash.merge';
 
 import config from './config.t';
 
+import ownPackageJson from '../package.json';
+
 type Context = { version: string; depVersion: string } & ExtractInput<typeof config>;
 
 export namespace Features {
@@ -96,9 +98,9 @@ export const base = ({ name, version, depVersion }: Context): Partial<PackageJso
 export default defineTemplate(
   async ({ input }) => {
     const { react, monorepo, pwa, storybook, dxosUi, tailwind } = input;
-    const { version: dxosVersion, patchedDependencies } = await getDxosRepoInfo();
-    const version = monorepo ? dxosVersion : '0.1.0';
-    const depVersion = monorepo ? `workspace:*` : dxosVersion;
+    const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
+    const version = monorepo ? packageVersion : '0.1.0';
+    const depVersion = monorepo ? `workspace:*` : packageVersion;
 
     const context = {
       version,

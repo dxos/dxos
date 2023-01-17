@@ -9,9 +9,10 @@ import path from 'path';
 
 // TODO(wittjosiah): Nx executor to execute in place.
 export default defineTemplate<typeof config>(async ({ input, outputDirectory }) => {
-  const info = await getDxosRepoInfo();
+  const { monorepo } = input;
+  const info = monorepo ? await getDxosRepoInfo() : null;
 
-  const rootTsConfig = info.isDxosMonorepo ? await getTsConfig(info.repositoryRootPath) : {};
+  const rootTsConfig = monorepo && info?.isDxosMonorepo ? await getTsConfig(info.repositoryRootPath) : {};
 
   const compilerOptions = {
     emitDeclarationOnly: false,
@@ -31,7 +32,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
   ];
 
   const tsconfig =
-    input.monorepo && info.isDxosMonorepo
+    input.monorepo && info?.isDxosMonorepo
       ? {
           extends: path.relative(outputDirectory, info.repositoryRootPath + '/tsconfig.json'),
           compilerOptions,
@@ -48,13 +49,13 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
           ]
         }
       : {
-          ...rootTsConfig,
+          ...(rootTsConfig ?? {}),
           compilerOptions: {
-            ...rootTsConfig.compilerOptions,
+            ...(rootTsConfig?.compilerOptions ?? {}),
             ...compilerOptions
           },
           include,
-          exclude: [...rootTsConfig.exclude, 'vite.config.ts'],
+          exclude: [...(rootTsConfig?.exclude ?? []), 'vite.config.ts'],
           references
         };
 

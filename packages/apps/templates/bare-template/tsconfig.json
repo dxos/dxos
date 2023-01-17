@@ -12,6 +12,7 @@
     ]
   },
   "include": [
+    "package.json",
     "src"
   ],
   "references": [

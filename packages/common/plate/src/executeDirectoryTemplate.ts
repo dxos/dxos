@@ -117,14 +117,15 @@ export const executeDirectoryTemplate = async <TInput>(
       : undefined;
   const allFiles = await readDir(
     templateDirectory,
-    (exclude ?? []).map((x) => (x instanceof RegExp ? (entry) => x.test(entry) : x))
+    (exclude ?? []).map((x) => (x instanceof RegExp ? (entry) => x.test(entry.replace(templateDirectory, '')) : x))
   );
+  debug(`${allFiles.length} files discovered`);
   const filteredFiles = filterIncludeExclude(allFiles, {
     include,
     exclude,
     transform: (s) => s.replace(templateDirectory, '').replace(/^\//, '')
   });
-  debug(`${filteredFiles.length} included files total`);
+  debug(`${filteredFiles.length}/${allFiles.length} files included`);
   const ignoredFiles = allFiles.filter((f) => filteredFiles.indexOf(f) < 0);
   const templateFiles = executeFileTemplates ? filteredFiles.filter(isTemplateFile) : [];
   const regularFiles = filteredFiles.filter((file) => !isTemplateFile(file));
