@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plate",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@swc/core": "^1.3.21",
+    "callsite": "^1.0.0",
     "chalk": "^4.1.0",
     "esbuild": "^0.16.14",
     "inquirer": "^8.2.0",
@@ -32,6 +33,7 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
+    "@types/callsite": "^1.0.31",
     "@types/inquirer": "^8.1.3",
     "@types/lodash.flatten": "^4.4.6",
     "@types/lodash.merge": "^4.6.6",

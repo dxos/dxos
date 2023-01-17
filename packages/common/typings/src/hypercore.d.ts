@@ -31,12 +31,12 @@ declare module 'hypercore' {
   /**
    * https://github.com/mafintosh/abstract-encoding
    */
-  export type AbstractValueEncoding<T> = {
+  export type AbstractValueEncoding<T = any> = {
     encode: (obj: T) => Buffer;
     decode: (buffer: Buffer) => T;
   };
 
-  export type ValueEncoding<T> = 'json' | 'utf-8' | 'binary' | AbstractValueEncoding<T>;
+  export type ValueEncoding<T = any> = 'json' | 'utf-8' | 'binary' | AbstractValueEncoding<T>;
 
   /**
    * Crypto
@@ -217,7 +217,7 @@ declare module 'hypercore' {
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedgetbatchstart-end-options-callback
     /** @deprecated remove in v10 */
-    getBatch(start: number, end: number, options?: GetOptions, cb: Callback<T[]>): void;
+    getBatch(start: number, end: number, options?: GetOptions, cb?: Callback<T[]>): void;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
     download(range?: Range, cb?: Callback<number>): any;
@@ -235,7 +235,7 @@ declare module 'hypercore' {
 
   export type HypercoreConstructor = (
     storage: string | RandomAccessStorageConstructor,
-    key?: Buffer | strin,
+    key?: Buffer | string,
     options?: HypercoreOptions
   ) => Hypercore;
 
@@ -247,5 +247,5 @@ declare module 'hypercore' {
     options?: HypercoreOptions
   ): Hypercore<T>;
 
-  export = hypercore;
+  export default hypercore;
 }

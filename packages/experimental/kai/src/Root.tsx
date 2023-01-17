@@ -10,24 +10,7 @@ import { appkitTranslations, Fallback, ServiceWorkerToast } from '@dxos/react-ap
 import { ThemeProvider } from '@dxos/react-components';
 
 import { App } from './app';
-import { AppView } from './hooks';
 import kaiTranslations from './translations';
-
-const views =
-  process.env.DEMO === 'true' /* || window.location.protocol === 'http:' */
-    ? [
-        AppView.DASHBOARD,
-        AppView.ORGS,
-        AppView.PROJECTS,
-        AppView.CONTACTS,
-        AppView.KANBAN,
-        AppView.TASKS,
-        AppView.GRAPH,
-        AppView.EDITOR,
-        AppView.MAP,
-        AppView.GAME
-      ]
-    : [AppView.TASKS];
 
 // TODO(burdon): Get debug from config.
 export const Root = () => {
@@ -41,13 +24,16 @@ export const Root = () => {
     }
   });
 
+  // TODO(burdon): Modes from env/config.
+  // const demo = process.env.DEMO === 'true';
+
   return (
     <ThemeProvider
       appNs='kai'
       resourceExtensions={[appkitTranslations, kaiTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
-      <App debug={process.env.DEBUG === 'true'} views={views} />
+      <App debug={process.env.DEBUG === 'true'} />
       {needRefresh ? (
         <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
       ) : offlineReady ? (

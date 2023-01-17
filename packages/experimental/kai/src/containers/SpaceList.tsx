@@ -9,8 +9,11 @@ import { Link, useParams } from 'react-router-dom';
 import { useSpaces } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
+import { createSpacePath } from '../app';
+import { FrameID } from '../hooks';
+
 export const SpaceList = () => {
-  const { spaceKey: currentSpaceKey, view } = useParams();
+  const { spaceKey: currentSpaceKey, frame } = useParams();
   const spaces = useSpaces();
 
   return (
@@ -24,11 +27,11 @@ export const SpaceList = () => {
             <Planet className={getSize(6)} />
           </div>
           <div className='flex flex-1 font-mono cursor-pointer'>
-            <Link to={`/${space.key.truncate()}/${view}`}>{space.key.truncate()}</Link>
+            <Link to={createSpacePath(space.key, frame)}>{space.key.truncate()}</Link>
           </div>
           {space.key.truncate() === currentSpaceKey && (
             <div className='flex items-center'>
-              <Link to={`/${space.key.truncate()}/settings`}>
+              <Link to={createSpacePath(space.key, FrameID.SETTINGS)}>
                 <Gear className={getSize(5)} />
               </Link>
             </div>

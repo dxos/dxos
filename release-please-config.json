@@ -333,6 +333,16 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/initializers/bare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/initializers/create/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
           "jsonpath": "$.version"
         },
@@ -344,6 +354,11 @@
         {
           "type": "json",
           "path": "packages/experimental/client-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/framebox/package.json",
           "jsonpath": "$.version"
         },
         {

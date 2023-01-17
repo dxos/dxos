@@ -1,0 +1,25 @@
+{
+  "name": "@dxos/create-bare",
+  "version": "0.1.23",
+  "description": "Creates an empty DXOS application",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "bin": "bin/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node bin/main.js"
+  },
+  "dependencies": {
+    "@dxos/bare-template": "workspace:*",
+    "minimist": "^1.2.7"
+  },
+  "devDependencies": {
+    "@types/minimist": "^1.2.2",
+    "typescript": "^4.8.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

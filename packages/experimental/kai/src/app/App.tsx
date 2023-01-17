@@ -9,11 +9,12 @@ import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { AppView, OptionsContext } from '../hooks';
-import { schema } from '../proto';
+import { AppStateProvider, BotsProvider, FramesProvider } from '../hooks';
+import { Generator, schema } from '../proto';
+import { frames } from './Frames';
 import { Routes } from './Routes';
 
-const clientProvider = async () => {
+const clientProvider = async (demo: boolean) => {
   const config = new Config(await Dynamics(), Defaults());
   const client = new Client({
     config,
@@ -22,25 +23,40 @@ const clientProvider = async () => {
 
   client.echo.dbRouter.setSchema(schema);
   await client.initialize();
+
+  // Auto create if in demo mode.
+  // TODO(burdon): Different modes (testing). ENV/Config?
+  // TODO(burdon): Auto invite/join if demo mode.
+  if (demo) {
+    await client.halo.createProfile();
+    const space = await client.echo.createSpace();
+
+    const generator = new Generator(space.experimental.db);
+    await generator.generate();
+
+    // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
+    // chrome.windows.create({ '/join', incognito: true });
+  }
+
   return client;
 };
 
 /**
  * Main app container with routes.
  */
-export const App: FC<{ views: AppView[]; debug?: boolean; demo?: boolean }> = ({
-  views,
-  debug = false,
-  demo = true
-}) => {
+export const App: FC<{ debug?: boolean; demo?: boolean }> = ({ debug = false, demo = true }) => {
   // TODO(burdon): Error boundary and indicator.
   return (
-    <ClientProvider client={clientProvider}>
-      <OptionsContext.Provider value={{ debug, demo, views }}>
-        <HashRouter>
-          <Routes />
-        </HashRouter>
-      </OptionsContext.Provider>
+    <ClientProvider client={() => clientProvider(demo)}>
+      <AppStateProvider value={{ debug, demo }}>
+        <BotsProvider>
+          <FramesProvider frames={frames}>
+            <HashRouter>
+              <Routes />
+            </HashRouter>
+          </FramesProvider>
+        </BotsProvider>
+      </AppStateProvider>
     </ClientProvider>
   );
 };

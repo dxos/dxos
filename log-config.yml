@@ -22,6 +22,8 @@ filter:
   # - peer:debug
   # - connection:debug
   # - test:debug
+  - auth:debug
+  - space:debug
   # - client-services:debug
   # - framer:debug
   # - feed-wrapper:debug

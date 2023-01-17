@@ -1,6 +1,7 @@
 //
 // Copyright 2022 DXOS.org
 //
+import { defineConfig } from '@dxos/plate';
 
 export type Input = {
   banner: string;
@@ -31,3 +32,6 @@ export type Input = {
   discordUrl: string;
   stackOverflowTag: string;
 };
+
+export default defineConfig({});
+
