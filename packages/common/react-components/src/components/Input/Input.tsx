@@ -4,7 +4,7 @@
 
 import React, { ChangeEvent, useCallback, useState, useTransition } from 'react';
 
-import { useId } from '../../hooks';
+import { useId, useThemeContext } from '../../hooks';
 import { defaultDescription, valenceColorText } from '../../styles';
 import { mx } from '../../util';
 import { BarePinInput } from './BarePinInput';
@@ -32,6 +32,7 @@ export const Input = ({
   const inputId = slots.input?.id ?? useId('input');
   const descriptionId = useId('input-description');
   const validationId = useId('input-validation');
+  const { hasIosKeyboard } = useThemeContext();
 
   const isInvalid = !!validationMessage && validationValence === 'error';
 
@@ -51,8 +52,9 @@ export const Input = ({
     [onChange]
   );
 
+  const { autoFocus, ...inputSlot } = slots.input ?? {};
+
   const bareInputBaseProps = {
-    ...slots.input,
     id: inputId,
     ...(slots.input?.required && { required: true }),
     ...(disabled && { disabled: true }),
@@ -64,7 +66,10 @@ export const Input = ({
     placeholder,
     value: internalValue,
     onChange: onInternalChange,
-    inputSlot: slots.input,
+    inputSlot: {
+      ...inputSlot,
+      ...(autoFocus && !hasIosKeyboard && { autoFocus: true })
+    },
     validationMessage,
     validationValence
   };

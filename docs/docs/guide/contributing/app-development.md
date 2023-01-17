@@ -34,3 +34,18 @@ Modern browsers treat `localhost` as a secure context, allowing secure apis such
     }
 
 Given this, the recommended setup is to run `serve` from the repo root and keep the `cert.pem` and `key.pem` files there. Alternatively, a copy of them could be kept in each app directory if `serve` is run from the app directory as well.
+
+### Proxying using https://srv.us
+
+`srv.us` is easier to setup but will lead to longer loading times.
+
+```
+pnpm -w nx serve kai
+ssh srv.us -R 1:localhost:5173
+
+# The session-specific link will be printed.
+```
+
+> NOTE: The amount of files that are needed to be loaded (more then 800 in dev mode) is causing srv.us to bottlenek. On the first time the app takes just under a minute to load, and it might seem like nothing is happening.
+
+

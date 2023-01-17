@@ -4,7 +4,8 @@
 
 import React, { ChangeEvent, InputHTMLAttributes, FC, useEffect, useRef, useState, KeyboardEvent } from 'react';
 
-export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'onBlur'> {
+export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'onBlur'> {
+  value?: string;
   onChange?: (value: string) => void;
   onEnter?: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
@@ -15,6 +16,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 /**
  * Input element that updates when losing focus or after a delay.
  */
+// TODO(burdon): Constrain input.
 export const Input: FC<InputProps> = ({
   value: initialValue,
   onKeyDown,
@@ -25,43 +27,41 @@ export const Input: FC<InputProps> = ({
   ...props
 }) => {
   const t = useRef<ReturnType<typeof setTimeout>>();
-  const [value, setValue] = useState<string>('');
+  const [value, setValue] = useState<string | undefined>(initialValue);
+
+  // TODO(burdon): How to check if value has been updated? Controlled vs. uncontrolled!
   useEffect(() => {
     setValue((initialValue as string) ?? '');
   }, [initialValue]);
 
-  const handleUpdate = (value: string) => {
+  const handleUpdate = (value?: string) => {
+    clearTimeout(t.current);
     setValue(value);
-    if (value !== initialValue) {
-      clearTimeout(t.current);
-      onChange?.(value);
-    }
+    onChange?.(value ?? '');
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setValue(event.target.value);
     clearTimeout(t.current);
+    setValue(event.target.value);
     if (delay > 0) {
       t.current = setTimeout(() => handleUpdate(event.target.value), delay);
     }
   };
 
-  const handleBlur = () => {
-    handleUpdate(value);
-    onBlur?.();
-  };
-
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case 'Enter': {
-        handleUpdate(value);
-        onEnter?.(value);
+        clearTimeout(t.current);
+        if (onEnter?.(value ?? '')) {
+          setValue('');
+        } else {
+          handleUpdate(value);
+        }
         break;
       }
 
       case 'Escape': {
-        handleUpdate('');
-        onEnter?.('');
+        handleUpdate(initialValue);
         break;
       }
 
@@ -71,5 +71,10 @@ export const Input: FC<InputProps> = ({
     }
   };
 
-  return <input value={value} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} {...props} />;
+  const handleBlur = () => {
+    handleUpdate(value);
+    onBlur?.();
+  };
+
+  return <input value={value ?? ''} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} {...props} />;
 };

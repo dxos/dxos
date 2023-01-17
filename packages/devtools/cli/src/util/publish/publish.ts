@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
@@ -41,13 +42,18 @@ interface PublishArgs {
 
 export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { log, config, module }: PublishParams) => {
   assert(module.name, 'Module name is required to publish.');
-  log(`Uploading ${module.name}...`);
-
+  log(`Publishing module ${chalk.bold(module.name)} ...`);
   const moduleOut = `out/${encodeName(module.name)}`;
   const outdir = path ?? module.build?.outdir ?? (fs.existsSync(moduleOut) ? moduleOut : DEFAULT_OUTDIR);
   const publishFolder = join(process.cwd(), outdir);
+  if (!fs.existsSync(publishFolder)) {
+    throw new Error(`Publish failed. Build output folder does not exist: ${publishFolder}.`);
+  }
   const total = await getFolderSize(publishFolder);
-
+  if (verbose) {
+    log(`Publishing from: ${publishFolder}`);
+  }
+  log('Uploading ...');
   const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
   verbose && bar.start(total, 0);
 
@@ -60,7 +66,7 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { lo
   verbose && bar.update(total);
   verbose && bar.stop();
 
-  log(`Uploaded ${module.name} to IPFS with cid ${cid.toString()}.`);
+  log(`Published module ${chalk.bold(module.name)}. IPFS cid: ${cid.toString()}`);
 
   return cid;
 };

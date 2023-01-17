@@ -9,7 +9,7 @@ Type: "https://halo.dxos.org/vault.html"
 Type: "dxos:app"
 ### [`EXPECTED_CONFIG_VERSION`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L12)
 Type: "1"
-### [`SPACE_ITEM_TYPE`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L23)
+### [`SPACE_ITEM_TYPE`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L25)
 Type: "dxos:item/space"
 ### [`TYPE_SCHEMA`]()
 Type: "dxos:type/schema"

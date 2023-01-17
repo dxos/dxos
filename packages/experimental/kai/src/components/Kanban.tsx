@@ -25,46 +25,54 @@ export type KanbanColumnDef = {
 export const Kanban: FC<{
   objects: EchoObject[];
   columns: KanbanColumnDef[];
-  columnWidth?: number;
   onCreate?: (column: KanbanColumnDef) => void;
-}> = ({ objects, columns, columnWidth = 300, onCreate }) => {
+}> = ({ objects, columns, onCreate }) => {
+  // NOTE: On mobile (sm) the column width is set to the full screen (w-screen)
+  // with different padding from other screen sized.
   return (
-    <div className='flex flex-1 overflow-x-scroll overflow-y-hidden p-3 pb-5'>
+    <div className='flex flex-1 overflow-x-scroll overflow-y-hidden snap-x px-0 md:px-2'>
       <div className='flex'>
+        {/* Columns */}
         {columns.map((column, i) => {
           const filtered = objects.filter(column.filter);
 
           return (
             <div
               key={column.id ?? i}
-              className='flex flex-col ml-4 first:ml-0 drop-shadow-md bg-gray-100'
-              style={{ width: columnWidth }}
+              className='flex flex-col overflow-hidden w-screen md:w-[314px] snap-center px-4 md:px-2 pb-4'
             >
-              <div className='pl-3 pr-3 pt-2 rounded-t'>{column.header}</div>
-              <div className='flex overflow-hidden fade'>
-                <div className='flex flex-1 flex-col pl-3 pr-3 overflow-y-scroll'>
+              <div className='flex flex-col first:ml-0 overflow-hidden border drop-shadow-md bg-gray-100 rounded'>
+                <div className='flex p-3 rounded-t text-sm'>{column.header}</div>
+                <div className='flex flex-col flex-1 overflow-y-scroll px-3'>
+                  {/* Cards. */}
                   {filtered.map((object) => {
-                    const Content = column.Content;
+                    const { Content } = column;
                     return (
-                      <div key={object[id]} className='mt-2 bg-white rounded border border-slate-300'>
+                      <div key={object[id]} className='mb-2 bg-white rounded border border-slate-300'>
                         <Content object={object} />
                       </div>
                     );
                   })}
                 </div>
-              </div>
 
-              {onCreate && (
-                <div className='flex flex-shrink-0 items-center p-3'>
-                  <div className='text-sm'>
-                    {filtered.length} record{filtered.length === 1 ? '' : 's'}
+                {onCreate && (
+                  <div className='flex flex-shrink-0 items-center p-3'>
+                    <div className='flex flex-1 text-sm'>
+                      {filtered.length > 0 && (
+                        <span>
+                          {filtered.length} record{filtered.length === 1 ? '' : 's'}
+                        </span>
+                      )}
+                    </div>
+                    <div className='flex flex-1 justify-center'>
+                      <Button onClick={() => onCreate(column)}>
+                        <PlusCircle className={getSize(6)} />
+                      </Button>
+                    </div>
+                    <div className='flex flex-1' />
                   </div>
-                  <div className='flex-1' />
-                  <Button onClick={() => onCreate(column)}>
-                    <PlusCircle className={getSize(5)} />
-                  </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           );
         })}

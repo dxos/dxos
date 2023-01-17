@@ -56,7 +56,7 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _haloProxy: HaloProxy
-  ) {}
+  ) { }
 
   [inspect.custom]() {
     return inspectObject(this);
@@ -96,9 +96,11 @@ export class EchoProxy implements Echo {
   async open() {
     this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
 
-    const gotSpaces = this._spacesChanged.waitForCount(1);
+    const gotInitialUpdate = new Trigger();
     const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
     spacesStream.subscribe(async (data) => {
+      let emitUpdate = false;
+
       for (const space of data.spaces ?? []) {
         if (!this._spaces.has(space.publicKey)) {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
@@ -125,17 +127,22 @@ export class EchoProxy implements Echo {
           //     this._spacesChanged.emit(); // Trigger for `querySpaces()` when a space is updated.
           //   }
           // });
+
+          emitUpdate = true;
         } else {
           this._spaces.get(space.publicKey)!._processSpaceUpdate(space);
         }
       }
 
-      this._spacesChanged.emit();
+      gotInitialUpdate.wake();
+      if (emitUpdate) {
+        this._spacesChanged.emit();
+      }
     });
 
     this._subscriptions.add(() => spacesStream.close());
 
-    await gotSpaces;
+    await gotInitialUpdate.wait();
   }
 
   async close() {

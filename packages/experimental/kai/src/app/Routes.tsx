@@ -18,13 +18,14 @@ import {
   RecoverIdentityPage,
   SettingsPage,
   SpacePage
-} from './pages';
+} from '../pages';
 
 export const matchSpaceKey = (spaces: Space[], spaceKey: string) =>
   spaces.find((space) => space.key.truncate() === spaceKey);
 
-export const createSpacePath = (spaceKey: PublicKey, view?: string) =>
-  `/${spaceKey.truncate()}` + (view ? `/${view}` : '');
+// TODO(burdon): Circular deps?
+export const createSpacePath = (spaceKey: PublicKey, frame?: string) =>
+  `/${spaceKey.truncate()}` + (frame ? `/${frame}` : '');
 
 /**
  * Main app routes.
@@ -69,7 +70,7 @@ export const Routes = () => {
           element: <SpacePage />,
           children: [
             {
-              path: '/:spaceKey/:view',
+              path: '/:spaceKey/:frame',
               element: <SpacePage />
             }
           ]

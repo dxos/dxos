@@ -5,7 +5,10 @@
 import { expect } from 'chai';
 
 import { Config } from '@dxos/config';
-import { ISpace } from '@dxos/echo-db';
+import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
+import { ISpace, MetadataStore, SigningContext, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-db';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
@@ -77,4 +80,87 @@ export const syncItems = async (space1: ISpace, space2: ISpace) => {
     const item2 = await space1.database!.waitForItem({ type: 'type-2' });
     expect(item1.id).to.eq(item2.id);
   }
+};
+
+export class TestBuilder {
+  public readonly signalContext = new MemorySignalManagerContext();
+
+  createPeer(): TestPeer {
+    return new TestPeer(this.signalContext);
+  }
+}
+
+export type TestPeerProps = {
+  storage?: Storage;
+  feedStore?: FeedStore<any>;
+  metadataStore?: MetadataStore;
+  keyring?: Keyring;
+  networkManager?: NetworkManager;
+  spaceManager?: SpaceManager;
+  snapshotStore?: SnapshotStore;
+};
+
+export class TestPeer {
+  private _props: TestPeerProps = {};
+
+  constructor(private readonly signalContext: MemorySignalManagerContext) {}
+
+  get storage() {
+    return (this._props.storage ??= createStorage({ type: StorageType.RAM }));
+  }
+
+  get keyring() {
+    return (this._props.keyring ??= new Keyring(this.storage.createDirectory('keyring')));
+  }
+
+  get feedStore() {
+    return (this._props.feedStore ??= new FeedStore({
+      factory: new FeedFactory({
+        root: this.storage.createDirectory('feeds'),
+        signer: this.keyring,
+        hypercore: {
+          valueEncoding
+        }
+      })
+    }));
+  }
+
+  get metadataStore() {
+    return (this._props.metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
+  }
+
+  get snapshotStore() {
+    return (this._props.snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
+  }
+
+  get networkManager() {
+    return (this._props.networkManager ??= new NetworkManager({
+      signalManager: new MemorySignalManager(this.signalContext),
+      transportFactory: MemoryTransportFactory
+    }));
+  }
+
+  get spaceManager() {
+    return (this._props.spaceManager ??= new SpaceManager({
+      feedStore: this.feedStore,
+      networkManager: this.networkManager
+    }));
+  }
+}
+
+export const createSigningContext = async (keyring: Keyring): Promise<SigningContext> => {
+  const identityKey = await keyring.createKey();
+  const deviceKey = await keyring.createKey();
+
+  return {
+    identityKey,
+    deviceKey,
+    credentialSigner: createCredentialSignerWithChain(
+      keyring,
+      {
+        credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey)
+      },
+      deviceKey
+    )
+  };
 };

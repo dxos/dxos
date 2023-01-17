@@ -14,6 +14,15 @@
   ],
   "references": [
     {
+      "path": "../../apps/templates/bare-template"
+    },
+    {
+      "path": "../../apps/templates/hello-template"
+    },
+    {
+      "path": "../../apps/templates/tasks-template"
+    },
+    {
       "path": "../../common/async"
     },
     {

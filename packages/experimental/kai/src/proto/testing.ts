@@ -2,23 +2,28 @@
 // Copyright 2022 DXOS.org
 //
 
+import add from 'date-fns/add';
+import roundToNearestMinutes from 'date-fns/roundToNearestMinutes';
 import faker from 'faker';
 
 import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 
 import { cities } from './data';
-import { Contact, Organization, Project, Task } from './gen/schema';
+import { Contact, Event, Organization, Project, Task } from './gen/schema';
 
 // TODO(burdon): Don't save inside utils.
 
-type MinMax = { min: number; max: number };
+type MinMax = { min: number; max: number } | number;
 
 type GeneratorOptions = {
   organizations: MinMax;
   projects: MinMax;
   tasks: MinMax;
   contacts: MinMax;
+  events: MinMax;
 };
+
+const range = (range: MinMax) => Array.from({ length: faker.datatype.number(range as any) });
 
 export class Generator {
   constructor(
@@ -27,14 +32,17 @@ export class Generator {
       organizations: { min: 1, max: 3 },
       projects: { min: 1, max: 2 },
       tasks: { min: 1, max: 8 },
-      contacts: { min: 3, max: 5 }
+      contacts: { min: 3, max: 5 },
+      events: { min: 20, max: 40 }
     }
   ) {}
 
   async generate() {
+    const contacts: Contact[] = [];
+
     // Organizations.
     await Promise.all(
-      Array.from({ length: faker.datatype.number(this._options.organizations) }).map(async () => {
+      range(this._options.organizations).map(async () => {
         const organization = await createOrganization(this._db);
 
         // Address.
@@ -46,28 +54,29 @@ export class Generator {
             lng: city.coordinates[0]
           },
           // TODO (mykola): Add zip and state.
-          zip: '????',
-          state: '????'
+          zip: '11205',
+          state: 'NY'
         };
 
         // Contacts.
         await Promise.all(
-          Array.from({ length: faker.datatype.number(this._options.contacts) }).map(async () => {
+          range(this._options.contacts).map(async () => {
             const contact = await createContact(this._db);
-            organization.team.push(contact);
+            contacts.push(contact);
+            organization.people.push(contact);
             return contact;
           })
         );
 
         // Projects.
         await Promise.all(
-          Array.from({ length: faker.datatype.number(this._options.projects) }).map(async () => {
+          range(this._options.projects).map(async () => {
             const project = await createProject(this._db);
             organization.projects.push(project);
 
             // Tasks.
             const tasks = await Promise.all(
-              Array.from({ length: faker.datatype.number(this._options.tasks) }).map(async () => {
+              range(this._options.tasks).map(async () => {
                 // TODO(burdon): Fails add multiple.
                 // project.tasks.push(await createTask(this._db));
                 const task = await createTask(this._db);
@@ -82,6 +91,15 @@ export class Generator {
         );
       })
     );
+
+    // Events.
+    await Promise.all(
+      range(this._options.events).map(async () => {
+        const event = await createEvent(this._db);
+        event.members.push(...faker.random.arrayElements(contacts, faker.datatype.number(2)));
+        return event;
+      })
+    );
   }
 }
 
@@ -89,10 +107,12 @@ export const tags = ['red', 'green', 'blue', 'orange'];
 
 export const createOrganization = async (db: EchoDatabase) => {
   const organization = new Organization({
-    name: faker.company.companyName()
+    name: faker.company.companyName(),
+    website: faker.internet.url(),
+    description: faker.lorem.sentences(2)
   });
 
-  const projects = await Promise.all(Array.from({ length: faker.datatype.number(3) }).map(() => createProject(db)));
+  const projects = await Promise.all(range(3).map(() => createProject(db)));
   projects.forEach((project) => organization.projects.push(project));
 
   return await db.save(organization);
@@ -102,6 +122,7 @@ export const createProject = async (db: EchoDatabase, tag?: string) => {
   const project = new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
     description: new TextObject(),
+    url: faker.internet.url(),
     tag: tag ?? faker.random.arrayElement(tags)
     // tags: [faker.random.arrayElement(tags)] // TODO(burdon): Implement constructor.
   });
@@ -144,4 +165,18 @@ export const createContact = async (db: EchoDatabase) => {
   });
 
   return await db.save(contact);
+};
+
+export const createEvent = async (db: EchoDatabase) => {
+  // TODO(burdon): Round numbers.
+  const start = roundToNearestMinutes(faker.date.soon(21, add(new Date(), { days: -7 })), { nearestTo: 30 });
+  const end = add(start, { hours: 1 });
+
+  const event = new Event({
+    title: faker.lorem.sentence(3),
+    start: start.toISOString(),
+    end: end.toISOString()
+  });
+
+  return await db.save(event);
 };
