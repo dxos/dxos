@@ -40,6 +40,11 @@ Options:
 Type: <code>[Repo](/api/@dxos/config/interfaces/Repo)[]</code>
 ### [tags]()
 Type: <code>string[]</code>
+### [tunnel]()
+Type: <code>boolean</code>
+
+Options:
+  - proto3_optional = true
 ### [type]()
 Type: <code>string</code>
 

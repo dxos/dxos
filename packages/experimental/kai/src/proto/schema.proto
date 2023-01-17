@@ -6,6 +6,10 @@ syntax = "proto3";
 
 package dxos.experimental.kai;
 
+//
+// Types
+//
+
 message LatLng {
   fixed32 lat = 1;
   fixed32 lng = 2;
@@ -16,6 +20,40 @@ message Address {
   string state = 2;
   string zip = 3;
   LatLng coordinates = 4;
+}
+
+//
+// Internal
+// TODO(dmaretskyi): Move to separate file.
+//
+
+/// Special object type for text object references.
+message TextObject {}
+
+// TODO(burdon): First-class typed links?
+message Link {
+  option (object) = true;
+
+  // TODO(burdon): Keys.
+  string source = 1;
+  string target = 2;
+//  repeated string tags = 3;
+  string tag = 3;
+}
+
+//
+// Objects
+//
+
+message Organization {
+  option (object) = true; // TODO(burdon): Fix protobuf plugin.
+
+  string name = 1;
+  string description = 2;
+  string website = 3;
+  repeated Contact people = 4;
+  repeated Project projects = 5;
+  Address address = 6;
 }
 
 message Contact {
@@ -41,22 +79,40 @@ message Project {
   option (object) = true;
 
   string title = 1;
-  TextObject description = 2;
-  repeated Contact team = 3;
-  repeated Task tasks = 4;
-//  repeated string tags = 5; // TODO(burdon): Broken.
-  string tag = 5;
+  TextObject description = 2; // TODO(burdon): Change to string (see Document).
+  string url = 3;
+  repeated Contact team = 4;
+  repeated Task tasks = 5;
+//  repeated string tags = 6; // TODO(burdon): Broken.
+  string tag = 6;
 }
 
-message Organization {
+message Document {
   option (object) = true;
 
-  string name = 1;
-  repeated Project projects = 2;
-  repeated Contact team = 3;
-  Address address = 4;
+  TextObject description = 1;
+//  repeated string tags = 2;
+  string tag = 2;
 }
 
-// TODO(dmaretskyi): Move to separate file.
-/// Special object type for text object references.
-message TextObject {}
+message Message {
+  option (object) = true;
+
+  // TODO(burdon): Timestamp.
+  string date = 1;
+  string from = 2;
+  string to = 3;
+  string text = 4;
+}
+
+message Event {
+  option (object) = true;
+
+  string title = 1;
+  // TODO(burdon): Timestamp.
+  string start = 2;
+  string end = 3;
+  Address location = 4;
+  repeated Contact members = 5;
+}
+

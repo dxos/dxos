@@ -84,8 +84,9 @@ export const appkit = {
   'create invitation label': 'Invite',
   'current identity label': 'You',
   'empty members message': 'No members in this space',
-  'composer placeholder': 'Write something…',
+  'composer placeholder': 'Enter text…',
   'heartbeat stalled': 'Heartbeat stalled',
   'empty spaces label': 'No spaces here',
-  'empty spaces message': 'Why not try creating or joining one?'
+  'empty spaces message': 'Why not try creating or joining one?',
+  'current device label': 'This device'
 };

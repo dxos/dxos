@@ -2,23 +2,38 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { Chess } from 'chess.js';
+import React, { useState } from 'react';
 
-import { Chessboard } from './Chessboard';
-import { Game } from './proto';
+import '@dxosTheme';
+
+import { Chessboard, ChessModel, ChessPanel, ChessMove } from './Chessboard';
 
 export default {
   component: Chessboard,
   argTypes: {}
 };
 
-export const Default = {
-  render: () => {
-    // TODO(burdon): Make responsive.
-    return (
-      <div style={{ width: 600 }}>
-        <Chessboard game={new Game()} />
+const Test = () => {
+  const [model, setModel] = useState<ChessModel>({ chess: new Chess() });
+  const handleUpdate = (move: ChessMove) => {
+    if (model.chess.move(move)) {
+      setModel({ ...model });
+    }
+  };
+
+  return (
+    <div className='flex flex-row'>
+      <div className='w-[600px]'>
+        <Chessboard model={model} onUpdate={handleUpdate} />
       </div>
-    );
-  }
+      <div className='w-[160px] ml-8'>
+        <ChessPanel model={model} />
+      </div>
+    </div>
+  );
+};
+
+export const Default = {
+  render: () => <Test />
 };

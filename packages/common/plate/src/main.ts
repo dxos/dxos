@@ -68,6 +68,17 @@ const main = async () => {
       type: 'boolean',
       default: true
     })
+    .option('executeFileTemplates', {
+      description: 'execute any .t.ts files discovered in the template directory',
+      requiresArg: false,
+      type: 'boolean',
+      default: true
+    })
+    .options('inheritance', {
+      description: 'controls whether inherited templates should be executed',
+      requiresArg: false,
+      type: 'boolean'
+    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
@@ -84,6 +95,8 @@ const main = async () => {
           overwrite: boolean;
           quiet: boolean;
           interactive: boolean;
+          executeFileTemplates: boolean;
+          inheritance: boolean;
         } & any
       ) => {
         const tstart = Date.now();
@@ -94,11 +107,13 @@ const main = async () => {
           output = process.cwd(),
           include,
           exclude,
+          inheritance,
           sequential = false,
           verbose = false,
           quiet = false,
           overwrite,
           interactive,
+          executeFileTemplates,
           ...restArgs
         } = args;
         const debug = logger(verbose);
@@ -119,7 +134,9 @@ const main = async () => {
           overwrite,
           include: include?.split(','),
           exclude: exclude?.split(','),
-          interactive
+          interactive,
+          executeFileTemplates,
+          inheritance
         });
         let written = 0;
         debug(`output folder: ${output}`);

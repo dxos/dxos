@@ -1,0 +1,67 @@
+{
+  "name": "@dxos/framebox",
+  "version": "0.1.23",
+  "description": "Frame sandbox",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "scripts": {
+    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-typegen": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/messaging": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-async": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-tunnel": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@monaco-editor/react": "^4.4.6",
+    "esbuild-wasm": "^0.16.14",
+    "monaco-editor": "^0.25.0",
+    "use-subscription": "^1.8.0",
+    "y-monaco": "^0.1.0",
+    "yjs": "^13.5.41"
+  },
+  "devDependencies": {
+    "@dxos/react-components": "workspace:*",
+    "@testing-library/dom": "^8.17.1",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@types/debug": "^4.1.7",
+    "@types/level-js": "~4.0.1",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@types/use-subscription": "^1.0.0",
+    "level-js": "^5.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-dom": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "typedoc": {
+    "entryPoint": "src/index.ts"
+  }
+}

@@ -12,16 +12,16 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
 
-import { createHaloAuthProvider, HaloAuthVerifier } from './authenticator';
+import { createAuthProvider, TrustedKeySetAuthVerifier } from './authenticator';
 
 describe('identity/authenticator', () => {
   test('verifies credentials', async () => {
     const keyring = new Keyring();
     const deviceKey = await keyring.createKey();
     const signer = createCredentialSignerWithKey(keyring, deviceKey);
-    const authProvider = createHaloAuthProvider(signer);
-    const authVerifier = new HaloAuthVerifier({
-      trustedDevicesProvider: () => new ComplexSet(PublicKey.hash, [deviceKey]),
+    const authProvider = createAuthProvider(signer);
+    const authVerifier = new TrustedKeySetAuthVerifier({
+      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, [deviceKey]),
       update: new Event(),
       authTimeout: 10
     });

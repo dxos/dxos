@@ -22,43 +22,63 @@ dx app publish
 ## Roadmap
 
 - [ ] Deprecate Kitchen Sink.
-- [ ] Playwright.
-
-- [ ] Profile (App team UX).
-- [ ] Invitations configuration (App team UX).
-- [ ] Project settings.
-- [ ] Saved prefs (e.g., persistent).
-- [ ] Import/export JSON.
+- [ ] Playwright tests/demo.
 - [ ] Deploy mobile app.
-- [ ] Menu.
-- [ ] CRM/KM (Airtable + reusable cards).
-- [ ] Graph control.
+- [ ] Import/export JSON.
+- [ ] OpenAI bot demo (e.g., fill in background information on Orgs).
+
+- [ ] Kanban column width on mobile (change breakpoint dep on phone).
+- [ ] Kanban card expand.
+- [ ] Data navigation (slide views).
+- [ ] Undo butterbar.
+
 - [x] Selector control.
 - [ ] Search (filtering).
+- [ ] Saved prefs (e.g., persistent).
+- [ ] Menu.
+- [ ] CRM/KM (Airtable + reusable cards).
+- [ ] Graph control with pop-up.
 - [ ] Integrate with Devtools.
-- [ ] Virtual table:
+- [ ] Virtual table (columns, rows):
   - https://react-table-v7.tanstack.com
   - https://bvaughn.github.io/react-virtualized/#/components/Masonry
 - [ ] Super app (WeChat/Twitter) for IPFS:
   https://youtu.be/zRcl77pnbgY?t=1835 (Scott Galloway)
 
+- [x] Profile.
+- [x] Invitations configuration.
+
 ### UX Issues.
 
-- [ ] Theme (e.g., AppBar colors).
+- [ ] Controlled vs. non-controlled (`itmems` and `value` property.)
+- [ ] Getters (decouple from ECHO objects).
+- [ ] Theme: 
+  - [ ] Mobile font size.
+  - [ ] AppBar/Accent colors.
 - [ ] Consistent styles for controls (e.g., bg color).
-- [ ] Styling slots.
-- [ ] i18n Text properties (e.g., placeholder)
+- [ ] Styling slots?
+- [ ] i18n Text properties (e.g., placeholder.)
+
+### UX Framework
+
+- [ ] Containers and Responsive Cards
 
 ### Framework/ECHO Issues
 
-- [ ] dxtype build rule.
+- [ ] Set undefined value.
 - [ ] Can't set complex value (see echo-typegen tests)
-- [ ] Reset.
 - [ ] Splice (drag and drop).
 - [ ] Scalar sets (e.g., Project tags for kanban).
 - [ ] Materialized links (referential integrity).
 - [ ] Device management.
 - [ ] Save space credentials (membership) to HALO.
+- [ ] Introspect types (see meta table).
+- [ ] Reset (data services).
+
+### SDK
+
+- [ ] dxtype build rule.
+- [ ] Schema docs
 
 ## Refs
 
