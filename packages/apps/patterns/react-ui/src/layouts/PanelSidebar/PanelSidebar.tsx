@@ -7,7 +7,6 @@ import React, {
   ComponentProps,
   createContext,
   Dispatch,
-  Fragment,
   PropsWithChildren,
   SetStateAction,
   useCallback,
@@ -37,7 +36,7 @@ export const useTogglePanelSidebar = () => {
 };
 
 export interface PanelSidebarProviderSlots {
-  content?: ComponentProps<typeof Fragment>;
+  content?: ComponentProps<typeof DialogPrimitive.Content>;
   fixedBlockStart?: ComponentProps<'div'>;
   fixedBlockEnd?: ComponentProps<'div'>;
 }
@@ -83,13 +82,15 @@ export const PanelSidebarProvider = ({
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
       <DialogPrimitive.Root open={domShow} modal={!isLg}>
         <DialogPrimitive.Content
+          {...slots?.content}
           className={mx(
             'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
-            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]'
+            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]',
+            slots?.content?.className
           )}
         >
           <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
-          <Fragment {...slots?.content} />
+          {slots?.content?.children}
         </DialogPrimitive.Content>
         {slots?.fixedBlockStart && (
           <div
