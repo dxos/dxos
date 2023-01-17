@@ -19,7 +19,12 @@ export const SpacePage = () => {
   return item ? (
     <Composer
       item={item}
-      className='z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]'
+      slots={{
+        editor: {
+          className:
+            'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]'
+        }
+      }}
     />
   ) : (
     <Loading label='Loading' size='md' />
