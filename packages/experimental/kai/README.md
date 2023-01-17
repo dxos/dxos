@@ -6,7 +6,7 @@ The word kai (貝) is the Japanese word for shell.
 ## Development
 
 ```bash
-p serve
+pnpm nx serve kai
 ```
 
 ## Deploying the App
