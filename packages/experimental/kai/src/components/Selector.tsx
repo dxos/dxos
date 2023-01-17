@@ -22,9 +22,18 @@ export const Selector: FC<{
   onSelect?: (id?: string) => void;
   onChange?: (text: string) => void;
 }> = ({ value, options, rows = 5, placeholder, onSelect, onChange }) => {
+  const getText = (id?: string) => {
+    if (id === undefined) {
+      return '';
+    }
+
+    const option = options?.find((option) => option.id === id);
+    return option?.title;
+  };
+
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState(value);
   const [selected, setSelected] = useState<string | undefined>(value);
+  const [text, setText] = useState(getText(value));
   const hasOptions = !!(options?.length ?? 0);
 
   const handleToggleOpen = () => {
@@ -32,8 +41,7 @@ export const Selector: FC<{
   };
 
   const handleSelect = (id?: string) => {
-    const option = options?.find((option) => option.id === id);
-    setText(option?.title);
+    setText(getText(id));
     setSelected(id);
     setOpen(false);
     onSelect?.(id);

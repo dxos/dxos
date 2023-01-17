@@ -10,24 +10,23 @@ import { useQuery } from '@dxos/react-client';
 import { Kanban, KanbanColumnDef, Searchbar } from '../components';
 import { useSpace } from '../hooks';
 import { createProject, Project, tags } from '../proto';
-import { ProjectItem } from './ProjectList';
+import { ProjectCard } from './cards';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
-  return <ProjectItem project={object as Project} />;
+  return <ProjectCard project={object as Project} />;
 };
 
 export const ProjectKanban: FC = () => {
   const { space } = useSpace();
-  const projects = useQuery(space, Project.filter());
 
-  const titleAccessor = (object: EchoObject) => (object as Project).title;
+  // TODO(burdon): Generalize.
+  const objects = useQuery(space, Project.filter());
   const columns: KanbanColumnDef[] = tags.map((tag) => ({
     id: tag,
     header: tag,
-    title: titleAccessor,
-    Content: ProjectContent,
-    // filter: (object: EchoObject) => (object as Project).tags.has(tag)
-    filter: (object: EchoObject) => (object as Project).tag === tag
+    title: (object: EchoObject) => (object as Project).title,
+    filter: (object: EchoObject) => (object as Project).tag === tag,
+    Content: ProjectContent
   }));
 
   const handleCreate = async (column: KanbanColumnDef) => {
@@ -36,14 +35,14 @@ export const ProjectKanban: FC = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-3'>
-        <div style={{ width: 300 }}>
+      <div className='py-3 px-0 md:px-2'>
+        <div className='w-screen md:w-[314px] px-4 md:px-2'>
           <Searchbar />
         </div>
       </div>
 
       <div className='flex flex-1 overflow-hidden'>
-        <Kanban objects={projects} columns={columns} onCreate={handleCreate} />
+        <Kanban objects={objects} columns={columns} onCreate={handleCreate} />
       </div>
     </div>
   );

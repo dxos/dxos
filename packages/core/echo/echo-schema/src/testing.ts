@@ -11,6 +11,7 @@ import { TextModel } from '@dxos/text-model';
 import { EchoDatabase } from './database';
 import { DatabaseRouter } from './database-router';
 
+// TODO(burdon): Builder pattern.
 // TODO(burdon): Rename createMemoryDatabase.
 export const createDatabase = async (router = new DatabaseRouter()) => {
   // prettier-ignore

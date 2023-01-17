@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { createSpacePath } from '../app';
-import { Searchbar } from '../components';
+import { createSpacePath } from '../../app';
+import { Searchbar } from '../../components';
 import {
   BotID,
   FrameID,
@@ -20,28 +20,48 @@ import {
   useFrameDispatch,
   useFrames,
   useSpace
-} from '../hooks';
+} from '../../hooks';
 
 type ExtensionType = 'app' | 'bot';
 
-const Tile: FC<{ id: string; title: string; active: boolean; Icon: FC<any>; onSelect: (id: string) => void }> = ({
-  id,
-  title,
-  active,
-  Icon,
-  onSelect
-}) => {
+const Tile: FC<{
+  id: string;
+  title: string;
+  description?: string;
+  active: boolean;
+  Icon: FC<any>;
+  onSelect: (id: string) => void;
+}> = ({ id, title, description, active, Icon, onSelect }) => {
   return (
     <div
       className={mx(
-        'flex flex-col items-center w-[140px] h-[140px] border-0 rounded-lg p-4 bg-gray-200',
+        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 bg-gray-200 drop-shadow-md',
         '[&>div>svg]:hover:text-black hover:bg-blue-200',
         active && 'bg-blue-300 text-black'
       )}
       onClick={() => onSelect(id)}
     >
-      <div className='text-xl font-thin text-black'>{title}</div>
-      <div className='mt-5'>
+      <div className='flex flex-1 flex-col'>
+        <h2 className='text-xl font-thin text-black mb-1'>{title}</h2>
+        <div className='text-sm font-thin text-black'>{description}</div>
+      </div>
+      <div className='flex flex-col justify-center ml-2 text-black'>
+        <Icon weight='thin' className={mx(getSize(16))} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div
+      className={mx(
+        'flex flex-col items-center w-[200px] h-[140px] border-0 rounded-lg p-4 bg-gray-200 drop-shadow-md',
+        '[&>div>svg]:hover:text-black hover:bg-blue-200',
+        active && 'bg-blue-300 text-black'
+      )}
+      onClick={() => onSelect(id)}
+    >
+      <div className='text-xl __font-thin text-black'>{title}</div>
+      <div className='mt-3'>
         <Icon weight='thin' className={mx(getSize(16))} />
       </div>
     </div>
@@ -52,7 +72,7 @@ const Tile: FC<{ id: string; title: string; active: boolean; Icon: FC<any>; onSe
  * DMG Explorer.
  * https://ifttt.com/explore
  */
-export const DMGView = () => {
+export const RegistryFrame = () => {
   const { space } = useSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>('app');
@@ -68,9 +88,11 @@ export const DMGView = () => {
   const handleSelect = (id: string) => {
     switch (type) {
       case 'app': {
-        // TODO(burdon): Toggle.
-        setActiveFrame(id as FrameID, true);
-        navigate(createSpacePath(space.key, id));
+        const active = !activeFrames.find((frame) => frame.id === id);
+        setActiveFrame(id as FrameID, active);
+        if (active) {
+          navigate(createSpacePath(space.key, id));
+        }
         break;
       }
 
@@ -106,14 +128,15 @@ export const DMGView = () => {
 
       <div className='flex justify-center overflow-hidden'>
         <div className='flex flex-col overflow-y-scroll p-4'>
-          <div className='flex flex-col grid-cols-1 gap-8 lg:grid lg:grid-cols-3'>
+          <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
             {Object.values(type === 'app' ? frames : bots)
               .filter(({ system }) => !system)
-              .map(({ id, title, Icon }) => (
+              .map(({ id, title, description, Icon }) => (
                 <Tile
                   key={id}
                   id={id}
                   title={title}
+                  description={description}
                   Icon={Icon}
                   onSelect={handleSelect}
                   active={!!((type === 'app' ? activeFrames : activeBots) as any[]).find((active) => active.id === id)}

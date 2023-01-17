@@ -10,7 +10,7 @@ import { Bot } from './bot';
 /**
  * Adds info to records.
  */
-export class AIBot extends Bot<Project> {
+export class ResearchBot extends Bot<Project> {
   constructor(db: EchoDatabase) {
     super(db, Project.filter());
   }
