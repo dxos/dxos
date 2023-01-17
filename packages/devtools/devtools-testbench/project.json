@@ -2,15 +2,6 @@
   "sourceRoot": "packages/devtools/devtools-testbench/src",
   "projectType": "application",
   "targets": {
-    "bundle": {
-      "executor": "@nrwl/vite:build",
-      "options": {
-        "outputPath": "packages/devtools/devtools-testbench/out/devtools-testbench"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {

@@ -45,22 +45,6 @@ export default defineConfig({
       '@dxos/react-client'
     ]
   },
-
-  build: {
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-      },
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom']
-        }
-      }
-    }
-  },
   // TODO(burdon): Add fonts.
   plugins: [
     ConfigPlugin(),
