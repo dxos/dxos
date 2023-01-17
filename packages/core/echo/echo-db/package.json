@@ -43,6 +43,7 @@
     "@dxos/teleport-extension-presence": "workspace:*",
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
+    "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "debug": "^4.3.3"
   },

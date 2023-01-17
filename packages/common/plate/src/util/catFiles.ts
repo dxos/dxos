@@ -29,7 +29,7 @@ export const catFiles = async (fileNames: string[], options?: LoadOptions): Prom
       return result;
     } catch (err: any) {
       if (!/ENOENT/.test(err.toString())) {
-        console.warn('problem in file:', file);
+        console.warn('problem in file:', relativeTo ? path.resolve(relativeTo, file) : file);
         console.warn(err);
       }
       errors.push(err);
