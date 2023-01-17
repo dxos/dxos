@@ -8,7 +8,7 @@ import React, { FC, KeyboardEvent, useCallback, useEffect, useState } from 'reac
 import { base, deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
-import { getSize, mx, useThemeContext } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/react-components';
 
 import { Button, Card, Input, CardRow, CardMenu } from '../components';
 import { useAppState, useSpace } from '../hooks';
@@ -52,7 +52,6 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   const tasks = useQuery(space, Task.filter({ completed }));
   const [newTask, setNewTask] = useState<Task>();
   const [saving, setSaving] = useState(false);
-  const { hasIosKeyboard } = useThemeContext();
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | undefined;
@@ -91,8 +90,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 
   return (
     <div className='flex flex-1 justify-center bg-gray-100'>
-      <div className={'flex flex-col overflow-y-scroll pt-2 bg-white w-screen is-full md:is-[400px] relative'}>
-        <div className={'mt-2 pli-3'}>
+      <div className={'flex flex-col overflow-y-scroll pl-3 pr-3 pt-2 pb-8 bg-white w-screen is-full md:is-[400px]'}>
+        <div className={'mt-2'}>
           {tasks?.map((task, index) => (
             <TaskItem
               key={task[id]}
@@ -107,16 +106,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
         </div>
 
         {/* TODO(burdon): Keep pinned to bottom on create. */}
-        {newTask && (
-          <div
-            className={mx(
-              'bg-white pli-3 pbs-2 pbe-4',
-              !hasIosKeyboard && 'focus-within:sticky focus-within:block-end-0'
-            )}
-          >
-            <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />
-          </div>
-        )}
+        <div>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />}</div>
       </div>
 
       {saving && (
@@ -167,7 +157,6 @@ export const NewTaskItem: FC<{
           onChange={(value) => {
             task.title = value;
           }}
-          autoFocus
         />
       }
     />
@@ -178,11 +167,12 @@ export const TaskItem: FC<{
   task: Task;
   readonly?: boolean;
   showAssigned?: boolean;
+  onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
   isLast?: boolean;
   orderIndex: number;
-}> = withReactor(({ task, readonly, showAssigned, onDelete, onSave, orderIndex, isLast }) => {
+}> = withReactor(({ task, readonly, showAssigned, onEnter, onDelete, onSave, orderIndex, isLast }) => {
   const { debug } = useAppState();
   useReactorContext({
     onChange: () => {
@@ -225,6 +215,7 @@ export const TaskItem: FC<{
               )?.focus();
             }
           }
+          onEnter?.(task);
           break;
       }
     },

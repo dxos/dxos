@@ -11,7 +11,6 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { withReactor } from '@dxos/react-client';
-import { mx, useThemeContext } from '@dxos/react-components';
 
 import { Button } from '../components';
 import { useSpace } from '../hooks';
@@ -61,11 +60,13 @@ export const DraggableTaskList: FC<{
   //  - Split current task if pressing Enter in the middle.
 
   return (
-    <DndContext onDragEnd={onDrag ? handleDragEnd : undefined} modifiers={[restrictToVerticalAxis]}>
-      <SortableContext items={tasks.map((task) => task[id])}>
-        <DraggableTaskListContainer tasks={tasks} newTask={newTask} onCreate={handleCreateTask} />
-      </SortableContext>
-    </DndContext>
+    <div>
+      <DndContext onDragEnd={onDrag ? handleDragEnd : undefined} modifiers={[restrictToVerticalAxis]}>
+        <SortableContext items={tasks.map((task) => task[id])}>
+          <DraggableTaskListContainer tasks={tasks} newTask={newTask} onCreate={handleCreateTask} />
+        </SortableContext>
+      </DndContext>
+    </div>
   );
 });
 
@@ -76,11 +77,10 @@ export const DraggableTaskListContainer: FC<{
   onDelete?: (task: Task) => void;
 }> = withReactor(({ tasks, newTask, onCreate, onDelete }) => {
   const { active } = useDndContext();
-  const { hasIosKeyboard } = useThemeContext();
 
   // TODO(burdon): Order isn't reliable after dragging.
   return (
-    <div className='relative'>
+    <div>
       {tasks.map((task, index) => (
         <DraggableTaskItem
           key={task[id]}
@@ -92,11 +92,8 @@ export const DraggableTaskListContainer: FC<{
       ))}
 
       {newTask && (
-        <div
-          className={mx('flex ml-7', !hasIosKeyboard && 'focus-within:sticky focus-within:block-end-0')}
-          style={active ? { visibility: 'hidden' } : {}}
-        >
-          <NewTaskItem task={newTask} onEnter={onCreate} lastIndex={tasks.length - 1} />
+        <div className='flex ml-7' style={active ? { visibility: 'hidden' } : {}}>
+          <NewTaskItem task={newTask} onEnter={onCreate} />
         </div>
       )}
     </div>
@@ -105,11 +102,11 @@ export const DraggableTaskListContainer: FC<{
 
 export const DraggableTaskItem: FC<{
   task: Task;
+  onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-
-  isLast?: boolean;
   orderIndex: number;
-}> = withReactor(({ task, onDelete, orderIndex, isLast }) => {
+  isLast?: boolean;
+}> = withReactor(({ task, onEnter, onDelete, orderIndex, isLast }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task[id] });
 
   // TODO(burdon): Dragging doesn't handle variable height items?
@@ -124,7 +121,7 @@ export const DraggableTaskItem: FC<{
         <DotsSixVertical />
       </Button>
 
-      <TaskItem {...{ task, onDelete, orderIndex, isLast }} />
+      <TaskItem {...{ task, onDelete, onEnter, orderIndex, isLast }} />
     </div>
   );
 });
