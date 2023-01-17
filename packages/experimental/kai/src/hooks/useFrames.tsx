@@ -5,7 +5,7 @@
 import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 export enum FrameID {
-  DMG = 'registry',
+  REGISTRY = 'registry',
   SETTINGS = 'settings',
   DASHBOARD = 'dashboard',
   TABLE = 'tables',
@@ -18,9 +18,25 @@ export enum FrameID {
   CHESS = 'chess'
 }
 
-const activeFrames = [FrameID.SETTINGS, FrameID.DMG, FrameID.DASHBOARD, FrameID.TABLE, FrameID.TASKS];
+export const defaultFrameId = FrameID.DASHBOARD;
 
-export type FrameDef = { id: FrameID; system?: boolean; title: string; Icon: FC<any>; Component: FC<any> };
+// prettier-ignore
+const activeFrames = [
+  FrameID.SETTINGS,
+  FrameID.REGISTRY,
+  FrameID.DASHBOARD,
+  FrameID.TABLE,
+  FrameID.TASKS
+];
+
+export type FrameDef = {
+  id: FrameID;
+  system?: boolean;
+  title: string;
+  description?: string;
+  Icon: FC<any>;
+  Component: FC<any>;
+};
 
 export type FrameMap = { [index: string]: FrameDef };
 
@@ -59,16 +75,17 @@ export const useActiveFrames = (): FrameDef[] => {
 
 export const useFrameDispatch = () => {
   const [, dispatch] = useContext(FramesContext)!;
-  return (id: FrameID, state: boolean) => {
+  return (id: FrameID, add: boolean) => {
     dispatch((context: FramesContextType) => {
       const { frames, active } = context;
-      if (active.findIndex((active) => active === id) !== -1) {
-        return context;
+      const list = active.filter((frame) => frame !== id);
+      if (add) {
+        list.push(id);
       }
 
       return {
         frames,
-        active: [...active, id]
+        active: list
       };
     });
   };

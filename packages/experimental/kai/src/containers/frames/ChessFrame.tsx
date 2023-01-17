@@ -12,7 +12,7 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { useSpace } from '../hooks';
+import { useSpace } from '../../hooks';
 
 const smallSize = 300;
 const panelWidth = 160;
@@ -28,7 +28,7 @@ export const createChess = (game: Game) => {
 
 // TODO(burdon): Invite/determine player.
 // TODO(burdon): Move to @dxos/chess-app (stand-alone app).
-export const ChessView: FC = () => {
+export const ChessFrame: FC = () => {
   const [style] = useState(ChessPieces.RIOHACHA);
   const [game, setGame] = useState<Game | undefined>();
   const { space } = useSpace();

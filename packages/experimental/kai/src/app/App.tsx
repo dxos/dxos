@@ -27,15 +27,14 @@ const clientProvider = async (demo: boolean) => {
   // Auto create if in demo mode.
   // TODO(burdon): Different modes (testing). ENV/Config?
   // TODO(burdon): Auto invite/join if demo mode.
+  // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
+  // chrome.windows.create({ '/join', incognito: true });
   if (demo) {
     await client.halo.createProfile();
     const space = await client.echo.createSpace();
 
     const generator = new Generator(space.experimental.db);
     await generator.generate();
-
-    // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
-    // chrome.windows.create({ '/join', incognito: true });
   }
 
   return client;

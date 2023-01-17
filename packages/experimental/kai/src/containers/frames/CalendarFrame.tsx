@@ -6,8 +6,8 @@ import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
-import { Article, Clock, GridFour, SquareHalf, User } from 'phosphor-react';
-import React, { useState } from 'react';
+import { Article, Clock, GridFour, SquareHalf, Tray, User } from 'phosphor-react';
+import React, { useMemo, useState } from 'react';
 import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 'react-big-calendar';
 
 import { id } from '@dxos/echo-schema';
@@ -17,8 +17,9 @@ import { getSize, mx } from '@dxos/react-components';
 // import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { useSpace } from '../hooks';
-import { Event as EventType } from '../proto';
+import { useSpace } from '../../hooks';
+import { Contact, Event as EventType } from '../../proto';
+import { ContactCard } from '../cards';
 
 const mapEvents = (event: EventType) => ({
   title: event.title,
@@ -41,54 +42,56 @@ const localizer = dateFnsLocalizer({
 
 const views = [
   { view: Views.MONTH, Icon: GridFour },
-  { view: Views.WEEK, Icon: Article },
-  { view: Views.AGENDA, Icon: SquareHalf }
+  { view: Views.WEEK, Icon: SquareHalf },
+  { view: Views.DAY, Icon: Article },
+  { view: Views.AGENDA, Icon: Tray }
 ];
-
-// TODO(burdon): Custom views:
-//  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/examples--example-8
-//  - https://github.com/jquense/react-big-calendar/blob/master/stories/demos/exampleCode/rendering.js
-//  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-creating-custom-views--page
-
-const components: any = {
-  agenda: {
-    event: ({ event }: { event: Event }) => (
-      <div className='flex flex-col overflow-hidden'>
-        <div>{event.title}</div>
-        <div className='flex flex-col'>
-          {(event.resource as EventType).members.map((member) => (
-            <div key={member[id]} className='flex items-center overflow-hidden cursor-pointer'>
-              <div className='mr-1 text-blue-500'>
-                <User />
-              </div>
-              <div className='overflow-hidden text-ellipsis whitespace-nowrap w-[100px] text-blue-500'>
-                {member.name}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  },
-
-  // TODO(burdon): Remove time (currently via CSS).
-  event: ({ event }: { event: Event }) => {
-    return <div>{event.title}</div>;
-  }
-};
 
 /**
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/story/about-big-calendar--page
  */
-export const CalendarView = () => {
+export const CalendarFrame = () => {
   const { space } = useSpace();
   const events = useQuery(space, EventType.filter()).map(mapEvents);
   // TODO(burdon): Manage global state persistently.
-  const [view, setView] = useState<any>(Views.MONTH);
+  const [view, setView] = useState<any>(Views.AGENDA);
+  const [contact, setContact] = useState<Contact>();
+
+  const components: any = useMemo(
+    () => ({
+      agenda: {
+        event: ({ event }: { event: Event }) => (
+          <div className='flex flex-col overflow-hidden'>
+            <div>{event.title}</div>
+            <div className='flex flex-col'>
+              {(event.resource as EventType).members.map((member) => (
+                <div key={member[id]} className='flex items-center overflow-hidden cursor-pointer'>
+                  <div className='flex items-center mr-1 text-blue-500'>
+                    <button onClick={() => setContact(member)}>
+                      <User />
+                    </button>
+                  </div>
+                  <div className='overflow-hidden text-ellipsis whitespace-nowrap w-[100px] text-blue-500'>
+                    {member.name}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      },
+
+      // TODO(burdon): Remove time (currently via CSS).
+      event: ({ event }: { event: Event }) => {
+        return <div>{event.title}</div>;
+      }
+    }),
+    []
+  );
 
   return (
     <div className='flex flex-1 flex-col justify-center overflow-hidden'>
-      <div className='flex m-2'>
+      <div className='flex m-2 pl-2 pr-2'>
         <div>
           <button>
             <Clock className={getSize(6)} />
@@ -104,7 +107,7 @@ export const CalendarView = () => {
         </div>
       </div>
 
-      <div className={mx('flex flex-1 overflow-hidden')}>
+      <div className={mx('flex flex-1 overflow-hidden p-4')}>
         <div className={mx('flex flex-1 overflow-y-scroll', '[&>div]:w-full [&>div>div>table]:hidden')}>
           <ReactBigCalendar
             // date={new Date(2023, 0, 15)}
@@ -118,7 +121,11 @@ export const CalendarView = () => {
             components={components}
           />
         </div>
-        {view === Views.AGENDA && <div className='flex flex-1 border-l hidden md:flex'></div>}
+        {view === Views.AGENDA && contact && (
+          <div className='flex flex-1 border-l hidden md:flex pl-4'>
+            <ContactCard contact={contact} />
+          </div>
+        )}
       </div>
     </div>
   );

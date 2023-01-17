@@ -12,6 +12,7 @@ import { Bot } from './bot';
 // TODO(burdon): Show bots in sidebar (DMG state).
 // TODO(burdon): Instantiate bot from fake bot selector (DMG view).
 // TODO(burdon): Add apps/bots from DMG grid view (Chess, Explorer, Calendar, Kanban, Maps).
+// TODO(burdon): Trivial engine: https://github.com/josefjadrny/js-chess-engine
 export class ChessBot extends Bot<Game> {
   private readonly _player = 'b';
 

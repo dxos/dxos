@@ -23,6 +23,7 @@ import {
 export const matchSpaceKey = (spaces: Space[], spaceKey: string) =>
   spaces.find((space) => space.key.truncate() === spaceKey);
 
+// TODO(burdon): Circular deps?
 export const createSpacePath = (spaceKey: PublicKey, frame?: string) =>
   `/${spaceKey.truncate()}` + (frame ? `/${frame}` : '');
 

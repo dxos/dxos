@@ -31,6 +31,7 @@ const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell
  * Virtual table.
  * https://react-table-v7.tanstack.com/docs/overview
  */
+// TODO(burdon): Checkbox in left gutter.
 export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = ({ columns, data }) => {
   const defaultColumn = useMemo(
     () => ({
@@ -65,7 +66,7 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
-                <div {...column.getHeaderProps(headerProps)} className='th pl-4 pr-4'>
+                <div {...column.getHeaderProps(headerProps)} className='th px-4 py-1'>
                   {column.render('Header')}
 
                   {/* Use column.getResizerProps to hook up the events correctly. */}
@@ -79,25 +80,23 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
         </div>
 
         {/* Body */}
-        <div className='tbody overflow-y-scroll'>
-          <div>
-            {rows.map((row, i) => {
-              prepareRow(row);
-              return (
-                // eslint-disable-next-line react/jsx-key
-                <div {...row.getRowProps()} className='tr'>
-                  {row.cells.map((cell) => {
-                    return (
-                      // eslint-disable-next-line react/jsx-key
-                      <div {...cell.getCellProps(cellProps)} className='td pl-4 pr-4 overflow-hidden text-ellipsis`'>
-                        {cell.render('Cell')}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
+        <div className='tbody overflow-y-scroll mt-2'>
+          {rows.map((row, i) => {
+            prepareRow(row);
+            return (
+              // eslint-disable-next-line react/jsx-key
+              <div className='tr' {...row.getRowProps()}>
+                {row.cells.map((cell) => {
+                  return (
+                    // eslint-disable-next-line react/jsx-key
+                    <div {...cell.getCellProps(cellProps)} className='td px-4'>
+                      <div className='overflow-hidden text-ellipsis whitespace-nowrap'>{cell.render('Cell')}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
