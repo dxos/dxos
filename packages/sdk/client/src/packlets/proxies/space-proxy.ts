@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import isEqual from 'lodash.isequal';
+
 import { Event, synchronized, Trigger } from '@dxos/async';
 import {
   ClientServicesProvider,
@@ -19,7 +21,6 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import isEqual from 'lodash.isequal'
 
 export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
 
@@ -352,7 +353,6 @@ export class SpaceProxy implements Space {
   }
 }
 
-
 const shouldUpdate = (prev: SpaceType, next: SpaceType) => {
-  return !isEqual(prev, next)
-}
+  return !isEqual(prev, next);
+};

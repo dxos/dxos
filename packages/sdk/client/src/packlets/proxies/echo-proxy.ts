@@ -96,10 +96,9 @@ export class EchoProxy implements Echo {
   async open() {
     this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
 
-    const gotInitialUpdate = new Trigger()
+    const gotInitialUpdate = new Trigger();
     const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
     spacesStream.subscribe(async (data) => {
-      
       let emitUpdate = false;
 
       for (const space of data.spaces ?? []) {
