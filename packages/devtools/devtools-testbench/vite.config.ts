@@ -23,7 +23,14 @@ export default defineConfig({
   base: '', // Ensures relative path to assets.
 
   server: {
-    host: true
+    host: true,
+    https:
+      process.env.HTTPS === 'true'
+        ? {
+            key: './key.pem',
+            cert: './cert.pem'
+          }
+        : false
   },
 
   define: {
@@ -82,11 +89,12 @@ export default defineConfig({
 
   // TODO(burdon): Add fonts.
   plugins: [
+    // TODO(burdon): Document.
     ConfigPlugin(),
+
+    // TODO(burdon): Document.
     ThemePlugin({
       content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
@@ -99,17 +107,21 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs')
       ]
     }),
+
+    // TODO(burdon): Document.
     ReactPlugin(),
+
+    // TODO(burdon): Document.
+    // To reset, unregister service worker using devtools.
     VitePWA({
-      registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },
       includeAssets: ['favicon.ico'],
       manifest: {
-        name: 'DXOS TestBench',
-        short_name: 'TestBench',
-        description: 'DXOS TestBench',
+        name: 'DXOS Kai',
+        short_name: 'Kai',
+        description: 'DXOS Kai Demo',
         theme_color: '#ffffff',
         icons: [
           {

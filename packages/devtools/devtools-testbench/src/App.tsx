@@ -118,10 +118,10 @@ const KaiPart = () => {
 export const App = () => {
   return (
     <div className='h-screen w-full grid grid-rows-2 grid-flow-col gap-4'>
-      <div className='h-1/2'>
+      <div className='relative h-1/2'>
         <KaiPart />
       </div>
-      <div className='h-1/2'>
+      <div className='relative h-1/2'>
         <DevtoolsPart />
       </div>
     </div>

@@ -6,11 +6,12 @@ import React, { useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { SignalStatusComp } from '@dxos/devtools-mesh';
 import { SignalState, SignalStatus } from '@dxos/messaging';
 import { SignalResponse, SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components-deprecated';
+
+import { SignalStatusComp } from './SignalStatus';
 
 const stringToState = (state: string): SignalState => {
   const dict: Record<string, SignalState> = {
