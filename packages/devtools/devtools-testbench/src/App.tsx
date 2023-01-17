@@ -3,18 +3,22 @@
 //
 
 import React from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Event, sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServicesProxy } from '@dxos/client-services';
 import { ClientAndServices, Devtools } from '@dxos/devtools';
+import { App as KaiApp } from '@dxos/kai';
 // eslint-disable-next-line no-restricted-imports
-import { Root as KaiPart } from '@dxos/kai/src/Root';
+import kaiTranslations from '@dxos/kai/src/translations';
 import { log } from '@dxos/log';
+import { appkitTranslations, Fallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
+import { ThemeProvider } from '@dxos/react-components';
 import { RpcPort } from '@dxos/rpc';
 
-const waitForDXOS = async (timeout = 100000, interval = 1000) => {
+const waitForDXOS = async (timeout = 5_000, interval = 500) => {
   while (timeout > 0) {
     const isReady = !!(window as any).__DXOS__;
     if (isReady) {
@@ -76,6 +80,36 @@ const DevtoolsPart = () => {
   }, []);
 
   return <Devtools clientReady={clientReady} />;
+};
+
+const KaiPart = () => {
+  const {
+    offlineReady: [offlineReady, _setOfflineReady],
+    needRefresh: [needRefresh, _setNeedRefresh],
+    updateServiceWorker
+  } = useRegisterSW({
+    onRegisterError: (err) => {
+      log.error(err);
+    }
+  });
+
+  // TODO(burdon): Modes from env/config.
+  // const demo = process.env.DEMO === 'true';
+
+  return (
+    <ThemeProvider
+      appNs='kai'
+      resourceExtensions={[appkitTranslations, kaiTranslations]}
+      fallback={<Fallback message='Loading...' />}
+    >
+      <KaiApp debug={process.env.DEBUG === 'true'} />
+      {needRefresh ? (
+        <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+      ) : offlineReady ? (
+        <ServiceWorkerToast variant='offlineReady' />
+      ) : null}
+    </ThemeProvider>
+  );
 };
 
 /**

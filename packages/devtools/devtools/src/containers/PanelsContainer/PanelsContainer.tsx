@@ -39,11 +39,11 @@ export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
   }
 
   return (
-    <div className='flex flex-1 flex-row w-full h-screen bg-gray overflow-hidden'>
-      <div className={mx('flex flex-col w-60 h-screen bg-white', 'overflow-auto scrollbar-thin', 'mr-2')}>
+    <div className='flex flex-row w-full h-full bg-gray overflow-hidden'>
+      <div className={mx('flex flex-col w-1/5 h-full bg-white', 'overflow-auto scrollbar-thin', 'mr-2')}>
         <FolderHierarchy
           items={sections}
-          highlightClassName='bg-slate-200'
+          highlightClassName='bg-slate-400'
           onSelect={(item: FolderHierarchyItem) => {
             const newSelected = findItem(sections, item.id);
             if (newSelected?.panel) {
@@ -55,8 +55,8 @@ export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
         />
       </div>
 
-      <div className='flex flex-1 flex-col w-36 bg-white overflow-auto scrollbar-thin mt-2 mb-2'>
-        {selected?.panel ?? selected!.panel}
+      <div className='flex flex-col w-4/5 h-full bg-white overflow-auto scrollbar-thin mt-2 mb-2'>
+        {selected?.panel}
       </div>
     </div>
   );

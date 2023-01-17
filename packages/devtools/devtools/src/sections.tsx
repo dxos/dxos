@@ -16,12 +16,12 @@ import {
   // NetworkPanel,
   KeyringPanel,
   SpacesPanel,
-  Section,
   SignalPanel,
-  SwarmPanel
+  SwarmPanel,
+  SectionItem
 } from './containers';
 
-export const sections: Section[] = [
+export const sections: SectionItem[] = [
   {
     title: 'CLIENT',
     id: 'client',
