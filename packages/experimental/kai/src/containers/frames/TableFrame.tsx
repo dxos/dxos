@@ -60,6 +60,7 @@ const types: ColumnType<any>[] = [
 
 const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
+// TODO(burdon): Normalize with Kanban filters.
 const stringMatch = (value?: string, match?: string) =>
   !match?.length || value?.toLocaleLowerCase().indexOf(match) !== -1;
 
