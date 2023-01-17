@@ -11,7 +11,7 @@ export * from './Dashboard';
 export * from './DMGView';
 export * from './DraggableTaskList';
 export * from './FramesView';
-export * from './Map';
+export * from './MapFrame';
 export * from './MemberList';
 export * from './MetaTable';
 export * from './OrganizationHierarchy';

@@ -15,8 +15,8 @@ import {
   ChessFrame,
   Dashboard,
   DMGView,
+  MapFrame,
   MetaTable,
-  MapView,
   ProjectEditor,
   ProjectGraph,
   ProjectKanban,
@@ -79,7 +79,7 @@ export const frames: FrameDef[] = [
     title: 'Maps',
     description: 'Community contributed street maps.',
     Icon: Compass,
-    Component: MapView
+    Component: MapFrame
   },
   {
     id: FrameID.CHESS,

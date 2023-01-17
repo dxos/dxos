@@ -18,9 +18,9 @@ export enum FrameID {
   CHESS = 'chess'
 }
 
-const activeFrames = [FrameID.SETTINGS, FrameID.DMG, FrameID.DASHBOARD, FrameID.TABLE, FrameID.TASKS, FrameID.CALENDAR];
+export const defaultFrameId = FrameID.MAPS;
 
-export const defaultFrameId = FrameID.CALENDAR;
+const activeFrames = [FrameID.SETTINGS, FrameID.DMG, FrameID.DASHBOARD, FrameID.TABLE, FrameID.TASKS, FrameID.MAPS];
 
 export type FrameDef = {
   id: FrameID;
