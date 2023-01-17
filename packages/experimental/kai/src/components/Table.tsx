@@ -61,12 +61,12 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
               {...headerGroup.getHeaderGroupProps({
                 // style: { paddingRight: '15px' },
               })}
-              className='tr bg-gray-200 sticky'
+              className='tr bg-gray-200'
             >
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
-                <div {...column.getHeaderProps(headerProps)} className='th px-4 py-1 sticky'>
+                <div {...column.getHeaderProps(headerProps)} className='th px-4 py-1'>
                   {column.render('Header')}
 
                   {/* Use column.getResizerProps to hook up the events correctly. */}
