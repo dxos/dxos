@@ -27,7 +27,7 @@ $ npm install -g @dxos/cli
 $ dx COMMAND
 running command...
 $ dx (--version)
-@dxos/cli/0.1.28 darwin-arm64 node-v16.15.1
+@dxos/cli/0.1.32 darwin-arm64 node-v16.15.1
 $ dx --help [COMMAND]
 USAGE
   $ dx COMMAND

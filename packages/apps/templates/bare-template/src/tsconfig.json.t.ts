@@ -49,13 +49,13 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
           ]
         }
       : {
-          ...(rootTsConfig ?? {}),
           compilerOptions: {
-            ...(rootTsConfig?.compilerOptions ?? {}),
+            esModuleInterop: true,
+            jsx: 'react',
             ...compilerOptions
           },
           include,
-          exclude: [...(rootTsConfig?.exclude ?? []), 'vite.config.ts'],
+          exclude: ['node_modules', 'dist', 'vite.config.ts'],
           references
         };
 

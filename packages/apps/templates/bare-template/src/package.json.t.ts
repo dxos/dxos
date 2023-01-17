@@ -1,14 +1,14 @@
 //
 // Copyright 2022 DXOS.org
 //
+import path from 'path';
+import { promises as fs } from 'fs';
 import { defineTemplate, ExtractInput, z } from '@dxos/plate';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 import { PackageJson } from 'types-package-json';
 import merge from 'lodash.merge';
 
 import config from './config.t';
-
-import ownPackageJson from '../package.json';
 
 type Context = { version: string; depVersion: string } & ExtractInput<typeof config>;
 
@@ -95,9 +95,15 @@ export const base = ({ name, version, depVersion }: Context): Partial<PackageJso
   };
 };
 
+const loadJson = async (moduleRelativePath: string) => {
+  const content = await fs.readFile(path.resolve(__dirname, moduleRelativePath));
+  return JSON.parse(content.toString());
+};
+
 export default defineTemplate(
   async ({ input }) => {
     const { react, monorepo, pwa, storybook, dxosUi, tailwind } = input;
+    const ownPackageJson = await loadJson('../../package.json'); // relative to dist/src
     const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
     const version = monorepo ? packageVersion : '0.1.0';
     const depVersion = monorepo ? `workspace:*` : packageVersion;
@@ -118,7 +124,7 @@ export default defineTemplate(
       !monorepo && {
         pnpm: {
           patchedDependencies: {
-            "vite@4.0.4": "patches/vite@4.0.4.patch"
+            'vite@4.0.4': 'patches/vite@4.0.4.patch'
           }
         }
       }
