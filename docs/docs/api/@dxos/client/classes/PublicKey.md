@@ -1,5 +1,5 @@
 # Class `PublicKey`
-<sub>Declared in [packages/common/keys/dist/types/src/public-key.d.ts:15]()</sub>
+<sub>Declared in [packages/common/keys/dist/types/src/public-key.d.ts:16]()</sub>
 
 
 The purpose of this class is to assure consistent use of keys throughout the project.
@@ -31,6 +31,12 @@ Arguments:
 `depth`: <code>number</code>
 
 `options`: <code>InspectOptionsStylized</code>
+### [\[devtoolsFormatter\]()]()
+
+
+Returns: <code>DevtoolsFormatter</code>
+
+Arguments: none
 ### [asBuffer()]()
 
 
