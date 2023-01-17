@@ -125,6 +125,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
         return value;
       }
     };
+
     if (this._uninitialized) {
       return {
         '@id': this[id],
@@ -160,9 +161,6 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   //     hasBody: () => true,
   //     body: () => {
   //       const json = this.toJSON();
-
-  //       const
-
   //       return null
   //     }
   //   };
