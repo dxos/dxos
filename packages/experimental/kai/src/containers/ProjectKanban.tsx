@@ -26,8 +26,7 @@ export const ProjectKanban: FC = () => {
   };
 
   // TODO(burdon): Chain filters.
-  const objects = useQuery(space, Project.filter());
-  const filtered = objects.filter(
+  const objects = useQuery(space, Project.filter()).filter(
     // TODO(burdon): Generalize search (by default all text; use schema annotations).
     (object: Project) => !text?.length || object.title.toLowerCase().indexOf(text) !== -1
   );
@@ -54,7 +53,7 @@ export const ProjectKanban: FC = () => {
       </div>
 
       <div className='flex flex-1 overflow-hidden'>
-        <Kanban objects={filtered} columns={columns} onCreate={handleCreate} />
+        <Kanban objects={objects} columns={columns} onCreate={handleCreate} />
       </div>
     </div>
   );
