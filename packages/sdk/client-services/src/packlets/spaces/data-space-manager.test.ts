@@ -26,7 +26,8 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer1.keyring,
       identity1,
-      new ModelFactory().registerModel(ObjectModel)
+      new ModelFactory().registerModel(ObjectModel),
+      peer1.snapshotStore
     );
 
     const peer2 = builder.createPeer();
@@ -37,7 +38,9 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer2.keyring,
       identity2,
-      new ModelFactory().registerModel(ObjectModel)
+      new ModelFactory().registerModel(ObjectModel),
+      peer1.snapshotStore
+
     );
 
     const space1 = await dataSpaceManager1.createSpace();

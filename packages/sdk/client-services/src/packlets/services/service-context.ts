@@ -122,8 +122,6 @@ export class ServiceContext {
     log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
-      credentialProvider: MOCK_AUTH_PROVIDER,
-      credentialAuthenticator: MOCK_AUTH_VERIFIER,
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,

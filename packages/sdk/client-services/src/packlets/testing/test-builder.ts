@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
-import { ISpace, MetadataStore, SigningContext, SpaceManager, valueEncoding } from '@dxos/echo-db';
+import { ISpace, MetadataStore, SigningContext, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -97,6 +97,7 @@ export type TestPeerProps = {
   keyring?: Keyring;
   networkManager?: NetworkManager;
   spaceManager?: SpaceManager;
+  snapshotStore?: SnapshotStore;
 };
 
 export class TestPeer {
@@ -126,6 +127,10 @@ export class TestPeer {
 
   get metadataStore() {
     return (this._props.metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
+  }
+
+  get snapshotStore() {
+    return (this._props.snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
   }
 
   get networkManager() {
