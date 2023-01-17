@@ -12,7 +12,7 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { useSpace } from '../hooks';
+import { useSpace } from '../../hooks';
 
 const smallSize = 300;
 const panelWidth = 160;

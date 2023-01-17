@@ -19,6 +19,8 @@
     "config": "packages/sdk/config",
     "conform": "tools/conform",
     "context": "packages/common/context",
+    "create": "packages/devtools/initializers/create",
+    "create-bare": "packages/devtools/initializers/bare",
     "credentials": "packages/core/halo/credentials",
     "crypto": "packages/common/crypto",
     "crypto-names": "packages/common/crypto-names",

@@ -18,16 +18,15 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
 
 export const ProjectKanban: FC = () => {
   const { space } = useSpace();
-  const projects = useQuery(space, Project.filter());
 
-  const titleAccessor = (object: EchoObject) => (object as Project).title;
+  // TODO(burdon): Generalize.
+  const objects = useQuery(space, Project.filter());
   const columns: KanbanColumnDef[] = tags.map((tag) => ({
     id: tag,
     header: tag,
-    title: titleAccessor,
-    Content: ProjectContent,
-    // filter: (object: EchoObject) => (object as Project).tags.has(tag)
-    filter: (object: EchoObject) => (object as Project).tag === tag
+    title: (object: EchoObject) => (object as Project).title,
+    filter: (object: EchoObject) => (object as Project).tag === tag,
+    Content: ProjectContent
   }));
 
   const handleCreate = async (column: KanbanColumnDef) => {
@@ -43,7 +42,7 @@ export const ProjectKanban: FC = () => {
       </div>
 
       <div className='flex flex-1 overflow-hidden'>
-        <Kanban objects={projects} columns={columns} onCreate={handleCreate} />
+        <Kanban objects={objects} columns={columns} onCreate={handleCreate} />
       </div>
     </div>
   );

@@ -46,6 +46,7 @@ export interface ISpace {
   close(): Promise<void>;
 }
 
+// TODO(dmaretskyi): Extract database stuff.
 /**
  * Spaces are globally addressable databases with access control.
  */

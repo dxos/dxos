@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { createSpacePath } from '../app';
-import { Searchbar } from '../components';
+import { createSpacePath } from '../../app';
+import { Searchbar } from '../../components';
 import {
   BotID,
   FrameID,
@@ -20,7 +20,7 @@ import {
   useFrameDispatch,
   useFrames,
   useSpace
-} from '../hooks';
+} from '../../hooks';
 
 type ExtensionType = 'app' | 'bot';
 
@@ -72,7 +72,7 @@ const Tile: FC<{
  * DMG Explorer.
  * https://ifttt.com/explore
  */
-export const DMGView = () => {
+export const RegistryFrame = () => {
   const { space } = useSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>('app');

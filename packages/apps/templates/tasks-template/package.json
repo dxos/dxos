@@ -1,20 +1,27 @@
 {
   "name": "@dxos/tasks-template",
   "version": "0.1.22",
+  "description": "An application template demonstrating a working Task List using the ECHO database",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/src/config.t.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && plate --inheritance=false --executeFileTemplates=false --output=dist/src src",
+    "build-resources": "plate --inheritance=false --executeFileTemplates=false --output=dist/src src",
+    "build-tsc": "tsc",
     "clean": "rm -rf test/out",
     "gen": "test/generate"
   },
   "dependencies": {
-    "@dxos/bare-template": "workspace:*"
+    "@dxos/bare-template": "workspace:*",
+    "@dxos/plate": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^4.8.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

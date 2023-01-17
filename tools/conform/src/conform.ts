@@ -9,7 +9,9 @@ import readDir from 'recursive-readdir';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { executeDirectoryTemplate, catFiles } from '@dxos/plate';
+import { catFiles } from '@dxos/plate';
+
+import template from './templates/readme/config.t';
 
 const main = async () => {
   yargs(hideBin(process.argv))
@@ -30,10 +32,9 @@ const main = async () => {
           .filter((file) => minimatch(path.relative(process.cwd(), file), glob))
           .map((pkg) => path.dirname(pkg));
         const promises = packages.map(async (pkg) =>
-          executeDirectoryTemplate({
+          template.execute({
             outputDirectory: pkg,
             overwrite: overwrite ? !!overwrite : false,
-            templateDirectory: path.resolve(__dirname, './template'),
             input: await catFiles(['package.json', 'README.yml'], {
               relativeTo: pkg
             })
@@ -45,7 +46,7 @@ const main = async () => {
         const savePromises = results.flat().map(async (file) => {
           const result = await file.save();
           const msg = file.shortDescription(process.cwd());
-          console.log(result ? 'wrote' : 'skipped', result ? msg : chalk.gray(msg));
+          console.log(result ? 'wrote' : 'skip', result ? msg : chalk.gray(msg));
         });
         await Promise.all(savePromises);
         console.log(packages.length, 'packages conformed');

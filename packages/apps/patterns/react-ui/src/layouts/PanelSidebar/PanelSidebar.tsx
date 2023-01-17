@@ -7,7 +7,6 @@ import React, {
   ComponentProps,
   createContext,
   Dispatch,
-  Fragment,
   PropsWithChildren,
   SetStateAction,
   useCallback,
@@ -18,8 +17,6 @@ import React, {
 import { defaultOverlay, mx, useMediaQuery, useTranslation } from '@dxos/react-components';
 
 export type PanelSidebarState = 'show' | 'hide';
-
-export const sidebarWidth = 272;
 
 export interface PanelSidebarContextValue {
   setDisplayState: Dispatch<SetStateAction<PanelSidebarState>>;
@@ -39,7 +36,7 @@ export const useTogglePanelSidebar = () => {
 };
 
 export interface PanelSidebarProviderSlots {
-  content?: ComponentProps<typeof Fragment>;
+  content?: ComponentProps<typeof DialogPrimitive.Content>;
   fixedBlockStart?: ComponentProps<'div'>;
   fixedBlockEnd?: ComponentProps<'div'>;
 }
@@ -49,7 +46,11 @@ export interface PanelSidebarProviderProps {
   slots?: PanelSidebarProviderSlots;
 }
 
-export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<PanelSidebarProviderProps>) => {
+export const PanelSidebarProvider = ({
+  children,
+  inlineStart,
+  slots
+}: PropsWithChildren<PanelSidebarProviderProps>) => {
   const { t } = useTranslation('os');
   const [isLg] = useMediaQuery('lg');
   const [displayState, setInternalDisplayState] = useState<PanelSidebarState>(isLg ? 'show' : 'hide');
@@ -81,14 +82,15 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
       <DialogPrimitive.Root open={domShow} modal={!isLg}>
         <DialogPrimitive.Content
+          {...slots?.content}
           className={mx(
             'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
-            'bg-neutral-50 dark:bg-neutral-950',
-            transitionShow ? 'inline-start-0' : `inline-start-[-${sidebarWidth}px]`
+            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]',
+            slots?.content?.className
           )}
         >
           <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
-          <Fragment {...slots?.content} />
+          {slots?.content?.children}
         </DialogPrimitive.Content>
         {slots?.fixedBlockStart && (
           <div

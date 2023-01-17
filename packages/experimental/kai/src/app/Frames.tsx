@@ -6,7 +6,7 @@ import { Article, Calendar, Compass, Gear, Globe, Graph, Kanban, ListChecks, Swo
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { mx, getSize, useMediaQuery } from '@dxos/react-components';
+import { mx, getSize } from '@dxos/react-components';
 import { PanelSidebarProvider, PanelSidebarContext } from '@dxos/react-ui';
 
 // TODO(burdon): Rename frames.
@@ -14,9 +14,9 @@ import {
   CalendarFrame,
   ChessFrame,
   Dashboard,
-  DMGView,
+  RegistryFrame,
   MapFrame,
-  MetaTable,
+  TableFrame,
   ProjectEditor,
   ProjectGraph,
   ProjectKanban,
@@ -30,7 +30,7 @@ import { Sidebar } from './Sidebar';
 
 export const frames: FrameDef[] = [
   { id: FrameID.SETTINGS, title: 'Settings', Icon: Gear, Component: ManageSpacePage, system: true },
-  { id: FrameID.DMG, title: 'Registry', Icon: Globe, Component: DMGView, system: true },
+  { id: FrameID.DMG, title: 'Registry', Icon: Globe, Component: RegistryFrame, system: true },
   {
     id: FrameID.DASHBOARD,
     title: 'Dashboard',
@@ -38,7 +38,7 @@ export const frames: FrameDef[] = [
     Icon: Wall,
     Component: Dashboard
   },
-  { id: FrameID.TABLE, title: 'Table', description: 'Generic data browser.', Icon: Table, Component: MetaTable },
+  { id: FrameID.TABLE, title: 'Table', description: 'Generic data browser.', Icon: Table, Component: TableFrame },
   {
     id: FrameID.KANBAN,
     title: 'Kanban',
@@ -98,15 +98,14 @@ export const FrameSelector: FC = () => {
   const { space } = useSpace();
   const frames = useActiveFrames();
   const { frame: currentFrame } = useParams();
-  const { displayState } = useContext(PanelSidebarContext); // TODO(burdon): Context lags.
+  const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
-  const [isLg] = useMediaQuery('lg');
 
   return (
     <div
       className={mx(
         'flex flex-col flex-1 bg-orange-500 pt-1 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
-        isLg && isOpen ? 'inline-start-[272px]' : 'inline-start-0'
+        isOpen ? 'inline-start-0 lg:inline-start-[272px]' : 'inline-start-0'
       )}
     >
       <div className='flex pl-2'>
@@ -142,13 +141,8 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
   const { Component } = active ?? {};
 
   return (
-    <PanelSidebarProvider
-      inlineStart
-      slots={{
-        fixedBlockStart: { children: <AppBar />, className: 'bg-orange-400' },
-        content: { children: <Sidebar /> }
-      }}
-    >
+    <PanelSidebarProvider inlineStart slots={{ content: { children: <Sidebar />, className: 'block-start-[48px]' } }}>
+      <AppBar />
       <FrameSelector />
       {Component && (
         <div className={mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex h-screen bg-white')}>

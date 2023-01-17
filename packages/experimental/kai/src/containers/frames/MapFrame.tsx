@@ -4,15 +4,16 @@
 
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
+import { LatLngExpression } from 'leaflet';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { List, ListItemButton } from '../components';
-import { useSpace } from '../hooks';
-import { LatLng, Organization } from '../proto';
+import { List, ListItemButton } from '../../components';
+import { useSpace } from '../../hooks';
+import { Organization } from '../../proto';
 
 export const MapFrame = () => {
   // https://react-leaflet.js.org/docs/api-map
@@ -33,7 +34,8 @@ export const MapControl = () => {
     label: (object: Organization) => object.name
   };
 
-  const [center, setCenter] = useState<LatLng>(); // { lng: -0.118, lat: 51.501 });
+  const [selected, setSelected] = useState<string>();
+  const [center, setCenter] = useState<LatLngExpression>(); // { lng: -0.118, lat: 51.501 });
   const map = useMap();
   useEffect(() => {
     if (center) {
@@ -48,6 +50,7 @@ export const MapControl = () => {
   }, [objects]);
 
   const handleSelect = (item?: Organization) => {
+    setSelected(item?.[id]);
     if (item) {
       const { lat, lng } = item.address?.coordinates ?? {};
       if (lat !== undefined && lng !== undefined) {
@@ -72,7 +75,7 @@ export const MapControl = () => {
       {objects.length && (
         <div className='flex flex-col absolute top-4 bottom-4 right-4 overflow-hidden' style={{ zIndex: 1000 }}>
           <div className='flex bg-white border rounded-md overflow-y-scroll' style={{ width: 240 }}>
-            <PlaceList<Organization> items={objects} onSelect={handleSelect} getter={getter} />
+            <PlaceList<Organization> items={objects} value={selected} onSelect={handleSelect} getter={getter} />
           </div>
         </div>
       )}
@@ -89,13 +92,14 @@ type PlaceListPropsGetter<T> = {
 
 type PlaceListProps<T = {}> = {
   items: T[];
-  selected?: string;
+  value?: string;
   onSelect: (object?: T) => void;
   getter: PlaceListPropsGetter<T>;
 };
 
-export const PlaceList = <T,>({ items, getter, onSelect }: PlaceListProps<T>) => {
-  const [selected, setSelected] = useState<string>(); // TODO(burdon): Controlled vs. non-controlled pattern.
+export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps<T>) => {
+  const [selected, setSelected] = useState<string | undefined>(value);
+  useEffect(() => setSelected(value), [value]);
 
   const handleSelect = useCallback(
     (objectId: string) => {

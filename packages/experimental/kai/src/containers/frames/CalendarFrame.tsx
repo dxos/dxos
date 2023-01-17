@@ -17,9 +17,9 @@ import { getSize, mx } from '@dxos/react-components';
 // import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { useSpace } from '../hooks';
-import { Contact, Event as EventType } from '../proto';
-import { ContactCard } from './cards';
+import { useSpace } from '../../hooks';
+import { Contact, Event as EventType } from '../../proto';
+import { ContactCard } from '../cards';
 
 const mapEvents = (event: EventType) => ({
   title: event.title,

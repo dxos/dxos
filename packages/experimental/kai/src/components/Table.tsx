@@ -66,7 +66,7 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
-                <div {...column.getHeaderProps(headerProps)} className='th pl-4 pr-4'>
+                <div {...column.getHeaderProps(headerProps)} className='th pl-2 pr-2'>
                   {column.render('Header')}
 
                   {/* Use column.getResizerProps to hook up the events correctly. */}
@@ -81,24 +81,22 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
 
         {/* Body */}
         <div className='tbody overflow-y-scroll'>
-          <div>
-            {rows.map((row, i) => {
-              prepareRow(row);
-              return (
-                // eslint-disable-next-line react/jsx-key
-                <div {...row.getRowProps()} className='tr'>
-                  {row.cells.map((cell) => {
-                    return (
-                      // eslint-disable-next-line react/jsx-key
-                      <div {...cell.getCellProps(cellProps)} className='td pl-4 pr-4 overflow-hidden text-ellipsis`'>
-                        {cell.render('Cell')}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
+          {rows.map((row, i) => {
+            prepareRow(row);
+            return (
+              // eslint-disable-next-line react/jsx-key
+              <div className='tr' {...row.getRowProps()}>
+                {row.cells.map((cell) => {
+                  return (
+                    // eslint-disable-next-line react/jsx-key
+                    <div {...cell.getCellProps(cellProps)} className='td pl-2 pr-2'>
+                      <div className='overflow-hidden text-ellipsis whitespace-nowrap'>{cell.render('Cell')}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
