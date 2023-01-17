@@ -15,10 +15,19 @@
       "path": "../../apps/patterns/react-appkit"
     },
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/log"
     },
     {
+      "path": "../../common/react-async"
+    },
+    {
       "path": "../../common/react-components"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/protocols"
@@ -28,6 +37,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
