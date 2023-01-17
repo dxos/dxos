@@ -29,7 +29,7 @@ const clientProvider = async (demo: boolean) => {
   // TODO(burdon): Auto invite/join if demo mode.
   // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
   // chrome.windows.create({ '/join', incognito: true });
-  if (demo) {
+  if (demo && !client.halo.profile) {
     await client.halo.createProfile();
     const space = await client.echo.createSpace();
 
