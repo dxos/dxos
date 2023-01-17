@@ -1,9 +1,12 @@
-import { TemplateFunction } from '../../executeFileTemplate';
-import { Input } from './config.t';
+import { defineTemplate, text } from '../../index';
+import config from './config.t';
 
-const template: TemplateFunction<Input> = ({ input }) => `
-# Package 
-${JSON.stringify(input, null, 2)}
-`;
-
-export default template;
+export default defineTemplate(
+  ({ input }) => {
+    return text`
+    // # Package 
+    // ${JSON.stringify(input, null, 2)}
+    `;
+  },
+  { config }
+);
