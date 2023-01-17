@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { id } from '@dxos/echo-schema';
+import { id, type } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
@@ -30,17 +30,25 @@ describe('schema', () => {
     const contact = new Contact();
     contact.name = 'User 1';
     expect(contact.name).to.eq('User 1');
-    expect(contact.toJSON()).to.deep.eq({ name: 'User 1' }); // TODO(burdon): Add id.
+    expect(contact.toJSON()).to.contain({ name: 'User 1' });
 
     const task1 = new Task();
     task1.title = 'Task 1';
     expect(task1.title).to.eq('Task 1');
-    expect(task1.toJSON()).to.deep.eq({ title: 'Task 1' });
+    expect(task1.toJSON()).to.contain({ title: 'Task 1' });
 
     task1.assignee = contact;
     expect(task1.assignee.name).to.eq('User 1');
-    expect(task1.toJSON()).to.deep.eq({ title: 'Task 1', assignee: { '@id': contact[id] } });
-    expect(JSON.stringify(task1)).to.eq(JSON.stringify({ title: 'Task 1', assignee: { '@id': contact[id] } }));
+    expect(task1.toJSON()).to.deep.contain({ title: 'Task 1', assignee: { '@id': contact[id] } });
+    expect(JSON.stringify(task1)).to.equal(
+      JSON.stringify({
+        '@id': task1[id],
+        '@type': task1[type],
+        subTasks: [],
+        title: 'Task 1',
+        assignee: { '@id': contact[id] }
+      })
+    );
   });
 
   test('json with recursion', () => {
@@ -49,6 +57,8 @@ describe('schema', () => {
     contact.tasks.push(new Task({ title: 'Task 2', assignee: contact }));
 
     expect(contact.toJSON()).to.deep.eq({
+      '@id': contact[id],
+      '@type': contact[type],
       name: 'User 1',
       tasks: [
         {

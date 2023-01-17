@@ -23,9 +23,11 @@ export type TypeFilter<T extends Document> = { __phantom: T } & Filter;
 export type SelectionFn = never; // TODO(burdon): Document or remove.
 export type Selection = EchoObject | SelectionFn | Selection[];
 
+export type Subscription = () => void;
+
 export type Query<T extends Document = Document> = {
   getObjects(): T[];
-  subscribe(callback: () => void): () => void;
+  subscribe(callback: (query: Query<T>) => void): Subscription;
 };
 
 export interface SubscriptionHandle {
@@ -96,7 +98,7 @@ export class EchoDatabase {
       props
     })) as Item<any>;
 
-    obj[base]._bind(item, this);
+    await obj[base]._bind(item, this);
     return obj;
   }
 
@@ -129,7 +131,7 @@ export class EchoDatabase {
     // Current result.
     let cache: Document[] | undefined;
 
-    return {
+    const query = {
       getObjects: () => {
         if (!cache) {
           // TODO(burdon): Sort.
@@ -140,13 +142,13 @@ export class EchoDatabase {
       },
 
       // TODO(burdon): Trigger callback on call (not just update).
-      subscribe: (callback: () => void) => {
+      subscribe: (callback: (query: Query) => void) => {
         return this._db.update.on((updatedObjects) => {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
               const match = matchObject(this._objects.get(object.id)!);
               const exists = cache?.find((obj) => obj[id] === object.id);
-              return (exists && !match) || (!exists && match);
+              return match || (exists && !match);
             } else {
               return false;
             }
@@ -154,11 +156,13 @@ export class EchoDatabase {
 
           if (changed) {
             cache = undefined;
-            callback();
+            callback(query);
           }
         });
       }
     };
+
+    return query;
   }
 
   /**
@@ -178,7 +182,7 @@ export class EchoDatabase {
 
         obj[base]._id = object.id;
         this._objects.set(object.id, obj);
-        obj[base]._bind(object, this);
+        obj[base]._bind(object, this).catch((err) => log.catch(err));
         obj[base]._isBound = true;
       }
     }

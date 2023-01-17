@@ -46,10 +46,14 @@ export const Default = {
           <Composer
             {...args}
             item={item}
-            className={mx(
-              'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]',
-              args.className
-            )}
+            slots={{
+              editor: {
+                className: mx(
+                  'z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]',
+                  args.slots?.editor?.className
+                )
+              }
+            }}
           />
         ) : (
           <Loading label='Loading document…' />

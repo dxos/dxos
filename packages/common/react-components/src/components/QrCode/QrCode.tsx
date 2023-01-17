@@ -11,6 +11,7 @@ import { Size } from '../../props';
 import { getSize } from '../../styles';
 import { mx } from '../../util';
 import { Button, ButtonGroup } from '../Button';
+import { Popover } from '../Popover';
 import { Tooltip, TooltipSlots } from '../Tooltip';
 
 interface SharedQrCodeProps {
@@ -88,35 +89,37 @@ export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact,
         <span className='sr-only' id={labelId}>
           {displayQrLabel}
         </span>
-        <Tooltip
-          compact
-          slots={{ content: { ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'left' } }}
-          content={
-            <div role='none' className='overflow-hidden rounded-md'>
-              <QRCodeSVG
-                includeMargin
-                role='none'
-                {...slots.qrSvg}
-                value={value}
-                className={mx(getSize(64), slots.qrSvg?.className)}
-              />
-            </div>
+        <Popover
+          openTrigger={
+            <Button
+              compact={buttonCompact}
+              {...slots.qrButton}
+              className={mx('border-ie-0 grow rounded-ie-none rounded-is-md', slots.qrButton?.className)}
+              aria-labelledby={labelId}
+            >
+              <QrCodeIcon className={getSize(5)} />
+            </Button>
           }
+          slots={{
+            content: { className: 'p-0', ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'bottom' },
+            trigger: { asChild: true }
+          }}
         >
-          <Button
-            compact={buttonCompact}
-            {...slots.qrButton}
-            className={mx('border-ie-0 grow rounded-is-md', slots.qrButton?.className)}
-            aria-labelledby={labelId}
-          >
-            <QrCodeIcon className={getSize(5)} />
-          </Button>
-        </Tooltip>
+          <div role='none' className='overflow-hidden rounded-md'>
+            <QRCodeSVG
+              includeMargin
+              role='none'
+              {...slots.qrSvg}
+              value={value}
+              className={mx(getSize(64), slots.qrSvg?.className)}
+            />
+          </div>
+        </Popover>
         <Tooltip content={copyLabel} tooltipLabelsTrigger slots={{ content: slots.qrTooltipContent }}>
           <Button
             compact={buttonCompact}
             {...slots.copyButton}
-            className={mx('rounded-ie-md grow', slots.copyButton?.className)}
+            className={mx('rounded-is-none rounded-ie-md grow', slots.copyButton?.className)}
             onClick={copyValue}
           >
             <CopySimple className={getSize(5)} />
@@ -124,34 +127,36 @@ export const CompactQrCode = ({ value, displayQrLabel, copyLabel, buttonCompact,
         </Tooltip>
       </ButtonGroup>
       <ButtonGroup className='hidden md:inline-flex'>
-        <Tooltip
-          compact
-          slots={{ content: { ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'left' } }}
-          content={
-            <div role='none' className='overflow-hidden rounded-md'>
-              <QRCodeSVG
-                includeMargin
-                role='none'
-                {...slots.qrSvg}
-                value={value}
-                className={mx(getSize(64), slots.qrSvg?.className)}
-              />
-            </div>
+        <Popover
+          openTrigger={
+            <Button
+              compact={buttonCompact}
+              {...slots.qrButton}
+              className={mx('border-ie-0 flex gap-1 rounded-ie-none rounded-is-md', slots.qrButton?.className)}
+            >
+              <QrCodeIcon className={getSize(5)} />
+              {displayQrLabel}
+            </Button>
           }
+          slots={{
+            content: { className: 'p-0', ...slots.qrTooltipContent, side: slots?.qrTooltipContent?.side ?? 'left' },
+            trigger: { asChild: true }
+          }}
         >
-          <Button
-            compact={buttonCompact}
-            {...slots.qrButton}
-            className={mx('border-ie-0 flex gap-1 rounded-is-md', slots.qrButton?.className)}
-          >
-            <QrCodeIcon className={getSize(5)} />
-            {displayQrLabel}
-          </Button>
-        </Tooltip>
+          <div role='none' className='overflow-hidden rounded-md'>
+            <QRCodeSVG
+              includeMargin
+              role='none'
+              {...slots.qrSvg}
+              value={value}
+              className={mx(getSize(64), slots.qrSvg?.className)}
+            />
+          </div>
+        </Popover>
         <Button
           compact={buttonCompact}
           {...slots.copyButton}
-          className={mx('flex gap-1 rounded-ie-md', slots.copyButton?.className)}
+          className={mx('flex gap-1 rounded-ie-md rounded-is-none', slots.copyButton?.className)}
           onClick={copyValue}
         >
           <CopySimple className={getSize(5)} />

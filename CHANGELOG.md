@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.1.23](https://github.com/dxos/dxos/compare/v0.1.22...v0.1.23) (2023-01-17)
+
+
+### Features
+
+* Auth for data spaces ([#2157](https://github.com/dxos/dxos/issues/2157)) ([7c6cd6a](https://github.com/dxos/dxos/commit/7c6cd6a4eac9be854cfbb045a579f69bd26dd7bc))
+* Calendar and meta table. ([#2282](https://github.com/dxos/dxos/issues/2282)) ([c5dc762](https://github.com/dxos/dxos/commit/c5dc76205b0c9ca04e756817a4f2a13721c3ba5f))
+* convert templates to self-contained npm packages ([#2281](https://github.com/dxos/dxos/issues/2281)) ([13e56f6](https://github.com/dxos/dxos/commit/13e56f6fb7e14d79978468f1852d077c3176157b))
+* DMG ([#2289](https://github.com/dxos/dxos/issues/2289)) ([359d85d](https://github.com/dxos/dxos/commit/359d85ddbd58033567fa31dad3540e4e8e89f918))
+* Filter space state updates ([#2298](https://github.com/dxos/dxos/issues/2298)) ([53cb37b](https://github.com/dxos/dxos/commit/53cb37b215e7a857680fdb38bfe010dd8f569ac9))
+* Fix input ([#2279](https://github.com/dxos/dxos/issues/2279)) ([5c8e610](https://github.com/dxos/dxos/commit/5c8e6103d2b16149e18bcf0ab0f85e7f57892e1f))
+* Fix kai exports ([#2283](https://github.com/dxos/dxos/issues/2283)) ([380a773](https://github.com/dxos/dxos/commit/380a77393669a07bf0d0e5c8bba17eb00b42f613))
+* Framebox ([#2280](https://github.com/dxos/dxos/issues/2280)) ([e4b90c3](https://github.com/dxos/dxos/commit/e4b90c3f341c4e81703dedd8a8641b8a6c08bd2c))
+* Implement import ([#2286](https://github.com/dxos/dxos/issues/2286)) ([da67b5e](https://github.com/dxos/dxos/commit/da67b5eb8006317351cef7acce0e0cf16d67c986))
+* Kanban/Chess clean-up. ([#2274](https://github.com/dxos/dxos/issues/2274)) ([a958693](https://github.com/dxos/dxos/commit/a9586934b5a39681c9469ceb9f3bbee0374d225e))
+* Refactor `composer` to use slots so its wrapping `div` can be styled. ([#2293](https://github.com/dxos/dxos/issues/2293)) ([7808ad8](https://github.com/dxos/dxos/commit/7808ad8fef48f4ed3c606fcae30088aba7f1467a))
+* Reorder views ([#2276](https://github.com/dxos/dxos/issues/2276)) ([204793b](https://github.com/dxos/dxos/commit/204793b44ec2764f61d45f306680acff80fa286b))
+* Responsive kai ([#2275](https://github.com/dxos/dxos/issues/2275)) ([6bab381](https://github.com/dxos/dxos/commit/6bab381a0da1e686ea4f5b580948875466dc6c33))
+* toJSON for schemaless echo objects ([#2262](https://github.com/dxos/dxos/issues/2262)) ([667ee62](https://github.com/dxos/dxos/commit/667ee621f456aa4b5fbcbee0ac1e119edac9a2be))
+
+
+### Bug Fixes
+
+* Don’t autofocus in iOS Safari ([#2284](https://github.com/dxos/dxos/issues/2284)) ([98d9f76](https://github.com/dxos/dxos/commit/98d9f760edf29f64552fcdd38d2b176bb003a352))
+* **network-manager:** Fix Flaky test ([#2263](https://github.com/dxos/dxos/issues/2263)) ([d6b4769](https://github.com/dxos/dxos/commit/d6b47692c66e92063c4e989f6bf518416ee24e9a))
+* **network-manager:** Fix RPC closed error ([#2285](https://github.com/dxos/dxos/issues/2285)) ([54493db](https://github.com/dxos/dxos/commit/54493dbb88253acd9774320ded46e23facfb0136))
+* QR codes ([#2271](https://github.com/dxos/dxos/issues/2271)) ([594484b](https://github.com/dxos/dxos/commit/594484b02833fcb44741dc1abcefb96be6419cca))
+* Sidebar layout & motion ([#2272](https://github.com/dxos/dxos/issues/2272)) ([69db45d](https://github.com/dxos/dxos/commit/69db45d3abd65cac312c0b148e672eda4a897a01))
+* Sidebar layout & motion ([#2290](https://github.com/dxos/dxos/issues/2290)) ([605ccd1](https://github.com/dxos/dxos/commit/605ccd1d213b70962c02237d1f4d84647a058606))
+* Taks keyboard access in `kai` ([#2278](https://github.com/dxos/dxos/issues/2278)) ([cf2533b](https://github.com/dxos/dxos/commit/cf2533b82febdbfbd4339cb5e47cf7aabc6a7420))
+* Topbar & Sidebar coordination in `kai` ([#2291](https://github.com/dxos/dxos/issues/2291)) ([26e855e](https://github.com/dxos/dxos/commit/26e855e91364d6e544fbd5ae72b58d4763783484))
+* Topbar & Sidebar coordination in `kai` ([#2292](https://github.com/dxos/dxos/issues/2292)) ([37924e9](https://github.com/dxos/dxos/commit/37924e9af947cf37483d4a5b6f17d08ae62b55eb))
+* Wait for the initial state to load during the database initialization ([#2102](https://github.com/dxos/dxos/issues/2102)) ([3901f60](https://github.com/dxos/dxos/commit/3901f600043f937dfd7c08b86e18edd9a119d9a9))
+
 ## [0.1.22](https://github.com/dxos/dxos/compare/v0.1.21...v0.1.22) (2023-01-13)
 
 

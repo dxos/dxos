@@ -10,10 +10,7 @@ describe('WebRTC transport', () => {
   basicTestSuite(testBuilder);
 }).timeout(10_000);
 
-/*
-// TODO(burdon): Flaky.
 describe('WebRTC transport proxy', () => {
   const testBuilder = new TestBuilder({ signalHosts: [TEST_SIGNAL_URL], bridge: true });
   basicTestSuite(testBuilder);
 }).timeout(10_000);
-*/

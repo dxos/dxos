@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Archive, Plus, PlusCircle, User } from 'phosphor-react';
+import { Archive, ArrowsOut, PlusCircle, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
@@ -11,7 +11,7 @@ import { getSize } from '@dxos/react-components';
 
 import { Card, Input, CardRow, Button, CardMenu } from '../components';
 import { useSpace } from '../hooks';
-import { Project, Task, createProject, createTask } from '../proto';
+import { Project, Task, createProject } from '../proto';
 import { DraggableTaskList } from './DraggableTaskList';
 
 export const ProjectListCard: FC = () => {
@@ -54,17 +54,7 @@ export const ProjectList: FC<{ header?: boolean }> = ({ header = false }) => {
 };
 
 export const ProjectItem: FC<{ project: Project }> = withReactor(({ project }) => {
-  const { space } = useSpace();
-
-  const handleGenerateTask = async () => {
-    const task = await createTask(space.experimental.db);
-    project.tasks.push(task);
-    // TODO(burdon): Can't set array. new OrderedSet().
-    // project.tasks = [task];
-    if (task.assignee) {
-      project.team.push(task.assignee);
-    }
-  };
+  const handleExpand = () => {};
 
   // TODO(burdon): Pass in Task1, Task2.
   const handleDrag = (active: number, over: number) => {
@@ -81,29 +71,26 @@ export const ProjectItem: FC<{ project: Project }> = withReactor(({ project }) =
           <Archive className={getSize(6)} />
         </div>
         <Input
-          className='w-full p-1 text-lg outline-0'
+          className='w-full p-1 text-lg'
           spellCheck={false}
           value={project.title}
           onChange={(value) => (project.title = value)}
         />
-        <Button className='mr-2 text-gray-500' onClick={handleGenerateTask}>
-          <Plus className={getSize(6)} />
+        <Button className='mr-1 text-gray-500' onClick={handleExpand}>
+          <ArrowsOut className={getSize(5)} />
         </Button>
       </div>
 
       {/* Tasks */}
-      {project.tasks?.length > 0 && (
-        <div>
-          <h2 className='pl-3 pt-1 pb-1 text-xs'>Tasks</h2>
-          <DraggableTaskList
-            tasks={project.tasks}
-            onCreate={(task: Task) => {
-              project.tasks.push(task);
-            }}
-            onDrag={handleDrag}
-          />
-        </div>
-      )}
+      <div>
+        <DraggableTaskList
+          tasks={project.tasks}
+          onCreate={(task: Task) => {
+            project.tasks.push(task);
+          }}
+          onDrag={handleDrag}
+        />
+      </div>
 
       {/* Contacts */}
       {project.team?.length > 0 && (

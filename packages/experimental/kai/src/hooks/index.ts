@@ -3,7 +3,7 @@
 //
 
 export * from './useAppState';
+export * from './useBots';
 export * from './useFileDownload';
-export * from './useOptions';
+export * from './useFrames';
 export * from './useSpace';
-export * from './views';

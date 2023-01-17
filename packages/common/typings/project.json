@@ -1,4 +1,29 @@
 {
   "sourceRoot": "packages/common/typings/src",
-  "projectType": "library"
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/typings/src/index.d.ts",
+        "outputPath": "packages/common/typings/dist/types",
+        "tsConfig": "packages/common/typings/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    }
+  },
+  "lint": {
+    "executor": "@nrwl/linter:eslint",
+    "options": {
+      "format": "unix",
+      "lintFilePatterns": [
+        "packages/common/typings/**/*.{ts,js}"
+      ]
+    },
+    "outputs": [
+      "{options.outputFile}"
+    ]
+  }
 }

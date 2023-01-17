@@ -12,11 +12,12 @@ import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/rea
 import React, { createContext, PropsWithChildren } from 'react';
 
 import { defaultFocus } from '../../styles';
-import { mx } from '../../util';
+import { hasIosKeyboard, mx } from '../../util';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
 export interface ThemeContextValue {
   themeVariant: 'app' | 'os';
+  hasIosKeyboard?: boolean;
 }
 
 export type ThemeProviderProps = PropsWithChildren<{
@@ -40,7 +41,7 @@ export const ThemeProvider = ({
   themeVariant = 'app'
 }: ThemeProviderProps) => {
   return (
-    <ThemeContext.Provider value={{ themeVariant }}>
+    <ThemeContext.Provider value={{ themeVariant, hasIosKeyboard: hasIosKeyboard() }}>
       <TranslationsProvider
         {...{
           fallback,

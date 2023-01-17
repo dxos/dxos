@@ -35,7 +35,7 @@ Type: <code>boolean</code>
 Returns: <code>string</code>
 
 Arguments: none
-### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L210)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L217)
 
 
 Initiates an interactive accept invitation flow.
@@ -47,13 +47,13 @@ Arguments:
 `invitation`: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 `options`: <code>InvitationsOptions</code>
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L141)
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L148)
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [createSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L158)
+### [createSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L165)
 
 
 Creates a new space.
@@ -61,7 +61,7 @@ Creates a new space.
 Returns: <code>Promise&lt;[Space](/api/@dxos/client/interfaces/Space)&gt;</code>
 
 Arguments: none
-### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L196)
+### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L203)
 
 
 Returns an individual space by its key.
@@ -77,7 +77,7 @@ Arguments:
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [querySpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L203)
+### [querySpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L210)
 
 
 Query for all spaces.
