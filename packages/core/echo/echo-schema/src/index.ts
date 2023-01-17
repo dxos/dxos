@@ -9,5 +9,6 @@ export * from './object';
 export * from './echo-array';
 export * from './document';
 export * from './schema';
+export * from './serializer';
 export * from './text-object';
 export * from './util';

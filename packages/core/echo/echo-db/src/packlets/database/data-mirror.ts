@@ -5,6 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
+import { Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Model } from '@dxos/model-factory';
@@ -31,12 +32,15 @@ export class DataMirror {
     private readonly _spaceKey: PublicKey
   ) {}
 
-  open() {
+  async open() {
+    const loaded = new Trigger();
+
     const entities = this._dataService.subscribeEntitySet({
       spaceKey: this._spaceKey
     });
     entities.subscribe(
       async (diff) => {
+        loaded.wake();
         for (const addedEntity of diff.added ?? []) {
           log(`Construct: ${JSON.stringify(addedEntity)}`);
           assert(addedEntity.itemId);
@@ -73,6 +77,9 @@ export class DataMirror {
         log(`Connection closed: ${err}`);
       }
     );
+
+    // Wait for initial set of items.
+    await loaded.wait();
   }
 
   private _subscribeToUpdates(entity: Entity<Model<any>>) {

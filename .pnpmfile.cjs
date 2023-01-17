@@ -30,6 +30,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case 'esbuild-plugin-raw': {
+      packageJson.dependencies['esbuild'] = '^0.16.0'
+      break;
+    }
+
     case 'ink':
     case 'ink-select-input':
     case 'ink-syntax-highlight':

@@ -16,6 +16,8 @@ export const CardMenu: FC<{ title: string; children?: ReactNode }> = ({ title, c
   );
 };
 
+// TODO(burdon): Responsive layout (compact, narrow, wide).
+
 export const Card: FC<{
   children?: ReactNode;
   scrollbar?: boolean;

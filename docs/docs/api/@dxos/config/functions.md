@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [Defaults(basePath)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L53)
+### [Defaults(basePath)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L52)
 
 
 JSON config.
@@ -12,7 +12,7 @@ Returns: <code>T</code>
 Arguments: 
 
 `basePath`: <code>string</code>
-### [Dynamics()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L40)
+### [Dynamics()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L39)
 
 
 Provided dynamically by server.
@@ -20,7 +20,7 @@ Provided dynamically by server.
 Returns: <code>T</code>
 
 Arguments: none
-### [Envs(basePath)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L45)
+### [Envs(basePath)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L44)
 
 
 ENV variable (key/value) map
@@ -30,7 +30,7 @@ Returns: <code>T</code>
 Arguments: 
 
 `basePath`: <code>string</code>
-### [LocalStorage()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L35)
+### [LocalStorage()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L34)
 
 
 File storage.

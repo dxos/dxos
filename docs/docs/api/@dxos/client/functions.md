@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [createDevtoolsRpcServer(client, clientServices)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/devtools/devtools.ts#L50)
+### [createDevtoolsRpcServer(client, clientServices)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/devtools/devtools.ts#L48)
 
 
 Returns: <code>Promise&lt;void&gt;</code>

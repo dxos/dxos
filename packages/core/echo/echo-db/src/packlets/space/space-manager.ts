@@ -15,7 +15,6 @@ import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { AuthProvider, AuthVerifier } from './auth';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
@@ -31,8 +30,6 @@ export interface AcceptSpaceOptions {
 export interface SigningContext {
   identityKey: PublicKey;
   deviceKey: PublicKey;
-  credentialProvider: AuthProvider;
-  credentialAuthenticator: AuthVerifier;
   credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
   profile?: ProfileDocument;
 }

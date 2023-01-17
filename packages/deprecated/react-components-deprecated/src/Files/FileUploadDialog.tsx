@@ -38,6 +38,7 @@ export const FileUploadDialog: FC<{
         capture: true,
         once: true
       });
+
       inputRef.current!.click();
     }
 

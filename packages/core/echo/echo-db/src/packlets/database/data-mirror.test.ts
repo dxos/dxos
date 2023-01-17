@@ -52,7 +52,7 @@ describe('DataMirror', () => {
     const mirrorItemManager = new ItemManager(modelFactory, PublicKey.random());
     const dataMirror = new DataMirror(mirrorItemManager, dataService, spaceKey);
 
-    dataMirror.open();
+    await dataMirror.open();
 
     // Create item
     const promise = asyncTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));

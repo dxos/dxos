@@ -5,8 +5,6 @@
 import { Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import {
-  MOCK_AUTH_PROVIDER,
-  MOCK_AUTH_VERIFIER,
   valueEncoding,
   DataServiceSubscriptions,
   MetadataStore,
@@ -122,8 +120,6 @@ export class ServiceContext {
     log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
-      credentialProvider: MOCK_AUTH_PROVIDER,
-      credentialAuthenticator: MOCK_AUTH_VERIFIER,
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,

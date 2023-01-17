@@ -35,7 +35,16 @@ Defined in:
 Values:
 - `INTERACTIVE`
 - `INTERACTIVE_TESTING`
+- `MULTIUSE_TESTING`
 - `OFFLINE`
+### [`PresenceState`]()
+
+Defined in:
+   file://./../../dxos/client.proto
+
+Values:
+- `OFFLINE`
+- `ONLINE`
 ### [`ItemFilterDeleted`]()
 
 Controls how deleted items are filtered.

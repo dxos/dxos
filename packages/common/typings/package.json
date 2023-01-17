@@ -1,12 +1,16 @@
 {
   "name": "@dxos/typings",
-  "version": "0.1.20",
-  "private": true,
-  "description": "Typescript defs.",
+  "version": "0.1.23",
+  "description": "Typescript defs for various base packages",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "types": "./src/index.d.ts",
-  "typeScriptVersion": "2.0"
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

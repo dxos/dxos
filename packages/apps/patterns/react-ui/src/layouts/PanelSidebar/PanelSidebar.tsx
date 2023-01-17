@@ -7,7 +7,6 @@ import React, {
   ComponentProps,
   createContext,
   Dispatch,
-  Fragment,
   PropsWithChildren,
   SetStateAction,
   useCallback,
@@ -37,9 +36,10 @@ export const useTogglePanelSidebar = () => {
 };
 
 export interface PanelSidebarProviderSlots {
-  content?: ComponentProps<typeof Fragment>;
+  content?: ComponentProps<typeof DialogPrimitive.Content>;
   fixedBlockStart?: ComponentProps<'div'>;
   fixedBlockEnd?: ComponentProps<'div'>;
+  main?: ComponentProps<'div'>;
 }
 
 export interface PanelSidebarProviderProps {
@@ -53,7 +53,7 @@ export const PanelSidebarProvider = ({
   slots
 }: PropsWithChildren<PanelSidebarProviderProps>) => {
   const { t } = useTranslation('os');
-  const [isLg] = useMediaQuery('lg');
+  const [isLg] = useMediaQuery('lg', { ssr: false });
   const [displayState, setInternalDisplayState] = useState<PanelSidebarState>(isLg ? 'show' : 'hide');
   const isOpen = displayState === 'show';
   const [transitionShow, setTransitionShow] = useState(isOpen);
@@ -66,6 +66,7 @@ export const PanelSidebarProvider = ({
       setDomShow(false);
     }, 200);
   };
+
   const internalShow = () => {
     setDomShow(true);
     setInternalDisplayState('show');
@@ -74,6 +75,7 @@ export const PanelSidebarProvider = ({
       // todo (thure): this may be a race condition in certain situations
     }, 0);
   };
+
   const setDisplayState = (displayState: SetStateAction<PanelSidebarState>) =>
     displayState === 'show' ? internalShow() : internalHide();
 
@@ -81,14 +83,15 @@ export const PanelSidebarProvider = ({
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
       <DialogPrimitive.Root open={domShow} modal={!isLg}>
         <DialogPrimitive.Content
+          {...slots?.content}
           className={mx(
             'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
-            'bg-neutral-50 dark:bg-neutral-950',
-            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]'
+            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]',
+            slots?.content?.className
           )}
         >
           <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
-          <Fragment {...slots?.content} />
+          {slots?.content?.children}
         </DialogPrimitive.Content>
         {slots?.fixedBlockStart && (
           <div
@@ -115,9 +118,11 @@ export const PanelSidebarProvider = ({
         )}
         <div
           role='none'
+          {...slots?.main}
           className={mx(
-            'bs-full transition-[padding-inline-start] duration-200 ease-in-out',
-            isLg && isOpen ? 'pis-[272px]' : 'pis-0'
+            'transition-[padding-inline-start] duration-200 ease-in-out',
+            isLg && isOpen ? 'pis-[272px]' : 'pis-0',
+            slots?.main?.className
           )}
         >
           {children}
