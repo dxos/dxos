@@ -11,14 +11,14 @@ import { fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
+  appkitTranslations,
+  ClientFallback,
   ErrorProvider,
   Fallback,
   FatalError,
-  GenericFallback,
   ServiceWorkerToast,
-  useTelemetry,
-  appkitTranslations,
-  StatusIndicator
+  StatusIndicator,
+  useTelemetry
 } from '@dxos/react-appkit';
 import { ClientProvider, useNetworkStatus } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
@@ -110,7 +110,7 @@ export const App = () => {
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider config={configProvider} services={serviceProvider} fallback={<GenericFallback />}>
+          <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
             <HashRouter>
               <StatusIndicator />
               <Routes />

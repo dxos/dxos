@@ -44,7 +44,7 @@ export {
 
 export { ApiError } from '@dxos/errors';
 
-export { Contact, SpaceMember, Profile } from '@dxos/protocols/proto/dxos/client';
+export { Contact, Profile, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Remove.

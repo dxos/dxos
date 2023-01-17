@@ -3,7 +3,7 @@
 //
 
 import { Config } from '@dxos/config';
-import { SystemService } from '@dxos/protocols/proto/dxos/client';
+import { Status, SystemService } from '@dxos/protocols/proto/dxos/client';
 
 import { ServiceContext } from '../services';
 import { LocalStorageResourceManager } from '../vault';
@@ -34,12 +34,12 @@ export class SystemServiceImpl implements SystemService {
   async getStatus(_request: void) {
     if (!this._serviceContext.isOpen) {
       return {
-        message: `closed: ${Date.now()}`
+        status: Status.CLOSED
       };
     }
 
     return {
-      message: `ok: ${Date.now()}`
+      status: Status.OK
     };
   }
 

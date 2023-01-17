@@ -2,20 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactNode, useState, Context, createContext, useContext } from 'react';
+import React, { ReactNode, useState, Context, createContext, useContext, useEffect, FunctionComponent } from 'react';
 
+import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { useAsyncEffect } from '@dxos/react-async';
+import { Status } from '@dxos/protocols/proto/dxos/client';
 import { getAsyncValue, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
 import { printBanner } from '../banner';
 
-type ClientContextProps = {
+export type ClientContextProps = {
   client: Client;
+
+  status?: Status;
 
   // Optionally expose services (e.g., for devtools).
   services?: ClientServices;
@@ -59,7 +62,7 @@ export interface ClientProviderProps {
   /**
    * ReactNode to display until the client is available.
    */
-  fallback?: ReactNode;
+  fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
   /**
    * Post initialization hook.
@@ -78,55 +81,80 @@ export const ClientProvider = ({
   config: configProvider,
   services: createServices,
   client: clientProvider,
-  fallback = null,
+  fallback: Fallback = () => null,
   onInitialize
 }: ClientProviderProps) => {
   const [client, setClient] = useState<Client | undefined>(
     clientProvider instanceof Client ? clientProvider : undefined
   );
+  const [status, setStatus] = useState<Status>();
   const [error, setError] = useState();
 
   if (error) {
     throw error;
   }
 
-  useAsyncEffect(async () => {
+  useEffect(() => {
+    if (!client) {
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const { status } = await asyncTimeout(client.getStatus(), 500);
+        log('status', { status });
+        setStatus(status);
+      } catch (err) {
+        log.error('heartbeat stalled');
+        setStatus(undefined);
+      }
+    }, 1_000);
+
+    return () => clearInterval(interval);
+  }, [client]);
+
+  useEffect(() => {
     const done = async (client: Client) => {
       log('client ready', { client });
+      const { status } = await client.getStatus();
       await onInitialize?.(client);
       setClient(client);
+      setStatus(status);
       printBanner(client);
     };
 
-    if (clientProvider) {
-      // Asynchronously request client.
-      const client = await getAsyncValue(clientProvider);
-      await done(client);
-    } else {
-      // Asynchronously construct client (config may be undefined).
-      const config = await getAsyncValue(configProvider);
-      log('resolved config', { config });
-      const services = config && createServices?.(config);
-      log('created services', { services });
-      const client = new Client({ config, services });
-      log('created client', { client });
-      await client.initialize().catch((err) => setError(err));
-      await done(client);
-    }
+    const timeout = setTimeout(async () => {
+      if (clientProvider) {
+        // Asynchronously request client.
+        const client = await getAsyncValue(clientProvider);
+        await done(client);
+      } else {
+        // Asynchronously construct client (config may be undefined).
+        const config = await getAsyncValue(configProvider);
+        log('resolved config', { config });
+        const services = config && createServices?.(config);
+        log('created services', { services });
+        const client = new Client({ config, services });
+        log('created client', { client });
+        await client.initialize().catch((err) => setError(err));
+        await done(client);
+      }
+    });
 
-    return async () => {
-      log('cleanUp');
-      await client?.destroy().catch((err) => log.catch(err));
+    return () => {
+      log('clean up');
+      clearTimeout(timeout);
+      void client?.destroy().catch((err) => log.catch(err));
     };
   }, [clientProvider, configProvider, createServices]);
 
-  if (!client) {
-    return fallback as JSX.Element;
+  if (!client || status !== Status.OK) {
+    return <Fallback client={client} status={status} />;
   }
 
   // prettier-ignore
   return (
-    <ClientContext.Provider value={{ client }}>
+    <ClientContext.Provider value={{ client, status }}>
       {children}
     </ClientContext.Provider>
   );
