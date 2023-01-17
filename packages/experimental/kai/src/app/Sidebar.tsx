@@ -48,6 +48,11 @@ export const Sidebar = () => {
     >
       {/* Spaces */}
       <div className='flex shrink-0 flex-col overflow-y-scroll'>
+        {/* Match Frame selector. */}
+        <div className='flex p-1 pl-3 h-[36px] pt-2 bg-orange-500'>
+          <div>Spaces</div>
+        </div>
+
         <SpaceList />
 
         <div className='p-3'>

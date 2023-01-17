@@ -25,11 +25,12 @@ export type KanbanColumnDef = {
 export const Kanban: FC<{
   objects: EchoObject[];
   columns: KanbanColumnDef[];
-  columnWidth?: number;
   onCreate?: (column: KanbanColumnDef) => void;
-}> = ({ objects, columns, columnWidth = 300, onCreate }) => {
+}> = ({ objects, columns, onCreate }) => {
+  // NOTE: On mobile (sm) the column width is set to the full screen (w-screen)
+  // with different padding from other screen sized.
   return (
-    <div className='flex flex-1 overflow-x-scroll overflow-y-hidden p-3 pt-0 pb-2'>
+    <div className='flex flex-1 overflow-x-scroll overflow-y-hidden snap-x px-0 md:px-2'>
       <div className='flex'>
         {/* Columns */}
         {columns.map((column, i) => {
@@ -38,24 +39,20 @@ export const Kanban: FC<{
           return (
             <div
               key={column.id ?? i}
-              className='flex flex-col overflow-hidden ml-4 first:ml-0 pb-2'
-              style={{ width: columnWidth }}
+              className='flex flex-col overflow-hidden w-screen md:w-[300px] snap-center px-4 md:px-2 pb-4'
             >
-              <div className='flex flex-col overflow-hidden border drop-shadow-md bg-gray-100'>
-                <div className='p-3 pt-2 pb-2 rounded-t text-sm'>{column.header}</div>
-
-                <div className='flex overflow-hidden'>
-                  <div className='flex flex-col pl-3 pr-3 overflow-y-scroll'>
-                    {/* Cards. */}
-                    {filtered.map((object) => {
-                      const { Content } = column;
-                      return (
-                        <div key={object[id]} className='mt-2 bg-white rounded border border-slate-300'>
-                          <Content object={object} />
-                        </div>
-                      );
-                    })}
-                  </div>
+              <div className='flex flex-col first:ml-0 overflow-hidden border drop-shadow-md bg-gray-100 rounded'>
+                <div className='flex p-3 rounded-t text-sm'>{column.header}</div>
+                <div className='flex flex-col flex-1 overflow-y-scroll p-3'>
+                  {/* Cards. */}
+                  {filtered.map((object) => {
+                    const { Content } = column;
+                    return (
+                      <div key={object[id]} className='mt-2 bg-white rounded border border-slate-300'>
+                        <Content object={object} />
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {onCreate && (

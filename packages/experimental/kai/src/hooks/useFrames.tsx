@@ -5,7 +5,7 @@
 import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 export enum FrameID {
-  DMG = 'registry',
+  REGISTRY = 'registry',
   SETTINGS = 'settings',
   DASHBOARD = 'dashboard',
   TABLE = 'tables',
@@ -18,9 +18,16 @@ export enum FrameID {
   CHESS = 'chess'
 }
 
-export const defaultFrameId = FrameID.DASHBOARD;
+export const defaultFrameId = FrameID.KANBAN;
 
-const activeFrames = [FrameID.SETTINGS, FrameID.DMG, FrameID.DASHBOARD, FrameID.TABLE, FrameID.TASKS];
+const activeFrames = [
+  FrameID.SETTINGS,
+  FrameID.REGISTRY,
+  FrameID.DASHBOARD,
+  FrameID.TABLE,
+  FrameID.TASKS,
+  FrameID.KANBAN
+];
 
 export type FrameDef = {
   id: FrameID;

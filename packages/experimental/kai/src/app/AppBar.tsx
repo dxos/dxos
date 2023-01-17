@@ -14,7 +14,7 @@ import { FrameID } from '../hooks';
 export const Menu = () => {
   return (
     <div className='flex items-center'>
-      <Link className='ml-2' to={FrameID.DMG} title='DMG'>
+      <Link className='ml-2' to={FrameID.REGISTRY} title='Registry'>
         <Globe className={getSize(6)} />
       </Link>
       <Link className='ml-2' to='/identity' title='Identity'>
