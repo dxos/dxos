@@ -10,6 +10,11 @@ import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, Sna
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { Presence } from '@dxos/teleport-extension-presence';
+import { ComplexSet } from '@dxos/util';
+
+import { TrustedKeySetAuthVerifier } from '../identity';
+
+const AUTH_TIMEOUT = 30000;
 
 export type DataSpaceParams = {
   inner: Space;
@@ -27,6 +32,7 @@ export class DataSpace implements ISpace {
   private readonly _dataPipelineController: DataPipelineControllerImpl;
   private readonly _inner: Space;
   private readonly _presence: Presence;
+  public readonly authVerifier: TrustedKeySetAuthVerifier;
 
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
@@ -39,6 +45,11 @@ export class DataSpace implements ISpace {
       spaceKey: this._inner.key,
       feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
       snapshotId: params.snapshotId
+    });
+    this.authVerifier = new TrustedKeySetAuthVerifier({
+      trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(this._inner.spaceState.members.keys())),
+      update: this._inner.stateUpdate,
+      authTimeout: AUTH_TIMEOUT
     });
   }
 
@@ -78,6 +89,7 @@ export class DataSpace implements ISpace {
 
   async close() {
     await this._ctx.dispose();
+    await this.authVerifier.close();
     await this._inner.close();
     await this._presence.destroy();
   }

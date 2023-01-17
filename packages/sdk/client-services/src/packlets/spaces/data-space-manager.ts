@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
@@ -21,8 +23,9 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Presence } from '@dxos/teleport-extension-presence';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, deferFunction } from '@dxos/util';
 
+import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
 
 @trackLeaks('open', 'close')
@@ -99,6 +102,8 @@ export class DataSpaceManager {
   // TODO(burdon): Rename join space.
   @synchronized
   async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
+    assert(!this._spaces.has(opts.spaceKey), 'Space already exists.');
+
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
@@ -125,8 +130,8 @@ export class DataSpaceManager {
       metadata,
       swarmIdentity: {
         peerKey: this._signingContext.deviceKey,
-        credentialProvider: this._signingContext.credentialProvider,
-        credentialAuthenticator: this._signingContext.credentialAuthenticator
+        credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
+        credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier)
       },
       onNetworkConnection: (session) => {
         session.addExtension(
