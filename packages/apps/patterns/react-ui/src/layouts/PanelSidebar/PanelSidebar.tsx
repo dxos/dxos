@@ -53,7 +53,7 @@ export const PanelSidebarProvider = ({
   slots
 }: PropsWithChildren<PanelSidebarProviderProps>) => {
   const { t } = useTranslation('os');
-  const [isLg] = useMediaQuery('lg');
+  const [isLg] = useMediaQuery('lg', { ssr: false });
   const [displayState, setInternalDisplayState] = useState<PanelSidebarState>(isLg ? 'show' : 'hide');
   const isOpen = displayState === 'show';
   const [transitionShow, setTransitionShow] = useState(isOpen);
