@@ -27,19 +27,17 @@ export const Input: FC<InputProps> = ({
   ...props
 }) => {
   const t = useRef<ReturnType<typeof setTimeout>>();
-  const [value, setValue] = useState<string>(initialValue ?? '');
+  const [value, setValue] = useState<string | undefined>(initialValue);
 
   // TODO(burdon): How to check if value has been updated? Controlled vs. uncontrolled!
   useEffect(() => {
     setValue((initialValue as string) ?? '');
   }, [initialValue]);
 
-  const handleUpdate = (value: string) => {
+  const handleUpdate = (value?: string) => {
     clearTimeout(t.current);
     setValue(value);
-    if (value !== initialValue) {
-      onChange?.(value);
-    }
+    onChange?.(value ?? '');
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +52,7 @@ export const Input: FC<InputProps> = ({
     switch (event.key) {
       case 'Enter': {
         clearTimeout(t.current);
-        if (onEnter?.(value)) {
+        if (onEnter?.(value ?? '')) {
           setValue('');
         } else {
           handleUpdate(value);
@@ -63,7 +61,7 @@ export const Input: FC<InputProps> = ({
       }
 
       case 'Escape': {
-        setValue(initialValue ?? '');
+        handleUpdate(initialValue);
         break;
       }
 
@@ -78,5 +76,5 @@ export const Input: FC<InputProps> = ({
     onBlur?.();
   };
 
-  return <input value={value} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} {...props} />;
+  return <input value={value ?? ''} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} {...props} />;
 };
