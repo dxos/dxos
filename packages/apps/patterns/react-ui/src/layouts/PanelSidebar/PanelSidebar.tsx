@@ -120,7 +120,7 @@ export const PanelSidebarProvider = ({
           role='none'
           {...slots?.main}
           className={mx(
-            'min-bs-full transition-[padding-inline-start] duration-200 ease-in-out',
+            'transition-[padding-inline-start] duration-200 ease-in-out',
             isLg && isOpen ? 'pis-[272px]' : 'pis-0',
             slots?.main?.className
           )}

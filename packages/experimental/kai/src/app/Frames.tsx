@@ -97,12 +97,7 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
       inlineStart
       slots={{
         content: { children: <Sidebar />, className: 'block-start-[48px]' },
-        main: {
-          className: mx(
-            frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]',
-            'min-bs-screen max-bs-screen flex flex-col bg-white'
-          )
-        }
+        main: { className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'bs-screen flex flex-col bg-white') }
       }}
     >
       <AppBar />
