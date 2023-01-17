@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PlusCircle, X } from 'phosphor-react';
+import { PlusCircle } from 'phosphor-react';
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -47,12 +47,6 @@ export const Sidebar = () => {
       role='none'
       className='flex flex-col overflow-auto min-bs-full backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
     >
-      <div className='flex justify-end bg-orange-500/50 lg:bg-orange-400'>
-        <Button onClick={toggleSidebar} className='p-3'>
-          <span className='sr-only'>Close sidebar</span>
-          <X className={getSize(6)} />
-        </Button>
-      </div>
       {/* Spaces */}
       <div className='flex shrink-0 flex-col overflow-y-scroll'>
         <SpaceList />
