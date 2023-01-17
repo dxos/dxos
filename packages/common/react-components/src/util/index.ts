@@ -3,3 +3,4 @@
 //
 
 export * from './mx';
+export * from './hasIosKeyboard';

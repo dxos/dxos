@@ -2,18 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bug, List, User } from 'phosphor-react';
+import { Bug, Globe, List, User } from 'phosphor-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 import { useTogglePanelSidebar } from '@dxos/react-ui';
 
+import { FrameID } from '../hooks';
+
 export const Menu = () => {
   return (
-    <Link to='/identity'>
-      <User className={getSize(6)} />
-    </Link>
+    <div className='flex items-center'>
+      <Link className='ml-2' to={FrameID.DMG} title='DMG'>
+        <Globe className={getSize(6)} />
+      </Link>
+      <Link className='ml-2' to='/identity' title='Identity'>
+        <User className={getSize(6)} />
+      </Link>
+    </div>
   );
 };
 
@@ -21,7 +28,10 @@ export const AppBar = () => {
   const toggleSidebar = useTogglePanelSidebar();
 
   return (
-    <div className='flex items-center pl-4 pr-4' style={{ height: 48 }}>
+    <div
+      className='flex items-center pl-4 pr-4 fixed inline-start-0 inline-end-0 block-start-0 bg-orange-400'
+      style={{ height: 48 }}
+    >
       <div className='flex'>
         <button onClick={toggleSidebar}>
           <List className={getSize(6)} />

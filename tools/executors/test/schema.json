@@ -128,6 +128,11 @@
     "grep": {
       "type": "string",
       "description": "Name of test for debugging"
+    },
+    "bail": {
+      "type": "boolean",
+      "description": "Exit after first failed test",
+      "default": false
     }
   },
   "required": [

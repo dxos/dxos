@@ -134,7 +134,7 @@ export class Presence {
             timestamp: new Date(),
             identityKey: this._params.identityKey
           })
-          .catch((err) => log.catch(err))
+          .catch((err) => log.warn(err))
       )
     );
   }

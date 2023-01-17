@@ -7,7 +7,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { getSize } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { Input, Selector } from '../components';
@@ -54,7 +54,12 @@ export const ProjectEditor: FC = withReactor(() => {
               <div className='flex flex-1 overflow-y-scroll border'>
                 <Composer
                   doc={project.description?.doc}
-                  className={mx('z-0 bg-white text-black w-full m-2 p-2 min-bs-[12em]')}
+                  slots={{
+                    root: { className: 'grow' },
+                    editor: {
+                      className: 'z-0 bg-white text-black w-full m-2 p-2 min-bs-[12em]'
+                    }
+                  }}
                 />
               </div>
             </div>
