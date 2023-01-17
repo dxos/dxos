@@ -11,7 +11,7 @@ export const defaultActive = mx(
 );
 
 const sideInset = {
-  be: 'after:rounded-be after:bs-px after:block-end-0 after:inline-start-0 after:inline-end-0'
+  be: 'after:rounded-be after:bs-[2px] after:block-end-0 after:inline-start-0 after:inline-end-0'
 };
 
 export const osActive = (side: keyof typeof sideInset) =>

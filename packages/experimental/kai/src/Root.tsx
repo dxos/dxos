@@ -7,6 +7,7 @@ import React from 'react';
 
 import { appkitTranslations, Fallback } from '@dxos/react-appkit';
 import { ThemeProvider } from '@dxos/react-components';
+import { osTranslations } from '@dxos/react-ui';
 
 import { App } from './app';
 import kaiTranslations from './translations';
@@ -29,7 +30,7 @@ export const Root = () => {
   return (
     <ThemeProvider
       appNs='kai'
-      resourceExtensions={[appkitTranslations, kaiTranslations]}
+      resourceExtensions={[appkitTranslations, osTranslations, kaiTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
       <App debug={process.env.DEBUG === 'true'} />

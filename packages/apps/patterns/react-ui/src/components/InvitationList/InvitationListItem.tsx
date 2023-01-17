@@ -87,8 +87,13 @@ export const InvitationListItem = ({
       {showShare && invitationUrl && (
         <AccordionPrimitive.Content>
           <Button className='flex gap-2 is-full p-2' onClick={handleCLickCopy}>
-            <QRCodeSVG bgColor='transparent' fgColor='currentColor' value={invitationUrl} className={getSize(24)} />
-            <span className='grow text-center'>
+            <QRCodeSVG
+              bgColor='transparent'
+              fgColor='currentColor'
+              value={invitationUrl}
+              className={mx('grow aspect-square is-24 bs-auto')}
+            />
+            <span className='pli-1'>
               {t('copy invitation code label')}
               <Copy className={mx(getSize(4), 'inline mis-1')} weight='bold' />
             </span>
