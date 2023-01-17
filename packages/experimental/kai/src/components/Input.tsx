@@ -6,8 +6,8 @@ import React, { ChangeEvent, InputHTMLAttributes, FC, useEffect, useRef, useStat
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'onBlur'> {
   value?: string;
-  onChange?: (value?: string) => void;
-  onEnter?: (value?: string) => void;
+  onChange?: (value: string) => void;
+  onEnter?: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
   onBlur?: () => void;
   delay?: number;
@@ -37,7 +37,7 @@ export const Input: FC<InputProps> = ({
   const handleUpdate = (value?: string) => {
     clearTimeout(t.current);
     setValue(value);
-    onChange?.(value);
+    onChange?.(value ?? '');
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -52,7 +52,7 @@ export const Input: FC<InputProps> = ({
     switch (event.key) {
       case 'Enter': {
         clearTimeout(t.current);
-        if (onEnter?.(value)) {
+        if (onEnter?.(value ?? '')) {
           setValue('');
         } else {
           handleUpdate(value);

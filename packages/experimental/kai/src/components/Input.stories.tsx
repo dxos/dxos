@@ -23,12 +23,14 @@ const Test = () => {
           className='p-1'
           value={value}
           onChange={setValue}
-          onEnter={(value: string) => {
+          onEnter={(value?: string) => {
             setValue('');
-            setValues((values) => {
-              values.push(value);
-              return [...values];
-            });
+            if (value !== undefined) {
+              setValues((values) => {
+                values.push(value);
+                return [...values];
+              });
+            }
           }}
           spellCheck={false}
           autoFocus
