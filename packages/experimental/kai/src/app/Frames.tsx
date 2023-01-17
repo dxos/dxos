@@ -56,7 +56,7 @@ export const FrameSelector: FC = () => {
   return (
     <div
       className={mx(
-        'flex flex-col flex-1 bg-orange-500 pt-1 fixed inline-end-0 block-start-[48px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
+        'flex flex-col flex-1 bg-orange-500 pt-1 fixed inline-end-0 block-start-[48px] bs-[36px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
         isOpen ? 'inline-start-0 lg:inline-start-[272px]' : 'inline-start-0'
       )}
     >
