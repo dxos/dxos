@@ -65,6 +65,7 @@ dx app publish
 
 ### Framework/ECHO Issues
 
+- [ ] Set undefined value.
 - [ ] Can't set complex value (see echo-typegen tests)
 - [ ] Splice (drag and drop).
 - [ ] Scalar sets (e.g., Project tags for kanban).
