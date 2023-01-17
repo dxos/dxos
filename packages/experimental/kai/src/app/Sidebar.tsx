@@ -20,11 +20,10 @@ export const Sidebar = () => {
   const navigate = useNavigate();
   const client = useClient();
   const { space } = useSpace();
-
-  const toggleSidebar = useTogglePanelSidebar();
   const { view } = useParams();
   const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);
+  const toggleSidebar = useTogglePanelSidebar();
 
   // TODO(wittjosiah): Find a better way to do this.
   if (prevSpace !== space) {
@@ -45,11 +44,17 @@ export const Sidebar = () => {
   return (
     <div
       role='none'
-      className='flex flex-col overflow-auto min-bs-full backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
+      className='flex flex-col overflow-auto min-bs-full box-shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
     >
       {/* Spaces */}
       <div className='flex shrink-0 flex-col overflow-y-scroll'>
+        {/* Match Frame selector. */}
+        <div className='flex p-1 pl-4 h-[36px] pt-2 bg-orange-500'>
+          <div>Spaces</div>
+        </div>
+
         <SpaceList />
+
         <div className='p-3'>
           <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
             <span className='sr-only'>Create new space</span>

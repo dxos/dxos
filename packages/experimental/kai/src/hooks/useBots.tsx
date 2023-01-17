@@ -7,7 +7,7 @@ import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction,
 
 import { EchoDatabase } from '@dxos/echo-schema';
 
-import { AIBot, Bot, ChessBot } from '../bots';
+import { ResearchBot, Bot, ChessBot } from '../bots';
 import { useSpace } from './useSpace';
 
 export enum BotID {
@@ -20,13 +20,26 @@ export type BotDef = {
   id: BotID;
   system?: boolean;
   title: string;
+  description?: string;
   Icon: FC<any>;
   constructor: (db: EchoDatabase) => Bot<any>;
 };
 
 const bots: BotDef[] = [
-  { id: BotID.RESEARCH, Icon: Binoculars, title: 'ResearchBot', constructor: (db: EchoDatabase) => new AIBot(db) },
-  { id: BotID.CHESS, Icon: Sword, title: 'ChessBot', constructor: (db: EchoDatabase) => new ChessBot(db) }
+  {
+    id: BotID.RESEARCH,
+    Icon: Binoculars,
+    title: 'ResearchBot',
+    description: 'Background data analysis and text matching.',
+    constructor: (db: EchoDatabase) => new ResearchBot(db)
+  },
+  {
+    id: BotID.CHESS,
+    Icon: Sword,
+    title: 'ChessBot',
+    description: 'Basic chess engine.',
+    constructor: (db: EchoDatabase) => new ChessBot(db)
+  }
 ];
 
 export type BotMap = { [index: string]: BotDef };

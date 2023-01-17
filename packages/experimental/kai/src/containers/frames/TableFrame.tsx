@@ -5,12 +5,12 @@
 import React, { useState } from 'react';
 import { Column } from 'react-table';
 
-import { EchoObject, TypeFilter } from '@dxos/echo-schema';
+import { EchoObject, id, TypeFilter } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { Searchbar, Selector, SelectorOption, Table } from '../components';
-import { useSpace } from '../hooks';
-import { Contact, Organization, Project } from '../proto';
+import { Searchbar, Selector, SelectorOption, Table } from '../../components';
+import { useSpace } from '../../hooks';
+import { Contact, Organization, Project } from '../../proto';
 
 type ColumnType = SelectorOption & {
   filter: TypeFilter<any>;
@@ -20,10 +20,11 @@ type ColumnType = SelectorOption & {
 // TODO(burdon): Infer columns for generic table container.
 const types: ColumnType[] = [
   {
-    id: 'org',
+    id: 'organization',
     title: 'Organization',
     filter: Organization.filter(),
     columns: [
+      { Header: 'ID', accessor: (item: any) => item[id] },
       { Header: 'Name', accessor: 'name' as any },
       { Header: 'City', accessor: 'address.city' as any },
       { Header: 'Web', accessor: 'website' }
@@ -34,6 +35,7 @@ const types: ColumnType[] = [
     title: 'Project',
     filter: Project.filter(),
     columns: [
+      { Header: 'ID', accessor: (item: any) => item[id] },
       { Header: 'Name', accessor: 'title' as any },
       { Header: 'URL', accessor: 'url' }
     ]
@@ -43,6 +45,7 @@ const types: ColumnType[] = [
     title: 'Contact',
     filter: Contact.filter(),
     columns: [
+      { Header: 'ID', accessor: (item: any) => item[id] },
       { Header: 'Name', accessor: 'name' as any },
       { Header: 'Username', accessor: 'username' as any },
       { Header: 'Email', accessor: 'email' as any },
@@ -53,7 +56,7 @@ const types: ColumnType[] = [
 
 const getType = (id: string): ColumnType => types.find((type) => type.id === id)!;
 
-export const MetaTable = () => {
+export const TableFrame = () => {
   const { space } = useSpace();
   const [type, setType] = useState<ColumnType>(getType('contact'));
   const contacts = useQuery(space, type.filter);
@@ -69,7 +72,7 @@ export const MetaTable = () => {
       <div className='flex p-3'>
         <div className='flex'>
           <div className='mr-2'>
-            <Selector options={types} onSelect={handleSelect} />
+            <Selector options={types} value={type.id} onSelect={handleSelect} />
           </div>
           <div>
             <Searchbar />

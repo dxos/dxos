@@ -50,6 +50,8 @@ dx app publish
 
 ### UX Issues.
 
+- [ ] Controlled vs. non-controlled (`itmems` and `value` property.)
+- [ ] Getters (decouple from ECHO objects).
 - [ ] Theme: 
   - [ ] Mobile font size.
   - [ ] AppBar/Accent colors.
@@ -57,16 +59,25 @@ dx app publish
 - [ ] Styling slots?
 - [ ] i18n Text properties (e.g., placeholder.)
 
+### UX Framework
+
+- [ ] Containers and Responsive Cards
+
 ### Framework/ECHO Issues
 
-- [ ] dxtype build rule.
 - [ ] Can't set complex value (see echo-typegen tests)
-- [ ] Reset.
 - [ ] Splice (drag and drop).
 - [ ] Scalar sets (e.g., Project tags for kanban).
 - [ ] Materialized links (referential integrity).
 - [ ] Device management.
 - [ ] Save space credentials (membership) to HALO.
+- [ ] Introspect types (see meta table).
+- [ ] Reset (data services).
+
+### SDK
+
+- [ ] dxtype build rule.
+- [ ] Schema docs
 
 ## Refs
 
