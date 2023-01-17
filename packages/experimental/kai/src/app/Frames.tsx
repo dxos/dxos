@@ -93,7 +93,7 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
   const { Component } = active ?? {};
 
   return (
-    <PanelSidebarProvider inlineStart slots={{ content: { children: <Sidebar /> } }}>
+    <PanelSidebarProvider inlineStart slots={{ content: { children: <Sidebar />, className: 'block-start-[48px]' } }}>
       <AppBar />
       <FrameSelector />
       {Component && (
