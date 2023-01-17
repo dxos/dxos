@@ -87,7 +87,9 @@ export const App = () => {
       <div className='h-1/2'>
         <KaiPart />
       </div>
-      <div className='h-1/2'>{/* <DevtoolsPart /> */}</div>
+      <div className='h-1/2'>
+        <DevtoolsPart />
+      </div>
     </div>
   );
 };

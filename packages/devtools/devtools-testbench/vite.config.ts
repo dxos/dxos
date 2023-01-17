@@ -27,6 +27,8 @@ export default defineConfig({
   },
 
   define: {
+    'process.env.DEBUG': env(process.env.DEBUG),
+    'process.env.DEMO': env(process.env.DEMO),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
     'process.env.DX_VAULT': env(process.env.DX_VAULT),
@@ -63,14 +65,13 @@ export default defineConfig({
     ]
   },
 
-  build: {
+  build:  {
+    outDir: 'out/devtools-testbench',
+    sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     },
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html')
-      },
       output: {
         manualChunks: {
           vendor: ['react', 'react-router-dom', 'react-dom']
@@ -78,6 +79,7 @@ export default defineConfig({
       }
     }
   },
+
   // TODO(burdon): Add fonts.
   plugins: [
     ConfigPlugin(),

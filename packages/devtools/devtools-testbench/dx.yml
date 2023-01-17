@@ -7,7 +7,7 @@ package:
       displayName: testbench
       description: TestBench
       build:
-        command: pnpm -w nx bundle devtools-testbench
+        command: DEMO=true NODE_OPTIONS="--max_old_space_size=8096" pnpm -w nx bundle devtools-testbench
 
 runtime:
   client:

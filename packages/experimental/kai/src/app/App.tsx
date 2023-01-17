@@ -44,6 +44,7 @@ const clientProvider = async (demo: boolean) => {
  * Main app container with routes.
  */
 export const App: FC<{ debug?: boolean; demo?: boolean }> = ({ debug = false, demo = true }) => {
+  console.log('App', { debug, demo });
   // TODO(burdon): Error boundary and indicator.
   return (
     <ClientProvider client={() => clientProvider(demo)}>
