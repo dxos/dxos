@@ -29,7 +29,7 @@ export const AppBar = () => {
 
   return (
     <div
-      className='flex items-center pl-4 pr-4 fixed inline-start-0 inline-end-0 block-start-0 bg-orange-400'
+      className='flex items-center pl-4 pr-4 fixed inline-start-0 inline-end-0 block-start-0 bg-orange-400 z-[1]'
       style={{ height: 48 }}
     >
       <div className='flex'>
