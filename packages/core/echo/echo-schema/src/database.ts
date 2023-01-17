@@ -15,10 +15,12 @@ import { DELETED, Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
 
-export type Filter = Record<string, any>;
+export type PropertiesFilter = Record<string, any>;
+export type OperatorFilter<T extends DocumentBase> = (document: T) => boolean;
+export type Filter<T extends DocumentBase> = PropertiesFilter | OperatorFilter<T>;
 
 // NOTE: `__phantom` property forces type.
-export type TypeFilter<T extends Document> = { __phantom: T } & Filter;
+export type TypeFilter<T extends Document> = { __phantom: T } & Filter<T>;
 
 export type SelectionFn = never; // TODO(burdon): Document or remove.
 export type Selection = EchoObject | SelectionFn | Selection[];
@@ -120,10 +122,10 @@ export class EchoDatabase {
    */
   // TODO(burdon): Additional filters?
   query<T extends Document>(filter: TypeFilter<T>): Query<T>;
-  query(filter?: Filter): Query;
-  query(filter: Filter): Query {
+  query(filter?: Filter<any>): Query;
+  query(filter: Filter<any>): Query {
     // TODO(burdon): Create separate test.
-    const matchObject = (object: EchoObject): object is DocumentBase =>
+    const matcher = (object: EchoObject): object is DocumentBase =>
       object instanceof DocumentBase &&
       !object[deleted] &&
       (!filter || Object.entries(filter).every(([key, value]) => (object as any)[key] === value));
@@ -135,7 +137,7 @@ export class EchoDatabase {
       getObjects: () => {
         if (!cache) {
           // TODO(burdon): Sort.
-          cache = Array.from(this._objects.values()).filter(matchObject);
+          cache = Array.from(this._objects.values()).filter(matcher);
         }
 
         return cache;
@@ -146,7 +148,7 @@ export class EchoDatabase {
         return this._db.update.on((updatedObjects) => {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
-              const match = matchObject(this._objects.get(object.id)!);
+              const match = matcher(this._objects.get(object.id)!);
               const exists = cache?.find((obj) => obj[id] === object.id);
               return match || (exists && !match);
             } else {

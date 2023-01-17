@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 
 import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
@@ -16,11 +16,23 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
   return <ProjectCard project={object as Project} />;
 };
 
+// TODO(burdon): Generalize type.
 export const ProjectKanban: FC = () => {
   const { space } = useSpace();
 
-  // TODO(burdon): Generalize.
+  const [text, setText] = useState<string>();
+  const handleSearch = (text: string) => {
+    setText(text);
+  };
+
+  // TODO(burdon): Chain filters.
   const objects = useQuery(space, Project.filter());
+  const filtered = objects.filter(
+    // TODO(burdon): Generalize search (by default all text; use schema annotations).
+    (object: Project) => !text?.length || object.title.toLowerCase().indexOf(text) !== -1
+  );
+
+  // TODO(burdon): Pass in filter.
   const columns: KanbanColumnDef[] = tags.map((tag) => ({
     id: tag,
     header: tag,
@@ -37,12 +49,12 @@ export const ProjectKanban: FC = () => {
     <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='py-3 px-0 md:px-2'>
         <div className='w-screen md:w-[314px] px-4 md:px-2'>
-          <Searchbar />
+          <Searchbar onSearch={handleSearch} />
         </div>
       </div>
 
       <div className='flex flex-1 overflow-hidden'>
-        <Kanban objects={objects} columns={columns} onCreate={handleCreate} />
+        <Kanban objects={filtered} columns={columns} onCreate={handleCreate} />
       </div>
     </div>
   );

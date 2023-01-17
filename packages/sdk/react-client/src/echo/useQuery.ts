@@ -9,13 +9,13 @@ import { Document, DocumentBase, Filter, TypeFilter } from '@dxos/echo-schema';
 
 type UseQuery = {
   <T extends DocumentBase>(space: Space, filter?: TypeFilter<T>): T[];
-  (space: Space, filter?: Filter): Document[];
+  <T extends DocumentBase>(space: Space, filter?: Filter<T>): Document[];
 };
 
 /**
  * Create subscription.
  */
-export const useQuery: UseQuery = (space: Space, filter?: Filter) => {
+export const useQuery: UseQuery = (space: Space, filter?: Filter<any>) => {
   const query = useMemo(
     () => space.experimental.db.query(filter ?? {}),
     [space.experimental.db, ...filterToDepsArray(filter)]
@@ -28,4 +28,4 @@ export const useQuery: UseQuery = (space: Space, filter?: Filter) => {
   );
 };
 
-const filterToDepsArray = (filter?: Filter) => Object.entries(filter ?? {}).flat();
+const filterToDepsArray = (filter?: Filter<any>) => Object.entries(filter ?? {}).flat();
