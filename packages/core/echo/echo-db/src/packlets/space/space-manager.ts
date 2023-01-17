@@ -15,8 +15,6 @@ import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { DataPipelineController } from './data-pipeline-controller';
-import { AuthProvider, AuthVerifier } from './auth';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 

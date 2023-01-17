@@ -40,7 +40,6 @@ describe('DataSpaceManager', () => {
       identity2,
       new ModelFactory().registerModel(ObjectModel),
       peer1.snapshotStore
-
     );
 
     const space1 = await dataSpaceManager1.createSpace();

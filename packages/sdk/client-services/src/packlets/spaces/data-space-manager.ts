@@ -22,8 +22,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { ComplexMap, deferFunction } from '@dxos/util';
 import { Presence } from '@dxos/teleport-extension-presence';
+import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';

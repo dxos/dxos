@@ -9,9 +9,9 @@ import { Context } from '@dxos/context';
 import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, SnapshotManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexSet } from '@dxos/util';
 
-import { Presence } from '@dxos/teleport-extension-presence';
 import { TrustedKeySetAuthVerifier } from '../identity';
 
 const AUTH_TIMEOUT = 30000;
@@ -31,7 +31,7 @@ export class DataSpace implements ISpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;
   private readonly _inner: Space;
-  private readonly _presence: Presence
+  private readonly _presence: Presence;
   public readonly authVerifier: TrustedKeySetAuthVerifier;
 
   constructor(params: DataSpaceParams) {
