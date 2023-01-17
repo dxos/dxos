@@ -20,15 +20,18 @@ import { TestFeedBuilder, TestAgentBuilder, WebsocketNetworkManagerProvider } fr
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
 describe('space/space-protocol', () => {
-  test.skip('two peers discover each other', async () => {
+  test('two peers discover each other', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
-    const protocol1 = peer1.createSpaceProtocol(topic);
+    const presence1 = peer1.createPresence();
+    const protocol1 = peer1.createSpaceProtocol(topic, presence1);
 
     const peer2 = await builder.createPeer();
-    const protocol2 = peer2.createSpaceProtocol(topic);
+    const presence2 = peer2.createPresence();
+    const protocol2 = peer2.createSpaceProtocol(topic, presence2);
 
     await protocol1.start();
     await protocol2.start();
@@ -37,13 +40,14 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(protocol1.peers).toContainEqual(peer2.deviceKey);
-      expect(protocol2.peers).toContainEqual(peer1.deviceKey);
+      expect(presence1.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
+      expect(presence2.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
     });
   });
 
   test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -89,6 +93,7 @@ describe('space/space-protocol', () => {
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
     });
+    afterTest(async () => await builder.close());
 
     const keyring = new Keyring();
     const topic = await keyring.createKey();

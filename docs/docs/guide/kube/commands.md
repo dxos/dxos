@@ -76,42 +76,6 @@ kube config port 9005
 sudo kube restart
 ```
 
-## Telemetry
-
-To disable telemetry:
-
-```bash
-kube config telemetry.disabled true
-sudo kube restart
-```
-
-## HTTPS
-
-To enable HTTPS (public KUBEs):
-
-*   Generate certificate, e.g.:
-
-```bash
-sudo apt-get install certbot
-
-certbot certonly -d *.exampledomain.com -d exampledomain.com --preferred-challenges dns-01 --server https://acme-v02.api.letsencrypt.org/directory --manual
-```
-
-*   Setup DNS - add suggested TXT record;
-
-*   After cert is generated, setup KUBE:
-
-```bash
-kube config host exampledomain.com
-kube config https.enabled true
-kube config https.port 443
-kube config https.certfile /etc/letsencrypt/live/exampledomain.com/fullchain.pem
-kube config https.keyfile /etc/letsencrypt/live/exampledomain.com/privkey.pem
-sudo kube restart
-```
-
-*   Setup DNS record to point domain name to KUBE server
-
 # Uninstall
 
 ```bash

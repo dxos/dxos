@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -31,16 +31,19 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/bare-template": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/hello-template": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
+    "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@oclif/core": "^1.14.1",
     "@oclif/plugin-help": "^5.1.12",

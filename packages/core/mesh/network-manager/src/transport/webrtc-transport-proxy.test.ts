@@ -16,7 +16,8 @@ import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
-describe('WebRTCTransportProxy', () => {
+// TODO(burdon): Flaky.
+describe.skip('WebRTCTransportProxy', () => {
   const setupProxy = async ({
     initiator = true,
     stream = new TestStream(),

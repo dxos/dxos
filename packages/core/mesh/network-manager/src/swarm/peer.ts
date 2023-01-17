@@ -80,7 +80,8 @@ export class Peer {
     if (this.connection || this.initiating) {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this.localPeerId.toHex()) {
-        log.info("closing local connection and accepting remote peer's offer", {
+        // TODO(burdon): Too verbose.
+        log("closing local connection and accepting remote peer's offer", {
           id: this.id,
           topic: this.topic,
           peerId: this.localPeerId

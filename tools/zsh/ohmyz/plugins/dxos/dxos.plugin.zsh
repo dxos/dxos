@@ -60,8 +60,10 @@ function pre () {
     git clean -xdf
   fi;
 
-  pnpm i
-  pa build
-  pa test
-  pa lint
+#  export CI=true
+
+  pnpm i --no-frozen-lockfile
+  CI=true pa build
+  CI=true pa test
+  CI=true pa lint
 }

@@ -27,6 +27,16 @@
       "description": "Environments to run tests in CI",
       "default": ["nodejs", "chromium", "firefox", "webkit"]
     },
+    "playwright": {
+      "type": "boolean",
+      "description": "Running playwright tests, sets up and provides a playwright environment",
+      "default": false
+    },
+    "serve": {
+      "type": "string",
+      "description": "Project target to run concurrently alongside the tests",
+      "examples": ["halo-app:preview", "react-client:storybook"]
+    },
     "setup": {
       "type": "string",
       "description": "Setup script to run before tests"
@@ -71,6 +81,11 @@
       "description": "Mocha timeout in ms",
       "default": 15000
     },
+    "trackLeakedResource": {
+      "type": "boolean",
+      "description": "Track resources that are not cleaned up after tests",
+      "default": false
+    },
     "checkLeaks": {
       "type": "boolean",
       "description": "Check for global variable leaks",
@@ -108,6 +123,15 @@
     "inspect": {
       "type": "boolean",
       "description": "Enable node inspector",
+      "default": false
+    },
+    "grep": {
+      "type": "string",
+      "description": "Name of test for debugging"
+    },
+    "bail": {
+      "type": "boolean",
+      "description": "Exit after first failed test",
       "default": false
     }
   },

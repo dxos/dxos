@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import chalk from 'chalk';
 import { spawnSync } from 'child_process';
 
 import type { PackageModule, Logger } from './common';
@@ -16,12 +17,12 @@ interface BuildArgs {
 }
 
 export const build = ({ verbose }: BuildArgs, { log, module }: BuildParams) => {
-  verbose && log(`Building module ${module.name}...`);
+  log(`Building module ${chalk.bold(module.name)} ...`);
 
   const [command, ...args] = module.build!.command!.split(' ');
 
   // Build with configuration.
-  const { status } = spawnSync(command, args, {
+  const { status, error } = spawnSync(command, args, {
     env: {
       ...process.env,
       CONFIG_DYNAMIC: 'true'
@@ -29,10 +30,14 @@ export const build = ({ verbose }: BuildArgs, { log, module }: BuildParams) => {
     stdio: verbose ? 'inherit' : undefined
   });
 
-  if (status) {
-    verbose && log('Build failed.');
-    process.exit(status);
+  if (error || status !== 0) {
+    log(
+      `Module ${chalk.bold(module.name)} build failed${
+        verbose ? ` with status: ${status}.${error ? '\n' + error : ''}` : '. Re-run with --verbose for more details.'
+      }`
+    );
+    process.exit(status === null ? 1 : status);
   }
 
-  verbose && log('Build succeded.');
+  log(`Module build ${chalk.bold(module.name)} succeeded.`);
 };

@@ -32,10 +32,13 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-ui"
+      "path": "../../common/react-components"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/mesh/messaging"

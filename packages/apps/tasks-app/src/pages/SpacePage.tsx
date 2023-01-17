@@ -7,8 +7,9 @@ import { useOutletContext } from 'react-router-dom';
 
 import type { Item, ObjectModel, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
-import { Loading } from '@dxos/react-uikit';
-import { TaskList, TASK_LIST } from '../containers/TaskList';
+import { Loading } from '@dxos/react-components';
+
+import { TaskList, TASK_LIST } from '../containers';
 
 export const SpacePage = () => {
   const { space } = useOutletContext<{ space: Space }>();

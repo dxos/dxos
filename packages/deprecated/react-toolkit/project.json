@@ -6,11 +6,20 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/deprecated/react-toolkit/src/index.ts",
-        "outputPath": "packages/deprecated/react-toolkit/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "outputPath": "packages/deprecated/react-toolkit/dist/types",
         "tsConfig": "packages/deprecated/react-toolkit/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/deprecated/react-toolkit/src/index.ts"
+        ],
+        "outputPath": "packages/deprecated/react-toolkit/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"

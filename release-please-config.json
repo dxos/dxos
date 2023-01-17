@@ -53,17 +53,27 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/samples/bare/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/samples/hello/package.json",
+          "path": "packages/apps/patterns/react-ui/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/tasks-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/bare-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/hello-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/tasks-template/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -153,7 +163,7 @@
         },
         {
           "type": "json",
-          "path": "packages/common/react-ui/package.json",
+          "path": "packages/common/react-components/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -184,6 +194,16 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-db/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-schema/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-typegen/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -248,6 +268,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mesh/teleport-extension-object-sync/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/teleport-extension-presence/package.json",
           "jsonpath": "$.version"
         },
@@ -263,7 +288,7 @@
         },
         {
           "type": "json",
-          "path": "packages/deprecated/react-components/package.json",
+          "path": "packages/deprecated/react-components-deprecated/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -303,12 +328,37 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/devtools-testbench/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/initializers/bare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/initializers/create/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
+          "path": "packages/experimental/chess-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/client-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/framebox/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -408,11 +458,6 @@
         },
         {
           "type": "json",
-          "path": "packages/sdk/react-uikit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },
@@ -444,11 +489,6 @@
         {
           "type": "json",
           "path": "tools/executors/esbuild/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/executors/playwright/package.json",
           "jsonpath": "$.version"
         },
         {

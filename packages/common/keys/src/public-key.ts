@@ -6,7 +6,7 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
 
-import { truncateKey } from '@dxos/debug';
+import { truncateKey, devtoolsFormatter, DevtoolsFormatter } from '@dxos/debug';
 
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
@@ -77,6 +77,14 @@ export class PublicKey {
   static random(): PublicKey {
     // TODO(burdon): Enable seed for debugging.
     return PublicKey.from(randomBytes(32));
+  }
+
+  static *randomSequence(): Generator<PublicKey> {
+    for (let i = 0; i < 1_0000; i++) {
+      // Counter just to protect against infinite loops.
+      yield PublicKey.random();
+    }
+    throw new Error('Too many keys requested');
   }
 
   /**
@@ -210,6 +218,38 @@ export class PublicKey {
     )})`;
   }
 
+  [devtoolsFormatter](): DevtoolsFormatter {
+    return {
+      header: () => {
+        // NOTE: Keep in sync with inspect colors.
+        const colors = [
+          'darkred',
+          'green',
+          'orange',
+          'blue',
+          'darkmagenta',
+          'darkcyan',
+          'red',
+          'green',
+          'orange',
+          'blue',
+          'magenta',
+          'darkcyan',
+          'black'
+        ];
+        const color = colors[this.getInsecureHash(colors.length)];
+
+        return [
+          'span',
+          {},
+          ['span', {}, 'PublicKey('],
+          ['span', { style: `color: ${color};` }, this.truncate()],
+          ['span', {}, ')']
+        ];
+      }
+    };
+  }
+
   /**
    * Test this key for equality with some other key.
    */
@@ -227,68 +267,3 @@ export class PublicKey {
     return equal;
   }
 }
-
-type JsonML = [string, { [key: string]: any }?, ...(JsonML | string)[]];
-
-/**
- * https://www.mattzeunert.com/2016/02/19/custom-chrome-devtools-object-formatters.html
- * NOTE: Must be enabled in chrome devtools preferences.
- */
-// TODO(dmaretskyi): Change into prototype attribute on symbol like `custom.inspect`.
-abstract class DevtoolsFormatter<T> {
-  /**
-   * NOTE: Make sure to do an instance check and return null if the object is not of the correct type.
-   */
-  abstract header(value: T): JsonML | null;
-  abstract hasBody(value: T): boolean;
-  abstract body(value: T): JsonML | null;
-
-  register() {
-    if (typeof window !== 'undefined') {
-      ((window as any).devtoolsFormatters ??= []).push(this);
-    }
-  }
-}
-
-class PublicKeyFormatter extends DevtoolsFormatter<PublicKey> {
-  header(value: PublicKey): JsonML | null {
-    if (!PublicKey.isPublicKey(value)) {
-      return null;
-    }
-
-    // NOTE: Keep in sync with inspect colors.
-    const colors = [
-      'darkred',
-      'green',
-      'orange',
-      'blue',
-      'darkmagenta',
-      'darkcyan',
-      'red',
-      'green',
-      'orange',
-      'blue',
-      'magenta',
-      'darkcyan',
-      'black'
-    ];
-    const color = colors[value.getInsecureHash(colors.length)];
-
-    return [
-      'span',
-      {},
-      ['span', {}, 'PublicKey('],
-      ['span', { style: `color: ${color};` }, value.truncate()],
-      ['span', {}, ')']
-    ];
-  }
-
-  hasBody(value: PublicKey): boolean {
-    return false;
-  }
-
-  body(value: PublicKey): JsonML | null {
-    return null;
-  }
-}
-new PublicKeyFormatter().register();

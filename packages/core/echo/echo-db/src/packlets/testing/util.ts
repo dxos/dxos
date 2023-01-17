@@ -17,7 +17,7 @@ import {
   DataServiceSubscriptions
 } from '../database';
 
-export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
+export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<EchoEnvelope>();
   const backend = new DatabaseBackendHost(feed, undefined, { snapshots: true });
 
@@ -33,7 +33,6 @@ export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   );
 
   const database = new Database(modelFactory, backend, PublicKey.random());
-
   await database.initialize();
   return database;
 };
@@ -49,7 +48,6 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
   const database = new Database(modelFactory, new DatabaseBackendProxy(dataService, spaceKey), PublicKey.random());
-
   await database.initialize();
   return database;
 };

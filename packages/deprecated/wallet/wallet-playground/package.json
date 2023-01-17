@@ -1,6 +1,6 @@
 {
   "name": "@dxos/wallet-playground",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "private": true,
   "description": "DXOS Wallet Playground.",
   "homepage": "https://dxos.org",
@@ -20,7 +20,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.1",

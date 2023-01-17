@@ -7,12 +7,11 @@ import React, { ChangeEvent, KeyboardEvent, FC, useState, useEffect } from 'reac
 import * as ReactClientModule from '@dxos/react-client';
 
 // NOTE: Due to ESM.
-const { useClient, useSpaces } = ReactClientModule as any;
+const { useSpaces } = ReactClientModule as any;
 
 const ITEM_TYPE = 'demo/task';
 
 export const List: FC<{}> = () => {
-  const client = useClient();
   const spaces = useSpaces();
   const [text, setText] = useState<string>('');
   const [items, setItems] = useState<any[]>([]);
@@ -38,12 +37,12 @@ export const List: FC<{}> = () => {
     }
   };
 
-  const handleChange = (ev: ChangeEvent<HTMLInputElement>) => {
-    setText(ev.target.value);
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setText(event.target.value);
   };
 
-  const handleKeyDown = (ev: KeyboardEvent<HTMLInputElement>) => {
-    switch (ev.key) {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    switch (event.key) {
       case 'Enter': {
         const title = text.trim();
         if (title.length) {

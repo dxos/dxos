@@ -1,0 +1,17 @@
+version: 1
+stateMachine: "test-guest"
+startSequence:
+  commands:
+    - createProfile:
+        foo: 'bar'
+    
+testSequences:
+  - commands:
+    - syncClient:
+        id: "test-agent-client-sync"
+        srvId: "gravity-agent-server-sync"
+        host: "localhost"
+        port: 43430
+        verbose: true
+    - acceptSpaceInvitation:
+        swarmKey: "62815fecc2448f37aab2b77c92f5a73a238407d8eb3ff15eeb4037bda4c075ae"

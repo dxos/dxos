@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client-testing",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "private": true,
   "description": "Tools for react testing.",
   "homepage": "https://dxos.org",
@@ -30,7 +30,7 @@
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",

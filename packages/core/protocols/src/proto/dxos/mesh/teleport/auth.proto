@@ -1,0 +1,19 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.mesh.teleport.auth;
+
+message AuthenticateRequest {
+  bytes challenge = 1;
+}
+
+message AuthenticateResponse {
+  bytes credential = 1;
+}
+
+service AuthService {
+  rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse);
+}

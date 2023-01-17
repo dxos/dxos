@@ -18,3 +18,7 @@ message TestListMutation {
 message TestItemSnapshot {
   repeated TestItemMutation keys = 1;
 }
+
+message TestPayload {
+  string data = 1;
+}

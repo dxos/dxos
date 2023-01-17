@@ -1,6 +1,6 @@
 import path from 'path';
 import { TemplateFunction, File } from '@dxos/plate';
-import { Input } from '../index.js';
+import { Input } from '../config.t.js';
 import { packagesInProject } from '../util.t/index.js';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {

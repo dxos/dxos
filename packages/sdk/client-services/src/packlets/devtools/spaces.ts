@@ -28,7 +28,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
           return {
             key: space.key,
             isOpen: space.isOpen,
-            timeframe: spaceMetadata!.latestTimeframe!,
+            timeframe: spaceMetadata?.latestTimeframe,
             genesisFeed: space.genesisFeedKey,
             controlFeed: space.controlFeedKey,
             dataFeed: space.dataFeedKey
@@ -39,7 +39,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
 
     const timeout = setTimeout(async () => {
       await context.initialized.wait();
-      unsubscribe = context.spaceManager!.updated.on(() => update());
+      unsubscribe = context.dataSpaceManager!.updated.on(() => update());
 
       // Send initial spaces.
       await update();

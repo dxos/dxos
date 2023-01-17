@@ -17,7 +17,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nxext/vite:build",
+      "executor": "@nrwl/vite:build",
       "inputs": [
         {
           "env": "CONFIG_DYNAMIC"
@@ -44,7 +44,6 @@
         "production"
       ],
       "options": {
-        "configFile": "packages/apps/tasks-app/vite.config.ts",
         "outputPath": "packages/apps/tasks-app/out/tasks"
       },
       "outputs": [
@@ -56,7 +55,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/tasks-app/**/*.{ts,js}"
+          "packages/apps/tasks-app/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [
@@ -64,10 +63,9 @@
       ]
     },
     "serve": {
-      "executor": "@nxext/vite:dev",
+      "executor": "@nrwl/vite:dev-server",
       "options": {
-        "configFile": "packages/apps/tasks-app/vite.config.ts",
-        "outputPath": "packages/apps/tasks-app/out/tasks"
+        "buildTarget": "tasks-app:bundle"
       }
     },
     "serve-with-halo": {

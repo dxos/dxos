@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -12,11 +11,14 @@ import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } 
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
-import { Database, DataServiceSubscriptions } from '../database';
+import { SnapshotStore } from '../database';
+import { SnapshotManager } from '../database/snapshot-manager';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
+import { DataPipelineControllerImpl } from '../space/data-pipeline-controller';
 import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => NetworkManager;
@@ -102,7 +104,7 @@ export class TestAgent {
   }
 
   async close() {
-    return Promise.all(this.spaces.map((space) => space.close()));
+    return Promise.all([...this.spaces.map((space) => space.close())]);
   }
 
   get spaces() {
@@ -115,20 +117,8 @@ export class TestAgent {
 
   createSpaceManager() {
     return new SpaceManager({
-      keyring: this._feedBuilder.keyring,
       feedStore: this._feedBuilder.createFeedStore(),
-      metadataStore: new MetadataStore(this._feedBuilder.storage.createDirectory('metadata')),
-      networkManager: this._networkManagerProvider(),
-      dataServiceSubscriptions: new DataServiceSubscriptions(),
-      modelFactory: new ModelFactory().registerModel(ObjectModel),
-      signingContext: {
-        // TODO(burdon): Util to convert to Identity in SpaceProtocol
-        identityKey: this.identityKey,
-        deviceKey: this.deviceKey,
-        credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER,
-        credentialSigner: createCredentialSignerWithKey(this._feedBuilder.keyring, this.identityKey)
-      }
+      networkManager: this._networkManagerProvider()
     });
   }
 
@@ -136,7 +126,7 @@ export class TestAgent {
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
     genesisKey?: PublicKey
-  ): Promise<Space> {
+  ): Promise<[Space, DataPipelineControllerImpl]> {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
     }
@@ -147,31 +137,56 @@ export class TestAgent {
     const controlFeedKey = await this.keyring.createKey();
     const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
+    const snapshotManager = new SnapshotManager(new SnapshotStore(createStorage().createDirectory('snapshots')));
 
+    const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl({
+      modelFactory: new ModelFactory().registerModel(ObjectModel),
+      metadataStore: new MetadataStore(createStorage().createDirectory('metadata')),
+      snapshotManager,
+      memberKey: identityKey,
+      spaceKey,
+      feedInfoProvider: (feedKey) => space.spaceState.feeds.get(feedKey),
+      snapshotId: undefined
+    });
     const space = new Space({
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
       genesisFeed,
       controlFeed,
       dataFeed,
-      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
-      databaseFactory: async ({ databaseBackend }) =>
-        new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
+      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey)
     });
+    await space.open();
+    await space.initDataPipeline(dataPipelineController);
 
     this._spaces.set(spaceKey, space);
-    return space;
+    return [space, dataPipelineController];
   }
 
-  createSpaceProtocol(topic: PublicKey) {
+  createSpaceProtocol(topic: PublicKey, presence?: Presence) {
     return new SpaceProtocol({
       topic,
-      identity: {
+      swarmIdentity: {
         peerKey: this.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
-      networkManager: this._networkManagerProvider()
+      networkManager: this._networkManagerProvider(),
+      onSessionAuth: (session) => {
+        session.addExtension(
+          'dxos.mesh.teleport.presence',
+          (presence ?? this.createPresence()).createExtension({ remotePeerId: session.remotePeerId })
+        );
+      }
+    });
+  }
+
+  createPresence() {
+    return new Presence({
+      localPeerId: this.deviceKey,
+      announceInterval: 30,
+      offlineTimeout: 200,
+      identityKey: this.identityKey
     });
   }
 }

@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, scheduleTask, sleep } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -19,7 +19,7 @@ import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { WireProtocolProvider } from '../wire-protocol';
-import { Connection } from './connection';
+import { Connection, ConnectionState } from './connection';
 import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
@@ -33,7 +33,10 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {
-  private readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
+  /**
+   * @internal
+   */
+  readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
 
   private readonly _swarmMessenger: MessageRouter;
 
@@ -129,6 +132,7 @@ export class Swarm {
   }
 
   async setTopology(topology: Topology) {
+    assert(!this._ctx.disposed, 'Swarm is offline');
     if (topology === this._topology) {
       return;
     }
@@ -141,6 +145,92 @@ export class Swarm {
     this._topology = topology;
     this._topology.init(this._getSwarmController());
     this._topology.update();
+  }
+
+  @synchronized
+  onSwarmEvent(swarmEvent: SwarmEvent) {
+    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
+
+    if (this._ctx.disposed) {
+      log.warn('ignored for offline swarm');
+      return;
+    }
+
+    if (swarmEvent.peerAvailable) {
+      const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
+      log('new peer', { peerId });
+      if (!peerId.equals(this._ownPeerId)) {
+        const peer = this._getOrCreatePeer(peerId);
+        peer.advertizing = true;
+      }
+    } else if (swarmEvent.peerLeft) {
+      const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
+      if (peer) {
+        peer.advertizing = false;
+        if (peer.connection?.state !== ConnectionState.CONNECTED) {
+          // Destroy peer only if there is no p2p-connection established
+          void this._destroyPeer(peer.id).catch((err) => log.catch(err));
+        }
+      }
+    }
+
+    this._topology.update();
+  }
+
+  @synchronized
+  async onOffer(message: OfferMessage): Promise<Answer> {
+    log('offer', { message });
+    if (this._ctx.disposed) {
+      log.info('ignored for offline swarm');
+      return { accept: false };
+    }
+
+    // Id of the peer offering us the connection.
+    assert(message.author);
+    if (!message.recipient?.equals(this._ownPeerId)) {
+      log('rejecting offer with incorrect peerId', { message });
+      return { accept: false };
+    }
+    if (!message.topic?.equals(this._topic)) {
+      log('rejecting offer with incorrect topic', { message });
+      return { accept: false };
+    }
+
+    const peer = this._getOrCreatePeer(message.author);
+    const answer = await peer.onOffer(message);
+    this._topology.update();
+    return answer;
+  }
+
+  @synchronized
+  async onSignal(message: SignalMessage): Promise<void> {
+    log('signal', { message });
+    if (this._ctx.disposed) {
+      log.info('ignored for offline swarm');
+      return;
+    }
+    assert(
+      message.recipient?.equals(this._ownPeerId),
+      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`
+    );
+    assert(message.topic?.equals(this._topic));
+    assert(message.author);
+
+    const peer = this._getOrCreatePeer(message.author);
+    await peer.onSignal(message);
+  }
+
+  // For debug purposes
+  @synchronized
+  async goOffline() {
+    await this._ctx.dispose();
+    await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(peerId)));
+  }
+
+  // For debug purposes
+  @synchronized
+  async goOnline() {
+    this._ctx = new Context();
   }
 
   private _getOrCreatePeer(peerId: PublicKey): Peer {
@@ -195,74 +285,6 @@ export class Swarm {
     this._peers.delete(peerId);
   }
 
-  onSwarmEvent(swarmEvent: SwarmEvent) {
-    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
-    if (this._ctx.disposed) {
-      log.warn('ignored for destroyed swarm');
-      return;
-    }
-
-    if (swarmEvent.peerAvailable) {
-      const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
-      log('new peer', { peerId });
-      if (!peerId.equals(this._ownPeerId)) {
-        const peer = this._getOrCreatePeer(peerId);
-        peer.advertizing = true;
-      }
-    } else if (swarmEvent.peerLeft) {
-      const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
-      if (peer) {
-        peer.advertizing = false;
-        if (!peer.connection) {
-          void this._destroyPeer(peer.id);
-        }
-      }
-    }
-
-    this._topology.update();
-  }
-
-  async onOffer(message: OfferMessage): Promise<Answer> {
-    log('offer', { message });
-    if (this._ctx.disposed) {
-      log.info('ignored for destroyed swarm');
-      return { accept: false };
-    }
-
-    // Id of the peer offering us the connection.
-    assert(message.author);
-    if (!message.recipient?.equals(this._ownPeerId)) {
-      log('rejecting offer with incorrect peerId', { message });
-      return { accept: false };
-    }
-    if (!message.topic?.equals(this._topic)) {
-      log('rejecting offer with incorrect topic', { message });
-      return { accept: false };
-    }
-
-    const peer = this._getOrCreatePeer(message.author);
-    const answer = await peer.onOffer(message);
-    this._topology.update();
-    return answer;
-  }
-
-  async onSignal(message: SignalMessage): Promise<void> {
-    log('signal', { message });
-    if (this._ctx.disposed) {
-      log.info('ignored for destroyed swarm');
-      return;
-    }
-    assert(
-      message.recipient?.equals(this._ownPeerId),
-      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`
-    );
-    assert(message.topic?.equals(this._topic));
-    assert(message.author);
-
-    const peer = this._getOrCreatePeer(message.author);
-    await peer.onSignal(message);
-  }
-
   private _getSwarmController(): SwarmController {
     return {
       getState: () => ({
@@ -306,13 +328,15 @@ export class Swarm {
    * Creates a connection then sends message over signal network.
    */
   private async _initiateConnection(remoteId: PublicKey) {
+    const ctx = this._ctx; // Copy to avoid getting reset while sleeping.
+
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     if (remoteId.toHex() < this._ownPeerId.toHex()) {
       log('initiation delay', { remoteId });
       await sleep(INITIATION_DELAY);
     }
-    if (this._ctx.disposed) {
+    if (ctx.disposed) {
       return;
     }
 

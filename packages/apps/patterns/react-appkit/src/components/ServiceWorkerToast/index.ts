@@ -3,3 +3,4 @@
 //
 
 export * from './ServiceWorkerToast';
+export * from './ServiceWorkerToastContainer';

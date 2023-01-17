@@ -11,6 +11,6 @@
     "../packages/sdk/client",
     "../packages/sdk/react-client",
     "../packages/sdk/config",
-    "../packages/sdk/client-services"
+    "../packages/core/echo/text-model"
   ]
 }

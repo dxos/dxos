@@ -11,7 +11,7 @@ import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { mapFromKeyValues } from '../config';
 import { FILE_DEFAULTS, FILE_ENVS } from '../types';
 
-// TODO(burdon): No code in index file.
+// TODO(burdon): Move code out of index file.
 
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 
@@ -29,7 +29,6 @@ const maybeLoadFile = (file: string): any => {
 
 /**
  * File storage.
- *
  * @deprecated
  */
 export const LocalStorage = <T = ConfigProto>(): T => ({} as T);

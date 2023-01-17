@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -20,6 +20,7 @@ import { Link } from './link';
 import { RootFilter, Selection, createSelection } from './selection';
 
 export interface CreateItemOption<M extends Model> {
+  id?: ItemID;
   model?: ModelConstructor<M>;
   type?: ItemType;
   parent?: ItemID;
@@ -43,6 +44,7 @@ export enum State {
 /**
  * Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
  */
+@trackLeaks('initialize', 'destroy')
 export class Database {
   private readonly _itemManager: ItemManager;
 
@@ -101,6 +103,7 @@ export class Database {
       return;
     }
 
+    await this._itemManager.destroy();
     await this._backend.close();
     this._state = State.DESTROYED;
   }
@@ -127,6 +130,7 @@ export class Database {
     // TODO(burdon): Get model_type from somewhere other than `ObjectModel.meta.type`.
     return (await this._itemManager.createItem(
       options.model.meta.type,
+      options.id,
       options.type,
       options.parent,
       options.props

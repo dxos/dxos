@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-list",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "description": "A list editing experience component for DXOS.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,8 +19,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-uikit": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "lodash.debounce": "^4.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

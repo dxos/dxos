@@ -90,6 +90,14 @@ export class ItemManager {
     return Array.from(this._entities.values()).filter((entity): entity is Link<Model> => entity instanceof Link);
   }
 
+  async destroy() {
+    log('destroying..');
+    for (const entity of this._entities.values()) {
+      await entity._destroy();
+    }
+    this._entities.clear();
+  }
+
   /**
    * Creates an item and writes the genesis message.
    * @param {ModelType} modelType
@@ -100,6 +108,7 @@ export class ItemManager {
   @timed(5_000)
   async createItem(
     modelType: ModelType,
+    itemId: ItemID = createId(),
     itemType?: ItemType,
     parentId?: ItemID,
     initProps?: any // TODO(burdon): Remove/change to array of mutations.
@@ -123,7 +132,6 @@ export class ItemManager {
     // Pending until constructed (after genesis block is read from stream).
     const [waitForCreation, callback] = trigger<Entity<any>>();
 
-    const itemId = createId();
     this._pendingItems.set(itemId, callback);
 
     // Write Item Genesis block.

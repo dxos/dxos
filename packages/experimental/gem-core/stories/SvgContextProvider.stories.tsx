@@ -58,8 +58,8 @@ const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => 
         }
       `}
     >
-      <g ref={grid?.ref} className={defaultGridStyles} />
-      <g ref={zoom?.ref}>
+      <g ref={grid?.ref as any} className={defaultGridStyles} />
+      <g ref={zoom?.ref as any}>
         <circle cx={0} cy={0} r={100} />
       </g>
     </svg>

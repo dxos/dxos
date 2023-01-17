@@ -19,6 +19,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
@@ -41,6 +44,9 @@
     },
     {
       "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/model-factory"

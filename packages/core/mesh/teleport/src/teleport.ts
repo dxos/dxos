@@ -40,7 +40,10 @@ export class Teleport {
 
   private readonly _control = new ControlExtension({
     heartbeatInterval: 3000,
-    heartbeatTimeout: 3000
+    heartbeatTimeout: 3000,
+    onTimeout: () => {
+      this.destroy(new Error('Connection timed out')).catch((err) => log.catch(err));
+    }
   });
 
   private readonly _extensions = new Map<string, TeleportExtension>();
@@ -203,6 +206,7 @@ export interface TeleportExtension {
 type ControlExtensionOpts = {
   heartbeatInterval: number;
   heartbeatTimeout: number;
+  onTimeout: () => void;
 };
 
 class ControlExtension implements TeleportExtension {
@@ -216,7 +220,6 @@ class ControlExtension implements TeleportExtension {
   private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
 
   public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
-  public readonly onTimeout = new Callback<() => void>();
 
   constructor(private readonly opts: ControlExtensionOpts) {}
 
@@ -243,7 +246,7 @@ class ControlExtension implements TeleportExtension {
         }
       },
       port: extensionContext.createPort('rpc', {
-        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+        contentType: 'application/x-protobuf; messagType="dxos.rpc.Message"'
       })
     });
 
@@ -255,7 +258,7 @@ class ControlExtension implements TeleportExtension {
         try {
           await asyncTimeout(this._rpc.rpc.Control.heartbeat(), this.opts.heartbeatTimeout);
         } catch (err: any) {
-          this.onTimeout.call();
+          this.opts.onTimeout();
         }
       },
       this.opts.heartbeatInterval

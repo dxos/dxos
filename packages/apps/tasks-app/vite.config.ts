@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import { ThemePlugin } from '@dxos/react-ui/plugin';
+import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 import packageJson from './package.json';
@@ -19,7 +19,11 @@ const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${pa
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
-    host: true
+    host: true,
+    https: process.env.HTTPS === 'true' ? {
+      key: './key.pem',
+      cert: './cert.pem'
+    } : false
   },
   define: {
     'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
@@ -40,8 +44,7 @@ export default defineConfig({
       '@dxos/react-appkit',
       '@dxos/react-client',
       '@dxos/react-list',
-      '@dxos/react-ui',
-      '@dxos/react-uikit',
+      '@dxos/react-components',
       '@dxos/sentry'
     ]
   },
@@ -57,15 +60,14 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')
       ]
     }),
     ReactPlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },

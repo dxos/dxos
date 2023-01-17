@@ -2,7 +2,7 @@ const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
 const { ConfigPlugin } = require('@dxos/config/vite-plugin');
-const { ThemePlugin } = require('@dxos/react-ui/plugin');
+const { ThemePlugin } = require('@dxos/react-components/plugin');
 
 module.exports = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
@@ -12,13 +12,9 @@ module.exports = {
     '@storybook/addon-interactions',
     'storybook-dark-mode'
   ],
-  framework: '@storybook/react',
-  core: {
-    builder: '@storybook/builder-vite'
-  },
-  features: {
-    storyStoreV7: true,
-    previewMdx2: true
+  framework: {
+    name: '@storybook/react-vite',
+    options: {}
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
@@ -27,13 +23,13 @@ module.exports = {
         include: [
           '@dxos/async',
           '@dxos/client',
+          '@dxos/client/testing',
           '@dxos/config',
           '@dxos/debug',
           '@dxos/react-appkit',
           '@dxos/react-async',
           '@dxos/react-client',
-          '@dxos/react-ui',
-          '@dxos/react-uikit',
+          '@dxos/react-components',
           '@dxos/object-model',
           'storybook-dark-mode',
         ]

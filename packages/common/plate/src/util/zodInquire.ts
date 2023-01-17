@@ -56,7 +56,13 @@ export type InquirablePrimitive = z.ZodString | z.ZodNumber | z.ZodBoolean;
 
 export type InquirableZodObject = z.ZodObject<{ [k: string]: InquirablePrimitive | z.ZodDefault<InquirablePrimitive> }>;
 
-export type InquirableZodType = InquirableZodObject | z.ZodIntersection<InquirableZodType, InquirableZodType>;
+// TODO: only three refinements allowed per this need to nest them
+export type InquirableZodType =
+  | InquirableZodObject
+  | z.ZodIntersection<InquirableZodType, InquirableZodType>
+  | z.ZodEffects<InquirableZodObject>
+  | z.ZodEffects<z.ZodEffects<InquirableZodObject>>
+  | z.ZodEffects<z.ZodEffects<z.ZodEffects<InquirableZodObject>>>;
 
 export type InquireOptions<T extends InquirableZodType = InquirableZodType> = {
   defaults?: Partial<z.infer<T>> | ((answers: Partial<z.infer<T>>) => MaybePromise<Partial<z.infer<T>>>);
@@ -103,13 +109,15 @@ export const getQuestions = async <TShape extends InquirableZodType = Inquirable
   const extractFromType = (shape: InquirableZodType) => {
     if (shape instanceof z.ZodIntersection) {
       extractFromIntersection(shape);
+    } else if (shape instanceof z.ZodEffects) {
+      extractFromType(shape.innerType());
     } else {
       extractFromObject(shape);
     }
   };
   extractFromType(shape);
   return Object.values(questions).map((r) => {
-    r.askAnswered = true;
+    // r.askAnswered = true;
     return r;
   });
 };

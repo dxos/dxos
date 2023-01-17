@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,6 +8,7 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
+    "node:assert": "assert",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -19,17 +20,18 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
     "isomorphic-ws": "^4.0.1",
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@dxos/async": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@types/node": "^18.11.9",
     "earljs": "~0.1.10",

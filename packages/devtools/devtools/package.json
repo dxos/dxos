@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -30,7 +30,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/react-registry-client": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/registry-client": "workspace:*",
@@ -56,11 +56,11 @@
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^2.0.1",
+    "@vitejs/plugin-react": "^3.0.1",
     "faker": "^5.5.3",
     "typescript": "^4.8.4",
-    "vite": "3.2.5",
-    "vite-plugin-pwa": "^0.12.4",
+    "vite": "4.0.4",
+    "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
   }
 }

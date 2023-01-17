@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
@@ -35,5 +35,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typedoc": {
+    "entryPoint": "src/index.ts"
   }
 }

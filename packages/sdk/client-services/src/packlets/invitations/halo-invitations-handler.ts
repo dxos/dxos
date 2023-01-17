@@ -20,7 +20,7 @@ import {
   HaloAdmissionOffer,
   HaloHostService
 } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { ExtensionContext } from '@dxos/teleport';
+import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { IdentityManager } from '../identity';
 import {
@@ -32,7 +32,6 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
-import { RpcExtension } from './rpc-extension';
 
 /**
  * Handles the life-cycle of Halo invitations between peers.

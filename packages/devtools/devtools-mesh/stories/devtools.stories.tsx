@@ -7,7 +7,7 @@
 // @ts-nocheck
 
 import React, { useState, useEffect } from 'react';
-import useResizeAware from 'react-resize-aware';
+import useResizeAware from 'react-resize-aware'; // TODO(burdon): Change to react-resize-detector.
 import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
@@ -15,22 +15,22 @@ import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 import { PublicKey } from '@dxos/keys';
 import { SignalManager, CommandTrace, SignalStatus, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  FullyConnectedTopology,
-  Swarm,
-  MMSTTopology,
-  StarTopology,
-  NetworkManager,
-  SwarmMapper,
-  transportProtocolProvider,
-  PeerInfo,
-  Topology,
   ConnectionLog,
+  FullyConnectedTopology,
+  MMSTTopology,
+  NetworkManager,
+  PeerInfo,
+  StarTopology,
+  Swarm,
+  SwarmMapper,
+  Topology,
+  adaptProtocolProvider,
   createWebRTCTransportFactory,
-  adaptProtocolProvider
+  transportProtocolProvider
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
 

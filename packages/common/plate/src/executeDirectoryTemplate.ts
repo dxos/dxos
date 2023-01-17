@@ -5,7 +5,7 @@ import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 
-import { Config, loadConfig, unDefault, prettyConfig } from './config';
+import { loadConfig, unDefault, prettyConfig, ConfigDeclaration } from './config';
 import {
   executeFileTemplate,
   TemplatingResult,
@@ -14,40 +14,69 @@ import {
   TemplateResultMetadata
 } from './executeFileTemplate';
 import { File } from './file';
-import { includeExclude } from './util/includeExclude';
+import { filterIncludeExclude } from './util/filterIncludeExclude';
 import { logger } from './util/logger';
 import { runPromises } from './util/runPromises';
 import { inquire } from './util/zodInquire';
 
+export type DirectoryTemplateOptions<TInput> = {
+  templateDirectory: string;
+  outputDirectory?: string;
+  input?: Partial<TInput>;
+  parallel?: boolean;
+  verbose?: boolean;
+  overwrite?: boolean;
+  interactive?: boolean;
+  executeFileTemplates?: boolean;
+  inheritance?: boolean;
+  printMessage?: boolean;
+};
+
 export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions &
-  Config & {
-    templateDirectory: string;
-    outputDirectory: string;
-    input?: Partial<TInput>;
-    parallel?: boolean;
-    verbose?: boolean;
-    overwrite?: boolean;
-    interactive?: boolean;
-  };
+  ConfigDeclaration &
+  DirectoryTemplateOptions<TInput>;
 
 export const executeDirectoryTemplate = async <TInput>(
   options: ExecuteDirectoryTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const { templateDirectory, outputDirectory } = options;
+  const { templateDirectory } = options;
   const mergedOptions = {
     parallel: true,
     verbose: false,
     interactive: true,
+    executeFileTemplates: true,
+    inheritance: true,
+    outputDirectory: process.cwd(),
+    overwrite: false,
+    printMessage: true,
     ...options,
     ...(await loadConfig(templateDirectory, { verbose: options?.verbose, overrides: options }))
   };
-  const { parallel, verbose, inherits, interactive, overwrite, inputShape, include, exclude, ...restOptions } =
-    mergedOptions;
+  const {
+    parallel,
+    verbose,
+    inherits,
+    interactive,
+    overwrite,
+    inputShape,
+    include,
+    exclude,
+    inheritance,
+    executeFileTemplates,
+    outputDirectory,
+    printMessage,
+    message,
+    ...restOptions
+  } = mergedOptions;
   const debug = logger(verbose);
+  const info = logger(true);
+  if (!outputDirectory) {
+    throw new Error('an output directory is required');
+  }
   debug(`executing template ${templateDirectory}`);
   debug(prettyConfig(mergedOptions));
   let input = mergedOptions.input;
-  if (inputShape) {
+  if (inputShape && executeFileTemplates) {
     if (interactive) {
       const parse = unDefault(inputShape).safeParse(input);
       if (!parse.success) {
@@ -60,6 +89,10 @@ export const executeDirectoryTemplate = async <TInput>(
         }
         input = inquiredParsed.data as TInput;
       } else {
+        const parseWithEffects = inputShape.safeParse(input);
+        if (!parse.success) {
+          throw new Error('invalid input: ' + parseWithEffects.error.toString());
+        }
         input = parse.data as TInput;
       }
     } else {
@@ -71,26 +104,30 @@ export const executeDirectoryTemplate = async <TInput>(
     }
   }
   debug('inputs:', input);
-  inherits && debug(`executing inherited template ${inherits}`);
-  const inherited = inherits
-    ? await executeDirectoryTemplate({
-        ...options,
-        templateDirectory: path.resolve(templateDirectory, inherits),
-        interactive: false,
-        input
-      })
-    : undefined;
+  inherits && debug(`executing inherited template ${inherits?.templateDirectory}`);
+  const inherited =
+    inherits && inheritance
+      ? await inherits.execute({
+          ...options,
+          interactive: false,
+          executeFileTemplates,
+          input,
+          printMessage: false
+        })
+      : undefined;
   const allFiles = await readDir(
     templateDirectory,
-    (exclude ?? []).map((x) => (x instanceof RegExp ? (entry) => x.test(entry) : x))
+    (exclude ?? []).map((x) => (x instanceof RegExp ? (entry) => x.test(entry.replace(templateDirectory, '')) : x))
   );
-  const filteredFiles = includeExclude(allFiles, {
+  debug(`${allFiles.length} files discovered`);
+  const filteredFiles = filterIncludeExclude(allFiles, {
     include,
     exclude,
     transform: (s) => s.replace(templateDirectory, '').replace(/^\//, '')
   });
+  debug(`${filteredFiles.length}/${allFiles.length} files included`);
   const ignoredFiles = allFiles.filter((f) => filteredFiles.indexOf(f) < 0);
-  const templateFiles = filteredFiles.filter(isTemplateFile);
+  const templateFiles = executeFileTemplates ? filteredFiles.filter(isTemplateFile) : [];
   const regularFiles = filteredFiles.filter((file) => !isTemplateFile(file));
   debug(`${ignoredFiles.length} ignored files:`);
   debug(ignoredFiles.join('\n'));
@@ -98,18 +135,16 @@ export const executeDirectoryTemplate = async <TInput>(
   debug(templateFiles.join('\n'));
   debug(`${regularFiles.length} regular files:`);
   debug(regularFiles.join('\n'));
-  debug(`getting ready to execute ${templateFiles.length} template files ...`);
+  debug(`executing ${templateFiles.length} template files ${parallel ? 'in parallel' : 'sequentially'}...`);
   const templatingPromises = templateFiles?.map((t) => {
-    const templateFile = path.relative(templateDirectory, t);
-    const result = executeFileTemplate({
+    return executeFileTemplate({
       ...restOptions,
-      templateFile,
+      outputDirectory,
+      templateFile: path.relative(templateDirectory, t),
       templateRelativeTo: templateDirectory,
       input,
-      // inherited: inherits ? inherited?.filter((result) => result.metadata.templateFile === templateFile) : undefined,
       overwrite
     });
-    return result;
   });
   const runner = runPromises({
     before: (_p, i) => {
@@ -119,7 +154,6 @@ export const executeDirectoryTemplate = async <TInput>(
       debug(`${templateFiles[Number(i)]} done`);
     }
   });
-  debug(`executing template files ${parallel ? 'in parallel' : 'sequentially'} ...`);
   const templateOutputs = await (parallel
     ? runner.inParallel(templatingPromises)
     : runner.inSequence(templatingPromises));
@@ -127,7 +161,6 @@ export const executeDirectoryTemplate = async <TInput>(
   const isWithinTemplateOutput = (f: string): boolean => {
     return templateOutputs.some((files) => files.some((file) => !!file && stringPath(file.path) === f));
   };
-  debug(`template files executed : ${templateDirectory}`);
   const flatOutput = [
     ...regularFiles
       ?.filter((f) => !isWithinTemplateOutput(f))
@@ -140,11 +173,33 @@ export const executeDirectoryTemplate = async <TInput>(
           })
       ),
     ...flatten(templateOutputs)
-  ];
+  ].filter(Boolean);
+  debug(`${flatOutput.length} templating results`);
   const inheritedOutputMinusFlatOutput = inherited
     ? inherited.filter((inheritedOut) => {
         return !flatOutput.find((existing) => existing.path === inheritedOut.path);
       })
-    : flatOutput;
-  return [...flatOutput, ...inheritedOutputMinusFlatOutput];
+    : [];
+  const results = [...flatOutput, ...inheritedOutputMinusFlatOutput];
+  if (printMessage) {
+    const stack = [{ message, inherits }];
+    while (stack[0].inherits) {
+      const { message, inherits } = stack[0].inherits;
+      stack.unshift({ message, inherits });
+    }
+    let msg = '';
+    stack.forEach((template) => {
+      const currentmsg = template?.message?.({
+        ...mergedOptions,
+        results,
+        input: { ...input },
+        inheritedMessage: msg
+      });
+      msg = currentmsg ?? msg;
+    });
+    if (msg) {
+      info(msg);
+    }
+  }
+  return results;
 };

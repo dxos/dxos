@@ -138,11 +138,19 @@ export class MetadataStore {
     await this._save();
   }
 
-  async setSpaceLatestTimeframe(key: PublicKey, timeframe: Timeframe) {
-    const space = (this._metadata.spaces ??= []).find((space) => space.key === key);
-    assert(space, 'Space not found in metadata');
+  async setSpaceLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
 
     space.latestTimeframe = timeframe;
+    await this._save();
+  }
+
+  async setSpaceSnapshot(spaceKey: PublicKey, snapshot: string) {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+
+    space.snapshot = snapshot;
     await this._save();
   }
 }

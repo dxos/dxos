@@ -1,6 +1,6 @@
 {
   "name": "@dxos/conform",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "private": true,
   "description": "A utility for conforming files across packages in a monorepo",
   "homepage": "https://dxos.org",
@@ -9,13 +9,15 @@
   "author": "info@dxos.org",
   "main": "dist/index.js",
   "bin": {
-    "conform": "bin/index.js"
+    "conform": "bin/conform.js",
+    "new": "bin/new.js"
   },
   "scripts": {
     "dev": "plate ./src/template --input ./package.json,./README.yml --output . --overwrite false"
   },
   "dependencies": {
     "@dxos/plate": "workspace:*",
+    "chalk": "^4.1.0",
     "minimatch": "^5.1.0",
     "recursive-readdir": "^2.2.2",
     "yargs": "~16.2.0"
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@types/minimatch": "^5.1.2",
     "@types/recursive-readdir": "^2.2.0",
-    "@types/yargs": "~16.0.1"
+    "@types/yargs": "~16.0.1",
+    "types-package-json": "^2.0.39"
   }
 }

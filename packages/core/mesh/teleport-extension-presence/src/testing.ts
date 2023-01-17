@@ -55,13 +55,19 @@ export class TestAgent {
 
   constructor({ peerId = PublicKey.random(), announceInterval = 25, offlineTimeout = 50 }: TestAgentOptions) {
     this.peerId = peerId;
-    this.presence = new Presence({ localPeerId: peerId, announceInterval, offlineTimeout });
+    this.presence = new Presence({
+      localPeerId: peerId,
+      announceInterval,
+      offlineTimeout,
+      identityKey: PublicKey.random()
+    });
   }
 
   addConnection(connection: Connection) {
     assert(connection.teleport);
     this._connections.set(connection.teleport!.remotePeerId, connection);
-    this.presence.createExtension({ teleport: connection.teleport! });
+    const extension = this.presence.createExtension({ remotePeerId: connection.teleport!.remotePeerId });
+    connection.teleport.addExtension('dxos.mesh.teleport.presence', extension);
   }
 
   async deleteConnection(remotePeerId: PublicKey) {

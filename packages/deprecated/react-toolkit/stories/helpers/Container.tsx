@@ -6,7 +6,7 @@ import React, { ReactNode } from 'react';
 
 import { Box } from '@mui/material';
 
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 
 import { ErrorBoundary } from '../../src';
 

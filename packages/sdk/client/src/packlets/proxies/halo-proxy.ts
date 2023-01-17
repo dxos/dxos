@@ -127,6 +127,8 @@ export class HaloProxy implements Halo {
   async close() {
     this._subscriptions.clear();
     this._invitationProxy = undefined;
+    this._profile = undefined;
+    this._contacts = [];
   }
 
   /**

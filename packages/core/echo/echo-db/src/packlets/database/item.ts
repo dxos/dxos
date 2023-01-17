@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
-
 import { FeedWriter } from '@dxos/feed-store';
+import { log } from '@dxos/log';
 import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -13,8 +12,6 @@ import { Entity } from './entity';
 import { ItemManager } from './item-manager';
 import type { Link } from './link';
 import { createItemSelection, Selection } from './selection';
-
-const log = debug('dxos:echo-db:item');
 
 /**
  * A globally addressable data item.
@@ -128,7 +125,6 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     }
 
     const onUpdate = this._onUpdate.waitFor(() => this.deleted);
-
     await this._writeStream.write({
       itemId: this.id,
       itemMutation: {
@@ -146,12 +142,8 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     if (!this._writeStream) {
       throw new Error(`Item is read-only: ${this.id}`);
     }
-    if (!this.deleted) {
-      throw new Error(`Item was note delted: ${this.id}`);
-    }
 
     const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
-
     await this._writeStream.write({
       itemId: this.id,
       itemMutation: {
@@ -187,7 +179,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
    * @private (Package-private).
    */
   _processMutation(mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
-    log('_processMutation %s', JSON.stringify(mutation));
+    log('_processMutation %s', { mutation });
 
     const { action, parentId } = mutation;
 

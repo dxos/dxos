@@ -32,7 +32,8 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
   const substitutionsPath = join(options.basePath, options.substitutionsPath);
   const baseDir = resolve(context.cwd, options.basePath);
   const outDir = join(options.basePath, options.outputPath);
-  const packageRoot = context.workspace.projects[context.projectName!].root;
+  // TODO(wittjosiah): Workspace from context is deprecated.
+  const packageRoot = context.workspace!.projects[context.projectName!].root;
 
   try {
     rmSync(outDir, { recursive: true, force: true });

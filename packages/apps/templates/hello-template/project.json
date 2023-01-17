@@ -1,0 +1,61 @@
+{
+  "sourceRoot": "packages/apps/templates/hello-template/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "echo build ok",
+      "dependsOn": [
+        "^build",
+        "build-resources",
+        "build-tsc"
+      ]
+    },
+    "build-resources": {
+      "dependsOn": [
+        "build-tsc"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "build-resources"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "build-tsc": {
+      "dependsOn": [
+        "^build-tsc"
+      ],
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/templates/hello-template/src/index.ts",
+        "outputPath": "packages/apps/templates/hello-template/dist",
+        "tsConfig": "packages/apps/templates/hello-template/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "gen": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "gen"
+      },
+      "outputs": [
+        "packages/apps/templates/hello-template/test/variants"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/templates/hello-template/{src,test}/**/*.{ts,js,tsx,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createAdmissionCredentials, generatePasscode, getCredentialAssertion } from '@dxos/credentials';
-import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
+import { SigningContext } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -24,8 +24,10 @@ import {
   SpaceAdmissionRequest,
   SpaceHostService
 } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { ExtensionContext } from '@dxos/teleport';
+import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
+import { DataSpace } from '../spaces/data-space';
+import { DataSpaceManager } from '../spaces/data-space-manager';
 import {
   AuthenticatingInvitationProvider,
   AUTHENTICATION_CODE_LENGTH,
@@ -35,7 +37,6 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
-import { RpcExtension } from './rpc-extension';
 
 const MAX_OTP_ATTEMPTS = 3;
 
@@ -43,10 +44,10 @@ const MAX_OTP_ATTEMPTS = 3;
  * Handles the life-cycle of Space invitations between peers.
  */
 // TODO(dmaretskyi): Split into Host and Guest parts.
-export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
+export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpace> {
   constructor(
     networkManager: NetworkManager,
-    private readonly _spaceManager: SpaceManager,
+    private readonly _spaceManager: DataSpaceManager,
     private readonly _signingContext: SigningContext,
     private readonly _keyring: Keyring
   ) {
@@ -56,7 +57,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: Space, options?: InvitationsOptions): CancellableInvitationObservable {
+  createInvitation(space: DataSpace, options?: InvitationsOptions): CancellableInvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
     const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
@@ -86,10 +87,9 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     let authenticationCode: string;
     let authenticationRetry = 0;
 
-    const complete = new Trigger<PublicKey>();
-
     // Called for every connecting peer.
     const createExtension = (): HostSpaceInvitationExtension => {
+      const complete = new Trigger<PublicKey>();
       let guestProfile: ProfileDocument | undefined;
 
       const hostInvitationExtension = new HostSpaceInvitationExtension({
@@ -126,7 +126,10 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         requestAdmission: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
           try {
             // Check authenticated.
-            if (invitation.type !== Invitation.Type.INTERACTIVE_TESTING) {
+            if (
+              invitation.type !== Invitation.Type.INTERACTIVE_TESTING &&
+              invitation.type !== Invitation.Type.MULTIUSE_TESTING
+            ) {
               if (invitation.authenticationCode === undefined || invitation.authenticationCode !== authenticationCode) {
                 throw new Error(`invalid authentication code: ${authenticationCode}`);
               }
@@ -141,7 +144,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
               space.key,
               controlFeedKey,
               dataFeedKey,
-              space.genesisFeedKey,
+              space.inner.genesisFeedKey,
               guestProfile
             );
 
@@ -150,7 +153,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
             const spaceMemberCredential = credentials[0].credential;
             assert(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
 
-            await writeMessages(space.controlPipeline.writer, credentials);
+            await writeMessages(space.inner.controlPipeline.writer, credentials);
 
             // Updating credentials complete.
             complete.wake(deviceKey);
@@ -177,8 +180,10 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                 observable.callback.onError(err);
               }
             } finally {
-              await sleep(ON_CLOSE_DELAY);
-              await ctx.dispose();
+              if (type !== Invitation.Type.MULTIUSE_TESTING) {
+                await sleep(ON_CLOSE_DELAY);
+                await ctx.dispose();
+              }
             }
           });
         }

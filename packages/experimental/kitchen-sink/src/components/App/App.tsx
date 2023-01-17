@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Space } from '@dxos/client';
 import { ItemID } from '@dxos/protocols';
 import { ExportAction, execSelection, itemAdapter, useSpaceBuilder } from '@dxos/react-client-testing';
-import { FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components-deprecated';
 import { useGraphModel } from '@dxos/react-echo-graph';
 
 import { useQuery } from '../../data'; // TODO(burdon): Pass into App.

@@ -11,9 +11,11 @@ import { hopeTheme } from 'vuepress-theme-hope';
 
 import { MarkdownIt } from '@dxos/apidoc';
 
-import { showcasePlugin, apiSidebar, telemetryPlugin } from './src';
+import { apiSidebar, telemetryPlugin } from './src';
 
 const env = (value?: string) => (value ? `'${value}'` : undefined);
+
+const DXOS_DEPS = ['@dxos/client', '@dxos/react-client', '@dxos/telemetry'];
 
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
@@ -34,6 +36,7 @@ const config: UserConfig = defineUserConfig({
   ],
   extendsMarkdown: (md) => {
     md.use(MarkdownIt.apiDocRenderDirective);
+    md.use(MarkdownIt.showcaseRenderDirective);
   },
   theme: hopeTheme({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
@@ -70,43 +73,16 @@ const config: UserConfig = defineUserConfig({
       }
     }
   }),
-  // Config: https://vuepress.github.io/reference/default-theme/config.html
-  // theme: defaultTheme({
-  //   docsRepo: 'dxos/dxos',
-  //   docsBranch: 'main',
-  //   docsDir: 'docs/docs',
-  //   navbar: [
-  //     {
-  //       text: 'Guide',
-  //       link: '/guide'
-  //     },
-  //     {
-  //       text: 'Reference',
-  //       link: '/api',
-  //       children: PINNED_PACKAGES.map((text) => ({
-  //         text,
-  //         link: link.package(text)
-  //       }))
-  //     },
-  //     {
-  //       text: 'Github',
-  //       link: 'https://github.com/dxos/dxos'
-  //     }
-  //   ],
-  //   sidebar: {
-  //     '/guide': sidebarSection(join(DOCS_PATH, 'guide')),
-  //     '/api': await apiSidebar()
-  //   }
-  // }),
   plugins: [
     // Config: https://vuepress.github.io/reference/plugin/register-components.html
     registerComponentsPlugin({
-      componentsDir: resolve(__dirname, './src/components')
+      components: {
+        Showcase: resolve(__dirname, './src/components/Showcase.vue')
+      }
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin(),
-    telemetryPlugin(),
-    await showcasePlugin()
+    telemetryPlugin()
   ],
   bundler: viteBundler({
     viteOptions: {
@@ -117,7 +93,11 @@ const config: UserConfig = defineUserConfig({
       },
       optimizeDeps: {
         force: true,
-        include: ['@dxos/telemetry']
+        include: DXOS_DEPS
+      },
+      // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
+      ssr: {
+        external: DXOS_DEPS
       },
       build: {
         commonjsOptions: {

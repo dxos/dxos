@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -21,6 +21,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -38,8 +39,11 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
+    "@dxos/teleport-extension-object-sync": "workspace:*",
+    "@dxos/teleport-extension-presence": "workspace:*",
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
+    "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "debug": "^4.3.3"
   },

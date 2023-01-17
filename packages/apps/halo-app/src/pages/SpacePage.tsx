@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Profile } from '@dxos/client';
 import { useSafeSpaceKey, ProfileList } from '@dxos/react-appkit';
 import { useMembers } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-uikit';
+import { Heading, useTranslation } from '@dxos/react-components';
 
 const SpacePage = () => {
   const { t } = useTranslation('halo');
@@ -23,7 +23,7 @@ const SpacePage = () => {
 
   return (
     <>
-      <Heading level={2}>{t('space members label', { ns: 'uikit' })}</Heading>
+      <Heading level={2}>{t('space members label', { ns: 'appkit' })}</Heading>
       <ProfileList profiles={memberProfiles} />
     </>
   );

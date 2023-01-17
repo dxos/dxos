@@ -35,7 +35,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nxext/vite:build",
+      "executor": "@nrwl/vite:build",
       "inputs": [
         {
           "env": "CONFIG_DYNAMIC"
@@ -62,12 +62,31 @@
         "production"
       ],
       "options": {
-        "configFile": "packages/apps/halo-app/vite.config.ts",
-        "outputPath": "packages/apps/halo-app/out/halo",
-        "sourcemaps": true
+        "outputPath": "packages/apps/halo-app/out/halo"
       },
       "outputs": [
         "{options.outputPath}"
+      ]
+    },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/halo-app",
+        "outputPath": "tmp/mocha/packages/apps/halo-app",
+        "playwright": true,
+        "resultsPath": "test-results/packages/apps/halo-app",
+        "serve": "halo-app:preview",
+        "testPatterns": [
+          "packages/apps/halo-app/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/halo-app/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ]
     },
     "lint": {
@@ -82,11 +101,18 @@
         "{options.outputFile}"
       ]
     },
-    "serve": {
-      "executor": "@nxext/vite:dev",
+    "preview": {
+      "executor": "nx:run-commands",
       "options": {
-        "configFile": "packages/apps/halo-app/vite.config.ts",
-        "outputPath": "packages/apps/halo-app/out/halo"
+        "commands": [
+          "pnpm -w serve -L packages/apps/halo-app/out/halo"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "halo-app:bundle"
       }
     },
     "storybook": {

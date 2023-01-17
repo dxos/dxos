@@ -14,6 +14,16 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case '@nrwl/vite': {
+      // Ensure nx uses patched vite.
+      packageJson.peerDependencies['vite'] = '4.0.4'
+
+      // We don't use vitest.
+      delete packageJson.peerDependencies['vitest']
+
+      break;
+    }
+
     case '@typescript-eslint/eslint-plugin': 
     case '@typescript-eslint/parser': {
       packageJson.dependencies['eslint'] = '^8.0.0'
@@ -47,6 +57,26 @@ function readPackage(packageJson, context) {
     // https://github.com/FezVrasta/react-resize-aware/issues/59
     case 'react-resize-aware': {
       packageJson.peerDependencies['react'] = '^18.0.0'
+      break;
+    }
+
+    case 'storybook-dark-mode': {
+      packageJson.dependencies['@storybook/addons'] = '^7.0.0-beta'
+      packageJson.dependencies['@storybook/api'] = '^7.0.0-beta'
+      packageJson.dependencies['@storybook/components'] = '^7.0.0-beta'
+      packageJson.dependencies['@storybook/core-events'] = '^7.0.0-beta'
+      packageJson.dependencies['@storybook/theming'] = '^7.0.0-beta'
+    }
+
+    // Ensure vuepress uses patched vite.
+    case '@vuepress/bundler-vite': {
+      packageJson.dependencies['vite'] = '4.0.4'
+      break;
+    }
+    
+    // Ensure vuepress uses patched vite.
+    case '@vitejs/plugin-vue': {
+      packageJson.peerDependencies['vite'] = '4.0.4'
       break;
     }
   }

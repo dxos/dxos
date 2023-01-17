@@ -17,13 +17,46 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
+      "path": "../../apps/patterns/react-composer"
+    },
+    {
+      "path": "../../apps/patterns/react-list"
+    },
+    {
+      "path": "../../apps/patterns/react-ui"
+    },
+    {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/react-components"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/client"
@@ -35,7 +68,26 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../chess-app"
+    },
+    {
       "path": "../client-testing"
+    },
+    {
+      "path": "../framebox"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
     }
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    },
+    "files": true,
+    "transpileOnly": true
+  }
 }

@@ -31,15 +31,15 @@ describe('service registry', () => {
     await serviceContext.open();
     await serviceContext.createIdentity();
 
-    assert(serviceContext.spaceManager);
+    assert(serviceContext.dataSpaceManager);
     assert(serviceContext.spaceInvitations);
-    const space = await serviceContext.spaceManager.createSpace();
+    const space = await serviceContext.dataSpaceManager.createSpace();
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
         serviceContext.identityManager,
         () => serviceContext.spaceInvitations!,
-        () => serviceContext.spaceManager!
+        () => serviceContext.dataSpaceManager!
       )
     });
 

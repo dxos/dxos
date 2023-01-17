@@ -1,5 +1,10 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import React, { ComponentProps } from 'react';
-import { mx, defaultInput } from '@dxos/react-ui';
+
+import { mx, defaultInput } from '@dxos/react-components';
 
 export type InputProps = ComponentProps<'input'>;
 

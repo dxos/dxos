@@ -1,0 +1,32 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+
+package dxos.mesh.teleport.objectsync;
+
+message WantList {
+  repeated string ids = 1;
+}
+
+// Intentionally avoiding naming it `Object`.
+message DataObject {
+  string id = 1;
+  google.protobuf.Any payload = 2;
+}
+
+/**
+ * Allows synchronization of opaque data objects between two peers.
+ * Loosely based on Bittorrent protocol.
+ */
+service ObjectSyncService {
+  /// Notify the peer that we want to receive specified objects.
+  rpc Want(WantList) returns (google.protobuf.Empty);
+
+  /// Send an object to the peer.
+  rpc Push(DataObject) returns (google.protobuf.Empty);
+}

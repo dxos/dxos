@@ -21,6 +21,9 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/crypto"
     },
     {
@@ -48,6 +51,9 @@
       "path": "../../../common/timeframe"
     },
     {
+      "path": "../../../common/typings"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -67,6 +73,12 @@
     },
     {
       "path": "../../mesh/teleport"
+    },
+    {
+      "path": "../../mesh/teleport-extension-object-sync"
+    },
+    {
+      "path": "../../mesh/teleport-extension-presence"
     },
     {
       "path": "../../mesh/teleport-extension-replicator"

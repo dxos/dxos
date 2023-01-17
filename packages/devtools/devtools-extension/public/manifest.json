@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "0.1.17",
+  "version": "0.1.22",
   "author": "DXOS.org",
   "name": "DXOS Client Developer Tools",
   "short_name": "DXOS DevTools",
@@ -22,14 +22,6 @@
       "sandbox.html"
     ]
   },
-  "permissions": [
-    "storage",
-    "tabs"
-  ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
   "devtools_page": "main.html",
   "background": {
     "service_worker": "background.js"
@@ -37,7 +29,8 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "http://*/*",
+        "https://*/*"
       ],
       "js": [
         "content.js"

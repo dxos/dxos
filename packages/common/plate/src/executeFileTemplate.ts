@@ -4,7 +4,7 @@
 import path from 'path';
 import { z } from 'zod';
 
-import { Config } from './config';
+import { ConfigDeclaration } from './config';
 import { File, getFileType, MaybePromise, promise } from './file';
 import { Imports } from './util/imports';
 import { loadModule, LoadModuleOptions } from './util/loadModule';
@@ -12,7 +12,7 @@ import { loadModule, LoadModuleOptions } from './util/loadModule';
 /** Include all template files that end with .t.ts or .t.js */
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
 /** Do not process files that are compilation noise like .map and .t.d.ts */
-export const TEMPLATE_FILE_IGNORE = [/\.t\.d\./, /\.map$/, /config\.t\.[tj]s$/];
+export const TEMPLATE_FILE_IGNORE = [/\.t\.d\./, /\.d\.ts$/, /\.map$/, /config\.t\.[tj]s$/];
 
 export const isTemplateFile = (file: string) =>
   TEMPLATE_FILE_INCLUDE.test(file) && !TEMPLATE_FILE_IGNORE.some((pattern) => pattern.test(file));
@@ -37,36 +37,40 @@ const loadTemplate = async <I = any>(p: string, options?: LoadTemplateOptions): 
 export type ExecuteFileTemplateOptions<TInput = {}> = LoadTemplateOptions & {
   templateFile: string;
   templateRelativeTo?: string;
-  outputDirectory: string;
+  outputDirectory?: string;
   input?: TInput;
   overwrite?: boolean;
   inherited?: TemplatingResult;
 };
 
-export type TemplateSlotContext = {
+export type TemplateSlotContext<TInput = {}> = ExecuteFileTemplateOptions<TInput> & {
   imports: Imports;
+  input: TInput;
+  defaultOutputFile: string;
 };
 
-export type TemplateSlotFunction = (slotContext: TemplateSlotContext) => string;
+export type TemplateSlotFunction<TInput = any> = (slotContext: TemplateSlotContext<TInput>) => string;
 
-export type SatisfiedTemplateSlotFunction = (slotContext?: TemplateSlotContext) => string;
+export type SatisfiedTemplateSlotFunction<TInput = any> = (slotContext?: TemplateSlotContext<TInput>) => string;
 
-export type TemplateSlotContent = string | TemplateSlotFunction;
+export type TemplateSlotContent<TInput = any> = string | TemplateSlotFunction<TInput>;
 
-export type TemplateSlotMap = Record<string, TemplateSlotContent>;
+export type TemplateSlotMap<TInput = any> = Record<string, TemplateSlotContent<TInput>>;
 
-export type FunctionalMap<T extends TemplateSlotMap> = { [key in keyof T]: SatisfiedTemplateSlotFunction };
+export type FunctionalMap<T extends TemplateSlotMap<TInput>, TInput> = {
+  [key in keyof T]: SatisfiedTemplateSlotFunction<TInput>;
+};
 
-export const defineSlots = <M extends TemplateSlotMap>(map: M) => map;
+export const defineSlots = <M extends TemplateSlotMap<T>, T = {}>(map: M) => map;
 
 export const renderSlots =
-  <Map extends TemplateSlotMap>(slots?: Map) =>
-  (context: TemplateSlotContext) => {
-    const result: FunctionalMap<Map> = {} as FunctionalMap<Map>;
+  <Map extends TemplateSlotMap<T>, T>(slots?: Map) =>
+  (context: TemplateSlotContext<T>) => {
+    const result: FunctionalMap<Map, T> = {} as FunctionalMap<Map, T>;
     if (slots) {
       for (const i in slots) {
         const val = slots[i];
-        result[i] = typeof val === 'function' ? (c?: TemplateSlotContext) => val({ ...context, ...c }) : () => val;
+        result[i] = typeof val === 'function' ? (c?: TemplateSlotContext<T>) => val({ ...context, ...c }) : () => val;
       }
     }
     return result;
@@ -75,6 +79,7 @@ export const renderSlots =
 export type TemplateContext<TInput = {}, TSlots extends TemplateSlotMap = {}> = ExecuteFileTemplateOptions<TInput> & {
   input: TInput;
   defaultOutputFile: string;
+  outputDirectory: string;
   slots?: { [key in keyof TSlots]: TemplateSlotContent };
 };
 
@@ -86,11 +91,15 @@ export type TemplatingResult<R = any> = File<R, TemplateResultMetadata>[];
 
 export type TemplateFunctionResult<R = any> = null | string | File<R, TemplateResultMetadata>[];
 
-export type ExtractInput<TInput> = TInput extends Config<infer U> ? z.infer<U> : TInput;
-export type ExtractConfig<TInput> = TInput extends Config<any> ? TInput : never;
-export type ExtractNonConfig<TInput> = TInput extends Config<any> ? never : TInput;
+export type ExtractInput<TConfig> = TConfig extends ConfigDeclaration<infer U, infer V>
+  ? z.infer<U> & z.infer<V>
+  : TConfig extends ConfigDeclaration<infer U>
+  ? z.infer<U>
+  : TConfig;
+export type ExtractConfig<TConfig> = TConfig extends ConfigDeclaration<any, any> ? TConfig : never;
+export type ExtractNonConfig<TConfig> = TConfig extends ConfigDeclaration<any, any> ? never : TConfig;
 
-export const defineTemplate = <TInput = any, TSlots extends TemplateSlotMap = {}>(
+export const defineTemplate = <TInput = any, TSlots extends TemplateSlotMap<TInput> = {}>(
   fun: TemplateFunction<ExtractInput<TInput>, TSlots>,
   options?: { slots?: TSlots; config?: ExtractConfig<TInput> }
 ) => (options?.slots ? (o: TemplateContext<ExtractInput<TInput>, TSlots>) => fun({ slots: options.slots, ...o }) : fun);
@@ -106,7 +115,10 @@ export type TemplateFunction<TInput = void, TSlots extends TemplateSlotMap = {}>
 export const executeFileTemplate = async <TInput>(
   options: ExecuteFileTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const { templateFile, outputDirectory, templateRelativeTo, overwrite } = options;
+  const { templateFile, outputDirectory, templateRelativeTo, overwrite } = {
+    outputDirectory: process.cwd(),
+    ...options
+  };
   const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? '');
   const templateFullPath = path.join(absoluteTemplateRelativeTo, templateFile);
   const templateFunction = await loadTemplate(templateFullPath, options);
@@ -119,6 +131,7 @@ export const executeFileTemplate = async <TInput>(
     const templateContext = {
       input: {},
       ...options,
+      outputDirectory,
       defaultOutputFile: nominalOutputPath,
       inherited: options.inherited,
       ...(templateRelativeTo

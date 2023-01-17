@@ -1,18 +1,61 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import React, { useEffect } from 'react';
 import { useRoutes } from 'react-router-dom';
-import { SpacePage } from './pages';
-import { useClient, useIdentity } from '@dxos/react-client';
+
 import { ManageSpacePage, RequireIdentity, useTelemetry } from '@dxos/react-appkit';
-import { SpacesPage } from './pages/SpacesPage';
-import { SpaceLayout } from './layouts/SpaceLayout';
-import { AppLayout } from './layouts/AppLayout';
-import { SpaceSettingsLayout } from './layouts/SpaceSettingsLayout';
+import { useClient, useIdentity } from '@dxos/react-client';
+
+import { SpacesLayout, SpaceLayout, SpaceSettingsLayout } from './layouts';
+import { SpacePage, SpacesPage } from './pages';
+
 export const Routes = () => {
   const client = useClient();
   const identity = useIdentity();
 
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace: 'tasks-app' });
+
+  const routes = useRoutes([
+    {
+      path: '/',
+      element: <RequireIdentity />,
+      children: [
+        {
+          path: '/',
+          element: <SpacesLayout />,
+          children: [
+            {
+              path: '/',
+              element: <SpacesPage />
+            }
+          ]
+        },
+        {
+          path: '/spaces/:spaceKey',
+          element: <SpaceLayout />,
+          children: [
+            {
+              path: '/spaces/:spaceKey',
+              element: <SpacePage />
+            }
+          ]
+        },
+        {
+          path: '/spaces/:spaceKey/settings',
+          element: <SpaceSettingsLayout />,
+          children: [
+            {
+              path: '/spaces/:spaceKey/settings',
+              element: <ManageSpacePage />
+            }
+          ]
+        }
+      ]
+    }
+  ]);
 
   // Allow the client to auto-create an identity if env DX_VAULT=false
   useEffect(() => {
@@ -25,42 +68,5 @@ export const Routes = () => {
     return null;
   }
 
-  return useRoutes([
-    {
-      path: '/',
-      element: <RequireIdentity />,
-      children: [
-        {
-          path: '/',
-          element: <AppLayout />,
-          children: [
-            {
-              path: '/',
-              element: <SpacesPage />
-            }
-          ]
-        },
-        {
-          path: '/spaces/:space',
-          element: <SpaceLayout />,
-          children: [
-            {
-              path: '/spaces/:space',
-              element: <SpacePage />
-            }
-          ]
-        },
-        {
-          path: '/spaces/:space/settings',
-          element: <SpaceSettingsLayout />,
-          children: [
-            {
-              path: '/spaces/:space/settings',
-              element: <ManageSpacePage />
-            }
-          ]
-        }
-      ]
-    }
-  ]);
+  return routes;
 };

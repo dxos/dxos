@@ -8,6 +8,7 @@ import { ObjectMutation } from '@dxos/protocols/proto/dxos/echo/model/object';
 import { describe, test } from '@dxos/test';
 
 import { MutationUtil, ValueUtil } from './mutation';
+import { OrderedArray } from './ordered-array';
 
 describe('Mutations', () => {
   test('ValueUtil', () => {
@@ -153,6 +154,14 @@ describe('Mutations', () => {
       const object = ValueUtil.applyValue({}, 'data', ValueUtil.createMessage(Buffer.from('World')));
       expect(object.data).toEqual(Buffer.from('World'));
     }
+  });
+
+  test('ValueUtil yjs array', () => {
+    const data = [1, 3];
+    const message = ValueUtil.createMessage(OrderedArray.fromValues(data));
+
+    const object = ValueUtil.applyValue({}, 'data', message);
+    expect(object.data.toArray()).toEqual(data);
   });
 
   test('MutationUtil', () => {

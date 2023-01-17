@@ -61,6 +61,7 @@ export class WorkerSession {
         DevicesService: async () => (await this._getServices()).services.DevicesService,
         SpaceInvitationsService: async () => (await this._getServices()).services.SpaceInvitationsService,
         SpacesService: async () => (await this._getServices()).services.SpacesService,
+        NetworkService: async () => (await this._getServices()).services.NetworkService,
         SpaceService: async () => (await this._getServices()).services.SpaceService,
         DataService: async () => (await this._getServices()).services.DataService,
         ProfileService: async () => (await this._getServices()).services.ProfileService,

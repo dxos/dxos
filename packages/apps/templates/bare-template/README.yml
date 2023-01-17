@@ -1,0 +1,9 @@
+usage: |
+  This is an encapsulated [`@dxos/plate`](https://www.npmjs.com/package/@dxos/plate) template, the default export is a `ConfigurationDeclaration` from `plate`.
+
+  ```ts
+  import template from '@dxos/bare-template';
+
+  const results = await template.execute({ /* ExecuteDirectoryOptions */ });
+  Promise.all(results.map(file => file.save()));
+  ```

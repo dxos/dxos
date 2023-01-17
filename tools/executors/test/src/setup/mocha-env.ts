@@ -3,6 +3,6 @@
 //
 
 (globalThis as any).mochaExecutor = {
-  environment: 'nodejs',
+  environment: process.env.MOCHA_ENV ?? 'nodejs',
   tags: (process.env.MOCHA_TAGS ?? '').split(',')
 };

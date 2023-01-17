@@ -1,5 +1,5 @@
 # Class `ClientServicesHost`
-<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/services/service-host.d.ts:14]()</sub>
+<sub>Declared in [packages/sdk/client-services/dist/types/src/packlets/services/service-host.d.ts:16]()</sub>
 
 
 Remote service implementation.

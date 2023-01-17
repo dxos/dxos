@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { useClient, useClientServices } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { Panel } from '../../components';
 

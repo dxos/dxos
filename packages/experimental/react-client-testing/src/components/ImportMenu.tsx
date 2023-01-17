@@ -8,7 +8,7 @@ import { Upload as UploadIcon } from '@mui/icons-material';
 import { IconButton, Menu, MenuItem } from '@mui/material';
 
 import { useMounted } from '@dxos/react-async';
-import { FileUploadDialog } from '@dxos/react-components';
+import { FileUploadDialog } from '@dxos/react-components-deprecated';
 
 // TODO(burdon): Move to react-components?
 import { ImportIpfsDialog } from './ImportIpfsDialog';

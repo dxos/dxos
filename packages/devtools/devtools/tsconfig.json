@@ -57,7 +57,7 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../deprecated/react-components"
+      "path": "../../deprecated/react-components-deprecated"
     },
     {
       "path": "../../deprecated/react-toolkit"

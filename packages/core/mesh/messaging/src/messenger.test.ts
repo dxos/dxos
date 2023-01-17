@@ -3,17 +3,15 @@
 //
 
 import { expect, mockFn } from 'earljs';
-import waitForExpect from 'wait-for-expect';
 
-import { Any, TaggedType } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
+import { asyncTimeout, latch } from '@dxos/async';
+import { TaggedType } from '@dxos/codec-protobuf';
 import { TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
-import { Messenger } from './messenger';
 import { Message } from './signal-methods';
-import { WebsocketSignalManager } from './websocket-signal-manager';
+import { TestBuilder } from './testing';
 
 const PAYLOAD_1: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
@@ -44,113 +42,95 @@ describe('Messenger', () => {
     broker.stop();
   });
 
-  const setupPeer = async () => {
-    const received: Message[] = [];
-    const onMessage = async (message: Message) => {
-      received.push(message);
-    };
-
-    const peerId = PublicKey.random();
-
-    const signalManager = new WebsocketSignalManager([broker.url()]);
-    afterTest(() => signalManager.destroy());
-
-    const messenger = new Messenger({
-      signalManager
-    });
-
-    await messenger.listen({ peerId, onMessage });
-
-    return {
-      messenger,
-      peerId,
-      received
-    };
-  };
-
   test('Message between peers', async () => {
-    const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
-    const { peerId: peerId2, received: received2 } = await setupPeer();
+    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    afterTest(() => builder.close());
+    const peer1 = builder.createPeer();
+    const peer2 = builder.createPeer();
 
     const message: Message = {
-      author: peerId1,
-      recipient: peerId2,
+      author: peer1.peerId,
+      recipient: peer2.peerId,
       payload: PAYLOAD_1
     };
 
-    await messenger1.sendMessage(message);
+    const promise = peer2.waitTillReceive(message);
 
-    await waitForExpect(() => {
-      expect(received2[0]).toBeAnObjectWith(message);
-    }, 5_000);
+    await peer1.messenger.sendMessage(message);
+
+    await asyncTimeout(promise, 1_000);
   });
 
   test('Message 3 peers', async () => {
-    const { messenger: messenger1, received: received1, peerId: peerId1 } = await setupPeer();
-    const { messenger: messenger2, received: received2, peerId: peerId2 } = await setupPeer();
-    const { received: received3, peerId: peerId3 } = await setupPeer();
+    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    afterTest(() => builder.close());
+    const peer1 = builder.createPeer();
+    const peer2 = builder.createPeer();
+    const peer3 = builder.createPeer();
 
     {
       const message: Message = {
-        author: peerId1,
-        recipient: peerId2,
+        author: peer1.peerId,
+        recipient: peer2.peerId,
         payload: PAYLOAD_1
       };
-      await messenger1.sendMessage(message);
-      await waitForExpect(() => {
-        expect(received2[0]).toBeAnObjectWith(message);
-      }, 3_000);
+
+      const promise = peer2.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+      await asyncTimeout(promise, 1_000);
     }
 
     {
       const message: Message = {
-        author: peerId1,
-        recipient: peerId3,
+        author: peer1.peerId,
+        recipient: peer3.peerId,
         payload: PAYLOAD_2
       };
-      await messenger1.sendMessage(message);
-      await waitForExpect(() => {
-        expect(received3[0]).toBeAnObjectWith(message);
-      }, 3_000);
+
+      const promise = peer3.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+      await asyncTimeout(promise, 1_000);
     }
 
     {
       const message: Message = {
-        author: peerId2,
-        recipient: peerId1,
+        author: peer2.peerId,
+        recipient: peer1.peerId,
         payload: PAYLOAD_3
       };
-      await messenger2.sendMessage(message);
-      await waitForExpect(() => {
-        expect(received1[0]).toBeAnObjectWith(message);
-      }, 3_000);
+
+      const promise = peer1.waitTillReceive(message);
+      await peer2.messenger.sendMessage(message);
+      await asyncTimeout(promise, 1_000);
     }
   });
 
   test('Message routing', async () => {
-    const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
-    const { messenger: messenger2, received: received2, peerId: peerId2 } = await setupPeer();
+    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    afterTest(() => builder.close());
+    const peer1 = builder.createPeer();
+    const peer2 = builder.createPeer();
 
     // Subscribe first listener for second messenger.
     const onMessage1 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
-    await messenger2.listen({
-      peerId: peerId2,
+    await peer2.messenger.listen({
+      peerId: peer2.peerId,
       payloadType: PAYLOAD_1.type_url,
       onMessage: onMessage1
     });
 
     // Subscribe first listener for second messenger.
     const onMessage2 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
-    await messenger2.listen({
-      peerId: peerId2,
+    await peer2.messenger.listen({
+      peerId: peer2.peerId,
       payloadType: PAYLOAD_1.type_url,
       onMessage: onMessage2
     });
 
     // Subscribe third listener for second messenger.
     const onMessage3 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
-    await messenger2.listen({
-      peerId: peerId2,
+    await peer2.messenger.listen({
+      peerId: peer2.peerId,
       payloadType: PAYLOAD_2.type_url,
       onMessage: onMessage3
     });
@@ -158,29 +138,31 @@ describe('Messenger', () => {
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {
       const message: Message = {
-        author: peerId1,
-        recipient: peerId2,
+        author: peer1.peerId,
+        recipient: peer2.peerId,
         payload: PAYLOAD_1
       };
-      await messenger1.sendMessage(message);
+      await peer1.messenger.sendMessage(message);
+
       // 3 listeners (default one that was returned by setupPeer() and 2 that listen for type "1") should receive message.
-      await waitForExpect(() => {
-        expect(received2.at(-1)!).toBeAnObjectWith(message);
-        expect(onMessage1).toHaveBeenCalledWith([message]);
-        expect(onMessage2).toHaveBeenCalledWith([message]);
-        expect(onMessage3).not.toHaveBeenCalledWith([message]);
-      }, 3_000);
+      const promise = peer2.waitTillReceive(message);
+      await asyncTimeout(promise, 1_000);
+      expect(onMessage1).toHaveBeenCalledWith([message]);
+      expect(onMessage2).toHaveBeenCalledWith([message]);
+      expect(onMessage3).not.toHaveBeenCalledWith([message]);
     }
   });
 
   test('Unsubscribe listener', async () => {
-    const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
-    const { messenger: messenger2, peerId: peerId2 } = await setupPeer();
+    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    afterTest(() => builder.close());
+    const peer1 = builder.createPeer();
+    const peer2 = builder.createPeer();
 
     // Subscribe first listener for second messenger.
     const messages1: Message[] = [];
-    await messenger2.listen({
-      peerId: peerId2,
+    await peer2.messenger.listen({
+      peerId: peer2.peerId,
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
         messages1.push(message);
@@ -189,8 +171,8 @@ describe('Messenger', () => {
 
     // Subscribe first listener for second messenger.
     const messages2: Message[] = [];
-    const listenerHandle2 = await messenger2.listen({
-      peerId: peerId2,
+    const listenerHandle2 = await peer2.messenger.listen({
+      peerId: peer2.peerId,
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
         messages2.push(message);
@@ -200,16 +182,18 @@ describe('Messenger', () => {
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {
       const message: Message = {
-        author: peerId1,
-        recipient: peerId2,
+        author: peer1.peerId,
+        recipient: peer2.peerId,
         payload: PAYLOAD_1
       };
-      await messenger1.sendMessage(message);
+
+      const receivePromise = peer2.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+
       // 2 subscribed listeners should receive message.
-      await waitForExpect(() => {
-        expect(messages1[0]).toEqual(message);
-        expect(messages2[0]).toEqual(message);
-      }, 3_000);
+      await asyncTimeout(receivePromise, 1_000);
+      expect(messages1[0]).toEqual(message);
+      expect(messages2[0]).toEqual(message);
     }
 
     // Unsubscribe second listener.
@@ -218,67 +202,62 @@ describe('Messenger', () => {
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {
       const message: Message = {
-        author: peerId1,
-        recipient: peerId2,
+        author: peer1.peerId,
+        recipient: peer2.peerId,
         payload: PAYLOAD_1
       };
-      await messenger1.sendMessage(message);
+
+      const receivePromise = peer2.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+
       // 1 listener that was not unsubscribed should receive message.
-      await waitForExpect(() => {
-        expect(messages1[1]).toEqual(message);
-        expect(messages1.length).toEqual(2);
-        expect(messages2.length).toEqual(1);
-      }, 3_000);
+      await asyncTimeout(receivePromise, 1_000);
+      expect(messages1[1]).toEqual(message);
+      expect(messages1.length).toEqual(2);
+      expect(messages2.length).toEqual(1);
+    }
+  });
+
+  test('re-entrant message', async () => {
+    const builder = new TestBuilder({ signalHosts: [broker.url()] });
+    afterTest(() => builder.close());
+    const peer1 = builder.createPeer();
+    const peer2 = builder.createPeer();
+
+    const message: Message = {
+      author: peer1.peerId,
+      recipient: peer2.peerId,
+      payload: PAYLOAD_1
+    };
+
+    {
+      const receivePromise = peer2.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+      await asyncTimeout(receivePromise, 1_000);
+    }
+
+    {
+      //
+      // Close and reopen peer1
+      //
+
+      await peer2.close();
+      await peer2.open();
+    }
+
+    {
+      const receivePromise = peer2.waitTillReceive(message);
+      await peer1.messenger.sendMessage(message);
+      await asyncTimeout(receivePromise, 1_000);
     }
   });
 
   describe('Reliability', () => {
-    interface SendMessageArgs {
-      author: PublicKey;
-      recipient: PublicKey;
-      payload: Any;
-    }
-
-    const setupPeer = async ({
-      // Imitates signal network disruptions (e. g. message doubling, ).
-      messageDisruption = (data) => [data]
-    }: {
-      messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[];
-    } = {}) => {
-      const received: Message[] = [];
-      const onMessage = async (message: Message) => {
-        received.push(message);
-      };
-
-      const peerId = PublicKey.random();
-
-      const signalManager = new WebsocketSignalManager([broker.url()]);
-      const trueSend = signalManager.sendMessage.bind(signalManager);
-      signalManager.sendMessage = async (message) => {
-        for (const msg of messageDisruption(message)) {
-          await trueSend(msg);
-        }
-      };
-      afterTest(() => signalManager.destroy());
-
-      const messenger = new Messenger({
-        signalManager
-      });
-
-      await messenger.listen({ peerId, onMessage });
-
-      return {
-        messenger,
-        peerId,
-        received
-      };
-    };
-
     test('message with non reliable connection', async () => {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
       let i = 0;
-      const unreliableConnection = (data: SendMessageArgs): SendMessageArgs[] => {
+      const unreliableConnection = (data: Message): Message[] => {
         i++;
         if (i % 3 !== 0) {
           return [data];
@@ -286,49 +265,52 @@ describe('Messenger', () => {
         return [];
       };
 
-      const { peerId: peerId1, received: received1 } = await setupPeer();
+      const builder = new TestBuilder({ signalHosts: [broker.url()], messageDisruption: unreliableConnection });
+      afterTest(() => builder.close());
+      const peer1 = builder.createPeer();
+      const peer2 = builder.createPeer();
 
-      const { messenger: messenger2, peerId: peerId2 } = await setupPeer({
-        messageDisruption: unreliableConnection
-      });
+      const message = {
+        author: peer2.peerId,
+        recipient: peer1.peerId,
+        payload: PAYLOAD_1
+      };
 
+      const receivePromise = peer1.defaultReceived.waitForCount(3);
       // Sending 3 messages.
-      // Setup sends messages directly to between. So we don`t need to specify any ids.
       Array(3)
         .fill(0)
         .forEach(async () => {
-          await messenger2.sendMessage({
-            author: peerId2,
-            recipient: peerId1,
-            payload: PAYLOAD_1
-          });
+          await peer2.messenger.sendMessage(message);
         });
+
       // expect to receive 3 messages.
-      await waitForExpect(() => {
-        expect(received1.length).toEqual(3);
-      }, 4_000);
+      await receivePromise;
     }).timeout(5_000);
 
     test('ignoring doubled messages', async () => {
       // Message got doubled going through signal network.
-      const doublingMessage = (data: SendMessageArgs) => [data, data];
+      const doublingMessage = (data: Message) => [data, data];
 
-      const { peerId: peerId1, received: received1 } = await setupPeer();
+      const builder = new TestBuilder({ signalHosts: [broker.url()], messageDisruption: doublingMessage });
+      afterTest(() => builder.close());
+      const peer1 = builder.createPeer();
+      const peer2 = builder.createPeer();
 
-      const { messenger: messenger2, peerId: peerId2 } = await setupPeer({
-        messageDisruption: doublingMessage
+      const [promise, inc] = latch({ count: 1 });
+      let count = 0;
+      peer1.defaultReceived.on((msg) => {
+        count = inc();
       });
-
       // sending message.
-      await messenger2.sendMessage({
-        author: peerId2,
-        recipient: peerId1,
+      await peer2.messenger.sendMessage({
+        author: peer2.peerId,
+        recipient: peer1.peerId,
         payload: PAYLOAD_1
       });
       // expect to receive 1 message.
-      await waitForExpect(() => {
-        expect(received1.length).toEqual(1);
-      }, 4_000);
-    }).timeout(5_000);
+      await asyncTimeout(promise(), 1000);
+      expect(count).toEqual(1);
+    });
   });
 });

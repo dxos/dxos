@@ -1,0 +1,41 @@
+{
+  "sourceRoot": "packages/deprecated/react-components-deprecated/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/deprecated/react-components-deprecated/src/index.ts",
+        "outputPath": "packages/deprecated/react-components-deprecated/dist/types",
+        "tsConfig": "packages/deprecated/react-components-deprecated/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/deprecated/react-components-deprecated/src/index.ts"
+        ],
+        "outputPath": "packages/deprecated/react-components-deprecated/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/deprecated/react-components-deprecated/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

@@ -37,6 +37,8 @@ pnpm serve # local development server
 Only `pnpm` is supported for now due to a temporary requirement to patch `vite`.
 :::
 
+Learn more about the [application templates](./app-templates.md) available.
+
 ## Deploying applications
 
 Once you have a [KUBE](../kube) running, you can deploy your applications to it:
@@ -55,4 +57,4 @@ pnpm run deploy
 Take care not to omit the term `run` as `pnpm` will assume `deploy` means something else otherwise
 :::
 
-The configuration is read from a file `dx.yml` in the root of the project. Read more about [dx.yml](../kube/dx-yml-file.md).
+The configuration is read from a file [`dx.yml`](../kube/dx-yml-file) in the root of the project.
