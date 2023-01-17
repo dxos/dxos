@@ -7,13 +7,13 @@ package:
       displayName: kai
       description: Kai Demo.
       build:
-        command: DEMO=true NODE_OPTIONS="--max_old_space_size=8096" pnpm -w nx bundle kai
+        command: pnpm -w nx bundle kai
       tunnel: true
 
 runtime:
   client:
     storage:
-      persistent: false
+      persistent: true
 
   services:
     signal:
