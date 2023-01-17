@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
 import assert from 'node:assert';
 import { join } from 'path';
 import { promisify } from 'util';
-import chalk from 'chalk';
 
 import type { Config } from '@dxos/client';
 
