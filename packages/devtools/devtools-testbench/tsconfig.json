@@ -12,6 +12,12 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/react-components"
     },
     {

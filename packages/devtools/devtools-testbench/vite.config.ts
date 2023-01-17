@@ -40,8 +40,11 @@ export default defineConfig({
       '@dxos/config',
       '@dxos/devtools',
       '@dxos/kai',
+      '@dxos/log',
       '@dxos/protocols',
       '@dxos/protocols/proto/dxos/config',
+      '@dxos/react-appkit',
+      '@dxos/react-components',
       '@dxos/react-client'
     ]
   },
