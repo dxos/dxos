@@ -11,6 +11,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { withReactor } from '@dxos/react-client';
+import { mx, useThemeContext } from '@dxos/react-components';
 
 import { Button } from '../components';
 import { useSpace } from '../hooks';
@@ -75,6 +76,7 @@ export const DraggableTaskListContainer: FC<{
   onDelete?: (task: Task) => void;
 }> = withReactor(({ tasks, newTask, onCreate, onDelete }) => {
   const { active } = useDndContext();
+  const { hasIosKeyboard } = useThemeContext();
 
   // TODO(burdon): Order isn't reliable after dragging.
   return (
@@ -91,7 +93,7 @@ export const DraggableTaskListContainer: FC<{
 
       {newTask && (
         <div
-          className='flex ml-7 focus-within:sticky focus-within:block-end-0'
+          className={mx('flex ml-7', !hasIosKeyboard && 'focus-within:sticky focus-within:block-end-0')}
           style={active ? { visibility: 'hidden' } : {}}
         >
           <NewTaskItem task={newTask} onEnter={onCreate} lastIndex={tasks.length - 1} />

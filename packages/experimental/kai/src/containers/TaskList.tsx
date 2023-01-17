@@ -8,7 +8,7 @@ import React, { FC, KeyboardEvent, useCallback, useEffect, useState } from 'reac
 import { base, deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, mx, useThemeContext } from '@dxos/react-components';
 
 import { Button, Card, Input, CardRow, CardMenu } from '../components';
 import { useAppState, useSpace } from '../hooks';
@@ -52,6 +52,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   const tasks = useQuery(space, Task.filter({ completed }));
   const [newTask, setNewTask] = useState<Task>();
   const [saving, setSaving] = useState(false);
+  const { hasIosKeyboard } = useThemeContext();
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | undefined;
@@ -107,7 +108,12 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 
         {/* TODO(burdon): Keep pinned to bottom on create. */}
         {newTask && (
-          <div className='focus-within:sticky focus-within:block-end-0 bg-white pli-3 pbs-2 pbe-4'>
+          <div
+            className={mx(
+              'bg-white pli-3 pbs-2 pbe-4',
+              !hasIosKeyboard && 'focus-within:sticky focus-within:block-end-0'
+            )}
+          >
             <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />
           </div>
         )}
