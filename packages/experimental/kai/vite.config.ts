@@ -5,6 +5,7 @@
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import VitePluginAppinfo from 'vite-plugin-build-info'
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
@@ -156,6 +157,11 @@ export default defineConfig({
           }
         ]
       }
+    }),
+
+    // https://github.com/BWrong/vite-plugin-build-info
+    VitePluginAppinfo({
+      enableLog: true
     })
   ]
 });
