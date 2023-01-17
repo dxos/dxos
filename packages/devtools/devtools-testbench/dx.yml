@@ -6,6 +6,8 @@ package:
       type: dxos:type/app
       displayName: testbench
       description: TestBench
+      build:
+        command: pnpm -w nx bundle-disabled-on-ci devtools-testbench
 
 runtime:
   client:

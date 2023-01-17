@@ -2,6 +2,15 @@
   "sourceRoot": "packages/devtools/devtools-testbench/src",
   "projectType": "application",
   "targets": {
+    "bundle-disabled-on-ci": {
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "outputPath": "packages/devtools/devtools-testbench/out/devtools-testbench"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -17,7 +26,7 @@
     "serve": {
       "executor": "@nrwl/vite:dev-server",
       "options": {
-        "buildTarget": "devtools-testbench:bundle"
+        "buildTarget": "devtools-testbench:bundle-disabled-on-ci"
       }
     }
   }
