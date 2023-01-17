@@ -7,7 +7,7 @@ import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction,
 
 import { EchoDatabase } from '@dxos/echo-schema';
 
-import { AIBot, Bot, ChessBot } from '../bots';
+import { ResearchBot, Bot, ChessBot } from '../bots';
 import { useSpace } from './useSpace';
 
 export enum BotID {
@@ -31,7 +31,7 @@ const bots: BotDef[] = [
     Icon: Binoculars,
     title: 'ResearchBot',
     description: 'Background data analysis and text matching.',
-    constructor: (db: EchoDatabase) => new AIBot(db)
+    constructor: (db: EchoDatabase) => new ResearchBot(db)
   },
   {
     id: BotID.CHESS,

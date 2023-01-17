@@ -11,8 +11,8 @@ import { PanelSidebarProvider, PanelSidebarContext } from '@dxos/react-ui';
 
 // TODO(burdon): Rename frames.
 import {
-  CalendarView,
-  ChessView,
+  CalendarFrame,
+  ChessFrame,
   Dashboard,
   DMGView,
   MetaTable,
@@ -58,7 +58,7 @@ export const frames: FrameDef[] = [
     title: 'Events',
     description: 'Calendar and time management tools.',
     Icon: Calendar,
-    Component: CalendarView
+    Component: CalendarFrame
   },
   {
     id: FrameID.DOCUMENTS,
@@ -86,7 +86,7 @@ export const frames: FrameDef[] = [
     title: 'Chess',
     description: 'Peer-to-peer and engine powered games.',
     Icon: Sword,
-    Component: ChessView
+    Component: ChessFrame
   }
 ];
 

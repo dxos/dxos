@@ -108,7 +108,8 @@ export const tags = ['red', 'green', 'blue', 'orange'];
 export const createOrganization = async (db: EchoDatabase) => {
   const organization = new Organization({
     name: faker.company.companyName(),
-    website: faker.internet.url()
+    website: faker.internet.url(),
+    description: faker.lorem.sentences(2)
   });
 
   const projects = await Promise.all(range(3).map(() => createProject(db)));

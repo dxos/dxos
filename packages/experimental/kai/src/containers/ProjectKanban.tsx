@@ -10,10 +10,10 @@ import { useQuery } from '@dxos/react-client';
 import { Kanban, KanbanColumnDef, Searchbar } from '../components';
 import { useSpace } from '../hooks';
 import { createProject, Project, tags } from '../proto';
-import { ProjectItem } from './ProjectList';
+import { ProjectCard } from './cards';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
-  return <ProjectItem project={object as Project} />;
+  return <ProjectCard project={object as Project} />;
 };
 
 export const ProjectKanban: FC = () => {
