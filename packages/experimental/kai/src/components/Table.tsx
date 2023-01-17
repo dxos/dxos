@@ -51,8 +51,8 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
 
   return (
     // TODO(burdon): Remove table class to force scrolling.
-    <div className='flex overflow-x-scroll'>
-      <div {...getTableProps()} className='table'>
+    <div className='flex flex-auto overflow-x-auto'>
+      <div {...getTableProps()} className='table flex-auto'>
         {/* Header */}
         <div>
           {headerGroups.map((headerGroup) => (
@@ -80,16 +80,19 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
         </div>
 
         {/* Body */}
-        <div className='tbody overflow-y-scroll mt-2'>
+        <div className='tbody overflow-y-auto mt-2'>
           {rows.map((row, i) => {
             prepareRow(row);
             return (
               // eslint-disable-next-line react/jsx-key
-              <div className='tr' {...row.getRowProps()}>
+              <div
+                className='tr border-b border-solid border-slate-100 transition-colors duration-300 hover:duration-500 hover:delay-300 hover:border-orange-200'
+                {...row.getRowProps()}
+              >
                 {row.cells.map((cell) => {
                   return (
                     // eslint-disable-next-line react/jsx-key
-                    <div {...cell.getCellProps(cellProps)} className='td px-4'>
+                    <div {...cell.getCellProps(cellProps)} className='td py-2 px-4'>
                       <div className='overflow-hidden text-ellipsis whitespace-nowrap'>{cell.render('Cell')}</div>
                     </div>
                   );

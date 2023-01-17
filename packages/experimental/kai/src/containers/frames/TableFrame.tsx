@@ -82,7 +82,7 @@ export const TableFrame = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-3'>
+      <div className='flex p-3 border-b border-slate-200 border-solid'>
         <div className='flex'>
           <div className='mr-2'>
             <Selector options={types} value={type.id} onSelect={handleSelect} />
@@ -92,10 +92,9 @@ export const TableFrame = () => {
           </div>
         </div>
       </div>
-
-      <div className='flex flex-1 overflow-hidden'>
-        <Table columns={type.columns} data={objects} />{' '}
-      </div>
+      {/* <div className='flex flex-1 overflow-hidden'> */}
+      <Table columns={type.columns} data={objects} />
+      {/* </div> */}
     </div>
   );
 };
