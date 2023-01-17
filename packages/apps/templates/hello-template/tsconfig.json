@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/plate"
+    },
+    {
       "path": "../bare-template"
     }
   ]

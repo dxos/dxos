@@ -1,0 +1,18 @@
+{
+  "sourceRoot": "packages/devtools/initializers/create/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/devtools/initializers/create/src/**/*.{ts,js,tsx,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}
