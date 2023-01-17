@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,6 +43,7 @@
     "@dxos/teleport-extension-presence": "workspace:*",
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
+    "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "debug": "^4.3.3"
   },

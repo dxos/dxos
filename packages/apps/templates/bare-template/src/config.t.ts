@@ -1,4 +1,6 @@
-import { defineConfig, z } from '@dxos/plate';
+import chalk from 'chalk';
+
+import { defineConfig, z, text } from '@dxos/plate';
 import { isDxosMonorepoSync } from './utils.t/getDxosRepoInfo';
 
 export * from './utils.t/getDxosRepoInfo';
@@ -6,6 +8,7 @@ export * from './utils.t/nodePackage';
 
 import appTsx from './src/App.tsx.t';
 import indexHtml from './index.html.t';
+import path from 'path';
 export { appTsx, indexHtml };
 
 export default defineConfig({
@@ -24,5 +27,23 @@ export default defineConfig({
         .default(isDxosMonorepoSync())
     })
     .refine((val) => !(val.dxosUi && !(val.react && val.tailwind)), { message: 'dxosUi requires react and tailwind' })
-    .refine((val) => !(val.storybook && !val.react), { message: 'storybook requires react' })
+    .refine((val) => !(val.storybook && !val.react), { message: 'storybook requires react' }),
+  message: ({ outputDirectory, input: { name } }) => {
+    const cwd = process.cwd();
+    const relative = path.relative(cwd, outputDirectory);
+    return text`
+    
+    Application ${chalk.bold(name)} created.
+
+    Run the app:
+    ${relative ? `$ cd ${relative}` : null}
+    $ pnpm install
+    $ pnpm serve
+
+    See also:
+    - ${path.join(relative, 'README.md')}
+    - https://docs.dxos.org/guide/cli/app-templates
+    
+    `;
+  }
 });

@@ -15,14 +15,16 @@ export type SelectorOption = { id: string; title: string };
  * Options selector.
  */
 export const Selector: FC<{
+  value?: string;
   options?: SelectorOption[];
   rows?: number;
   placeholder?: string;
   onSelect?: (id?: string) => void;
   onChange?: (text: string) => void;
-}> = ({ options, rows = 5, placeholder, onSelect, onChange }) => {
+}> = ({ value, options, rows = 5, placeholder, onSelect, onChange }) => {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<string>();
+  const [text, setText] = useState(value);
+  const [selected, setSelected] = useState<string | undefined>(value);
   const hasOptions = !!(options?.length ?? 0);
 
   const handleToggleOpen = () => {
@@ -30,6 +32,8 @@ export const Selector: FC<{
   };
 
   const handleSelect = (id?: string) => {
+    const option = options?.find((option) => option.id === id);
+    setText(option?.title);
     setSelected(id);
     setOpen(false);
     onSelect?.(id);
@@ -67,9 +71,10 @@ export const Selector: FC<{
       <div className={mx('flex flex-1 items-center p-2 border', open ? 'rounded-t' : 'rounded')}>
         <Input
           className='w-full outline-0'
+          value={text}
+          onChange={setText}
           onEnter={() => handleSelect(selected)}
           onKeyDown={handleKeyDown}
-          onChange={onChange}
           onBlur={() => setOpen(false)}
           placeholder={placeholder ?? 'Select...'}
         />

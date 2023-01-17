@@ -33,7 +33,7 @@ export const DraggableTaskList: FC<{
   }, []);
 
   const handleCreateTask = async (task: Task) => {
-    if (task.title.length) {
+    if (task.title?.length) {
       await space.experimental.db.save(task);
       onCreate?.(task);
       setNewTask(new Task());
@@ -78,11 +78,17 @@ export const DraggableTaskListContainer: FC<{
 }> = withReactor(({ tasks, newTask, onCreate, onDelete }) => {
   const { active } = useDndContext();
 
-  // TODO(burdon): NewTaskItem doesn't update on create.
+  // TODO(burdon): Order isn't reliable after dragging.
   return (
     <div>
-      {tasks.map((task) => (
-        <DraggableTaskItem key={task[id]} task={task} onDelete={onDelete} />
+      {tasks.map((task, index) => (
+        <DraggableTaskItem
+          key={task[id]}
+          task={task}
+          onDelete={onDelete}
+          orderIndex={index}
+          isLast={index === tasks.length - 1}
+        />
       ))}
 
       {newTask && (
@@ -98,7 +104,9 @@ export const DraggableTaskItem: FC<{
   task: Task;
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}> = withReactor(({ task, onEnter, onDelete }) => {
+  orderIndex: number;
+  isLast?: boolean;
+}> = withReactor(({ task, onEnter, onDelete, orderIndex, isLast }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task[id] });
 
   // TODO(burdon): Dragging doesn't handle variable height items?
@@ -108,14 +116,12 @@ export const DraggableTaskItem: FC<{
   };
 
   return (
-    <div ref={setNodeRef} className='flex flex-1 ml-3' style={style}>
-      <div className='pt-1'>
-        <Button className='w-4' {...listeners} {...attributes}>
-          <DotsSixVertical />
-        </Button>
-      </div>
+    <div ref={setNodeRef} className='flex flex-1 items-center ml-3' style={style}>
+      <Button className='w-4' {...listeners} {...attributes}>
+        <DotsSixVertical />
+      </Button>
 
-      <TaskItem task={task} onEnter={onEnter} onDelete={onDelete} />
+      <TaskItem {...{ task, onDelete, onEnter, orderIndex, isLast }} />
     </div>
   );
 });

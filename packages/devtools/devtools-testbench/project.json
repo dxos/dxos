@@ -2,7 +2,7 @@
   "sourceRoot": "packages/devtools/devtools-testbench/src",
   "projectType": "application",
   "targets": {
-    "bundle": {
+    "bundle-skipped": {
       "executor": "@nrwl/vite:build",
       "options": {
         "outputPath": "packages/devtools/devtools-testbench/out/devtools-testbench"
@@ -26,7 +26,7 @@
     "serve": {
       "executor": "@nrwl/vite:dev-server",
       "options": {
-        "buildTarget": "devtools-testbench:bundle"
+        "buildTarget": "devtools-testbench:bundle-skipped"
       }
     }
   }
