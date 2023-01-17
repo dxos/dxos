@@ -8,7 +8,8 @@ package:
       description: Kai Demo.
       build:
         command: pnpm -w nx bundle kai
-      tunnel: true
+      # TODO(wittjosiah): Currently breaking publish to dev kube.
+      # tunnel: true
 
 runtime:
   client:
