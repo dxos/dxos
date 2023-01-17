@@ -93,14 +93,21 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
   const { Component } = active ?? {};
 
   return (
-    <PanelSidebarProvider inlineStart slots={{ content: { children: <Sidebar />, className: 'block-start-[48px]' } }}>
+    <PanelSidebarProvider
+      inlineStart
+      slots={{
+        content: { children: <Sidebar />, className: 'block-start-[48px]' },
+        main: {
+          className: mx(
+            frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]',
+            'min-bs-screen max-bs-screen flex flex-col bg-white'
+          )
+        }
+      }}
+    >
       <AppBar />
       <FrameSelector />
-      {Component && (
-        <div className={mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex h-screen bg-white')}>
-          <Component />
-        </div>
-      )}
+      {Component && <Component />}
     </PanelSidebarProvider>
   );
 };

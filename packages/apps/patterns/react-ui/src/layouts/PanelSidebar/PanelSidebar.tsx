@@ -39,6 +39,7 @@ export interface PanelSidebarProviderSlots {
   content?: ComponentProps<typeof DialogPrimitive.Content>;
   fixedBlockStart?: ComponentProps<'div'>;
   fixedBlockEnd?: ComponentProps<'div'>;
+  main?: ComponentProps<'div'>;
 }
 
 export interface PanelSidebarProviderProps {
@@ -117,9 +118,11 @@ export const PanelSidebarProvider = ({
         )}
         <div
           role='none'
+          {...slots?.main}
           className={mx(
-            'bs-full transition-[padding-inline-start] duration-200 ease-in-out',
-            isLg && isOpen ? 'pis-[272px]' : 'pis-0'
+            'min-bs-full transition-[padding-inline-start] duration-200 ease-in-out',
+            isLg && isOpen ? 'pis-[272px]' : 'pis-0',
+            slots?.main?.className
           )}
         >
           {children}
