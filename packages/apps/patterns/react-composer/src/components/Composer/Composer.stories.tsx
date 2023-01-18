@@ -127,7 +127,7 @@ export const Default = {
       return (
         <div className='flex is-full'>
           {clients.map((client, index) => (
-            <ClientProvider key={index} client={client} fallback={<Loading label='Loading client…' />}>
+            <ClientProvider key={index} client={client} fallback={() => <Loading label='Loading client…' />}>
               <Story args={{ spaceKey, id: index }} />
             </ClientProvider>
           ))}

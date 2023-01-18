@@ -17,10 +17,9 @@ import {
   Fallback,
   FatalError,
   ServiceWorkerToast,
-  StatusIndicator,
   useTelemetry
 } from '@dxos/react-appkit';
-import { ClientProvider, useNetworkStatus } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
@@ -112,7 +111,6 @@ export const App = () => {
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
             <HashRouter>
-              <StatusIndicator />
               <Routes />
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
