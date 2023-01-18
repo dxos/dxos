@@ -119,9 +119,9 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico'],
       manifest: {
-        name: 'DXOS Kai',
-        short_name: 'Kai',
-        description: 'DXOS Kai Demo',
+        name: 'DXOS TestBench',
+        short_name: 'TestBench',
+        description: 'DXOS TestBench',
         theme_color: '#ffffff',
         icons: [
           {

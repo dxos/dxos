@@ -17,7 +17,7 @@ const connectToClient = async () => {
       window.parent.postMessage(
         {
           data: Array.from(message),
-          source: 'content-script'
+          source: 'content-script' // This is required for dxos-client port to work.
         },
         '*'
       ),

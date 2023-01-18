@@ -13,7 +13,6 @@ import '@dxosTheme';
 
 import '@dxos/kai/style.css';
 
-// TODO(burdon): Get debug from config.
 createRoot(document.getElementById('root')!).render(<Root />);
 
 window.addEventListener('message', (event) => {
@@ -24,7 +23,7 @@ window.addEventListener('message', (event) => {
   }
 
   // It should be hear because dxos-client port expects messages from content-script with event.source === window.
-  if (message.source === 'content-script') {
+  if (message.source === 'content-script' && event.source !== window) {
     window.postMessage(message, '*');
   }
 });

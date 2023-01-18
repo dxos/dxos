@@ -16,16 +16,14 @@ window.addEventListener('message', (event) => {
   if (event.data.source === 'dxos-client') {
     const iframe = document.getElementById('devtools') as HTMLIFrameElement;
     if (!iframe) {
-      debugger;
-      return;
+      throw new Error('Devtools iframe not found.');
     }
     iframe.contentWindow?.postMessage(event.data, '*');
   }
   if (event.data.source === 'content-script') {
     const iframe = document.getElementById('kai') as HTMLIFrameElement;
     if (!iframe) {
-      debugger;
-      return;
+      throw new Error('Kai iframe not found.');
     }
     iframe.contentWindow?.postMessage(event.data, '*');
   }
