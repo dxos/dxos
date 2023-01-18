@@ -8,10 +8,15 @@ import stylePlugin from 'esbuild-style-plugin';
 import { mkdir, cp } from 'node:fs/promises';
 import { resolve, relative, join, basename } from 'node:path';
 import tailwindcss from 'tailwindcss';
+import type { ThemeConfig } from 'tailwindcss/types/config';
 
 import { tailwindConfig } from './config';
 
-export const ThemePlugins = (options: { content: string[]; outdir: string }): Plugin[] => {
+export const ThemePlugins = (options: {
+  content: string[];
+  outdir: string;
+  extensions?: Partial<ThemeConfig>[];
+}): Plugin[] => {
   return [
     // TODO(thure): This really shouldn’t be this way, but after hours of searching for a reasonable way to do this I came up empty. The prior art I found was mainly this thread, though it’s only tangentially related: https://github.com/evanw/esbuild/issues/800#issuecomment-786151076
     {
@@ -37,7 +42,9 @@ export const ThemePlugins = (options: { content: string[]; outdir: string }): Pl
     stylePlugin({
       postcss: {
         plugins: [
-          tailwindcss(tailwindConfig({ env: process.env.NODE_ENV, content: options.content })),
+          tailwindcss(
+            tailwindConfig({ env: process.env.NODE_ENV, content: options.content, extensions: options.extensions })
+          ),
           autoprefixer as any
         ]
       }

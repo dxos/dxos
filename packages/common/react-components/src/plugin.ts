@@ -5,7 +5,7 @@
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
-import { ThemeConfig } from 'tailwindcss/types/config';
+import type { ThemeConfig } from 'tailwindcss/types/config';
 import { Plugin } from 'vite';
 
 import { tailwindConfig } from './config';
@@ -21,7 +21,7 @@ export interface VitePluginTailwindOptions {
 // TODO: make it easy to override the tailwind config
 // TODO: make it easy to add postcss plugins?
 export const ThemePlugin = (
-  options: Pick<VitePluginTailwindOptions, 'content'> & { extensions: Partial<ThemeConfig>[] }
+  options: Pick<VitePluginTailwindOptions, 'content'> & { extensions?: Partial<ThemeConfig>[] }
 ) => {
   const config: VitePluginTailwindOptions = {
     jit: true,
@@ -42,7 +42,7 @@ export const ThemePlugin = (
                   env: env.mode,
                   root,
                   content: options.content,
-                  ...(options.extensions && { extensions: options.extensions })
+                  extensions: options.extensions
                 })
               ),
               autoprefixer

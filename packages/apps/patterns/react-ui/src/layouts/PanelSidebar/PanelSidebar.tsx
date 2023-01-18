@@ -85,8 +85,8 @@ export const PanelSidebarProvider = ({
         <DialogPrimitive.Content
           {...slots?.content}
           className={mx(
-            'fixed block-start-0 block-end-0 is-[272px] z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
-            transitionShow ? 'inline-start-0' : 'inline-start-[-272px]',
+            'fixed block-start-0 block-end-0 is-sidebar z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
+            transitionShow ? 'inline-start-0' : '-inline-start-sidebar',
             slots?.content?.className
           )}
         >
@@ -99,7 +99,7 @@ export const PanelSidebarProvider = ({
             {...slots?.fixedBlockStart}
             className={mx(
               'fixed inline-end-0 block-start-0 z-[49] transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
-              transitionShow ? 'inline-start-[272px]' : 'inline-start-0',
+              transitionShow ? 'inline-start-sidebar' : 'inline-start-0',
               slots?.fixedBlockStart?.className
             )}
           >
@@ -121,7 +121,7 @@ export const PanelSidebarProvider = ({
           {...slots?.main}
           className={mx(
             'transition-[padding-inline-start] duration-200 ease-in-out',
-            isLg && isOpen ? 'pis-[272px]' : 'pis-0',
+            isLg && isOpen ? 'pis-sidebar' : 'pis-0',
             slots?.main?.className
           )}
         >

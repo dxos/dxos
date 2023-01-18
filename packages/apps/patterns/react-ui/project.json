@@ -14,6 +14,21 @@
       ]
     },
     "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
@@ -22,6 +37,24 @@
         "outputPath": "packages/apps/patterns/react-ui/dist/lib",
         "platforms": [
           "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile"
+      ],
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/apps/patterns/react-ui/src/themeExtensions.ts"
+        ],
+        "outputPath": "packages/apps/patterns/react-ui/dist/config",
+        "platforms": [
+          "node"
         ]
       },
       "outputs": [
