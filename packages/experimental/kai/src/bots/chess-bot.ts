@@ -21,7 +21,7 @@ export class ChessBot extends Bot<Game> {
   }
 
   // TODO(burdon): Only trigger if invited.
-  override onUpdate(game: Game) {
+  override async onUpdate(game: Game) {
     if (game.fen) {
       const chess = new Chess();
       chess.loadPgn(game.fen);
