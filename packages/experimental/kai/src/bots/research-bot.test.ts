@@ -18,6 +18,7 @@ const API_KEY = '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';
 // TODO(burdon): Navigation: Calendar event => Person => Create Org (Blue Yard) => Magic.
 
 describe('openai', () => {
+  // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('basic', async () => {
     // https://beta.openai.com/docs/api-reference/authentication
     const configuration = new Configuration({

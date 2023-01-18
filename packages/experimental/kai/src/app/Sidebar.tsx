@@ -53,38 +53,38 @@ export const Sidebar = () => {
         role='none'
         className='flex flex-col overflow-auto min-bs-full box-shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
       >
-        {/* Spaces */}
-        <div className='flex shrink-0 flex-col overflow-y-scroll'>
-          {/* Match Frame selector. */}
-          <div className='flex p-1 pl-4 h-[36px] pt-2 bg-orange-500'>
-            <div>Spaces</div>
-          </div>
-
-          <SpaceList />
-
-          <div className='p-3'>
-            <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
-              <span className='sr-only'>Create new space</span>
-              <PlusCircle className={getSize(6)} />
-            </Button>
-          </div>
+        {/* Match Frame selector. */}
+        <div className='flex p-1 pl-4 h-[36px] pt-2 bg-orange-500'>
+          <div>Spaces</div>
         </div>
+        <div className='flex flex-col flex-1 border-r border-slate-200'>
+          {/* Spaces */}
+          <div className='flex shrink-0 flex-col overflow-y-auto'>
+            <SpaceList />
 
-        <div className='flex flex-1'></div>
+            <div className='p-3'>
+              <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
+                <span className='sr-only'>Create new space</span>
+                <PlusCircle className={getSize(6)} />
+              </Button>
+            </div>
+          </div>
+
+          <div className='flex flex-1'></div>
 
         <div role='none' className='shrink pli-2 overflow-y-auto'>
           <InvitationListContainer spaceKey={space.key} {...{ createInvitationUrl }} />
         </div>
         <PanelSeparator className='mli-2' />
-        <div role='none' className='mli-2'>
+          <div role='none' className='mli-2'>
           <NaturalButton compact className='flex gap-2 is-full' onClick={handleCreateInvitation}>
             <span>Invite</span>
             <UserPlus className={getSize(4)} weight='bold' />
           </NaturalButton>
         </div>
         <PanelSeparator className='mli-2' />
-        <div role='none' className='shrink pli-2 overflow-y-auto'>
-          <SpaceMemberListContainer spaceKey={space.key} includeSelf />
+          <div role='none' className='shrink pli-2 overflow-y-auto'>
+            <SpaceMemberListContainer spaceKey={space.key} includeSelf />
         </div>
         <PanelSeparator className='mli-2' />
 
