@@ -3,6 +3,7 @@
 //
 
 import { LogConfig, LogFilter, LogLevel } from './config';
+import { gatherLogInfoFromScope } from './scope';
 
 /**
  * Optional object passed to the logging API.
@@ -62,3 +63,26 @@ export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boo
     return config.filters.some((filter) => matchFilter(filter, level, path));
   }
 };
+
+export const getContextFromEntry = (entry: LogEntry): Record<string, any> | undefined => {
+  let context;
+  if(entry.meta) {
+    const scopeInfo = gatherLogInfoFromScope(entry.meta.scope);
+    if (Object.keys(scopeInfo).length > 0) {
+      context = Object.assign(context ?? {}, scopeInfo);
+    }
+  }  
+
+  if (entry.context) {
+    if (entry.context instanceof Error) {
+      // Additional context from Error.
+      const c = (entry.context as any).context;
+      // If ERROR then show stacktrace.
+      context = Object.assign(context ?? {}, { error: entry.context.stack, ...c });
+    } else if (typeof entry.context === 'object') {
+      context = Object.assign(context ?? {}, entry.context);
+    }
+  }
+
+  return context && Object.keys(context).length > 0 ? context : undefined;
+}

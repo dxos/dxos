@@ -3,7 +3,7 @@
 //
 
 import { LogLevel } from '../config';
-import { LogProcessor, shouldLog } from '../context';
+import { getContextFromEntry, LogProcessor, shouldLog } from '../context';
 
 const getRelativeFilename = (filename: string) => {
   // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)
@@ -62,8 +62,10 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   let args = [];
   args.push(entry.message);
-  if (entry.context && Object.keys(entry.context).length > 0) {
-    args.push(entry.context);
+
+  const context = getContextFromEntry(entry);
+  if (context) {
+    args.push(context);
   }
 
   const levels: any = {
@@ -103,8 +105,10 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   let args = [];
   args.push(entry.message);
-  if (entry.context && Object.keys(entry.context).length > 0) {
-    args.push(entry.context);
+  
+  const context = getContextFromEntry(entry);
+  if (context) {
+    args.push(context);
   }
 
   const levels: any = {
