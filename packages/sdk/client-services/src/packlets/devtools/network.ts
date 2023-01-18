@@ -34,7 +34,6 @@ export const subscribeToSignal = ({ networkManager }: { networkManager: NetworkM
   new Stream<SignalResponse>(({ next }) => {
     const ctx = new Context();
     networkManager.signalManager.onMessage.on(ctx, (message) => {
-      console.log('subscribeToSignal', { message });
       next({
         message: {
           author: message.author.asUint8Array(),
@@ -44,8 +43,7 @@ export const subscribeToSignal = ({ networkManager }: { networkManager: NetworkM
       });
     });
     networkManager.signalManager.swarmEvent.on(ctx, (swarmEvent) => {
-      console.log('subscribeToSignal', { swarmEvent });
-      next({ swarmEvent });
+      next({ swarmEvent: swarmEvent.swarmEvent });
     });
     return () => {
       return ctx.dispose();

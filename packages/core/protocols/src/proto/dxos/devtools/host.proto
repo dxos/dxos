@@ -263,14 +263,8 @@ message SubscribeToSignalStatusResponse {
 }
 
 message SignalResponse {
-
-  message SwarmEvent {
-    dxos.keys.PublicKey topic = 1;
-    dxos.mesh.signal.SwarmEvent swarm_event = 2;
-  }
-
   oneof data {
-    SwarmEvent swarm_event = 1;
+    dxos.mesh.signal.SwarmEvent swarm_event = 1;
     dxos.mesh.signal.Message message = 2;
   }
 }
