@@ -18,9 +18,12 @@ createRoot(document.getElementById('root')!).render(<Root />);
 
 window.addEventListener('message', (event) => {
   const message = event.data;
+  // Pass messages from client to parent window.
   if (message.source === 'dxos-client') {
     window.parent.postMessage(message, '*');
   }
+
+  // It should be hear because dxos-client port expects messages from content-script with event.source === window.
   if (message.source === 'content-script') {
     window.postMessage(message, '*');
   }

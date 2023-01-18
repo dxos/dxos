@@ -11,6 +11,7 @@ import devtoolsURL from './devtools/index.html?url';
 // @ts-ignore
 import kaiURL from './kai/index.html?url';
 
+// Pass messages between devtools and kai IFrames.
 window.addEventListener('message', (event) => {
   if (event.data.source === 'dxos-client') {
     const iframe = document.getElementById('devtools') as HTMLIFrameElement;
