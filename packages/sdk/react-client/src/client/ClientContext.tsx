@@ -14,12 +14,11 @@ import React, {
 } from 'react';
 
 import { asyncTimeout } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { Client, Status } from '@dxos/client';
 import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { Status } from '@dxos/protocols/proto/dxos/client';
 import { getAsyncValue, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
 import { printBanner } from '../banner';

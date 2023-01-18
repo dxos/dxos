@@ -4,8 +4,8 @@
 
 import { useContext } from 'react';
 
+import { Status } from '@dxos/client';
 import { raise } from '@dxos/debug';
-import { Status } from '@dxos/protocols/proto/dxos/client';
 
 import { ClientContext } from './ClientContext';
 
