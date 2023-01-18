@@ -16,6 +16,7 @@ export const parameters = {
 const ThemeWrapper = ({ children }) => {
   // render your custom theme provider
   const darkMode = useDarkMode();
+  console.log('[dark mode]', darkMode);
   useEffect(() => {
     document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
   }, [darkMode]);

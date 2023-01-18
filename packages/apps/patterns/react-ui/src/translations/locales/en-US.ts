@@ -8,6 +8,6 @@ export const os = {
   'sidebar label': 'DXOS sidebar',
   'copy invitation code label': 'Copy',
   'open share panel label': 'Share',
-  'join space heading': '<small>Joining</small><large>{{displayName}}</large>',
+  'join space heading': '<small>Joining</small><large>{{spaceTitle}}</large>',
   'exit label': 'Exit'
 };

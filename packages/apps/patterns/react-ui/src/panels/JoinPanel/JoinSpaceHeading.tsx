@@ -10,12 +10,12 @@ import { subduedSurface } from '../../styles';
 
 export interface JoinSpaceHeadingProps {
   titleId: string;
-  displayName: string;
+  spaceTitle: string;
   onClickExit?: () => void;
 }
 
 export const JoinSpaceHeading = forwardRef(
-  ({ titleId, displayName, onClickExit }: JoinSpaceHeadingProps, ref: ForwardedRef<HTMLDivElement>) => {
+  ({ titleId, spaceTitle, onClickExit }: JoinSpaceHeadingProps, ref: ForwardedRef<HTMLDivElement>) => {
     const { t } = useTranslation('os');
     const nameId = useId('spaceDisplayName');
     return (
@@ -30,7 +30,7 @@ export const JoinSpaceHeading = forwardRef(
                   small: <span className='block font-body font-system-medium text-sm' />,
                   large: <span className='block' id={nameId} />
                 },
-                values: { displayName }
+                values: { spaceTitle }
               }}
             />
           </Heading>
