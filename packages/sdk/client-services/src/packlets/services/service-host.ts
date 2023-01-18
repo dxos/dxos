@@ -34,6 +34,7 @@ type ClientServicesHostParams = {
   modelFactory?: ModelFactory;
   networkManager: NetworkManager;
   storage?: Storage;
+  compatibilityMode?: boolean;
 };
 
 /**
@@ -49,17 +50,21 @@ export class ClientServicesHost implements ClientServicesProvider {
   private _storage: Storage;
   private _open = false;
 
+  readonly compatibilityMode: boolean;
+
   constructor({
     config,
     modelFactory = createDefaultModelFactory(),
     // TODO(burdon): Create ApolloLink abstraction (see Client).
     networkManager,
-    storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage
+    storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage,
+    compatibilityMode = false
   }: ClientServicesHostParams) {
     this._config = config;
     this._modelFactory = modelFactory;
     this._networkManager = networkManager;
     this._storage = storage;
+    this.compatibilityMode = compatibilityMode;
   }
 
   get isOpen() {

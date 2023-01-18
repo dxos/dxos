@@ -4,7 +4,6 @@
 
 import { Config } from '@dxos/config';
 import { Status, SystemService } from '@dxos/protocols/proto/dxos/client';
-import { isNode } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { VaultResourceManager } from '../vault';
@@ -16,13 +15,13 @@ export class SystemServiceImpl implements SystemService {
   private readonly _resourceManager?: VaultResourceManager;
 
   constructor(private readonly _config: Config, private readonly _serviceHost: ClientServicesHost) {
-    if (!isNode()) {
+    if (this._serviceHost.compatibilityMode) {
       this._resourceManager = new VaultResourceManager(this._serviceHost);
     }
   }
 
   async initSession() {
-    if (!isNode()) {
+    if (this._serviceHost.compatibilityMode) {
       await this._resourceManager?.acquire();
     }
   }

@@ -51,6 +51,7 @@ export class IFrameCompatibilityRuntime {
       this._config = await this._configProvider();
       const signalServer = this._config.get('runtime.services.signal.server');
       this._clientServices = new ClientServicesHost({
+        compatibilityMode: true,
         config: this._config,
         networkManager: new NetworkManager({
           log: true,
