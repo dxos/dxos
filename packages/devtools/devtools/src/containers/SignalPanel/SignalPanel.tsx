@@ -9,7 +9,7 @@ import { SignalStatusComp } from './SignalStatus';
 
 export const SignalPanel = () => {
   return (
-    <div className='flex flex-col flex-1 overflow-auto'>
+    <div className='flex flex-col flex-1'>
       <div className='flex m-2'>
         <SignalStatusComp />
       </div>

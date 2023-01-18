@@ -8,6 +8,7 @@ import { Column } from 'react-table';
 import { Searchbar, Selector, SelectorOption, Table } from '@dxos/kai';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-components-deprecated';
 import { humanize } from '@dxos/util';
 
 type ColumnType<T extends {}> = SelectorOption & {
@@ -119,17 +120,23 @@ export const SignalMessages = () => {
     return null;
   }
 
-  const [type, setType] = useState<ColumnType<SignalResponse>>(types[0]);
-
   const [text, setText] = useState<string>('');
   const handleSearch = (text: string) => {
     setText(text);
   };
 
-  const handleSelect = (id?: string) => {
+  const [type, setType] = useState<ColumnType<SignalResponse>>(types[0]);
+  const selectType = (id?: string) => {
     if (id) {
       setType(getType(id));
+      setSelected(0);
     }
+  };
+
+  const [selected, setSelected] = useState<number>(0);
+  const selectRow = (index: number) => {
+    setSelected(index);
+    console.log('selectRow', getFilteredData().at(index));
   };
 
   const [signalResponses, setSignalResponses] = useState<SignalResponse[]>([]);
@@ -147,22 +154,33 @@ export const SignalMessages = () => {
     };
   }, []);
 
+  const getFilteredData = () => signalResponses.filter(type.filter).filter(type.subFilter(text));
+
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='flex p-3 border-b border-slate-200 border-solid'>
         <div className='flex'>
           <div className='mr-2'>
-            <Selector options={types} value={type.id} onSelect={handleSelect} />
+            <Selector options={types} value={type.id} onSelect={selectType} />
           </div>
           <div>
             <Searchbar onSearch={handleSearch} />
           </div>
         </div>
       </div>
-      <Table
-        columns={type.columns as any}
-        data={signalResponses.filter(type.filter).filter(type.subFilter(text)) as any}
-      />
+      <div className='flex flex-row'>
+        <div className='flex w-1/2'>
+          <Table
+            columns={type.columns as any}
+            data={getFilteredData() as any}
+            selected={selected}
+            onSelect={selectRow}
+          />
+        </div>
+        <div className='flex w-1/2'>
+          <JsonTreeView data={getFilteredData().at(selected)} />
+        </div>
+      </div>
     </div>
   );
 };
