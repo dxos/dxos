@@ -136,7 +136,6 @@ export const SignalMessages = () => {
   const [selected, setSelected] = useState<number>(0);
   const selectRow = (index: number) => {
     setSelected(index);
-    console.log('selectRow', getFilteredData().at(index));
   };
 
   const [signalResponses, setSignalResponses] = useState<SignalResponse[]>([]);
@@ -157,7 +156,7 @@ export const SignalMessages = () => {
   const getFilteredData = () => signalResponses.filter(type.filter).filter(type.subFilter(text));
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
+    <div className='flex flex-col flex-1'>
       <div className='flex p-3 border-b border-slate-200 border-solid'>
         <div className='flex'>
           <div className='mr-2'>
@@ -169,7 +168,7 @@ export const SignalMessages = () => {
         </div>
       </div>
       <div className='flex flex-row'>
-        <div className='flex w-1/2'>
+        <div className='flex w-2/3 h-full'>
           <Table
             columns={type.columns as any}
             data={getFilteredData() as any}
@@ -177,7 +176,7 @@ export const SignalMessages = () => {
             onSelect={selectRow}
           />
         </div>
-        <div className='flex w-1/2'>
+        <div className='flex w-1/3'>
           <JsonTreeView data={getFilteredData().at(selected)} />
         </div>
       </div>
