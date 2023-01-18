@@ -75,6 +75,10 @@ export class ClientServicesHost implements ClientServicesProvider {
   }
 
   async open() {
+    if (this._open) {
+      return;
+    }
+
     log('opening...');
     await this._initialize();
     await this._serviceContext.open();
@@ -84,6 +88,10 @@ export class ClientServicesHost implements ClientServicesProvider {
   }
 
   async close() {
+    if (!this._open) {
+      return;
+    }
+
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
     await this._serviceContext.close();

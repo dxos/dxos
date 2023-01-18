@@ -10,7 +10,7 @@ import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 import { mobileAndTabletCheck } from './util';
 
 log.config({
-  filter: process.env.LOG_FILTER ?? 'warn,localstorage:debug',
+  filter: process.env.LOG_FILTER ?? 'warn,vault:debug',
   prefix: process.env.LOG_BROWSER_PREFIX
 });
 
@@ -30,7 +30,7 @@ if (mobileAndTabletCheck() || typeof SharedWorker === 'undefined') {
   void iframeRuntime.start();
 
   window.addEventListener('beforeunload', () => {
-    iframeRuntime.stop().catch((err) => log.catch(err));
+    iframeRuntime.stop().catch((err: Error) => log.catch(err));
   });
 } else {
   // NOTE: Url must be within SharedWorker instantiation for bundling to work as expected.
@@ -48,6 +48,6 @@ if (mobileAndTabletCheck() || typeof SharedWorker === 'undefined') {
   });
 
   window.addEventListener('beforeunload', () => {
-    iframeRuntime.close().catch((err) => log.catch(err));
+    iframeRuntime.close().catch((err: Error) => log.catch(err));
   });
 }
