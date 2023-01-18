@@ -74,6 +74,8 @@ export const createCredential = async ({
     credential.proof.chain = chain;
   }
 
+  // TODO(dmaretskyi): Generate id as payload hash.
+
   return credential;
 };
 

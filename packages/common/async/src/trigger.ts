@@ -42,7 +42,7 @@ export type TriggerOptions = {
  */
 export class Trigger<T = void> {
   private _promise!: Promise<T>;
-  private _wake!: (value: T) => void;
+  private _wake!: (value: T | PromiseLike<T>) => void;
 
   constructor(private _options: TriggerOptions = { autoReset: false }) {
     this.reset();
@@ -78,6 +78,18 @@ export class Trigger<T = void> {
     this._promise = new Promise<T>((resolve) => {
       this._wake = resolve;
     });
+
+    return this;
+  }
+
+  /**
+   * Throw error to blocked callers (if any).
+   */
+  throw (error: Error) {
+    this._wake(Promise.reject(error));
+    if (this._options.autoReset) {
+      return this.reset();
+    }
 
     return this;
   }
