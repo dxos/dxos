@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import base from 'base-x';
 import { Configuration, OpenAIApi } from 'openai';
 
 import { EchoDatabase } from '@dxos/echo-schema';
@@ -9,18 +10,14 @@ import { EchoDatabase } from '@dxos/echo-schema';
 import { Organization } from '../proto';
 import { Bot } from './bot';
 
-export const OPENAI_ORG_ID = 'org-mZTRiNMMnvZWUqWxPlirjw5l';
+const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
-// prettier-ignore
-// Dangerously unsafe obfuscation of API KEY.
-// https://beta.openai.com/account/api-keys
-export const OPENAI_API_KEY = [
-  'jM9krj5H1M8l',
-  'wYXT3BlbkFJYSl3937p',
-  'SHTJRZecyW',
-  '-eS1PdlF',
-  'sk'
-];
+const config = {
+  organization: 'org-mZTRiNMMnvZWUqWxPlirjw5l',
+  // Dangerously unsafe obfuscation of API KEY.
+  // https://beta.openai.com/account/api-keys
+  apiKey: base62.decode('3U7sbXYdzwNsY8TGXWVeTPoxBcONui3sclUrrTnAZ5F23YpoM0nSFrYxaHDZqTdI84f5M').toString()
+};
 
 /**
  * Adds info to records.
@@ -31,13 +28,10 @@ export class ResearchBot extends Bot<Organization> {
 
   constructor(db: EchoDatabase) {
     super(db, Organization.filter());
-    const configuration = new Configuration({
-      organization: OPENAI_ORG_ID,
-      apiKey: OPENAI_API_KEY.reverse().join('')
-    });
 
     // TODO(burdon): Hack to workaround error:
     //  - Refused to set unsafe header "User-Agent".
+    const configuration = new Configuration(config);
     delete configuration.baseOptions.headers['User-Agent'];
 
     this._api = new OpenAIApi(configuration);
@@ -49,7 +43,7 @@ export class ResearchBot extends Bot<Organization> {
 
       const completion = await this._api.createCompletion({
         model: 'text-davinci-003',
-        prompt: `Describe ${object.name}`,
+        prompt: `describe ${object.name}`,
         max_tokens: 128
       });
 

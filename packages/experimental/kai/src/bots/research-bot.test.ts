@@ -6,8 +6,6 @@ import { Configuration, OpenAIApi } from 'openai';
 
 import { describe, test } from '@dxos/test';
 
-import { OPENAI_ORG_ID } from './research-bot';
-
 // TODO(burdon): Test from web.
 // TODO(burdon): UX trigger.
 // TODO(burdon): Project cards.
@@ -18,7 +16,7 @@ describe('openai', () => {
   test.skip('basic', async () => {
     // https://beta.openai.com/docs/api-reference/authentication
     const configuration = new Configuration({
-      organization: OPENAI_ORG_ID,
+      organization: process.env.OPENAI_ORG_ID,
       apiKey: process.env.OPENAI_API_KEY
     });
 
