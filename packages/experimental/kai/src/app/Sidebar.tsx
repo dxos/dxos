@@ -72,23 +72,24 @@ export const Sidebar = () => {
 
           <div className='flex flex-1'></div>
 
-        <div role='none' className='shrink pli-2 overflow-y-auto'>
-          <InvitationListContainer spaceKey={space.key} {...{ createInvitationUrl }} />
-        </div>
-        <PanelSeparator className='mli-2' />
+          <div role='none' className='shrink pli-2 overflow-y-auto'>
+            <InvitationListContainer spaceKey={space.key} {...{ createInvitationUrl }} />
+          </div>
+          <PanelSeparator className='mli-2' />
           <div role='none' className='mli-2'>
-          <NaturalButton compact className='flex gap-2 is-full' onClick={handleCreateInvitation}>
-            <span>Invite</span>
-            <UserPlus className={getSize(4)} weight='bold' />
-          </NaturalButton>
-        </div>
-        <PanelSeparator className='mli-2' />
+            <NaturalButton compact className='flex gap-2 is-full' onClick={handleCreateInvitation}>
+              <span>Invite</span>
+              <UserPlus className={getSize(4)} weight='bold' />
+            </NaturalButton>
+          </div>
+          <PanelSeparator className='mli-2' />
           <div role='none' className='shrink pli-2 overflow-y-auto'>
             <SpaceMemberListContainer spaceKey={space.key} includeSelf />
-        </div>
-        <PanelSeparator className='mli-2' />
+          </div>
+          <PanelSeparator className='mli-2' />
 
-        <Actions />
+          <Actions />
+        </div>
       </div>
     </ThemeContext.Provider>
   );
