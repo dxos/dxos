@@ -21,7 +21,7 @@ export class IFrameCompatibilityRuntime {
   private readonly _configProvider: () => MaybePromise<Config>;
   private readonly _transportFactory = createWebRTCTransportFactory();
   private readonly _ready = new Trigger<Error | undefined>();
-  private readonly _getServices: () => Promise<ClientServicesHost>;
+  private readonly _getServices: (checkContext?: boolean) => Promise<ClientServicesHost>;
   private readonly _appPort: RpcPort;
   private _clientServices!: ClientServicesHost;
   private _clientRpc!: ProtoRpcPeer<ClientServices>;
@@ -33,7 +33,11 @@ export class IFrameCompatibilityRuntime {
   constructor({ configProvider, appPort }: IFrameCompatibilityRuntimeParams) {
     this._configProvider = configProvider;
     this._appPort = appPort;
-    this._getServices = async () => {
+    this._getServices = async (checkContext = true) => {
+      if (checkContext && !this._clientServices.serviceContext.isOpen) {
+        throw new Error('Service context is closed');
+      }
+
       const error = await this._ready.wait();
       if (error !== undefined) {
         throw error;
@@ -60,16 +64,16 @@ export class IFrameCompatibilityRuntime {
       this._clientRpc = createProtoRpcPeer({
         exposed: clientServiceBundle,
         handlers: {
-          HaloInvitationsService: async () => (await this._getServices()).services.HaloInvitationsService,
-          DevicesService: async () => (await this._getServices()).services.DevicesService,
-          SpaceInvitationsService: async () => (await this._getServices()).services.SpaceInvitationsService,
-          SpacesService: async () => (await this._getServices()).services.SpacesService,
-          NetworkService: async () => (await this._getServices()).services.NetworkService,
-          SpaceService: async () => (await this._getServices()).services.SpaceService,
           DataService: async () => (await this._getServices()).services.DataService,
-          ProfileService: async () => (await this._getServices()).services.ProfileService,
-          SystemService: async () => (await this._getServices()).services.SystemService,
+          DevicesService: async () => (await this._getServices()).services.DevicesService,
           DevtoolsHost: async () => (await this._getServices()).services.DevtoolsHost,
+          HaloInvitationsService: async () => (await this._getServices()).services.HaloInvitationsService,
+          NetworkService: async () => (await this._getServices()).services.NetworkService,
+          ProfileService: async () => (await this._getServices()).services.ProfileService,
+          SpaceInvitationsService: async () => (await this._getServices()).services.SpaceInvitationsService,
+          SpaceService: async () => (await this._getServices()).services.SpaceService,
+          SpacesService: async () => (await this._getServices()).services.SpacesService,
+          SystemService: async () => (await this._getServices(false)).services.SystemService,
           TracingService: async () => (await this._getServices()).services.TracingService
         },
         port: this._appPort

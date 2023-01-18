@@ -69,6 +69,11 @@ export class ClientServicesHost implements ClientServicesProvider {
     return this._serviceRegistry.services;
   }
 
+  // TODO(wittjosiah): Try to avoid this.
+  get serviceContext() {
+    return this._serviceContext;
+  }
+
   async open() {
     log('opening...');
     await this._initialize();
