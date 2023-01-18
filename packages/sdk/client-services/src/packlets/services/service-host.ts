@@ -47,6 +47,7 @@ export class ClientServicesHost implements ClientServicesProvider {
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
   private _storage: Storage;
+  private _open = false;
 
   constructor({
     config,
@@ -61,6 +62,10 @@ export class ClientServicesHost implements ClientServicesProvider {
     this._storage = storage;
   }
 
+  get isOpen() {
+    return this._open;
+  }
+
   get descriptors() {
     return this._serviceRegistry.descriptors;
   }
@@ -69,15 +74,11 @@ export class ClientServicesHost implements ClientServicesProvider {
     return this._serviceRegistry.services;
   }
 
-  // TODO(wittjosiah): Try to avoid this.
-  get serviceContext() {
-    return this._serviceContext;
-  }
-
   async open() {
     log('opening...');
     await this._initialize();
     await this._serviceContext.open();
+    this._open = true;
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
   }
@@ -86,7 +87,12 @@ export class ClientServicesHost implements ClientServicesProvider {
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
     await this._serviceContext.close();
+    this._open = false;
     log('closed', { deviceKey });
+  }
+
+  async reset() {
+    await this._serviceContext.reset();
   }
 
   // TODO(burdon): Move into open.
@@ -118,7 +124,7 @@ export class ClientServicesHost implements ClientServicesProvider {
       // TODO(burdon): Move to new protobuf definitions.
       ProfileService: new ProfileServiceImpl(this._serviceContext),
       SpaceService: new SpaceServiceImpl(this._serviceContext),
-      SystemService: new SystemServiceImpl(this._config, this._serviceContext),
+      SystemService: new SystemServiceImpl(this._config, this),
       TracingService: new TracingServiceImpl(this._config),
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),

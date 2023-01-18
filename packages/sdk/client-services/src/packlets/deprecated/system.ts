@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import { Status, SystemService } from '@dxos/protocols/proto/dxos/client';
 
-import { ServiceContext } from '../services';
+import { ClientServicesHost } from '../services';
 import { LocalStorageResourceManager } from '../vault';
 
 /**
@@ -18,9 +18,7 @@ export class SystemServiceImpl implements SystemService {
     onReleased: this._onReleased.bind(this)
   });
 
-  constructor(private readonly _config: Config, private readonly _serviceContext: ServiceContext) {
-    console.log({ _serviceContext });
-  }
+  constructor(private readonly _config: Config, private readonly _serviceHost: ClientServicesHost) {}
 
   async initSession() {
     await this._resourceManager.acquire();
@@ -32,7 +30,7 @@ export class SystemServiceImpl implements SystemService {
 
   // TODO(burdon): Connect to iframe RPC heartbeat for network status?
   async getStatus(_request: void) {
-    if (!this._serviceContext.isOpen) {
+    if (!this._serviceHost.isOpen) {
       return {
         status: Status.CLOSED
       };
@@ -43,19 +41,15 @@ export class SystemServiceImpl implements SystemService {
     };
   }
 
-  async reconnect(_request: void) {
-    await this._resourceManager.acquire();
-  }
-
   async reset(_request: void) {
-    await this._serviceContext.reset();
+    await this._serviceHost.reset();
   }
 
   private async _onAcquired() {
-    await this._serviceContext.open();
+    await this._serviceHost.open();
   }
 
   private async _onReleased() {
-    await this._serviceContext.close();
+    await this._serviceHost.close();
   }
 }

@@ -178,7 +178,7 @@ export class Client {
   }
 
   async compatibilityModeReconnect(): Promise<void> {
-    await this._services.services.SystemService.reconnect();
+    await this._services.services.SystemService.initSession();
   }
 
   /**

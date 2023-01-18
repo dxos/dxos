@@ -44,8 +44,6 @@ export class ServiceContext {
   public dataSpaceManager?: DataSpaceManager;
   public spaceInvitations?: SpaceInvitationsHandler;
 
-  private _isOpen = false;
-
   // prettier-ignore
   constructor(
     public readonly storage: Storage,
@@ -81,10 +79,6 @@ export class ServiceContext {
     this.haloInvitations = new HaloInvitationsHandler(this.networkManager, this.identityManager);
   }
 
-  get isOpen() {
-    return this._isOpen;
-  }
-
   async open() {
     log('opening...');
     await this.networkManager.open();
@@ -93,7 +87,6 @@ export class ServiceContext {
     if (this.identityManager.identity) {
       await this._initialize();
     }
-    this._isOpen = true;
     log('opened');
   }
 
@@ -105,7 +98,6 @@ export class ServiceContext {
     await this.feedStore.close();
     await this.networkManager.close();
     this.dataServiceSubscriptions.clear();
-    this._isOpen = false;
     log('closed');
   }
 

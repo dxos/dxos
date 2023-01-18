@@ -34,7 +34,7 @@ export class IFrameCompatibilityRuntime {
     this._configProvider = configProvider;
     this._appPort = appPort;
     this._getServices = async (checkContext = true) => {
-      if (checkContext && !this._clientServices.serviceContext.isOpen) {
+      if (checkContext && !this._clientServices.isOpen) {
         throw new Error('Service context is closed');
       }
 
