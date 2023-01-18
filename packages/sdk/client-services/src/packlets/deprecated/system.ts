@@ -13,15 +13,17 @@ import { VaultResourceManager } from '../vault';
  * @deprecated
  */
 export class SystemServiceImpl implements SystemService {
-  private readonly _resourceManager: VaultResourceManager;
+  private readonly _resourceManager?: VaultResourceManager;
 
   constructor(private readonly _config: Config, private readonly _serviceHost: ClientServicesHost) {
-    this._resourceManager = new VaultResourceManager(this._serviceHost);
+    if (!isNode()) {
+      this._resourceManager = new VaultResourceManager(this._serviceHost);
+    }
   }
 
   async initSession() {
     if (!isNode()) {
-      await this._resourceManager.acquire();
+      await this._resourceManager?.acquire();
     }
   }
 
