@@ -8,7 +8,6 @@ import { inspect } from 'node:util';
 
 import { LogConfig, LogLevel, shortLevelName } from '../config';
 import { getContextFromEntry, LogProcessor, shouldLog } from '../context';
-import { gatherLogInfoFromScope } from '../scope';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.DEBUG]: 'gray',
@@ -75,7 +74,7 @@ export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => 
 const formatter = DEFAULT_FORMATTER;
 
 export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
-  let { level, message, meta, error } = entry;
+  const { level, message, meta, error } = entry;
   if (!shouldLog(config, level, meta?.file ?? '')) {
     return;
   }
@@ -88,7 +87,7 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
   }
 
   const context = getContextFromEntry(entry);
-  if(context) {
+  if (context) {
     // Remove undefined fields.
     // https://nodejs.org/api/util.html#utilinspectobject-options
     parts.context = inspect(
@@ -96,7 +95,7 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
       { depth: config.options.depth, colors: true, maxArrayLength: 8, sorted: false }
     );
   }
-  
+
   const line = formatter(config, parts).filter(Boolean).join(' ');
   console.log(line);
 };

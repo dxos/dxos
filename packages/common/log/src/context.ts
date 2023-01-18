@@ -66,12 +66,12 @@ export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boo
 
 export const getContextFromEntry = (entry: LogEntry): Record<string, any> | undefined => {
   let context;
-  if(entry.meta) {
+  if (entry.meta) {
     const scopeInfo = gatherLogInfoFromScope(entry.meta.scope);
     if (Object.keys(scopeInfo).length > 0) {
       context = Object.assign(context ?? {}, scopeInfo);
     }
-  }  
+  }
 
   if (entry.context) {
     if (entry.context instanceof Error) {
@@ -85,4 +85,4 @@ export const getContextFromEntry = (entry: LogEntry): Record<string, any> | unde
   }
 
   return context && Object.keys(context).length > 0 ? context : undefined;
-}
+};

@@ -105,7 +105,7 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   let args = [];
   args.push(entry.message);
-  
+
   const context = getContextFromEntry(entry);
   if (context) {
     args.push(context);
