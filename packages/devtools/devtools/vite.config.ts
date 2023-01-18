@@ -41,6 +41,7 @@ export default defineConfig({
       '@dxos/feed-store',
       '@dxos/kai',
       '@dxos/keys',
+      '@dxos/log',
       '@dxos/messaging',
       '@dxos/messenger-model',
       '@dxos/model-factory',
@@ -48,22 +49,44 @@ export default defineConfig({
       '@dxos/object-model',
       '@dxos/protocols',
       '@dxos/protocols/proto/dxos/client/services.ts',
+      '@dxos/protocols/proto/dxos/config',
+      '@dxos/protocols/proto/dxos/client',
+      '@dxos/protocols/proto/dxos/config',
+      '@dxos/protocols/proto/dxos/echo/feed',
+      '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/protocols/proto/dxos/halo/credentials',
+      '@dxos/protocols/proto/dxos/halo/invitations',
+      '@dxos/protocols/proto/dxos/halo/keys',
+      '@dxos/protocols/proto/dxos/mesh/bridge',
+      '@dxos/protocols/proto/dxos/rpc',
       '@dxos/react-appkit',
       '@dxos/react-async',
       '@dxos/react-client',
       '@dxos/react-components-deprecated',
-      '@dxos/react-components-deprecated',
       '@dxos/react-registry-client',
       '@dxos/react-toolkit',
       '@dxos/registry-client',
+      '@dxos/rpc',
       '@dxos/text-model',
       '@dxos/timeframe',
       '@dxos/util'
     ]
   },
   build: {
+    sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
+    },
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        testbench: resolve(__dirname, 'testbench.html')
+      },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-router-dom', 'react-dom']
+        }
+      }
     }
   },
   plugins: [
@@ -73,10 +96,14 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs')
       ]
     }),
     ReactPlugin(),

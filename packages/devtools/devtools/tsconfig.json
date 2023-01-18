@@ -27,6 +27,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/react-async"
     },
     {
@@ -55,6 +58,9 @@
     },
     {
       "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/protocols"
