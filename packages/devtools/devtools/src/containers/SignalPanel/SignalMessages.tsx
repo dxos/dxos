@@ -10,10 +10,10 @@ import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
-type ColumnType<T> = SelectorOption & {
+type ColumnType<T extends {}> = SelectorOption & {
   filter: (object: T) => boolean;
   subFilter: (match?: string) => (object: T) => boolean;
-  columns: Column<{}>[];
+  columns: Column<T>[];
 };
 
 const matchJsonString =
@@ -21,7 +21,6 @@ const matchJsonString =
   (event: SignalResponse) => {
     return JSON.stringify(event).includes(match);
   };
-
 
 const types: ColumnType<SignalResponse>[] = [
   {
@@ -32,6 +31,10 @@ const types: ColumnType<SignalResponse>[] = [
     },
     subFilter: matchJsonString,
     columns: [
+      {
+        Header: 'Received At',
+        accessor: (response: SignalResponse) => response.receivedAt.toJSON()
+      },
       {
         Header: 'TYPE',
         accessor: (response: SignalResponse) => {
@@ -49,8 +52,8 @@ const types: ColumnType<SignalResponse>[] = [
           humanize(response.swarmEvent!.peerLeft?.peer ?? '')
       },
       {
-        Header: 'Timestamp',
-        accessor: (response: SignalResponse) => response.swarmEvent!.peerAvailable?.since?.toString()
+        Header: 'Since',
+        accessor: (response: SignalResponse) => response.swarmEvent!.peerAvailable?.since?.toJSON()
       }
     ]
   },
@@ -63,6 +66,10 @@ const types: ColumnType<SignalResponse>[] = [
     subFilter: matchJsonString,
     columns: [
       {
+        Header: 'Received At',
+        accessor: (response: SignalResponse) => response.receivedAt.toJSON()
+      },
+      {
         Header: 'Author',
         accessor: (response: SignalResponse) => humanize(response.message!.author)
       },
@@ -71,15 +78,40 @@ const types: ColumnType<SignalResponse>[] = [
         accessor: (response: SignalResponse) => humanize(response.message!.recipient)
       },
       { Header: 'Payload', accessor: (response: SignalResponse) => JSON.stringify(response.message?.payload) },
+      { Header: 'MessageID', accessor: (response: SignalResponse) => humanize(response.message?.payload.messageId) },
       {
         Header: 'Topic',
-        accessor: (response: SignalResponse) => humanize(response.message!.payload.topic)
+        accessor: (response: SignalResponse) =>
+          response.message!.payload?.payload?.topic && humanize(response.message!.payload?.payload?.topic)
       }
+    ]
+  },
+  {
+    id: 'ack',
+    title: 'Acknologment',
+    filter: (response: SignalResponse) => {
+      return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
+    },
+    subFilter: matchJsonString,
+    columns: [
+      {
+        Header: 'Received At',
+        accessor: (response: SignalResponse) => response.receivedAt.toJSON()
+      },
+      {
+        Header: 'Author',
+        accessor: (response: SignalResponse) => humanize(response.message!.author)
+      },
+      {
+        Header: 'Recipient',
+        accessor: (response: SignalResponse) => humanize(response.message!.recipient)
+      },
+      { Header: 'MessageID', accessor: (response: SignalResponse) => humanize(response.message?.payload.messageId) }
     ]
   }
 ];
 
-const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
+const getType = (id: string): ColumnType<SignalResponse> => types.find((type) => type.id === id)!;
 
 export const SignalMessages = () => {
   const devtoolsHost = useDevtools();
@@ -89,7 +121,7 @@ export const SignalMessages = () => {
 
   const [type, setType] = useState<ColumnType<SignalResponse>>(types[0]);
 
-  const [text, setText] = useState<string>();
+  const [text, setText] = useState<string>('');
   const handleSearch = (text: string) => {
     setText(text);
   };
@@ -127,12 +159,10 @@ export const SignalMessages = () => {
           </div>
         </div>
       </div>
-      {/* <div className='flex flex-1 overflow-hidden'> */}
       <Table
         columns={type.columns as any}
         data={signalResponses.filter(type.filter).filter(type.subFilter(text)) as any}
       />
-      {/* </div> */}
     </div>
   );
 };
