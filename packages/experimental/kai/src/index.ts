@@ -11,3 +11,4 @@ export * from './hooks';
 export * from './pages';
 export * from './proto';
 export * from './util';
+export * from './Root';
