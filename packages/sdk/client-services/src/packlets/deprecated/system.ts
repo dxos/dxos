@@ -4,6 +4,7 @@
 
 import { Config } from '@dxos/config';
 import { Status, SystemService } from '@dxos/protocols/proto/dxos/client';
+import { isNode } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { VaultResourceManager } from '../vault';
@@ -19,7 +20,9 @@ export class SystemServiceImpl implements SystemService {
   }
 
   async initSession() {
-    await this._resourceManager.acquire();
+    if (!isNode()) {
+      await this._resourceManager.acquire();
+    }
   }
 
   async getConfig(_request: void) {

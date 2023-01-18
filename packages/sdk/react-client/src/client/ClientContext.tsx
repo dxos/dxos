@@ -2,7 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactNode, useState, Context, createContext, useContext, useEffect, FunctionComponent } from 'react';
+import React, {
+  ReactNode,
+  useState,
+  Context,
+  createContext,
+  useContext,
+  useEffect,
+  FunctionComponent,
+  useReducer
+} from 'react';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
@@ -84,10 +93,21 @@ export const ClientProvider = ({
   fallback: Fallback = () => null,
   onInitialize
 }: ClientProviderProps) => {
-  const [client, setClient] = useState<Client | undefined>(
-    clientProvider instanceof Client ? clientProvider : undefined
+  const [{ client, status }, dispatch] = useReducer(
+    (state: Partial<ClientContextProps>, action: Partial<ClientContextProps>) => {
+      if (action.client) {
+        state.client = action.client;
+      }
+
+      if (action.status) {
+        state.status = action.status;
+      }
+
+      return state;
+    },
+    clientProvider instanceof Client ? { client: clientProvider, status: Status.OK } : {}
   );
-  const [status, setStatus] = useState<Status>();
+
   const [error, setError] = useState();
 
   if (error) {
@@ -103,10 +123,10 @@ export const ClientProvider = ({
       try {
         const { status } = await asyncTimeout(client.getStatus(), 500);
         log('status', { status });
-        setStatus(status);
+        dispatch({ status });
       } catch (err) {
         log.error('heartbeat stalled');
-        setStatus(undefined);
+        dispatch({ status: undefined });
       }
     }, 1_000);
 
@@ -118,8 +138,7 @@ export const ClientProvider = ({
       log('client ready', { client });
       const { status } = await client.getStatus();
       await onInitialize?.(client);
-      setClient(client);
-      setStatus(status);
+      dispatch({ client, status });
       printBanner(client);
     };
 
