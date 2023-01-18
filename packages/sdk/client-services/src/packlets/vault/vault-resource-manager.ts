@@ -46,15 +46,19 @@ export class VaultResourceManager {
   private async _requestLock(steal = false) {
     log('requesting lock...', { steal });
     const acquired = new Trigger();
-    void navigator.locks.request(LOCK_KEY, { steal }, async () => {
-      await this._serviceHost.open();
-      acquired.wake();
-      this._releaseTrigger = new Trigger();
-      await this._releaseTrigger.wait();
-      log('releasing lock...');
-      await this._serviceHost.close();
-      log('released lock');
-    });
+    void navigator.locks
+      .request(LOCK_KEY, { steal }, async () => {
+        await this._serviceHost.open();
+        acquired.wake();
+        this._releaseTrigger = new Trigger();
+        await this._releaseTrigger.wait();
+        log('releasing lock...');
+        await this._serviceHost.close();
+        log('released lock');
+      })
+      .catch(async () => {
+        await this._serviceHost.close();
+      });
     await acquired.wait();
     log('recieved lock', { steal });
   }
