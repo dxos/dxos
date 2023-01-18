@@ -66,6 +66,7 @@ dx app publish
 ### Framework/ECHO Issues
 
 - [ ] Set undefined value.
+- [ ] Don't throw undefined if access unset value (e.g., org.address.city).
 - [ ] Can't set complex value (see echo-typegen tests)
 - [ ] Splice (drag and drop).
 - [ ] Scalar sets (e.g., Project tags for kanban).
