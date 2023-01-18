@@ -267,6 +267,7 @@ message SignalResponse {
     dxos.mesh.signal.SwarmEvent swarm_event = 1;
     dxos.mesh.signal.Message message = 2;
   }
+  google.protobuf.Timestamp received_at = 3;
 }
 
 // SubscribeToSwarmInfo

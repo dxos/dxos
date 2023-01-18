@@ -39,11 +39,12 @@ export const subscribeToSignal = ({ networkManager }: { networkManager: NetworkM
           author: message.author.asUint8Array(),
           recipient: message.recipient.asUint8Array(),
           payload: message.payload
-        }
+        },
+        receivedAt: new Date()
       });
     });
     networkManager.signalManager.swarmEvent.on(ctx, (swarmEvent) => {
-      next({ swarmEvent: swarmEvent.swarmEvent });
+      next({ swarmEvent: swarmEvent.swarmEvent, receivedAt: new Date() });
     });
     return () => {
       return ctx.dispose();
