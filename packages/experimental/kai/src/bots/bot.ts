@@ -21,11 +21,13 @@ export class Bot<T extends Document> {
 
     // TODO(burdon): Update when object mutated.
     const query = this._db.query(this._filter);
-    this._subscription = query.subscribe((query) => {
+    this._subscription = query.subscribe(async (query) => {
       const objects = query.getObjects();
-      objects.forEach((object) => {
-        this.onUpdate(object);
-      });
+      await Promise.all(
+        objects.map(async (object) => {
+          await this.onUpdate(object);
+        })
+      );
     });
 
     return this;
@@ -36,7 +38,5 @@ export class Bot<T extends Document> {
     return this;
   }
 
-  onUpdate(object: T) {
-    console.log('::', object);
-  }
+  async onUpdate(object: T): Promise<void> {}
 }
