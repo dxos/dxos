@@ -5,6 +5,8 @@
 import React, { useEffect, useState } from 'react';
 
 import { SignalState, SignalStatus } from '@dxos/messaging';
+import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { useDevtools, useStream } from '@dxos/react-client';
 
 const getColor = (state: SignalState) => {
   switch (state) {
@@ -24,7 +26,35 @@ export interface SignalStatusProps {
   status: SignalStatus[];
 }
 
-export const SignalStatusComp = ({ status }: SignalStatusProps) => {
+const stringToState = (state: string): SignalState => {
+  const dict: Record<string, SignalState> = {
+    CONNECTING: SignalState.CONNECTING,
+    RE_CONNECTING: SignalState.RE_CONNECTING,
+    CONNECTED: SignalState.CONNECTED,
+    DISCONNECTED: SignalState.DISCONNECTED,
+    CLOSED: SignalState.CLOSED
+  };
+  return dict[state];
+};
+
+const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalStatus => {
+  return {
+    connectionStarted: server.connectionStarted!,
+    lastStateChange: server.lastStateChange!,
+    reconnectIn: server.reconnectIn!,
+    host: server.host!,
+    state: stringToState(server.state!)
+  };
+};
+
+export const SignalStatusComp = () => {
+  const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+  const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), { servers: [] });
+  const status = servers!.map(getSignalStatus);
+
   const [time, setTime] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setTime(Date.now()), 1000);
@@ -33,6 +63,10 @@ export const SignalStatusComp = ({ status }: SignalStatusProps) => {
 
   // TODO(burdon): Use format tool (mins, sec, etc.)
   const format = (n: number, unit = 's') => `${n.toLocaleString()}${unit}`;
+
+  if (!servers) {
+    return null;
+  }
 
   return (
     <div>
