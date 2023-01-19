@@ -43,19 +43,18 @@ export const SpacePage = () => {
     return null;
   }
 
-  // prettier-ignore
   return (
     <SpaceContext.Provider value={context}>
       <PanelSidebarProvider
         inlineStart
         slots={{
-          content: { children: <Sidebar />, className: 'block-start-[48px]' },
-          main: { className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'bs-screen flex flex-col bg-white') }
+          content: { children: <Sidebar />, className: 'block-start-appbar' },
+          main: { className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-appbar', 'bs-screen flex flex-col bg-white') }
         }}
       >
         <AppBar />
         <FrameSelector />
-        <FrameContainer frame={} />
+        {frame && <FrameContainer frame={frame} />}
       </PanelSidebarProvider>
     </SpaceContext.Provider>
   );
