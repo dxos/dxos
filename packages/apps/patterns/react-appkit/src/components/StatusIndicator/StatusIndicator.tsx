@@ -4,15 +4,9 @@
 
 import React from 'react';
 
-<<<<<<< HEAD
-import { NetworkMode } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { Tooltip, useTranslation, valenceColorText, mx, Button } from '@dxos/react-components';
-=======
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { Tooltip, useTranslation, valenceColorText, mx, Button } from '@dxos/react-components';
->>>>>>> 508592f22 (Refactor status indicator)
 
 // TODO(burdon): Extend to show heartbeat, network status, etc.
 // TODO(burdon): Merge with ErrorBoundary indicator since overlaps.
