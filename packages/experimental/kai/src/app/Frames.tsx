@@ -7,7 +7,7 @@ import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { mx, getSize } from '@dxos/react-components';
-import { PanelSidebarProvider, PanelSidebarContext } from '@dxos/react-ui';
+import { PanelSidebarContext } from '@dxos/react-ui';
 
 // TODO(burdon): Rename frames.
 import {
@@ -24,9 +24,7 @@ import {
 } from '../containers';
 import { FrameID, FrameDef, useActiveFrames, useSpace } from '../hooks';
 import { ManageSpacePage } from '../pages';
-import { AppBar } from './AppBar';
 import { createSpacePath } from './Routes';
-import { Sidebar } from './Sidebar';
 
 export const frames: FrameDef[] = [
   { id: FrameID.SETTINGS, title: 'Settings', Icon: Gear, Component: ManageSpacePage, system: true },
@@ -133,28 +131,15 @@ export const FrameSelector: FC = () => {
 };
 
 /**
- * View main content.
+ * Viewport for frame.
  */
 export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
   const frames = useActiveFrames();
   const active = frames.find(({ id }) => id === frame);
   const { Component } = active ?? {};
+  if (!Component) {
+    return null;
+  }
 
-  return (
-    <PanelSidebarProvider
-      inlineStart
-      slots={{
-        content: { children: <Sidebar />, className: 'block-start-appbar' },
-        main: {
-          className: mx(frames.length > 1 ? 'pbs-topbars' : 'pbs-appbar', 'bs-full overflow-hidden')
-        }
-      }}
-    >
-      <AppBar />
-      <FrameSelector />
-      <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
-        {Component && <Component />}
-      </div>
-    </PanelSidebarProvider>
-  );
+  return <Component />;
 };

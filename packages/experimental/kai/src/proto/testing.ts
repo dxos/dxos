@@ -13,17 +13,17 @@ import { Contact, Event, Organization, Project, Task } from './gen/schema';
 
 // TODO(burdon): Don't save inside utils.
 
-type MinMax = { min: number; max: number } | number;
+export type MinMax = { min: number; max: number } | number;
 
-type GeneratorOptions = {
+export const range = (range: MinMax) => Array.from({ length: faker.datatype.number(range as any) });
+
+export type GeneratorOptions = {
   organizations: MinMax;
   projects: MinMax;
   tasks: MinMax;
   contacts: MinMax;
   events: MinMax;
 };
-
-const range = (range: MinMax) => Array.from({ length: faker.datatype.number(range as any) });
 
 export class Generator {
   constructor(
