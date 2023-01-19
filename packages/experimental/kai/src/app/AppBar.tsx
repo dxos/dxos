@@ -28,7 +28,7 @@ export const AppBar = () => {
   const toggleSidebar = useTogglePanelSidebar();
 
   return (
-    <div className='flex items-center pl-4 pr-4 fixed inline-start-0 inline-end-0 block-start-0 bs-[48px] bg-orange-400 z-[1]'>
+    <div className='flex items-center pl-4 pr-4 fixed inline-start-0 inline-end-0 block-start-0 bs-appbar bg-orange-400 z-[1]'>
       <div className='flex'>
         <button onClick={toggleSidebar}>
           <List className={getSize(6)} />
