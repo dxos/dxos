@@ -7,8 +7,6 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-
-
 export const JsonView = ({ data }: { data: Object }) => {
   return (
     <div className='flex flex-1'>
