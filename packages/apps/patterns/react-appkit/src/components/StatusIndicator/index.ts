@@ -3,5 +3,3 @@
 //
 
 export * from './StatusIndicator';
-export * from './Indicator';
-export * from './StatusIndicator2';
