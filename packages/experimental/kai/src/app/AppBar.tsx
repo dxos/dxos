@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bug, Globe, SquareHalf, User } from 'phosphor-react';
+import { Bug, Globe, Sidebar, User } from 'phosphor-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -30,12 +30,12 @@ export const AppBar = () => {
   return (
     <div className='flex items-center fixed inline-start-0 inline-end-0 block-start-0 bs-appbar bg-orange-400 z-[1] pli-2'>
       <button onClick={toggleSidebar} className='p-2'>
-        <SquareHalf className={getSize(6)} />
+        <Sidebar className={getSize(6)} />
       </button>
 
       <div className='flex items-center p-2'>
         <Bug className={mx('logo', getSize(8))} />
-        <div className='ml-1'>KAI</div>
+        <div className='ml-1 font-system-semibold'>KAI</div>
       </div>
 
       <div className='flex-1' />

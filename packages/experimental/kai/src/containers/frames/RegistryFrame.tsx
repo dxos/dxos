@@ -42,11 +42,11 @@ const Tile: FC<{
       onClick={() => onSelect(id)}
     >
       <div className='flex flex-1 flex-col'>
-        <h2 className='text-xl font-thin text-black mb-1'>{title}</h2>
-        <div className='text-sm font-thin text-black'>{description}</div>
+        <h2 className='text-xl font-display font-medium text-black mb-1'>{title}</h2>
+        <div className='text-black'>{description}</div>
       </div>
       <div className='flex flex-col justify-center ml-2 text-black'>
-        <Icon weight='thin' className={mx(getSize(16))} />
+        <Icon weight='duotone' className={mx(getSize(16), '[&>*]:stroke-[8]')} />
       </div>
     </div>
   );
