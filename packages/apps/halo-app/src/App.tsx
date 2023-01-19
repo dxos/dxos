@@ -20,7 +20,7 @@ import {
   appkitTranslations,
   StatusIndicator
 } from '@dxos/react-appkit';
-import { ClientProvider, useStatus } from '@dxos/react-client';
+import { ClientProvider, useNetworkStatus } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
@@ -48,11 +48,6 @@ log.config({
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 const serviceProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
-
-const StatusContainer = () => {
-  const status = useStatus();
-  return <StatusIndicator status={status} />;
-};
 
 const Routes = () => {
   useTelemetry({ namespace: 'halo-app' });
@@ -118,7 +113,7 @@ export const App = () => {
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={<GenericFallback />}>
             <HashRouter>
-              <StatusContainer />
+              <StatusIndicator />
               <Routes />
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />

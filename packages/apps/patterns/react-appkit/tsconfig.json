@@ -43,6 +43,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/protocols"
+    },
+    {
       "path": "../../../experimental/react-client-testing"
     },
     {
