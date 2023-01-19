@@ -15,7 +15,7 @@ import { ProjectHierarchy } from './ProjectHierarchy';
 import { ProjectListCard } from './ProjectList';
 import { TaskListCard } from './TaskList';
 
-const dashboardItemStyles = 'flex shrink-0 max-bs-[80vh] lg:max-bs-[40vh]';
+const dashboardItemStyles = 'flex shrink-0 bs-[80vh] lg:bs-[40vh]';
 
 export const Dashboard: FC = () => {
   const { ref } = useResizeDetector();

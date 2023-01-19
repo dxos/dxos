@@ -9,6 +9,10 @@ html, body, #root {
   height: 100%;
 }
 
+body {
+  overflow: hidden;
+}
+
 .logo {
   transform: rotate(300deg);
   transition: transform 750ms ease-in-out;
