@@ -84,7 +84,7 @@ export class NotarizationPlugin implements CredentialProcessor {
         });
         log('success')
       } catch(err) {
-        log.catch(err)
+        log.warn('error notarizing (recoverable)', err)
         notarizeTask.schedule() // retry immediately with next peer
       }
     })
