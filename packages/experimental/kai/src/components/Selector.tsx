@@ -21,7 +21,7 @@ export const Selector: FC<{
   placeholder?: string;
   onSelect?: (id?: string) => void;
   onChange?: (text: string) => void;
-}> = ({ value, options, rows = 5, placeholder, onSelect, onChange }) => {
+}> = ({ value, options, rows = 5, placeholder, onSelect }) => {
   const getText = (id?: string) => {
     if (id === undefined) {
       return '';
@@ -98,7 +98,7 @@ export const Selector: FC<{
 
       {hasOptions && open && (
         <div className='relative z-50'>
-          <div className='absolute flex flex-col overflow-y-scroll w-full bg-gray-100' style={{ maxHeight: rows * 32 }}>
+          <div className='absolute flex flex-col overflow-y-auto w-full bg-gray-100' style={{ maxHeight: rows * 32 }}>
             {options!.map((option) => (
               <div
                 key={option.id}

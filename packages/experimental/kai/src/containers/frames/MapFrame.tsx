@@ -90,7 +90,7 @@ export const MapControl = () => {
       {/* List panel. */}
       {objects.length > 0 && (
         <div className='flex flex-col absolute top-4 bottom-4 right-4 overflow-hidden' style={{ zIndex: 1000 }}>
-          <div className='flex bg-white border rounded-md overflow-y-scroll' style={{ width: 240 }}>
+          <div className='flex bg-white border rounded-md overflow-y-auto' style={{ width: 240 }}>
             <PlaceList<Organization> items={objects} value={selected} onSelect={handleSelect} getter={getter} />
           </div>
         </div>
