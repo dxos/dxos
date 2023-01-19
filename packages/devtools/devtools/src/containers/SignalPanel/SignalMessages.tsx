@@ -10,7 +10,6 @@ import { humanize } from '@dxos/util';
 
 import { ColumnType, MasterTable } from '../../components';
 
-
 const types: ColumnType<SignalResponse>[] = [
   {
     id: 'swarm-event',
