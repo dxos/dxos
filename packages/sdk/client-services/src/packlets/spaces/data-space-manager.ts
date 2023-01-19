@@ -139,6 +139,7 @@ export class DataSpaceManager {
           presence.createExtension({ remotePeerId: session.remotePeerId })
         );
         session.addExtension('dxos.mesh.teleport.objectsync', snapshotManager.objectSync.createExtension());
+        session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
       }
     });
 
