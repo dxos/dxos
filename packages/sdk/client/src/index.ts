@@ -36,8 +36,8 @@ export {
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
   type ClientServicesProvider,
-  IFrameCompatibilityRuntime,
-  IFrameRuntime,
+  IFrameHostRuntime,
+  IFrameProxyRuntime,
   WorkerRuntime,
   WorkerSession
 } from '@dxos/client-services';

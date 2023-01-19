@@ -22,29 +22,34 @@ export const GenericFallback = () => {
   return <Fallback message={t('generic loading label', { ns: 'appkit' })} />;
 };
 
+/**
+ * Fallback component for the ClientProvider from @dxos/react-client.
+ *
+ * Allows the user to resume their client when it has been suspended.
+ */
 export const ClientFallback = ({ client, status }: Partial<ClientContextProps>) => {
   const { t } = useTranslation('appkit');
   const [pending, setPending] = useState(false);
 
-  const reconnect = useCallback(async () => {
+  const resume = useCallback(async () => {
     setPending(true);
-    await client?.compatibilityModeReconnect();
+    await client?.resumeHostServices();
     setPending(false);
   }, [client]);
 
   switch (status) {
-    case Status.CLOSED:
+    case Status.INACTIVE:
       return (
         <div className='flex flex-col gap-4 justify-center items-center h-screen' aria-live='polite'>
           <Heading level={1} className='text-lg font-light text-center'>
-            {t('reconnect heading label')}
+            {t('resume heading label')}
           </Heading>
           {/* TODO(wittjosiah): Add "Why?" link out to documentation. */}
           <Heading level={3} className='text-sm font-light text-center'>
-            {t('reconnect description label')}
+            {t('resume description label')}
           </Heading>
-          <Button disabled={pending} onClick={reconnect}>
-            {t('reconnect label')}
+          <Button disabled={pending} onClick={resume}>
+            {t('resume label')}
           </Button>
         </div>
       );

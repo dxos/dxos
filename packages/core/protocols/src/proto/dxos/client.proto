@@ -20,19 +20,22 @@ package dxos.client;
 //
 
 enum Status {
-  OK = 0;
-  CLOSED = 1;
+  ACTIVE = 0;
+  INACTIVE = 1;
 }
 
 message StatusResponse {
-  optional string message = 1;
   optional Status status = 2;
+
+  /// Deprecated, use `status` instead.
+  optional string message = 1;
 }
 
 service SystemService {
   /// Called at the start of the session. Service should block until it is fully initialized.
   rpc InitSession (google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
+  // TODO(wittjosiah): Stream?
   rpc GetStatus (google.protobuf.Empty) returns (StatusResponse);
   rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
 }

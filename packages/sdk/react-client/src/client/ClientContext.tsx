@@ -101,7 +101,7 @@ export const ClientProvider = ({
         const response = await asyncTimeout(client.getStatus(), 500);
         log('status', response);
         // TODO(wittjosiah): Remove fallback once HALO is live with new status RPC.
-        setStatus(response.status ?? Status.OK);
+        setStatus(response.status ?? Status.ACTIVE);
       } catch (err) {
         log.error('heartbeat stalled');
         setStatus(undefined);
@@ -119,7 +119,7 @@ export const ClientProvider = ({
       log('status', response);
       setClient(client);
       // TODO(wittjosiah): Remove fallback once HALO is live with new status RPC.
-      setStatus(response.status ?? Status.OK);
+      setStatus(response.status ?? Status.ACTIVE);
       printBanner(client);
     };
 
@@ -148,7 +148,7 @@ export const ClientProvider = ({
     };
   }, [clientProvider, configProvider, createServices]);
 
-  if (!client || status !== Status.OK) {
+  if (!client || status !== Status.ACTIVE) {
     return <Fallback client={client} status={status} />;
   }
 

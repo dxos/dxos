@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './iframe-compatibility-runtime';
-export * from './iframe-runtime';
+export * from './iframe-host-runtime';
+export * from './iframe-proxy-runtime';
 export * from './services';
-export * from './vault-resource-manager';
+export * from './vault-resource-lock';
 export * from './worker-runtime';
 export * from './worker-session';

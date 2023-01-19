@@ -68,12 +68,13 @@ export class WorkerRuntime {
    */
   async createSession({ appPort, systemPort }: CreateSessionParams) {
     const session = new WorkerSession({
-      getServices: async () => {
-        const error = await this._ready.wait();
-        if (error !== undefined) {
-          throw error;
+      getService: async (find) => {
+        const service = find(this._clientServices.services);
+        if (!service) {
+          throw new Error('Service not found');
         }
-        return this._clientServices;
+
+        return service;
       },
       appPort,
       systemPort,

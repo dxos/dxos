@@ -142,6 +142,7 @@ export class Client {
       await createDevtoolsRpcServer(this, this._services);
     }
 
+    assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services.SystemService.initSession();
 
     await this._halo.open();
@@ -174,10 +175,18 @@ export class Client {
    * Get system status.
    */
   async getStatus(): Promise<StatusResponse> {
+    assert(this._services.services.SystemService, 'SystemService is not available.');
     return this._services.services?.SystemService.getStatus();
   }
 
-  async compatibilityModeReconnect(): Promise<void> {
+  /**
+   * Reinitializes the client session with the remote service host.
+   *
+   * This is useful when connecting to a host running behind a resource lock
+   * (e.g., HALO when SharedWorker is unavailable).
+   */
+  async resumeHostServices(): Promise<void> {
+    assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services.SystemService.initSession();
   }
 
@@ -190,6 +199,7 @@ export class Client {
       throw new ApiError('Client not open.');
     }
 
+    assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services?.SystemService.reset();
     await this.destroy();
     this._halo.profileChanged.emit();

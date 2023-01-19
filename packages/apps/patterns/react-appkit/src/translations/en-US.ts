@@ -89,7 +89,7 @@ export const appkit = {
   'empty spaces label': 'No spaces here',
   'empty spaces message': 'Why not try creating or joining one?',
   'current device label': 'This device',
-  'reconnect heading label': 'Resume session',
-  'reconnect description label': 'Only one tab can be active at a time',
-  'reconnect label': 'Reconnect'
+  'resume heading label': 'Resume session',
+  'resume description label': 'Only one tab can be active at a time',
+  'resume label': 'Resume'
 };

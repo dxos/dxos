@@ -74,7 +74,7 @@ describe('Client hook', function () {
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.OK);
+      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
     });
     expect(result.current).toEqual(client);
   });
@@ -101,7 +101,7 @@ describe('ClientProvider', () => {
     );
 
     await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.OK);
+      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
     });
 
     expect(() => screen.getByText('Hello World')).not.toThrow();
@@ -115,7 +115,7 @@ describe('ClientProvider', () => {
     );
 
     await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.OK);
+      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
     });
 
     expect(() => screen.getByText('Client is defined')).not.toThrow();

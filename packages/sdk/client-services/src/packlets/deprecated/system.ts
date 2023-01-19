@@ -3,47 +3,46 @@
 //
 
 import { Config } from '@dxos/config';
-import { Status, SystemService } from '@dxos/protocols/proto/dxos/client';
+import { StatusResponse, SystemService } from '@dxos/protocols/proto/dxos/client';
+import { MaybePromise } from '@dxos/util';
 
-import { ClientServicesHost } from '../services';
-import { VaultResourceManager } from '../vault';
+export type SystemServiceOptions = {
+  config: Config;
+  onInit: () => MaybePromise<void>;
+  onStatus: () => MaybePromise<StatusResponse>;
+  onReset: () => MaybePromise<void>;
+};
 
 /**
  * @deprecated
  */
 export class SystemServiceImpl implements SystemService {
-  private readonly _resourceManager?: VaultResourceManager;
+  private readonly _config: Config;
+  private readonly _onInit: () => MaybePromise<void>;
+  private readonly _onStatus: () => MaybePromise<StatusResponse>;
+  private readonly _onReset: () => MaybePromise<void>;
 
-  constructor(private readonly _config: Config, private readonly _serviceHost: ClientServicesHost) {
-    if (this._serviceHost.compatibilityMode) {
-      this._resourceManager = new VaultResourceManager(this._serviceHost);
-    }
+  constructor({ config, onInit, onStatus, onReset }: SystemServiceOptions) {
+    this._config = config;
+    this._onInit = onInit;
+    this._onStatus = onStatus;
+    this._onReset = onReset;
   }
 
   async initSession() {
-    if (this._serviceHost.compatibilityMode) {
-      await this._resourceManager?.acquire();
-    }
+    await this._onInit();
   }
 
-  async getConfig(_request: void) {
+  async getConfig() {
     return this._config.values;
   }
 
   // TODO(burdon): Connect to iframe RPC heartbeat for network status?
-  async getStatus(_request: void) {
-    if (!this._serviceHost.isOpen) {
-      return {
-        status: Status.CLOSED
-      };
-    }
-
-    return {
-      status: Status.OK
-    };
+  async getStatus() {
+    return await this._onStatus();
   }
 
-  async reset(_request: void) {
-    await this._serviceHost.reset();
+  async reset() {
+    await this._onReset();
   }
 }

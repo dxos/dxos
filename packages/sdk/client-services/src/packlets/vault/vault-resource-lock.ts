@@ -4,20 +4,29 @@
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-
-import { ClientServicesHost } from '../services';
-
-const LOCK_KEY = 'DXOS_COMPATIBILITY_LOCK';
+import { MaybePromise } from '@dxos/util';
 
 enum Message {
   ACQUIRING = 'acquiring'
 }
 
-export class VaultResourceManager {
-  private readonly _broadcastChannel = new BroadcastChannel('vault-resource-manager');
+export type VaultResourceLockOptions = {
+  lockKey: string;
+  onAcquire?: () => MaybePromise<void>;
+  onRelease?: () => MaybePromise<void>;
+};
+
+export class VaultResourceLock {
+  private readonly _broadcastChannel = new BroadcastChannel('vault-resource-lock');
+  private readonly _lockKey: string;
+  private readonly _onAcquire: VaultResourceLockOptions['onAcquire'];
+  private readonly _onRelease: VaultResourceLockOptions['onRelease'];
   private _releaseTrigger = new Trigger();
 
-  constructor(private readonly _serviceHost: ClientServicesHost) {
+  constructor({ lockKey, onAcquire, onRelease }: VaultResourceLockOptions) {
+    this._lockKey = lockKey;
+    this._onAcquire = onAcquire;
+    this._onRelease = onRelease;
     this._broadcastChannel.onmessage = this._onMessage.bind(this);
   }
 
@@ -46,19 +55,21 @@ export class VaultResourceManager {
   private async _requestLock(steal = false) {
     log('requesting lock...', { steal });
     const acquired = new Trigger();
+
     void navigator.locks
-      .request(LOCK_KEY, { steal }, async () => {
-        await this._serviceHost.open();
+      .request(this._lockKey, { steal }, async () => {
+        await this._onAcquire?.();
         acquired.wake();
         this._releaseTrigger = new Trigger();
         await this._releaseTrigger.wait();
         log('releasing lock...');
-        await this._serviceHost.close();
+        await this._onRelease?.();
         log('released lock');
       })
       .catch(async () => {
-        await this._serviceHost.close();
+        await this._onRelease?.();
       });
+
     await acquired.wait();
     log('recieved lock', { steal });
   }
