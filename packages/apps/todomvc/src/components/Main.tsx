@@ -6,6 +6,7 @@ import React, { ChangeEvent, KeyboardEvent, useCallback, useRef, useState } from
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
+import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
 import { ACTIVE_TODOS, ALL_TODOS, COMPLETED_TODOS } from '../constants';
@@ -33,16 +34,16 @@ export const Main = withReactor(() => {
 
       const title = inputRef.current?.value.trim();
       if (title) {
-        void space.experimental.db.save(new Todo({ title }));
+        list.todos.push(new Todo({ title }));
         inputRef.current!.value = '';
       }
     },
-    [inputRef, space]
+    [inputRef, list]
   );
 
-  const handleToggle = useCallback((todo: Todo) => {
+  const handleToggle = (todo: Todo) => {
     todo.completed = !todo.completed;
-  }, []);
+  };
 
   const handleDestroy = useCallback(
     (todo: Todo) => {
@@ -117,12 +118,13 @@ export const Main = withReactor(() => {
           <ul className='todo-list'>
             {todos.map((todo) => (
               <TodoItem
-                key={todo._id}
-                todo={todo}
+                key={todo[id]}
+                title={todo.title}
+                completed={todo.completed}
                 onToggle={() => handleToggle(todo)}
                 onDestroy={() => handleDestroy(todo)}
-                onEdit={() => setEditing(todo._id)}
-                editing={editing === todo._id}
+                onEdit={() => setEditing(todo[id])}
+                editing={editing === todo[id]}
                 onSave={(val) => handleSave(todo, val)}
                 onCancel={() => setEditing(undefined)}
               />
