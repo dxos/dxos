@@ -168,7 +168,7 @@ export const SignalMessages = () => {
         </div>
       </div>
       <div className='flex flex-row'>
-        <div className='flex w-2/3 h-full'>
+        <div className='flex w-1/2 h-full'>
           <Table
             columns={type.columns as any}
             data={getFilteredData() as any}
@@ -176,7 +176,7 @@ export const SignalMessages = () => {
             onSelect={selectRow}
           />
         </div>
-        <div className='flex w-1/3'>
+        <div className='flex w-1/2'>
           <JsonTreeView data={getFilteredData().at(selected)} />
         </div>
       </div>
