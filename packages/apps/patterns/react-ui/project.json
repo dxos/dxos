@@ -19,7 +19,10 @@
         "entryPoints": [
           "packages/apps/patterns/react-ui/src/index.ts"
         ],
-        "outputPath": "packages/apps/patterns/react-ui/dist/lib"
+        "outputPath": "packages/apps/patterns/react-ui/dist/lib",
+        "platforms": [
+          "browser"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
