@@ -5,27 +5,23 @@
 import React, { ChangeEvent, KeyboardEvent, useCallback, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
-import { Invitation, InvitationEncoder, Item, ObjectModel, Space } from '@dxos/client';
-import { useSelection } from '@dxos/react-client';
+import { Invitation, InvitationEncoder, Space } from '@dxos/client';
+import { useQuery } from '@dxos/react-client';
 
-import { ACTIVE_TODOS, ALL_TODOS, COMPLETED_TODOS, Todo, TODO_TYPE } from '../model';
+import { ACTIVE_TODOS, ALL_TODOS, COMPLETED_TODOS } from '../constants';
+import { Todo, TodoList } from '../proto';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 
 export const Main = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { space, item } = useOutletContext<{
-    space: Space;
-    item: Item<ObjectModel>;
-  }>();
-  const todoItems = useSelection<Item<ObjectModel>>(item.select().children().filter({ type: TODO_TYPE })) ?? [];
-  const todos = todoItems.map((item) => ({
-    id: item.id,
-    title: item.model.get('title'),
-    completed: item.model.get('completed')
-  }));
+  const { space } = useOutletContext<{ space: Space }>();
   const { state } = useParams();
-  const nowShowing = state === 'active' ? ACTIVE_TODOS : state === 'completed' ? COMPLETED_TODOS : ALL_TODOS;
+  const completed = state === ACTIVE_TODOS ? false : state === COMPLETED_TODOS ? true : undefined;
+  // TODO(wittjosiah): Support multiple lists in a single space.
+  const [list] = useQuery(space, TodoList.filter());
+  console.log({ spaceKey: space.key.toHex(), list });
+  const todos = list?.todos?.filter((todo) => completed === todo.completed) ?? [];
   const [editing, setEditing] = useState<string>();
 
   const handleNewTodoKeyDown = useCallback(
@@ -36,16 +32,9 @@ export const Main = () => {
 
       event.preventDefault();
 
-      const val = inputRef.current?.value.trim();
-      if (val) {
-        void space.database.createItem({
-          model: ObjectModel,
-          type: TODO_TYPE,
-          parent: item.id,
-          props: {
-            title: val
-          }
-        });
+      const title = inputRef.current?.value.trim();
+      if (title) {
+        void space.experimental.db.save(new Todo({ title }));
         inputRef.current!.value = '';
       }
     },
@@ -54,28 +43,24 @@ export const Main = () => {
 
   const handleToggle = useCallback(
     (todo: Todo) => {
-      const item = todoItems.find((item) => item.id === todo.id);
-      void item?.model.set('completed', !todo.completed);
+      todo.completed = !todo.completed;
     },
-    [todoItems]
+    [todos]
   );
 
   const handleDestroy = useCallback(
     (todo: Todo) => {
-      const item = todoItems.find((item) => item.id === todo.id);
-      // TODO(wittjosiah): Item deletion is not working.
-      void item?.delete();
+      void space.experimental.db.delete(todo);
     },
-    [todoItems]
+    [space, todos]
   );
 
   const handleSave = useCallback(
     (todo: Todo, val: string) => {
-      const item = todoItems.find((item) => item.id === todo.id);
-      void item?.model.set('title', val);
+      todo.title = val;
       setEditing(undefined);
     },
-    [todoItems]
+    [todos]
   );
 
   const handleShare = useCallback(async () => {
@@ -87,31 +72,20 @@ export const Main = () => {
   const handleToggleAll = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const checked = event.target.checked;
-      todoItems.forEach((item) => {
-        void item.model.set('completed', checked);
+      todos.forEach((item) => {
+        item.completed = checked;
       });
     },
-    [todoItems]
+    [todos]
   );
 
   const handleClearCompleted = useCallback(() => {
-    todoItems
-      .filter((item) => item.model.get('completed'))
+    todos
+      .filter((item) => item.completed)
       .forEach((item) => {
-        void item.delete();
+        void space.experimental.db.delete(item);
       });
-  }, [todoItems]);
-
-  const shownTodos = todos.filter((todo) => {
-    switch (nowShowing) {
-      case ACTIVE_TODOS:
-        return !todo.completed;
-      case COMPLETED_TODOS:
-        return todo.completed;
-      default:
-        return true;
-    }
-  });
+  }, [space, todos]);
 
   const activeTodoCount = todos.reduce((acc, todo) => {
     return todo.completed ? acc : acc + 1;
@@ -145,14 +119,14 @@ export const Main = () => {
             Share
           </button>
           <ul className='todo-list'>
-            {shownTodos.map((todo) => (
+            {todos.map((todo) => (
               <TodoItem
-                key={todo.id}
+                key={todo._id}
                 todo={todo}
                 onToggle={() => handleToggle(todo)}
                 onDestroy={() => handleDestroy(todo)}
-                onEdit={() => setEditing(todo.id)}
-                editing={editing === todo.id}
+                onEdit={() => setEditing(todo._id)}
+                editing={editing === todo._id}
                 onSave={(val) => handleSave(todo, val)}
                 onCancel={() => setEditing(undefined)}
               />
@@ -164,7 +138,7 @@ export const Main = () => {
         <TodoFooter
           count={activeTodoCount}
           completedCount={completedCount}
-          nowShowing={nowShowing}
+          nowShowing={state ?? ALL_TODOS}
           generatePath={(state = '') => generatePath('/:space/:state', { space: space.key.toHex(), state })}
           onClearCompleted={handleClearCompleted}
         />

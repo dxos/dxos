@@ -6,7 +6,7 @@ import cx from 'classnames';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS } from '../model';
+import { ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS } from '../constants';
 
 const pluralize = (count: number, word: string) => {
   return count === 1 ? word : word + 's';

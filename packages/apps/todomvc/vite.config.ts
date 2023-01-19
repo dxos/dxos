@@ -30,6 +30,8 @@ export default defineConfig({
       '@dxos/client',
       '@dxos/config',
       '@dxos/log',
+      '@dxos/protocols',
+      '@dxos/protocols/proto/dxos/echo/model/object',
       '@dxos/react-client',
       '@dxos/util'
     ]

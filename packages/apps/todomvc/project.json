@@ -37,6 +37,15 @@
         "{options.outputFile}"
       ]
     },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/apps/todomvc/src/proto/gen"
+      ]
+    },
     "serve": {
       "executor": "@nrwl/vite:dev-server",
       "options": {

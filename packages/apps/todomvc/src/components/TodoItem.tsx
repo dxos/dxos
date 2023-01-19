@@ -5,16 +5,16 @@
 import cx from 'classnames';
 import React, { FormEvent, KeyboardEvent, useCallback, useState } from 'react';
 
-import { Todo } from '../model';
+import { Todo } from '../proto';
 
 export interface TodoItemProps {
   key: string;
   todo: Todo;
   editing?: boolean;
-  onSave: (val: any) => void;
+  onSave: (val: string) => void;
   onDestroy: () => void;
   onEdit: () => void;
-  onCancel: (event: any) => void;
+  onCancel: (event: KeyboardEvent) => void;
   onToggle: () => void;
 }
 
