@@ -2,16 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, {
-  ReactNode,
-  useState,
-  Context,
-  createContext,
-  useContext,
-  useEffect,
-  FunctionComponent,
-  useReducer
-} from 'react';
+import React, { ReactNode, useState, Context, createContext, useContext, useEffect, FunctionComponent } from 'react';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, Status } from '@dxos/client';
@@ -92,21 +83,8 @@ export const ClientProvider = ({
   fallback: Fallback = () => null,
   onInitialize
 }: ClientProviderProps) => {
-  const [{ client, status }, dispatch] = useReducer(
-    (state: Partial<ClientContextProps>, action: Partial<ClientContextProps>) => {
-      if (action.client) {
-        state.client = action.client;
-      }
-
-      if (action.status) {
-        state.status = action.status;
-      }
-
-      return state;
-    },
-    clientProvider instanceof Client ? { client: clientProvider, status: Status.OK } : {}
-  );
-
+  const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
+  const [status, setStatus] = useState<Status>();
   const [error, setError] = useState();
 
   if (error) {
@@ -120,12 +98,13 @@ export const ClientProvider = ({
 
     const interval = setInterval(async () => {
       try {
-        const { status } = await asyncTimeout(client.getStatus(), 500);
-        log('status', { status });
-        dispatch({ status });
+        const response = await asyncTimeout(client.getStatus(), 500);
+        log('status', response);
+        // TODO(wittjosiah): Remove fallback once HALO is live with new status RPC.
+        setStatus(response.status ?? Status.OK);
       } catch (err) {
         log.error('heartbeat stalled');
-        dispatch({ status: undefined });
+        setStatus(undefined);
       }
     }, 1_000);
 
@@ -135,9 +114,12 @@ export const ClientProvider = ({
   useEffect(() => {
     const done = async (client: Client) => {
       log('client ready', { client });
-      const { status } = await client.getStatus();
       await onInitialize?.(client);
-      dispatch({ client, status });
+      const response = await client.getStatus();
+      log('status', response);
+      setClient(client);
+      // TODO(wittjosiah): Remove fallback once HALO is live with new status RPC.
+      setStatus(response.status ?? Status.OK);
       printBanner(client);
     };
 

@@ -25,7 +25,8 @@ enum Status {
 }
 
 message StatusResponse {
-  Status status = 1;
+  optional string message = 1;
+  optional Status status = 2;
 }
 
 service SystemService {
