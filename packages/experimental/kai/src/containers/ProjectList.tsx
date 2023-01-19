@@ -41,8 +41,8 @@ export const ProjectList: FC<{ header?: boolean }> = (_props) => {
   const projects = useQuery(space, Project.filter());
 
   return (
-    <div className='flex flex-1 justify-center overflow-auto bg-gray-100'>
-      <div className='flex flex-col overflow-y-auto is-full md:is-[600px] bg-white'>
+    <div className='is-full flex-1 bg-gray-100'>
+      <div className='is-full md:max-is-[600px] mli-auto bg-white'>
         {projects.map((project) => (
           <div key={project[id]}>
             <ProjectCard project={project} />
