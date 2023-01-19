@@ -48,10 +48,10 @@ export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
   return (
     <div className='flex flex-row w-full h-screen bg-gray overflow-hidden'>
       <div className={mx('flex flex-col w-1/5 h-screen bg-white', 'overflow-auto scrollbar-thin', 'mr-2')}>
-        <div className='flex mt-4 ml-2'>
+        <div className='flex mt-4'>
           <FolderHierarchy
             items={sections}
-            textStyle={'text-black text-xl'}
+            textStyle={'text-black text-lg'}
             onSelect={handleSelect}
             selected={selected?.id}
             expanded={sections.map((section) => section.id)}
