@@ -15,6 +15,7 @@ filter:
   - data:debug
   - identity:debug
   - sync:debug
+  - notarization:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug

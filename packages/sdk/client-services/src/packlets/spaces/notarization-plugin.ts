@@ -1,4 +1,4 @@
-import { RpcExtension } from "@dxos/teleport";
+import { ExtensionContext, RpcExtension } from "@dxos/teleport";
 import { NotarizationService, NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization'
 import { schema } from "@dxos/protocols";
 import { Credential } from "@dxos/protocols/proto/dxos/halo/credentials";
@@ -39,16 +39,19 @@ export class NotarizationPlugin implements CredentialProcessor {
    * Request credentials to be notarized.
    */
   async notarize(credentials: Credential[]) {
+    log('notarize', { credentials })
     assert(credentials.every(credential => credential.id), 'Credentials must have an id');
 
     const errors = new Trigger();
     const ctx = this._ctx.derive({
       onError: err => {
+        log.warn('Notarization error', { err })
         ctx.dispose()
         errors.throw(err);
       }
     });
     scheduleTask(ctx, () => {
+      log.warn('Notarization timeout')
       ctx.dispose()
       errors.throw(new TimeoutError(NOTARIZE_TIMEOUT, 'Notarization timed out'));
     }, NOTARIZE_TIMEOUT);
@@ -61,21 +64,25 @@ export class NotarizationPlugin implements CredentialProcessor {
     const notarizeTask = new DeferredTask(ctx, async () => {
       try {
         if(this._extensions.size === 0) {
+          log.warn('No peers to notarize with')
           return; // No peers to try.
         }
 
         // Pick a peer that we haven't tried yet.
         const peer = [...this._extensions].find(peer => !peersTried.has(peer));
         if(!peer) {
+          log.warn('Exhausted all peers to notarize with', { retryIn: RETRY_TIMEOUT })
           peersTried.clear();
           scheduleTask(ctx, () => notarizeTask.schedule(), RETRY_TIMEOUT) // retry with all peers again
           return;
         }
 
         peersTried.add(peer);
+        log('try notarizing', { peer: peer.localPeerId, credentialId: credentials.map(credential => credential.id) })
         await peer.rpc.NotarizationService.notarize({
           credentials: credentials.filter(credential => !this._processedCredentials.has(credential.id!))
         });
+        log('success')
       } catch(err) {
         log.catch(err)
         notarizeTask.schedule() // retry immediately with next peer
@@ -87,10 +94,11 @@ export class NotarizationPlugin implements CredentialProcessor {
     
     try {
       // TODO(dmaretskyi): Abort (context) & timeout.
-      return await Promise.race([
+      await Promise.race([
         allNotarized,
         errors.wait()
       ]);
+      log('done')
     } finally {
       await ctx.dispose()
     }
@@ -136,18 +144,20 @@ export class NotarizationPlugin implements CredentialProcessor {
     }
   }
 
-  async getExtension() {
+  createExtension() {
     const extension = new NotarizationTeleportExtension({
       onOpen: async () => {
+        log('extension opened', { peer: extension.localPeerId })
         this._extensions.add(extension);
         this._extensionOpened.emit();
       },
       onClose: async () => {
+        log('extension closed', { peer: extension.localPeerId })
         this._extensions.delete(extension);
       },
       onNotarize: this._onNotarize.bind(this)
     });
-    return this;
+    return extension;
   }
 }
 
@@ -181,6 +191,15 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
     }
   }
 
+  override async onOpen(ctx: ExtensionContext) {
+    await super.onOpen(ctx);
+    await this._params.onOpen();
+  }
+
+  override async onClose(err?: Error | undefined) {
+    await this._params.onClose();
+    await super.onClose(err);
+  }
 }
 
 type Services = {

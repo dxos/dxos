@@ -14,7 +14,7 @@ export const SECRET_KEY_LENGTH = 64;
 /**
  * All representations that can be converted to a PublicKey.
  */
-export type PublicKeyLike = PublicKey | Buffer | Uint8Array | string;
+export type PublicKeyLike = PublicKey | Buffer | Uint8Array | ArrayBuffer | string;
 
 /**
  * The purpose of this class is to assure consistent use of keys throughout the project.
@@ -35,6 +35,8 @@ export class PublicKey {
       return new PublicKey(new Uint8Array(source));
     } else if (source instanceof Uint8Array) {
       return new PublicKey(source);
+    } else if(source instanceof ArrayBuffer) {
+      return new PublicKey(new Uint8Array(source));
     } else if (typeof source === 'string') {
       return PublicKey.fromHex(source);
     } else if ((<any>source).asUint8Array) {
@@ -128,7 +130,7 @@ export class PublicKey {
    * @return Hex string representation of key.
    * @deprecated All keys should be represented as instances of PublicKey.
    */
-  static stringify(key: Buffer | Uint8Array): string {
+  static stringify(key: Buffer | Uint8Array | ArrayBuffer): string {
     if (key instanceof PublicKey) {
       key = key.asBuffer();
     } else if (key instanceof Uint8Array) {
