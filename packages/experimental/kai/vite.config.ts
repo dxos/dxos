@@ -13,11 +13,6 @@ import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 
-import packageJson from './package.json';
-
-const env = (value?: string) => (value ? `"${value}"` : undefined);
-const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${packageJson.version}` : undefined;
-
 /**
  * https://vitejs.dev/config
  */
@@ -33,17 +28,6 @@ export default defineConfig({
             cert: './cert.pem'
           }
         : false
-  },
-
-  define: {
-    'process.env.KAI_DEBUG': env(process.env.KAI_DEBUG),
-    'process.env.KAI_DEV': env(process.env.KAI_DEV),
-    'process.env.KAI_PWA': env(process.env.KAI_PWA),
-    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.DX_RELEASE': env(DX_RELEASE),
-    'process.env.DX_VAULT': env(process.env.DX_VAULT),
-    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
-    'process.env.LOG_FILTER': env(process.env.LOG_FILTER)
   },
 
   // TODO(burdon): Document.
@@ -84,7 +68,7 @@ export default defineConfig({
 
   plugins: [
     // TODO(burdon): Document.
-    ConfigPlugin(),
+    ConfigPlugin({ env: ['DX_VAULT'] }),
 
     // TODO(burdon): Document.
     ThemePlugin({

@@ -2,6 +2,7 @@
   "name": "@dxos/kai",
   "version": "0.1.23",
   "private": true,
+  "type": "module",
   "description": "Kai Demo.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

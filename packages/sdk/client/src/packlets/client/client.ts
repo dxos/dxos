@@ -9,14 +9,14 @@ import { synchronized } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
-import { ApiError, InvalidConfigError } from '@dxos/errors';
+import { ApiError } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { StatusResponse } from '@dxos/protocols/proto/dxos/client';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
-import { EXPECTED_CONFIG_VERSION } from './config';
 import { SpaceSerializer } from './serializer';
 import { fromIFrame } from './utils';
 
@@ -68,11 +68,10 @@ export class Client {
     this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
     this._mesh = new MeshProxy(this._services);
 
-    // TODO(burdon): Reconcile with Config.sanitizer.
-    if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigError(
-        'Invalid config version', { current: this._config.values.version, expected: EXPECTED_CONFIG_VERSION }
-      );
+    const filter = this.config.get('runtime.client.log.filter');
+    if (filter) {
+      const prefix = this.config.get('runtime.client.log.prefix');
+      log.config({ filter, prefix });
     }
   }
 

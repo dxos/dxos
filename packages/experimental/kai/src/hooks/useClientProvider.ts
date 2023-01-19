@@ -3,16 +3,16 @@
 //
 
 import { Client, fromHost, fromIFrame } from '@dxos/client';
-import { Config, Defaults, Dynamics } from '@dxos/config';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 
 import { Generator, schema } from '../proto';
 
 export const useClientProvider = () => {
   return async (dev: boolean) => {
-    const config = new Config(await Dynamics(), Defaults());
+    const config = new Config(await Dynamics(), await Envs(), Defaults());
     const client = new Client({
       config,
-      services: process.env.DX_VAULT === 'true' ? fromIFrame(config) : fromHost(config)
+      services: config.get('runtime.app.env.DX_VAULT') === 'true' ? fromIFrame(config) : fromHost(config)
     });
 
     client.echo.dbRouter.setSchema(schema);

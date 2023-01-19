@@ -18,9 +18,9 @@ import '../style.css';
 const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 
 const initialState: AppState = {
-  dev: bool(process.env.KAI_DEV),
-  debug: bool(process.env.KAI_DEBUG),
-  pwa: bool(process.env.KAI_PWA)
+  dev: bool(import.meta.env.VITE_DEV),
+  debug: bool(import.meta.env.VITE_DEBUG),
+  pwa: bool(import.meta.env.VITE_PWA)
 };
 
 /**
