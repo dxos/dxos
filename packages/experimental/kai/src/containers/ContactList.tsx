@@ -29,7 +29,7 @@ export const ContactsListCard: FC = () => {
   );
 
   return (
-    <Card fade scrollbar header={<Header />}>
+    <Card scrollbar header={<Header />}>
       <ContactList />
     </Card>
   );

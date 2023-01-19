@@ -12,18 +12,6 @@
   transform: rotate(-300deg);
 }
 
-/** TODO(burdon): Currently bleeds outside of content to fade. */
-.fade:after {
-  content: '';
-  display: block;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 62px;
-  background-image: linear-gradient(to bottom, rgba(255,255,255,0), white);
-  pointer-events: none;
-}
-
 /*
  * TODO(burdon): Custom RBC style
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/guides-custom-styling--page

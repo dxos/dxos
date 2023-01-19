@@ -30,13 +30,13 @@ export const ProjectListCard: FC = () => {
   );
 
   return (
-    <Card fade scrollbar header={<Header />}>
+    <Card scrollbar header={<Header />}>
       <ProjectList />
     </Card>
   );
 };
 
-export const ProjectList: FC<{ header?: boolean }> = ({ header = false }) => {
+export const ProjectList: FC<{ header?: boolean }> = (_props) => {
   const { space } = useSpace();
   const projects = useQuery(space, Project.filter());
 
