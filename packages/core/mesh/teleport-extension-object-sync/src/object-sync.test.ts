@@ -9,7 +9,7 @@ import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { ObjectSync } from './object-sync';
-import { TestConnection } from '@dxos/teleport/src/testing';
+import { TestConnection } from '@dxos/teleport/testing';
 
 class TestAgent extends TestPeer {
   constructor(
