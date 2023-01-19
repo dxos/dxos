@@ -13,6 +13,8 @@ import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
+import { NotarizationPlugin } from './notarization-plugin';
+import { CredentialConsumer } from '@dxos/credentials';
 
 const AUTH_TIMEOUT = 30000;
 
@@ -33,6 +35,7 @@ export class DataSpace implements ISpace {
   private readonly _inner: Space;
   private readonly _presence: Presence;
   public readonly authVerifier: TrustedKeySetAuthVerifier;
+  private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
 
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
@@ -51,6 +54,7 @@ export class DataSpace implements ISpace {
       update: this._inner.stateUpdate,
       authTimeout: AUTH_TIMEOUT
     });
+    this._notarizationPluginConsumer = this._inner.spaceState.registerProcessor(new NotarizationPlugin());
   }
 
   get key() {
@@ -82,15 +86,28 @@ export class DataSpace implements ISpace {
     return this._presence;
   }
 
+  get notarizationPlugin() {
+    return this._notarizationPluginConsumer.processor;
+  }
+
   async open() {
+    await this.notarizationPlugin.open();
+    await this._notarizationPluginConsumer.open()
+
     await this._inner.open();
+
     await this._inner.initDataPipeline(this._dataPipelineController);
   }
 
   async close() {
     await this._ctx.dispose();
+
     await this.authVerifier.close();
     await this._inner.close();
+
+    await this._notarizationPluginConsumer.close();
+    await this.notarizationPlugin.close();
+
     await this._presence.destroy();
   }
 }

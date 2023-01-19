@@ -8,13 +8,14 @@ filter:
   - info
   # - debug
   - space-invitations-handler.ts:debug
-  - entity:debug
-  - database:debug
-  - service-host:debug
-  - service:debug
-  - data:debug
-  - identity:debug
-  - sync:debug
+  # - entity:debug
+  # - database:debug
+  # - service-host:debug
+  # - service:debug
+  # - data:debug
+  # - identity:debug
+  # - sync:debug
+  - auth:debug
   - notarization:debug
   # - test:debug
   # - debug
@@ -24,7 +25,7 @@ filter:
   # - connection:debug
   # - test:debug
   - auth:debug
-  - space:debug
+  # - space:debug
   # - client-services:debug
   # - framer:debug
   # - feed-wrapper:debug
