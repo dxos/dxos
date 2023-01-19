@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import base from 'base-x';
 import { Configuration, OpenAIApi } from 'openai';
 
 import { EchoDatabase } from '@dxos/echo-schema';
@@ -10,13 +9,11 @@ import { EchoDatabase } from '@dxos/echo-schema';
 import { Organization } from '../proto';
 import { Bot } from './bot';
 
-const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
-
 const config = {
-  organization: 'org-mZTRiNMMnvZWUqWxPlirjw5l',
-  // Dangerously unsafe obfuscation of API KEY.
+  organization: process.env.OPENAI_ORG_ID,
+  // TODO(burdon): Get API key from runtime config.
   // https://beta.openai.com/account/api-keys
-  apiKey: base62.decode('3U7sbXYdzwNsY8TGXWVeTPoxBcONui3sclUrrTnAZ5F23YpoM0nSFrYxaHDZqTdI84f5M').toString()
+  apiKey: process.env.OPENAI_API_KEY
 };
 
 /**
