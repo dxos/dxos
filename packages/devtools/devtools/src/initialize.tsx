@@ -23,11 +23,15 @@ export const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices
     clientReady.on((value) => setValue(value));
   }, []);
 
-  return value ? (
-    <ClientContext.Provider value={value}>
-      <PanelsContainer sections={sections} />
-    </ClientContext.Provider>
-  ) : null;
+  return (
+    <ErrorBoundary>
+      {value && (
+        <ClientContext.Provider value={value}>
+          <PanelsContainer sections={sections} />
+        </ClientContext.Provider>
+      )}
+    </ErrorBoundary>
+  );
 };
 
 export const initializeDevtools = (clientReady: Event<ClientAndServices>) => {
