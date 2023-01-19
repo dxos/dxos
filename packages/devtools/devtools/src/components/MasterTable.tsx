@@ -8,15 +8,21 @@ import { Column } from 'react-table';
 import { Searchbar, Selector, SelectorOption, Table } from '@dxos/kai';
 import { JsonTreeView } from '@dxos/react-components-deprecated';
 
+const defaultSubFilter =
+  (match = '') =>
+  (object: Object) => {
+    return JSON.stringify(object).includes(match);
+  };
+
 export type ColumnType<T extends {}> = SelectorOption & {
   filter: (object: T) => boolean;
-  subFilter: (match?: string) => (object: T) => boolean;
+  subFilter?: (match?: string) => (object: T) => boolean;
   columns: Column<T>[];
 };
 
-export type MasterTableProps<T extends {}> = { types: ColumnType<T>[]; data: T[] };
+export type MasterTableProps<T extends {}> = { types: ColumnType<T>[]; data: T[]; onSelectType?: (id: string) => void };
 
-export const MasterTable = ({ types, data }: MasterTableProps<any>) => {
+export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>) => {
   const [text, setText] = useState<string>('');
   const handleSearch = (text: string) => {
     setText(text);
@@ -27,6 +33,7 @@ export const MasterTable = ({ types, data }: MasterTableProps<any>) => {
     if (id) {
       setType(types.find((type) => type.id === id)!);
       setSelected(0);
+      onSelectType?.(id);
     }
   };
 
@@ -35,7 +42,8 @@ export const MasterTable = ({ types, data }: MasterTableProps<any>) => {
     setSelected(index);
   };
 
-  const getFilteredData = () => data.filter(type.filter).filter(type.subFilter(text));
+  const getFilteredData = () =>
+    data.filter(type.filter).filter(type.subFilter ? type.subFilter(text) : defaultSubFilter(text));
 
   return (
     <div className='flex flex-col flex-1'>

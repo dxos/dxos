@@ -10,11 +10,6 @@ import { humanize } from '@dxos/util';
 
 import { ColumnType, MasterTable } from '../../components';
 
-const matchJsonString =
-  (match = '') =>
-  (event: SignalResponse) => {
-    return JSON.stringify(event).includes(match);
-  };
 
 const types: ColumnType<SignalResponse>[] = [
   {
@@ -23,7 +18,6 @@ const types: ColumnType<SignalResponse>[] = [
     filter: (response: SignalResponse) => {
       return !!response.swarmEvent;
     },
-    subFilter: matchJsonString,
     columns: [
       {
         Header: 'Received At',
@@ -57,7 +51,6 @@ const types: ColumnType<SignalResponse>[] = [
     filter: (response: SignalResponse) => {
       return !!response.message;
     },
-    subFilter: matchJsonString,
     columns: [
       {
         Header: 'Received At',
@@ -86,7 +79,6 @@ const types: ColumnType<SignalResponse>[] = [
     filter: (response: SignalResponse) => {
       return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
-    subFilter: matchJsonString,
     columns: [
       {
         Header: 'Received At',
