@@ -1,0 +1,28 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "dxos/keys.proto";
+import "dxos/halo/credentials.proto";
+
+package dxos.mesh.teleport.notarization;
+
+message NotarizeRequest {
+  /**
+   * Write specified credentials to the control feed of the space.
+   * Credentials with ids that are already present in the control pipeline must be skipped.
+   */
+  repeated dxos.halo.credentials.Credential credentials = 1;
+}
+
+/**
+ * Allows peers to request their credentials be written to the control feed.
+ * Useful for new devices bootstraping their feeds into the space.
+ */
+service NotarizationService {
+  rpc Notarize(NotarizeRequest) returns (google.protobuf.Empty);
+}
+

@@ -18,7 +18,7 @@ describe('Scope capture', function () {
       }
 
       run() {
-        log('run');
+        log.info('run');
       }
     }
 
