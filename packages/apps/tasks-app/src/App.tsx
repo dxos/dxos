@@ -17,7 +17,7 @@ import {
   GenericFallback,
   ServiceWorkerToast,
   appkitTranslations,
-  StatusIndicator2
+  StatusIndicator
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
@@ -57,7 +57,7 @@ export const App = () => {
         {/* TODO: (wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={servicesProvider} fallback={<GenericFallback />}>
-            <StatusIndicator2 />
+            <StatusIndicator />
             <HashRouter>
               <Routes />
               {needRefresh ? (
