@@ -51,7 +51,6 @@ export class FeedStateMachine {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
     assert(assertion.spaceKey.equals(this._spaceKey));
-    assert(!this._feeds.has(credential.subject.id));
 
     const info: FeedInfo = {
       key: credential.subject.id,
