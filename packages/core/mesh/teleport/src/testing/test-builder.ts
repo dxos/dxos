@@ -2,17 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
 import { Duplex, pipeline } from 'node:stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Teleport } from '../teleport';
-import assert from 'node:assert'
 
 type CreatePeerOpts<T extends TestPeer> = {
   factory: () => T;
-}
+};
 
 export class TestBuilder {
   private readonly _peers = new Set<TestPeer>();
@@ -24,7 +24,7 @@ export class TestBuilder {
   }
 
   *createPeers<T extends TestPeer>(opts: CreatePeerOpts<T>): Generator<T> {
-    while(true) {
+    while (true) {
       yield this.createPeer(opts);
     }
   }
@@ -42,10 +42,7 @@ export class TestBuilder {
     const connection2 = peer2.createConnection({ initiator: false, remotePeerId: peer1.peerId });
 
     pipeStreams(connection1.teleport.stream, connection2.teleport.stream);
-    await Promise.all([
-      peer1.openConnection(connection1),
-      peer2.openConnection(connection2)
-    ]);
+    await Promise.all([peer1.openConnection(connection1), peer2.openConnection(connection2)]);
 
     return [connection1, connection2];
   }
@@ -55,16 +52,17 @@ export class TestBuilder {
     assert(this._peers.has(peer1));
     assert(this._peers.has(peer1));
 
-    const connection1 = Array.from(peer1.connections).find((connection) => connection.remotePeerId.equals(peer2.peerId));
-    const connection2 = Array.from(peer2.connections).find((connection) => connection.remotePeerId.equals(peer1.peerId));
+    const connection1 = Array.from(peer1.connections).find((connection) =>
+      connection.remotePeerId.equals(peer2.peerId)
+    );
+    const connection2 = Array.from(peer2.connections).find((connection) =>
+      connection.remotePeerId.equals(peer1.peerId)
+    );
 
     assert(connection1);
     assert(connection2);
 
-    await Promise.all([
-      peer1.closeConnection(connection1),
-      peer2.closeConnection(connection2)
-    ]);
+    await Promise.all([peer1.closeConnection(connection1), peer2.closeConnection(connection2)]);
   }
 }
 
@@ -77,18 +75,14 @@ export class TestPeer {
   protected async onClose(connection: TestConnection) {}
 
   createConnection({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
-    const connection = new TestConnection(
-      this.peerId,
-      remotePeerId,
-      initiator
-    );
+    const connection = new TestConnection(this.peerId, remotePeerId, initiator);
     this.connections.add(connection);
     return connection;
   }
 
   async openConnection(connection: TestConnection) {
     assert(this.connections.has(connection));
-    await connection.teleport.open()
+    await connection.teleport.open();
     await this.onOpen(connection);
   }
 
@@ -100,7 +94,7 @@ export class TestPeer {
   }
 
   async destroy() {
-    for(const teleport of this.connections) {
+    for (const teleport of this.connections) {
       await this.closeConnection(teleport);
     }
   }
@@ -117,7 +111,7 @@ const pipeStreams = (stream1: Duplex, stream2: Duplex) => {
       log.catch(err);
     }
   });
-}
+};
 
 export class TestConnection {
   public teleport: Teleport;
@@ -130,7 +124,7 @@ export class TestConnection {
     this.teleport = new Teleport({
       initiator,
       localPeerId,
-      remotePeerId,
-    })
+      remotePeerId
+    });
   }
 }

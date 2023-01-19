@@ -5,8 +5,8 @@
 import { latch, sleep } from '@dxos/async';
 import { TestBuilder } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
-import { TestAgent } from './testing';
 
+import { TestAgent } from './testing';
 
 describe('Presence', () => {
   test('Two peers see each other', async () => {
@@ -78,7 +78,9 @@ describe('Presence', () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
-    const [agent1, agent2, agent3, agent4] = builder.createPeers({ factory: () => new TestAgent({ announceInterval: 10, offlineTimeout: 50 }) });
+    const [agent1, agent2, agent3, agent4] = builder.createPeers({
+      factory: () => new TestAgent({ announceInterval: 10, offlineTimeout: 50 })
+    });
 
     {
       await builder.connect(agent1, agent2);

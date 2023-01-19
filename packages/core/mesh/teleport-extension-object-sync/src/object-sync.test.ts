@@ -5,16 +5,13 @@
 import expect from 'expect';
 
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
-import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
+import { TestBuilder, TestPeer, TestConnection } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { ObjectSync } from './object-sync';
-import { TestConnection } from '@dxos/teleport/testing';
 
 class TestAgent extends TestPeer {
-  constructor(
-    public objectSync: ObjectSync,
-  ) {
+  constructor(public objectSync: ObjectSync) {
     super();
   }
 
@@ -33,31 +30,41 @@ describe('ObjectSync', () => {
   test('two peers synchronize an object', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
-    
-    const peer1 = await testBuilder.createPeer({ factory: () => new TestAgent(new ObjectSync({
-      getObject: async (id: string) => {
-        return {
-          id,
-          payload: {
-            '@type': 'google.protobuf.Any',
-            type_url: 'test',
-            value: Buffer.from(id)
-          }
-        };
-      },
-      setObject: async (data: DataObject) => {
-        // console.log('setObject', data);
-      }
-    })) });
 
-    const peer2 = await testBuilder.createPeer({ factory: () => new TestAgent(new ObjectSync({
-      getObject: async (id: string) => {
-        return undefined;
-      },
-      setObject: async (data: DataObject) => {
-        // console.log('setObject', data);
-      }
-    })) });
+    const peer1 = await testBuilder.createPeer({
+      factory: () =>
+        new TestAgent(
+          new ObjectSync({
+            getObject: async (id: string) => {
+              return {
+                id,
+                payload: {
+                  '@type': 'google.protobuf.Any',
+                  type_url: 'test',
+                  value: Buffer.from(id)
+                }
+              };
+            },
+            setObject: async (data: DataObject) => {
+              // console.log('setObject', data);
+            }
+          })
+        )
+    });
+
+    const peer2 = await testBuilder.createPeer({
+      factory: () =>
+        new TestAgent(
+          new ObjectSync({
+            getObject: async (id: string) => {
+              return undefined;
+            },
+            setObject: async (data: DataObject) => {
+              // console.log('setObject', data);
+            }
+          })
+        )
+    });
 
     await testBuilder.connect(peer1, peer2);
 
