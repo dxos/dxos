@@ -24,7 +24,7 @@ export const Card: FC<{
   header?: JSX.Element;
 }> = ({ scrollbar, header, children }) => {
   return (
-    <div className='flex flex-col w-full bg-white overflow-hidden drop-shadow-md'>
+    <div className='flex flex-col w-full bg-white overflow-hidden shadow'>
       {header}
 
       <div className={mx('flex flex-1 flex-col bg-white', scrollbar ? 'overflow-auto' : 'overflow-hidden')}>

@@ -145,12 +145,16 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
       inlineStart
       slots={{
         content: { children: <Sidebar />, className: 'block-start-[48px]' },
-        main: { className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'flex flex-col min-bs-screen bg-white') }
+        main: {
+          className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'bs-full overflow-hidden')
+        }
       }}
     >
       <AppBar />
       <FrameSelector />
-      {Component && <Component />}
+      <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
+        {Component && <Component />}
+      </div>
     </PanelSidebarProvider>
   );
 };

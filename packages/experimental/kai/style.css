@@ -4,6 +4,11 @@
 
 /* TODO(burdon): Remove custom CSS. */
 
+html, body, #root {
+  overscroll-behavior: none;
+  height: 100%;
+}
+
 .logo {
   transform: rotate(300deg);
   transition: transform 750ms ease-in-out;

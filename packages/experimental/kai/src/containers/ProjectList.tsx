@@ -41,7 +41,7 @@ export const ProjectList: FC<{ header?: boolean }> = (_props) => {
   const projects = useQuery(space, Project.filter());
 
   return (
-    <div className='flex flex-1 justify-center overflow-hidden bg-gray-100'>
+    <div className='flex flex-1 justify-center overflow-auto bg-gray-100'>
       <div className='flex flex-col overflow-y-scroll is-full md:is-[600px] bg-white'>
         {projects.map((project) => (
           <div key={project[id]}>

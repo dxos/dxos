@@ -5,6 +5,8 @@
 import React, { FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { mx } from '@dxos/react-components';
+
 import { CardMenu, Card } from '../components';
 import { ContactsListCard } from './ContactList';
 import { ProjectEditor } from './ProjectEditor';
@@ -13,44 +15,42 @@ import { ProjectHierarchy } from './ProjectHierarchy';
 import { ProjectListCard } from './ProjectList';
 import { TaskListCard } from './TaskList';
 
+const dashboardItemStyles = 'flex shrink-0 max-bs-[80vh] lg:max-bs-[40vh]';
+
 export const Dashboard: FC = () => {
-  const { ref, height } = useResizeDetector();
-  const props = height ? { minHeight: (height - 16) / 2 } : {};
+  const { ref } = useResizeDetector();
 
   return (
-    <div
-      ref={ref}
-      className='basis-[calc(100vh-84px)] flex flex-1 flex-col p-4 gap-2 lg:grid lg:grid-cols-5 lg:grid-flow-row lg:gap-4 overflow-y-scroll scrollbar'
-    >
-      <div className='flex flex-shrink-0 col-span-2' style={props}>
+    <div ref={ref} className='flex flex-col p-4 gap-2 lg:grid lg:grid-cols-5 lg:auto-rows-auto lg:gap-4'>
+      <div className={mx(dashboardItemStyles, 'col-span-2')}>
         <ProjectListCard />
       </div>
 
-      <div className='flex flex-shrink-0 col-span-2' style={props}>
+      <div className={mx(dashboardItemStyles, 'col-span-2')}>
         <ContactsListCard />
       </div>
 
-      <div className='flex flex-shrink-0 row-span-2' style={props}>
+      <div className={mx(dashboardItemStyles, 'row-span-3')}>
         <TaskListCard />
       </div>
 
-      <div className='flex flex-shrink-0' style={props}>
+      <div className={dashboardItemStyles}>
         <TaskListCard title='Completed Tasks' completed readonly />
       </div>
 
-      <div className='flex flex-shrink-0 col-span-3' style={props}>
+      <div className={mx(dashboardItemStyles, 'col-span-3')}>
         <Card header={<CardMenu title='Projects' />}>
           <ProjectGraph />
         </Card>
       </div>
 
-      <div className='flex flex-shrink-0 col-span-3' style={props}>
+      <div className={mx(dashboardItemStyles, 'col-span-2')}>
         <Card scrollbar header={<CardMenu title='Project' />}>
           <ProjectEditor />
         </Card>
       </div>
 
-      <div className='flex flex-shrink-0 col-span-2' style={props}>
+      <div className={mx(dashboardItemStyles, 'col-span-2')}>
         <Card scrollbar header={<CardMenu title='Projects' />}>
           <ProjectHierarchy />
         </Card>
