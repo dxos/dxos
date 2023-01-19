@@ -6,12 +6,6 @@ import { Configuration, OpenAIApi } from 'openai';
 
 import { describe, test } from '@dxos/test';
 
-// TODO(burdon): 2023-01-16
-// TODO(burdon): WARNING: This is a paid account. Move to env.
-// https://beta.openai.com/account/api-keys
-const ORG_ID = 'org-mZTRiNMMnvZWUqWxPlirjw5l';
-const API_KEY = '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';
-
 // TODO(burdon): Test from web.
 // TODO(burdon): UX trigger.
 // TODO(burdon): Project cards.
@@ -22,8 +16,8 @@ describe('openai', () => {
   test.skip('basic', async () => {
     // https://beta.openai.com/docs/api-reference/authentication
     const configuration = new Configuration({
-      organization: ORG_ID,
-      apiKey: API_KEY
+      organization: process.env.OPENAI_ORG_ID,
+      apiKey: process.env.OPENAI_API_KEY
     });
 
     // https://www.npmjs.com/package/openai

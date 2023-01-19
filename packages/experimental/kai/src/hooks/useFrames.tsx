@@ -27,6 +27,7 @@ const activeFrames = [
   FrameID.DASHBOARD,
   FrameID.TABLE,
   FrameID.TASKS
+  // FrameID.CALENDAR
 ];
 
 export type FrameDef = {

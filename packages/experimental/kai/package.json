@@ -43,6 +43,7 @@
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "assert": "^2.0.0",
+    "base-x": "~3.0.9",
     "chess.js": "^1.0.0-alpha.0",
     "date-fns": "^2.29.3",
     "leaflet": "^1.9.3",
