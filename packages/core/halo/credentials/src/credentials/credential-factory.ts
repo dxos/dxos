@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { sha256, Signer, subtleCrypto } from '@dxos/crypto';
+import { Signer, subtleCrypto } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';

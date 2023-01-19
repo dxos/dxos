@@ -35,7 +35,7 @@ export class PublicKey {
       return new PublicKey(new Uint8Array(source));
     } else if (source instanceof Uint8Array) {
       return new PublicKey(source);
-    } else if(source instanceof ArrayBuffer) {
+    } else if (source instanceof ArrayBuffer) {
       return new PublicKey(new Uint8Array(source));
     } else if (typeof source === 'string') {
       return PublicKey.fromHex(source);

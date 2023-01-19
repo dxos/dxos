@@ -85,7 +85,7 @@ export class Trigger<T = void> {
   /**
    * Throw error to blocked callers (if any).
    */
-  throw (error: Error) {
+  throw(error: Error) {
     this._wake(Promise.reject(error));
     if (this._options.autoReset) {
       return this.reset();
