@@ -33,6 +33,13 @@ const findItem = (items: SectionItem[], id: string): SectionItem | undefined => 
 
 export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
   const [selected, setSelected] = useState(sections[0]?.items?.[0]);
+  const handleSelect = (item: FolderHierarchyItem) => {
+    const newSelected = findItem(sections, item.id);
+    if (newSelected?.panel) {
+      setSelected(newSelected);
+    }
+  };
+
   const services = useClientServices();
   if (!services) {
     return null;
@@ -41,18 +48,15 @@ export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
   return (
     <div className='flex flex-row w-full h-screen bg-gray overflow-hidden'>
       <div className={mx('flex flex-col w-1/5 h-screen bg-white', 'overflow-auto scrollbar-thin', 'mr-2')}>
-        <FolderHierarchy
-          items={sections}
-          highlightClassName='bg-slate-400'
-          onSelect={(item: FolderHierarchyItem) => {
-            const newSelected = findItem(sections, item.id);
-            if (newSelected?.panel) {
-              setSelected(newSelected);
-            }
-          }}
-          selected={selected?.id}
-          expanded={[sections[0].id]}
-        />
+        <div className='flex mt-4 ml-2'>
+          <FolderHierarchy
+            items={sections}
+            textStyle={'text-black text-xl'}
+            onSelect={handleSelect}
+            selected={selected?.id}
+            expanded={sections.map((section) => section.id)}
+          />
+        </div>
       </div>
 
       <div className='flex flex-col w-4/5 h-screen bg-white overflow-auto scrollbar-thin'>{selected?.panel}</div>

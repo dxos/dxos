@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Gear, Users, Graph, PaperPlane, UserCircle } from 'phosphor-react';
 import React from 'react';
-
-import { Gear, Users, Graph, PaperPlane } from 'phosphor-react';
 
 import {
   ConfigPanel,
@@ -109,7 +108,7 @@ export const sections: SectionItem[] = [
       {
         id: 'mesh.members',
         title: 'Members',
-        // icon: <IdentityIcon />,
+        Icon: UserCircle,
         panel: <MembersPanel />
       },
       {

@@ -65,10 +65,18 @@ export type FolderHierarchyItem = {
 export const FolderHierarchy: FC<{
   items: FolderHierarchyItem[];
   highlightClassName?: string;
+  textStyle?: string;
   onSelect?: (item: FolderHierarchyItem) => void;
   selected?: string;
   expanded?: string[];
-}> = ({ items, highlightClassName = 'bg-gray-300', onSelect, selected, expanded = [] }) => {
+}> = ({
+  items,
+  highlightClassName = 'bg-gray-300',
+  textStyle = 'text-blue-600 text-base',
+  onSelect,
+  selected,
+  expanded = []
+}) => {
   const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>(
     expanded?.reduce((map, id) => ({ ...map, [id]: true }), {})
   );
@@ -111,7 +119,7 @@ export const FolderHierarchy: FC<{
             )}
             {Element || (
               <div style={{ lineHeight: 1.6 }}>
-                <span className='text-blue-600 text-sm'>{item.title}</span>
+                <span className={textStyle}>{item.title}</span>
                 {!item.items && item.value !== undefined && <span className='pl-2'>{String(item.value)}</span>}
               </div>
             )}
