@@ -44,7 +44,7 @@ export const Sidebar = () => {
       className='flex flex-col overflow-auto min-bs-full box-shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
     >
       {/* Match Frame selector. */}
-      <div className='flex p-1 pl-4 h-[36px] pt-2 bg-orange-500'>
+      <div className='flex p-1 pl-4 h-framepicker pt-2 bg-orange-500'>
         <div>Spaces</div>
       </div>
       <div className='flex flex-col flex-1 border-r border-slate-200'>
