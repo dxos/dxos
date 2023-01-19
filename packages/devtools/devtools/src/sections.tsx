@@ -41,59 +41,60 @@ export const sections: SectionItem[] = [
       // // }
     ]
   },
-  // {
-  //   title: 'HALO',
-  //   id: 'halo',
-  //   items: [
-  //     {
-  //       id: 'halo.identity',
-  //       title: 'Identity',
-  //       // Icon: <IdentityIcon />,
-  //       panel: <IdentityPanel />
-  //     },
-  //     {
-  //       id: 'halo.keyring',
-  //       title: 'Keyring',
-  //       // Icon: <KeyIcon />,
-  //       panel: <KeyringPanel />
-  //     },
-  //     {
-  //       id: 'halo.credentials',
-  //       title: 'Credentials',
-  //       // Icon: <CredentialsIcon />,
-  //       panel: <CredentialsPanel />
-  //     }
-  //   ]
-  // },
-  // {
-  //   title: 'ECHO',
-  //   items: [
-  //     {
-  //       id: 'echo.spaces',
-  //       title: 'Spaces',
-  //       icon: <SpacesIcon />,
-  //       panel: <SpacesPanel />
-  //     },
-  //     {
-  //       id: 'echo.feeds',
-  //       title: 'Feeds',
-  //       icon: <FeedsIcon />,
-  //       panel: <FeedsPanel />
-  //     },
-  //     {
-  //       id: 'echo.items',
-  //       title: 'Items',
-  //       icon: <ItemsIcon />,
-  //       panel: <ItemsPanel />
-  //     }
-  //     // {
-  //     //   id: 'echo.snapshots',
-  //     //   title: 'Snapshots',
-  //     //   icon: <SnapshotsIcon />,
-  //     //   panel: <SnapshotsPanel />
-  //     // }
-  //   ]
-  // },
+  {
+    title: 'HALO',
+    id: 'halo',
+    items: [
+      {
+        id: 'halo.identity',
+        title: 'Identity',
+        // Icon: <IdentityIcon />,
+        panel: <IdentityPanel />
+      },
+      {
+        id: 'halo.keyring',
+        title: 'Keyring',
+        // Icon: <KeyIcon />,
+        panel: <KeyringPanel />
+      },
+      {
+        id: 'halo.credentials',
+        title: 'Credentials',
+        // Icon: <CredentialsIcon />,
+        panel: <CredentialsPanel />
+      }
+    ]
+  },
+  {
+    title: 'ECHO',
+    id: 'echo',
+    items: [
+      {
+        id: 'echo.spaces',
+        title: 'Spaces',
+        // icon: <SpacesIcon />,
+        panel: <SpacesPanel />
+      },
+      {
+        id: 'echo.feeds',
+        title: 'Feeds',
+        // icon: <FeedsIcon />,
+        panel: <FeedsPanel />
+      },
+      {
+        id: 'echo.items',
+        title: 'Items',
+        // icon: <ItemsIcon />,
+        panel: <ItemsPanel />
+      }
+      // {
+      //   id: 'echo.snapshots',
+      //   title: 'Snapshots',
+      //   icon: <SnapshotsIcon />,
+      //   panel: <SnapshotsPanel />
+      // }
+    ]
+  },
   {
     id: 'mesh',
     title: 'MESH',
@@ -105,18 +106,18 @@ export const sections: SectionItem[] = [
       //   icon: SwarmIcon,
       //   panel: NetworkPanel
       // },
-      // {
-      //   id: 'mesh.members',
-      //   title: 'Members',
-      //   icon: <IdentityIcon />,
-      //   panel: <MembersPanel />
-      // },
-      // {
-      //   id: 'mesh.swarminfo',
-      //   title: 'Swarm',
-      //   icon: <SwarmIcon />,
-      //   panel: <SwarmPanel />
-      // },
+      {
+        id: 'mesh.members',
+        title: 'Members',
+        // icon: <IdentityIcon />,
+        panel: <MembersPanel />
+      },
+      {
+        id: 'mesh.swarminfo',
+        title: 'Swarm',
+        // icon: <SwarmIcon />,
+        panel: <SwarmPanel />
+      },
       {
         id: 'mesh.signal',
         title: 'Signal',
