@@ -45,7 +45,8 @@ describe('NotarizationPlugin', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const [peer1, peer2] = await testBuilder.createPeers({ factory: () => new TestAgent() });
+    // peer0 is there to test retries.
+    const [_peer0, peer1, peer2] = await testBuilder.createPeers({ factory: () => new TestAgent() });
     peer1.enableWriting();
 
     peer1.feed.written.on(async ([credential]) => {
@@ -53,14 +54,16 @@ describe('NotarizationPlugin', () => {
       await peer2.feed.write(credential);
     });
 
-    await testBuilder.connect(peer1, peer2);
+    await testBuilder.connect(_peer0, peer2);
 
     const keyring = new Keyring();
     const generator = new CredentialGenerator(keyring, await keyring.createKey(), await keyring.createKey());
     const credential = await generator.createFeedAdmission(await keyring.createKey(), await keyring.createKey(), AdmittedFeed.Designation.CONTROL);
 
-    await peer2.notarizationPlugin.notarize([credential])
-    console.log(peer1.feed.messages, credential)
+    const notarized = peer2.notarizationPlugin.notarize([credential])
+
+    await testBuilder.connect(peer1, peer2);
+    await notarized;
 
     expect(peer1.feed.messages.map(c => c.id)).to.deep.eq([credential.id]);
     expect(peer2.feed.messages.map(c => c.id)).to.deep.eq([credential.id]);
