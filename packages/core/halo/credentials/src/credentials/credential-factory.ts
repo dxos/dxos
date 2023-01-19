@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Signer } from '@dxos/crypto';
+import { Signer, subtleCrypto } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -73,6 +73,8 @@ export const createCredential = async ({
   if (chain) {
     credential.proof.chain = chain;
   }
+
+  credential.id = PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload));
 
   return credential;
 };

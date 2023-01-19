@@ -104,8 +104,8 @@ export const FrameSelector: FC = () => {
   return (
     <div
       className={mx(
-        'flex flex-col-reverse bg-orange-500 fixed inline-end-0 block-start-[48px] bs-[36px] z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
-        isOpen ? 'inline-start-0 lg:inline-start-[272px]' : 'inline-start-0'
+        'flex flex-col-reverse bg-orange-500 fixed inline-end-0 block-start-appbar bs-framepicker z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
+        isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
       )}
     >
       <div className='flex pl-3'>
@@ -144,9 +144,9 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
     <PanelSidebarProvider
       inlineStart
       slots={{
-        content: { children: <Sidebar />, className: 'block-start-[48px]' },
+        content: { children: <Sidebar />, className: 'block-start-appbar' },
         main: {
-          className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-[48px]', 'bs-full overflow-hidden')
+          className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-appbar', 'bs-full overflow-hidden')
         }
       }}
     >
