@@ -5,18 +5,36 @@
 import expect from 'expect';
 
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
-import { TestBuilder } from '@dxos/teleport/testing';
+import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { ObjectSync } from './object-sync';
+import { TestConnection } from '@dxos/teleport/src/testing';
+
+class TestAgent extends TestPeer {
+  constructor(
+    public objectSync: ObjectSync,
+  ) {
+    super();
+  }
+
+  protected override async onOpen(connection: TestConnection): Promise<void> {
+    await super.onOpen(connection);
+    connection.teleport.addExtension('dxos.mesh.teleport.objectsync', this.objectSync.createExtension());
+  }
+
+  override async destroy(): Promise<void> {
+    await super.destroy();
+    await this.objectSync.close();
+  }
+}
 
 describe('ObjectSync', () => {
   test('two peers synchronize an object', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
-    const { peer1, peer2 } = await testBuilder.createPipedPeers();
-
-    const objectSync1 = new ObjectSync({
+    
+    const peer1 = await testBuilder.createPeer({ factory: () => new TestAgent(new ObjectSync({
       getObject: async (id: string) => {
         return {
           id,
@@ -30,20 +48,20 @@ describe('ObjectSync', () => {
       setObject: async (data: DataObject) => {
         // console.log('setObject', data);
       }
-    });
-    peer1.teleport!.addExtension('dxos.mesh.teleport.objectsync', objectSync1.createExtension());
+    })) });
 
-    const objectSync2 = new ObjectSync({
+    const peer2 = await testBuilder.createPeer({ factory: () => new TestAgent(new ObjectSync({
       getObject: async (id: string) => {
         return undefined;
       },
       setObject: async (data: DataObject) => {
         // console.log('setObject', data);
       }
-    });
-    peer2.teleport!.addExtension('dxos.mesh.teleport.objectsync', objectSync2.createExtension());
+    })) });
 
-    const obj = await objectSync2.download('test');
+    await testBuilder.connect(peer1, peer2);
+
+    const obj = await peer2.objectSync.download('test');
     expect(obj).toEqual({
       id: 'test',
       payload: {
@@ -52,8 +70,5 @@ describe('ObjectSync', () => {
         value: Buffer.from('test')
       }
     });
-
-    await objectSync1.close();
-    await objectSync2.close();
   });
 });
