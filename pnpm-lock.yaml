@@ -422,6 +422,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
@@ -447,6 +448,7 @@ importers:
       '@dxos/config': link:../../../sdk/config
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../../core/protocols
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-components': link:../../../common/react-components
@@ -26545,9 +26547,9 @@ packages:
     resolution: {integrity: sha512-4sITrrzEbPcr0aNV28QyOmgn6C9yKiF8k92jn4buYAK8wmA5xo1qL3II5/gT1r7wxbXBflSduZ2K3FbtOrtGkA==}
     engines: {node: '>=10.0'}
     dependencies:
-      JSONStream: 1.3.5
       clone-deep: 4.0.1
       download-stats: 0.3.4
+      JSONStream: 1.3.5
       moment: 2.29.4
       node-fetch: 2.6.7
       paged-request: 2.0.2
@@ -33036,7 +33038,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
