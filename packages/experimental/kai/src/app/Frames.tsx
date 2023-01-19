@@ -146,7 +146,7 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
       slots={{
         content: { children: <Sidebar />, className: 'block-start-appbar' },
         main: {
-          className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-appbar', 'bs-full overflow-hidden')
+          className: mx(frames.length > 1 ? 'pbs-topbars' : 'pbs-appbar', 'bs-full overflow-hidden')
         }
       }}
     >
