@@ -2,74 +2,135 @@
 // Copyright 2022 DXOS.org
 //
 
-import { pipeline } from 'node:stream';
+import { Duplex, pipeline } from 'node:stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Teleport } from '../teleport';
+import assert from 'node:assert'
+
+type CreatePeerOpts<T extends TestPeer> = {
+  factory: () => T;
+}
 
 export class TestBuilder {
-  private readonly _peers = new Array<TestPeer>();
+  private readonly _peers = new Set<TestPeer>();
 
-  createPeer(peerId?: PublicKey): TestPeer {
-    const peer = new TestPeer(peerId);
-    this._peers.push(peer);
+  createPeer<T extends TestPeer>(opts: CreatePeerOpts<T>): T {
+    const peer = opts.factory();
+    this._peers.add(peer);
     return peer;
   }
 
-  async destroy() {
-    await Promise.all(this._peers.map((agent) => agent.destroy()));
+  *createPeers<T extends TestPeer>(opts: CreatePeerOpts<T>): Generator<T> {
+    while(true) {
+      yield this.createPeer(opts);
+    }
   }
 
-  /**
-   * Simulates two peers connected via P2P network.
-   */
-  async createPipedPeers({ peerId1, peerId2 }: { peerId1?: PublicKey; peerId2?: PublicKey } = {}) {
-    const peer1 = this.createPeer(peerId1);
-    const peer2 = this.createPeer(peerId2);
+  async destroy() {
+    await Promise.all(Array.from(this._peers).map((agent) => agent.destroy()));
+  }
 
-    peer1.initializeTeleport({ initiator: true, remotePeerId: peer2.peerId });
-    peer2.initializeTeleport({ initiator: false, remotePeerId: peer1.peerId });
+  async connect(peer1: TestPeer, peer2: TestPeer) {
+    assert(peer1 !== peer2);
+    assert(this._peers.has(peer1));
+    assert(this._peers.has(peer1));
 
-    peer1.pipeline(peer2);
-    peer2.pipeline(peer1);
+    const connection1 = peer1.createConnection({ initiator: true, remotePeerId: peer2.peerId });
+    const connection2 = peer2.createConnection({ initiator: false, remotePeerId: peer1.peerId });
 
-    await Promise.all([peer1.teleport!.open(), peer2.teleport!.open()]);
+    pipeStreams(connection1.teleport.stream, connection2.teleport.stream);
+    await Promise.all([
+      peer1.openConnection(connection1),
+      peer2.openConnection(connection2)
+    ]);
 
-    return { peer1, peer2 };
+    return [connection1, connection2];
+  }
+
+  async disconnect(peer1: TestPeer, peer2: TestPeer) {
+    assert(peer1 !== peer2);
+    assert(this._peers.has(peer1));
+    assert(this._peers.has(peer1));
+
+    const connection1 = Array.from(peer1.connections).find((connection) => connection.remotePeerId.equals(peer2.peerId));
+    const connection2 = Array.from(peer2.connections).find((connection) => connection.remotePeerId.equals(peer1.peerId));
+
+    assert(connection1);
+    assert(connection2);
+
+    await Promise.all([
+      peer1.closeConnection(connection1),
+      peer2.closeConnection(connection2)
+    ]);
   }
 }
 
 export class TestPeer {
-  public teleport?: Teleport;
+  public readonly connections = new Set<TestConnection>();
 
   constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
 
-  initializeTeleport({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
-    if (this.teleport) {
-      return this;
-    }
-    this.teleport = new Teleport({
-      initiator,
-      localPeerId: this.peerId,
-      remotePeerId
-    });
-    return this;
+  protected async onOpen(connection: TestConnection) {}
+  protected async onClose(connection: TestConnection) {}
+
+  createConnection({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
+    const connection = new TestConnection(
+      this.peerId,
+      remotePeerId,
+      initiator
+    );
+    this.connections.add(connection);
+    return connection;
   }
 
-  pipeline(peer: TestPeer) {
-    if (!this.teleport || !peer.teleport) {
-      throw new Error('Teleport not initialized');
-    }
-    pipeline(this.teleport.stream, peer.teleport.stream, (err) => {
-      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-        log.catch(err);
-      }
-    });
+  async openConnection(connection: TestConnection) {
+    assert(this.connections.has(connection));
+    await connection.teleport.open()
+    await this.onOpen(connection);
+  }
+
+  async closeConnection(connection: TestConnection) {
+    assert(this.connections.has(connection));
+    await this.onClose(connection);
+    await connection.teleport.close();
+    this.connections.delete(connection);
   }
 
   async destroy() {
-    await this.teleport?.destroy();
+    for(const teleport of this.connections) {
+      await this.closeConnection(teleport);
+    }
+  }
+}
+
+const pipeStreams = (stream1: Duplex, stream2: Duplex) => {
+  pipeline(stream1, stream2, (err) => {
+    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      log.catch(err);
+    }
+  });
+  pipeline(stream2, stream1, (err) => {
+    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      log.catch(err);
+    }
+  });
+}
+
+export class TestConnection {
+  public teleport: Teleport;
+
+  constructor(
+    public readonly localPeerId: PublicKey,
+    public readonly remotePeerId: PublicKey,
+    public readonly initiator: boolean
+  ) {
+    this.teleport = new Teleport({
+      initiator,
+      localPeerId,
+      remotePeerId,
+    })
   }
 }
