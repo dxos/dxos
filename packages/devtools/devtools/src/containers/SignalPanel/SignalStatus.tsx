@@ -91,11 +91,11 @@ export const SignalStatusComp = () => {
           {status.error && <div>{status.error}</div>}
           {status.state === SignalState.DISCONNECTED && (
             <div>
-              Will reconnect in {formatDate(time.getTime() - status.lastStateChange.getTime() + status.reconnectIn)}
+              Will reconnect in {formatDate(status.lastStateChange.getTime() + status.reconnectIn - time.getTime())}
             </div>
           )}
           {status.state === SignalState.CONNECTED && (
-            <div>Connected for {formatDate(status.lastStateChange.getTime() - time.getTime())}</div>
+            <div>Connected for {formatDate(time.getTime() - status.lastStateChange.getTime())}</div>
           )}
         </div>
       ))}
