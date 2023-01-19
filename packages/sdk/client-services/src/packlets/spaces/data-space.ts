@@ -6,6 +6,7 @@ import assert from 'node:assert';
 
 import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { CredentialConsumer } from '@dxos/credentials';
 import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, SnapshotManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
@@ -14,7 +15,6 @@ import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
 import { NotarizationPlugin } from './notarization-plugin';
-import { CredentialConsumer } from '@dxos/credentials';
 
 const AUTH_TIMEOUT = 30000;
 
@@ -92,9 +92,11 @@ export class DataSpace implements ISpace {
 
   async open() {
     await this.notarizationPlugin.open();
-    await this._notarizationPluginConsumer.open()
+    await this._notarizationPluginConsumer.open();
 
     await this._inner.open();
+
+    // TODO(dmaretskyi): wait until control pipeline reads all messages that are available and then see if we need to admit our feeds.
 
     await this._inner.initDataPipeline(this._dataPipelineController);
   }
