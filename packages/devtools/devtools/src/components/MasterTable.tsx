@@ -20,9 +20,14 @@ export type ColumnType<T extends {}> = SelectorOption & {
   columns: Column<T>[];
 };
 
-export type MasterTableProps<T extends {}> = { types: ColumnType<T>[]; data: T[]; onSelectType?: (id: string) => void };
+export type MasterTableProps<T extends {}> = {
+  types: ColumnType<T>[];
+  data: T[];
+  onSelectType?: (id: string) => void;
+  dataProcessor?: (data: T[]) => any[];
+};
 
-export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>) => {
+export const MasterTable = ({ types, data, onSelectType, dataProcessor = (data) => data }: MasterTableProps<any>) => {
   const [text, setText] = useState<string>('');
   const handleSearch = (text: string) => {
     setText(text);
@@ -67,7 +72,7 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
           />
         </div>
         <div className='flex w-1/2 h-full'>
-          <JsonTreeView data={getFilteredData().at(selected)} />
+          <JsonTreeView data={dataProcessor(getFilteredData().at(selected))} />
         </div>
       </div>
     </div>

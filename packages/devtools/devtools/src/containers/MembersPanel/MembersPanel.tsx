@@ -48,14 +48,12 @@ export const MembersPanel = () => {
   }));
 
   return (
-    <div className='flex ml-2 mr-2'>
-      <MasterTable
-        types={types}
-        data={members}
-        onSelectType={(id) => {
-          setSelectedSpaceKey(PublicKey.fromHex(id));
-        }}
-      />
-    </div>
+    <MasterTable
+      types={types}
+      data={members}
+      onSelectType={(id) => {
+        setSelectedSpaceKey(PublicKey.fromHex(id));
+      }}
+    />
   );
 };
