@@ -61,6 +61,7 @@ export class SpaceStateMachine implements SpaceState {
   /**
    * @param fromFeed Key of the feed where this credential is recorded.
    */
+  // TODO(dmaretskyi): Skip existing credentials comparing by id.
   async process(credential: Credential, fromFeed: PublicKey): Promise<boolean> {
     const result = await verifyCredential(credential);
     if (result.kind !== 'pass') {
