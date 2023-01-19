@@ -36,6 +36,7 @@ export default defineConfig({
       '@dxos/client',
       '@dxos/client-services',
       '@dxos/config',
+      '@dxos/context',
       '@dxos/debug',
       '@dxos/devtools-mesh',
       '@dxos/feed-store',

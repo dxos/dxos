@@ -17,6 +17,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools-mesh": "workspace:*",
     "@dxos/feed-store": "workspace:*",

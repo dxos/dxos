@@ -4,6 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { scheduleTaskInterval } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { SignalState, SignalStatus } from '@dxos/messaging';
 import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client';
@@ -55,14 +57,22 @@ export const SignalStatusComp = () => {
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), { servers: [] });
   const status = servers!.map(getSignalStatus);
 
-  const [time, setTime] = useState(Date.now());
+  const [time, setTime] = useState(new Date());
   useEffect(() => {
-    const id = setInterval(() => setTime(Date.now()), 1000);
-    return () => clearInterval(id);
+    const ctx = new Context();
+    scheduleTaskInterval(
+      ctx,
+      async () => {
+        setTime(new Date());
+      },
+      1000
+    );
+    return () => {
+      void ctx.dispose();
+    };
   }, []);
 
-  // TODO(burdon): Use format tool (mins, sec, etc.)
-  const format = (n: number, unit = 's') => `${n.toLocaleString()}${unit}`;
+  const formatDate = (milliseconds: number) => new Date(milliseconds).toISOString().split('T')[1].split('Z')[0];
 
   if (!servers) {
     return null;
@@ -81,11 +91,11 @@ export const SignalStatusComp = () => {
           {status.error && <div>{status.error}</div>}
           {status.state === SignalState.DISCONNECTED && (
             <div>
-              Will reconnect in {format(Math.floor((status.lastStateChange + status.reconnectIn - time) / 1000))}
+              Will reconnect in {formatDate(time.getTime() - status.lastStateChange.getTime() + status.reconnectIn)}
             </div>
           )}
           {status.state === SignalState.CONNECTED && (
-            <div>Connected for {format(Math.floor((time - status.connectionStarted) / 1000))}</div>
+            <div>Connected for {formatDate(status.lastStateChange.getTime() - time.getTime())}</div>
           )}
         </div>
       ))}
