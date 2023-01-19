@@ -3,4 +3,5 @@
 //
 
 export * from './deprecated';
+export * from './JsonView';
 export * from './MasterTable';
