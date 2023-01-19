@@ -57,7 +57,7 @@ export const ItemsPanel = () => {
         />
       }
     >
-      <Box display='flex' height='100%'>
+      <div className='flex h-full'>
         <TreeView
           defaultCollapseIcon={<CollapseIcon />}
           defaultExpandIcon={<ExpandIcon />}
@@ -76,7 +76,7 @@ export const ItemsPanel = () => {
         </TreeView>
 
         <Box flex={1}>{selectedItem && <ItemDetails item={selectedItem} />}</Box>
-      </Box>
+      </div>
     </Panel>
   );
 };
