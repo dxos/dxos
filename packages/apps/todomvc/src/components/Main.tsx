@@ -6,22 +6,21 @@ import React, { ChangeEvent, KeyboardEvent, useCallback, useRef, useState } from
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
-import { useQuery } from '@dxos/react-client';
+import { useQuery, withReactor } from '@dxos/react-client';
 
 import { ACTIVE_TODOS, ALL_TODOS, COMPLETED_TODOS } from '../constants';
 import { Todo, TodoList } from '../proto';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 
-export const Main = () => {
+export const Main = withReactor(() => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { space } = useOutletContext<{ space: Space }>();
   const { state } = useParams();
   const completed = state === ACTIVE_TODOS ? false : state === COMPLETED_TODOS ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const [list] = useQuery(space, TodoList.filter());
-  console.log({ spaceKey: space.key.toHex(), list });
-  const todos = list?.todos?.filter((todo) => completed === todo.completed) ?? [];
+  const todos = list.todos.filter((todo) => completed === todo.completed);
   const [editing, setEditing] = useState<string>();
 
   const handleNewTodoKeyDown = useCallback(
@@ -41,26 +40,23 @@ export const Main = () => {
     [inputRef, space]
   );
 
-  const handleToggle = useCallback(
-    (todo: Todo) => {
-      todo.completed = !todo.completed;
-    },
-    [todos]
-  );
+  const handleToggle = useCallback((todo: Todo) => {
+    todo.completed = !todo.completed;
+  }, []);
 
   const handleDestroy = useCallback(
     (todo: Todo) => {
       void space.experimental.db.delete(todo);
     },
-    [space, todos]
+    [space]
   );
 
   const handleSave = useCallback(
-    (todo: Todo, val: string) => {
-      todo.title = val;
+    (todo: Todo, title: string) => {
+      todo.title = title;
       setEditing(undefined);
     },
-    [todos]
+    [setEditing]
   );
 
   const handleShare = useCallback(async () => {
@@ -145,4 +141,4 @@ export const Main = () => {
       )}
     </div>
   );
-};
+});
