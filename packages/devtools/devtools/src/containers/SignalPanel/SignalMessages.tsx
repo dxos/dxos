@@ -63,7 +63,6 @@ const types: ColumnType<SignalResponse>[] = [
         Header: 'Recipient',
         accessor: (response: SignalResponse) => humanize(response.message!.recipient)
       },
-      { Header: 'Payload', accessor: (response: SignalResponse) => JSON.stringify(response.message?.payload) },
       { Header: 'MessageID', accessor: (response: SignalResponse) => humanize(response.message?.payload.messageId) },
       {
         Header: 'Topic',
