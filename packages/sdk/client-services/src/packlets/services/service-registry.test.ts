@@ -13,6 +13,7 @@ import { describe, test } from '@dxos/test';
 
 import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from '../invitations';
 import { createServiceContext } from '../testing';
+import { ClientServices } from './service-definitions';
 import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Create TestService (that doesn't require peers).
@@ -54,7 +55,7 @@ describe('service registry', () => {
 
     const server = createProtoRpcPeer({
       exposed: serviceRegistry.descriptors,
-      handlers: serviceRegistry.services,
+      handlers: serviceRegistry.services as ClientServices,
       port: serverPort
     });
 

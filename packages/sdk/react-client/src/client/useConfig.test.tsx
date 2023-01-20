@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import expect from 'expect';
 import React from 'react';
 
-import { Client, Config, fromHost } from '@dxos/client';
+import { waitForCondition } from '@dxos/async';
+import { Client, Config, fromHost, Status } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { ClientProvider } from './ClientContext';
@@ -20,14 +21,18 @@ describe('Config hook', () => {
     expect(renderHook(render)).toThrow();
   });
 
-  test('should return default client config when no config is passed in a context', () => {
+  test('should return default client config when no config is passed in a context', async () => {
     const client = new Client({ services: fromHost() });
+    await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
+    await act(async () => {
+      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
+    });
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
 
-  test('should return custom client config when used properly in a context', () => {
+  test('should return custom client config when used properly in a context', async () => {
     const config = new Config({
       version: 1,
       runtime: {
@@ -39,8 +44,12 @@ describe('Config hook', () => {
       }
     });
     const client = new Client({ config, services: fromHost(config) });
+    await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
+    await act(async () => {
+      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
+    });
     expect(result.current.get('runtime.client.storage')).toEqual(config.get('runtime.client.storage'));
   });
 });

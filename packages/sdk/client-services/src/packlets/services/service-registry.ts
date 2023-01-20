@@ -11,7 +11,7 @@ export class ServiceRegistry<Services> {
   // prettier-ignore
   constructor (
     private readonly _serviceBundle: ServiceBundle<Services>,
-    private readonly _handlers: Services
+    private _handlers: Partial<Services>
   ) {}
 
   get descriptors() {
@@ -20,5 +20,9 @@ export class ServiceRegistry<Services> {
 
   get services() {
     return this._handlers;
+  }
+
+  setServices(services: Partial<Services>) {
+    this._handlers = services;
   }
 }
