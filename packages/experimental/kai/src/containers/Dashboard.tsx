@@ -45,13 +45,13 @@ export const Dashboard: FC = () => {
       </div>
 
       <div className='flex flex-shrink-0 col-span-3' style={props}>
-        <Card fade scrollbar header={<CardMenu title='Project' />}>
+        <Card scrollbar header={<CardMenu title='Project' />}>
           <ProjectEditor />
         </Card>
       </div>
 
       <div className='flex flex-shrink-0 col-span-2' style={props}>
-        <Card fade scrollbar header={<CardMenu title='Projects' />}>
+        <Card scrollbar header={<CardMenu title='Projects' />}>
           <ProjectHierarchy />
         </Card>
       </div>

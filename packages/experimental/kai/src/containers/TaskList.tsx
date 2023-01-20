@@ -38,7 +38,7 @@ export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?:
   );
 
   return (
-    <Card fade scrollbar header={<Header />}>
+    <Card scrollbar header={<Header />}>
       <TaskList completed={completed} readonly={readonly} />
     </Card>
   );

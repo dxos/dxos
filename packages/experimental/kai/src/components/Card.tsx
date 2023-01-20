@@ -21,16 +21,13 @@ export const CardMenu: FC<{ title: string; children?: ReactNode }> = ({ title, c
 export const Card: FC<{
   children?: ReactNode;
   scrollbar?: boolean;
-  fade?: boolean;
   header?: JSX.Element;
-}> = ({ scrollbar, fade, header, children }) => {
+}> = ({ scrollbar, header, children }) => {
   return (
     <div className='flex flex-col w-full bg-white overflow-hidden drop-shadow-md'>
       {header}
 
-      <div
-        className={mx('flex flex-1 flex-col bg-white', scrollbar ? 'overflow-auto' : 'overflow-hidden', fade && 'fade')}
-      >
+      <div className={mx('flex flex-1 flex-col bg-white', scrollbar ? 'overflow-auto' : 'overflow-hidden')}>
         {children}
       </div>
     </div>

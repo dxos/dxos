@@ -16,10 +16,11 @@ message LatLng {
 }
 
 message Address {
-  string city = 1;
-  string state = 2;
-  string zip = 3;
-  LatLng coordinates = 4;
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip = 4;
+  LatLng coordinates = 5;
 }
 
 //

@@ -30,7 +30,7 @@ export const ProjectListCard: FC = () => {
   );
 
   return (
-    <Card fade scrollbar header={<Header />}>
+    <Card scrollbar header={<Header />}>
       <ProjectList />
     </Card>
   );
