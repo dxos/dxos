@@ -12,8 +12,6 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { osThemeExtension, kaiThemeExtension } from '@dxos/kai/theme-extensions';
 
-console.log('[theme extensions]', osThemeExtension, kaiThemeExtension);
-
 import packageJson from './package.json';
 
 const env = (value?: string) => (value ? `"${value}"` : undefined);
