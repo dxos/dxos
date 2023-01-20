@@ -4,6 +4,7 @@
 
 export * from './components';
 export * from './containers';
+export * from './hooks';
 export * from './initialize';
-export * from './sections';
+export * from './panels';
 export * from './theme';

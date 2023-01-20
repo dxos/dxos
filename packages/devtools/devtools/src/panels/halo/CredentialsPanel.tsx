@@ -11,26 +11,24 @@ import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { KeySelect, Panel } from '../../components';
 
+// TODO(burdon): Blows up since JSON data is too large.
+
 export const CredentialsPanel = () => {
   const devtoolsHost = useDevtools();
   if (!devtoolsHost) {
     return null;
   }
+
   const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
-
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
-
   const services = useClientServices();
-  if (!services) {
-    return null;
-  }
-
   const [credentials, setCredentials] = useState<Credential[]>([]);
 
   useEffect(() => {
-    if (!selectedSpaceKey) {
+    if (!services || !selectedSpaceKey) {
       return;
     }
+
     const stream = services.SpacesService.queryCredentials({ spaceKey: selectedSpaceKey });
     const newCredentials: Credential[] = [];
 
@@ -43,6 +41,10 @@ export const CredentialsPanel = () => {
       stream.close();
     };
   }, [selectedSpaceKey?.toHex()]);
+
+  if (!services) {
+    return null;
+  }
 
   return (
     <Panel

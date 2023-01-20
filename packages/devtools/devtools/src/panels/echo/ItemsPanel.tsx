@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { FolderHierarchy, FolderHierarchyItem, Selector, Searchbar } from '@dxos/kai';
+import { FolderHierarchy, FolderHierarchyItem, Searchbar } from '@dxos/kai';
 import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';

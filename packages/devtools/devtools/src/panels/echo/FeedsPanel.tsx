@@ -6,7 +6,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client';
-import { ComplexSet } from '@dxos/util';
 
 import { MessageTable, PublicKeySelector } from '../../components';
 

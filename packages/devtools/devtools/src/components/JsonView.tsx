@@ -10,10 +10,8 @@ import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 // TODO(mykola): Add proto schema. Decode bytes.
 export const JsonView = ({ data }: { data: Object }) => {
   return (
-    <div className='flex flex-1 overflow-auto'>
-      <SyntaxHighlighter className='flex flex-1' language='json' style={style}>
-        {JSON.stringify(data, undefined, 2)}
-      </SyntaxHighlighter>
-    </div>
+    <SyntaxHighlighter className='flex flex-1 text-xs' language='json' style={style}>
+      {JSON.stringify(data, undefined, 2)}
+    </SyntaxHighlighter>
   );
 };

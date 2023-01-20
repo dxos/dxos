@@ -8,7 +8,7 @@ import { Config } from '@dxos/protocols/proto/dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClientServices } from '@dxos/react-client';
 
-import { JsonView } from '../../components/JsonView';
+import { JsonView } from '../../components';
 
 export const ConfigPanel = () => {
   const services = useClientServices();

@@ -34,11 +34,11 @@ window.addEventListener('message', (event) => {
  */
 export const App = () => {
   return (
-    <div className='h-screen w-full grid grid-rows-2 grid-flow-col gap-4'>
-      <div>
+    <div className='absolute left-0 right-0 top-0 bottom-0 flex flex-col bg-green-300'>
+      <div className='flex flex-1'>
         <iframe id='kai' src={kaiURL} className='w-full h-full' />
       </div>
-      <div>
+      <div className='flex flex-1 border-t-2 border-gray-500'>
         <iframe id='devtools' src={devtoolsURL} className='w-full h-full' />
       </div>
     </div>

@@ -12,12 +12,12 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { PanelsContainer } from './containers';
+import { RootContainer } from './containers';
 import { ClientAndServices } from './initialize';
-import { sections } from './sections';
 
 const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
 
+// TODO(burdon): Move out of here.
 const createClientAndServices = async (): Promise<ClientAndServices> => {
   /**
    * Create client from remote source.
@@ -66,23 +66,23 @@ const Telemetry = () => {
   return null;
 };
 
+// TODO(burdon): Refactor with initialize.
 export const App = () => {
-  const [value, setValue] = useState<ClientAndServices>();
+  const [client, setClient] = useState<ClientAndServices>();
 
   useAsyncEffect(async () => {
-    setValue(await createClientAndServices());
+    setClient(await createClientAndServices());
   }, []);
 
-  if (!value) {
+  if (!client) {
     return null;
   }
 
   return (
     <ErrorBoundary>
-      <ClientContext.Provider value={value as ClientAndServices}>
+      <ClientContext.Provider value={client}>
         <Telemetry />
-
-        <PanelsContainer sections={sections} />
+        <RootContainer />
       </ClientContext.Provider>
     </ErrorBoundary>
   );
