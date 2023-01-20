@@ -44,13 +44,13 @@ type ClientServicesHostParams = {
  */
 export class ClientServicesHost implements ClientServicesProvider {
   private readonly _resourceLock?: VaultResourceLock;
-  private _serviceContext: ServiceContext;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
 
   private readonly _config: Config;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
+  private _serviceContext!: ServiceContext;
   private _storage: Storage;
   private _open = false;
 
@@ -75,9 +75,6 @@ export class ClientServicesHost implements ClientServicesProvider {
         })
       : undefined;
 
-    // TODO(burdon): Break into components.
-    this._serviceContext = new ServiceContext(this._storage, this._networkManager, this._modelFactory);
-
     this._systemService = new SystemServiceImpl({
       config: this._config,
       onInit: async () => {
@@ -91,7 +88,7 @@ export class ClientServicesHost implements ClientServicesProvider {
         return { status: Status.ACTIVE };
       },
       onReset: async () => {
-        await this._serviceContext.reset();
+        await this._serviceContext?.reset();
       }
     });
 
@@ -120,7 +117,8 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     log('opening...');
 
-    // TODO(wittjosiah): Remove. Clear metadata store on close instead.
+    // TODO(wittjosiah): Make re-entrant.
+    // TODO(burdon): Break into components.
     this._serviceContext = new ServiceContext(this._storage, this._networkManager, this._modelFactory);
 
     // TODO(burdon): Start to think of DMG (dynamic services).
@@ -155,6 +153,7 @@ export class ClientServicesHost implements ClientServicesProvider {
         context: this._serviceContext
       })
     });
+
     await this._serviceContext.open();
     this._open = true;
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
