@@ -167,19 +167,21 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   // }
 
   private _get(key: string) {
+    this._database?._logObjectAccess(this);
+
     if (!this._item) {
       return this._uninitialized![key];
     } else {
-      this._database?._logObjectAccess(this);
       return this._getModelProp(key);
     }
   }
 
   private _set(key: string, value: any) {
+    this._database?._logObjectAccess(this);
+    
     if (!this._item) {
       this._uninitialized![key] = value;
     } else {
-      this._database?._logObjectAccess(this);
       this._setModelProp(key, value).catch((err) => log.catch(err));
     }
   }
