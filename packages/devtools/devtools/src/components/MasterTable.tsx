@@ -51,7 +51,7 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
     data.filter(type.filter).filter(type.subFilter ? type.subFilter(text) : defaultSubFilter(text));
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
+    <div className='flex flex-col flex-1'>
       <div className='flex p-3 border-b border-slate-200 border-solid'>
         <div className='flex'>
           <div className='mr-2'>
