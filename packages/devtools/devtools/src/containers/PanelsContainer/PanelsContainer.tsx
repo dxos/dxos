@@ -59,7 +59,7 @@ export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
         </div>
       </div>
 
-      <div className='flex flex-col w-4/5 h-screen bg-white overflow-auto scrollbar-thin'>{selected?.panel}</div>
+      <div className='flex flex-col w-4/5 h-screen bg-white overflow-hidden'>{selected?.panel}</div>
     </div>
   );
 };

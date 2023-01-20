@@ -7,6 +7,7 @@ import { Column } from 'react-table';
 
 import { Searchbar, Selector, SelectorOption, Table } from '@dxos/kai';
 import { JsonTreeView } from '@dxos/react-components-deprecated';
+import { JsonView } from './JsonView';
 
 const defaultSubFilter =
   (match = '') =>
@@ -50,7 +51,7 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
     data.filter(type.filter).filter(type.subFilter ? type.subFilter(text) : defaultSubFilter(text));
 
   return (
-    <div className='flex flex-col flex-1'>
+    <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='flex p-3 border-b border-slate-200 border-solid'>
         <div className='flex'>
           <div className='mr-2'>
@@ -61,8 +62,8 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
           </div>
         </div>
       </div>
-      <div className='flex flex-row'>
-        <div className='flex w-1/2 h-full'>
+      <div className='flex flex-row h-[85vh]'>
+        <div className='flex w-1/2'>
           <Table
             columns={type.columns as any}
             data={getFilteredData() as any}
@@ -70,8 +71,8 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
             onSelect={selectRow}
           />
         </div>
-        <div className='flex w-1/2 h-full'>
-          <JsonTreeView data={getFilteredData().at(selected)} />
+        <div className='flex w-1/2'>
+          <JsonView data={getFilteredData().at(selected)} />
         </div>
       </div>
     </div>

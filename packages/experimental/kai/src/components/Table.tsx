@@ -87,7 +87,7 @@ export const Table: FC<{
         </div>
 
         {/* Body */}
-        <div className='tbody overflow-y-auto mt-2'>
+        <div className='tbody overflow-y-auto overflow-x-hidden mt-2'>
           {rows.map((row, i) => {
             prepareRow(row);
             return (
