@@ -4,33 +4,56 @@
 
 import React, { useState } from 'react';
 
-import { Box } from '@mui/material';
-
 import { PublicKey } from '@dxos/keys';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { useMembers, useSpaces } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components-deprecated';
+import { humanize } from '@dxos/util';
 
-import { KeySelect, Panel } from '../../components';
+import { ColumnType, MasterTable } from '../../components';
 
 export const MembersPanel = () => {
-  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
-  const members = useMembers(selectedSpaceKey);
-
   const spaces = useSpaces();
 
-  return (
-    <Panel
-      controls={
-        <KeySelect
-          label='Space'
-          keys={spaces.map(({ key }) => key)}
-          selected={selectedSpaceKey}
-          onChange={(key) => setSelectedSpaceKey(key)}
-          humanize={true}
-        />
+  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
+  const members = useMembers(selectedSpaceKey ?? spaces[0].key);
+
+  const types: ColumnType<SpaceMember>[] = spaces.map((space) => ({
+    id: space.key.toHex(),
+    title: humanize(space.key),
+    filter: () => true,
+    columns: [
+      {
+        Header: 'Name',
+        accessor: (member) => member.profile?.displayName
+      },
+      {
+        Header: 'IdentityKey',
+        accessor: (member) => {
+          const identityKey = member.identityKey;
+          return humanize(identityKey);
+        }
+      },
+      {
+        Header: 'Presence',
+        accessor: (member) => {
+          switch (member.presence) {
+            case SpaceMember.PresenceState.ONLINE:
+              return 'Online';
+            case SpaceMember.PresenceState.OFFLINE:
+              return 'Offline';
+          }
+        }
       }
-    >
-      <Box flex={1}>{selectedSpaceKey && <JsonTreeView data={{ members }} />}</Box>
-    </Panel>
+    ]
+  }));
+
+  return (
+    <MasterTable
+      types={types}
+      data={members}
+      onSelectType={(id) => {
+        setSelectedSpaceKey(PublicKey.fromHex(id));
+      }}
+    />
   );
 };

@@ -2,21 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Gear, Users, Graph, PaperPlane, UserCircle, Database, Queue } from 'phosphor-react';
 import React from 'react';
-
-// https://mui.com/components/material-icons
-import {
-  AccountCircle as IdentityIcon,
-  Grain as ItemsIcon,
-  FilterTiltShift as SwarmIcon,
-  Group as SpacesIcon,
-  List as FeedsIcon,
-  List as CredentialsIcon,
-  // AppRegistration as RegistryIcon,
-  Router as SignalIcon,
-  Settings as ConfigIcon,
-  VpnKey as KeyIcon
-} from '@mui/icons-material';
 
 import {
   ConfigPanel,
@@ -28,71 +15,75 @@ import {
   // NetworkPanel,
   KeyringPanel,
   SpacesPanel,
-  Section,
   SignalPanel,
-  SwarmPanel
+  SwarmPanel,
+  SectionItem
 } from './containers';
 
-export const sections: Section[] = [
+export const sections: SectionItem[] = [
   {
     title: 'CLIENT',
+    id: 'client',
+    Icon: Users,
     items: [
       {
         id: 'config',
         title: 'Config',
-        icon: <ConfigIcon />,
+        Icon: Gear,
         panel: <ConfigPanel />
       }
-      // {
-      //   id: 'storage',
-      //   title: 'Storage',
-      //   icon: <StorageIcon />,
-      //   panel: <StoragePanel />
-      // }
+      // // {
+      // //   id: 'storage',
+      // //   title: 'Storage',
+      // //   icon: <StorageIcon />,
+      // //   panel: <StoragePanel />
+      // // }
     ]
   },
   {
     title: 'HALO',
+    id: 'halo',
     items: [
       {
         id: 'halo.identity',
         title: 'Identity',
-        icon: <IdentityIcon />,
+        // Icon: <IdentityIcon />,
         panel: <IdentityPanel />
       },
       {
         id: 'halo.keyring',
         title: 'Keyring',
-        icon: <KeyIcon />,
+        // Icon: <KeyIcon />,
         panel: <KeyringPanel />
       },
       {
         id: 'halo.credentials',
         title: 'Credentials',
-        icon: <CredentialsIcon />,
+        // Icon: <CredentialsIcon />,
         panel: <CredentialsPanel />
       }
     ]
   },
   {
     title: 'ECHO',
+    id: 'echo',
     items: [
       {
         id: 'echo.spaces',
         title: 'Spaces',
-        icon: <SpacesIcon />,
+        // icon: <SpacesIcon />,
         panel: <SpacesPanel />
       },
       {
         id: 'echo.feeds',
         title: 'Feeds',
-        icon: <FeedsIcon />,
+        Icon: Queue,
         panel: <FeedsPanel />
       },
       {
         id: 'echo.items',
         title: 'Items',
-        icon: <ItemsIcon />,
+        Icon: Database,
         panel: <ItemsPanel />
       }
       // {
@@ -104,32 +95,32 @@ export const sections: Section[] = [
     ]
   },
   {
+    id: 'mesh',
     title: 'MESH',
+    Icon: Graph,
     items: [
-      /*
-      {
-        id: 'mesh.network',
-        title: 'Network Graph',
-        icon: SwarmIcon,
-        panel: NetworkPanel
-      },
-      */
+      // {
+      //   id: 'mesh.network',
+      //   title: 'Network Graph',
+      //   icon: SwarmIcon,
+      //   panel: NetworkPanel
+      // },
       {
         id: 'mesh.members',
         title: 'Members',
-        icon: <IdentityIcon />,
+        Icon: UserCircle,
         panel: <MembersPanel />
       },
       {
         id: 'mesh.swarminfo',
         title: 'Swarm',
-        icon: <SwarmIcon />,
+        // icon: <SwarmIcon />,
         panel: <SwarmPanel />
       },
       {
         id: 'mesh.signal',
         title: 'Signal',
-        icon: <SignalIcon />,
+        Icon: PaperPlane,
         panel: <SignalPanel />
       }
     ]

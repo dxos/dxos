@@ -4,104 +4,87 @@
 
 import React, { useState } from 'react';
 
-import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
-import { TreeItem, TreeView } from '@mui/lab';
-import { Box } from '@mui/material';
-
 import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
+import { FolderHierarchy, FolderHierarchyItem, Selector, Searchbar } from '@dxos/kai';
 import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { useSpace, useSelection, useDevtools, useStream } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components-deprecated';
+import { useSpace, useSelection, useSpaces } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
-import { KeySelect, Panel } from '../../components';
-
-const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
-  const children = useSelection(item.select().children()) ?? [];
-
-  return (
-    <TreeItem nodeId={item.id} label={item.type ?? item.modelType ?? 'undefined'} onClick={() => onSelect(item)}>
-      {children.map((child) => (
-        <ItemNode key={child.id} item={child} onSelect={onSelect} />
-      ))}
-    </TreeItem>
-  );
-};
+import { JsonView, PublicKeySelector } from '../../components';
 
 export const ItemsPanel = () => {
+  const spaces = useSpaces();
+
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
-  const [selectedItem, setSelectedItem] = useState<Item<any>>();
-
-  const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
-  const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
-
   const space = useSpace(selectedSpaceKey);
   const items = useSelection(space?.select()) ?? [];
 
-  return (
-    <Panel
-      controls={
-        <KeySelect
-          label='Space'
-          keys={spaces.map(({ key }) => key)}
-          selected={selectedSpaceKey}
-          onChange={(key) => setSelectedSpaceKey(key)}
-          humanize={true}
-        />
-      }
-    >
-      <Box display='flex' height='100%'>
-        <TreeView
-          defaultCollapseIcon={<CollapseIcon />}
-          defaultExpandIcon={<ExpandIcon />}
-          sx={{
-            flex: 1,
-            maxWidth: 300,
-            overflowY: 'auto',
-            height: '100%'
-          }}
-        >
-          {items
-            .filter((item) => !item.parent)
-            .map((item) => (
-              <ItemNode key={item.id} item={item} onSelect={setSelectedItem} />
-            ))}
-        </TreeView>
+  const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
-        <Box flex={1}>{selectedItem && <ItemDetails item={selectedItem} />}</Box>
-      </Box>
-    </Panel>
+  const [text, setText] = useState<string>('');
+  const handleSearch = (text: string) => {
+    setText(text);
+  };
+
+  const getHierarchicalItem = (dbItem: Item<any>): FolderHierarchyItem => {
+    return {
+      id: dbItem.id,
+      title: (modelToObject(dbItem.model) as any)?.['@type'] ?? dbItem.type ?? dbItem.modelType ?? 'undefined',
+      items: dbItem.children.map((child) => getHierarchicalItem(child)),
+      value: dbItem
+    };
+  };
+
+  return (
+    <div className='flex flex-1 flex-col overflow-hidden'>
+      <div className='flex flex-1 p-3 border-b border-slate-200 border-solid'>
+        <div className='w-1/3 mr-2'>
+          <PublicKeySelector
+            keys={spaces.map(({ key }) => key)}
+            value={selectedSpaceKey}
+            placeholder={'Select space'}
+            onSelect={(key) => {
+              key && setSelectedSpaceKey(key);
+            }}
+          />
+        </div>
+        <div>
+          <Searchbar onSearch={handleSearch} />
+        </div>
+      </div>
+      <div className='flex h-full'>
+        <div className='flex flex-col w-1/3 overflow-auto'>
+          <FolderHierarchy
+            items={items
+              .filter((item) => !item.parent)
+              .map(getHierarchicalItem)
+              .filter((item) => item.title?.includes(text) ?? true)}
+            titleClassName={'text-black text-lg'}
+            onSelect={(item) => setSelectedItem(item.value)}
+            selected={selectedItem?.id}
+          />
+        </div>
+
+        <div className='flex flex-1 w-2/3 overflow-auto'>{selectedItem && <ItemDetails item={selectedItem} />}</div>
+      </div>
+    </div>
   );
 };
-
-interface ItemNodeProps {
-  item: Item<any>;
-  onSelect: (item: Item<any>) => void;
-}
 
 interface ItemDetailsProps {
   item: Item<Model<any>>;
 }
 
 const ItemDetails = ({ item }: ItemDetailsProps) => (
-  <Box
-    sx={{
-      '& td': {
-        verticalAlign: 'top'
-      }
-    }}
-  >
+  <div className='align-top mt-2 ml-2'>
     <table>
       <tbody>
         <tr>
-          <td style={{ width: 100 }}>ID</td>
+          <td>ID</td>
           <td>{truncateKey(item.id, 8)}</td>
         </tr>
         <tr>
@@ -117,14 +100,14 @@ const ItemDetails = ({ item }: ItemDetailsProps) => (
           <td>{item.deleted ? 'Yes' : 'No'}</td>
         </tr>
         <tr>
-          <td>Properties</td>
+          <td className='align-top'>Properties</td>
           <td>
-            <JsonTreeView data={modelToObject(item.model)} />
+            <JsonView data={modelToObject(item.model)} />
           </td>
         </tr>
       </tbody>
     </table>
-  </Box>
+  </div>
 );
 
 const modelToObject = (model: Model<any>) => {
