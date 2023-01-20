@@ -42,27 +42,11 @@ const Tile: FC<{
       onClick={() => onSelect(id)}
     >
       <div className='flex flex-1 flex-col'>
-        <h2 className='text-xl font-thin text-black mb-1'>{title}</h2>
-        <div className='text-sm font-thin text-black'>{description}</div>
+        <h2 className='text-xl font-display font-medium text-black mb-1'>{title}</h2>
+        <div className='text-black'>{description}</div>
       </div>
       <div className='flex flex-col justify-center ml-2 text-black'>
-        <Icon weight='thin' className={mx(getSize(16))} />
-      </div>
-    </div>
-  );
-
-  return (
-    <div
-      className={mx(
-        'flex flex-col items-center w-[200px] h-[140px] border-0 rounded-lg p-4 bg-gray-200 drop-shadow-md',
-        '[&>div>svg]:hover:text-black hover:bg-blue-200',
-        active && 'bg-blue-300 text-black'
-      )}
-      onClick={() => onSelect(id)}
-    >
-      <div className='text-xl __font-thin text-black'>{title}</div>
-      <div className='mt-3'>
-        <Icon weight='thin' className={mx(getSize(16))} />
+        <Icon weight='duotone' className={mx(getSize(16), '[&>*]:stroke-[8]')} />
       </div>
     </div>
   );
@@ -105,7 +89,7 @@ export const RegistryFrame = () => {
   };
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
+    <div className='flex flex-col flex-1'>
       <div className='flex justify-center'>
         <div className='flex w-[400px] items-center m-10'>
           <Searchbar />
@@ -126,8 +110,8 @@ export const RegistryFrame = () => {
         </div>
       </div>
 
-      <div className='flex justify-center overflow-hidden'>
-        <div className='flex flex-col overflow-y-scroll p-4'>
+      <div className='flex justify-center'>
+        <div className='flex flex-col p-4'>
           <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
             {Object.values(type === 'app' ? frames : bots)
               .filter(({ system }) => !system)

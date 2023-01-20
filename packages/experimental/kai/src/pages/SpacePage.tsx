@@ -49,12 +49,14 @@ export const SpacePage = () => {
         inlineStart
         slots={{
           content: { children: <Sidebar />, className: 'block-start-appbar' },
-          main: { className: mx(frames.length > 1 ? 'pbs-[84px]' : 'pbs-appbar', 'bs-screen flex flex-col bg-white') }
+          main: { className: mx(frames.length > 1 ? 'pbs-topbars' : 'pbs-appbar', 'bs-full overflow-hidden') }
         }}
       >
         <AppBar />
         <FrameSelector />
-        {frame && <FrameContainer frame={frame} />}
+        <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
+          {frame && <FrameContainer frame={frame} />}
+        </div>
       </PanelSidebarProvider>
     </SpaceContext.Provider>
   );
