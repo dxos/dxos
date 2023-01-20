@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useCallback, useRef, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
-import { id } from '@dxos/echo-schema';
+import { deleted, id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
 import { ACTIVE_TODOS, ALL_TODOS, COMPLETED_TODOS } from '../constants';
@@ -21,74 +21,51 @@ export const Main = withReactor(() => {
   const completed = state === ACTIVE_TODOS ? false : state === COMPLETED_TODOS ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const [list] = useQuery(space, TodoList.filter());
-  const todos = list.todos.filter((todo) => completed === todo.completed);
+  // TODO(wittjosiah): Hide deleted items from `useQuery`?
+  const allTodos = list.todos.filter((todo) => !todo[deleted]);
+  const todos = allTodos.filter((todo) => (completed !== undefined ? completed === todo.completed : true));
   const [editing, setEditing] = useState<string>();
 
-  const handleNewTodoKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key !== 'Enter') {
-        return;
-      }
+  const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') {
+      return;
+    }
 
-      event.preventDefault();
+    event.preventDefault();
 
-      const title = inputRef.current?.value.trim();
-      if (title) {
-        list.todos.push(new Todo({ title }));
-        inputRef.current!.value = '';
-      }
-    },
-    [inputRef, list]
-  );
-
-  const handleToggle = (todo: Todo) => {
-    todo.completed = !todo.completed;
+    const title = inputRef.current?.value.trim();
+    if (title) {
+      list.todos.push(new Todo({ title }));
+      inputRef.current!.value = '';
+    }
   };
 
-  const handleDestroy = useCallback(
-    (todo: Todo) => {
-      void space.experimental.db.delete(todo);
-    },
-    [space]
-  );
-
-  const handleSave = useCallback(
-    (todo: Todo, title: string) => {
-      todo.title = title;
-      setEditing(undefined);
-    },
-    [setEditing]
-  );
-
-  const handleShare = useCallback(async () => {
+  const handleShare = async () => {
     const { invitation } = await space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
     const code = InvitationEncoder.encode(invitation!);
     await navigator.clipboard.writeText(code);
-  }, [space]);
+  };
 
-  const handleToggleAll = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const checked = event.target.checked;
-      todos.forEach((item) => {
-        item.completed = checked;
-      });
-    },
-    [todos]
-  );
+  const handleToggleAll = (event: ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    todos.forEach((item) => {
+      item.completed = checked;
+    });
+  };
 
-  const handleClearCompleted = useCallback(() => {
-    todos
+  const handleClearCompleted = () => {
+    list.todos
       .filter((item) => item.completed)
       .forEach((item) => {
         void space.experimental.db.delete(item);
       });
-  }, [space, todos]);
+  };
 
-  const activeTodoCount = todos.reduce((acc, todo) => {
+  const activeTodoCount = allTodos.reduce((acc, todo) => {
     return todo.completed ? acc : acc + 1;
   }, 0);
 
-  const completedCount = todos.length - activeTodoCount;
+  const completedCount = allTodos.length - activeTodoCount;
 
   return (
     <div>
@@ -121,11 +98,14 @@ export const Main = withReactor(() => {
                 key={todo[id]}
                 title={todo.title}
                 completed={todo.completed}
-                onToggle={() => handleToggle(todo)}
-                onDestroy={() => handleDestroy(todo)}
+                onToggle={() => (todo.completed = !todo.completed)}
+                onDestroy={() => space.experimental.db.delete(todo)}
                 onEdit={() => setEditing(todo[id])}
                 editing={editing === todo[id]}
-                onSave={(val) => handleSave(todo, val)}
+                onSave={(title) => {
+                  todo.title = title;
+                  setEditing(undefined);
+                }}
                 onCancel={() => setEditing(undefined)}
               />
             ))}
