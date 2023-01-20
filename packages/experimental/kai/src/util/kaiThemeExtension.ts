@@ -5,6 +5,7 @@
 export const kaiThemeExtension = {
   spacing: {
     appbar: '48px',
-    framepicker: '36px'
+    framepicker: '36px',
+    topbars: '84px'
   }
 };

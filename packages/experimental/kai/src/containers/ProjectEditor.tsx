@@ -51,7 +51,7 @@ export const ProjectEditor: FC = withReactor(() => {
           {project.description?.doc && (
             <div className='flex flex-col flex-1 m-2'>
               <div className='text-xs pb-1'>Description</div>
-              <div className='flex flex-1 overflow-y-scroll border'>
+              <div className='flex flex-1 overflow-y-auto border'>
                 <Composer
                   doc={project.description?.doc}
                   slots={{
