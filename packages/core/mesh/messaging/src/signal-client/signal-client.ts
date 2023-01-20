@@ -39,8 +39,8 @@ export type SignalStatus = {
   state: SignalState;
   error?: string;
   reconnectIn: number;
-  connectionStarted: number;
-  lastStateChange: number;
+  connectionStarted: Date;
+  lastStateChange: Date;
 };
 
 export type CommandTrace = {
@@ -70,12 +70,12 @@ export class SignalClient implements SignalMethods {
   /**
    * Timestamp of when the connection attempt was began.
    */
-  private _connectionStarted = Date.now();
+  private _connectionStarted = new Date();
 
   /**
    * Timestamp of last state change.
    */
-  private _lastStateChange = Date.now();
+  private _lastStateChange = new Date();
 
   private _client!: SignalRPCClient;
   private readonly _clientReady = new Trigger();
@@ -207,7 +207,7 @@ export class SignalClient implements SignalMethods {
 
   private _setState(newState: SignalState) {
     this._state = newState;
-    this._lastStateChange = Date.now();
+    this._lastStateChange = new Date();
     log('signal state changed', { status: this.getStatus() });
     this.statusChanged.emit(this.getStatus());
   }
@@ -219,7 +219,7 @@ export class SignalClient implements SignalMethods {
   }
 
   private _createClient() {
-    this._connectionStarted = Date.now();
+    this._connectionStarted = new Date();
     try {
       this._client = new SignalRPCClient(this._host);
     } catch (err: any) {

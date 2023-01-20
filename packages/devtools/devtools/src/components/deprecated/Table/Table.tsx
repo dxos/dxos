@@ -14,7 +14,7 @@ import {
   styled
 } from '@mui/material';
 
-export type TableProps = MuiTableProps
+export type TableProps = MuiTableProps;
 
 /**
  * Scrolling table.
@@ -44,7 +44,7 @@ export const Table = ({ children, ...props }: TableProps) => (
 );
 
 interface TableCellProps extends MuiTableCellProps {
-  monospace?: boolean
+  monospace?: boolean;
 }
 
 const StyledTableCell = styled(MuiTableCell, {

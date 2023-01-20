@@ -2,139 +2,61 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { FC, ReactNode, useState } from 'react';
 
-import {
-  Box,
-  Divider,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  colors,
-  useTheme
-} from '@mui/material';
-
-import { MessengerModel } from '@dxos/messenger-model';
-import { useClient, useClientServices } from '@dxos/react-client';
-import { TextModel } from '@dxos/text-model';
+import { FolderHierarchy, FolderHierarchyItem } from '@dxos/kai';
+import { useClientServices } from '@dxos/react-client';
 
 export type SectionItem = {
   id: string;
   title: string;
-  icon: ReactNode;
-  panel: ReactNode;
+  Icon?: FC;
+  panel?: ReactNode;
+  items?: SectionItem[];
 };
 
-export type Section = {
-  title: string;
-  items: SectionItem[];
+const findItem = (items: SectionItem[], id: string): SectionItem | undefined => {
+  for (const item of items) {
+    if (item.id === id) {
+      return item;
+    }
+
+    if (item.items) {
+      const subItem = findItem(item.items, id);
+      if (subItem) {
+        return subItem;
+      }
+    }
+  }
 };
 
-export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
-  const theme = useTheme();
-  const client = useClient();
-  const [selected, setSelected] = useState(sections[0]?.items[0]?.id);
+export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
+  const [selected, setSelected] = useState(sections[0]?.items?.[0]);
+  const handleSelect = (item: FolderHierarchyItem) => {
+    const newSelected = findItem(sections, item.id);
+    if (newSelected?.panel) {
+      setSelected(newSelected);
+    }
+  };
+
   const services = useClientServices();
   if (!services) {
     return null;
   }
-  // TODO(burdon): Factor out.
-  // TODO(wittjosiah): Should this only be done in the app?
-  useEffect(() => {
-    client.echo.modelFactory.registerModel(TextModel);
-    client.echo.modelFactory.registerModel(MessengerModel);
-  }, [client]);
-
-  // TODO(mykola): unavailable for now.
-  // useEffect(() => {
-  //   void services.TracingService.setTracingOptions({ enable: true });
-  //   return () => {
-  //     void services.TracingService.setTracingOptions({ enable: false });
-  //   };
-  // }, [client]);
-
-  const handleListItemClick = (event: any, index: string) => {
-    setSelected(index);
-  };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        flexGrow: 1,
-        height: '100vh',
-        overflow: 'hidden'
-      }}
-    >
-      <Box
-        sx={{
-          flexShrink: 0,
-          width: 140,
-          backgroundColor: colors.grey[100],
-          borderRight: '1px solid',
-          borderRightColor: 'divider',
-          overflowY: 'auto'
-        }}
-      >
-        <List dense disablePadding>
-          {sections.map(({ title, items = [] }) => (
-            <div key={title}>
-              <ListItem>
-                <ListItemText primary={title} />
-              </ListItem>
-              {items.map(({ id, title, icon }) => (
-                <ListItemButton
-                  key={id}
-                  id={id}
-                  selected={selected === id}
-                  onClick={(event) => handleListItemClick(event, id)}
-                >
-                  <ListItemIcon
-                    sx={{
-                      '&.MuiListItemIcon-root': {
-                        color: selected === id ? theme.palette.secondary.main : '',
-                        minWidth: 36
-                      }
-                    }}
-                  >
-                    {icon}
-                  </ListItemIcon>
-                  <ListItemText style={{ whiteSpace: 'nowrap' }} primary={title} />
-                </ListItemButton>
-              ))}
-              <Divider />
-            </div>
-          ))}
-        </List>
-      </Box>
+    <div className='flex w-full h-screen overflow-hidden'>
+      <div className={'flex flex-col w-[200px] overflow-hidden overflow-y-auto'}>
+        <FolderHierarchy
+          items={sections}
+          titleClassName={'text-black text-lg'}
+          onSelect={handleSelect}
+          selected={selected?.id}
+          expanded={sections.map((section) => section.id)}
+        />
+      </div>
 
-      <Box
-        sx={{
-          display: 'flex',
-          flex: 1,
-          overflow: 'hidden'
-        }}
-      >
-        {sections.map(({ items = [] }) =>
-          items.map(({ id, panel }) => (
-            <Box
-              id={`${id}-panel`}
-              key={id}
-              sx={{
-                display: selected === id ? 'flex' : 'none',
-                flex: 1,
-                flexDirection: 'column',
-                overflow: 'auto'
-              }}
-            >
-              {panel}
-            </Box>
-          ))
-        )}
-      </Box>
-    </Box>
+      <div className='flex flex-1 flex-col overflow-hidden bg-white'>{selected?.panel}</div>
+    </div>
   );
 };

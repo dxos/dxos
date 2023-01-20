@@ -328,11 +328,6 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/devtools-testbench/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/devtools/initializers/bare/package.json",
           "jsonpath": "$.version"
         },

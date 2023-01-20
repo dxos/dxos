@@ -11,6 +11,7 @@ import "dxos/echo/feed.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/halo/keyring.proto";
 import "dxos/halo/signed.proto";
+import "dxos/mesh/signal.proto";
 import "dxos/keys.proto";
 import "dxos/rpc.proto";
 
@@ -64,7 +65,7 @@ service DevtoolsHost {
   rpc GetNetworkPeers(GetNetworkPeersRequest) returns (GetNetworkPeersResponse);
   rpc SubscribeToNetworkTopics(google.protobuf.Empty) returns (stream SubscribeToNetworkTopicsResponse);
   rpc SubscribeToSignalStatus(google.protobuf.Empty) returns (stream SubscribeToSignalStatusResponse);
-  rpc SubscribeToSignalTrace(google.protobuf.Empty) returns (stream SubscribeToSignalTraceResponse);
+  rpc SubscribeToSignal(google.protobuf.Empty) returns (stream SignalResponse);
   rpc SubscribeToSwarmInfo(SubscribeToSwarmInfoRequest) returns (stream SubscribeToSwarmInfoResponse);
 }
 
@@ -253,19 +254,19 @@ message SubscribeToSignalStatusResponse {
     // TODO(dmaretskyi): Represent as absolute timestamp.
     int32 reconnect_in = 4;
 
-    // TODO(dmaretskyi): Change to timestamp.
-    int32 connection_started = 5;
-    int32 last_state_change = 6;
+    google.protobuf.Timestamp connection_started = 5;
+    google.protobuf.Timestamp last_state_change = 6;
   }
 
   repeated SignalServer servers = 1;
 }
 
-// SubscribeToSignalTrace
-
-message SubscribeToSignalTraceResponse {
-  // JSON-encoded events.
-  repeated string events = 1;
+message SignalResponse {
+  oneof data {
+    dxos.mesh.signal.SwarmEvent swarm_event = 1;
+    dxos.mesh.signal.Message message = 2;
+  }
+  google.protobuf.Timestamp received_at = 3;
 }
 
 // SubscribeToSwarmInfo
