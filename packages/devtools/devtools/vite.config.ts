@@ -10,7 +10,8 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-components/plugin';
-import { osThemeExtension, kaiThemeExtension } from '@dxos/kai/theme-extensions';
+import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
+import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
 
 import packageJson from './package.json';
 
