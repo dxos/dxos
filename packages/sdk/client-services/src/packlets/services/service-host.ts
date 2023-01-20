@@ -120,6 +120,9 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     log('opening...');
 
+    // TODO(wittjosiah): Remove. Clear metadata store on close instead.
+    this._serviceContext = new ServiceContext(this._storage, this._networkManager, this._modelFactory);
+
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry.setServices({
       HaloInvitationsService: new HaloInvitationsServiceImpl(

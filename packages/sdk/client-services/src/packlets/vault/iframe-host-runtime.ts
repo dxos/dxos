@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
@@ -27,6 +28,7 @@ export type IFrameHostRuntimeParams = {
 export class IFrameHostRuntime {
   private readonly _configProvider: () => MaybePromise<Config>;
   private readonly _transportFactory = createWebRTCTransportFactory();
+  private readonly _ready = new Trigger<Error | undefined>();
   private readonly _getService: <Service>(
     find: (services: Partial<ClientServices>) => Service | undefined
   ) => Promise<Service>;
@@ -43,6 +45,11 @@ export class IFrameHostRuntime {
     this._configProvider = configProvider;
     this._appPort = appPort;
     this._getService = async (find) => {
+      const error = await this._ready.wait();
+      if (error) {
+        throw error;
+      }
+
       const service = await find(this._clientServices.services);
       if (!service) {
         throw new Error('Service not found');
@@ -54,40 +61,46 @@ export class IFrameHostRuntime {
 
   async start() {
     log('starting...');
-    this._config = await this._configProvider();
-    const signalServer = this._config.get('runtime.services.signal.server');
-    this._clientServices = new ClientServicesHost({
-      lockKey: LOCK_KEY,
-      config: this._config,
-      networkManager: new NetworkManager({
-        log: true,
-        signalManager: signalServer
-          ? new WebsocketSignalManager([signalServer])
-          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-        transportFactory: this._transportFactory
-      })
-    });
+    try {
+      this._config = await this._configProvider();
+      const signalServer = this._config.get('runtime.services.signal.server');
+      this._clientServices = new ClientServicesHost({
+        lockKey: LOCK_KEY,
+        config: this._config,
+        networkManager: new NetworkManager({
+          log: true,
+          signalManager: signalServer
+            ? new WebsocketSignalManager([signalServer])
+            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+          transportFactory: this._transportFactory
+        })
+      });
 
-    this._clientRpc = createProtoRpcPeer({
-      exposed: clientServiceBundle,
-      handlers: {
-        DataService: async () => await this._getService((services) => services.DataService),
-        DevicesService: async () => await this._getService((services) => services.DevicesService),
-        DevtoolsHost: async () => await this._getService((services) => services.DevtoolsHost),
-        HaloInvitationsService: async () => await this._getService((services) => services.HaloInvitationsService),
-        NetworkService: async () => await this._getService((services) => services.NetworkService),
-        ProfileService: async () => await this._getService((services) => services.ProfileService),
-        SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),
-        SpaceService: async () => await this._getService((services) => services.SpaceService),
-        SpacesService: async () => await this._getService((services) => services.SpacesService),
-        SystemService: async () => await this._getService((services) => services.SystemService),
-        TracingService: async () => await this._getService((services) => services.TracingService)
-      },
-      port: this._appPort
-    });
+      this._clientRpc = createProtoRpcPeer({
+        exposed: clientServiceBundle,
+        handlers: {
+          DataService: async () => await this._getService((services) => services.DataService),
+          DevicesService: async () => await this._getService((services) => services.DevicesService),
+          DevtoolsHost: async () => await this._getService((services) => services.DevtoolsHost),
+          HaloInvitationsService: async () => await this._getService((services) => services.HaloInvitationsService),
+          NetworkService: async () => await this._getService((services) => services.NetworkService),
+          ProfileService: async () => await this._getService((services) => services.ProfileService),
+          SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),
+          SpaceService: async () => await this._getService((services) => services.SpaceService),
+          SpacesService: async () => await this._getService((services) => services.SpacesService),
+          SystemService: async () => await this._getService((services) => services.SystemService),
+          TracingService: async () => await this._getService((services) => services.TracingService)
+        },
+        port: this._appPort
+      });
 
-    await Promise.all([this._clientServices.open(), this._clientRpc.open()]);
-    log('started');
+      await Promise.all([this._clientServices.open(), this._clientRpc.open()]);
+      this._ready.wake(undefined);
+      log('started');
+    } catch (err: any) {
+      this._ready.wake(err);
+      log.catch(err);
+    }
   }
 
   async stop() {

@@ -4,6 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager, WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
@@ -37,6 +38,7 @@ export class WorkerRuntime {
   ) { }
 
   async start() {
+    log('starting...');
     try {
       this._config = await this._configProvider();
       const signalServer = this._config.get('runtime.services.signal.server');
@@ -53,8 +55,10 @@ export class WorkerRuntime {
 
       await this._clientServices.open();
       this._ready.wake(undefined);
+      log('started');
     } catch (err: any) {
       this._ready.wake(err);
+      log.catch(err);
     }
   }
 
@@ -69,6 +73,11 @@ export class WorkerRuntime {
   async createSession({ appPort, systemPort }: CreateSessionParams) {
     const session = new WorkerSession({
       getService: async (find) => {
+        const error = await this._ready.wait();
+        if (error) {
+          throw error;
+        }
+
         const service = find(this._clientServices.services);
         if (!service) {
           throw new Error('Service not found');
