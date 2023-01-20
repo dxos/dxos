@@ -178,7 +178,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   private _set(key: string, value: any) {
     this._database?._logObjectAccess(this);
-    
+
     if (!this._item) {
       this._uninitialized![key] = value;
     } else {

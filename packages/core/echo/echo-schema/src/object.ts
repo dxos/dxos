@@ -59,8 +59,6 @@ export abstract class EchoObject<T extends Model = any> {
    */
   protected async _onBind(): Promise<void> {}
 
-
-
   /**
    * @internal
    */
