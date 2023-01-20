@@ -28,6 +28,8 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
 
+const DATA_PIPELINE_READY_TIMEOUT = 3_000;
+
 @trackLeaks('open', 'close')
 export class DataSpaceManager {
   private readonly _ctx = new Context();
@@ -61,8 +63,9 @@ export class DataSpaceManager {
       const space = await this._constructSpace(spaceMetadata);
       if (spaceMetadata.latestTimeframe) {
         log('waiting for latest timeframe', { spaceMetadata });
-        await space.dataPipelineController.waitUntilTimeframe(spaceMetadata.latestTimeframe);
+        await space.dataPipelineController.pipelineState!.setTargetTimeframe(spaceMetadata.latestTimeframe);
       }
+      await space.dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({ timeout: DATA_PIPELINE_READY_TIMEOUT })
     }
   }
 

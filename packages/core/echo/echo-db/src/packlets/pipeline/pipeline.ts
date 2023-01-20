@@ -14,6 +14,11 @@ import { Timeframe } from '@dxos/timeframe';
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
+import { sleep } from '@dxos/async';
+
+export type WaitUntilReachedTargetParams = {
+  timeout?: number;
+}
 
 /**
  * External state accessor.
@@ -22,13 +27,24 @@ export class PipelineState {
   // TODO(dmaretskyi): Remove?.
   public readonly timeframeUpdate = this._timeframeClock.updateTimeframe;
 
+  /**
+   * Target timeframe we are waiting to reach.
+   */
+  private _targetTimeframe: Timeframe | undefined;
+
+  private _reachedTargetPromise: Promise<void> | undefined;
+
   // prettier-ignore
   constructor(
     private _iterator: FeedSetIterator<any>,
     private _timeframeClock: TimeframeClock
-  ) {}
+  ) { }
 
-  // TODO(burdon): For testing only.
+
+  /**
+   * Latest theoretical timeframe based on the last mutation in each feed.
+   * NOTE: This might never be reached if the mutation dependencies 
+   */
   get endTimeframe() {
     return mapFeedIndexesToTimeframe(
       this._iterator.feeds
@@ -46,6 +62,40 @@ export class PipelineState {
 
   async waitUntilTimeframe(target: Timeframe) {
     await this._timeframeClock.waitUntilReached(target);
+  }
+
+  setTargetTimeframe(target: Timeframe) {
+    this._targetTimeframe = target;
+  }
+
+  /**
+   * Wait until the pipeline processes all messages in the feed and reaches the target timeframe if that is set.
+   * 
+   * This function will resolve immediately if the pipeline is stalled.
+   * 
+   * @param timeout Timeout in milliseconds to specify the maximum wait time.
+   */
+  async waitUntilReachedTargetTimeframe({ timeout }: WaitUntilReachedTargetParams = {}) {
+    this._reachedTargetPromise ??= Promise.race([
+      this._timeframeClock.update.waitForCondition(() => {
+        const target = this._targetTimeframe ? Timeframe.merge(this.endTimeframe, this._targetTimeframe) : this.endTimeframe;
+
+        return Timeframe.dependencies(target, this._timeframeClock.timeframe).isEmpty();
+      }),
+      this._iterator.stalled.discardParameter().waitForCount(1)
+    ])
+
+
+    if (timeout) {
+      return Promise.race([
+        this._reachedTargetPromise,
+        sleep(timeout).then(() => {
+          log.warn(`waitUntilReachedTargetTimeframe timed out after ${timeout}ms.`)
+        }),
+      ])
+    } else {
+      return this._reachedTargetPromise;
+    }
   }
 }
 

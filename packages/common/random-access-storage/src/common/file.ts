@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import pify from 'pify';
 import type { FileStat, RandomAccessStorage, RandomAccessStorageProperties } from 'random-access-storage';
 
@@ -42,7 +43,19 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
       // TODO(burdon): Suppress warning and throw error if used.
       // console.warn(`Field not supported for type: ${JSON.stringify({ type, field })}`);
     } else {
-      object[field] = pify(object[field].bind(object));
+      const fn = pify(object[field].bind(object))
+      object[field] = async (...args: any) => {
+        const before = performance.now()
+        
+        const res = await fn(...args);
+
+        const elapsed = performance.now() - before;
+        if (elapsed > 10) {
+          log.warn('Slow storage operation', { type, operation: field, elapsed })
+        }
+
+        return res;
+      } 
     }
   }
 
