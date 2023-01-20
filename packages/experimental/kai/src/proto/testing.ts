@@ -13,17 +13,17 @@ import { Contact, Event, Organization, Project, Task } from './gen/schema';
 
 // TODO(burdon): Don't save inside utils.
 
-type MinMax = { min: number; max: number } | number;
+export type MinMax = { min: number; max: number } | number;
 
-type GeneratorOptions = {
+export const range = (range: MinMax) => Array.from({ length: faker.datatype.number(range as any) });
+
+export type GeneratorOptions = {
   organizations: MinMax;
   projects: MinMax;
   tasks: MinMax;
   contacts: MinMax;
   events: MinMax;
 };
-
-const range = (range: MinMax) => Array.from({ length: faker.datatype.number(range as any) });
 
 export class Generator {
   constructor(
@@ -32,16 +32,14 @@ export class Generator {
       organizations: { min: 1, max: 3 },
       projects: { min: 1, max: 2 },
       tasks: { min: 1, max: 8 },
-      contacts: { min: 3, max: 5 },
+      contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 }
     }
   ) {}
 
   async generate() {
-    const contacts: Contact[] = [];
-
     // Organizations.
-    await Promise.all(
+    const organizations = await Promise.all(
       range(this._options.organizations).map(async () => {
         const organization = await createOrganization(this._db);
 
@@ -57,16 +55,6 @@ export class Generator {
           zip: '11205',
           state: 'NY'
         };
-
-        // Contacts.
-        await Promise.all(
-          range(this._options.contacts).map(async () => {
-            const contact = await createContact(this._db);
-            contacts.push(contact);
-            organization.people.push(contact);
-            return contact;
-          })
-        );
 
         // Projects.
         await Promise.all(
@@ -89,6 +77,21 @@ export class Generator {
             return project;
           })
         );
+
+        return organization;
+      })
+    );
+
+    // Contacts.
+    const contacts = await Promise.all(
+      range(this._options.contacts).map(async () => {
+        const contact = await createContact(this._db);
+        if (faker.datatype.number(10) > 7) {
+          const organization = faker.random.arrayElement(organizations);
+          organization.people.push(contact);
+        }
+
+        return contact;
       })
     );
 

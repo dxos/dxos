@@ -19,6 +19,7 @@ export const getSignaturePayload = (credential: Credential): Uint8Array => {
       chain: undefined
     }
   };
+  delete copy.id; // ID is not part of the signature payload.
 
   return Buffer.from(canonicalStringify(copy));
 };

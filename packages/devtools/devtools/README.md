@@ -9,3 +9,6 @@ it is setup to listen for halo-app shared worker (`pnpm nx serve halo-app`).
 
 ## Start
 `pnpm nx serve devtools`
+
+## TestBench
+You can access testbench by going to `<devtools-url>/testbench.html`

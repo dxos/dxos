@@ -8,19 +8,20 @@ import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { TestBuilder } from './testing';
+import { TestBuilder, TestPeer } from './testing';
 import { TestExtension } from './testing/test-extension';
 
 describe('Teleport', () => {
   test('sends rpc via TestExtension', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
-    const { peer1, peer2 } = await builder.createPipedPeers();
+    const [peer1, peer2] = builder.createPeers({ factory: () => new TestPeer() });
+    const [connection1, connection2] = await builder.connect(peer1, peer2);
 
     const extension1 = new TestExtension();
-    peer1.teleport!.addExtension('example.testing.rpc', extension1);
+    connection1.teleport!.addExtension('example.testing.rpc', extension1);
     const extension2 = new TestExtension();
-    peer2.teleport!.addExtension('example.testing.rpc', extension2);
+    connection2.teleport!.addExtension('example.testing.rpc', extension2);
 
     await extension1.test();
     log('test1 done');
@@ -34,12 +35,13 @@ describe('Teleport', () => {
   test('disconnect', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
-    const { peer1, peer2 } = await builder.createPipedPeers();
+    const [peer1, peer2] = builder.createPeers({ factory: () => new TestPeer() });
+    const [connection1, connection2] = await builder.connect(peer1, peer2);
 
     const extension1 = new TestExtension();
-    peer1.teleport!.addExtension('example.testing.rpc', extension1);
+    connection1.teleport.addExtension('example.testing.rpc', extension1);
     const extension2 = new TestExtension();
-    peer2.teleport!.addExtension('example.testing.rpc', extension2);
+    connection2.teleport.addExtension('example.testing.rpc', extension2);
     await extension1.test();
     log('test1 done');
     await extension2.test();
@@ -54,12 +56,13 @@ describe('Teleport', () => {
   test('destroy is idempotent', async () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
-    const { peer1, peer2 } = await builder.createPipedPeers();
+    const [peer1, peer2] = builder.createPeers({ factory: () => new TestPeer() });
+    const [connection1, connection2] = await builder.connect(peer1, peer2);
 
     const extension1 = new TestExtension();
-    peer1.teleport!.addExtension('example.testing.rpc', extension1);
+    connection1.teleport.addExtension('example.testing.rpc', extension1);
     const extension2 = new TestExtension();
-    peer2.teleport!.addExtension('example.testing.rpc', extension2);
+    connection2.teleport.addExtension('example.testing.rpc', extension2);
     await extension1.test();
     log('test1 done');
     await extension2.test();

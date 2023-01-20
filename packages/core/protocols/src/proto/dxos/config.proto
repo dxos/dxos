@@ -303,6 +303,11 @@ message Runtime {
     optional Publisher publisher = 9;
   }
 
+  message Keys {
+    optional string name = 1;
+    optional string value = 2;
+  }
+
   optional Client client = 1;
   optional App app = 2;
   optional CLI cli = 3;
@@ -310,4 +315,5 @@ message Runtime {
   optional Services services = 5;
   optional System system = 6;
   optional Kube kube = 7;
+  repeated Keys keys = 8;
 }

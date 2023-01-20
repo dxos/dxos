@@ -6,8 +6,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSpaces } from '@dxos/react-client';
+import { mx } from '@dxos/react-components';
+import { PanelSidebarProvider } from '@dxos/react-ui';
 
-import { createSpacePath, matchSpaceKey, FrameContainer } from '../app';
+import { createSpacePath, matchSpaceKey, FrameContainer, Sidebar, AppBar, FrameSelector } from '../app';
 import { SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from '../hooks';
 
 /**
@@ -41,10 +43,21 @@ export const SpacePage = () => {
     return null;
   }
 
-  // prettier-ignore
   return (
     <SpaceContext.Provider value={context}>
-      {frame && <FrameContainer frame={frame} />}
+      <PanelSidebarProvider
+        inlineStart
+        slots={{
+          content: { children: <Sidebar />, className: 'block-start-appbar' },
+          main: { className: mx(frames.length > 1 ? 'pbs-topbars' : 'pbs-appbar', 'bs-full overflow-hidden') }
+        }}
+      >
+        <AppBar />
+        <FrameSelector />
+        <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
+          {frame && <FrameContainer frame={frame} />}
+        </div>
+      </PanelSidebarProvider>
     </SpaceContext.Provider>
   );
 };

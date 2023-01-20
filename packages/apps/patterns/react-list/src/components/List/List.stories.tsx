@@ -112,7 +112,7 @@ export const Default = {
       return (
         <div className='flex'>
           {clients.map((client, index) => (
-            <ClientProvider key={index} client={client} fallback={<Loading label='Loading…' />}>
+            <ClientProvider key={index} client={client} fallback={() => <Loading label='Loading…' />}>
               <Story args={{ spaceKey, id: index }} />
             </ClientProvider>
           ))}

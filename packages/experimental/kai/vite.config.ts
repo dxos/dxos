@@ -11,6 +11,7 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 
 import packageJson from './package.json';
 
@@ -98,7 +99,8 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
-      ]
+      ],
+      extensions: [osThemeExtension, kaiThemeExtension]
     }),
 
     // TODO(burdon): Document.

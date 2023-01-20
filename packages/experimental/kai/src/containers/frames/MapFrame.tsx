@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 import { LatLngExpression } from 'leaflet';
@@ -13,10 +14,13 @@ import { useQuery } from '@dxos/react-client';
 
 import { List, ListItemButton } from '../../components';
 import { useSpace } from '../../hooks';
-import { Organization } from '../../proto';
+import { LatLng, Organization } from '../../proto';
+
+// TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
+// TODO(burdon): Popup card.
+// TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
 
 export const MapFrame = () => {
-  // https://react-leaflet.js.org/docs/api-map
   return (
     <div className='flex flex-1 overflow-hidden'>
       <MapContainer className='flex flex-1'>
@@ -26,20 +30,30 @@ export const MapFrame = () => {
   );
 };
 
+type MapPropsGetter<T> = {
+  id: (object: T) => string;
+  label: (object: T) => string;
+  coordinates: (object: T) => LatLng | undefined;
+};
+
+/**
+ * https://react-leaflet.js.org/docs/api-map
+ */
 export const MapControl = () => {
   const { space } = useSpace();
   const objects = useQuery(space, Organization.filter());
-  const getter = {
+  const getter: MapPropsGetter<Organization> = {
     id: (object: Organization) => object[id],
-    label: (object: Organization) => object.name
+    label: (object: Organization) => object.name,
+    coordinates: (object: Organization) => object.address?.coordinates
   };
 
   const [selected, setSelected] = useState<string>();
-  const [center, setCenter] = useState<LatLngExpression>(); // { lng: -0.118, lat: 51.501 });
+  const [center, setCenter] = useState<LatLngExpression>();
   const map = useMap();
   useEffect(() => {
     if (center) {
-      map.setView(center, 10);
+      map.setView(center, map.getZoom() ?? 10);
     }
   }, [center]);
 
@@ -49,10 +63,10 @@ export const MapControl = () => {
     }
   }, [objects]);
 
-  const handleSelect = (item?: Organization) => {
-    setSelected(item?.[id]);
-    if (item) {
-      const { lat, lng } = item.address?.coordinates ?? {};
+  const handleSelect = (object?: Organization) => {
+    setSelected(object?.[id]);
+    if (object) {
+      const { lat, lng } = getter.coordinates(object) ?? {};
       if (lat !== undefined && lng !== undefined) {
         setCenter({ lat, lng });
       }
@@ -63,18 +77,20 @@ export const MapControl = () => {
     <div className='flex flex-1 overflow-hidden'>
       <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
-      {objects.map((item) => {
-        const { lat, lng } = item.address?.coordinates ?? {};
+      {/* Markers. */}
+      {objects.map((object) => {
+        const { lat, lng } = getter.coordinates(object) ?? {};
         if (lat === undefined || lng === undefined) {
           return null;
         }
 
-        return <Marker key={item[id]} position={{ lat, lng }} />;
+        return <Marker key={getter.id(object)} position={{ lat, lng }} />;
       })}
 
-      {objects.length && (
+      {/* List panel. */}
+      {objects.length > 0 && (
         <div className='flex flex-col absolute top-4 bottom-4 right-4 overflow-hidden' style={{ zIndex: 1000 }}>
-          <div className='flex bg-white border rounded-md overflow-y-scroll' style={{ width: 240 }}>
+          <div className='flex bg-white border rounded-md overflow-y-auto' style={{ width: 240 }}>
             <PlaceList<Organization> items={objects} value={selected} onSelect={handleSelect} getter={getter} />
           </div>
         </div>
@@ -85,16 +101,11 @@ export const MapControl = () => {
 
 // TODO(burdon): Standardize pattern.
 
-type PlaceListPropsGetter<T> = {
-  id: (object: T) => string;
-  label: (object: T) => string;
-};
-
 type PlaceListProps<T = {}> = {
   items: T[];
   value?: string;
   onSelect: (object?: T) => void;
-  getter: PlaceListPropsGetter<T>;
+  getter: MapPropsGetter<T>;
 };
 
 export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps<T>) => {

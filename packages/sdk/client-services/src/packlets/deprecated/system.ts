@@ -3,33 +3,46 @@
 //
 
 import { Config } from '@dxos/config';
-import { SystemService } from '@dxos/protocols/proto/dxos/client';
+import { StatusResponse, SystemService } from '@dxos/protocols/proto/dxos/client';
+import { MaybePromise } from '@dxos/util';
 
-import { ServiceContext } from '../services';
+export type SystemServiceOptions = {
+  config: Config;
+  onInit: () => MaybePromise<void>;
+  onStatus: () => MaybePromise<StatusResponse>;
+  onReset: () => MaybePromise<void>;
+};
 
 /**
  * @deprecated
  */
 export class SystemServiceImpl implements SystemService {
-  constructor(private readonly _config: Config, private readonly _serviceContext: ServiceContext) {}
+  private readonly _config: Config;
+  private readonly _onInit: () => MaybePromise<void>;
+  private readonly _onStatus: () => MaybePromise<StatusResponse>;
+  private readonly _onReset: () => MaybePromise<void>;
 
-  // TODO(burdon): Remove.
-  async initSession() {
-    // Ok.
+  constructor({ config, onInit, onStatus, onReset }: SystemServiceOptions) {
+    this._config = config;
+    this._onInit = onInit;
+    this._onStatus = onStatus;
+    this._onReset = onReset;
   }
 
-  async getConfig(request: void) {
+  async initSession() {
+    await this._onInit();
+  }
+
+  async getConfig() {
     return this._config.values;
   }
 
   // TODO(burdon): Connect to iframe RPC heartbeat for network status?
-  async getStatus(request: void) {
-    return {
-      message: `ok: ${Date.now()}`
-    };
+  async getStatus() {
+    return await this._onStatus();
   }
 
-  async reset(request: any) {
-    await this._serviceContext.reset();
+  async reset() {
+    await this._onReset();
   }
 }

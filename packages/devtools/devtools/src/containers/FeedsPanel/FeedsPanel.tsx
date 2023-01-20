@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { ComplexSet } from '@dxos/util';
 
-import { KeySelect, MessageTable, Panel } from '../../components';
+import { MessageTable, PublicKeySelector } from '../../components';
 
 export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
@@ -38,39 +38,36 @@ export const FeedsPanel = () => {
     setMessages(blocks ?? []);
   }, [blocks]);
 
-  const handleSpaceChange = (key: PublicKey | undefined) => {
-    setSelectedSpaceKey(key);
-    setSelectedFeed(undefined);
-    setMessages([]);
-  };
-
-  const handleFeedChange = (feedKey: PublicKey | undefined) => {
-    setSelectedFeed(feedKey);
-    setMessages([]);
-  };
   return (
-    <Panel
-      controls={
-        <>
-          <KeySelect
-            id='space-select'
-            label='Space'
+    <div className='flex flex-col'>
+      <div className='flex flex-1 p-3 border-b border-slate-200 border-solid'>
+        <div className='w-1/3 mr-2'>
+          <PublicKeySelector
             keys={spaces.map(({ key }) => key)}
-            selected={selectedSpaceKey}
-            onChange={handleSpaceChange}
-            humanize={true}
+            value={selectedSpaceKey}
+            placeholder={'Select space'}
+            onSelect={(key) => {
+              setMessages([]);
+              setSelectedFeed(undefined);
+              key && setSelectedSpaceKey(key);
+            }}
           />
-          <KeySelect
-            id='feed-select'
-            label='Feed'
-            keys={[...new ComplexSet(PublicKey.hash, spaceFeeds)]}
-            selected={selectedFeed}
-            onChange={handleFeedChange}
+        </div>
+        <div className='w-1/3 mr-2'>
+          <PublicKeySelector
+            keys={spaceFeeds}
+            value={selectedFeed}
+            placeholder={'Select feed'}
+            onSelect={(key) => {
+              setMessages([]);
+              key && setSelectedFeed(key);
+            }}
           />
-        </>
-      }
-    >
-      <MessageTable messages={messages} />
-    </Panel>
+        </div>
+      </div>
+      <div className='flex flex-1'>
+        <MessageTable messages={messages} />
+      </div>
+    </div>
   );
 };
