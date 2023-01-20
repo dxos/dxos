@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import { Client, DEFAULT_CLIENT_ORIGIN, fromHost, fromIFrame } from '@dxos/client';
+import { ClientServices } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useTelemetry } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -37,7 +38,7 @@ const createClientAndServices = async (): Promise<ClientAndServices> => {
     const servicesProvider = remoteSource ? fromIFrame(config) : fromHost(config);
     const client = new Client({ config, services: servicesProvider });
     await client.initialize();
-    return { client, services: servicesProvider.services };
+    return { client, services: servicesProvider.services as ClientServices };
   };
 
   const targetResolvers: Record<string, (remoteSource?: string) => Promise<ClientAndServices>> = {
@@ -78,7 +79,7 @@ export const App = () => {
 
   return (
     <ErrorBoundary>
-      <ClientContext.Provider value={value}>
+      <ClientContext.Provider value={value as ClientAndServices}>
         <Telemetry />
 
         <PanelsContainer sections={sections} />
