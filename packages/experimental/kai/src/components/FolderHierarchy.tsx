@@ -65,14 +65,14 @@ export type FolderHierarchyItem = {
 export const FolderHierarchy: FC<{
   items: FolderHierarchyItem[];
   highlightClassName?: string;
-  textStyle?: string;
+  titleClassName?: string;
   onSelect?: (item: FolderHierarchyItem) => void;
   selected?: string;
   expanded?: string[];
 }> = ({
   items,
   highlightClassName = 'bg-gray-300',
-  textStyle = 'text-blue-600 text-base',
+  titleClassName = 'text-blue-600 text-base',
   onSelect,
   selected,
   expanded = []
@@ -119,7 +119,7 @@ export const FolderHierarchy: FC<{
             )}
             {Element || (
               <div style={{ lineHeight: 1.6 }}>
-                <span className={textStyle}>{item.title}</span>
+                <span className={titleClassName}>{item.title}</span>
                 {!item.items && item.value !== undefined && <span className='pl-2'>{String(item.value)}</span>}
               </div>
             )}
