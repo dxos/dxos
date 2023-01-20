@@ -37,8 +37,6 @@ export const useTogglePanelSidebar = () => {
 
 export interface PanelSidebarProviderSlots {
   content?: ComponentProps<typeof DialogPrimitive.Content>;
-  fixedBlockStart?: ComponentProps<'div'>;
-  fixedBlockEnd?: ComponentProps<'div'>;
   main?: ComponentProps<'div'>;
 }
 
@@ -47,11 +45,7 @@ export interface PanelSidebarProviderProps {
   slots?: PanelSidebarProviderSlots;
 }
 
-export const PanelSidebarProvider = ({
-  children,
-  inlineStart,
-  slots
-}: PropsWithChildren<PanelSidebarProviderProps>) => {
+export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<PanelSidebarProviderProps>) => {
   const { t } = useTranslation('os');
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const [displayState, setInternalDisplayState] = useState<PanelSidebarState>(isLg ? 'show' : 'hide');
@@ -85,7 +79,7 @@ export const PanelSidebarProvider = ({
         <DialogPrimitive.Content
           {...slots?.content}
           className={mx(
-            'fixed block-start-0 block-end-0 is-sidebar z-50 transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
+            'fixed block-start-0 block-end-0 is-sidebar z-50 overscroll-contain transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
             transitionShow ? 'inline-start-0' : '-inline-start-sidebar',
             slots?.content?.className
           )}
@@ -93,19 +87,6 @@ export const PanelSidebarProvider = ({
           <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
           {slots?.content?.children}
         </DialogPrimitive.Content>
-        {slots?.fixedBlockStart && (
-          <div
-            role='none'
-            {...slots?.fixedBlockStart}
-            className={mx(
-              'fixed inline-end-0 block-start-0 z-[49] transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
-              transitionShow ? 'inline-start-sidebar' : 'inline-start-0',
-              slots?.fixedBlockStart?.className
-            )}
-          >
-            {slots?.fixedBlockStart?.children}
-          </div>
-        )}
         {!isLg && (
           <DialogPrimitive.Overlay
             className={mx(

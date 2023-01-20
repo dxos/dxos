@@ -8,7 +8,7 @@ import React, { FC } from 'react';
 import { EchoObject, id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-components';
 
-import { Button } from '../components';
+import { Button } from '../';
 
 export type KanbanColumnDef = {
   id?: string;
@@ -30,7 +30,7 @@ export const Kanban: FC<{
   // NOTE: On mobile (sm) the column width is set to the full screen (w-screen)
   // with different padding from other screen sized.
   return (
-    <div className='flex flex-1 overflow-x-scroll overflow-y-hidden snap-x px-0 md:px-2'>
+    <div className='flex flex-1 overflow-x-auto overflow-y-hidden snap-x px-0 md:px-2'>
       <div className='flex'>
         {/* Columns */}
         {columns.map((column, i) => {
@@ -43,7 +43,7 @@ export const Kanban: FC<{
             >
               <div className='flex flex-col first:ml-0 overflow-hidden border drop-shadow-md bg-gray-100 rounded'>
                 <div className='flex p-3 rounded-t text-sm'>{column.header}</div>
-                <div className='flex flex-col flex-1 overflow-y-scroll px-3'>
+                <div className='flex flex-col flex-1 overflow-y-auto px-3'>
                   {/* Cards. */}
                   {filtered.map((object) => {
                     const { Content } = column;
