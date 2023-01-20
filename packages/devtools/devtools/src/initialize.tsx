@@ -5,23 +5,18 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { CssBaseline, ThemeProvider } from '@mui/material';
-
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServices } from '@dxos/client-services';
 import { ClientContext } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components-deprecated';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { Loader } from './components';
 import { PanelsContainer } from './containers';
 import { sections } from './sections';
-import { theme } from './theme';
 
 export type ClientAndServices = { client: Client; services: ClientServices };
 
-const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices> }) => {
+export const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices> }) => {
   const [value, setValue] = useState<ClientAndServices>();
 
   useEffect(() => {
@@ -30,17 +25,11 @@ const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices> }) =>
 
   return (
     <ErrorBoundary>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <FullScreen>
-          <Loader loading={!value} label='Loading DXOS Client...' />
-          {value && (
-            <ClientContext.Provider value={value}>
-              <PanelsContainer sections={sections} />
-            </ClientContext.Provider>
-          )}
-        </FullScreen>
-      </ThemeProvider>
+      {value && (
+        <ClientContext.Provider value={value}>
+          <PanelsContainer sections={sections} />
+        </ClientContext.Provider>
+      )}
     </ErrorBoundary>
   );
 };
