@@ -13,7 +13,6 @@ import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { useSpace, useSelection, useSpaces } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
-import { humanize } from '@dxos/util';
 
 import { JsonView, PublicKeySelector } from '../../components';
 

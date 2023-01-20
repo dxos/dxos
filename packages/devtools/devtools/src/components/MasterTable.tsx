@@ -51,8 +51,8 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
     data.filter(type.filter).filter(type.subFilter ? type.subFilter(text) : defaultSubFilter(text));
 
   return (
-    <div className='flex flex-1 flex-col'>
-      <div className='flex p-3 border-b border-slate-200 border-solid'>
+    <div className='flex flex-1 flex-col overflow-hidden'>
+      <div className='flex'>
         <div className='w-1/3 mr-2'>
           <Selector options={types} value={type.id} onSelect={selectType} />
         </div>
@@ -60,8 +60,9 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
           <Searchbar onSearch={handleSearch} />
         </div>
       </div>
-      <div className='flex flex-row h-[85vh]'>
-        <div className='flex w-1/2 border-r  border-slate-200 border-solid'>
+
+      <div className='flex flex-1 flex-row overflow-hidden'>
+        <div className='flex flex-1 overflow-hidden'>
           <Table
             columns={type.columns as any}
             data={getFilteredData() as any}
@@ -69,7 +70,8 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
             onSelect={selectRow}
           />
         </div>
-        <div className='flex w-1/2'>
+
+        <div className='flex flex-shrink-0 w-[500px]'>
           <JsonView data={getFilteredData().at(selected)} />
         </div>
       </div>

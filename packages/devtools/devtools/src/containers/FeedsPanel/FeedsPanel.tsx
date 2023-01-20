@@ -47,9 +47,9 @@ export const FeedsPanel = () => {
             value={selectedSpaceKey}
             placeholder={'Select space'}
             onSelect={(key) => {
-              key && setSelectedSpaceKey(key);
-              setSelectedFeed(undefined);
               setMessages([]);
+              setSelectedFeed(undefined);
+              key && setSelectedSpaceKey(key);
             }}
           />
         </div>
@@ -59,8 +59,8 @@ export const FeedsPanel = () => {
             value={selectedFeed}
             placeholder={'Select feed'}
             onSelect={(key) => {
-              key && setSelectedFeed(key);
               setMessages([]);
+              key && setSelectedFeed(key);
             }}
           />
         </div>

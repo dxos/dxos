@@ -45,20 +45,18 @@ export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
   }
 
   return (
-    <div className='flex flex-row w-full h-screen bg-gray overflow-hidden'>
-      <div className={'flex flex-col w-1/5 h-screen bg-white overflow-auto mr-2'}>
-        <div className='flex mt-4'>
-          <FolderHierarchy
-            items={sections}
-            titleClassName={'text-black text-lg'}
-            onSelect={handleSelect}
-            selected={selected?.id}
-            expanded={sections.map((section) => section.id)}
-          />
-        </div>
+    <div className='flex w-full h-screen overflow-hidden'>
+      <div className={'flex flex-col w-[200px] overflow-hidden overflow-y-auto'}>
+        <FolderHierarchy
+          items={sections}
+          titleClassName={'text-black text-lg'}
+          onSelect={handleSelect}
+          selected={selected?.id}
+          expanded={sections.map((section) => section.id)}
+        />
       </div>
 
-      <div className='flex flex-col w-4/5 h-screen bg-white overflow-hidden'>{selected?.panel}</div>
+      <div className='flex flex-1 flex-col overflow-hidden bg-white'>{selected?.panel}</div>
     </div>
   );
 };
