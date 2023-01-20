@@ -16,9 +16,9 @@ export type ContainerProps = {
 /**
  * Expandable container with optional scrolling.
  */
-export const ScrollContainer: FC<ContainerProps> = ({ scrollX, scrollY, className, children, ...rest }) => {
+export const ScrollContainer: FC<ContainerProps> = ({ scrollX, scrollY, className, children }) => {
   return (
-    <div className={mx('flex', scrollX && 'overflow-x-scroll', scrollY && 'overflow-y-scroll', className)}>
+    <div className={mx('flex', scrollX && 'overflow-x-auto', scrollY && 'overflow-y-auto', className)}>
       <div className='flex'>{children}</div>
     </div>
   );

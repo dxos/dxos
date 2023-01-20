@@ -108,7 +108,7 @@ export const CalendarFrame = () => {
       </div>
 
       <div className={mx('flex flex-1 overflow-hidden p-4')}>
-        <div className={mx('flex flex-1 overflow-y-scroll', '[&>div]:w-full [&>div>div>table]:hidden')}>
+        <div className={mx('flex flex-1 overflow-y-auto', '[&>div]:w-full [&>div>div>table]:hidden')}>
           <ReactBigCalendar
             // date={new Date(2023, 0, 15)}
             view={view}
