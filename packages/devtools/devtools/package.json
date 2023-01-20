@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/react-ui": "workspace:*",
     "@types/color-hash": "^1.0.1",
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
