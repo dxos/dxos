@@ -37,6 +37,10 @@
       "description": "Project target to run concurrently alongside the tests",
       "examples": ["halo-app:preview", "react-client:storybook"]
     },
+    "serveOptions": {
+      "type": "object",
+      "description": "Options to pass to the serve executor"
+    },
     "setup": {
       "type": "string",
       "description": "Setup script to run before tests"

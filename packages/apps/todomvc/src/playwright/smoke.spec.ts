@@ -16,15 +16,15 @@ describe('Smoke test', function () {
       return;
     }
 
-    const result = await setupPage(this, 'http://localhost:3967', async (page) => {
-      return await page.isVisible(':has-text("HALO")');
+    const result = await setupPage(this, 'http://localhost:4200', async (page) => {
+      return await page.isVisible(':has-text("todos")');
     });
 
     page = result.page;
   });
 
   test('connects to shared worker', async () => {
-    const isVisible = await page.isVisible(':has-text("HALO")');
+    const isVisible = await page.isVisible(':has-text("todos")');
     expect(isVisible).to.be.true;
   }).skipEnvironments('firefox'); // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
 });
