@@ -9,7 +9,7 @@ import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 export const JsonView = ({ data }: { data: Object }) => {
   return (
-    <div className='flex flex-1 overflow-auto'>
+    <div className='flex flex-1 overflow-scroll'>
       <SyntaxHighlighter className='flex flex-1' language='json' style={style}>
         {JSON.stringify(data, undefined, 2)}
       </SyntaxHighlighter>

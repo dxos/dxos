@@ -6,7 +6,6 @@ import React, { FC, ReactNode, useState } from 'react';
 
 import { FolderHierarchy, FolderHierarchyItem } from '@dxos/kai';
 import { useClientServices } from '@dxos/react-client';
-import { mx } from '@dxos/react-components';
 
 export type SectionItem = {
   id: string;
@@ -47,7 +46,7 @@ export const PanelsContainer = ({ sections }: { sections: SectionItem[] }) => {
 
   return (
     <div className='flex flex-row w-full h-screen bg-gray overflow-hidden'>
-      <div className={mx('flex flex-col w-1/5 h-screen bg-white', 'overflow-auto scrollbar-thin', 'mr-2')}>
+      <div className={'flex flex-col w-1/5 h-screen bg-white overflow-auto mr-2'}>
         <div className='flex mt-4'>
           <FolderHierarchy
             items={sections}
