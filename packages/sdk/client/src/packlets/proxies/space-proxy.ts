@@ -3,6 +3,7 @@
 //
 
 import isEqual from 'lodash.isequal';
+import assert from 'node:assert';
 
 import { Event, synchronized, Trigger } from '@dxos/async';
 import {
@@ -91,7 +92,7 @@ export interface Space extends ISpace {
 export class SpaceProxy implements Space {
   private readonly _database?: Database;
   private readonly _experimental?: Experimental;
-  private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
+  private readonly _invitationProxy: SpaceInvitationsProxy;
   private readonly _invitations: CancellableInvitationObservable[] = [];
 
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
@@ -114,10 +115,15 @@ export class SpaceProxy implements Space {
     databaseRouter: DatabaseRouter,
     memberKey: PublicKey // TODO(burdon): Change to identityKey (see optimistic mutations)?
   ) {
+    assert(this._clientServices.services.SpaceInvitationsService, 'SpaceInvitationsService not available');
+    this._invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
+
     // TODO(burdon): Don't shadow properties.
     if (!this._state.isOpen) { // TODO(burdon): Assert?
       return;
     }
+
+    assert(this._clientServices.services.DataService, 'DataService not available');
 
     this._database = new Database(
       this._modelFactory,
@@ -221,6 +227,8 @@ export class SpaceProxy implements Space {
   }
 
   async getDetails(): Promise<SpaceDetails> {
+    assert(this._clientServices.services.SpaceService, 'SpaceService not available');
+
     return this._clientServices.services.SpaceService.getSpaceDetails({
       spaceKey: this.key
     });
@@ -333,6 +341,8 @@ export class SpaceProxy implements Space {
   }
 
   async _setOpen(open: boolean) {
+    assert(this._clientServices.services.SpaceService, 'SpaceService not available');
+
     await this._clientServices.services.SpaceService.setSpaceState({
       spaceKey: this.key,
       open

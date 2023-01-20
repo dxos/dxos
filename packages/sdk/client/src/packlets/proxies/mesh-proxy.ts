@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Event } from '@dxos/async';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Context } from '@dxos/context';
@@ -36,6 +38,7 @@ export class MeshProxy {
   async open() {
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
+    assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
     const networkStatusStream = this._serviceProvider.services.NetworkService.subscribeToNetworkStatus();
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
       this._networkStatus = networkStatus;
@@ -52,6 +55,7 @@ export class MeshProxy {
   }
 
   async setConnectionState(state: ConnectionState) {
+    assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
     return this._serviceProvider.services.NetworkService.setNetworkOptions({ state });
   }
 }

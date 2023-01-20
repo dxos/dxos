@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { renderHook, screen, render } from '@testing-library/react';
+import { renderHook, screen, render, act } from '@testing-library/react';
 import expect from 'expect';
 import React, { Component, PropsWithChildren } from 'react';
 
-import { Client, Config, fromHost } from '@dxos/client';
+import { waitForCondition } from '@dxos/async';
+import { Client, Config, fromHost, Status } from '@dxos/client';
 import { log } from '@dxos/log';
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
@@ -56,7 +57,7 @@ describe('Client hook', function () {
     expect(result).not.toBeDefined();
   });
 
-  test('should return client when used properly in a context', () => {
+  test('should return client when used properly in a context', async () => {
     const config = new Config({
       version: 1,
       runtime: {
@@ -69,8 +70,12 @@ describe('Client hook', function () {
     });
 
     const client = new Client({ config, services: fromHost(config) });
+    await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
+    await act(async () => {
+      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
+    });
     expect(result.current).toEqual(client);
   });
 });
@@ -95,6 +100,10 @@ describe('ClientProvider', () => {
       </ClientProvider>
     );
 
+    await act(async () => {
+      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
+    });
+
     expect(() => screen.getByText('Hello World')).not.toThrow();
   });
 
@@ -104,6 +113,10 @@ describe('ClientProvider', () => {
         <TestComponent />
       </ClientProvider>
     );
+
+    await act(async () => {
+      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
+    });
 
     expect(() => screen.getByText('Client is defined')).not.toThrow();
     expect(() => screen.getByText('Client is NOT there')).toThrow();

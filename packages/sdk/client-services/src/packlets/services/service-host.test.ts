@@ -15,10 +15,10 @@ describe('ClientServicesHost', () => {
     await host.open();
     afterTest(() => host.close());
 
-    await host.services.ProfileService.createProfile({});
-    const { publicKey: spaceKey } = await host.services.SpaceService.createSpace();
+    await host.services.ProfileService!.createProfile({});
+    const { publicKey: spaceKey } = await host.services.SpaceService!.createSpace();
 
-    const stream = host.services.SpacesService.queryCredentials({ spaceKey });
+    const stream = host.services.SpacesService!.queryCredentials({ spaceKey });
     const [done, tick] = latch({ count: 3 });
     stream.subscribe((credential) => {
       tick();

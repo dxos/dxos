@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
 import { Client, DEFAULT_CLIENT_ORIGIN, fromHost, fromIFrame } from '@dxos/client';
-import { ClientServicesProvider } from '@dxos/client-services';
+import { ClientServices, ClientServicesProvider } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useTelemetry } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -90,7 +90,7 @@ export const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <FullScreen>
-          <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
+          <ClientContext.Provider value={{ client, services: servicesProvider?.services as ClientServices }}>
             <Telemetry />
 
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
