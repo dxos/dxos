@@ -107,7 +107,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs')
       ],
-      extensions: [osThemeExtension, kaiThemeExtension, { spacing: { sidebar: '272px' } }]
+      extensions: [osThemeExtension, kaiThemeExtension]
     }),
     ReactPlugin(),
     VitePWA({
