@@ -15,7 +15,7 @@ import { useSpace, useSelection, useSpaces } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
-import { JsonView } from '../../components';
+import { JsonView, PublicKeySelector } from '../../components';
 
 export const ItemsPanel = () => {
   const spaces = useSpaces();
@@ -44,15 +44,12 @@ export const ItemsPanel = () => {
     <div className='flex flex-1 flex-col overflow-hidden'>
       <div className='flex flex-1 p-3 border-b border-slate-200 border-solid'>
         <div className='w-1/3 mr-2'>
-          <Selector
-            options={spaces.map((space) => ({
-              id: space.key.toHex(),
-              title: humanize(space.key)
-            }))}
-            value={selectedSpaceKey?.toHex()}
+          <PublicKeySelector
+            keys={spaces.map(({ key }) => key)}
+            value={selectedSpaceKey}
             placeholder={'Select space'}
             onSelect={(key) => {
-              key && setSelectedSpaceKey(PublicKey.fromHex(key));
+              key && setSelectedSpaceKey(key);
             }}
           />
         </div>

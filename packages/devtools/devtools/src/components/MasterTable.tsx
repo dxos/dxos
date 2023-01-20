@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { Column } from 'react-table';
 
 import { Searchbar, Selector, SelectorOption, Table } from '@dxos/kai';
-import { JsonTreeView } from '@dxos/react-components-deprecated';
+
 import { JsonView } from './JsonView';
 
 const defaultSubFilter =

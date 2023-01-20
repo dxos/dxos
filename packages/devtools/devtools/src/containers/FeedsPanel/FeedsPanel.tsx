@@ -4,17 +4,11 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Selector } from '@dxos/kai';
 import { PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client';
-import { ComplexSet, humanize } from '@dxos/util';
+import { ComplexSet } from '@dxos/util';
 
-import { MessageTable } from '../../components';
-
-const dropDoubledKeys = (keys: PublicKey[]) => {
-  const set = new ComplexSet(PublicKey.hash, keys);
-  return Array.from(set.values());
-};
+import { MessageTable, PublicKeySelector } from '../../components';
 
 export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
@@ -48,30 +42,24 @@ export const FeedsPanel = () => {
     <div className='flex flex-col'>
       <div className='flex flex-1 p-3 border-b border-slate-200 border-solid'>
         <div className='w-1/3 mr-2'>
-          <Selector
-            options={spaces.map((space) => ({
-              id: space.key.toHex(),
-              title: humanize(space.key)
-            }))}
-            value={selectedSpaceKey?.toHex()}
+          <PublicKeySelector
+            keys={spaces.map(({ key }) => key)}
+            value={selectedSpaceKey}
             placeholder={'Select space'}
             onSelect={(key) => {
-              key && setSelectedSpaceKey(PublicKey.fromHex(key));
+              key && setSelectedSpaceKey(key);
               setSelectedFeed(undefined);
               setMessages([]);
             }}
           />
         </div>
         <div className='w-1/3 mr-2'>
-          <Selector
-            options={dropDoubledKeys(spaceFeeds).map((feedKey) => ({
-              id: feedKey.toHex(),
-              title: humanize(feedKey)
-            }))}
-            value={selectedFeed?.toHex()}
+          <PublicKeySelector
+            keys={spaceFeeds}
+            value={selectedFeed}
             placeholder={'Select feed'}
             onSelect={(key) => {
-              key && setSelectedFeed(PublicKey.fromHex(key));
+              key && setSelectedFeed(key);
               setMessages([]);
             }}
           />
