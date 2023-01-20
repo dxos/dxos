@@ -19,18 +19,17 @@ import { JsonView, KeySelect } from '../../components';
 export const ItemsPanel = () => {
   const spaces = useSpaces();
 
-  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>(spaces[0]!.key);
+  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const space = useSpace(selectedSpaceKey);
   const items = useSelection(space?.select()) ?? [];
 
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
   const getHierarchicalItem = (dbItem: Item<any>): FolderHierarchyItem => {
-    const children = useSelection(dbItem.select().children()) ?? [];
     return {
       id: dbItem.id,
       title: (modelToObject(dbItem.model) as any)?.['@type'] ?? dbItem.type ?? dbItem.modelType ?? 'undefined',
-      items: children.map((child) => getHierarchicalItem(child)),
+      items: dbItem.children.map((child) => getHierarchicalItem(child)),
       value: dbItem
     };
   };
