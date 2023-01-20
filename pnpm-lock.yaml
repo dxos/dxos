@@ -562,6 +562,8 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/util': workspace:*
+      '@radix-ui/react-accordion': ^1.0.1
+      '@radix-ui/react-alert-dialog': ^1.0.2
       '@radix-ui/react-dialog': ^1.0.0
       '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
@@ -570,6 +572,7 @@ importers:
       '@vitejs/plugin-react': ^3.0.1
       debug: ^4.3.3
       phosphor-react: ^1.4.1
+      qrcode.react: ^3.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
       storybook-dark-mode: ^1.1.2
@@ -583,9 +586,12 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-components': link:../../../common/react-components
       '@dxos/util': link:../../../common/util
+      '@radix-ui/react-accordion': 1.1.0_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-alert-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@react-hook/async': 3.1.1_react@18.2.0
       debug: 4.3.4
+      qrcode.react: 3.1.0_react@18.2.0
       url-join: 5.0.0
     devDependencies:
       '@types/debug': 4.1.7
@@ -9387,6 +9393,26 @@ packages:
       '@babel/runtime': 7.19.4
     dev: false
 
+  /@radix-ui/react-accordion/1.1.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-CNN9ZBgCK4i4SX7gFk5s8095j55DUWi85vwRNfkfBLs0QdAG5Tb4ku6sBeugCAiLvsmxw481GyNl+C3stoJVBQ==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.19.4
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-collapsible': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-collection': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-direction': 1.0.0_react@18.2.0
+      '@radix-ui/react-id': 1.0.0_react@18.2.0
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
   /@radix-ui/react-alert-dialog/1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce:
     resolution: {integrity: sha512-0MtxV53FaEEBOKRgyLnEqHZKKDS5BldQ9oUBsKVXWI5FHbl2jp35qs+0aJET+K5hJDsc40kQUzP7g+wC7tqrqA==}
     peerDependencies:
@@ -9428,6 +9454,25 @@ packages:
       '@radix-ui/react-context': 1.0.0_react@18.2.0
       '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-use-callback-ref': 1.0.0_react@18.2.0
+      '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@radix-ui/react-collapsible/1.0.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-0maX4q91iYa4gjt3PsNf7dq/yqSR+HGAE8I5p54dQ6gnveS+ETWlMoijxrhmgV1k8svxpm34mQAtqIrJt4XZmA==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.19.4
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-id': 1.0.0_react@18.2.0
+      '@radix-ui/react-presence': 1.0.0_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -33027,7 +33072,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
