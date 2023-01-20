@@ -51,19 +51,17 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
     data.filter(type.filter).filter(type.subFilter ? type.subFilter(text) : defaultSubFilter(text));
 
   return (
-    <div className='flex flex-col flex-1'>
-      <div className='flex p-3 border-b border-slate-200 border-solid'>
-        <div className='flex'>
-          <div className='mr-2'>
-            <Selector options={types} value={type.id} onSelect={selectType} />
-          </div>
-          <div>
-            <Searchbar onSearch={handleSearch} />
-          </div>
+    <div className='flex flex-col'>
+      <div className='flex flex-1 p-3 border-b border-slate-200 border-solid'>
+        <div className='w-1/3 mr-2'>
+          <Selector options={types} value={type.id} onSelect={selectType} />
+        </div>
+        <div className='w-1/3'>
+          <Searchbar onSearch={handleSearch} />
         </div>
       </div>
       <div className='flex flex-row h-[85vh]'>
-        <div className='flex w-1/2'>
+        <div className='flex w-1/2 border-r  border-slate-200 border-solid'>
           <Table
             columns={type.columns as any}
             data={getFilteredData() as any}

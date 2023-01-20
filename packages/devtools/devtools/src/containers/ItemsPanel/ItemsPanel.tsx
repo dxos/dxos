@@ -6,15 +6,16 @@ import React, { useState } from 'react';
 
 import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { FolderHierarchy, FolderHierarchyItem } from '@dxos/kai';
+import { FolderHierarchy, FolderHierarchyItem, Selector, Searchbar } from '@dxos/kai';
 import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { useSpace, useSelection, useSpaces } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
+import { humanize } from '@dxos/util';
 
-import { JsonView, KeySelect } from '../../components';
+import { JsonView } from '../../components';
 
 export const ItemsPanel = () => {
   const spaces = useSpaces();
@@ -24,6 +25,11 @@ export const ItemsPanel = () => {
   const items = useSelection(space?.select()) ?? [];
 
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
+
+  const [text, setText] = useState<string>('');
+  const handleSearch = (text: string) => {
+    setText(text);
+  };
 
   const getHierarchicalItem = (dbItem: Item<any>): FolderHierarchyItem => {
     return {
@@ -36,17 +42,32 @@ export const ItemsPanel = () => {
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
-      <KeySelect
-        label='Space'
-        keys={spaces.map(({ key }) => key)}
-        selected={selectedSpaceKey}
-        onChange={(key) => setSelectedSpaceKey(key)}
-        humanize={true}
-      />
+      <div className='flex flex-1 p-3 border-b border-slate-200 border-solid'>
+        <div className='w-1/3 mr-2'>
+          <Selector
+            options={spaces.map((space) => ({
+              id: space.key.toHex(),
+              title: humanize(space.key)
+            }))}
+            value={selectedSpaceKey?.toHex()}
+            placeholder={'Select space'}
+            onSelect={(key) => {
+              key && setSelectedSpaceKey(PublicKey.fromHex(key));
+            }}
+          />
+        </div>
+        <div>
+          <Searchbar onSearch={handleSearch} />
+        </div>
+      </div>
       <div className='flex h-full'>
         <div className='flex flex-col w-1/3 overflow-auto'>
           <FolderHierarchy
-            items={items.filter((item) => !item.parent).map(getHierarchicalItem)}
+            items={items
+              .filter((item) => !item.parent)
+              .map(getHierarchicalItem)
+              .filter((item) => item.title?.includes(text) ?? true)}
+            titleClassName={'text-black text-lg'}
             onSelect={(item) => setSelectedItem(item.value)}
             selected={selectedItem?.id}
           />
