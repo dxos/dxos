@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Gear, Users, Graph, PaperPlane, UserCircle, Database } from 'phosphor-react';
+import { Gear, Users, Graph, PaperPlane, UserCircle, Database, Queue } from 'phosphor-react';
 import React from 'react';
 
 import {
@@ -77,7 +77,7 @@ export const sections: SectionItem[] = [
       {
         id: 'echo.feeds',
         title: 'Feeds',
-        // icon: <FeedsIcon />,
+        Icon: Queue,
         panel: <FeedsPanel />
       },
       {
