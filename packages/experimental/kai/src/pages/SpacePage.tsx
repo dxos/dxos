@@ -18,15 +18,15 @@ import { SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from 
 export const SpacePage = () => {
   const navigate = useNavigate();
   const frames = useActiveFrames();
-  const [context, setContext] = useState<SpaceContextType | undefined>();
   const { spaceKey: currentSpaceKey, frame } = useParams();
   const spaces = useSpaces();
   const space = currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined;
+  const [spaceContext, setSpaceContext] = useState<SpaceContextType>();
 
   // Change space.
   useEffect(() => {
     if (space) {
-      setContext({ space });
+      setSpaceContext({ space });
     } else {
       navigate('/');
     }
@@ -39,12 +39,12 @@ export const SpacePage = () => {
     }
   }, [currentSpaceKey, frame]);
 
-  if (!context) {
+  if (!spaceContext) {
     return null;
   }
 
   return (
-    <SpaceContext.Provider value={context}>
+    <SpaceContext.Provider value={spaceContext}>
       <PanelSidebarProvider
         inlineStart
         slots={{

@@ -51,7 +51,7 @@ const views = [
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/story/about-big-calendar--page
  */
 export const CalendarFrame = () => {
-  const { space } = useSpace();
+  const space = useSpace();
   const events = useQuery(space, EventType.filter()).map(mapEvents);
   // TODO(burdon): Manage global state persistently.
   const [view, setView] = useState<any>(Views.AGENDA);
