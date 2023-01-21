@@ -11,8 +11,8 @@ import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { Button, Card, Input, CardRow, CardMenu } from '../components';
-import { useAppState, useSpace } from '../hooks';
-import { createTask, Task } from '../proto';
+import { useAppState, useGenerator, useSpace } from '../hooks';
+import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
 
@@ -21,10 +21,10 @@ export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?:
   readonly = false,
   title = 'Tasks'
 }) => {
-  const { space } = useSpace();
+  const generator = useGenerator();
 
   const handleGenerateTask = async () => {
-    await createTask(space.experimental.db);
+    await generator.createTask();
   };
 
   const Header = () => (
@@ -48,7 +48,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   completed = undefined,
   readonly = false
 }) => {
-  const { space } = useSpace();
+  const space = useSpace();
   const tasks = useQuery(space, Task.filter({ completed }));
   const [newTask, setNewTask] = useState<Task>();
   const [saving, setSaving] = useState(false);

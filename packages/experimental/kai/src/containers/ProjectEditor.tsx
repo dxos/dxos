@@ -15,7 +15,7 @@ import { useSpace } from '../hooks';
 import { Project } from '../proto';
 
 export const ProjectEditor: FC = withReactor(() => {
-  const { space } = useSpace();
+  const space = useSpace();
   const projects = useQuery(space, Project.filter());
   const [project, setProject] = useState<Project>();
   useEffect(() => {

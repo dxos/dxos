@@ -78,7 +78,7 @@ export const useActiveBots = (): BotDef[] => {
 };
 
 export const useBotDispatch = () => {
-  const { space } = useSpace();
+  const space = useSpace();
   const [, dispatch] = useContext(BotsContext)!;
   return (id: BotID, state: boolean) => {
     dispatch((context: BotsContextType) => {

@@ -18,7 +18,7 @@ import { createSpacePath } from './Routes';
 export const Sidebar = () => {
   const navigate = useNavigate();
   const client = useClient();
-  const { space } = useSpace();
+  const space = useSpace();
   const { view } = useParams();
   const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);

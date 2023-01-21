@@ -10,14 +10,14 @@ import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
 import { Card, Input, CardRow, Button, CardMenu } from '../components';
-import { useSpace } from '../hooks';
-import { Address, Contact, createContact } from '../proto';
+import { useGenerator, useSpace } from '../hooks';
+import { Address, Contact } from '../proto';
 
 export const ContactsListCard: FC = () => {
-  const { space } = useSpace();
+  const generator = useGenerator();
 
   const handleCreate = async () => {
-    return createContact(space.experimental.db);
+    return generator.createContact();
   };
 
   const Header = () => (
@@ -36,7 +36,7 @@ export const ContactsListCard: FC = () => {
 };
 
 export const ContactList: FC = () => {
-  const { space } = useSpace();
+  const space = useSpace();
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   return (
