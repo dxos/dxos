@@ -2,55 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 import * as AlertPrimitive from '@radix-ui/react-alert-dialog';
-import React, { useReducer } from 'react';
+import React, { PropsWithChildren, useReducer } from 'react';
 
-import type { Profile } from '@dxos/client';
 import { ThemeContext, useId } from '@dxos/react-components';
 
+import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
 import { JoinSpaceHeading } from './JoinSpaceHeading';
+import { AdditionMethodSelector } from './view-states/AdditionMethodSelector';
+import { IdentitySelector } from './view-states/IdentitySelector';
 
-type Space = { properties: { title: string } };
+const ViewState = ({ children }: PropsWithChildren<{}>) => {
+  return (
+    <div role='none' className='basis-0 grow'>
+      {children}
+    </div>
+  );
+};
 
-export interface JoinPanelProps {
-  space: Space;
-  deviceHasIdentities?: boolean;
-}
-
-interface IdentityAction {
-  type: 'select identity' | 'added identity';
-  identity: Profile;
-}
-
-interface EmptyJoinAction {
-  type: 'deselect identity' | 'cancel addition' | 'add identity';
-}
-
-interface AdditionMethodAction {
-  type: 'select addition method';
-  method: 'restore identity' | 'accept device invitation' | 'create identity';
-}
-
-type JoinAction = IdentityAction | EmptyJoinAction | AdditionMethodAction;
-
-type JoinView =
-  | 'identities enum'
-  | 'addition method enum'
-  | 'restore identity init'
-  | 'accept device invitation'
-  | 'create identity init'
-  | 'identity added'
-  | 'accept space invitation';
-
-interface JoinState {
-  activeView: JoinView;
-  space: Space;
-  selectedIdentity: Profile | null;
-}
-
-export const JoinPanel = ({ space, deviceHasIdentities }: JoinPanelProps) => {
+export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
   const titleId = useId('joinTitle');
 
-  const spaceTitle = space.properties.title;
+  const spaceTitle = space.properties.get('title') ?? '';
 
   const reducer = (state: JoinState, action: JoinAction) => {
     switch (action.type) {
@@ -61,10 +33,11 @@ export const JoinPanel = ({ space, deviceHasIdentities }: JoinPanelProps) => {
     return state;
   };
 
-  const [_joinState, _dispatchJoinAction] = useReducer(reducer, {
-    space: { properties: { title: spaceTitle } },
-    activeView: deviceHasIdentities ? 'identities enum' : 'addition method enum',
-    selectedIdentity: null
+  const [_joinState, dispatch] = useReducer(reducer, {
+    space,
+    activeView: availableIdentities.length > 0 ? 'identity selector' : 'addition method selector',
+    selectedIdentity: undefined,
+    additionMethod: undefined
   });
 
   return (
@@ -77,8 +50,17 @@ export const JoinPanel = ({ space, deviceHasIdentities }: JoinPanelProps) => {
         >
           <div role='none' className='is-full max-is-[480px]'>
             <JoinSpaceHeading titleId={titleId} spaceTitle={spaceTitle} onClickExit={() => {}} />
+            <div role='none' className='is-full overflow-x-auto overflow-y-hidden'>
+              <div role='none' className='flex is-[200%]'>
+                <ViewState>
+                  <IdentitySelector {...{ dispatch, availableIdentities }} />
+                </ViewState>
+                <ViewState>
+                  <AdditionMethodSelector {...{ dispatch, availableIdentities }} />
+                </ViewState>
+              </div>
+            </div>
           </div>
-          {/* todo: choose what to render */}
         </AlertPrimitive.Content>
       </ThemeContext.Provider>
     </AlertPrimitive.Root>

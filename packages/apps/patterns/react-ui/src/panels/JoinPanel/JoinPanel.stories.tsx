@@ -12,7 +12,7 @@ export default {
 
 export const Default = {
   args: {
-    space: { properties: { title: 'Q3 2022 Planning' } },
-    deviceHasIdentities: true
+    space: { properties: { get: () => 'Q3 2022 Planning' } },
+    availableIdentities: [{ displayName: 'Os Mutantes' }]
   }
 };
