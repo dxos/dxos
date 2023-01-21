@@ -5,6 +5,7 @@
 const chalk = require('chalk');
 const copy = require('copy');
 const { build } = require('esbuild');
+const { nodeExternalsPlugin } = require('esbuild-node-externals');
 const fs = require('fs');
 const { join } = require('path');
 const rmdir = require('rmdir');
@@ -21,11 +22,17 @@ void (async () => {
     await promisify(rmdir)(distDir);
   }
 
+  const packagePath = join(__dirname, '../package.json');
   const config = {
     outdir: distDir,
     write: true,
     bundle: true,
-    plugins: [NodeModulesPlugin()],
+    plugins: [
+      NodeModulesPlugin(),
+      nodeExternalsPlugin({
+        packagePath
+      })
+    ],
     watch: process.argv.includes('--watch')
       ? {
           onRebuild: (error) => {
