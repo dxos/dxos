@@ -57,7 +57,7 @@ const Tile: FC<{
  * https://ifttt.com/explore
  */
 export const RegistryFrame = () => {
-  const { space } = useSpace();
+  const space = useSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>('app');
 

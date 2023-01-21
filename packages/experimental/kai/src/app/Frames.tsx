@@ -2,12 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Article, Calendar, Compass, Gear, Globe, Graph, Kanban, ListChecks, Sword, Table, Wall } from 'phosphor-react';
+import {
+  Article,
+  Calendar,
+  CaretLeft,
+  CaretRight,
+  Compass,
+  Gear,
+  Globe,
+  Graph,
+  Kanban,
+  ListChecks,
+  Sword,
+  Table,
+  Wall
+} from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { mx, getSize } from '@dxos/react-components';
-import { PanelSidebarContext } from '@dxos/react-ui';
+import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 // TODO(burdon): Rename frames.
 import {
@@ -93,20 +107,26 @@ export const frames: FrameDef[] = [
  */
 export const FrameSelector: FC = () => {
   const navigate = useNavigate();
-  const { space } = useSpace();
+  const space = useSpace();
   const frames = useActiveFrames();
   const { frame: currentFrame } = useParams();
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
+  const toggleSidebar = useTogglePanelSidebar();
 
   return (
     <div
       className={mx(
-        'flex flex-col-reverse bg-orange-500 fixed inline-end-0 block-start-appbar bs-framepicker z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
+        'flex flex-col-reverse bg-orange-500',
+        'fixed inline-end-0 block-start-appbar bs-framepicker transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
         isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
       )}
     >
       <div className='flex pl-3'>
+        <button className='mr-2' onClick={toggleSidebar}>
+          {isOpen ? <CaretLeft className={getSize(6)} /> : <CaretRight className={getSize(6)} />}
+        </button>
+
         {frames
           .filter(({ system }) => !system)
           .map(({ id, title, Icon }) => {
@@ -124,6 +144,7 @@ export const FrameSelector: FC = () => {
               </a>
             );
           })}
+
         <div className='flex-1' />
       </div>
     </div>

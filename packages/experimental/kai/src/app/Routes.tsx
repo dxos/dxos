@@ -20,7 +20,7 @@ import {
   SpacePage
 } from '../pages';
 
-export const matchSpaceKey = (spaces: Space[], spaceKey: string) =>
+export const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
   spaces.find((space) => space.key.truncate() === spaceKey);
 
 // TODO(burdon): Circular deps?
@@ -30,6 +30,7 @@ export const createSpacePath = (spaceKey: PublicKey, frame?: string) =>
 /**
  * Main app routes.
  */
+// TODO(burdon): Export as hook.
 export const Routes = () => {
   return useRoutes([
     {

@@ -8,8 +8,8 @@ import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
 import { Kanban, KanbanColumnDef, Searchbar } from '../components';
-import { useSpace } from '../hooks';
-import { createProject, Project, tags } from '../proto';
+import { useGenerator, useSpace } from '../hooks';
+import { Project, tags } from '../proto';
 import { ProjectCard } from './cards';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
@@ -18,7 +18,8 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
 
 // TODO(burdon): Generalize type.
 export const ProjectKanban: FC = () => {
-  const { space } = useSpace();
+  const space = useSpace();
+  const generator = useGenerator();
 
   const [text, setText] = useState<string>();
   const handleSearch = (text: string) => {
@@ -41,7 +42,7 @@ export const ProjectKanban: FC = () => {
   }));
 
   const handleCreate = async (column: KanbanColumnDef) => {
-    await createProject(space.experimental.db, column.id);
+    await generator.createProject(column.id);
   };
 
   return (

@@ -40,7 +40,7 @@ type MapPropsGetter<T> = {
  * https://react-leaflet.js.org/docs/api-map
  */
 export const MapControl = () => {
-  const { space } = useSpace();
+  const space = useSpace();
   const objects = useQuery(space, Organization.filter());
   const getter: MapPropsGetter<Organization> = {
     id: (object: Organization) => object[id],

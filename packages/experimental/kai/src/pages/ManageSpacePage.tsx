@@ -21,7 +21,7 @@ import { createInvitationUrl } from '../util';
 export const ManageSpacePage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
-  const { space } = useSpace();
+  const space = useSpace();
   const invitations = useSpaceInvitations(space?.key);
   const members = useMembers(space.key);
   const memberProfiles = useMemo(
