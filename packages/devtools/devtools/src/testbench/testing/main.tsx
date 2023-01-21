@@ -13,9 +13,8 @@ import '@dxosTheme';
 
 import '@dxos/kai/style.css';
 
+// TODO(burdon): Document bootstrap sequence.
 // TODO(burdon): Wrap all bootstrap code in a main function.
-
-createRoot(document.getElementById('root')!).render(<Root />);
 
 window.addEventListener('message', (event) => {
   const message = event.data;
@@ -56,3 +55,5 @@ waitForDXOS()
   .catch((err) => {
     throw err;
   });
+
+createRoot(document.getElementById('root')!).render(<Root />);

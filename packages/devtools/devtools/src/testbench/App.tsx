@@ -11,22 +11,18 @@ import devtoolsURL from './devtools/index.html?url';
 // @ts-ignore
 import testAppUrl from './testing/index.html?url';
 
-// Pass messages between devtools and kai IFrames.
+/**
+ * Pass messages between devtools and test app (kai) iFrames.
+ */
 window.addEventListener('message', (event) => {
   if (event.data.source === 'dxos-client') {
     const iframe = document.getElementById('devtools') as HTMLIFrameElement;
-    if (!iframe) {
-      throw new Error('Devtools iframe not found.');
-    }
-    iframe.contentWindow?.postMessage(event.data, '*');
+    iframe.contentWindow!.postMessage(event.data, '*');
   }
 
   if (event.data.source === 'content-script') {
     const iframe = document.getElementById('testing') as HTMLIFrameElement;
-    if (!iframe) {
-      throw new Error('Test app iframe not found.');
-    }
-    iframe.contentWindow?.postMessage(event.data, '*');
+    iframe.contentWindow!.postMessage(event.data, '*');
   }
 });
 

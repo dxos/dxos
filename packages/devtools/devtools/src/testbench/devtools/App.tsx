@@ -3,48 +3,30 @@
 //
 
 import React from 'react';
+import { HashRouter } from 'react-router-dom';
 
-import { Event } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { ClientServicesProxy } from '@dxos/client-services';
-import { useAsyncEffect } from '@dxos/react-async';
-import { RpcPort } from '@dxos/rpc';
+import { ClientContext } from '@dxos/react-client';
+import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { ClientAndServices, Devtools } from '../../app';
+import { useProxiedClient, useRoutes } from '../../hooks';
 
-const connectToClient = async () => {
-  const port: RpcPort = {
-    // content-script is required for dxos-client port to work.
-    send: async (message) => window.parent.postMessage({ data: Array.from(message), source: 'content-script' }, '*'),
-
-    subscribe: (callback) => {
-      const handler = (event: MessageEvent<any>) => {
-        const message = event.data;
-        if (typeof message !== 'object' || message === null || message.source !== 'dxos-client') {
-          return;
-        }
-
-        callback(new Uint8Array(message.data));
-      };
-
-      window.addEventListener('message', handler);
-      return () => window.removeEventListener('message', handler);
-    }
-  };
-
-  const servicesProvider = new ClientServicesProxy(port);
-  const client = new Client({ services: servicesProvider });
-  await client.initialize();
-
-  return { client, services: servicesProvider.services };
+const Routes = () => {
+  return useRoutes();
 };
 
 export const App = () => {
-  const clientReady = new Event<ClientAndServices>();
-  useAsyncEffect(async () => {
-    const { client, services } = await connectToClient();
-    clientReady.emit({ client, services });
-  }, []);
+  const client = useProxiedClient();
+  if (!client) {
+    return null;
+  }
 
-  return <Devtools clientReady={clientReady} />;
+  return (
+    <ErrorBoundary>
+      <ClientContext.Provider value={client}>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
+      </ClientContext.Provider>
+    </ErrorBoundary>
+  );
 };
