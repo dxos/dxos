@@ -3,8 +3,9 @@
 //
 
 import React from 'react';
-import { useRoutes } from 'react-router-dom';
+import { useRoutes as useRouterRoutes } from 'react-router-dom';
 
+import { RootContainer } from '../app';
 import {
   ConfigPanel,
   CredentialsPanel,
@@ -17,12 +18,13 @@ import {
   SignalPanel,
   SwarmPanel
 } from '../panels';
-import { RootContainer } from './RootContainer';
 
-// https://github.com/remix-run/react-router/blob/main/docs/start/tutorial.md
-
-export const Routes = () => {
-  return useRoutes([
+/**
+ * Main app routes.
+ * https://reactrouter.com/en/main
+ */
+export const useRoutes = () => {
+  return useRouterRoutes([
     {
       path: '/',
       element: <RootContainer />,

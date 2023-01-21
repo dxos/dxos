@@ -10,18 +10,12 @@ import { ClientServicesProxy } from '@dxos/client-services';
 import { useAsyncEffect } from '@dxos/react-async';
 import { RpcPort } from '@dxos/rpc';
 
-import { ClientAndServices, Devtools } from '../../initialize';
+import { ClientAndServices, Devtools } from '../../app';
 
 const connectToClient = async () => {
   const port: RpcPort = {
-    send: async (message) =>
-      window.parent.postMessage(
-        {
-          data: Array.from(message),
-          source: 'content-script' // This is required for dxos-client port to work.
-        },
-        '*'
-      ),
+    // content-script is required for dxos-client port to work.
+    send: async (message) => window.parent.postMessage({ data: Array.from(message), source: 'content-script' }, '*'),
 
     subscribe: (callback) => {
       const handler = (event: MessageEvent<any>) => {
@@ -37,11 +31,11 @@ const connectToClient = async () => {
       return () => window.removeEventListener('message', handler);
     }
   };
+
   const servicesProvider = new ClientServicesProxy(port);
-
   const client = new Client({ services: servicesProvider });
-
   await client.initialize();
+
   return { client, services: servicesProvider.services };
 };
 
@@ -51,5 +45,6 @@ export const App = () => {
     const { client, services } = await connectToClient();
     clientReady.emit({ client, services });
   }, []);
+
   return <Devtools clientReady={clientReady} />;
 };

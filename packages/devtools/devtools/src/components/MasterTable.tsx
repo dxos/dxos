@@ -50,6 +50,8 @@ export const MasterTable = ({ types, data, onSelectType }: MasterTableProps<any>
   const getFilteredData = () =>
     data.filter(type.filter).filter(type.subFilter ? type.subFilter(text) : defaultSubFilter(text));
 
+  // TODO(burdon): Create storybook.
+  // TODO(burdon): Factor out table from search/selector.
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
       <div className='flex'>

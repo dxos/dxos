@@ -13,22 +13,26 @@ import '@dxosTheme';
 
 import '@dxos/kai/style.css';
 
+// TODO(burdon): Wrap all bootstrap code in a main function.
+
 createRoot(document.getElementById('root')!).render(<Root />);
 
 window.addEventListener('message', (event) => {
   const message = event.data;
-  // Pass messages from client to parent window.
+  // Route messages from client to parent window.
   if (message.source === 'dxos-client') {
     window.parent.postMessage(message, '*');
   }
 
-  // It should be hear because dxos-client port expects messages from content-script with event.source === window.
+  // The dxos-client port expects messages from content-script with event.source === window.
   if (message.source === 'content-script' && event.source !== window) {
     window.postMessage(message, '*');
   }
 });
 
-// open services in devtools hook;
+/**
+ * Detect global hook from App.
+ */
 const waitForDXOS = async (timeout = 5_000, interval = 500) => {
   while (timeout > 0) {
     const isReady = !!(window as any).__DXOS__;
@@ -48,6 +52,7 @@ waitForDXOS()
   .then(() => {
     (window as any).__DXOS__.openClientRpcServer();
   })
+  // TODO(burdon): Catch/throw?
   .catch((err) => {
     throw err;
   });

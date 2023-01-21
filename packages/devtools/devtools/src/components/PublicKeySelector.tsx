@@ -8,6 +8,12 @@ import { Selector } from '@dxos/kai';
 import { PublicKey } from '@dxos/keys';
 import { ComplexSet, humanize } from '@dxos/util';
 
+// TODO(burdon): Factor out.
+const removeDuplicates = (keys: PublicKey[]) => {
+  const set = new ComplexSet(PublicKey.hash, keys);
+  return Array.from(set.values());
+};
+
 interface PublicKeySelectorProps {
   id?: string;
   placeholder?: string;
@@ -16,13 +22,9 @@ interface PublicKeySelectorProps {
   onSelect: (value: PublicKey | undefined) => void;
 }
 
-const dropDoubledKeys = (keys: PublicKey[]) => {
-  const set = new ComplexSet(PublicKey.hash, keys);
-  return Array.from(set.values());
-};
-
+// TODO(burdon): Why is this wrapper needed? Remove?
 export const PublicKeySelector = ({
-  id = 'key-select',
+  id = 'key-select', // TODO(burdon): Why is id needed?
   placeholder = 'Key',
   keys,
   value,
@@ -30,7 +32,7 @@ export const PublicKeySelector = ({
 }: PublicKeySelectorProps) => (
   <div id={id}>
     <Selector
-      options={dropDoubledKeys(keys).map((key) => ({
+      options={removeDuplicates(keys).map((key) => ({
         id: key.toHex(),
         title: humanize(key)
       }))}

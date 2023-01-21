@@ -3,7 +3,6 @@
 //
 
 import React, { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 
 import { Event } from '@dxos/async';
@@ -12,17 +11,18 @@ import { ClientServices } from '@dxos/client-services';
 import { ClientContext } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { Routes } from './containers';
+import { useRoutes } from '../hooks';
 
+// TODO(burdon): Replace with dxos/client definition?
 export type ClientAndServices = { client: Client; services: ClientServices };
 
-// TODO(burdon): Refactor with App.tsx
-// TODO(burdon): React.StrictMode?
-// TODO(burdon): Error page.
+const Routes = () => {
+  return useRoutes();
+};
 
+// TODO(burdon): Refactor with main App.tsx?
 export const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices> }) => {
   const [client, setClient] = useState<ClientAndServices>();
-
   useEffect(() => {
     clientReady.on((value) => setClient(value));
   }, []);
@@ -38,8 +38,4 @@ export const Devtools = ({ clientReady }: { clientReady: Event<ClientAndServices
       )}
     </ErrorBoundary>
   );
-};
-
-export const initializeDevtools = (clientReady: Event<ClientAndServices>) => {
-  createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
 };

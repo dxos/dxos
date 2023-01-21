@@ -3,6 +3,7 @@
 //
 
 import React, { useState } from 'react';
+import { HashRouter } from 'react-router-dom';
 
 import { Client, DEFAULT_CLIENT_ORIGIN, fromHost, fromIFrame } from '@dxos/client';
 import { ClientServices } from '@dxos/client-services';
@@ -12,8 +13,8 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { RootContainer } from './containers';
-import { ClientAndServices } from './initialize';
+import { useRoutes } from '../hooks';
+import { ClientAndServices } from './Devtools';
 
 const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
 
@@ -34,10 +35,10 @@ const createClientAndServices = async (): Promise<ClientAndServices> => {
       : {};
 
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
-
     const servicesProvider = remoteSource ? fromIFrame(config) : fromHost(config);
     const client = new Client({ config, services: servicesProvider });
     await client.initialize();
+
     return { client, services: servicesProvider.services as ClientServices };
   };
 
@@ -58,7 +59,12 @@ const createClientAndServices = async (): Promise<ClientAndServices> => {
   if (!(protocol in targetResolvers)) {
     throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
   }
+
   return targetResolvers[protocol](remoteSource);
+};
+
+const Routes = () => {
+  return useRoutes();
 };
 
 const Telemetry = () => {
@@ -66,10 +72,9 @@ const Telemetry = () => {
   return null;
 };
 
-// TODO(burdon): Refactor with initialize.
+// TODO(burdon): Refactor with Devtools.tsx?
 export const App = () => {
   const [client, setClient] = useState<ClientAndServices>();
-
   useAsyncEffect(async () => {
     setClient(await createClientAndServices());
   }, []);
@@ -81,8 +86,10 @@ export const App = () => {
   return (
     <ErrorBoundary>
       <ClientContext.Provider value={client}>
-        <Telemetry />
-        <RootContainer />
+        <HashRouter>
+          <Telemetry />
+          <Routes />
+        </HashRouter>
       </ClientContext.Provider>
     </ErrorBoundary>
   );

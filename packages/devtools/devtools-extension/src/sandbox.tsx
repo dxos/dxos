@@ -3,26 +3,25 @@
 //
 
 import debug from 'debug';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServicesProxy } from '@dxos/client-services';
-import { ClientAndServices, initializeDevtools } from '@dxos/devtools';
+import { ClientAndServices, Devtools } from '@dxos/devtools';
 import { RpcPort } from '@dxos/rpc';
 
+// TODO(burdon): Use dxos/log?
 const log = debug('dxos:extension:sandbox');
 
+// TODO(burdon): Create class.
 const clientReady = new Event<ClientAndServices>();
 
 const windowPort = (): RpcPort => ({
   send: async (message) =>
-    window.parent.postMessage(
-      {
-        data: Array.from(message),
-        source: 'sandbox'
-      },
-      window.location.origin
-    ),
+    window.parent.postMessage({ data: Array.from(message), source: 'sandbox' }, window.location.origin),
+
   subscribe: (callback) => {
     const handler = (event: MessageEvent<any>) => {
       const message = event.data;
@@ -54,32 +53,24 @@ const waitForRpc = async () =>
       }
     };
 
-    window.addEventListener('message', handler);
-
     log('Sandbox RPC port ready.');
-
-    window.parent.postMessage(
-      {
-        data: 'open-rpc',
-        source: 'sandbox'
-      },
-      window.location.origin
-    );
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ data: 'open-rpc', source: 'sandbox' }, window.location.origin);
   });
 
 const init = async () => {
-  initializeDevtools(clientReady);
+  // TODO(burdon): After client created.
+  createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
 
-  log('Initialize client RPC server starting...');
+  log('initializing...');
   const rpcPort = windowPort();
   const servicesProvider = new ClientServicesProxy(rpcPort);
-
   await waitForRpc();
 
   const client = new Client({ services: servicesProvider });
-
   await client.initialize();
-  log('Initialized client RPC server finished.');
+
+  log('initialized client');
   clientReady.emit({ client, services: servicesProvider.services });
 };
 
