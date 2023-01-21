@@ -183,6 +183,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/tracing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/typings/package.json",
           "jsonpath": "$.version"
         },

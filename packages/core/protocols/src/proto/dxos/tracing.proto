@@ -1,0 +1,32 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+package dxos.tracing;
+
+message TraceEvent {
+  google.protobuf.Timestamp timestamp = 1;
+
+  google.protobuf.Any event = 10;
+  TraceScopeChain scope = 11;
+}
+
+message TraceScopeChain {
+  repeated TraceScope scope = 1;
+}
+
+message TraceScope {
+  optional bytes id = 1;
+
+  google.protobuf.Any data = 2;
+}
+
+service TraceService {
+  rpc Subscribe (google.protobuf.Empty) returns (stream TraceEvent);
+}

@@ -100,6 +100,7 @@
     "timeframe": "packages/common/timeframe",
     "todomvc": "packages/apps/todomvc",
     "toolbox": "tools/executors/toolbox",
+    "tracing": "packages/common/tracing",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
     "wallet-extension": "packages/deprecated/wallet/wallet-extension",
