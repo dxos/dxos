@@ -28,18 +28,26 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
+export type TableProps = {
+  columns: Column<EchoObject>[];
+  data?: EchoObject[];
+  highlightClassName?: string; // TODO(burdon): Slots.
+  onSelect?: (index: number) => void;
+  selected?: number;
+};
+
 /**
  * Virtual table.
  * https://react-table-v7.tanstack.com/docs/overview
  */
 // TODO(burdon): Checkbox in left gutter.
-export const Table: FC<{
-  columns: Column<EchoObject>[];
-  data: EchoObject[];
-  highlightClassName?: string;
-  onSelect?: (index: number) => void;
-  selected?: number;
-}> = ({ columns, data, highlightClassName = 'bg-gray-300', onSelect, selected }) => {
+export const Table: FC<TableProps> = ({
+  columns,
+  data = [],
+  highlightClassName = 'bg-gray-300',
+  onSelect,
+  selected
+}) => {
   const defaultColumn = useMemo(
     () => ({
       // When using the useFlexLayout:
@@ -58,10 +66,10 @@ export const Table: FC<{
 
   return (
     // TODO(burdon): Remove table class to force scrolling.
-    <div className='flex flex-auto overflow-x-auto'>
-      <div {...getTableProps()} className='table flex-auto'>
+    <div className='flex flex-col overflow-x-auto'>
+      <div className='table' {...getTableProps()}>
         {/* Header */}
-        <div>
+        <div className='thead sticky top-0'>
           {headerGroups.map((headerGroup) => (
             // eslint-disable-next-line react/jsx-key
             <div
@@ -87,7 +95,7 @@ export const Table: FC<{
         </div>
 
         {/* Body */}
-        <div className='tbody overflow-y-auto overflow-x-hidden mt-2'>
+        <div className='tbody overflow-y-auto'>
           {rows.map((row, i) => {
             prepareRow(row);
             return (

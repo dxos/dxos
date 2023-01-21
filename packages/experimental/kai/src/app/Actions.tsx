@@ -12,8 +12,7 @@ import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { FileUploadDialog } from '../components';
-import { useFileDownload, useSpace } from '../hooks';
-import { Generator } from '../proto';
+import { useFileDownload, useGenerator, useSpace } from '../hooks';
 import { createSpacePath } from './Routes';
 
 export type Action = {
@@ -27,9 +26,9 @@ export const Actions = () => {
   const navigate = useNavigate();
   const client = useClient();
   const download = useFileDownload();
-  const { space } = useSpace();
+  const space = useSpace();
   const { state: connectionState } = useNetworkStatus();
-  const generator = useMemo(() => (space ? new Generator(space.experimental.db) : undefined), [space]);
+  const generator = useGenerator();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const serializer = useMemo(() => new Serializer(), []);
 
