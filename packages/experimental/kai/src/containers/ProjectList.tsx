@@ -10,15 +10,15 @@ import { useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
 import { Card, Button, CardMenu } from '../components';
-import { useSpace } from '../hooks';
-import { Project, createProject } from '../proto';
+import { useGenerator, useSpace } from '../hooks';
+import { Project } from '../proto';
 import { ProjectCard } from './cards';
 
 export const ProjectListCard: FC = () => {
-  const { space } = useSpace();
+  const generator = useGenerator();
 
   const handleCreate = async () => {
-    await createProject(space.experimental.db);
+    await generator.createProject();
   };
 
   const Header = () => (
@@ -37,7 +37,7 @@ export const ProjectListCard: FC = () => {
 };
 
 export const ProjectList: FC<{ header?: boolean }> = (_props) => {
-  const { space } = useSpace();
+  const space = useSpace();
   const projects = useQuery(space, Project.filter());
 
   return (

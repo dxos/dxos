@@ -41,6 +41,7 @@ export const RecoverIdentityPage = () => {
       if (demo && !client.config.values.runtime?.client?.storage?.persistent) {
         await new Generator(space.experimental.db).generate();
       }
+
       redirect();
     } catch {
       setPending(false);

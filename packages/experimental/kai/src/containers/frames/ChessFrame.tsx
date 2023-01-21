@@ -31,7 +31,7 @@ export const createChess = (game: Game) => {
 export const ChessFrame: FC = () => {
   const [style] = useState(ChessPieces.RIOHACHA);
   const [game, setGame] = useState<Game | undefined>();
-  const { space } = useSpace();
+  const space = useSpace();
 
   const handleCreate = async () => {
     const game = new Game();
@@ -118,7 +118,7 @@ const Grid: FC<{ style: ChessPieces; onSelect: (game: Game) => void; onCreate: (
   onSelect,
   onCreate
 }) => {
-  const { space } = useSpace();
+  const space = useSpace();
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (

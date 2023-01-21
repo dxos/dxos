@@ -21,7 +21,7 @@ export const mapOrganizationToItem = (organization: Organization): FolderHierarc
 });
 
 export const OrganizationHierarchy = withReactor(() => {
-  const { space } = useSpace();
+  const space = useSpace();
   // TODO(burdon): useQuery should not return undefined.
   // TODO(burdon): Need subscription for children.
   const organizations = useQuery(space, Organization.filter()) ?? [];
