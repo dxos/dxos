@@ -12,7 +12,7 @@ export default {
 
 export const Default = {
   args: {
-    spaceTitle: 'Q3 2022 Planning',
-    onClickExit: () => {}
+    space: { properties: { title: 'Q3 2022 Planning' } },
+    deviceHasIdentities: true
   }
 };
