@@ -25,7 +25,7 @@ export type WaitUntilReachedTargetParams = {
  */
 export class PipelineState {
   // TODO(dmaretskyi): Remove?.
-  public readonly timeframeUpdate = this._timeframeClock.updateTimeframe;
+  public readonly timeframeUpdate = this._timeframeClock.update;
 
   /**
    * Target timeframe we are waiting to reach.
@@ -60,6 +60,10 @@ export class PipelineState {
     return this._timeframeClock.timeframe;
   }
 
+  get targetTimeframe() {
+    return this._targetTimeframe ? Timeframe.merge(this.endTimeframe, this._targetTimeframe) : this.endTimeframe;
+  }
+
   async waitUntilTimeframe(target: Timeframe) {
     await this._timeframeClock.waitUntilReached(target);
   }
@@ -78,19 +82,29 @@ export class PipelineState {
   async waitUntilReachedTargetTimeframe({ timeout }: WaitUntilReachedTargetParams = {}) {
     this._reachedTargetPromise ??= Promise.race([
       this._timeframeClock.update.waitForCondition(() => {
-        const target = this._targetTimeframe ? Timeframe.merge(this.endTimeframe, this._targetTimeframe) : this.endTimeframe;
-
-        return Timeframe.dependencies(target, this._timeframeClock.timeframe).isEmpty();
+        return Timeframe.dependencies(this.targetTimeframe, this.timeframe).isEmpty();
       }),
       this._iterator.stalled.discardParameter().waitForCount(1)
     ])
 
+    let done = false;
 
     if (timeout) {
       return Promise.race([
-        this._reachedTargetPromise,
+        this._reachedTargetPromise.then(() => {
+          done = true;
+        }),
         sleep(timeout).then(() => {
-          log.warn(`waitUntilReachedTargetTimeframe timed out after ${timeout}ms.`)
+          if (done) {
+            return;
+          }
+          
+          log.warn(`waitUntilReachedTargetTimeframe timed out`, { 
+            timeout,
+            current: this.timeframe,
+            target: this.targetTimeframe,
+            dependencies: Timeframe.dependencies(this.targetTimeframe, this.timeframe),
+          })
         }),
       ])
     } else {

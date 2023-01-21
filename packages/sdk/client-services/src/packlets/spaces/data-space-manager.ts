@@ -153,6 +153,8 @@ export class DataSpaceManager {
       snapshotManager,
       presence,
       memberKey: this._signingContext.identityKey,
+      keyring: this._keyring,
+      signingContext: this._signingContext,
       snapshotId: metadata.snapshot
     });
 
