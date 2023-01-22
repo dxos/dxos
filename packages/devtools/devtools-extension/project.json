@@ -5,7 +5,7 @@
     "bundle-skip": {
       "executor": "nx:run-script",
       "options": {
-        "script": "bundle"
+        "script": "bundle-skip"
       },
       "outputs": [
         "packages/devtools/devtools-extension/dist"
