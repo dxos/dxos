@@ -2481,6 +2481,7 @@ importers:
       crx: ^5.0.1
       debug: ^4.3.3
       download: ^8.0.0
+      esbuild-plugin-inline-image: ^0.0.9
       express: 4.17.1
       moment: ^2.24.0
       react: ^18.2.0
@@ -2531,6 +2532,7 @@ importers:
       copy: 0.3.2
       crx: 5.0.1
       download: 8.0.0
+      esbuild-plugin-inline-image: 0.0.9
       express: 4.17.1
       rmdir: 1.2.0
       safe-compare: 1.1.4
@@ -18899,6 +18901,10 @@ packages:
     resolution: {integrity: sha512-jyfL/pwPqaFXyKnj8lP8iLk6Z0m099uXR45aSN8Av1XD4vhvQutxxPzgA2bTcAwQpa1zCXDcWOlhFgyP3GKqhQ==}
     dev: true
 
+  /esbuild-plugin-inline-image/0.0.9:
+    resolution: {integrity: sha512-pw3ZgN2phh32Z7BpKrhRDtmI+iVCl+Gc0BLOT9croXg1MnMjRuN7aXhIQirhLeK39erkIwfFlhy6xieroBGc1Q==}
+    dev: true
+
   /esbuild-plugin-raw/0.1.7:
     resolution: {integrity: sha512-kYfu+XBzKm1/ryjjITSMkj/D+JsVHRWD48vM/EWTufUledFlnCw8envwgjz29R3bXj6g+wguhUW8Q2qjxCQNXw==}
     dependencies:
@@ -33040,7 +33046,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

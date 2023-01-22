@@ -7,7 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "bundle": "node scripts/build.js",
+    "bundle-skip": "node scripts/build.js",
     "pack:crx": "crx pack dist -o dxos-devtools.crx",
     "pack:webext": "web-ext build --source-dir ./dist",
     "start:firefox": "web-ext run --source-dir ./dist"
@@ -54,6 +54,7 @@
     "copy": "~0.3.2",
     "crx": "^5.0.1",
     "download": "^8.0.0",
+    "esbuild-plugin-inline-image": "^0.0.9",
     "express": "4.17.1",
     "rmdir": "~1.2.0",
     "safe-compare": "~1.1.4",
