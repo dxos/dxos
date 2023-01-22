@@ -29,7 +29,7 @@ export const RootContainer = () => {
 
   return (
     <div className='flex w-full h-screen overflow-hidden'>
-      <div className={'flex flex-col w-[180px] overflow-hidden overflow-y-auto bg-gray-200'}>
+      <div className={'flex flex-col w-[180px] overflow-hidden overflow-y-auto bg-gray-200 border-gray-400 border-r'}>
         <FolderHierarchy
           items={sections}
           selected={pathname}

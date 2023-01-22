@@ -100,10 +100,6 @@ const types: ColumnType<SignalResponse>[] = [
 
 export const SignalMessages = () => {
   const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
-
   const [signalResponses, setSignalResponses] = useState<SignalResponse[]>([]);
 
   useEffect(() => {

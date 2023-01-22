@@ -15,10 +15,6 @@ import { KeySelect, Panel } from '../../components';
 
 export const CredentialsPanel = () => {
   const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
-
   const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const services = useClientServices();

@@ -8,62 +8,62 @@ import { PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 import { MessageTable, PublicKeySelector } from '../../components';
+import { SpaceToolbar } from '../../containers';
+import { useDevtoolsDispatch, useDevtoolsState } from '../../hooks';
 
 export const FeedsPanel = () => {
+  const setContext = useDevtoolsDispatch();
+  const { space, feedKey } = useDevtoolsState();
+
+  // Spaces subscription.
   const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
-
-  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
-  const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
-
   const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
-  const spaceFeeds = useMemo(() => {
-    if (!selectedSpaceKey || !spaces) {
-      return [];
-    }
-    const space = spaces.find((space) => space.key.equals(selectedSpaceKey));
-    return space ? [space.genesisFeed, space.controlFeed, space.dataFeed] : [];
-  }, [spaces, selectedSpaceKey]);
+
   // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<any[]>([]);
-  const { blocks } = useStream(
-    () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: selectedSpaceKey, feedKey: selectedFeed }),
-    {},
-    [selectedSpaceKey, selectedFeed]
-  );
+  const { blocks } = useStream(() => devtoolsHost.subscribeToFeedBlocks({ spaceKey: space?.key, feedKey }), {}, [
+    spaces,
+    feedKey
+  ]);
+
+  // TODO(burdon): Multiple feeds (for peers).
+  // const feeds = devtoolsHost.subscribeToFeeds({ feedKeys: space?.key });
+
+  const feeds: PublicKey[] = useMemo(() => {
+    if (!spaces || !spaces) {
+      return [];
+    }
+
+    const spaceInfo = spaces.find((space) => space.key.equals(space.key));
+    return spaceInfo ? [spaceInfo.genesisFeed, spaceInfo.controlFeed, spaceInfo.dataFeed] : [];
+  }, [spaces, space]);
+
+  // TODO(burdon): Reset if space changed.
+  useEffect(() => {
+    if (feedKey && feeds.findIndex((key) => key.equals(feedKey)) === -1) {
+      setContext((state) => ({ ...state, feedKey: undefined }));
+    }
+
+    setMessages([]);
+  }, [space]);
+
   useEffect(() => {
     setMessages(blocks ?? []);
   }, [blocks]);
 
+  const handleSelect = (feedKey?: PublicKey) => {
+    setContext((state) => ({ ...state, feedKey }));
+    setMessages([]);
+  };
+
   return (
     <div className='flex flex-col'>
-      <div className='flex flex-1 p-3 border-b border-slate-200 border-solid'>
-        <div className='w-1/3 mr-2'>
-          <PublicKeySelector
-            keys={spaces.map(({ key }) => key)}
-            value={selectedSpaceKey}
-            placeholder={'Select space'}
-            onSelect={(key) => {
-              setMessages([]);
-              setSelectedFeed(undefined);
-              key && setSelectedSpaceKey(key);
-            }}
-          />
+      <SpaceToolbar>
+        <div className='w-1/2'>
+          <PublicKeySelector keys={feeds} value={feedKey} placeholder={'Select feed'} onSelect={handleSelect} />
         </div>
-        <div className='w-1/3 mr-2'>
-          <PublicKeySelector
-            keys={spaceFeeds}
-            value={selectedFeed}
-            placeholder={'Select feed'}
-            onSelect={(key) => {
-              setMessages([]);
-              key && setSelectedFeed(key);
-            }}
-          />
-        </div>
-      </div>
+      </SpaceToolbar>
+
       <div className='flex flex-1'>
         <MessageTable messages={messages} />
       </div>

@@ -7,108 +7,29 @@ import React, { useState } from 'react';
 import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { FolderHierarchy, FolderHierarchyItem, Searchbar } from '@dxos/kai';
-import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { useSpace, useSelection, useSpaces } from '@dxos/react-client';
+import { useSelection } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
-import { JsonView, PublicKeySelector } from '../../components';
+import { DetailsTable, JsonView } from '../../components';
+import { SpaceToolbar } from '../../containers';
+import { useDevtoolsState } from '../../hooks';
 
-export const ItemsPanel = () => {
-  const spaces = useSpaces();
+// TODO(burdon): Factor out.
 
-  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
-  const space = useSpace(selectedSpaceKey);
-  const items = useSelection(space?.select()) ?? [];
+const textFilter = (text?: string) => {
+  if (!text) {
+    return () => true;
+  }
 
-  const [selectedItem, setSelectedItem] = useState<Item<any>>();
-
-  const [text, setText] = useState<string>('');
-  const handleSearch = (text: string) => {
-    setText(text);
+  const matcher = new RegExp(text, 'i');
+  return (item: FolderHierarchyItem) => {
+    const match = item.title?.match(matcher);
+    return match !== null;
   };
-
-  const getHierarchicalItem = (dbItem: Item<any>): FolderHierarchyItem => {
-    return {
-      id: dbItem.id,
-      title: (modelToObject(dbItem.model) as any)?.['@type'] ?? dbItem.type ?? dbItem.modelType ?? 'undefined',
-      items: dbItem.children.map((child) => getHierarchicalItem(child)),
-      value: dbItem
-    };
-  };
-
-  return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <div className='flex flex-1 p-3 border-b border-slate-200 border-solid'>
-        <div className='w-1/3 mr-2'>
-          <PublicKeySelector
-            keys={spaces.map(({ key }) => key)}
-            value={selectedSpaceKey}
-            placeholder={'Select space'}
-            onSelect={(key) => {
-              key && setSelectedSpaceKey(key);
-            }}
-          />
-        </div>
-        <div>
-          <Searchbar onSearch={handleSearch} />
-        </div>
-      </div>
-      <div className='flex h-full'>
-        <div className='flex flex-col w-1/3 overflow-auto'>
-          <FolderHierarchy
-            items={items
-              .filter((item) => !item.parent)
-              .map(getHierarchicalItem)
-              .filter((item) => item.title?.includes(text) ?? true)}
-            titleClassName={'text-black text-lg'}
-            onSelect={(item) => setSelectedItem(item.value)}
-            selected={selectedItem?.id}
-          />
-        </div>
-
-        <div className='flex flex-1 w-2/3 overflow-auto'>{selectedItem && <ItemDetails item={selectedItem} />}</div>
-      </div>
-    </div>
-  );
 };
-
-interface ItemDetailsProps {
-  item: Item<Model<any>>;
-}
-
-const ItemDetails = ({ item }: ItemDetailsProps) => (
-  <div className='align-top mt-2 ml-2'>
-    <table>
-      <tbody>
-        <tr>
-          <td>ID</td>
-          <td>{truncateKey(item.id, 8)}</td>
-        </tr>
-        <tr>
-          <td>Model</td>
-          <td>{item.model.modelMeta.type}</td>
-        </tr>
-        <tr>
-          <td>Type</td>
-          <td>{item.type}</td>
-        </tr>
-        <tr>
-          <td>Deleted</td>
-          <td>{item.deleted ? 'Yes' : 'No'}</td>
-        </tr>
-        <tr>
-          <td className='align-top'>Properties</td>
-          <td>
-            <JsonView data={modelToObject(item.model)} />
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-);
 
 const modelToObject = (model: Model<any>) => {
   if (model instanceof ObjectModel) {
@@ -120,4 +41,63 @@ const modelToObject = (model: Model<any>) => {
   }
 
   return model.toJSON();
+};
+
+// TODO(burdon): Rationalize with new API.
+const getItemType = (item: Item<any>) =>
+  (modelToObject(item.model) as any)?.['@type'] ?? item.type ?? item.modelType ?? 'undefined';
+
+const getItemDetails = (item: Item<any>) => ({
+  id: truncateKey(item.id, 4),
+  model: item.model.modelMeta.type,
+  type: (modelToObject(item.model) as any)?.['@type'],
+  deleted: String(Boolean(item.deleted)),
+  properties: <JsonView data={modelToObject(item.model)} />
+});
+
+const getHierarchicalItem = (item: Item<any>): FolderHierarchyItem => ({
+  id: item.id,
+  title: getItemType(item),
+  items: item.children.map((child) => getHierarchicalItem(child)),
+  value: item
+});
+
+export const ItemsPanel = () => {
+  const { space } = useDevtoolsState();
+  // TODO(burdon): Sort by type?
+  // TODO(burdon): Filter deleted.
+  const items = useSelection(space?.select()) ?? [];
+  const [selectedItem, setSelectedItem] = useState<Item<any>>();
+  const [filter, setFilter] = useState('');
+
+  return (
+    <div className='flex flex-1 flex-col overflow-hidden'>
+      <SpaceToolbar>
+        <div className='w-1/2'>
+          <Searchbar onSearch={setFilter} />
+        </div>
+      </SpaceToolbar>
+
+      <div className='flex h-full overflow-hidden'>
+        <div className='flex flex-col w-1/3 overflow-auto border-r'>
+          {/* TODO(burdon): Convert to list with new API. */}
+          <FolderHierarchy
+            items={items
+              .filter((item) => !item.parent)
+              .map(getHierarchicalItem)
+              .filter(textFilter(filter))}
+            titleClassName={'text-black text-sm'}
+            onSelect={(item) => setSelectedItem(item.value)}
+            selected={selectedItem?.id}
+          />
+        </div>
+
+        {selectedItem && (
+          <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
+            <DetailsTable object={getItemDetails(selectedItem)} expand />
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };

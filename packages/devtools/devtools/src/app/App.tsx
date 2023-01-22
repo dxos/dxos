@@ -9,7 +9,7 @@ import { useTelemetry } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { useRemoteClient, useRoutes } from '../hooks';
+import { DevtoolsContextProvider, useRemoteClient, useRoutes } from '../hooks';
 
 const Routes = () => {
   return useRoutes();
@@ -30,10 +30,12 @@ export const App = () => {
   return (
     <ErrorBoundary>
       <ClientContext.Provider value={client}>
-        <HashRouter>
-          <Telemetry />
-          <Routes />
-        </HashRouter>
+        <DevtoolsContextProvider>
+          <HashRouter>
+            <Telemetry />
+            <Routes />
+          </HashRouter>
+        </DevtoolsContextProvider>
       </ClientContext.Provider>
     </ErrorBoundary>
   );

@@ -4,11 +4,12 @@
 
 syntax = "proto3";
 
-import "dxos/echo/timeframe.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 import "dxos/echo/feed.proto";
 import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
 import "dxos/halo/keyring.proto";
 import "dxos/halo/signed.proto";
 import "dxos/mesh/signal.proto";
@@ -42,7 +43,6 @@ service DevtoolsHost {
   //
 
   rpc SubscribeToKeyringKeys(SubscribeToKeyringKeysRequest) returns (stream SubscribeToKeyringKeysResponse);
-
   rpc SubscribeToCredentialMessages(SubscribeToCredentialMessagesRequest) returns (stream SubscribeToCredentialMessagesResponse);
 
   //
@@ -132,7 +132,7 @@ message GetNetworkPeersRequest {
 
 message GetNetworkPeersResponse {
   message PeerInfo {
-   dxos.keys.PublicKey id = 1;
+    dxos.keys.PublicKey id = 1;
 
     // PeerState enum.
     string state = 2;
@@ -154,9 +154,9 @@ message SubscribeToSpacesResponse {
     dxos.keys.PublicKey key = 1;
     bool is_open = 2;
     optional dxos.echo.timeframe.TimeframeVector timeframe = 3;
-    dxos.keys.PublicKey genesisFeed = 4;
-    dxos.keys.PublicKey controlFeed = 5;
-    dxos.keys.PublicKey dataFeed = 6;
+    dxos.keys.PublicKey genesis_feed = 4;
+    dxos.keys.PublicKey control_feed = 5;
+    dxos.keys.PublicKey data_feed = 6;
   }
 
   repeated SpaceInfo spaces = 1;

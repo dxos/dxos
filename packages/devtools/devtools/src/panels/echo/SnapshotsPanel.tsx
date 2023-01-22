@@ -15,10 +15,6 @@ import { KeySelect, Panel } from '../../components';
 
 export const SnapshotsPanel = () => {
   const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
-
   const spaces = useSpaces();
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [snapshot, setSnapshot] = useState<SpaceSnapshot>();

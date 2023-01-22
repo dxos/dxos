@@ -2,58 +2,53 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Column } from 'react-table';
 
-import { PublicKey } from '@dxos/keys';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
-import { useMembers, useSpaces } from '@dxos/react-client';
-import { humanize } from '@dxos/util';
+import { useMembers } from '@dxos/react-client';
 
-import { ColumnType, MasterTable } from '../../components';
+import { MasterTable } from '../../components';
+import { SpaceToolbar } from '../../containers';
+import { useDevtoolsState } from '../../hooks';
+
+const columns: Column<SpaceMember>[] = [
+  {
+    Header: 'key',
+    width: 120,
+    accessor: (member) => {
+      const identityKey = member.identityKey;
+      return identityKey.truncate(4);
+    }
+  },
+  {
+    Header: 'name',
+    accessor: (member) => member.profile?.displayName
+  },
+  {
+    Header: 'status',
+    accessor: (member) => {
+      switch (member.presence) {
+        case SpaceMember.PresenceState.ONLINE:
+          return 'online';
+        case SpaceMember.PresenceState.OFFLINE:
+          return 'offline';
+      }
+    }
+  }
+];
 
 export const MembersPanel = () => {
-  const spaces = useSpaces();
-
-  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
-  const members = useMembers(selectedSpaceKey ?? spaces[0].key);
-
-  const types: ColumnType<SpaceMember>[] = spaces.map((space) => ({
-    id: space.key.toHex(),
-    title: humanize(space.key),
-    filter: () => true,
-    columns: [
-      {
-        Header: 'Name',
-        accessor: (member) => member.profile?.displayName
-      },
-      {
-        Header: 'IdentityKey',
-        accessor: (member) => {
-          const identityKey = member.identityKey;
-          return humanize(identityKey);
-        }
-      },
-      {
-        Header: 'Presence',
-        accessor: (member) => {
-          switch (member.presence) {
-            case SpaceMember.PresenceState.ONLINE:
-              return 'Online';
-            case SpaceMember.PresenceState.OFFLINE:
-              return 'Offline';
-          }
-        }
-      }
-    ]
-  }));
+  const { space } = useDevtoolsState();
+  const members = useMembers(space?.key);
 
   return (
-    <MasterTable
-      types={types}
-      data={members}
-      onSelectType={(id) => {
-        setSelectedSpaceKey(PublicKey.fromHex(id));
-      }}
-    />
+    <div className='flex flex-1 flex-col overflow-hidden'>
+      <SpaceToolbar />
+
+      <div className='flex flex-1'>
+        <MasterTable<SpaceMember> columns={columns} data={members} />
+      </div>
+    </div>
   );
 };

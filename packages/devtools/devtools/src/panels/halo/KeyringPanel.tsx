@@ -10,10 +10,6 @@ import { KeyTable } from '../../components';
 
 export const KeyringPanel = () => {
   const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
-
   const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
   if (keys === undefined) {
     return null;

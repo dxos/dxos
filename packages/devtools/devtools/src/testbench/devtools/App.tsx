@@ -8,7 +8,7 @@ import { HashRouter } from 'react-router-dom';
 import { ClientContext } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { useProxiedClient, useRoutes } from '../../hooks';
+import { DevtoolsContextProvider, useProxiedClient, useRoutes } from '../../hooks';
 
 const Routes = () => {
   return useRoutes();
@@ -23,9 +23,11 @@ export const App = () => {
   return (
     <ErrorBoundary>
       <ClientContext.Provider value={client}>
-        <HashRouter>
-          <Routes />
-        </HashRouter>
+        <DevtoolsContextProvider>
+          <HashRouter>
+            <Routes />
+          </HashRouter>
+        </DevtoolsContextProvider>
       </ClientContext.Provider>
     </ErrorBoundary>
   );

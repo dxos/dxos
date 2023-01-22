@@ -10,10 +10,6 @@ import { useDevtools } from '@dxos/react-client';
 
 export const LoggingPanel = () => {
   const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
-
   const [enabled, setEnabled] = useState(false);
   const [namespaces, setNamespaces] = useState('');
 

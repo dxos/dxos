@@ -51,9 +51,6 @@ const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): 
 
 export const SignalStatusComp = () => {
   const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), { servers: [] });
   const status = servers!.map(getSignalStatus);
 

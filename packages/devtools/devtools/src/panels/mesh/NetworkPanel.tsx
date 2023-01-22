@@ -27,10 +27,6 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => (
 
 export const NetworkPanel = () => {
   const devtoolsHost = useDevtools();
-  if (!devtoolsHost) {
-    return null;
-  }
-
   const [selectedTopic, setSelectedTopic] = useState<string>();
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 

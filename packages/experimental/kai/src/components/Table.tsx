@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { EchoObject } from '@dxos/echo-schema';
 import { mx } from '@dxos/react-components';
 
 // https://github.com/TanStack/table/blob/v7/examples/full-width-resizable-table/src/App.js
@@ -28,12 +27,26 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
-export type TableProps = {
-  columns: Column<EchoObject>[];
-  data?: EchoObject[];
-  highlightClassName?: string; // TODO(burdon): Slots.
-  onSelect?: (index: number) => void;
-  selected?: number;
+export type TableSlots = {
+  root?: string;
+  header?: string;
+  row?: string;
+  selected?: string;
+};
+
+// TODO(burdon): Theme.
+export const defaultTableSlots: TableSlots = {
+  header: 'text-sm',
+  row: 'hover:bg-gray-200',
+  selected: 'bg-slate-300'
+};
+
+export type TableProps<T extends {}> = {
+  classes?: TableSlots;
+  columns: Column<T>[];
+  data?: T[];
+  selected?: T;
+  onSelect?: (item: T) => void;
 };
 
 /**
@@ -41,13 +54,13 @@ export type TableProps = {
  * https://react-table-v7.tanstack.com/docs/overview
  */
 // TODO(burdon): Checkbox in left gutter.
-export const Table: FC<TableProps> = ({
+export const Table = <T extends {}>({
   columns,
   data = [],
-  highlightClassName = 'bg-gray-300',
+  classes = defaultTableSlots,
   onSelect,
   selected
-}) => {
+}: TableProps<T>) => {
   const defaultColumn = useMemo(
     () => ({
       // When using the useFlexLayout:
@@ -58,7 +71,7 @@ export const Table: FC<TableProps> = ({
     []
   );
 
-  const { getTableProps, headerGroups, prepareRow, rows } = useTable<EchoObject>(
+  const { getTableProps, headerGroups, prepareRow, rows } = useTable<T>(
     { columns, data, defaultColumn },
     useResizeColumns,
     useFlexLayout
@@ -66,7 +79,7 @@ export const Table: FC<TableProps> = ({
 
   return (
     // TODO(burdon): Remove table class to force scrolling.
-    <div className='flex flex-col overflow-x-auto'>
+    <div className={mx('flex flex-col overflow-x-auto', classes?.root)}>
       <div className='table' {...getTableProps()}>
         {/* Header */}
         <div className='thead sticky top-0'>
@@ -81,7 +94,7 @@ export const Table: FC<TableProps> = ({
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
-                <div {...column.getHeaderProps(headerProps)} className='th px-4 py-1'>
+                <div {...column.getHeaderProps(headerProps)} className={mx('th px-4 py-1', classes?.header)}>
                   {column.render('Header')}
 
                   {/* Use column.getResizerProps to hook up the events correctly. */}
@@ -96,16 +109,18 @@ export const Table: FC<TableProps> = ({
 
         {/* Body */}
         <div className='tbody overflow-y-auto'>
-          {rows.map((row, i) => {
+          {rows.map((row) => {
             prepareRow(row);
+
             return (
               // eslint-disable-next-line react/jsx-key
               <div
                 className={mx(
-                  'tr border-b border-solid border-slate-100 transition-colors duration-300 hover:duration-500 hover:delay-300 hover:border-orange-200',
-                  i === selected && highlightClassName
+                  'tr border-b border-solid border-slate-100 cursor-pointer',
+                  row.original === selected && classes?.selected,
+                  classes?.row
                 )}
-                onClick={() => onSelect?.(i)}
+                onClick={() => onSelect?.(row.original)}
                 {...row.getRowProps()}
               >
                 {row.cells.map((cell) => {
