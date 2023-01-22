@@ -5,7 +5,7 @@
 const chalk = require('chalk');
 const copy = require('copy');
 const { build } = require('esbuild');
-const { nodeExternalsPlugin } = require('esbuild-node-externals');
+const inlineImage = require('esbuild-plugin-inline-image');
 const fs = require('fs');
 const { join } = require('path');
 const rmdir = require('rmdir');
@@ -22,17 +22,47 @@ void (async () => {
     await promisify(rmdir)(distDir);
   }
 
-  const packagePath = join(__dirname, '../package.json');
   const config = {
     outdir: distDir,
     write: true,
     bundle: true,
     plugins: [
       NodeModulesPlugin(),
-      nodeExternalsPlugin({
-        packagePath
-      })
+      inlineImage(),
+      // Substitute '/*?url' imports with empty string.
+      {
+        name: 'url',
+        setup: ({ onResolve, onLoad }) => {
+          onResolve({ filter: /\?url$/ }, (args) => {
+            return {
+              path: args.path.replace(/\?url$/, '/empty-url'),
+              namespace: 'url'
+            };
+          });
+
+          onLoad({ filter: /\/empty-url/, namespace: 'url' }, async (args) => {
+            return { contents: 'export default ""' };
+          });
+        }
+      },
+      // Substitute '/*?ttf' imports with empty string.
+      {
+        name: 'ttf',
+        setup: ({ onResolve, onLoad }) => {
+          onResolve({ filter: /\?\.ttf$/ }, (args) => {
+            return {
+              path: args.path.replace(/\?url$/, '/empty-ttf'),
+              namespace: 'ttf'
+            };
+          });
+
+          onLoad({ filter: /\/empty-ttf/, namespace: 'ttf' }, async (args) => {
+            return { contents: 'export default ""' };
+          });
+        }
+      }
     ],
+    platform: 'browser',
     watch: process.argv.includes('--watch')
       ? {
           onRebuild: (error) => {
