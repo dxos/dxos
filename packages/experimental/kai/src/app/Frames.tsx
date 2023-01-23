@@ -46,6 +46,8 @@ import {
 } from '../frames';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
+import { HitlerFrame } from '../hitler/HitlerPage';
+
 
 // prettier-ignore
 export const frames: FrameDef[] = [
@@ -146,6 +148,13 @@ export const frames: FrameDef[] = [
     description: 'Peer-to-peer and engine powered games.',
     Icon: Sword,
     Component: ChessFrame
+  },
+  {
+    id: FrameID.HITLER,
+    title: 'Hitler',
+    description: 'Peer-to-peer and engine powered games.',
+    Icon: Sword,
+    Component: HitlerFrame // Best game ever.
   },
   {
     id: FrameID.SANDBOX,

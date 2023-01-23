@@ -20,7 +20,8 @@ export enum FrameID {
   MAPS = 'maps',
   PRESENTER = 'presenter', // TODO(burdon): MDX.
   CHESS = 'chess',
-  SANDBOX = 'sandbox'
+  SANDBOX = 'sandbox',
+  HITLER = 'hitler'
 }
 
 export const defaultFrameId = FrameID.STACK;
@@ -31,7 +32,8 @@ const activeFrames = [
   FrameID.REGISTRY,
   FrameID.STACK,
   FrameID.TABLE,
-  FrameID.TASKS
+  FrameID.TASKS,
+  FrameID.HITLER
   // FrameID.EXPLORER
   // FrameID.KANBAN,
   // FrameID.NOTES

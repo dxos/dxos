@@ -165,3 +165,105 @@ message Note {
   string title = 1;
   TextObject content = 2;
 }
+
+enum Character {
+  LIBERAL = 0;
+  FASHIST = 1;
+  HITLER = 2;
+}
+
+enum Party {
+  LIBERAL_PARTY = 0;
+  FASCIST_PARTY = 1;
+}
+
+message Player {
+  option (object) = true;
+
+  string member_key = 1;
+
+  string name = 10;
+  Character character = 11;
+  Party party = 12;
+
+  bool killed = 13;
+  bool investigated = 14;
+}
+
+enum Policy {
+  LIBERAL_POLICY = 0;
+  FASCIST_POLICY = 1;
+}
+
+message PolicyCard {
+  option (object) = true;
+
+  Policy policy = 1;
+}
+
+message Game {
+  option (object) = true;
+
+  enum State {
+    LOBBY = 0;
+    GAME = 1;
+  }
+
+  string host_member_key = 1;
+  State state = 2;
+  repeated Player players = 3;
+  repeated Round rounds = 10;
+  repeated PolicyCard policies = 11;
+  repeated PolicyCard deck = 12;
+  repeated PolicyCard discard = 13;
+
+  Player president = 6;
+  Player chancellor = 7;
+}
+
+message Election {
+  option (object) = true;
+
+  // Goes to next player on the left.
+  Player president = 1;
+  // President nominates chancellor.
+  Player chancellor = 2;
+  repeated VoteByPlayer votes = 3;
+}
+
+enum Vote {
+  JA = 0;
+  NEIN = 1;
+}
+
+message VoteByPlayer {
+  option (object) = true;
+
+  Player player = 1;
+  Vote vote = 2;
+}
+
+enum Veto {
+  VETO_NONE = 0;
+  VETO_REQUESTED = 1;
+  VETO_APPROVED = 2;
+  VETO_REJECTED = 3;
+}
+
+message Round {
+  option (object) = true;
+
+  // Max 3 failed elections, after that the top card from the deck is the next policy.
+  repeated Election elections = 1;
+
+  // 3 cards
+  repeated PolicyCard policy_candidates = 2;
+
+  PolicyCard president_discard = 3;
+  PolicyCard chancellor_discard = 4;
+  
+  // Chancellor requests veto.
+  Veto veto = 5;
+
+  PolicyCard passed_policy = 6;
+}

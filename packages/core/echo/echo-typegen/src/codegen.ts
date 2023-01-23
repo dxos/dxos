@@ -49,9 +49,9 @@ export const createSchema = (schema: pb.NamespaceBase) => {
 /**
  * Type definition generator.
  */
-export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
+export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type | pb.Enum> {
   for (const type of ns.nestedArray) {
-    if (type instanceof pb.Type) {
+    if (type instanceof pb.Type || type instanceof pb.Enum) {
       yield type;
     }
 
@@ -60,6 +60,7 @@ export function* iterTypes(ns: pb.NamespaceBase): IterableIterator<pb.Type> {
     }
   }
 }
+
 
 /**
  * Field type definition.
@@ -124,14 +125,18 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
     .push('export const schema = EchoSchema.fromJson(schemaJson);').nl();
 
   for (const type of iterTypes(root)) {
-    if (type.name === 'TextObject') {
-      continue;
-    }
-
-    if (type.options?.['(object)'] !== true) {
-      createPlainInterface(builder, type);
+    if(type instanceof pb.Enum) {
+      createEnum(builder, type);
     } else {
-      createObjectClass(builder, type);
+      if (type.name === 'TextObject') {
+        continue;
+      }
+  
+      if (type.options?.['(object)'] !== true) {
+        createPlainInterface(builder, type);
+      } else {
+        createObjectClass(builder, type);
+      }
     }
 
     builder.nl();
@@ -176,6 +181,21 @@ export const createPlainInterface = (builder: SourceBuilder, type: pb.Type) => {
   // prettier-ignore
   builder
     .push(`export interface ${name} {`)
+    .push(fields, 1)
+    .push('}');
+};
+
+
+/**
+ * Enums.
+ */
+export const createEnum = (builder: SourceBuilder, type: pb.Enum) => {
+  const name = type.name;
+  const fields = Object.keys(type.values).map((field) => `${field} = ${JSON.stringify(field)},`);
+
+  // prettier-ignore
+  builder
+    .push(`export enum ${name} {`)
     .push(fields, 1)
     .push('}');
 };
