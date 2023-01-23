@@ -24,6 +24,7 @@
     "@dxos/devtools": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@emotion/react": "^11.9.0",
@@ -38,6 +39,7 @@
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0",
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {

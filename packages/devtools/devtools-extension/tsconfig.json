@@ -52,6 +52,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../devtools"
     }
   ]
