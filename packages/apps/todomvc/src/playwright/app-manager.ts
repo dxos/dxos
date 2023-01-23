@@ -3,9 +3,9 @@
 //
 
 import type { Context as MochaContext } from 'mocha';
-import type { Page } from 'playwright';
+import type { ConsoleMessage, Page } from 'playwright';
 
-import { sleep, synchronized } from '@dxos/async';
+import { synchronized, Trigger } from '@dxos/async';
 import { setupPage } from '@dxos/test';
 
 import { FILTER } from '../constants';
@@ -16,7 +16,8 @@ const BASE_URL = 'http://localhost:4200';
 export class AppManager {
   page!: Page;
 
-  private initialized = false;
+  private _initialized = false;
+  private _invitationCode = new Trigger<string>();
 
   constructor(private readonly mochaContext: MochaContext) {}
 
@@ -57,9 +58,9 @@ export class AppManager {
 
   async shareList() {
     await this._init();
+    this._invitationCode = new Trigger<string>();
     await this.page.locator('data-testid=share-button').click();
-    await sleep(5); // Wait for invitation to be written to clipboard.
-    return await this.page.evaluate(() => navigator.clipboard.readText());
+    return await this._invitationCode.wait();
   }
 
   async joinList(invitationCode: string) {
@@ -131,12 +132,22 @@ export class AppManager {
 
   @synchronized
   private async _init() {
-    if (this.initialized) {
+    if (this._initialized) {
       return;
     }
 
     const { page } = await setupPage(this.mochaContext, BASE_URL, (page) => page.isVisible(':has-text("todos")'));
     this.page = page;
-    this.initialized = true;
+    this.page.on('console', (message) => this._onConsoleMessage(message));
+    this._initialized = true;
+  }
+
+  private async _onConsoleMessage(message: ConsoleMessage) {
+    try {
+      const json = JSON.parse(message.text());
+      if (json.invitationCode) {
+        this._invitationCode.wake(json.invitationCode);
+      }
+    } catch {}
   }
 }

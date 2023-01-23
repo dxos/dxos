@@ -10,7 +10,6 @@ export const setupPage = async (mochaContext: Context, url?: string, waitFor?: (
 
   const browser = mochaContext.browser as Browser;
   const context = await browser.newContext();
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const page = await context.newPage();
 
   if (url) {

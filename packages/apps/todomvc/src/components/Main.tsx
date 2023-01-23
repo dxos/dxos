@@ -48,8 +48,11 @@ export const Main = withReactor(() => {
   const handleShare = async () => {
     space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING }).subscribe({
       onConnecting: (invitation) => {
-        const code = InvitationEncoder.encode(invitation);
-        void navigator.clipboard.writeText(code);
+        const invitationCode = InvitationEncoder.encode(invitation);
+        // TODO(wittjosiah): Playwright only supports reading clipboard in chromium.
+        //   https://github.com/microsoft/playwright/issues/13037
+        console.log(JSON.stringify({ invitationCode }));
+        void navigator.clipboard.writeText(invitationCode);
       },
       onError: (error) => console.error(error),
       onSuccess: (invitation) => {}
