@@ -7,7 +7,7 @@ import React, { FormEvent, KeyboardEvent, useCallback, useState } from 'react';
 
 export interface TodoItemProps {
   title: string;
-  completed?: boolean;
+  completed: boolean;
   editing?: boolean;
   onSave: (val: string) => void;
   onDestroy: () => void;
@@ -64,19 +64,22 @@ export const TodoItem = ({
   );
 
   return (
-    <li className={cx({ completed, editing })}>
+    <li className={cx({ completed, editing })} data-test='todo'>
       <div className='view'>
-        <input className='toggle' type='checkbox' checked={completed ?? false} onChange={onToggle} />
+        <input className='toggle' type='checkbox' checked={completed} onChange={onToggle} data-test='todo-toggle' />
         <label onDoubleClick={() => handleEdit()}>{title}</label>
-        <button className='destroy' onClick={onDestroy} />
+        <button className='destroy' onClick={onDestroy} data-test='destroy-button' />
       </div>
-      <input
-        className='edit'
-        value={editText}
-        onBlur={() => handleSubmit()}
-        onChange={(ev) => handleChange(ev)}
-        onKeyDown={(ev) => handleKeyDown(ev)}
-      />
+      {editing && (
+        <input
+          className='edit'
+          value={editText}
+          onBlur={() => handleSubmit()}
+          onChange={(ev) => handleChange(ev)}
+          onKeyDown={(ev) => handleKeyDown(ev)}
+          autoFocus={true}
+        />
+      )}
     </li>
   );
 };
