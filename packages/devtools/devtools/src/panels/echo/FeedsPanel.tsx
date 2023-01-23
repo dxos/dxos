@@ -5,11 +5,10 @@
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { useDevtools, useStream } from '@dxos/react-client';
 
 import { MessageTable, PublicKeySelector } from '../../components';
 import { SpaceToolbar } from '../../containers';
-import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages, useSpacesInfo } from '../../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
 
 export const FeedsPanel = () => {
   const setContext = useDevtoolsDispatch();
