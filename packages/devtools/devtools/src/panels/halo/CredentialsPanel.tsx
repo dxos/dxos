@@ -6,8 +6,7 @@ import React from 'react';
 
 import { JsonView } from '../../components';
 import { SpaceToolbar } from '../../containers';
-import { useDevtoolsState } from '../../hooks';
-import { useCredentials } from '../../hooks/useCredentials';
+import { useDevtoolsState, useCredentials } from '../../hooks';
 
 // TODO(burdon): Blows up since JSON data is too large.
 
