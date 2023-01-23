@@ -159,8 +159,12 @@ export const GameInProgress = withReactor(() => {
   const us = game.players.find((player) => player.memberKey === identityKey.toHex())!;
   return (
     <div>
+      <div>
+        <PlayerCard player={us} />
+        <PlayersList />
+      </div>
+
       <Policies />
-      <PlayerCard player={us} />
     </div>
   );
 });
@@ -171,13 +175,13 @@ export const Policies = withReactor(() => {
   const numLiberal = game?.policies.filter((policy) => policy.policy === Policy.LIBERAL_POLICY).length ?? 0;
 
   return (
-    <div className='flex flex-row'>
-      <div className='flex flex-col'>
+    <div className='flex flex-col'>
+      <div className='flex flex-row'>
         {range(numFascist).map((i) => (
           <div key={i}>F</div>
         ))}
       </div>
-      <div className='flex flex-col'>
+      <div className='flex flex-row'>
         {range(numLiberal).map((i) => (
           <div key={i}>L</div>
         ))}
