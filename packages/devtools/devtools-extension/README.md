@@ -1,7 +1,5 @@
 # DXOS DevTools browser extension
 
-WARNING: This package is currently outdated and unmaintained.
-
 The DevTools extension provides debugging information about all aspects of the currently loaded DXOS app.
 
 [![Watch the video](https://user-images.githubusercontent.com/36420699/210833098-ea42d197-0c4e-4b71-a83c-de2649c1a5cb.png)](https://github.com/dxos/dxos/pull/2193#issue-1512878065)
