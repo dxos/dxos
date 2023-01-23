@@ -14,6 +14,7 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { createDefaultModelFactory, ClientServicesHost, ServiceContext } from '../services';
+import { asyncTimeout } from '@dxos/async';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -70,14 +71,14 @@ export const syncItems = async (space1: ISpace, space2: ISpace) => {
   {
     // Check item replicated from 1 => 2.
     const item1 = await space1.database!.createItem({ type: 'type-1' });
-    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
+    const item2 = await asyncTimeout(space2.database!.waitForItem({ type: 'type-1' }), 1000);
     expect(item1.id).to.eq(item2.id);
   }
 
   {
     // Check item replicated from 2 => 1.
     const item1 = await space2.database!.createItem({ type: 'type-2' });
-    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
+    const item2 = await asyncTimeout(space1.database!.waitForItem({ type: 'type-2' }), 1000);
     expect(item1.id).to.eq(item2.id);
   }
 };

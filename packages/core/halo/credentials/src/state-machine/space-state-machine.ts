@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AsyncCallback, Callback } from '@dxos/util';
+import { AsyncCallback, Callback, ComplexSet } from '@dxos/util';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { CredentialConsumer, CredentialProcessor } from '../processor/credential-processor';
@@ -30,6 +30,7 @@ export class SpaceStateMachine implements SpaceState {
   private readonly _members = new MemberStateMachine(this._spaceKey);
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
   private readonly _credentials: Credential[] = [];
+  private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private _genesisCredential: Credential | undefined;
   private _credentialProcessors: CredentialConsumer<any>[] = [];
 
@@ -61,8 +62,14 @@ export class SpaceStateMachine implements SpaceState {
   /**
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  // TODO(dmaretskyi): Skip existing credentials comparing by id.
   async process(credential: Credential, fromFeed: PublicKey): Promise<boolean> {
+    if(credential.id) {
+      if (this._processedCredentials.has(credential.id)) {
+        return false;
+      }
+      this._processedCredentials.add(credential.id);
+    }
+
     const result = await verifyCredential(credential);
     if (result.kind !== 'pass') {
       log.warn(`Invalid credential: ${result.errors.join(', ')}`);

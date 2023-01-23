@@ -61,11 +61,13 @@ export class DataSpaceManager {
     for (const spaceMetadata of this._metadataStore.spaces) {
       log('load space', { spaceMetadata });
       const space = await this._constructSpace(spaceMetadata);
-      if (spaceMetadata.latestTimeframe) {
+      await space.initializeDataPipeline();
+      if (spaceMetadata.dataTimeframe) {
         log('waiting for latest timeframe', { spaceMetadata });
-        await space.dataPipelineController.pipelineState!.setTargetTimeframe(spaceMetadata.latestTimeframe);
+        await space.dataPipelineController.pipelineState!.setTargetTimeframe(spaceMetadata.dataTimeframe);
       }
       await space.dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({ timeout: DATA_PIPELINE_READY_TIMEOUT })
+      this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
     }
   }
 
@@ -97,6 +99,8 @@ export class DataSpaceManager {
 
     await spaceGenesis(this._keyring, this._signingContext, space.inner);
     await this._metadataStore.addSpace(metadata);
+    await space.initializeDataPipeline();
+    this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
 
     this.updated.emit();
     return space;
@@ -116,6 +120,9 @@ export class DataSpaceManager {
 
     const space = await this._constructSpace(metadata);
     await this._metadataStore.addSpace(metadata);
+    await space.initializeDataPipeline();
+    this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
+
     this.updated.emit();
     return space;
   }
@@ -159,7 +166,6 @@ export class DataSpaceManager {
     });
 
     await dataSpace.open();
-    this._dataServiceSubscriptions.registerSpace(space.key, dataSpace.database.createDataServiceHost());
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
   }

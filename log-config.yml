@@ -17,6 +17,7 @@ filter:
   # - sync:debug
   - auth:debug
   - notarization:debug
+  - pipeline:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug
@@ -24,7 +25,6 @@ filter:
   # - peer:debug
   # - connection:debug
   # - test:debug
-  - auth:debug
   # - space:debug
   # - client-services:debug
   # - framer:debug

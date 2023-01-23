@@ -80,6 +80,12 @@ export class PipelineState {
    * @param timeout Timeout in milliseconds to specify the maximum wait time.
    */
   async waitUntilReachedTargetTimeframe({ timeout }: WaitUntilReachedTargetParams = {}) {
+    log(`waitUntilReachedTargetTimeframe`, {
+      timeout,
+      current: this.timeframe,
+      target: this.targetTimeframe,
+    })
+
     this._reachedTargetPromise ??= Promise.race([
       this._timeframeClock.update.waitForCondition(() => {
         return Timeframe.dependencies(this.targetTimeframe, this.timeframe).isEmpty();
@@ -98,8 +104,8 @@ export class PipelineState {
           if (done) {
             return;
           }
-          
-          log.warn(`waitUntilReachedTargetTimeframe timed out`, { 
+
+          log.warn(`waitUntilReachedTargetTimeframe timed out`, {
             timeout,
             current: this.timeframe,
             target: this.targetTimeframe,

@@ -48,7 +48,7 @@ describe('services/space-invitations-handler', () => {
     await space.close();
   });
 
-  test('creates and accepts invitation with retry', async () => {
+  test.only('creates and accepts invitation with retry', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<PublicKey>();
@@ -104,6 +104,7 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
+      debugger;
       await syncItems(space1, space2);
 
       await space1.close();

@@ -83,7 +83,7 @@ export class DataSpace implements ISpace {
   get dataPipelineController(): DataPipelineControllerImpl {
     return this._dataPipelineController;
   }
-
+ 
   get database(): Database {
     assert(this._dataPipelineController.database);
     return this._dataPipelineController.database;
@@ -106,16 +106,6 @@ export class DataSpace implements ISpace {
     await this._notarizationPluginConsumer.open();
 
     await this._inner.open();
-
-    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: CONTROL_PIPELINE_READY_TIMEFRAME });
-
-    await this._ensureOwnFeedsAreAdmitted();
-    this.notarizationPlugin.setWriter(createMappedFeedWriter<Credential, TypedMessage>(credential => ({
-      '@type': 'dxos.echo.feed.CredentialsMessage',
-      credential
-    }), this._inner.controlPipeline.writer));
-    
-    await this._inner.initDataPipeline(this._dataPipelineController);
   }
 
   async close() {
@@ -128,6 +118,18 @@ export class DataSpace implements ISpace {
     await this.notarizationPlugin.close();
 
     await this._presence.destroy();
+  }
+
+  async initializeDataPipeline() {
+    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: CONTROL_PIPELINE_READY_TIMEFRAME });
+
+    // await this._ensureOwnFeedsAreAdmitted();
+    this.notarizationPlugin.setWriter(createMappedFeedWriter<Credential, TypedMessage>(credential => ({
+      '@type': 'dxos.echo.feed.CredentialsMessage',
+      credential
+    }), this._inner.controlPipeline.writer));
+    
+    await this._inner.initDataPipeline(this._dataPipelineController);
   }
 
   @timed(10_000)
