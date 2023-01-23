@@ -58,8 +58,13 @@
     "download": "^8.0.0",
     "esbuild-plugin-inline-image": "^0.0.9",
     "express": "4.17.1",
+    "postcss": "^8.4.17",
     "rmdir": "~1.2.0",
     "safe-compare": "~1.1.4",
+    "tailwindcss": "^3.1.8",
+    "vite": "4.0.4",
+    "vite-plugin-chrome-extension": "^0.0.7",
+    "vite-plugin-fonts": "^0.7.0",
     "web-ext": "~6.6.0"
   }
 }
