@@ -5,19 +5,18 @@
 import React, { useState } from 'react';
 import { Column } from 'react-table';
 
-import { Item } from '@dxos/client';
 import { Table } from '@dxos/kai';
 
 import { JsonView } from './JsonView';
 
-export type MasterTableProps<T extends Item> = {
+export type MasterTableProps<T extends {}> = {
   columns: Column<T>[];
   data: T[];
 };
 
 // TODO(burdon): Create storybook.
-export const MasterTable = <T,>({ columns, data }: MasterTableProps<any>) => {
-  const [selected, setSelected] = useState<string>();
+export const MasterTable = <T extends {}>({ columns, data }: MasterTableProps<T>) => {
+  const [selected, setSelected] = useState<T>();
 
   return (
     <div className='flex flex-1 overflow-hidden'>

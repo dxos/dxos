@@ -36,7 +36,7 @@ export const PublicKeySelector = ({ placeholder, keys, value, onSelect }: Public
     }))}
     value={value?.toHex()}
     placeholder={placeholder}
-    onSelect={(id: string) => {
+    onSelect={(id) => {
       id && onSelect(PublicKey.fromHex(id));
     }}
   />
