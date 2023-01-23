@@ -25,7 +25,7 @@ export const MasterTable = <T,>({ columns, data }: MasterTableProps<any>) => {
         <Table<T> columns={columns} data={data} selected={selected} onSelect={setSelected} />
       </div>
 
-      <div className='flex w-1/2'>{selected && <JsonView data={selected} />}</div>
+      <div className='flex w-1/2 overflow-hidden'>{selected && <JsonView data={selected} />}</div>
     </div>
   );
 };

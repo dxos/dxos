@@ -3,12 +3,20 @@
 //
 
 import React, { useEffect, useState } from 'react';
+import { Column } from 'react-table';
 
+import { Searchbar, Selector, SelectorOption } from '@dxos/kai';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
-import { ColumnType, MasterTable } from '../../components';
+import { MasterTable } from '../../components';
+
+type ColumnType<T extends {}> = SelectorOption & {
+  filter: (object: T) => boolean;
+  subFilter?: (match?: string) => (object: T) => boolean;
+  columns: Column<T>[];
+};
 
 const types: ColumnType<SignalResponse>[] = [
   {
@@ -98,9 +106,34 @@ const types: ColumnType<SignalResponse>[] = [
   }
 ];
 
+const getType = (id: string): ColumnType<SignalResponse> => types.find((type) => type.id === id)!;
+
 export const SignalMessages = () => {
   const devtoolsHost = useDevtools();
   const [signalResponses, setSignalResponses] = useState<SignalResponse[]>([]);
+
+  const [type, setType] = useState<ColumnType<SignalResponse>>(getType('swarm-event'));
+  const handleSearch = (text: string) => {
+    setText(text);
+  };
+
+  const [text, setText] = useState<string>();
+  const handleSelect = (id?: string) => {
+    if (id) {
+      setType(getType(id));
+    }
+  };
+
+  const defaultSubFilter = (match?: string) => (object: SignalResponse) => {
+    if (!match) {
+      return true;
+    }
+    return JSON.stringify(object).includes(match);
+  };
+
+  const getFilteredData = () => {
+    return signalResponses.filter(type.filter).filter(type.subFilter ? type.subFilter(text) : defaultSubFilter(text));
+  };
 
   useEffect(() => {
     const signalOutput = devtoolsHost.subscribeToSignal();
@@ -115,5 +148,21 @@ export const SignalMessages = () => {
     };
   }, []);
 
-  return <MasterTable types={types} data={signalResponses} />;
+  return (
+    <div className='flex flex-col flex-1 overflow-hidden'>
+      <div className='flex p-3 border-b border-slate-200 border-solid'>
+        <div className='flex'>
+          <div className='mr-2'>
+            <Selector options={types} value={type.id} onSelect={handleSelect} />
+          </div>
+          <div>
+            <Searchbar onSearch={handleSearch} />
+          </div>
+        </div>
+      </div>
+      <div className='flex flex-1 overflow-hidden'>
+        <MasterTable columns={type.columns} data={getFilteredData()} />
+      </div>
+    </div>
+  );
 };
