@@ -20,7 +20,7 @@ export const SpaceSelector = () => {
     setState((state) => ({
       ...state,
       space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
-      spacesInfo: spaceKey ? spacesInfo.find((space) => space.key.equals(spaceKey)) : undefined,
+      spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
       feedKey: undefined
     }));
   };

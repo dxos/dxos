@@ -12,25 +12,24 @@ import { useDevtoolsState } from '../../hooks';
 
 // TODO(burdon): Show master/detail table with currently selected.
 export const SpacesPanel = () => {
-  const { space, spaceInfo: metadata } = useDevtoolsState();
+  const { spaceInfo: metadata } = useDevtoolsState();
   const object = useMemo(() => {
-    if (!space) {
+    console.log('metadata', metadata);
+    if (!metadata) {
       return undefined;
     }
 
     // TODO(burdon): List feeds and nav.
-    return space
-      ? {
-          id: space.key.truncate(4),
-          name: humanize(space.key),
-          open: space.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
-          timeframe: metadata?.timeframe, // TODO(burdon): Undefined.
-          controlFeed: metadata?.controlFeed,
-          genesisFeed: metadata?.genesisFeed,
-          dataFeed: metadata?.dataFeed
-        }
-      : undefined;
-  }, [space]);
+    return {
+      id: metadata.key.truncate(4),
+      name: humanize(metadata?.key),
+      open: metadata.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
+      timeframe: JSON.stringify(metadata?.timeframe), // TODO(mykola): Display in a better way.
+      controlFeed: humanize(metadata?.controlFeed),
+      genesisFeed: humanize(metadata?.genesisFeed),
+      dataFeed: humanize(metadata?.dataFeed)
+    };
+  }, [metadata]);
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
