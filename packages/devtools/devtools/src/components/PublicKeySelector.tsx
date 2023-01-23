@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Selector } from '@dxos/kai';
 import { PublicKey } from '@dxos/keys';
-import { ComplexSet } from '@dxos/util';
+import { ComplexSet, humanize } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 const removeDuplicates = (keys: PublicKey[]) => {
@@ -26,11 +26,11 @@ export const PublicKeySelector = ({ placeholder, keys, value, onSelect }: Public
   <Selector
     options={removeDuplicates(keys).map((key) => ({
       id: key.toHex(),
-      title: key.truncate(4)
+      title: `${key.truncate(4)}  (${humanize(key)})`
     }))}
     value={value?.toHex()}
     placeholder={placeholder}
-    onSelect={(key) => {
+    onSelect={(key: string) => {
       key && onSelect(PublicKey.fromHex(key));
     }}
   />

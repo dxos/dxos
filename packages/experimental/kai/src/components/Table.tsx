@@ -79,7 +79,7 @@ export const Table = <T extends {}>({
 
   return (
     // TODO(burdon): Remove table class to force scrolling.
-    <div className={mx('flex flex-col overflow-x-auto', classes?.root)}>
+    <div className={mx('flex flex-1 flex-col overflow-x-auto', classes?.root)}>
       <div className='table' {...getTableProps()}>
         {/* Header */}
         <div className='thead sticky top-0'>
