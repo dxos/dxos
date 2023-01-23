@@ -10,7 +10,9 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContextProps } from '@dxos/react-client';
 import { RpcPort } from '@dxos/rpc';
 
-// TODO(burdon): Document (rename?)
+/**
+ * Creates Client with services opened on window.__DXOS__ hook.
+ */
 export const useProxiedClient = () => {
   const [client, setClient] = useState<ClientContextProps>();
   useAsyncEffect(async () => {
@@ -23,8 +25,14 @@ export const useProxiedClient = () => {
 
 const createClientContext = async () => {
   const port: RpcPort = {
-    // content-script is required for dxos-client port to work.
-    send: async (message) => window.parent.postMessage({ data: Array.from(message), source: 'content-script' }, '*'),
+    send: async (message) =>
+      window.parent.postMessage(
+        {
+          data: Array.from(message),
+          source: 'content-script' // content-script is required for RPC port to work because services port on window.__DXOS__ hook expect such source.
+        },
+        '*'
+      ),
     subscribe: (callback) => {
       const handler = (event: MessageEvent<any>) => {
         const message = event.data;
