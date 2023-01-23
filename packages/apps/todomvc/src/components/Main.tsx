@@ -9,7 +9,7 @@ import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { deleted, id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
-import { ACTIVE_TODOS, ALL_TODOS, COMPLETED_TODOS } from '../constants';
+import { FILTER } from '../constants';
 import { Todo, TodoList } from '../proto';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
@@ -19,7 +19,7 @@ export const Main = withReactor(() => {
   const [editing, setEditing] = useState<string>();
   const { space } = useOutletContext<{ space: Space }>();
   const { state } = useParams();
-  const completed = state === ACTIVE_TODOS ? false : state === COMPLETED_TODOS ? true : undefined;
+  const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const [list] = useQuery(space, TodoList.filter());
 
@@ -129,7 +129,7 @@ export const Main = withReactor(() => {
         <TodoFooter
           count={activeTodoCount}
           completedCount={completedCount}
-          nowShowing={state ?? ALL_TODOS}
+          nowShowing={state ?? FILTER.ALL}
           generatePath={(state = '') => generatePath('/:space/:state', { space: space.key.toHex(), state })}
           onClearCompleted={handleClearCompleted}
         />

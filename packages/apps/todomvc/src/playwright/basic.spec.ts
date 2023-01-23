@@ -3,175 +3,151 @@
 //
 
 import { expect } from 'chai';
-import { Page } from 'playwright';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
-import { beforeAll, describe, setupPage, test } from '@dxos/test';
+import { beforeAll, describe, test } from '@dxos/test';
 
-// TODO(wittjosiah): Get this from executor.
-const BASE_URL = 'http://localhost:4200';
+import { FILTER } from '../constants';
+import { AppManager } from './app-manager';
+
+enum Groceries {
+  Eggs = 'eggs',
+  Eggnog = 'eggnog',
+  Milk = 'milk',
+  Butter = 'butter',
+  Flour = 'flour'
+}
 
 describe('Basic test', () => {
-  let page: Page;
-  let guestPage: Page;
+  let host: AppManager;
+  let guest: AppManager;
 
-  beforeAll(async function () {
+  beforeAll(function () {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
     if (mochaExecutor.environment === 'firefox') {
       return;
     }
 
-    const isLoaded = async (page: Page) => {
-      return await page.isVisible(':has-text("todos")');
-    };
-
-    page = (await setupPage(this, BASE_URL, isLoaded)).page;
-    guestPage = (await setupPage(this, BASE_URL, isLoaded)).page;
+    host = new AppManager(this);
+    guest = new AppManager(this);
   });
 
   describe('Default space', () => {
     test('create a task', async () => {
       // Should be autofocused into new task input.
-      await page.keyboard.type('eggs');
-      await page.keyboard.press('Enter');
+      await host.createTodo(Groceries.Eggs);
 
-      expect(await page.locator('data-test=todo').locator(':text("eggs")').isVisible()).to.be.true;
-      expect(await page.innerText('data-testid=todo-count')).to.eq('1 item left');
+      expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
+      expect(await host.todoCount()).to.equal(1);
     }).skipEnvironments('firefox');
 
     test('invite guest', async () => {
-      await page.locator('data-testid=share-button').click();
-      await sleep(5); // Wait for invitation to be written to clipboard.
-      const invitationCode = await page.evaluate(() => navigator.clipboard.readText());
-
-      await guestPage.locator('data-testid=open-button').click();
-      await guestPage.locator('data-testid=invitation-input').fill(invitationCode);
-      await guestPage.locator('data-testid=join-button').click();
+      const invitationCode = await host.shareList();
+      await guest.joinList(invitationCode);
 
       // Wait for redirect.
       await waitForExpect(async () => {
-        expect(await page.url()).to.equal(await guestPage.url());
-        expect(await guestPage.locator('data-test=todo').locator(':text("eggs")').isVisible()).to.be.true;
+        expect(await host.page.url()).to.equal(await guest.page.url());
+        expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
       }, 1000);
     }).skipEnvironments('firefox');
 
     test('toggle a task', async () => {
-      await page.locator('data-test=todo').locator(':has-text("eggs")').locator('data-test=todo-toggle').click();
+      await host.toggleTodo(Groceries.Eggs);
 
       // Wait for sync.
       await waitForExpect(async () => {
-        expect(
-          await guestPage
-            .locator('data-test=todo')
-            .locator(':has-text("eggs")')
-            .locator('data-test=todo-toggle')
-            .isChecked()
-        ).to.be.true;
-        expect(await guestPage.innerText('data-testid=todo-count')).to.eq('0 items left');
+        expect(await guest.todoIsCompleted(Groceries.Eggs)).to.be.true;
+        expect(await guest.todoCount()).to.equal(0);
       }, 10);
     }).skipEnvironments('firefox');
 
     test('untoggle a task', async () => {
-      await page.locator('label:has-text("eggs")').locator('..').locator('data-test=todo-toggle').click();
+      await host.toggleTodo(Groceries.Eggs);
 
       // Wait for sync.
       await waitForExpect(async () => {
-        expect(
-          await guestPage
-            .locator('data-test=todo')
-            .locator(':has-text("eggs")')
-            .locator('data-test=todo-toggle')
-            .isChecked()
-        ).to.be.false;
-        expect(await guestPage.innerText('data-testid=todo-count')).to.eq('1 item left');
+        expect(await guest.todoIsCompleted(Groceries.Eggs)).to.be.false;
+        expect(await guest.todoCount()).to.equal(1);
       }, 10);
     }).skipEnvironments('firefox');
 
     test('edit a task', async () => {
-      await page.locator('data-test=todo').locator(':text("eggs")').dblclick();
-
-      await page.keyboard.press('Backspace');
-      await page.keyboard.type('nog');
-      await page.keyboard.press('Enter');
+      await host.setTodoEditing(Groceries.Eggs);
+      await host.page.keyboard.press('Backspace');
+      await host.page.keyboard.type('nog');
+      await host.submitTodoEdits();
 
       // Wait for sync.
       await waitForExpect(async () => {
-        expect(await guestPage.locator('data-test=todo').locator(':text("eggnog")').isVisible()).to.be.true;
-        expect(await guestPage.innerText('data-testid=todo-count')).to.eq('1 item left');
+        expect(await guest.todoIsVisible(Groceries.Eggnog)).to.be.true;
+        expect(await guest.todoCount()).to.equal(1);
       }, 10);
     }).skipEnvironments('firefox');
 
     test('cancel editing a task', async () => {
-      await page.locator('data-test=todo').locator(':text("eggnog")').dblclick();
+      await host.setTodoEditing(Groceries.Eggnog);
+      await host.cancelTodoEditing();
 
-      await page.keyboard.press('Escape');
-
-      expect(await page.locator('data-test=todo').locator(':text("eggnog")').isVisible()).to.be.true;
-      expect(await page.innerText('data-testid=todo-count')).to.eq('1 item left');
+      expect(await host.todoIsVisible(Groceries.Eggnog)).to.be.true;
+      expect(await host.todoCount()).to.equal(1);
     }).skipEnvironments('firefox');
 
     test('delete a task', async () => {
-      await page.locator('data-test=todo').locator(':has-text("eggnog")').locator('data-test=destroy-button').click();
+      await host.deleteTodo(Groceries.Eggnog);
 
       // Wait for sync.
       await waitForExpect(async () => {
-        expect(await guestPage.isVisible(':has-text("eggnog")')).to.be.false;
+        expect(await guest.textIsVisible(Groceries.Eggnog)).to.be.false;
       }, 10);
     }).skipEnvironments('firefox');
 
     test('filter active tasks', async () => {
-      await page.locator('data-testid=new-todo').click();
+      await host.focusNewTodo();
+      await host.createTodo(Groceries.Eggs);
+      await host.createTodo(Groceries.Milk);
+      await host.createTodo(Groceries.Butter);
+      await host.createTodo(Groceries.Flour);
 
-      await page.keyboard.type('eggs');
-      await page.keyboard.press('Enter');
-      await page.keyboard.type('milk');
-      await page.keyboard.press('Enter');
-      await page.keyboard.type('butter');
-      await page.keyboard.press('Enter');
-      await page.keyboard.type('flour');
-      await page.keyboard.press('Enter');
+      await host.toggleTodo(Groceries.Milk);
+      await host.toggleTodo(Groceries.Butter);
 
-      await page.locator('data-test=todo').locator(':has-text("milk")').locator('data-test=todo-toggle').click();
-      await page.locator('data-test=todo').locator(':has-text("butter")').locator('data-test=todo-toggle').click();
+      await host.filterTodos(FILTER.ACTIVE);
 
-      await page.locator('data-testid=active-filter').click();
-
-      expect(await page.isVisible(':has-text("milk")')).to.be.false;
-      expect(await page.isVisible(':has-text("butter")')).to.be.false;
-      expect(await page.locator('data-test=todo').locator(':text("eggs")').isVisible()).to.be.true;
-      expect(await page.locator('data-test=todo').locator(':text("flour")').isVisible()).to.be.true;
-      expect(await page.innerText('data-testid=todo-count')).to.eq('2 items left');
+      expect(await host.textIsVisible(Groceries.Milk)).to.be.false;
+      expect(await host.textIsVisible(Groceries.Butter)).to.be.false;
+      expect(await host.todoIsVisible(Groceries.Eggs)).to.be.true;
+      expect(await host.todoIsVisible(Groceries.Flour)).to.be.true;
+      expect(await host.todoCount()).to.equal(2);
     }).skipEnvironments('firefox');
 
     test('filter completed tasks', async () => {
-      await page.locator('data-testid=completed-filter').click();
+      await host.filterTodos(FILTER.COMPLETED);
 
-      expect(await page.isVisible(':has-text("eggs")')).to.be.false;
-      expect(await page.isVisible(':has-text("flour")')).to.be.false;
-      expect(await page.locator('data-test=todo').locator(':text("milk")').isVisible()).to.be.true;
-      expect(await page.locator('data-test=todo').locator(':text("butter")').isVisible()).to.be.true;
+      expect(await host.textIsVisible(Groceries.Eggs)).to.be.false;
+      expect(await host.textIsVisible(Groceries.Flour)).to.be.false;
+      expect(await host.todoIsVisible(Groceries.Milk)).to.be.true;
+      expect(await host.todoIsVisible(Groceries.Butter)).to.be.true;
     }).skipEnvironments('firefox');
 
     test('toggle all tasks', async () => {
-      await page.locator('data-testid=all-filter').click();
-      // NOTE: This input behaves weirdly so eval is necessary to toggle it.
-      await page.$eval('data-testid=toggle-all', (elem: HTMLLabelElement) => elem.click());
+      await host.filterTodos(FILTER.ALL);
+      await host.toggleAll();
 
-      expect(await page.locator('data-test=todo').locator(':text("eggs")').isVisible()).to.be.true;
-      expect(await page.locator('data-test=todo').locator(':text("milk")').isVisible()).to.be.true;
-      expect(await page.locator('data-test=todo').locator(':text("butter")').isVisible()).to.be.true;
-      expect(await page.locator('data-test=todo').locator(':text("flour")').isVisible()).to.be.true;
-      expect(await page.innerText('data-testid=todo-count')).to.eq('0 items left');
+      expect(await host.todoIsCompleted(Groceries.Eggs)).to.be.true;
+      expect(await host.todoIsCompleted(Groceries.Milk)).to.be.true;
+      expect(await host.todoIsCompleted(Groceries.Butter)).to.be.true;
+      expect(await host.todoIsCompleted(Groceries.Flour)).to.be.true;
+      expect(await host.todoCount()).to.equal(0);
     }).skipEnvironments('firefox');
 
     test('clear completed tasks', async () => {
-      await page.locator('data-testid=clear-button').click();
+      await host.clearCompleted();
 
-      expect(await page.isVisible(':has-text("eggs")')).to.be.false;
-      expect(await page.isVisible(':has-text("milk")')).to.be.false;
-      expect(await page.isVisible(':has-text("butter")')).to.be.false;
-      expect(await page.isVisible(':has-text("flour")')).to.be.false;
+      expect(await host.textIsVisible(Groceries.Eggs)).to.be.false;
+      expect(await host.textIsVisible(Groceries.Milk)).to.be.false;
+      expect(await host.textIsVisible(Groceries.Butter)).to.be.false;
+      expect(await host.textIsVisible(Groceries.Flour)).to.be.false;
     }).skipEnvironments('firefox');
   });
 });

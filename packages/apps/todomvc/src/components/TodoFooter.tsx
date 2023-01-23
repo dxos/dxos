@@ -6,7 +6,7 @@ import cx from 'classnames';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS } from '../constants';
+import { FILTER } from '../constants';
 
 const pluralize = (count: number, word: string) => {
   return count === 1 ? word : word + 's';
@@ -30,14 +30,14 @@ export const TodoFooter = ({ nowShowing, count, completedCount, generatePath, on
       </span>
       <ul className='filters'>
         <li>
-          <Link to={generatePath()} className={cx({ selected: nowShowing === ALL_TODOS })} data-testid='all-filter'>
+          <Link to={generatePath()} className={cx({ selected: nowShowing === FILTER.ALL })} data-testid='all-filter'>
             All
           </Link>
         </li>
         <li>
           <Link
-            to={generatePath(ACTIVE_TODOS)}
-            className={cx({ selected: nowShowing === ACTIVE_TODOS })}
+            to={generatePath(FILTER.ACTIVE)}
+            className={cx({ selected: nowShowing === FILTER.ACTIVE })}
             data-testid='active-filter'
           >
             Active
@@ -45,8 +45,8 @@ export const TodoFooter = ({ nowShowing, count, completedCount, generatePath, on
         </li>
         <li>
           <Link
-            to={generatePath(COMPLETED_TODOS)}
-            className={cx({ selected: nowShowing === COMPLETED_TODOS })}
+            to={generatePath(FILTER.COMPLETED)}
+            className={cx({ selected: nowShowing === FILTER.COMPLETED })}
             data-testid='completed-filter'
           >
             Completed
