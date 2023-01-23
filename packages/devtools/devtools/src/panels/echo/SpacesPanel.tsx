@@ -14,7 +14,6 @@ import { useDevtoolsState } from '../../hooks';
 export const SpacesPanel = () => {
   const { spaceInfo: metadata } = useDevtoolsState();
   const object = useMemo(() => {
-    console.log('metadata', metadata);
     if (!metadata) {
       return undefined;
     }

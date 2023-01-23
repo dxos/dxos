@@ -8,6 +8,7 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
+    "node:assert": "assert",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -28,6 +29,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
