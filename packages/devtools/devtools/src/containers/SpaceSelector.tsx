@@ -18,7 +18,8 @@ export const SpaceSelector = () => {
   const handleSelect = (spaceKey?: PublicKey) => {
     setState((state) => ({
       ...state,
-      space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined
+      space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
+      feedKey: undefined
     }));
   };
 
