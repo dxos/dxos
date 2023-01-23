@@ -5,9 +5,11 @@
 import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 import { PublicKey, Space } from '@dxos/client';
+import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 export type DevtoolsContextType = {
   space?: Space;
+  spaceInfo?: SubscribeToSpacesResponse.SpaceInfo;
   feedKey?: PublicKey;
 };
 

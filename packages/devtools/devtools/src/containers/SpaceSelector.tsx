@@ -8,17 +8,20 @@ import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
 
 import { PublicKeySelector } from '../components';
-import { useDevtoolsDispatch, useDevtoolsState } from '../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
 
 export const SpaceSelector = () => {
   const spaces = useSpaces();
+  const spacesInfo = useSpacesInfo();
   const { space } = useDevtoolsState();
   const setState = useDevtoolsDispatch();
 
   const handleSelect = (spaceKey?: PublicKey) => {
     setState((state) => ({
       ...state,
-      space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined
+      space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
+      spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
+      feedKey: undefined
     }));
   };
 
