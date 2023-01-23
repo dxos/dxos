@@ -1,0 +1,91 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+
+syntax = "proto3";
+
+import "dxos/keys.proto";
+import "dxos/echo/timeframe.proto";
+import "google/protobuf/any.proto";
+
+package dxos.config;
+
+// Requirements:
+// - General purpose mechanism for a client to initiate sync from server.
+// - Use cases: peer start-up from disk; client/service-worker; peer/sync-bot; peer joining from swarm; devtools.
+// - Client initiates subscription which includes the spec for the sync "session" managed by the server.
+// - Server sends stream of events, which update the client's cache.
+// - Client can simultaneously send mutation events.
+// - Only one Space per sync session.
+// - ISSUE: Can the client can have multiple sessions open at once.
+//      - If not how does the server support multiple clients?
+//      - Can different clients request different sync states?
+//
+// Notes:
+// - https://github.com/dxos/dxos/issues/2227
+
+service DataService {
+  rpc CreateSubscription(DataQuery) returns (stream DataEvent);
+}
+
+message DataQuery {
+  message Filter {
+    /// Requested objects to sync.
+    repeated string object_ids = 1;
+  }
+
+  string subscription_id = 1;
+  dxos.keys.PublicKey space_key = 2;
+
+  /// Current timestamp of client.
+  /// Informs server that client has this current state and can accept mutations from here.
+  optional dxos.echo.timeframe.TimeframeVector start = 3;
+
+  Filter filter = 4;
+}
+
+message DataEvent {
+  string subscription_id = 1;
+
+  repeated DataObjectEvent object_events = 10;
+}
+
+//
+// Object events are written to feeds.
+// TODO(burdon): Replaces current EchoEnvelope?
+//
+message DataObjectEvent {
+  enum Action {
+    NOOP = 0;
+    /// Remove from cache (stop tracking; e.g., deleted or no longer matches filter).
+    REMOVE = 1;
+  }
+
+  string object_id = 1;
+  Action action = 2;
+
+  /// Genesis of object.
+  optional ObjectGenesis genesis = 10;
+  /// State-machine snapshot (replaces currently cached instance).
+  optional ObjectSnapshot snapshot = 11;
+  /// Apply mutations (optionally on top of snapshot).
+  repeated ObjectMutation mutations = 12;
+}
+
+message ObjectGenesis {
+  dxos.echo.timeframe.TimeframeVector timestamp = 1;
+  string model_type = 2;
+  optional string model_version = 3;
+  optional string parent_id = 4;
+}
+
+message ObjectSnapshot {
+  dxos.echo.timeframe.TimeframeVector timestamp = 1;
+  google.protobuf.Any payload = 2;
+}
+
+message ObjectMutation {
+  optional string parent_id = 1;
+  google.protobuf.Any payload = 2;
+}
