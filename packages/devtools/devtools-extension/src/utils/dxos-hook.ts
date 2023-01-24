@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
-
 import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
-const log = debug('dxos:extension:hook');
 const error = log.extend('error');
 
 // TODO(burdon): ?
