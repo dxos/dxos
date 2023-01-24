@@ -32,7 +32,7 @@ export const PublicKeySelector = ({ placeholder, keys, value, onSelect }: Public
   <Selector
     options={removeDuplicates(keys).map((key) => ({
       id: key.toHex(),
-      title: `${key.truncate(4)}  (${humanize(key)})`
+      title: `${key.truncate(4)} [${humanize(key)}]`
     }))}
     value={value?.toHex()}
     placeholder={placeholder}

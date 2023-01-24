@@ -23,7 +23,7 @@ export const SpacesPanel = () => {
       id: metadata.key.truncate(4),
       name: humanize(metadata?.key),
       open: metadata.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
-      timeframe: JSON.stringify(metadata?.timeframe.frames), // TODO(mykola): Display in a better way.
+      timeframe: JSON.stringify(metadata?.timeframe?.frames), // TODO(mykola): Display in a better way.
       genesisFeed: humanize(metadata?.genesisFeed),
       controlFeed: humanize(metadata?.controlFeed),
       dataFeed: humanize(metadata?.dataFeed)
