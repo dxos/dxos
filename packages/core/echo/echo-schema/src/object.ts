@@ -34,12 +34,6 @@ export abstract class EchoObject<T extends Model = any> {
   /**
    * @internal
    */
-  // TODO(burdon): Remove? Deduce from whether _database is set?
-  _isBound = false;
-
-  /**
-   * @internal
-   */
   abstract _modelConstructor: ModelConstructor<T>;
 
   constructor() {
@@ -69,9 +63,8 @@ export abstract class EchoObject<T extends Model = any> {
    * @internal
    */
   // TODO(burdon): Document.
-  async _bind(item: Item<T>, database: EchoDatabase) {
+  async _bind(item: Item<T>) {
     this._item = item;
-    this._database = database;
     await this._onBind();
   }
 }

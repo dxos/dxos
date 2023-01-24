@@ -31,7 +31,7 @@ function readPackage(packageJson, context) {
     }
 
     case 'esbuild-plugin-raw': {
-      packageJson.dependencies['esbuild'] = '^0.16.0'
+      packageJson.peerDependencies['esbuild'] = '^0.16.0'
       break;
     }
 
