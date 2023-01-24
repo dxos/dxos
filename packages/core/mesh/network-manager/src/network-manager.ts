@@ -170,7 +170,7 @@ export class NetworkManager {
     this._mappers.set(topic, new SwarmMapper(swarm));
 
     this.topicsUpdated.emit();
-    this._connectionLog?.swarmJoined(swarm);
+    this._connectionLog?.joinedSwarm(swarm);
     log('joined', { topic: PublicKey.from(topic), count: this._swarms.size });
 
     return {
@@ -195,7 +195,7 @@ export class NetworkManager {
     map.destroy();
     this._mappers.delete(topic);
 
-    this._connectionLog?.swarmLeft(swarm);
+    this._connectionLog?.leftSwarm(swarm);
 
     await swarm.destroy();
     this._swarms.delete(topic);

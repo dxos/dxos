@@ -9,7 +9,7 @@ import { FormControl, IconButton, Input, InputAdornment } from '@mui/material';
 
 export interface SearchBarProps {
   placeholder?: string;
-  onSearch?: (text?: string) => void;
+  onSearch?: (text: string) => void;
   delay?: number;
 }
 
@@ -29,13 +29,13 @@ export const Searchbar = ({ placeholder, onSearch, delay = 0 }: SearchBarProps) 
 
   const handleReset = () => {
     setText(undefined);
-    onSearch && onSearch(undefined);
+    onSearch && onSearch('');
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case 'Enter': {
-        onSearch && onSearch(undefined);
+        onSearch && onSearch('');
         break;
       }
       case 'Escape': {

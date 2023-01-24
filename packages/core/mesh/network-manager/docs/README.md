@@ -136,8 +136,8 @@ class SignalConnection {
 class ConnectionLog {
   swarms
   getSwarmInfo()
-  swarmJoined()
-  swarmLeft()
+  joinedSwarm()
+  leftSwarm()
 }
 ```
 
