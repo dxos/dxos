@@ -180,8 +180,7 @@ export class Client {
   }
 
   /**
-   * Reinitializes the client session with the remote service host.
-   *
+   * Reinitialized the client session with the remote service host.
    * This is useful when connecting to a host running behind a resource lock
    * (e.g., HALO when SharedWorker is unavailable).
    */
@@ -202,7 +201,7 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services?.SystemService.reset();
     await this.destroy();
-    this._halo.profileChanged.emit();
+    // this._halo.profileChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
   }
 

@@ -59,12 +59,8 @@ export const Actions = () => {
     await client.reset();
     await client.initialize();
 
-    // TODO(burdon): Hangs (no error) if profile not created?
-    if (!client.halo.profile) {
-      await client.halo.createProfile();
-    }
-
-    location.reload(); // TODO(mykola): Client is not re-entrant after reset.
+    // TODO(mykola): Client is not re-entrant after reset.
+    // location.reload();
   };
 
   const handleToggleConnection = async () => {

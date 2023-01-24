@@ -52,7 +52,7 @@ export const DashboardFrame: FC = () => {
       </div>
 
       <div className={mx(cardStyles, 'col-span-2 hidden lg:flex')}>
-        <Card header={<CardMenu title='Projects' />}>
+        <Card header={<CardMenu title='Explorer' />}>
           <GraphComponent />
         </Card>
       </div>
