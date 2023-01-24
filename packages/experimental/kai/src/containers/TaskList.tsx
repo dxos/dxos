@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
+import { Spinner, XCircle } from 'phosphor-react';
 import React, { FC, KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
 import { base, deleted, id } from '@dxos/echo-schema';
@@ -10,39 +10,11 @@ import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button, Card, Input, CardRow, CardMenu } from '../components';
-import { useAppState, useGenerator, useSpace } from '../hooks';
+import { Button, Input, CardRow } from '../components';
+import { useAppState, useSpace } from '../hooks';
 import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
-
-export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
-  completed = undefined,
-  readonly = false,
-  title = 'Tasks'
-}) => {
-  const generator = useGenerator();
-
-  const handleGenerateTask = async () => {
-    await generator.createTask();
-  };
-
-  const Header = () => (
-    <CardMenu title={title}>
-      {!readonly && (
-        <Button onClick={handleGenerateTask}>
-          <PlusCircle className={getSize(5)} />
-        </Button>
-      )}
-    </CardMenu>
-  );
-
-  return (
-    <Card scrollbar header={<Header />}>
-      <TaskList completed={completed} readonly={readonly} />
-    </Card>
-  );
-};
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   completed = undefined,
@@ -90,8 +62,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 
   return (
     <div className='min-bs-full flex flex-1 justify-center bg-gray-100'>
-      <div className={'flex flex-col overflow-y-auto pl-3 pr-3 pt-2 pb-8 bg-white w-screen is-full md:is-[400px]'}>
-        <div className={'mt-2'}>
+      <div className={'flex flex-col overflow-y-auto bg-white w-screen is-full md:is-[400px]'}>
+        <div className={'mt-1 ml-2 mr-2'}>
           {tasks?.map((task, index) => (
             <TaskItem
               key={task[id]}
@@ -106,7 +78,9 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
         </div>
 
         {/* TODO(burdon): Keep pinned to bottom on create. */}
-        <div>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />}</div>
+        <div className='mb-2 ml-2 mr-8'>
+          {newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />}
+        </div>
       </div>
 
       {saving && (
