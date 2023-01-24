@@ -7,12 +7,13 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import { crx as chromeExtensionPlugin } from '@crxjs/vite-plugin';
-import manifest from './manifest.json';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
+
+import manifest from './manifest.json';
 
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 
