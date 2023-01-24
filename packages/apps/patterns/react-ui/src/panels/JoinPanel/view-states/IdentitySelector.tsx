@@ -36,6 +36,7 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
         onValueChange={onValueChange}
         className='overflow-y-auto grow shrink min-bs-10 pli-1 -mli-1'
         aria-label={t('identity radio group title')}
+        data-autofocus='identity selector'
       >
         {availableIdentities.map(({ displayName, identityKey }) => {
           const hex = identityKey.toHex();

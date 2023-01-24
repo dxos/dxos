@@ -25,34 +25,36 @@ export const AdditionMethodSelector = ({
   return (
     <ViewState {...viewStateProps}>
       <h2 className='font-system-medium text-sm'>{t('addition method selector title')}</h2>
-      <CompoundButton
-        description={t('create identity description')}
-        before={<Plus className={getSize(6)} />}
-        after={<CaretRight className={getSize(4)} weight='bold' />}
-        disabled={disabled}
-        onClick={() => dispatch({ type: 'select addition method', method: 'create identity' })}
-      >
-        {t('create identity label')}
-      </CompoundButton>
-      <CompoundButton
-        description={t('join identity description')}
-        before={<QrCode className={getSize(6)} />}
-        after={<CaretRight className={getSize(4)} weight='bold' />}
-        disabled={disabled}
-        onClick={() => dispatch({ type: 'select addition method', method: 'accept device invitation' })}
-      >
-        {t('join identity label')}
-      </CompoundButton>
-      <CompoundButton
-        description={t('recover identity description')}
-        before={<Textbox className={getSize(6)} />}
-        after={<CaretRight className={getSize(4)} weight='bold' />}
-        disabled={disabled}
-        onClick={() => dispatch({ type: 'select addition method', method: 'restore identity' })}
-      >
-        {t('recover identity label')}
-      </CompoundButton>
-      <div role='none' className='grow' />
+      <div role='none' className='flex flex-col gap-1 grow'>
+        <CompoundButton
+          description={t('create identity description')}
+          before={<Plus className={getSize(6)} />}
+          after={<CaretRight className={getSize(4)} weight='bold' />}
+          disabled={disabled}
+          onClick={() => dispatch({ type: 'select addition method', method: 'create identity' })}
+          data-autofocus='addition method selector'
+        >
+          {t('create identity label')}
+        </CompoundButton>
+        <CompoundButton
+          description={t('join identity description')}
+          before={<QrCode className={getSize(6)} />}
+          after={<CaretRight className={getSize(4)} weight='bold' />}
+          disabled={disabled}
+          onClick={() => dispatch({ type: 'select addition method', method: 'accept device invitation' })}
+        >
+          {t('join identity label')}
+        </CompoundButton>
+        <CompoundButton
+          description={t('recover identity description')}
+          before={<Textbox className={getSize(6)} />}
+          after={<CaretRight className={getSize(4)} weight='bold' />}
+          disabled={disabled}
+          onClick={() => dispatch({ type: 'select addition method', method: 'restore identity' })}
+        >
+          {t('recover identity label')}
+        </CompoundButton>
+      </div>
       {availableIdentities.length && (
         <Button disabled={disabled} onClick={() => dispatch({ type: 'deselect identity' })}>
           <CaretLeft className={getSize(4)} weight='bold' />

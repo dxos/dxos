@@ -44,7 +44,11 @@ export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
   });
 
   useEffect(() => {
-    console.log('[active view]', joinState.activeView);
+    // TODO (thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
+    const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${joinState.activeView}"]`);
+    if ($nextAutofocus) {
+      $nextAutofocus.focus();
+    }
   }, [joinState.activeView]);
 
   return (
