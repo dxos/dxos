@@ -36,7 +36,6 @@ export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) =
           value={project.title}
           onChange={(value) => (project.title = value)}
           placeholder='Project name'
-          autoFocus
         />
         <Button className='mr-1 text-gray-500' onClick={handleExpand}>
           <ArrowsOut className={getSize(5)} />

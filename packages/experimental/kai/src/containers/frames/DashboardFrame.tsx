@@ -21,8 +21,8 @@ export const DashboardFrame: FC = () => {
     <div
       ref={ref}
       className={mx(
-        'flex flex-col h-full gap-2 overflow-x-hidden overflow-y-scroll p-4',
-        'lg:p-2 lg:grid lg:gap-3 lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
+        'flex flex-col h-full p-0 gap-0 overflow-x-hidden overflow-y-scroll',
+        'lg:p-2 lg:gap-3 lg:grid lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
       )}
     >
       <div className={mx(cardStyles)}>
