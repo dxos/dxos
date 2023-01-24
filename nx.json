@@ -62,6 +62,9 @@
         "^production",
         {
           "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_VAULT"
         }
       ],
       "dependsOn": [
@@ -107,6 +110,13 @@
       ]
     },
     "serve": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ]
+    },
+    "serve-with-halo": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",
