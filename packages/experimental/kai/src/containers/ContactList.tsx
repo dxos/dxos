@@ -14,7 +14,7 @@ import { useSpace } from '../hooks';
 import { Address, Contact } from '../proto';
 
 export const ContactList: FC = () => {
-  const space = useSpace();
+  const space = useSpace(); // TODO(burdon): Factor out.
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   return (

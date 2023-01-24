@@ -7,9 +7,8 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { CardMenu, Card } from '../../components';
+import { CardMenu, Card, GraphComponent } from '../../components';
 import { ContactList } from '../ContactList';
-import { GraphComponent } from '../GraphComponent';
 import { OrganizationList } from '../OrganizationList';
 import { ProjectHierarchy } from '../ProjectHierarchy';
 import { TaskList } from '../TaskList';
