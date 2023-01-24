@@ -9,20 +9,16 @@ import { log } from '@dxos/log';
 import { appkitTranslations, Fallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { ThemeProvider } from '@dxos/react-components';
 
-import '@dxosTheme';
-
 import { App } from './app';
 import { AppState } from './hooks';
 import kaiTranslations from './translations';
-
-import '../style.css';
 
 const useRegisterSW: (args: any) => any = () => {}; // TODO(burdon): Remove.
 
 /**
  * Root component.
  */
-export const Root: FC<{ initialState: AppState; pwa?: boolean }> = ({ initialState, pwa = false }) => {
+export const Root: FC<{ initialState?: AppState; pwa?: boolean }> = ({ initialState = {}, pwa = false }) => {
   if (pwa) {
     return (
       <Base initialState={initialState}>

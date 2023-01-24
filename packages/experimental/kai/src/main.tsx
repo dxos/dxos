@@ -5,8 +5,12 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import '@dxosTheme';
+
 import { Root } from './Root';
 import { AppState } from './hooks';
+
+import '../style.css';
 
 const initialState: AppState = {
   demo: process.env.KAI_DEMO === 'true',

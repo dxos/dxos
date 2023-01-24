@@ -43,7 +43,7 @@ const clientProvider = async (demo: boolean) => {
 /**
  * Main app container with routes.
  */
-export const App: FC<{ initialState: AppState }> = ({ initialState }) => {
+export const App: FC<{ initialState: AppState }> = ({ initialState = {} }) => {
   // TODO(burdon): Error boundary and indicator.
   return (
     <ClientProvider client={() => clientProvider(initialState.demo ?? false)}>
