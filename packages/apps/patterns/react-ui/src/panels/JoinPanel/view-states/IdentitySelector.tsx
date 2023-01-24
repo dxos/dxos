@@ -41,7 +41,7 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
           const hex = identityKey.toHex();
           const inputId = `identitySelector__item--${hex}`;
           return (
-            <div key={hex} className='flex items-center'>
+            <div key={hex} className='flex items-center mbe-2'>
               <RadioGroup.Item
                 id={inputId}
                 value={hex}
@@ -83,9 +83,9 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
           })
         }
       >
-        <CaretLeft className={mx(getSize(5), 'invisible')} />
+        <CaretLeft weight='bold' className={mx(getSize(4), 'invisible')} />
         <span className='grow'>{t('continue label')}</span>
-        <CaretRight className={getSize(5)} />
+        <CaretRight weight='bold' className={getSize(4)} />
       </Button>
     </ViewState>
   );

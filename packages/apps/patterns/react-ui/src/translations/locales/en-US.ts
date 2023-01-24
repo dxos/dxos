@@ -13,5 +13,14 @@ export const os = {
   'identity selector title': 'Join as',
   'identity radio group title': 'Select an identity you’ve associated with this device already',
   'add identity label': 'Add',
-  'continue label': 'Continue'
+  'continue label': 'Continue',
+  'auth choices label': 'Choose an identity',
+  'create identity label': 'Create an identity',
+  'create identity description': 'Create a new identity.',
+  'recover identity label': 'Use a seed phrase',
+  'recover identity description': 'Enter your seed phrase to log in manually.',
+  'join identity label': 'Use an authed device',
+  'join identity description': 'Add this device to an identity you’re already logged into on another device.',
+  'deselect identity label': 'Back to identities',
+  'addition method selector title': 'Add an identity to this device'
 };

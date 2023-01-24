@@ -37,7 +37,7 @@ export const JoinSpaceHeading = forwardRef(
           </Heading>
           {onClickExit && (
             <Cancel asChild>
-              <Button compact onClick={onClickExit} className='grow-0 shrink-0'>
+              <Button compact variant='ghost' onClick={onClickExit} className='grow-0 shrink-0'>
                 <ProhibitInset className={getSize(5)} />
                 <span className='sr-only'>{t('exit label')}</span>
               </Button>
