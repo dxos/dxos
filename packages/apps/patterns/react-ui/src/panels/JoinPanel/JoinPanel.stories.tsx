@@ -4,6 +4,8 @@
 
 import '@dxosTheme';
 
+import { PublicKey } from '@dxos/keys';
+
 import { JoinPanel } from './JoinPanel';
 
 export default {
@@ -13,6 +15,6 @@ export default {
 export const Default = {
   args: {
     space: { properties: { get: () => 'Q3 2022 Planning' } },
-    availableIdentities: [{ displayName: 'Os Mutantes' }]
+    availableIdentities: [{ displayName: 'Os Mutantes', identityKey: PublicKey.random() }]
   }
 };

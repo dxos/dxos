@@ -8,7 +8,7 @@ import type { Profile as NaturalProfile, Space as NaturalSpace } from '@dxos/cli
 
 export type Space = Pick<NaturalSpace, 'properties'>;
 
-export type Profile = Pick<NaturalProfile, 'displayName'>;
+export type Profile = Pick<NaturalProfile, 'displayName' | 'identityKey'>;
 
 export interface JoinPanelProps {
   space: Space;

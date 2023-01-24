@@ -7,6 +7,7 @@ import React from 'react';
 import { Button } from '@dxos/react-components';
 
 import { JoinDispatch, Profile } from '../JoinPanelProps';
+import { ViewState } from './ViewState';
 
 export interface AdditionMethodSelectorProps {
   dispatch: JoinDispatch;
@@ -15,7 +16,7 @@ export interface AdditionMethodSelectorProps {
 
 export const AdditionMethodSelector = ({ dispatch, availableIdentities }: AdditionMethodSelectorProps) => {
   return (
-    <div role='group'>
+    <ViewState>
       <span>Addition method selector</span>
       <Button onClick={() => dispatch({ type: 'select addition method', method: 'create identity' })}>
         Create an identity
@@ -29,6 +30,6 @@ export const AdditionMethodSelector = ({ dispatch, availableIdentities }: Additi
       {availableIdentities.length && (
         <Button onClick={() => dispatch({ type: 'deselect identity' })}>Back to identities</Button>
       )}
-    </div>
+    </ViewState>
   );
 };
