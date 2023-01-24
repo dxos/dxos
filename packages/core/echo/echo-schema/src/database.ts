@@ -82,12 +82,12 @@ export class EchoDatabase {
   async save<T extends EchoObject>(obj: T): Promise<T> {
     assert(obj[id]); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
-    if (obj[base]._isBound) {
+    if (obj[base]._database) {
       return obj;
     }
 
     assert(!obj[db]);
-    obj[base]._isBound = true;
+    obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
 
     let props;
@@ -100,7 +100,7 @@ export class EchoDatabase {
       props
     })) as Item<any>;
 
-    await obj[base]._bind(item, this);
+    await obj[base]._bind(item);
     return obj;
   }
 
@@ -184,8 +184,8 @@ export class EchoDatabase {
 
         obj[base]._id = object.id;
         this._objects.set(object.id, obj);
-        obj[base]._bind(object, this).catch((err) => log.catch(err));
-        obj[base]._isBound = true;
+        obj[base]._database = this;
+        obj[base]._bind(object).catch((err) => log.catch(err));
       }
     }
   }

@@ -2,122 +2,83 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useCallback, useRef, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
-import { Invitation, InvitationEncoder, Item, ObjectModel, Space } from '@dxos/client';
-import { useSelection } from '@dxos/react-client';
+import { Invitation, InvitationEncoder, Space } from '@dxos/client';
+import { deleted, id } from '@dxos/echo-schema';
+import { useQuery, withReactor } from '@dxos/react-client';
 
-import { ACTIVE_TODOS, ALL_TODOS, COMPLETED_TODOS, Todo, TODO_TYPE } from '../model';
+import { FILTER } from '../constants';
+import { Todo, TodoList } from '../proto';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 
-export const Main = () => {
+export const Main = withReactor(() => {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { space, item } = useOutletContext<{
-    space: Space;
-    item: Item<ObjectModel>;
-  }>();
-  const todoItems = useSelection<Item<ObjectModel>>(item.select().children().filter({ type: TODO_TYPE })) ?? [];
-  const todos = todoItems.map((item) => ({
-    id: item.id,
-    title: item.model.get('title'),
-    completed: item.model.get('completed')
-  }));
-  const { state } = useParams();
-  const nowShowing = state === 'active' ? ACTIVE_TODOS : state === 'completed' ? COMPLETED_TODOS : ALL_TODOS;
   const [editing, setEditing] = useState<string>();
+  const { space } = useOutletContext<{ space: Space }>();
+  const { state } = useParams();
+  const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
+  // TODO(wittjosiah): Support multiple lists in a single space.
+  const [list] = useQuery(space, TodoList.filter());
 
-  const handleNewTodoKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key !== 'Enter') {
-        return;
-      }
+  if (!list) {
+    return null;
+  }
 
-      event.preventDefault();
+  // TODO(wittjosiah): Hide deleted items from `useQuery`?
+  const allTodos = list.todos.filter((todo) => !todo[deleted]);
+  const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo.completed : true));
 
-      const val = inputRef.current?.value.trim();
-      if (val) {
-        void space.database.createItem({
-          model: ObjectModel,
-          type: TODO_TYPE,
-          parent: item.id,
-          props: {
-            title: val
-          }
-        });
-        inputRef.current!.value = '';
-      }
-    },
-    [inputRef, space]
-  );
-
-  const handleToggle = useCallback(
-    (todo: Todo) => {
-      const item = todoItems.find((item) => item.id === todo.id);
-      void item?.model.set('completed', !todo.completed);
-    },
-    [todoItems]
-  );
-
-  const handleDestroy = useCallback(
-    (todo: Todo) => {
-      const item = todoItems.find((item) => item.id === todo.id);
-      // TODO(wittjosiah): Item deletion is not working.
-      void item?.delete();
-    },
-    [todoItems]
-  );
-
-  const handleSave = useCallback(
-    (todo: Todo, val: string) => {
-      const item = todoItems.find((item) => item.id === todo.id);
-      void item?.model.set('title', val);
-      setEditing(undefined);
-    },
-    [todoItems]
-  );
-
-  const handleShare = useCallback(async () => {
-    const { invitation } = await space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-    const code = InvitationEncoder.encode(invitation!);
-    await navigator.clipboard.writeText(code);
-  }, [space]);
-
-  const handleToggleAll = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const checked = event.target.checked;
-      todoItems.forEach((item) => {
-        void item.model.set('completed', checked);
-      });
-    },
-    [todoItems]
-  );
-
-  const handleClearCompleted = useCallback(() => {
-    todoItems
-      .filter((item) => item.model.get('completed'))
-      .forEach((item) => {
-        void item.delete();
-      });
-  }, [todoItems]);
-
-  const shownTodos = todos.filter((todo) => {
-    switch (nowShowing) {
-      case ACTIVE_TODOS:
-        return !todo.completed;
-      case COMPLETED_TODOS:
-        return todo.completed;
-      default:
-        return true;
+  const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') {
+      return;
     }
-  });
 
-  const activeTodoCount = todos.reduce((acc, todo) => {
+    event.preventDefault();
+
+    const title = inputRef.current?.value.trim();
+    if (title) {
+      list.todos.push(new Todo({ title }));
+      inputRef.current!.value = '';
+    }
+  };
+
+  const handleShare = async () => {
+    space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING }).subscribe({
+      onConnecting: (invitation) => {
+        const invitationCode = InvitationEncoder.encode(invitation);
+        // TODO(wittjosiah): Playwright only supports reading clipboard in chromium.
+        //   https://github.com/microsoft/playwright/issues/13037
+        console.log(JSON.stringify({ invitationCode }));
+        void navigator.clipboard.writeText(invitationCode);
+      },
+      onError: (error) => console.error(error),
+      onSuccess: (invitation) => {}
+    });
+  };
+
+  const handleToggleAll = (event: ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    todos.forEach((item) => {
+      item.completed = checked;
+    });
+  };
+
+  const handleClearCompleted = () => {
+    list.todos
+      .filter((item) => item.completed)
+      .forEach((item) => {
+        void space.experimental.db.delete(item);
+      });
+  };
+
+  const activeTodoCount = allTodos.reduce((acc, todo) => {
     return todo.completed ? acc : acc + 1;
   }, 0);
 
-  const completedCount = todos.length - activeTodoCount;
+  const completedCount = allTodos.length - activeTodoCount;
 
   return (
     <div>
@@ -129,6 +90,7 @@ export const Main = () => {
           placeholder='What needs to be done?'
           onKeyDown={handleNewTodoKeyDown}
           autoFocus={true}
+          data-testid='new-todo'
         />
       </header>
       {todos.length > 0 && (
@@ -140,20 +102,26 @@ export const Main = () => {
             onChange={handleToggleAll}
             checked={activeTodoCount === 0}
           />
-          <label htmlFor='toggle-all'>Mark all as complete</label>
-          <button id='share' onClick={handleShare}>
+          <label htmlFor='toggle-all' data-testid='toggle-all'>
+            Mark all as complete
+          </label>
+          <button id='share' onClick={handleShare} data-testid='share-button'>
             Share
           </button>
           <ul className='todo-list'>
-            {shownTodos.map((todo) => (
+            {todos.map((todo) => (
               <TodoItem
-                key={todo.id}
-                todo={todo}
-                onToggle={() => handleToggle(todo)}
-                onDestroy={() => handleDestroy(todo)}
-                onEdit={() => setEditing(todo.id)}
-                editing={editing === todo.id}
-                onSave={(val) => handleSave(todo, val)}
+                key={todo[id]}
+                title={todo.title}
+                completed={!!todo.completed}
+                onToggle={() => (todo.completed = !todo.completed)}
+                onDestroy={() => space.experimental.db.delete(todo)}
+                onEdit={() => setEditing(todo[id])}
+                editing={editing === todo[id]}
+                onSave={(title) => {
+                  todo.title = title;
+                  setEditing(undefined);
+                }}
                 onCancel={() => setEditing(undefined)}
               />
             ))}
@@ -164,11 +132,11 @@ export const Main = () => {
         <TodoFooter
           count={activeTodoCount}
           completedCount={completedCount}
-          nowShowing={nowShowing}
+          nowShowing={state ?? FILTER.ALL}
           generatePath={(state = '') => generatePath('/:space/:state', { space: space.key.toHex(), state })}
           onClearCompleted={handleClearCompleted}
         />
       )}
     </div>
   );
-};
+});
