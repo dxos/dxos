@@ -89,18 +89,18 @@ const Devtools = ({ clientReady }: { clientReady: Event<ClientContextProps> }) =
 
 const init = async () => {
   // TODO(burdon): After client created.
-  createRoot(document.getElementById('root')!).render(<div />);
+  createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
 
-  // log('initializing...');
-  // const rpcPort = windowPort();
-  // const servicesProvider = new ClientServicesProxy(rpcPort);
-  // await waitForRpc();
+  log('initializing...');
+  const rpcPort = windowPort();
+  const servicesProvider = new ClientServicesProxy(rpcPort);
+  await waitForRpc();
 
-  // const client = new Client({ services: servicesProvider });
-  // await client.initialize();
+  const client = new Client({ services: servicesProvider });
+  await client.initialize();
 
-  // log('initialized client');
-  // clientReady.emit({ client, services: servicesProvider.services as ClientServices });
+  log('initialized client');
+  clientReady.emit({ client, services: servicesProvider.services as ClientServices });
 };
 
 void init();

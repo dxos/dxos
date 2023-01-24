@@ -15,7 +15,6 @@ const createPanel = async () => {
   }
 
   log('Attempting to create panel...');
-  debugger;
   await browser.devtools.panels.create('DXOS', '', 'panel.html');
   panelCreated = true;
   log('Panel created.');

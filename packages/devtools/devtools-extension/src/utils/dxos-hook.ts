@@ -5,8 +5,6 @@
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
-const error = log.extend('error');
-
 // TODO(burdon): ?
 const checkForDXOS = () =>
   new Promise<boolean>((resolve, reject) => {
@@ -29,7 +27,7 @@ const checkForDXOS = () =>
 // TODO(burdon): Rename.
 export const waitForDXOS = async (timeout = 100000, interval = 1000) => {
   while (timeout > 0) {
-    const isReady = await checkForDXOS().catch(error);
+    const isReady = await checkForDXOS().catch((err) => log.catch(err));
     if (isReady) {
       return;
     }
