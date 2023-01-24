@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { GraphComponent } from '../GraphComponent';
+import { GraphComponent } from '../../components';
 
 export const ExplorerFrame: FC = () => {
   return <GraphComponent />;

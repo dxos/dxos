@@ -9,7 +9,7 @@ import { AuthChoices } from '@dxos/react-appkit';
 import { useIdentity, useSpaces } from '@dxos/react-client';
 import { Heading, useTranslation } from '@dxos/react-components';
 
-import { createSpacePath } from '../app';
+import { createSpacePath } from '../hooks';
 
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.

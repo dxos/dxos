@@ -25,7 +25,7 @@ export const AppStateContext: Context<AppStateContextType | undefined> = createC
 );
 
 export const AppStateProvider: FC<{ children: ReactNode; value?: AppState }> = ({ children, value }) => {
-  const [state, setState] = useState<AppState>(value ?? { showSidebar: true });
+  const [state, setState] = useState<AppState>(value ?? {});
   return <AppStateContext.Provider value={[state, setState]}>{children}</AppStateContext.Provider>;
 };
 

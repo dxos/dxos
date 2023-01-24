@@ -5,12 +5,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { Space } from '@dxos/client';
 import { useSpaces } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
-import { createSpacePath, matchSpaceKey, FrameContainer, Sidebar, AppBar, FrameSelector } from '../app';
-import { SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from '../hooks';
+import { FrameContainer, Sidebar, AppBar, FrameSelector } from '../app';
+import { createSpacePath, SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from '../hooks';
+
+// TODO(burdon): Factor out.
+const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
+  spaces.find((space) => space.key.truncate() === spaceKey);
 
 /**
  * Home page with current space.

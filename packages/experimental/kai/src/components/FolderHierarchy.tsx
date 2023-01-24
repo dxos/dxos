@@ -120,7 +120,10 @@ export const FolderHierarchy: FC<{
             {Element || (
               <div style={{ lineHeight: 1.6 }}>
                 <span className={titleClassName}>{item.title}</span>
-                {!item.items && item.value !== undefined && <span className='pl-2'>{String(item.value)}</span>}
+                {!item.items && item.value !== undefined && (
+                  // eslint-disable-next-line no-octal-escape
+                  <span className='pl-2 empty:after:content-["\00a0"]'>{String(item.value)}</span>
+                )}
               </div>
             )}
           </div>
