@@ -11,7 +11,6 @@ import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServices, ClientServicesProxy } from '@dxos/client-services';
 import { DevtoolsContextProvider, useRoutes } from '@dxos/devtools';
-import { log } from '@dxos/log';
 import { ClientContext, ClientContextProps } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 import { RpcPort } from '@dxos/rpc';
@@ -31,8 +30,9 @@ const windowPort = (): RpcPort => ({
       if (typeof message !== 'object' || message === null || message.source !== 'panel') {
         return;
       }
-
-      log('Received message from panel:', message);
+      // Can't use @dxos/log here because it is accessing LocalStorage which is not available in the sandbox.
+      // https://developer.chrome.com/docs/extensions/mv3/manifest/sandbox/
+      console.log('Received message from panel:', message);
       callback(new Uint8Array(message.data));
     };
 
@@ -50,13 +50,13 @@ const waitForRpc = async () =>
       }
 
       if (message.data === 'open-rpc') {
-        log('Panel RPC port ready.');
+        console.log('Panel RPC port ready.');
         window.removeEventListener('message', handler);
         resolve();
       }
     };
 
-    log('Sandbox RPC port ready.');
+    console.log('Sandbox RPC port ready.');
     window.addEventListener('message', handler);
     window.parent.postMessage({ data: 'open-rpc', source: 'sandbox' }, window.location.origin);
   });
@@ -91,7 +91,7 @@ const init = async () => {
   // TODO(burdon): After client created.
   createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
 
-  log('initializing...');
+  console.log('initializing...');
   const rpcPort = windowPort();
   const servicesProvider = new ClientServicesProxy(rpcPort);
   await waitForRpc();
@@ -99,7 +99,7 @@ const init = async () => {
   const client = new Client({ services: servicesProvider });
   await client.initialize();
 
-  log('initialized client');
+  console.log('initialized client');
   clientReady.emit({ client, services: servicesProvider.services as ClientServices });
 };
 
