@@ -4,7 +4,7 @@
 
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import { CaretLeft, CaretRight, UserPlus } from 'phosphor-react';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Avatar, Button, defaultFocus, getSize, mx, useTranslation } from '@dxos/react-components';
 
@@ -18,10 +18,20 @@ export interface IdentitySelectorProps {
 
 export const IdentitySelector = ({ dispatch, availableIdentities }: IdentitySelectorProps) => {
   const { t } = useTranslation('os');
+  const [activeIdentity, setActiveIdentity] = useState(availableIdentities[0]);
+  const onValueChange = useCallback(
+    (nextHex: string) =>
+      setActiveIdentity(
+        availableIdentities.find((identity) => identity.identityKey.toHex() === nextHex) || activeIdentity
+      ),
+    [availableIdentities]
+  );
   return (
     <ViewState>
       <h2 className='font-system-medium text-sm'>{t('identity selector title')}</h2>
       <RadioGroup.Root
+        value={activeIdentity.identityKey.toHex()}
+        onValueChange={onValueChange}
         className='overflow-y-auto grow shrink min-bs-10 pli-1 -mli-1'
         aria-label={t('identity radio group title')}
       >
@@ -54,14 +64,14 @@ export const IdentitySelector = ({ dispatch, availableIdentities }: IdentitySele
       </RadioGroup.Root>
       <Button compact onClick={() => dispatch({ type: 'add identity' })} className='flex items-center gap-2 pli-2'>
         <span>{t('add identity label')}</span>
-        <UserPlus className={getSize(4)} />
+        <UserPlus weight='bold' className={getSize(3.5)} />
       </Button>
       <Button
         className='flex items-center gap-2 pli-2'
         onClick={() =>
           dispatch({
             type: 'select identity',
-            identity: availableIdentities[0]
+            identity: activeIdentity
           })
         }
       >

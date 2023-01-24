@@ -15,6 +15,9 @@ export default {
 export const Default = {
   args: {
     space: { properties: { get: () => 'Q3 2022 Planning' } },
-    availableIdentities: [{ displayName: 'Os Mutantes', identityKey: PublicKey.random() }]
+    availableIdentities: [
+      { displayName: 'Os Mutantes', identityKey: PublicKey.random() },
+      { displayName: 'Sherelle', identityKey: PublicKey.random() }
+    ]
   }
 };

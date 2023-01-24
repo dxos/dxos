@@ -17,6 +17,7 @@ export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
   const spaceTitle = space.properties.get('title') ?? '';
 
   const reducer = (state: JoinState, action: JoinAction) => {
+    console.log('[reducer]', action);
     switch (action.type) {
       case 'add identity':
         break;
