@@ -12,8 +12,7 @@ import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { FileUploadDialog } from '../components';
-import { useFileDownload, useGenerator, useSpace } from '../hooks';
-import { createSpacePath } from './Routes';
+import { useFileDownload, useGenerator, useSpace, createSpacePath } from '../hooks';
 
 export type Action = {
   Icon: FC<any>;
