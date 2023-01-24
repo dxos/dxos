@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import '@dxosTheme';
 import debug from 'debug';
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
