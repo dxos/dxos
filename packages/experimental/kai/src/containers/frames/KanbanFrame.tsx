@@ -7,19 +7,18 @@ import React, { FC, useState } from 'react';
 import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { Kanban, KanbanColumnDef, Searchbar } from '../components';
-import { useGenerator, useSpace } from '../hooks';
-import { Project, tags } from '../proto';
-import { ProjectCard } from './cards';
+import { Kanban, KanbanColumnDef, Searchbar } from '../../components';
+import { useSpace } from '../../hooks';
+import { Project, tags } from '../../proto';
+import { ProjectCard } from '../cards';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
   return <ProjectCard project={object as Project} />;
 };
 
 // TODO(burdon): Generalize type.
-export const ProjectKanban: FC = () => {
+export const KanbanFrame: FC = () => {
   const space = useSpace();
-  const generator = useGenerator();
 
   const [text, setText] = useState<string>();
   const handleSearch = (text: string) => {
@@ -42,7 +41,8 @@ export const ProjectKanban: FC = () => {
   }));
 
   const handleCreate = async (column: KanbanColumnDef) => {
-    await generator.createProject(column.id);
+    const project = new Project({ tag: column.id });
+    await space.experimental.db.save(project);
   };
 
   return (

@@ -54,7 +54,7 @@ export const CalendarFrame = () => {
   const space = useSpace();
   const events = useQuery(space, EventType.filter()).map(mapEvents);
   // TODO(burdon): Manage global state persistently.
-  const [view, setView] = useState<any>(Views.AGENDA);
+  const [view, setView] = useState<any>(Views.MONTH);
   const [contact, setContact] = useState<Contact>();
 
   const components: any = useMemo(

@@ -10,11 +10,11 @@ import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { Input, Selector } from '../components';
-import { useSpace } from '../hooks';
-import { Project } from '../proto';
+import { Input, Selector } from '../../components';
+import { useSpace } from '../../hooks';
+import { Project } from '../../proto';
 
-export const ProjectEditor: FC = withReactor(() => {
+export const DocumentFrame: FC = withReactor(() => {
   const space = useSpace();
   const projects = useQuery(space, Project.filter());
   const [project, setProject] = useState<Project>();
