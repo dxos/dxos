@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 import { appkitTranslations, Fallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { ThemeProvider } from '@dxos/react-components';
 
-import { App } from './app';
-import kaiTranslations from './translations';
+import kaiTranslations from '../translations';
+import { App } from './App';
 
 const ServiceWorkerRegistration = () => {
   const {

@@ -9,7 +9,6 @@ import '@dxosTheme';
 
 import '../style.css';
 
-// TODO(burdon): Must be at the top-level for vite.
-import { Root } from './Root';
+import { Root } from './app/PWARoot';
 
 createRoot(document.getElementById('root')!).render(<Root />);
