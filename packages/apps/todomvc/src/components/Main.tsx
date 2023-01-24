@@ -9,22 +9,27 @@ import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { deleted, id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
-import { ACTIVE_TODOS, ALL_TODOS, COMPLETED_TODOS } from '../constants';
+import { FILTER } from '../constants';
 import { Todo, TodoList } from '../proto';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 
 export const Main = withReactor(() => {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [editing, setEditing] = useState<string>();
   const { space } = useOutletContext<{ space: Space }>();
   const { state } = useParams();
-  const completed = state === ACTIVE_TODOS ? false : state === COMPLETED_TODOS ? true : undefined;
+  const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const [list] = useQuery(space, TodoList.filter());
+
+  if (!list) {
+    return null;
+  }
+
   // TODO(wittjosiah): Hide deleted items from `useQuery`?
   const allTodos = list.todos.filter((todo) => !todo[deleted]);
-  const todos = allTodos.filter((todo) => (completed !== undefined ? completed === todo.completed : true));
-  const [editing, setEditing] = useState<string>();
+  const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'Enter') {
@@ -41,9 +46,17 @@ export const Main = withReactor(() => {
   };
 
   const handleShare = async () => {
-    const { invitation } = await space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-    const code = InvitationEncoder.encode(invitation!);
-    await navigator.clipboard.writeText(code);
+    space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING }).subscribe({
+      onConnecting: (invitation) => {
+        const invitationCode = InvitationEncoder.encode(invitation);
+        // TODO(wittjosiah): Playwright only supports reading clipboard in chromium.
+        //   https://github.com/microsoft/playwright/issues/13037
+        console.log(JSON.stringify({ invitationCode }));
+        void navigator.clipboard.writeText(invitationCode);
+      },
+      onError: (error) => console.error(error),
+      onSuccess: (invitation) => {}
+    });
   };
 
   const handleToggleAll = (event: ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +90,7 @@ export const Main = withReactor(() => {
           placeholder='What needs to be done?'
           onKeyDown={handleNewTodoKeyDown}
           autoFocus={true}
+          data-testid='new-todo'
         />
       </header>
       {todos.length > 0 && (
@@ -88,8 +102,10 @@ export const Main = withReactor(() => {
             onChange={handleToggleAll}
             checked={activeTodoCount === 0}
           />
-          <label htmlFor='toggle-all'>Mark all as complete</label>
-          <button id='share' onClick={handleShare}>
+          <label htmlFor='toggle-all' data-testid='toggle-all'>
+            Mark all as complete
+          </label>
+          <button id='share' onClick={handleShare} data-testid='share-button'>
             Share
           </button>
           <ul className='todo-list'>
@@ -97,7 +113,7 @@ export const Main = withReactor(() => {
               <TodoItem
                 key={todo[id]}
                 title={todo.title}
-                completed={todo.completed}
+                completed={!!todo.completed}
                 onToggle={() => (todo.completed = !todo.completed)}
                 onDestroy={() => space.experimental.db.delete(todo)}
                 onEdit={() => setEditing(todo[id])}
@@ -116,7 +132,7 @@ export const Main = withReactor(() => {
         <TodoFooter
           count={activeTodoCount}
           completedCount={completedCount}
-          nowShowing={state ?? ALL_TODOS}
+          nowShowing={state ?? FILTER.ALL}
           generatePath={(state = '') => generatePath('/:space/:state', { space: space.key.toHex(), state })}
           onClearCompleted={handleClearCompleted}
         />

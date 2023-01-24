@@ -6,7 +6,7 @@ import cx from 'classnames';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS } from '../constants';
+import { FILTER } from '../constants';
 
 const pluralize = (count: number, word: string) => {
   return count === 1 ? word : word + 's';
@@ -25,28 +25,36 @@ export const TodoFooter = ({ nowShowing, count, completedCount, generatePath, on
 
   return (
     <footer className='footer'>
-      <span className='todo-count'>
+      <span className='todo-count' data-testid='todo-count'>
         <strong>{count}</strong> {activeTodoWord} left
       </span>
       <ul className='filters'>
         <li>
-          <Link to={generatePath()} className={cx({ selected: nowShowing === ALL_TODOS })}>
+          <Link to={generatePath()} className={cx({ selected: nowShowing === FILTER.ALL })} data-testid='all-filter'>
             All
           </Link>
         </li>
         <li>
-          <Link to={generatePath(ACTIVE_TODOS)} className={cx({ selected: nowShowing === ACTIVE_TODOS })}>
+          <Link
+            to={generatePath(FILTER.ACTIVE)}
+            className={cx({ selected: nowShowing === FILTER.ACTIVE })}
+            data-testid='active-filter'
+          >
             Active
           </Link>
         </li>
         <li>
-          <Link to={generatePath(COMPLETED_TODOS)} className={cx({ selected: nowShowing === COMPLETED_TODOS })}>
+          <Link
+            to={generatePath(FILTER.COMPLETED)}
+            className={cx({ selected: nowShowing === FILTER.COMPLETED })}
+            data-testid='completed-filter'
+          >
             Completed
           </Link>
         </li>
       </ul>
       {completedCount > 0 && (
-        <button className='clear-completed' onClick={onClearCompleted}>
+        <button className='clear-completed' onClick={onClearCompleted} data-testid='clear-button'>
           Clear completed
         </button>
       )}

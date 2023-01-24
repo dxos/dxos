@@ -493,6 +493,11 @@
         },
         {
           "type": "json",
+          "path": "tools/executors/serve-with-halo/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/executors/test/package.json",
           "jsonpath": "$.version"
         },
