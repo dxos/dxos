@@ -80,13 +80,13 @@ const getEnvironments = (options: MochaExecutorOptions): TestEnvironment[] => {
     return options.environments.includes('all')
       ? Array.from(TestEnvironments)
       : (options.environments as TestEnvironment[]);
-  } else if (options.playwright) {
-    return process.env.CI ? Array.from(BrowserTypes) : ['chromium'];
   } else if (process.env.CI) {
-    return options.ciEnvironments;
+    return options.playwright ? options.ciEnvironments.filter((env) => env !== 'nodejs') : options.ciEnvironments;
+  } else if (options.devEnvironments) {
+    return options.devEnvironments;
   }
 
-  return options.devEnvironments;
+  return options.playwright ? ['chromium'] : ['nodejs'];
 };
 
 // TODO(wittjosiah): Clean up the types used in this executor.

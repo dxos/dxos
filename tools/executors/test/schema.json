@@ -19,8 +19,7 @@
     },
     "devEnvironments": {
       "type": "array",
-      "description": "Environments to run tests in during development",
-      "default": ["nodejs"]
+      "description": "Environments to run tests in during development"
     },
     "ciEnvironments": {
       "type": "array",
