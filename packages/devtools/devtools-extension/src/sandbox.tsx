@@ -3,7 +3,6 @@
 //
 
 import '@dxosTheme';
-import debug from 'debug';
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
@@ -12,12 +11,12 @@ import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServices, ClientServicesProxy } from '@dxos/client-services';
 import { DevtoolsContextProvider, useRoutes } from '@dxos/devtools';
+import { log } from '@dxos/log';
 import { ClientContext, ClientContextProps } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 import { RpcPort } from '@dxos/rpc';
 
 // TODO(burdon): Use dxos/log?
-const log = debug('dxos:extension:sandbox');
 
 // TODO(burdon): Create class.
 const clientReady = new Event<ClientContextProps>();
@@ -90,18 +89,18 @@ const Devtools = ({ clientReady }: { clientReady: Event<ClientContextProps> }) =
 
 const init = async () => {
   // TODO(burdon): After client created.
-  createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
+  createRoot(document.getElementById('root')!).render(<div />);
 
-  log('initializing...');
-  const rpcPort = windowPort();
-  const servicesProvider = new ClientServicesProxy(rpcPort);
-  await waitForRpc();
+  // log('initializing...');
+  // const rpcPort = windowPort();
+  // const servicesProvider = new ClientServicesProxy(rpcPort);
+  // await waitForRpc();
 
-  const client = new Client({ services: servicesProvider });
-  await client.initialize();
+  // const client = new Client({ services: servicesProvider });
+  // await client.initialize();
 
-  log('initialized client');
-  clientReady.emit({ client, services: servicesProvider.services as ClientServices });
+  // log('initialized client');
+  // clientReady.emit({ client, services: servicesProvider.services as ClientServices });
 };
 
 void init();

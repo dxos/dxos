@@ -2,11 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import browser, { Runtime } from 'webextension-polyfill';
 
-const log = debug('dxos:extension:background');
-const error = log.extend('error');
+import { log } from '@dxos/log';
 
 const panelPorts = new Map<number, Runtime.Port>();
 const contentPorts = new Map<number, Runtime.Port>();
@@ -25,7 +23,7 @@ browser.runtime.onConnect.addListener((port) => {
         log(`Forwarding message from panel to content on tab ${tabId}:`, message);
         port.postMessage(message);
       } else {
-        error(`Missing content port for tab ${tabId}`);
+        log.error((`Missing content port for tab ${tabId}`);
       }
     };
 
@@ -45,7 +43,7 @@ browser.runtime.onConnect.addListener((port) => {
         log(`Forwarding message from content to panel on tab ${tabId}:`, message);
         port.postMessage(message);
       } else {
-        error(`Missing panel port for tab ${tabId}`);
+        log.error((`Missing panel port for tab ${tabId}`);
       }
     };
 

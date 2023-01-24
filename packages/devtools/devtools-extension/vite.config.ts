@@ -37,6 +37,7 @@ export default defineConfig({
       '@dxos/debug',
       '@dxos/devtools',
       '@dxos/kai',
+      '@dxos/log',
       '@dxos/network-manager',
       '@dxos/protocols',
       '@dxos/react-client',

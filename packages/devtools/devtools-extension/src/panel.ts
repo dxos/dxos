@@ -2,12 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import browser from 'webextension-polyfill';
 
-import { waitForDXOS } from './utils';
+import { log } from '@dxos/log';
 
-const log = debug('dxos:extension:panel');
+import { waitForDXOS } from './utils';
 
 log('Initialize panel starting...');
 
