@@ -2,7 +2,7 @@
   "sourceRoot": "packages/devtools/devtools-extension/src",
   "projectType": "application",
   "targets": {
-    "bundle-skip": {
+    "bundle": {
       "executor": "@nrwl/vite:build",
       "inputs": [
         {
