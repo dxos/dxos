@@ -26,7 +26,7 @@ export const DraggableTaskList: FC<{
   onCreate?: (task: Task) => void;
   onDrag?: (active: number, over: number) => void;
 }> = withReactor(({ tasks, onCreate, onDrag }) => {
-  const space = useSpace();
+  const space = useSpace(); // TODO(burdon): Factor out.
   const [newTask, setNewTask] = useState<Task>();
   useEffect(() => {
     setNewTask(new Task());

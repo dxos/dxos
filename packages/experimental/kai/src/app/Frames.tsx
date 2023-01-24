@@ -20,7 +20,7 @@ import {
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { mx, getSize } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 // TODO(burdon): Rename frames.
@@ -36,9 +36,8 @@ import {
   TableFrame,
   TasksFrame
 } from '../containers';
-import { FrameID, FrameDef, useActiveFrames, useSpace } from '../hooks';
+import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
-import { createSpacePath } from './Routes';
 
 export const frames: FrameDef[] = [
   { id: FrameID.SETTINGS, title: 'Settings', Icon: Gear, Component: ManageSpacePage, system: true },

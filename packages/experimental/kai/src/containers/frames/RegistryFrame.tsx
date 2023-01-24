@@ -8,11 +8,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { createSpacePath } from '../../app';
 import { Searchbar } from '../../components';
 import {
   BotID,
   FrameID,
+  createSpacePath,
   useActiveBots,
   useActiveFrames,
   useBotDispatch,
