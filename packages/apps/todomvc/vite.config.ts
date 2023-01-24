@@ -27,14 +27,24 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
-      '@dxos/client',
       '@dxos/config',
+      '@dxos/keys',
       '@dxos/log',
-      '@dxos/react-client',
-      '@dxos/util'
+      '@dxos/protocols',
+      '@dxos/protocols/proto/dxos/client',
+      '@dxos/protocols/proto/dxos/client/services',
+      '@dxos/protocols/proto/dxos/config',
+      '@dxos/protocols/proto/dxos/echo/feed',
+      '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/protocols/proto/dxos/halo/credentials',
+      '@dxos/protocols/proto/dxos/halo/invitations',
+      '@dxos/protocols/proto/dxos/halo/keys',
+      '@dxos/protocols/proto/dxos/mesh/bridge',
+      '@dxos/protocols/proto/dxos/rpc'
     ]
   },
   build: {
+    sourcemap: true,
     outDir: 'out/todomvc',
     commonjsOptions: {
       include: [/packages/, /node_modules/]

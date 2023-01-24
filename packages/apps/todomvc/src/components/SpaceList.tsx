@@ -6,11 +6,11 @@ import cx from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, Outlet, useNavigate, Link } from 'react-router-dom';
 
-import { InvitationEncoder, Item, ObjectModel } from '@dxos/client';
-import { useClient, useIdentity, useSelection, useSpace, useSpaces } from '@dxos/react-client';
+import { InvitationEncoder } from '@dxos/client';
+import { useClient, useIdentity, useSpace, useSpaces } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
-import { LIST_TYPE } from '../model';
+import { TodoList } from '../proto';
 
 export const SpaceList = () => {
   const client = useClient();
@@ -19,7 +19,6 @@ export const SpaceList = () => {
   const { space: spaceHex } = useParams();
   const navigate = useNavigate();
   const space = useSpace(spaceHex);
-  const [item] = useSelection<Item<ObjectModel>>(space?.database.select({ type: LIST_TYPE })) ?? [];
   const [show, setShow] = useState(false);
   const [inviteCode, setInviteCode] = useState<string>();
 
@@ -43,10 +42,7 @@ export const SpaceList = () => {
 
   const handleCreateList = useCallback(async () => {
     const space = await client.echo.createSpace();
-    await space.database.createItem({
-      model: ObjectModel,
-      type: LIST_TYPE
-    });
+    await space.experimental.db.save(new TodoList());
     navigate(`/${space.key.toHex()}`);
   }, [client, navigate]);
 
@@ -100,7 +96,7 @@ export const SpaceList = () => {
           })}
         </ul>
       </div>
-      <section className='todoapp'>{space && item && <Outlet context={{ space, item }} />}</section>
+      <section className='todoapp'>{space && <Outlet context={{ space }} />}</section>
     </>
   );
 };
