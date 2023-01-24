@@ -17,10 +17,10 @@ import { printBanner } from '../banner';
 export type ClientContextProps = {
   client: Client;
 
-  status?: Status;
-
   // Optionally expose services (e.g., for devtools).
   services?: ClientServices;
+
+  status?: Status;
 };
 
 export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(

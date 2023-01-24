@@ -20,7 +20,7 @@ const TimeFrame = ({ value }: { value: Timeframe }) => (
   <div>
     {value.frames().map(([key, seq]) => (
       <div key={key.toHex()}>
-        <span>{truncateKey(key.toHex(), 8)}</span>&nbsp;
+        <span>{truncateKey(key.toHex(), 4)}</span>&nbsp;
         <span>[{seq}]</span>
       </div>
     ))}

@@ -9,6 +9,7 @@ import { sleep } from '@dxos/async';
 const log = debug('dxos:extension:hook');
 const error = log.extend('error');
 
+// TODO(burdon): ?
 const checkForDXOS = () =>
   new Promise<boolean>((resolve, reject) => {
     // TODO(wittjosiah): Switch to using webextension-polyfill once types are improved.
@@ -27,6 +28,7 @@ const checkForDXOS = () =>
  * @param timeout Total timeout in ms.
  * @param interval Check every interval ms.
  */
+// TODO(burdon): Rename.
 export const waitForDXOS = async (timeout = 100000, interval = 1000) => {
   while (timeout > 0) {
     const isReady = await checkForDXOS().catch(error);

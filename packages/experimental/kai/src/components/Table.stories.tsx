@@ -25,7 +25,7 @@ export const Default = {
   render: () => {
     return (
       <div>
-        <Table columns={columns} data={data} />
+        <Table<EchoObject> columns={columns} data={data} />
       </div>
     );
   }

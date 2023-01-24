@@ -13,10 +13,10 @@ import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
 
 export interface SpaceState {
-  readonly genesisCredential: Credential | undefined;
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
   readonly feeds: ReadonlyMap<PublicKey, FeedInfo>;
   readonly credentials: Credential[];
+  readonly genesisCredential: Credential | undefined;
 
   registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T>;
 }
@@ -30,6 +30,7 @@ export class SpaceStateMachine implements SpaceState {
   private readonly _members = new MemberStateMachine(this._spaceKey);
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
   private readonly _credentials: Credential[] = [];
+
   private _genesisCredential: Credential | undefined;
   private _credentialProcessors: CredentialConsumer<any>[] = [];
 
@@ -42,9 +43,7 @@ export class SpaceStateMachine implements SpaceState {
     private readonly _spaceKey: PublicKey
   ) { }
 
-  get genesisCredential(): Credential | undefined {
-    return this._genesisCredential;
-  }
+  // TODO(burdon): Return state object rather than extend.
 
   get members(): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members.members;
@@ -56,6 +55,32 @@ export class SpaceStateMachine implements SpaceState {
 
   get credentials(): Credential[] {
     return this._credentials;
+  }
+
+  get genesisCredential(): Credential | undefined {
+    return this._genesisCredential;
+  }
+
+  public registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T> {
+    const processor = new CredentialConsumer(
+      handler,
+      async () => {
+        for (const credential of this._credentials) {
+          await processor._process(credential);
+        }
+
+        // NOTE: It is important to set this flag after immediately after processing existing credentials.
+        // Otherwise, we might miss some credentials.
+        // Having an `await` statement between the end of the loop and setting the flag would cause a race condition.
+        processor._isReadyForLiveCredentials = true;
+      },
+      async () => {
+        this._credentialProcessors = this._credentialProcessors.filter((p) => p !== processor);
+      }
+    );
+
+    this._credentialProcessors.push(processor);
+    return processor;
   }
 
   /**
@@ -70,7 +95,7 @@ export class SpaceStateMachine implements SpaceState {
     }
 
     switch (getCredentialAssertion(credential)['@type']) {
-      case 'dxos.halo.credentials.SpaceGenesis':
+      case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
           log.warn('Space already has a genesis credential.');
           return false;
@@ -83,34 +108,43 @@ export class SpaceStateMachine implements SpaceState {
           log.warn('Space genesis credential must be issued to space.');
           return false;
         }
+
         this._genesisCredential = credential;
         break;
-      case 'dxos.halo.credentials.SpaceMember':
+      }
+
+      case 'dxos.halo.credentials.SpaceMember': {
         if (!this._genesisCredential) {
           log.warn('Space must have a genesis credential before adding members.');
           return false;
         }
         if (!this._canInviteNewMembers(credential.issuer)) {
-          log.warn(`Space member ${credential.issuer} is not authorized to invite new members.`);
+          log.warn(`Space member is not authorized to invite new members: ${credential.issuer}`);
           return false;
         }
+
         await this._members.process(credential);
         break;
-      case 'dxos.halo.credentials.AdmittedFeed':
+      }
+
+      case 'dxos.halo.credentials.AdmittedFeed': {
         if (!this._genesisCredential) {
           log.warn('Space must have a genesis credential before admitting feeds.');
           return false;
         }
         if (!this._canAdmitFeeds(credential.issuer)) {
-          log.warn(`Space member ${credential.issuer} is not authorized to admit feeds.`);
+          log.warn(`Space member is not authorized to admit feeds: ${credential.issuer}`);
           return false;
         }
+
         // TODO(dmaretskyi): Check that the feed owner is a member of the space.
         await this._feeds.process(credential, fromFeed);
         break;
+      }
     }
 
-    this._credentials.push(credential);
+    // TODO(burdon): Await or void?
+    void this._credentials.push(credential);
 
     for (const processor of this._credentialProcessors) {
       if (processor._isReadyForLiveCredentials) {
@@ -119,28 +153,7 @@ export class SpaceStateMachine implements SpaceState {
     }
 
     await this.onCredentialProcessed.callIfSet(credential);
-
     return true;
-  }
-
-  public registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T> {
-    const processor = new CredentialConsumer(
-      handler,
-      async () => {
-        for (const credential of this._credentials) {
-          await processor._process(credential);
-        }
-        // NOTE: It is important to set this flag after immediately after processing existing credentials.
-        // Otherwise, we might miss some credentials.
-        // Having an `await` statement between the end of the loop and setting the flag would cause a race condition.
-        processor._isReadyForLiveCredentials = true;
-      },
-      async () => {
-        this._credentialProcessors = this._credentialProcessors.filter((p) => p !== processor);
-      }
-    );
-    this._credentialProcessors.push(processor);
-    return processor;
   }
 
   private _canInviteNewMembers(key: PublicKey): boolean {

@@ -19,7 +19,6 @@ import { FeedWriter } from './feed-writer';
  */
 export class FeedWrapper<T extends {}> {
   private readonly _pendingWrites = new Set<StackTrace>();
-
   private readonly _binder = createBinder(this._hypercore);
 
   constructor(

@@ -55,7 +55,7 @@ export const KeySelect = ({
               }}
               variant='h6'
             >
-              {humanizeFlag ? humanize(key.toHex()) : truncateKey(key.toHex(), 8)}
+              {humanizeFlag ? humanize(key.toHex()) : truncateKey(key.toHex(), 4)}
             </Typography>
           </Box>
         </MenuItem>

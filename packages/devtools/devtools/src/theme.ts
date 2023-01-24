@@ -4,6 +4,10 @@
 
 import { colors, createTheme } from '@mui/material';
 
+//
+// NOTE: tailwind expects this file at the root.
+//
+
 export const theme = createTheme({
   palette: {
     primary: {
