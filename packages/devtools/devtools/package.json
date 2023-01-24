@@ -57,7 +57,8 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
     "react-syntax-highlighter": "^15.5.0",
-    "react-table": "^7.8.0"
+    "react-table": "^7.8.0",
+    "react-vis": "^1.11.12"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -68,6 +69,7 @@
     "@types/react-dom": "^18.0.6",
     "@types/react-syntax-highlighter": "^15.5.5",
     "@types/react-table": "^7.7.14",
+    "@types/react-vis": "^1.11.11",
     "@vitejs/plugin-react": "^3.0.1",
     "faker": "^5.5.3",
     "postcss": "^8.4.17",

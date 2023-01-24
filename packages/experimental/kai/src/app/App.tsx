@@ -33,6 +33,7 @@ const clientProvider = async (demo: boolean) => {
     await client.halo.createProfile();
     const space = await client.echo.createSpace();
 
+    // TODO(burdon): Create context.
     const generator = new Generator(space.experimental.db);
     await generator.generate();
   }

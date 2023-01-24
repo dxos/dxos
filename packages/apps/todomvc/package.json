@@ -8,9 +8,13 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "scripts": {
+    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
+  },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -22,6 +26,8 @@
     "todomvc-common": "^1.0.5"
   },
   "devDependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/echo-typegen": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",

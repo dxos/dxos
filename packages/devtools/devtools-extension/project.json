@@ -2,10 +2,10 @@
   "sourceRoot": "packages/devtools/devtools-extension/src",
   "projectType": "application",
   "targets": {
-    "bundle": {
+    "bundle-skip": {
       "executor": "nx:run-script",
       "options": {
-        "script": "bundle"
+        "script": "bundle-skip"
       },
       "outputs": [
         "packages/devtools/devtools-extension/dist"

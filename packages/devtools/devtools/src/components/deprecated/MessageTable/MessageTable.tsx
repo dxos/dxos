@@ -88,7 +88,7 @@ export const MessageTable = ({ messages, getType = defaultGetType, onSelect }: M
               >
                 {/* Feed. */}
                 <TableCell monospace style={{ color: colorHash.hex(key) }} title={key}>
-                  {feedKey.truncate(8)}
+                  {feedKey.truncate(4)}
                 </TableCell>
 
                 {/* Number. */}

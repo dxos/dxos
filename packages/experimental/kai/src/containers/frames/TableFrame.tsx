@@ -65,7 +65,7 @@ const stringMatch = (value?: string, match?: string) =>
   !match?.length || value?.toLocaleLowerCase().indexOf(match) !== -1;
 
 export const TableFrame = () => {
-  const { space } = useSpace();
+  const space = useSpace();
   const [type, setType] = useState<ColumnType<any>>(getType('contact'));
   const [text, setText] = useState<string>();
   const objects = useQuery(space, type.filter).filter(type.subFilter?.(text) ?? Boolean);
@@ -93,7 +93,7 @@ export const TableFrame = () => {
         </div>
       </div>
       {/* <div className='flex flex-1 overflow-hidden'> */}
-      <Table columns={type.columns} data={objects} />
+      <Table<EchoObject> columns={type.columns} data={objects} />
       {/* </div> */}
     </div>
   );

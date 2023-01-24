@@ -2,25 +2,39 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Article, Calendar, Compass, Gear, Globe, Graph, Kanban, ListChecks, Sword, Table, Wall } from 'phosphor-react';
+import {
+  Article,
+  Calendar,
+  CaretLeft,
+  CaretRight,
+  Compass,
+  Gear,
+  Globe,
+  Graph,
+  Kanban,
+  ListChecks,
+  Sword,
+  Table,
+  Wall
+} from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { mx, getSize } from '@dxos/react-components';
-import { PanelSidebarContext } from '@dxos/react-ui';
+import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 // TODO(burdon): Rename frames.
 import {
   CalendarFrame,
   ChessFrame,
-  Dashboard,
-  RegistryFrame,
+  DashboardFrame,
+  DocumentFrame,
+  ExplorerFrame,
+  KanbanFrame,
   MapFrame,
+  RegistryFrame,
   TableFrame,
-  ProjectEditor,
-  ProjectGraph,
-  ProjectKanban,
-  TaskList
+  TasksFrame
 } from '../containers';
 import { FrameID, FrameDef, useActiveFrames, useSpace } from '../hooks';
 import { ManageSpacePage } from '../pages';
@@ -34,7 +48,7 @@ export const frames: FrameDef[] = [
     title: 'Dashboard',
     description: 'Customizable collection of data-bounds control.',
     Icon: Wall,
-    Component: Dashboard
+    Component: DashboardFrame
   },
   { id: FrameID.TABLE, title: 'Table', description: 'Generic data browser.', Icon: Table, Component: TableFrame },
   {
@@ -42,14 +56,14 @@ export const frames: FrameDef[] = [
     title: 'Kanban',
     description: 'Card based process management.',
     Icon: Kanban,
-    Component: ProjectKanban
+    Component: KanbanFrame
   },
   {
     id: FrameID.TASKS,
     title: 'Tasks',
     description: 'Project and task management tools.',
     Icon: ListChecks,
-    Component: TaskList
+    Component: TasksFrame
   },
   {
     id: FrameID.CALENDAR,
@@ -63,14 +77,14 @@ export const frames: FrameDef[] = [
     title: 'Documents',
     description: 'Realtime structured document editing.',
     Icon: Article,
-    Component: ProjectEditor
+    Component: DocumentFrame
   },
   {
     id: FrameID.EXPLORER,
     title: 'Explorer',
     description: 'Graphical data navigator.',
     Icon: Graph,
-    Component: ProjectGraph
+    Component: ExplorerFrame
   },
   {
     id: FrameID.MAPS,
@@ -93,20 +107,26 @@ export const frames: FrameDef[] = [
  */
 export const FrameSelector: FC = () => {
   const navigate = useNavigate();
-  const { space } = useSpace();
+  const space = useSpace();
   const frames = useActiveFrames();
   const { frame: currentFrame } = useParams();
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
+  const toggleSidebar = useTogglePanelSidebar();
 
   return (
     <div
       className={mx(
-        'flex flex-col-reverse bg-orange-500 fixed inline-end-0 block-start-appbar bs-framepicker z-[1] transition-[inset-inline-start] duration-200 ease-in-out',
+        'flex flex-col-reverse bg-orange-500',
+        'fixed inline-end-0 block-start-appbar bs-framepicker transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
         isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
       )}
     >
       <div className='flex pl-3'>
+        <button className='mr-2' onClick={toggleSidebar}>
+          {isOpen ? <CaretLeft className={getSize(6)} /> : <CaretRight className={getSize(6)} />}
+        </button>
+
         {frames
           .filter(({ system }) => !system)
           .map(({ id, title, Icon }) => {
@@ -124,6 +144,7 @@ export const FrameSelector: FC = () => {
               </a>
             );
           })}
+
         <div className='flex-1' />
       </div>
     </div>

@@ -16,7 +16,7 @@ describe('Smoke test', function () {
       return;
     }
 
-    const result = await setupPage(this, 'http://localhost:3000', async (page) => {
+    const result = await setupPage(this, 'http://localhost:3967', async (page) => {
       return await page.isVisible(':has-text("HALO")');
     });
 

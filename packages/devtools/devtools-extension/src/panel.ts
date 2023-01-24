@@ -14,6 +14,7 @@ log('Initialize panel starting...');
 const port = browser.runtime.connect({
   name: `panel-${browser.devtools.inspectedWindow.tabId}`
 });
+
 const sandbox = document.createElement('iframe');
 sandbox.src = `${window.location.origin}/sandbox.html`;
 window.document.body.appendChild(sandbox);
@@ -28,15 +29,7 @@ window.addEventListener('message', async (event) => {
     log('Opening RPC Server...');
     await waitForDXOS();
     await browser.devtools.inspectedWindow.eval('window.__DXOS__.openClientRpcServer()');
-
-    sandbox.contentWindow?.postMessage(
-      {
-        data: 'open-rpc',
-        source: 'panel'
-      },
-      '*'
-    );
-
+    sandbox.contentWindow?.postMessage({ data: 'open-rpc', source: 'panel' }, '*');
     return;
   }
 
@@ -46,14 +39,7 @@ window.addEventListener('message', async (event) => {
 
 port.onMessage.addListener((message) => {
   log('Received message from background:', message);
-
-  sandbox.contentWindow?.postMessage(
-    {
-      data: message.data,
-      source: 'panel'
-    },
-    '*'
-  );
+  sandbox.contentWindow?.postMessage({ data: message.data, source: 'panel' }, '*');
 });
 
 browser.devtools.network.onNavigated.addListener(() => {

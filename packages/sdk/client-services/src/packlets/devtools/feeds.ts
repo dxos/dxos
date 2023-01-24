@@ -18,17 +18,17 @@ import { ComplexMap } from '@dxos/util';
 export const subscribeToFeeds = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
   { feedKeys }: SubscribeToFeedsRequest
-) =>
-  new Stream<SubscribeToFeedsResponse>(({ next }) => {
+) => {
+  return new Stream<SubscribeToFeedsResponse>(({ next }) => {
     if (feedKeys?.length === 0) {
       return;
     }
 
-    const feedMap = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
     const subscriptions = new EventSubscriptions();
+    const feedMap = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
     const update = () => {
-      const feeds = feedStore.feeds;
+      const { feeds } = feedStore;
       feeds
         .filter((feed) => !feedKeys?.length || feedKeys.some((feedKey) => feedKey.equals(feed.key)))
         .forEach((feed) => {
@@ -38,6 +38,7 @@ export const subscribeToFeeds = (
             subscriptions.add(feed.off('close', update));
           }
         });
+
       next({
         feeds: Array.from(feedMap.values()).map((feed) => ({ feedKey: feed.key, length: feed.properties.length }))
       });
@@ -50,12 +51,13 @@ export const subscribeToFeeds = (
       subscriptions.clear();
     };
   });
+};
 
 export const subscribeToFeedBlocks = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
   { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest
-) =>
-  new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
+) => {
+  return new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
     if (!feedKey) {
       return;
     }
@@ -77,9 +79,11 @@ export const subscribeToFeedBlocks = (
             break;
           }
         }
+
         next({
           blocks: blocks.slice(-maxBlocks)
         });
+
         await iterator.close();
       };
 
@@ -96,3 +100,4 @@ export const subscribeToFeedBlocks = (
       clearTimeout(timeout);
     };
   });
+};
