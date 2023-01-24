@@ -11,7 +11,7 @@ import { HashRouter } from 'react-router-dom';
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServices, ClientServicesProxy } from '@dxos/client-services';
-import { DevtoolsContextProvider, Routes as DevtoolsRoutes } from '@dxos/devtools';
+import { DevtoolsContextProvider, useRoutes } from '@dxos/devtools';
 import { ClientContext, ClientContextProps } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 import { RpcPort } from '@dxos/rpc';
@@ -61,6 +61,10 @@ const waitForRpc = async () =>
     window.addEventListener('message', handler);
     window.parent.postMessage({ data: 'open-rpc', source: 'sandbox' }, window.location.origin);
   });
+
+export const DevtoolsRoutes = () => {
+  return useRoutes();
+};
 
 const Devtools = ({ clientReady }: { clientReady: Event<ClientContextProps> }) => {
   const [value, setValue] = useState<ClientContextProps>();

@@ -3,12 +3,32 @@
   "projectType": "application",
   "targets": {
     "bundle-skip": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        {
+          "env": "IPDATA_API_KEY"
+        }
+      ],
       "options": {
-        "script": "bundle-skip"
+        "outputPath": "packages/devtools/devtools-extension/out/devtools-extension"
       },
       "outputs": [
-        "packages/devtools/devtools-extension/dist"
+        "{options.outputPath}"
       ]
     },
     "lint": {

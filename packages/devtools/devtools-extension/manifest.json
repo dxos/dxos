@@ -12,19 +12,19 @@
   "action": {
     "default_icon": "assets/img/icon-dxos-48.png",
     "default_title": "DXOS",
-    "default_popup": "popup.html"
+    "default_popup": "/popup.html"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
   "sandbox": {
     "pages": [
-      "sandbox.html"
+      "/sandbox.html"
     ]
   },
-  "devtools_page": "main.html",
+  "devtools_page": "/main.html",
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "/src/background.ts"
   },
   "content_scripts": [
     {
@@ -33,7 +33,7 @@
         "https://*/*"
       ],
       "js": [
-        "content.js"
+        "/src/content.ts"
       ],
       "run_at": "document_start"
     }
