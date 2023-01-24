@@ -29,7 +29,9 @@ describe('Basic test', () => {
     }
 
     host = new AppManager(this);
-    guest = new AppManager(this);
+    // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
+    //   https://github.com/microsoft/playwright/issues/2973
+    guest = mochaExecutor.environment === 'chromium' ? new AppManager(this) : host;
   });
 
   describe('Default space', () => {
@@ -50,7 +52,7 @@ describe('Basic test', () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
       }, 1000);
-    }).skipEnvironments('firefox');
+    }).onlyEnvironments('chromium');
 
     test('toggle a task', async () => {
       await host.toggleTodo(Groceries.Eggs);
