@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import { Cancel } from '@radix-ui/react-alert-dialog';
+import { ProhibitInset } from 'phosphor-react';
 import React, { ForwardedRef, forwardRef } from 'react';
 
 import { Button, getSize, Heading, mx, Trans, useId, useTranslation } from '@dxos/react-components';
@@ -19,29 +20,30 @@ export const JoinSpaceHeading = forwardRef(
     const { t } = useTranslation('os');
     const nameId = useId('spaceDisplayName');
     return (
-      <div role='none' className={mx(subduedSurface, 'rounded-md')} ref={ref}>
+      <div role='none' className={mx(subduedSurface, 'rounded-bs-md')} ref={ref}>
         <div role='group' className='flex items-center gap-2'>
           <p role='img' className={mx(getSize(10), 'rounded-full bg-primary-500')} aria-labelledby={nameId} />
-          <Heading level={1} className='font-body font-normal text-base' id={titleId}>
+          <Heading level={1} className='font-body font-normal text-base grow' id={titleId}>
             <Trans
               {...{
                 defaults: t('join space heading'),
                 components: {
-                  small: <span className='block font-body font-system-medium text-sm' />,
+                  small: <span className='block font-system-medium text-sm' />,
                   large: <span className='block' id={nameId} />
                 },
                 values: { spaceTitle }
               }}
             />
           </Heading>
+          {onClickExit && (
+            <Cancel asChild>
+              <Button compact onClick={onClickExit} className='grow-0 shrink-0'>
+                <ProhibitInset className={getSize(5)} />
+                <span className='sr-only'>{t('exit label')}</span>
+              </Button>
+            </Cancel>
+          )}
         </div>
-        {onClickExit && (
-          <Cancel asChild>
-            <Button compact onClick={onClickExit} className='is-full mbs-2'>
-              {t('exit label')}
-            </Button>
-          </Cancel>
-        )}
       </div>
     );
   }

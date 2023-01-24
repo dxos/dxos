@@ -9,14 +9,14 @@ import React, { useCallback, useState } from 'react';
 import { Avatar, Button, defaultFocus, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { JoinDispatch, Profile } from '../JoinPanelProps';
-import { ViewState } from './ViewState';
+import { ViewState, ViewStateProps } from './ViewState';
 
-export interface IdentitySelectorProps {
+export interface IdentitySelectorProps extends ViewStateProps {
   dispatch: JoinDispatch;
   availableIdentities: Profile[];
 }
 
-export const IdentitySelector = ({ dispatch, availableIdentities }: IdentitySelectorProps) => {
+export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStateProps }: IdentitySelectorProps) => {
   const { t } = useTranslation('os');
   const [activeIdentity, setActiveIdentity] = useState(availableIdentities[0]);
   const onValueChange = useCallback(
@@ -26,10 +26,12 @@ export const IdentitySelector = ({ dispatch, availableIdentities }: IdentitySele
       ),
     [availableIdentities]
   );
+  const disabled = !viewStateProps.active;
   return (
-    <ViewState>
+    <ViewState {...viewStateProps}>
       <h2 className='font-system-medium text-sm'>{t('identity selector title')}</h2>
       <RadioGroup.Root
+        disabled={disabled}
         value={activeIdentity.identityKey.toHex()}
         onValueChange={onValueChange}
         className='overflow-y-auto grow shrink min-bs-10 pli-1 -mli-1'
@@ -62,11 +64,17 @@ export const IdentitySelector = ({ dispatch, availableIdentities }: IdentitySele
           );
         })}
       </RadioGroup.Root>
-      <Button compact onClick={() => dispatch({ type: 'add identity' })} className='flex items-center gap-2 pli-2'>
+      <Button
+        disabled={disabled}
+        compact
+        onClick={() => dispatch({ type: 'add identity' })}
+        className='flex items-center gap-2 pli-2'
+      >
         <span>{t('add identity label')}</span>
         <UserPlus weight='bold' className={getSize(3.5)} />
       </Button>
       <Button
+        disabled={disabled}
         className='flex items-center gap-2 pli-2'
         onClick={() =>
           dispatch({

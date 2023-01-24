@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import * as AlertPrimitive from '@radix-ui/react-alert-dialog';
-import React, { useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
 
 import { mx, ThemeContext, useId } from '@dxos/react-components';
 
@@ -17,21 +17,35 @@ export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
   const spaceTitle = space.properties.get('title') ?? '';
 
   const reducer = (state: JoinState, action: JoinAction) => {
-    console.log('[reducer]', action);
+    const nextState = { ...state };
     switch (action.type) {
       case 'add identity':
+        nextState.activeView = 'addition method selector';
+        break;
+      case 'select identity':
+        nextState.selectedIdentity = action.identity;
+        nextState.activeView = 'accept space invitation';
+        break;
+      case 'deselect identity':
+        nextState.selectedIdentity = undefined;
+        nextState.activeView = 'identity selector';
         break;
       // todo: fill this in with the correct logic
     }
-    return state;
+    console.log('[reducer]', action, nextState);
+    return nextState;
   };
 
-  const [_joinState, dispatch] = useReducer(reducer, {
+  const [joinState, dispatch] = useReducer(reducer, {
     space,
     activeView: availableIdentities.length > 0 ? 'identity selector' : 'addition method selector',
     selectedIdentity: undefined,
     additionMethod: undefined
   });
+
+  useEffect(() => {
+    console.log('[active view]', joinState.activeView);
+  }, [joinState.activeView]);
 
   return (
     <AlertPrimitive.Root defaultOpen>
@@ -43,13 +57,14 @@ export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
         >
           <div role='none' className='is-full max-is-[320px]'>
             <JoinSpaceHeading titleId={titleId} spaceTitle={spaceTitle} onClickExit={() => {}} />
-            <div
-              role='none'
-              className={mx(defaultSurface, 'is-full overflow-x-auto overflow-y-hidden mbs-2 rounded-md p-0')}
-            >
+            <div role='none' className={mx(defaultSurface, 'is-full overflow-hidden rounded-be-md p-0')}>
               <div role='none' className='flex is-[200%]'>
-                <IdentitySelector {...{ dispatch, availableIdentities }} />
-                <AdditionMethodSelector {...{ dispatch, availableIdentities }} />
+                <IdentitySelector
+                  {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
+                />
+                <AdditionMethodSelector
+                  {...{ dispatch, availableIdentities, active: joinState.activeView === 'addition method selector' }}
+                />
               </div>
             </div>
           </div>
