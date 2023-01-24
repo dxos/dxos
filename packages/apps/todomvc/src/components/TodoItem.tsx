@@ -5,21 +5,28 @@
 import cx from 'classnames';
 import React, { FormEvent, KeyboardEvent, useCallback, useState } from 'react';
 
-import { Todo } from '../model';
-
 export interface TodoItemProps {
-  key: string;
-  todo: Todo;
+  title: string;
+  completed?: boolean;
   editing?: boolean;
-  onSave: (val: any) => void;
+  onSave: (val: string) => void;
   onDestroy: () => void;
   onEdit: () => void;
-  onCancel: (event: any) => void;
+  onCancel: (event: KeyboardEvent) => void;
   onToggle: () => void;
 }
 
-export const TodoItem = ({ todo, editing, onToggle, onDestroy, onCancel, onEdit, onSave }: TodoItemProps) => {
-  const [editText, setEditText] = useState(todo.title ?? '');
+export const TodoItem = ({
+  title,
+  completed,
+  editing,
+  onToggle,
+  onDestroy,
+  onCancel,
+  onEdit,
+  onSave
+}: TodoItemProps) => {
+  const [editText, setEditText] = useState(title);
 
   const handleSubmit = useCallback(() => {
     const val = editText.trim();
@@ -33,13 +40,13 @@ export const TodoItem = ({ todo, editing, onToggle, onDestroy, onCancel, onEdit,
 
   const handleEdit = useCallback(() => {
     onEdit();
-    setEditText(todo.title);
+    setEditText(title);
   }, [setEditText, onEdit]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setEditText(todo.title);
+        setEditText(title);
         onCancel(event);
       } else if (event.key === 'Enter') {
         handleSubmit();
@@ -57,10 +64,10 @@ export const TodoItem = ({ todo, editing, onToggle, onDestroy, onCancel, onEdit,
   );
 
   return (
-    <li className={cx({ completed: todo.completed, editing })}>
+    <li className={cx({ completed, editing })}>
       <div className='view'>
-        <input className='toggle' type='checkbox' checked={todo.completed ?? false} onChange={onToggle} />
-        <label onDoubleClick={() => handleEdit()}>{todo.title}</label>
+        <input className='toggle' type='checkbox' checked={completed ?? false} onChange={onToggle} />
+        <label onDoubleClick={() => handleEdit()}>{title}</label>
         <button className='destroy' onClick={onDestroy} />
       </div>
       <input
