@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Buildings } from 'phosphor-react';
+import { Buildings, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
@@ -49,6 +49,22 @@ export const OrganizationRow: FC<{ organization: Organization }> = withReactor((
     >
       <div className='ml-8 mb-1'>
         {organization.address && <div className='flex text-sm text-gray-800'>{address(organization.address)}</div>}
+
+        {/* Contacts */}
+        {organization.people?.length > 0 && (
+          <div className='pt-2'>
+            <div className='p-1 pt-1'>
+              {organization.people?.map((contact) => (
+                <div className='flex items-center' key={contact[id]}>
+                  <div className='pr-2'>
+                    <User />
+                  </div>
+                  <div>{contact.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </CardRow>
   );

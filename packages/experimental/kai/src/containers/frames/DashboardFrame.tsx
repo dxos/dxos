@@ -22,32 +22,38 @@ export const DashboardFrame: FC = () => {
   const cardStyles = 'flex shrink-0';
 
   return (
-    <div ref={ref} className='flex overflow-hidden p-4 gap-1 lg:grid lg:gap-4 lg:grid-rows-2 lg:grid-cols-6'>
-      <div className={mx(cardStyles, 'col-span-2')}>
+    <div
+      ref={ref}
+      className={mx(
+        'flex flex-col gap-2 overflow-x-hidden overflow-y-scroll p-4',
+        'lg:p-2 lg:grid lg:gap-3 lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
+      )}
+    >
+      <div className={mx(cardStyles)}>
         <Card scrollbar header={<CardMenu title='Organizations' />}>
           <OrganizationList />
         </Card>
       </div>
 
-      <div className={mx(cardStyles, 'col-span-2')}>
+      <div className={mx(cardStyles)}>
         <Card scrollbar header={<CardMenu title='Contacts' />}>
           <ContactList />
         </Card>
       </div>
 
-      <div className={mx(cardStyles, 'col-span-2')}>
+      <div className={mx(cardStyles)}>
         <Card scrollbar header={<CardMenu title='Tasks' />}>
           <TaskList />
         </Card>
       </div>
 
-      <div className={mx(cardStyles, 'col-span-2')}>
+      <div className={mx(cardStyles)}>
         <Card scrollbar header={<CardMenu title='Projects' />}>
           <ProjectHierarchy />
         </Card>
       </div>
 
-      <div className={mx(cardStyles, 'col-span-4')}>
+      <div className={mx(cardStyles, 'col-span-2 hidden lg:flex')}>
         <Card header={<CardMenu title='Projects' />}>
           <GraphComponent />
         </Card>
