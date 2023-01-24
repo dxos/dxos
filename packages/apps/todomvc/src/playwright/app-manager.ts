@@ -5,7 +5,7 @@
 import type { Context as MochaContext } from 'mocha';
 import type { ConsoleMessage, Page } from 'playwright';
 
-import { synchronized, Trigger } from '@dxos/async';
+import { sleep, synchronized, Trigger } from '@dxos/async';
 import { setupPage } from '@dxos/test';
 
 import { FILTER } from '../constants';
@@ -118,11 +118,15 @@ export class AppManager {
     await this._init();
     // NOTE: This input behaves weirdly so eval is necessary to toggle it.
     await this.page.$eval('data-testid=toggle-all', (elem: HTMLLabelElement) => elem.click());
+    // Allow some time for the page to update when actioning the whole list.
+    await sleep(10);
   }
 
   async clearCompleted() {
     await this._init();
     await this.page.locator('data-testid=clear-button').click();
+    // Allow some time for the page to update when actioning the whole list.
+    await sleep(10);
   }
 
   async filterTodos(filter: FILTER) {
