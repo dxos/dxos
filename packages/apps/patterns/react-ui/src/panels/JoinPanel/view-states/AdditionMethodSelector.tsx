@@ -52,6 +52,7 @@ export const AdditionMethodSelector = ({
       >
         {t('recover identity label')}
       </CompoundButton>
+      <div role='none' className='grow' />
       {availableIdentities.length && (
         <Button disabled={disabled} onClick={() => dispatch({ type: 'deselect identity' })}>
           <CaretLeft className={getSize(4)} weight='bold' />

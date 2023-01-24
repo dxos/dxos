@@ -58,7 +58,7 @@ export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
           <div role='none' className='is-full max-is-[320px]'>
             <JoinSpaceHeading titleId={titleId} spaceTitle={spaceTitle} onClickExit={() => {}} />
             <div role='none' className={mx(defaultSurface, 'is-full overflow-hidden rounded-be-md p-0')}>
-              <div role='none' className='flex is-[200%]'>
+              <div role='none' className='flex is-[200%]' aria-live='polite'>
                 <IdentitySelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
                 />
