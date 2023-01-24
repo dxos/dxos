@@ -108,34 +108,30 @@ export default defineConfig({
 
     // TODO(burdon): Document.
     // To reset, unregister service worker using devtools.
-    ...(pwa
-      ? [
-          VitePWA({
-            workbox: {
-              maximumFileSizeToCacheInBytes: 30000000
-            },
-            includeAssets: ['favicon.ico'],
-            manifest: {
-              name: 'DXOS Kai',
-              short_name: 'Kai',
-              description: 'DXOS Kai Demo',
-              theme_color: '#ffffff',
-              icons: [
-                {
-                  src: 'icons/icon-32.png',
-                  sizes: '32x32',
-                  type: 'image/png'
-                },
-                {
-                  src: 'icons/icon-256.png',
-                  sizes: '256x256',
-                  type: 'image/png'
-                }
-              ]
-            }
-          })
+    VitePWA({
+      workbox: {
+        maximumFileSizeToCacheInBytes: 30000000
+      },
+      includeAssets: ['favicon.ico'],
+      manifest: {
+        name: 'DXOS Kai',
+        short_name: 'Kai',
+        description: 'DXOS Kai Demo',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'icons/icon-32.png',
+            sizes: '32x32',
+            type: 'image/png'
+          },
+          {
+            src: 'icons/icon-256.png',
+            sizes: '256x256',
+            type: 'image/png'
+          }
         ]
-      : []),
+      }
+    }),
 
     /**
      * Bundle fonts.

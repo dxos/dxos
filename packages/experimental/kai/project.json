@@ -15,6 +15,19 @@
     },
     "bundle": {
       "executor": "@nrwl/vite:build",
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_VAULT"
+        },
+        {
+          "env": "PWA_ENABLE"
+        }
+      ],
       "options": {
         "outputPath": "packages/experimental/kai/out/kai"
       },

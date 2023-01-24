@@ -25,6 +25,7 @@ export const build = ({ verbose }: BuildArgs, { log, module }: BuildParams) => {
   const { status, error } = spawnSync(command, args, {
     env: {
       ...process.env,
+      ...(module.build!.env ?? {}),
       CONFIG_DYNAMIC: 'true'
     },
     stdio: verbose ? 'inherit' : undefined
