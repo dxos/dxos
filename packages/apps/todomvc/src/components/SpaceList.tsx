@@ -56,7 +56,6 @@ export const SpaceList = () => {
     const observable = await client.echo.acceptInvitation(invitation);
     observable.subscribe({
       onSuccess: (invitation) => {
-        console.log(invitation.spaceKey!.toHex());
         navigate(`/${invitation.spaceKey!.toHex()}`);
       },
       onError: (err) => console.error(err)
@@ -65,7 +64,7 @@ export const SpaceList = () => {
 
   return (
     <>
-      <button id='open' onClick={() => setShow(true)}>
+      <button id='open' onClick={() => setShow(true)} data-testid='open-button'>
         ❯
       </button>
       <div id='spaces' className={cx(show && 'show')}>
@@ -80,8 +79,13 @@ export const SpaceList = () => {
           </button>
         </div>
         <div className='flex'>
-          <input onChange={(ev) => setInviteCode(ev.target.value)} placeholder='Invite Code' className='flex-grow' />
-          <button id='join' onClick={handleJoin}>
+          <input
+            onChange={(ev) => setInviteCode(ev.target.value)}
+            placeholder='Invite Code'
+            className='flex-grow'
+            data-testid='invitation-input'
+          />
+          <button id='join' onClick={handleJoin} data-testid='join-button'>
             Join
           </button>
         </div>

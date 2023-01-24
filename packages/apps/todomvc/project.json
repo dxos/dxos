@@ -25,6 +25,30 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/todomvc",
+        "outputPath": "tmp/mocha/packages/apps/todomvc",
+        "playwright": true,
+        "resultsPath": "test-results/packages/apps/todomvc",
+        "serve": "todomvc:serve-with-halo",
+        "serveOptions": {
+          "serveTarget": "preview"
+        },
+        "testPatterns": [
+          "packages/apps/todomvc/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/todomvc/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -46,6 +70,13 @@
         "packages/apps/todomvc/src/proto/gen"
       ]
     },
+    "preview": {
+      "executor": "@nrwl/web:file-server",
+      "options": {
+        "buildTarget": "todomvc:bundle",
+        "staticFilePath": "packages/apps/todomvc/out/todomvc"
+      }
+    },
     "serve": {
       "executor": "@nrwl/vite:dev-server",
       "options": {
@@ -53,22 +84,10 @@
       }
     },
     "serve-with-halo": {
-      "dependsOn": [
-        "^build",
-        "^bundle"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          {
-            "command": "nx serve halo-app"
-          },
-          {
-            "command": "nx serve todomvc"
-          }
-        ],
-        "parallel": true
-      }
+      "executor": "@dxos/serve-with-halo:run"
     }
-  }
+  },
+  "implicitDependencies": [
+    "serve-with-halo"
+  ]
 }
