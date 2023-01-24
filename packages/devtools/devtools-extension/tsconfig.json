@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-ui"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -26,6 +29,9 @@
     },
     {
       "path": "../../common/esbuild-plugins"
+    },
+    {
+      "path": "../../common/react-components"
     },
     {
       "path": "../../core/halo/credentials"
@@ -41,6 +47,9 @@
     },
     {
       "path": "../../deprecated/react-toolkit"
+    },
+    {
+      "path": "../../experimental/kai"
     },
     {
       "path": "../../sdk/client"
