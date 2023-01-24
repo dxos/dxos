@@ -17,6 +17,8 @@ import { TaskList } from '../TaskList';
 export const DashboardFrame: FC = () => {
   const { ref } = useResizeDetector();
 
+  // TODO(burdon): Create cards here.
+
   const cardStyles = 'flex shrink-0';
 
   return (
