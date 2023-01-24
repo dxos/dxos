@@ -18,8 +18,6 @@ import packageJson from './package.json';
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${packageJson.version}` : undefined;
 
-const pwa = false;
-
 /**
  * https://vitejs.dev/config
  */
@@ -70,7 +68,7 @@ export default defineConfig({
 
   // TODO(burdon): Document.
   build: {
-    outDir: 'out/kai',
+    outDir: process.env.PWA_ENABLE === 'true' ? 'out/kai' : 'out/kai-web',
     sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
