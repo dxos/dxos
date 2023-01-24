@@ -17,7 +17,7 @@ import kaiTranslations from './translations';
 
 import '../style.css';
 
-const useRegisterSW = () => {}; // TODO(burdon): Remove.
+const useRegisterSW: (args: any) => any = () => {}; // TODO(burdon): Remove.
 
 /**
  * Root component.
@@ -49,7 +49,8 @@ const Base: FC<{ initialState: AppState; children?: ReactNode }> = ({ initialSta
 };
 
 /**
- * Progressive Web App registration and notifications.
+ * Progressive web app registration and notifications.
+ * https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps
  */
 const PWA = () => {
   const {
@@ -57,7 +58,7 @@ const PWA = () => {
     needRefresh: [needRefresh, _setNeedRefresh],
     updateServiceWorker
   } = useRegisterSW({
-    onRegisterError: (err) => {
+    onRegisterError: (err: any) => {
       log.error(err);
     }
   });
