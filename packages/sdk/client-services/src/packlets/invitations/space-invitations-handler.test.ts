@@ -48,7 +48,7 @@ describe('services/space-invitations-handler', () => {
     await space.close();
   });
 
-  test.only('creates and accepts invitation with retry', async () => {
+  test('creates and accepts invitation with retry', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<PublicKey>();

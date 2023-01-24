@@ -65,6 +65,10 @@ export class SpaceStateMachine implements SpaceState {
   async process(credential: Credential, fromFeed: PublicKey): Promise<boolean> {
     if(credential.id) {
       if (this._processedCredentials.has(credential.id)) {
+        log.warn('duplicate credential', {
+          id: credential.id,
+          type: getCredentialAssertion(credential)['@type']
+        })
         return false;
       }
       this._processedCredentials.add(credential.id);

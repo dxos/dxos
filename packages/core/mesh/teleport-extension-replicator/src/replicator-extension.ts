@@ -220,6 +220,18 @@ export class ReplicatorExtension implements TeleportExtension {
       noise: false,
       encrypted: false
     });
+
+    // left for testing
+    if(false) {
+      feed.on('download', (index: number, data: any) => {
+        log('download', {
+          key: info.feedKey,
+          index,
+        })
+      })
+    }
+
+
     replicationStream.on('error', (err) => {
       if (
         err?.message === 'Writable stream closed prematurely' ||

@@ -86,11 +86,9 @@ export class Space {
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
-        if (!this._dataPipeline) {
-          return;
+        if (this._dataPipeline) {
+          await this._dataPipeline.addFeed(await feedProvider(info.key));
         }
-
-        await this._dataPipeline.addFeed(await feedProvider(info.key));
       }
 
       if (!info.key.equals(genesisFeed.key)) {
@@ -185,7 +183,9 @@ export class Space {
         this._dataPipeline = new Pipeline(start);
         this._dataPipeline.setWriteFeed(this._dataFeed);
         for (const feed of this._controlPipeline.spaceState.feeds.values()) {
-          await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
+          if (feed.assertion.designation === AdmittedFeed.Designation.DATA) {
+            await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
+          }
         }
 
         await this._dataPipeline.start();
