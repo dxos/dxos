@@ -23,7 +23,7 @@ browser.runtime.onConnect.addListener((port) => {
         log(`Forwarding message from panel to content on tab ${tabId}:`, message);
         port.postMessage(message);
       } else {
-        log.error((`Missing content port for tab ${tabId}`);
+        log.error(`Missing content port for tab ${tabId}`);
       }
     };
 
@@ -43,7 +43,7 @@ browser.runtime.onConnect.addListener((port) => {
         log(`Forwarding message from content to panel on tab ${tabId}:`, message);
         port.postMessage(message);
       } else {
-        log.error((`Missing panel port for tab ${tabId}`);
+        log.error(`Missing panel port for tab ${tabId}`);
       }
     };
 
