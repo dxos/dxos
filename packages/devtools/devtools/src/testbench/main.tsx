@@ -11,5 +11,4 @@ import '@dxosTheme';
 
 import '@dxos/kai/style.css';
 
-// TODO(burdon): Get debug from config.
 createRoot(document.getElementById('root')!).render(<App />);

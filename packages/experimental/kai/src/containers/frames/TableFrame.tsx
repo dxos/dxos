@@ -93,7 +93,7 @@ export const TableFrame = () => {
         </div>
       </div>
       {/* <div className='flex flex-1 overflow-hidden'> */}
-      <Table columns={type.columns} data={objects} />
+      <Table<EchoObject> columns={type.columns} data={objects} />
       {/* </div> */}
     </div>
   );

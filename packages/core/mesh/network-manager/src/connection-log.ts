@@ -34,7 +34,7 @@ export class ConnectionLog {
     return Array.from(this._swarms.values());
   }
 
-  swarmJoined(swarm: Swarm) {
+  joinedSwarm(swarm: Swarm) {
     const info: SwarmInfo = {
       id: swarm.instanceId,
       topic: swarm.topic,
@@ -95,7 +95,7 @@ export class ConnectionLog {
     });
   }
 
-  swarmLeft(swarm: Swarm) {
+  leftSwarm(swarm: Swarm) {
     this.getSwarmInfo(swarm.instanceId).isActive = false;
     this.update.emit();
   }

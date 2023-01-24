@@ -1,64 +1,43 @@
-const { mergeConfig } = require('vite');
+//
+// Copyright 2023 DXOS.org
+//
 
-const { dxosPlugin } = require('@dxos/vite-plugin');
-const { NodeModulesPlugin } = require('@dxos/esbuild-plugins');
+const { mergeConfig } = require('vite');
+const { resolve } = require('path');
+
+const { ThemePlugin } = require('@dxos/react-components/plugin');
 
 module.exports = {
-  stories: [
-    '../src/**/*.stories.mdx',
-    '../src/**/*.stories.@(js|jsx|ts|tsx)'
-  ],
+  stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-essentials',
-    '@storybook/addon-interactions'
+    '@storybook/addon-interactions',
+    'storybook-dark-mode'
   ],
   framework: {
     name: '@storybook/react-vite',
     options: {}
   },
-  viteFinal: async config => mergeConfig(config, {
-    optimizeDeps: {
-      include: [
-        '@dxos/async',
-        '@dxos/client',
-        '@dxos/client-services',
-        '@dxos/config',
-        '@dxos/debug',
-        '@dxos/devtools-mesh',
-        '@dxos/feed-store',
-        '@dxos/keys',
-        '@dxos/messaging',
-        '@dxos/messenger-model',
-        '@dxos/model-factory',
-        '@dxos/network-manager',
-        '@dxos/object-model',
-        '@dxos/protocols',
-        '@dxos/react-appkit',
-        '@dxos/react-async',
-        '@dxos/react-client',
-        '@dxos/react-components-deprecated',
-        '@dxos/react-registry-client',
-        '@dxos/react-toolkit',
-        '@dxos/registry-client',
-        '@dxos/text-model',
-        '@dxos/timeframe',
-        '@dxos/util'
-      ],
-      esbuildOptions: {
-        plugins: [
-          NodeModulesPlugin()
-        ]
-      }
-    },
-    build: {
-      commonjsOptions: {
+  viteFinal: async (config) =>
+    mergeConfig(config, {
+      optimizeDeps: {
+        force: true,
         include: [
-          /packages/,
-          /node_modules/
+          '@dxos/protocols',
+          '@dxos/protocols/proto/dxos/echo/model/object',
+          'storybook-dark-mode'
         ]
-      }
-    },
-    plugins: [dxosPlugin()]
-  })
+      },
+      build: {
+        commonjsOptions: {
+          include: [/packages/, /node_modules/]
+        }
+      },
+      plugins: [
+        ThemePlugin({
+          content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
+        })
+      ]
+    })
 };

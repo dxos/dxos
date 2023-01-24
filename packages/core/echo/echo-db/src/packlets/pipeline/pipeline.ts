@@ -90,13 +90,13 @@ export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
 
   // Inbound feed stream.
-  private readonly feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
+  private readonly _feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
     start: mapTimeframeToFeedIndexes(this._initialTimeframe),
     stallTimeout: 1000
   });
 
   // External state accessor.
-  private readonly _state: PipelineState = new PipelineState(this.feedSetIterator, this._timeframeClock);
+  private readonly _state: PipelineState = new PipelineState(this._feedSetIterator, this._timeframeClock);
 
   // Outbound feed writer.
   private _writer: FeedWriter<TypedMessage> | undefined;
@@ -107,7 +107,7 @@ export class Pipeline implements PipelineAccessor {
   constructor(
     private readonly _initialTimeframe: Timeframe = new Timeframe()
   ) {
-    this.feedSetIterator.stalled.on((iterator) => {
+    this._feedSetIterator.stalled.on((iterator) => {
       log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
     });
   }
@@ -121,8 +121,12 @@ export class Pipeline implements PipelineAccessor {
     return this._writer;
   }
 
+  getFeeds(): FeedWrapper<FeedMessage>[] {
+    return this._feedSetIterator.feeds;
+  }
+
   async addFeed(feed: FeedWrapper<FeedMessage>) {
-    await this.feedSetIterator.addFeed(feed);
+    await this._feedSetIterator.addFeed(feed);
   }
 
   setWriteFeed(feed: FeedWrapper<FeedMessage>) {
@@ -140,13 +144,13 @@ export class Pipeline implements PipelineAccessor {
 
   async start() {
     log('starting...', {});
-    await this.feedSetIterator.open();
+    await this._feedSetIterator.open();
     log('started');
   }
 
   async stop() {
     log('stopping...', {});
-    await this.feedSetIterator.close();
+    await this._feedSetIterator.close();
     log('stopped');
   }
 
@@ -158,7 +162,7 @@ export class Pipeline implements PipelineAccessor {
     assert(!this._isOpen, 'Pipeline is already being consumed.');
     this._isOpen = true;
 
-    for await (const block of this.feedSetIterator) {
+    for await (const block of this._feedSetIterator) {
       yield block;
 
       this._timeframeClock.updateTimeframe(PublicKey.from(block.feedKey), block.seq);
