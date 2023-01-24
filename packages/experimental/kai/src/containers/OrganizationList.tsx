@@ -40,14 +40,14 @@ export const OrganizationRow: FC<{ organization: Organization }> = withReactor((
       }
       header={
         <Input
-          className='w-full outline-0'
+          className='w-full p-1'
           spellCheck={false}
           value={organization.name}
           onChange={(value) => (organization.name = value)}
         />
       }
     >
-      <div className='ml-8 mb-1'>
+      <div className='ml-9 mb-1'>
         {organization.address && <div className='flex text-sm text-gray-800'>{address(organization.address)}</div>}
 
         {/* Contacts */}

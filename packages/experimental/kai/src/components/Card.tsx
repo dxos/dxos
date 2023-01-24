@@ -8,7 +8,7 @@ import { mx } from '@dxos/react-components';
 
 export const CardMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
   return (
-    <div className='flex w-full p-1 items-center bg-slate-200 rounded-t'>
+    <div className='flex w-full p-1 px-3 items-center bg-slate-200'>
       <h2>{title}</h2>
       <div className='flex-1' />
       {children}
