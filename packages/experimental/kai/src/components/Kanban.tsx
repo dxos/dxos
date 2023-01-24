@@ -8,7 +8,7 @@ import React, { FC } from 'react';
 import { EchoObject, id } from '@dxos/echo-schema';
 import { getSize } from '@dxos/react-components';
 
-import { Button } from '../';
+import { Button } from '../components';
 
 export type KanbanColumnDef = {
   id?: string;

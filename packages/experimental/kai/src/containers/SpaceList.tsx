@@ -26,9 +26,11 @@ export const SpaceList = () => {
           <div className={mx('mr-3', space.key.truncate() === currentSpaceKey && 'text-orange-500')}>
             <Planet className={getSize(6)} />
           </div>
+
           <div className='flex flex-1 font-mono cursor-pointer'>
             <Link to={createSpacePath(space.key, frame)}>{space.key.truncate()}</Link>
           </div>
+
           {space.key.truncate() === currentSpaceKey && (
             <div className='flex items-center'>
               <Link to={createSpacePath(space.key, FrameID.SETTINGS)}>

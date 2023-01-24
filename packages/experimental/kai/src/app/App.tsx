@@ -9,7 +9,7 @@ import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { AppStateProvider, BotsProvider, FramesProvider } from '../hooks';
+import { AppState, AppStateProvider, BotsProvider, FramesProvider } from '../hooks';
 import { Generator, schema } from '../proto';
 import { frames } from './Frames';
 import { Routes } from './Routes';
@@ -26,7 +26,6 @@ const clientProvider = async (demo: boolean) => {
 
   // Auto create if in demo mode.
   // TODO(burdon): Different modes (testing). ENV/Config?
-  // TODO(burdon): Auto invite/join if demo mode.
   // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
   // chrome.windows.create({ '/join', incognito: true });
   if (demo && !client.halo.profile) {
@@ -44,11 +43,11 @@ const clientProvider = async (demo: boolean) => {
 /**
  * Main app container with routes.
  */
-export const App: FC<{ debug?: boolean; demo?: boolean }> = ({ debug = false, demo = true }) => {
+export const App: FC<{ initialState: AppState }> = ({ initialState }) => {
   // TODO(burdon): Error boundary and indicator.
   return (
-    <ClientProvider client={() => clientProvider(demo)}>
-      <AppStateProvider value={{ debug, demo }}>
+    <ClientProvider client={() => clientProvider(initialState.demo ?? false)}>
+      <AppStateProvider value={initialState}>
         <BotsProvider>
           <FramesProvider frames={frames}>
             <HashRouter>

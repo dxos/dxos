@@ -16,16 +16,13 @@ import { TaskList } from '../TaskList';
 
 export const DashboardFrame: FC = () => {
   const { ref } = useResizeDetector();
-
-  // TODO(burdon): Create cards here.
-
   const cardStyles = 'flex shrink-0';
 
   return (
     <div
       ref={ref}
       className={mx(
-        'flex flex-col gap-2 overflow-x-hidden overflow-y-scroll p-4',
+        'flex flex-col h-full gap-2 overflow-x-hidden overflow-y-scroll p-4',
         'lg:p-2 lg:grid lg:gap-3 lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
       )}
     >
