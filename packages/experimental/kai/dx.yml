@@ -25,7 +25,3 @@ runtime:
         credential: dxos
     dxns:
       server: https://kube.dxos.org/.well-known/dx/registry
-
-  keys:
-    - name: openai
-      value: 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

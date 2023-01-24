@@ -11,8 +11,7 @@ import { HeadingWithActions, InvitationList, ProfileList } from '@dxos/react-app
 import { useMembers, useSpaceInvitations } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-components';
 
-import { createSpacePath } from '../app';
-import { FrameID, useSpace } from '../hooks';
+import { createSpacePath, FrameID, useSpace } from '../hooks';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from react-appkit.

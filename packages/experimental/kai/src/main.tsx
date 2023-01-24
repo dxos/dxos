@@ -7,9 +7,14 @@ import { createRoot } from 'react-dom/client';
 
 import '@dxosTheme';
 
+import { Root } from './Root';
+import { AppState } from './hooks';
+
 import '../style.css';
 
-// TODO(burdon): Must be at the top-level for vite.
-import { Root } from './Root';
+const initialState: AppState = {
+  demo: process.env.KAI_DEMO === 'true' || true,
+  debug: process.env.KAI_DEBUG === 'true'
+};
 
-createRoot(document.getElementById('root')!).render(<Root />);
+createRoot(document.getElementById('root')!).render(<Root initialState={initialState} />);
