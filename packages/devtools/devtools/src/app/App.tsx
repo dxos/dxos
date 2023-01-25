@@ -11,7 +11,7 @@ import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { DevtoolsContextProvider, useRemoteClient, useRoutes } from '../hooks';
 
-export const Routes = () => {
+const Routes = () => {
   return useRoutes();
 };
 
