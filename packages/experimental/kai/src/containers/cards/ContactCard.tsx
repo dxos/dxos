@@ -19,7 +19,7 @@ import { Contact, Organization } from '../../proto';
 
 // TODO(burdon): List events, orgs.
 export const ContactCard: FC<{ contact: Contact }> = ({ contact }) => {
-  const space = useSpace();
+  const space = useSpace(); // TODO(burdon): Factor out.
   const organizations = useQuery(space, Organization.filter()).filter((organization) =>
     organization.people.find((member) => member[id] === contact[id])
   );

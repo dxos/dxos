@@ -8,7 +8,7 @@ import { Config, Defaults, Dynamics } from '@dxos/config';
 import { Generator, schema } from '../proto';
 
 export const useClientProvider = () => {
-  return async (demo: boolean) => {
+  return async (dev: boolean) => {
     const config = new Config(await Dynamics(), Defaults());
     const client = new Client({
       config,
@@ -22,7 +22,7 @@ export const useClientProvider = () => {
     // TODO(burdon): Different modes (testing). ENV/Config?
     // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
     // chrome.windows.create({ '/join', incognito: true });
-    if (demo && !client.halo.profile) {
+    if (dev && !client.halo.profile) {
       await client.halo.createProfile();
       const space = await client.echo.createSpace();
 

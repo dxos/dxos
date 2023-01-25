@@ -45,6 +45,7 @@
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
     "chess.js": "^1.0.0-alpha.0",
+    "clipboard-copy": "^4.0.1",
     "date-fns": "^2.29.3",
     "leaflet": "^1.9.3",
     "openai": "^3.1.0",
