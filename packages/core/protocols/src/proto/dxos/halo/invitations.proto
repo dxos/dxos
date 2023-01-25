@@ -8,6 +8,7 @@ import "google/protobuf/empty.proto";
 
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
+import "dxos/echo/timeframe.proto";
 
 package dxos.halo.invitations;
 
@@ -73,6 +74,9 @@ message SpaceAdmissionRequest {
 message SpaceAdmissionCredentials {
   /// Credential of type `SpaceMember` that grants Guest's identity access to the space.
   dxos.halo.credentials.Credential credential = 1;
+
+  optional dxos.echo.timeframe.TimeframeVector control_timeframe = 2;
+  optional dxos.echo.timeframe.TimeframeVector data_timeframe = 3;
 }
 
 service SpaceHostService {
