@@ -77,6 +77,7 @@ export default defineConfig({
 
     chromeExtensionPlugin({ manifest })
 
+    // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
     /**
      * Bundle fonts.
      * https://fonts.google.com
