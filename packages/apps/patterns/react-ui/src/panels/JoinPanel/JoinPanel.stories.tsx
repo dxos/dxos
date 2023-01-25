@@ -7,7 +7,8 @@ import '@dxosTheme';
 import { StoryFn } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
-import { Client, Invitation, CancellableInvitationObservable, fromHost } from '@dxos/client';
+import { Client, Invitation, CancellableInvitationObservable } from '@dxos/client';
+import { TestBuilder } from '@dxos/client/testing';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
@@ -26,8 +27,9 @@ export const Default = {
     // TODO(wittjosiah): Factor out.
     (Story: StoryFn) => {
       const n = 2;
+      const testBuilder = new TestBuilder();
       const clients = useMemo(() => {
-        return [...Array(n)].map(() => new Client({ services: fromHost() }));
+        return [...Array(n)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
       }, []);
 
       const [invitation, setInvitation] = useState<CancellableInvitationObservable>();
