@@ -7,13 +7,13 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { CardMenu, Card, GraphComponent } from '../../components';
+import { TileMenu, Tile, GraphComponent } from '../../components';
 import { ContactList } from '../ContactList';
 import { OrganizationList } from '../OrganizationList';
 import { ProjectHierarchy } from '../ProjectHierarchy';
 import { TaskList } from '../TaskList';
 
-export const DashboardFrame: FC = () => {
+export const StackFrame: FC = () => {
   const { ref } = useResizeDetector();
   const cardStyles = 'flex shrink-0';
 
@@ -26,33 +26,33 @@ export const DashboardFrame: FC = () => {
       )}
     >
       <div className={mx(cardStyles)}>
-        <Card scrollbar header={<CardMenu title='Organizations' />}>
+        <Tile scrollbar header={<TileMenu title='Organizations' />}>
           <OrganizationList />
-        </Card>
+        </Tile>
       </div>
 
       <div className={mx(cardStyles)}>
-        <Card scrollbar header={<CardMenu title='Contacts' />}>
+        <Tile scrollbar header={<TileMenu title='Contacts' />}>
           <ContactList />
-        </Card>
+        </Tile>
       </div>
 
       <div className={mx(cardStyles)}>
-        <Card scrollbar header={<CardMenu title='Tasks' />}>
+        <Tile scrollbar header={<TileMenu title='Tasks' />}>
           <TaskList />
-        </Card>
+        </Tile>
       </div>
 
       <div className={mx(cardStyles)}>
-        <Card scrollbar header={<CardMenu title='Projects' />}>
+        <Tile scrollbar header={<TileMenu title='Projects' />}>
           <ProjectHierarchy />
-        </Card>
+        </Tile>
       </div>
 
       <div className={mx(cardStyles, 'col-span-2 hidden lg:flex')}>
-        <Card header={<CardMenu title='Explorer' />}>
+        <Tile header={<TileMenu title='Explorer' />}>
           <GraphComponent />
-        </Card>
+        </Tile>
       </div>
     </div>
   );

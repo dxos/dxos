@@ -3,7 +3,6 @@
 //
 
 export * from './Button';
-export * from './Card';
 export * from './CardRow';
 export * from './FileUploadDialog';
 export * from './FolderHierarchy';
@@ -17,3 +16,4 @@ export * from './Searchbar';
 export * from './Selector';
 export * from './SpaceList';
 export * from './Table';
+export * from './Tile';

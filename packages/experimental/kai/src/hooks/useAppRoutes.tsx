@@ -5,6 +5,7 @@
 import React from 'react';
 import { useRoutes } from 'react-router-dom';
 
+import { Invitation, InvitationEncoder } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { RequireIdentity } from '@dxos/react-appkit';
 
@@ -21,6 +22,9 @@ import {
 
 export const createSpacePath = (spaceKey: PublicKey, frame?: string) =>
   `/${spaceKey.truncate()}` + (frame ? `/${frame}` : '');
+
+export const createInvitationPath = (invitation: Invitation) =>
+  `/space/join?invitation=${InvitationEncoder.encode(invitation)}`;
 
 /**
  * Main app routes.
