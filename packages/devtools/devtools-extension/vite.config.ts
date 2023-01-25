@@ -20,12 +20,6 @@ const env = (value?: string) => (value ? `"${value}"` : undefined);
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
-  define: {
-    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),
-    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY),
-    'process.env.IPDATA_API_KEY': env(process.env.IPDATA_API_KEY)
-  },
   optimizeDeps: {
     force: true,
     include: [
@@ -56,6 +50,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
         panel: resolve(__dirname, 'panel.html')
+      },
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-router-dom', 'react-dom']
+        }
       }
     }
   },
