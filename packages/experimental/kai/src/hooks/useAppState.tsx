@@ -12,8 +12,8 @@ import React, { Context, Dispatch, SetStateAction, FC, ReactNode, createContext,
 export type AppState = {
   // Debug info.
   debug?: boolean;
-  // Auto-create data.
-  demo?: boolean;
+  // Dev mode (auto profile, simple invitations).
+  dev?: boolean;
   // UX state.
   showSidebar?: boolean;
 };

@@ -56,7 +56,7 @@ export const ManageSpacePage = () => {
             </Button>
             <Button
               variant='primary'
-              onClick={() => navigate(createSpacePath(space.key, FrameID.DASHBOARD))}
+              onClick={() => navigate(createSpacePath(space.key, FrameID.STACK))}
               className='flex gap-1 items-center'
             >
               <span>{t('back to space label')}</span>

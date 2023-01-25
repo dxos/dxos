@@ -8,14 +8,14 @@ import {
   CaretLeft,
   CaretRight,
   Compass,
+  Stack,
   Gear,
   Globe,
   Graph,
   Kanban,
   ListChecks,
   Sword,
-  Table,
-  Wall
+  Table
 } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -27,7 +27,7 @@ import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 import {
   CalendarFrame,
   ChessFrame,
-  DashboardFrame,
+  StackFrame,
   DocumentFrame,
   ExplorerFrame,
   KanbanFrame,
@@ -39,17 +39,36 @@ import {
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
 
+// prettier-ignore
 export const frames: FrameDef[] = [
-  { id: FrameID.SETTINGS, title: 'Settings', Icon: Gear, Component: ManageSpacePage, system: true },
-  { id: FrameID.REGISTRY, title: 'Registry', Icon: Globe, Component: RegistryFrame, system: true },
   {
-    id: FrameID.DASHBOARD,
-    title: 'Dashboard',
-    description: 'Customizable collection of data-bounds control.',
-    Icon: Wall,
-    Component: DashboardFrame
+    id: FrameID.SETTINGS,
+    title: 'Settings',
+    Icon: Gear,
+    Component: ManageSpacePage,
+    system: true
   },
-  { id: FrameID.TABLE, title: 'Table', description: 'Generic data browser.', Icon: Table, Component: TableFrame },
+  {
+    id: FrameID.REGISTRY,
+    title: 'Registry',
+    Icon: Globe,
+    Component: RegistryFrame,
+    system: true
+  },
+  {
+    id: FrameID.STACK,
+    title: 'Stack',
+    description: 'Configurable tiles.',
+    Icon: Stack,
+    Component: StackFrame
+  },
+  {
+    id: FrameID.TABLE,
+    title: 'Table',
+    description: 'Generic data browser.',
+    Icon: Table,
+    Component: TableFrame
+  },
   {
     id: FrameID.KANBAN,
     title: 'Kanban',
@@ -113,6 +132,7 @@ export const FrameSelector: FC = () => {
   const isOpen = displayState === 'show';
   const toggleSidebar = useTogglePanelSidebar();
 
+  // TODO(burdon): Make larger for mobile.
   return (
     <div
       className={mx(

@@ -7,7 +7,7 @@ import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction,
 export enum FrameID {
   REGISTRY = 'registry',
   SETTINGS = 'settings',
-  DASHBOARD = 'dashboard',
+  STACK = 'stack',
   TABLE = 'tables',
   KANBAN = 'kanban',
   TASKS = 'tasks',
@@ -18,13 +18,13 @@ export enum FrameID {
   CHESS = 'chess'
 }
 
-export const defaultFrameId = FrameID.DASHBOARD;
+export const defaultFrameId = FrameID.STACK;
 
 // prettier-ignore
 const activeFrames = [
   FrameID.SETTINGS,
   FrameID.REGISTRY,
-  FrameID.DASHBOARD,
+  FrameID.STACK,
   FrameID.TABLE,
   FrameID.TASKS,
   FrameID.KANBAN

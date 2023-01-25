@@ -22,7 +22,7 @@ export const App: FC<{ initialState: AppState }> = ({ initialState = {} }) => {
 
   // TODO(burdon): Error boundary and indicator.
   return (
-    <ClientProvider client={() => clientProvider(initialState.demo ?? false)}>
+    <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>
       <AppStateProvider value={initialState}>
         <BotsProvider>
           <FramesProvider frames={frames}>
