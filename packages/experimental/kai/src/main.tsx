@@ -13,7 +13,7 @@ import { AppState } from './hooks';
 import '../style.css';
 
 const initialState: AppState = {
-  demo: process.env.KAI_DEMO === 'true' || true,
+  dev: process.env.KAI_DEV === 'true',
   debug: process.env.KAI_DEBUG === 'true'
 };
 

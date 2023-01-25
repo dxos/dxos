@@ -17,7 +17,7 @@ import { Generator } from '../proto';
 
 export const RecoverIdentityPage = () => {
   const { t } = useTranslation('appkit');
-  const { demo } = useAppState();
+  const { dev } = useAppState();
   const client = useClient();
   const identity = useIdentity();
   const [seedphrase, setSeedphrase] = useState('');
@@ -38,7 +38,7 @@ export const RecoverIdentityPage = () => {
     try {
       await client.halo.createProfile({ seedphrase });
       const space = await client.echo.createSpace();
-      if (demo && !client.config.values.runtime?.client?.storage?.persistent) {
+      if (dev && !client.config.values.runtime?.client?.storage?.persistent) {
         await new Generator(space.experimental.db).generate();
       }
 
@@ -46,7 +46,7 @@ export const RecoverIdentityPage = () => {
     } catch {
       setPending(false);
     }
-  }, [seedphrase, redirect, demo]);
+  }, [seedphrase, redirect, dev]);
 
   useEffect(() => {
     if (identity) {
