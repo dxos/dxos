@@ -16,7 +16,10 @@ import { apiSidebar, telemetryPlugin } from './src';
 const env = (value?: string) => (value ? `'${value}'` : undefined);
 
 const DXOS_DEPS = [
+  '@dxos/client/testing',
   '@dxos/config',
+  '@dxos/keys',
+  '@dxos/log',
   '@dxos/protocols',
   '@dxos/protocols/proto/dxos/client',
   '@dxos/protocols/proto/dxos/client/services',
