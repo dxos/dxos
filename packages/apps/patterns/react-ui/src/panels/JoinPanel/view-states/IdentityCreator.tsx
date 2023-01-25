@@ -30,6 +30,7 @@ export const IdentityCreator = (viewStateProps: ViewStateProps) => {
   return (
     <ViewState {...viewStateProps}>
       <Input
+        disabled={disabled}
         label={<h2 className='font-system-medium text-sm'>{t('new identity input label')}</h2>}
         onChange={(value) => setDisplayName(value)}
         slots={{
@@ -43,6 +44,11 @@ export const IdentityCreator = (viewStateProps: ViewStateProps) => {
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>
+        <Button disabled={disabled} className='grow flex items-center gap-2 pli-2 order-2' onClick={handleCreate}>
+          <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
+          <span className='grow'>{t('continue label')}</span>
+          <CaretRight weight='bold' className={getSize(4)} />
+        </Button>
         <Button
           disabled={disabled}
           onClick={() => dispatch({ type: 'add identity' })}
@@ -50,11 +56,6 @@ export const IdentityCreator = (viewStateProps: ViewStateProps) => {
         >
           <CaretLeft weight='bold' className={getSize(4)} />
           <span>{t('back label')}</span>
-        </Button>
-        <Button disabled={disabled} className='grow flex items-center gap-2 pli-2' onClick={handleCreate}>
-          <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
-          <span className='grow'>{t('continue label')}</span>
-          <CaretRight weight='bold' className={getSize(4)} />
         </Button>
       </div>
     </ViewState>

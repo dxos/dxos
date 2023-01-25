@@ -68,6 +68,7 @@ export const Input = ({
     onChange: onInternalChange,
     inputSlot: {
       id: inputId,
+      disabled,
       ...inputSlot,
       ...(autoFocus && !hasIosKeyboard && { autoFocus: true })
     },

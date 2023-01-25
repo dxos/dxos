@@ -34,15 +34,7 @@ export const IdentityAdded = ({ identity, ...viewStateProps }: IdentityAddedProp
       <div className='flex gap-2'>
         <Button
           disabled={disabled}
-          onClick={() => dispatch({ type: 'deselect identity' })}
-          className='flex items-center gap-2 pis-2 pie-4'
-        >
-          <CaretLeft weight='bold' className={getSize(4)} />
-          <span>{t('deselect identity label')}</span>
-        </Button>
-        <Button
-          disabled={disabled}
-          className='grow flex items-center gap-2 pli-2'
+          className='grow flex items-center gap-2 pli-2 order-2'
           onClick={() => {
             console.log('Identity added');
             // dispatch({ type: 'added identity', identity })
@@ -52,6 +44,14 @@ export const IdentityAdded = ({ identity, ...viewStateProps }: IdentityAddedProp
           <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
           <span className='grow'>{t('continue label')}</span>
           <CaretRight weight='bold' className={getSize(4)} />
+        </Button>
+        <Button
+          disabled={disabled}
+          onClick={() => dispatch({ type: 'deselect identity' })}
+          className='flex items-center gap-2 pis-2 pie-4'
+        >
+          <CaretLeft weight='bold' className={getSize(4)} />
+          <span>{t('deselect identity label')}</span>
         </Button>
       </div>
     </ViewState>
