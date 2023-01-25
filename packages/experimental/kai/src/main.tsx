@@ -12,9 +12,11 @@ import { AppState } from './hooks';
 
 import '../style.css';
 
+const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
+
 const initialState: AppState = {
-  dev: process.env.KAI_DEV === 'true',
-  debug: process.env.KAI_DEBUG === 'true'
+  dev: bool(process.env.KAI_DEV),
+  debug: bool(process.env.KAI_DEBUG)
 };
 
 createRoot(document.getElementById('root')!).render(<Root initialState={initialState} />);

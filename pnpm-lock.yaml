@@ -2069,7 +2069,7 @@ importers:
       debug: ^4.3.3
       lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
-      mobile-detect: ~1.4.5
+      mobile-detect: ^1.4.5
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
@@ -2956,6 +2956,7 @@ importers:
       date-fns: ^2.29.3
       faker: ^5.5.3
       leaflet: ^1.9.3
+      mobile-detect: ^1.4.5
       openai: ^3.1.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
@@ -3008,6 +3009,7 @@ importers:
       clipboard-copy: 4.0.1
       date-fns: 2.29.3
       leaflet: 1.9.3
+      mobile-detect: 1.4.5
       openai: 3.1.0
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
@@ -3090,7 +3092,7 @@ importers:
       faker: ^5.5.3
       immutability-helper: ^3.0.2
       it-all: 1.0.6
-      mobile-detect: ~1.4.5
+      mobile-detect: ^1.4.5
       react: ^18.2.0
       react-dom: ^18.2.0
       robotjs: ~0.6.0

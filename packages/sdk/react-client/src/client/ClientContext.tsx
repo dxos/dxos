@@ -86,7 +86,6 @@ export const ClientProvider = ({
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
   const [status, setStatus] = useState<Status>();
   const [error, setError] = useState();
-
   if (error) {
     throw error;
   }
