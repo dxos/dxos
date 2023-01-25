@@ -21,11 +21,13 @@ describe('Basic test', () => {
   });
 
   describe('Default space', () => {
-    test('demo loads', async () => {
-      expect(await host.dashboardIsVisible()).to.be.true;
+    test('app loads', async () => {
+      await host.createIdentity('host');
+      expect(await host.stackIsVisible()).to.be.true;
     });
 
     test('invite guest', async () => {
+      await guest.createIdentity('guest');
       const invitationCode = await host.shareSpace();
       const [authenticationCode] = await Promise.all([host.getAuthenticationCode(), guest.joinSpace(invitationCode)]);
       await guest.authenticate(authenticationCode);

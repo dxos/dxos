@@ -5,7 +5,7 @@
 import type { Context as MochaContext } from 'mocha';
 import type { ConsoleMessage, Page } from 'playwright';
 
-import { synchronized, Trigger } from '@dxos/async';
+import { sleep, synchronized, Trigger } from '@dxos/async';
 import { setupPage } from '@dxos/test';
 
 // TODO(wittjosiah): Get this from executor.
@@ -27,22 +27,33 @@ export class AppManager {
     return url.split('/').find((part) => part.includes('...'));
   }
 
-  async dashboardIsVisible() {
+  async stackIsVisible() {
     await this._init();
 
     return (
-      (await this.page.locator('a:has-text("Dashboard")').isVisible()) &&
-      (await this.page.locator('h2:text("Contacts")').isVisible())
+      (await this.page.isVisible('a:has-text("Stack")')) &&
+      (await this.page.isVisible('h2:text("Organizations")')) &&
+      (await this.page.isVisible('h2:text("Contacts")')) &&
+      (await this.page.isVisible('h2:text("Tasks")')) &&
+      (await this.page.isVisible('h2:text("Projects")'))
     );
   }
 
   // Actions
 
+  async createIdentity(name: string) {
+    await this._init();
+    await this.page.click('data-testid=create-identity-button');
+    await this.page.keyboard.type(name);
+    await this.page.keyboard.press('Enter');
+    await sleep(500); // Allow time for redirect.
+  }
+
   async shareSpace() {
     await this._init();
     this._invitationCode = new Trigger<string>();
-    await this.page.locator('data-testid=space-settings').click();
-    await this.page.locator('data-testid=create-invitation-button').click();
+    await this.page.click('data-testid=space-settings');
+    await this.page.click('data-testid=create-invitation-button');
     return await this._invitationCode.wait();
   }
 
