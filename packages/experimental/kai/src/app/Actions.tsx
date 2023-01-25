@@ -60,10 +60,9 @@ export const Actions = () => {
 
   const handleReset = async () => {
     try {
-      // TODO(burdon): Fails.
+      // TODO(mykola): Client is not re-entrant after reset.
       await client.reset();
     } finally {
-      // TODO(mykola): Client is not re-entrant after reset.
       location.reload();
     }
   };
