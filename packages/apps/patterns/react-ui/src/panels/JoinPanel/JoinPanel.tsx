@@ -18,6 +18,8 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
 
   const availableIdentities = identity ? [identity] : [];
 
+  console.log('[availableIdentities]', availableIdentities);
+
   const reducer = (state: JoinState, action: JoinAction) => {
     const nextState = { ...state };
     switch (action.type) {

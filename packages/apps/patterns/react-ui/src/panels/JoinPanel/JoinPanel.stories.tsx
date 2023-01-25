@@ -38,6 +38,8 @@ export const Default = {
         await Promise.all(clients.map((client) => client.initialize()));
         log('[initialized]');
 
+        const _profile = await clients[0].halo.createProfile({ displayName: 'Os Mutantes' });
+
         const space = await clients[0].echo.createSpace();
         log('[space created]', space);
         await space?.setProperty('title', 'Q3 2022 Planning');

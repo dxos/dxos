@@ -32,7 +32,7 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
       <h2 className='font-system-medium text-sm'>{t('identity selector title')}</h2>
       <RadioGroup.Root
         disabled={disabled}
-        value={activeIdentity.identityKey.toHex()}
+        value={activeIdentity?.identityKey.toHex()}
         onValueChange={onValueChange}
         className='overflow-y-auto grow shrink min-bs-10 pli-1 -mli-1'
         aria-label={t('identity radio group title')}
