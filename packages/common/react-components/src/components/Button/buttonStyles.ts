@@ -9,7 +9,7 @@ import { ButtonProps } from './ButtonProps';
 
 export const primaryAppButtonColors = 'bg-primary-600 text-white hover:bg-primary-650';
 export const defaultAppButtonColors = 'bg-white text-neutral-900 dark:bg-neutral-750 dark:text-neutral-50';
-export const defaultOsButtonColors = 'bg-white/50 text-neutral-900 dark:bg-neutral-800/50 dark:text-neutral-50';
+export const defaultOsButtonColors = 'bg-white/50 text-neutral-900 dark:bg-neutral-750/50 dark:text-neutral-50';
 export const ghostAppButtonColors = '';
 
 export const buttonStyles = (

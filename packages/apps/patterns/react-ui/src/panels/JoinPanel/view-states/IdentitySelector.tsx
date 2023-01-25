@@ -8,15 +8,17 @@ import React, { useCallback, useState } from 'react';
 
 import { Avatar, Button, defaultFocus, getSize, mx, useTranslation } from '@dxos/react-components';
 
-import { JoinDispatch, Profile } from '../JoinPanelProps';
+import { Profile } from '../JoinPanelProps';
 import { ViewState, ViewStateProps } from './ViewState';
 
 export interface IdentitySelectorProps extends ViewStateProps {
-  dispatch: JoinDispatch;
   availableIdentities: Profile[];
 }
 
-export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStateProps }: IdentitySelectorProps) => {
+export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: IdentitySelectorProps) => {
+  const { dispatch } = viewStateProps;
+  const disabled = !viewStateProps.active;
+
   const { t } = useTranslation('os');
   const [activeIdentity, setActiveIdentity] = useState(availableIdentities[0]);
   const onValueChange = useCallback(
@@ -26,7 +28,7 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
       ),
     [availableIdentities]
   );
-  const disabled = !viewStateProps.active;
+
   return (
     <ViewState {...viewStateProps}>
       <h2 className='font-system-medium text-sm'>{t('identity selector title')}</h2>
@@ -43,7 +45,7 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
           const inputId = `identitySelector__item--${hex}`;
           const labelId = `identitySelector__itemLabel--${hex}`;
           return (
-            <div key={hex} className='flex items-center mbe-2'>
+            <label htmlFor={inputId} key={hex} className='flex items-center mbe-2 gap-2'>
               <RadioGroup.Item
                 id={inputId}
                 aria-labelledby={labelId}
@@ -60,11 +62,9 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
                   <div className='w-1.5 h-1.5 rounded-full bg-white' />
                 </RadioGroup.Indicator>
               </RadioGroup.Item>
-              <div className='pis-1 block text-base grow cursor-pointer flex items-center gap-1'>
-                <Avatar fallbackValue={hex} labelId={labelId} variant='circle' />
-                <span id={labelId}>{displayName}</span>
-              </div>
-            </div>
+              <Avatar fallbackValue={hex} labelId={labelId} variant='circle' />
+              <span id={labelId}>{displayName}</span>
+            </label>
           );
         })}
       </RadioGroup.Root>

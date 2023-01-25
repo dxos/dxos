@@ -10,7 +10,7 @@ import { mx, ThemeContext, useId } from '@dxos/react-components';
 import { defaultSurface } from '../../styles';
 import { JoinHeading } from './JoinHeading';
 import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
-import { AdditionMethodSelector, IdentitySelector } from './view-states';
+import { AdditionMethodSelector, IdentitySelector, IdentityCreator, IdentityAdded } from './view-states';
 
 export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
   const titleId = useId('joinTitle');
@@ -18,13 +18,19 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
 
   const availableIdentities = identity ? [identity] : [];
 
-  console.log('[availableIdentities]', availableIdentities);
-
   const reducer = (state: JoinState, action: JoinAction) => {
     const nextState = { ...state };
     switch (action.type) {
+      case 'added identity':
+        nextState.activeView = 'identity added';
+        nextState.selectedIdentity = action.identity;
+        break;
       case 'add identity':
         nextState.activeView = 'addition method selector';
+        break;
+      case 'select addition method':
+        nextState.activeView = 'create identity init';
+        nextState.additionMethod = action.method;
         break;
       case 'select identity':
         nextState.selectedIdentity = action.identity;
@@ -50,7 +56,11 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
 
   useEffect(() => {
     // TODO (thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
-    const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${joinState.activeView}"]`);
+    const attrValue =
+      joinState.activeView === 'create identity init'
+        ? `${joinState.activeView}; ${joinState.additionMethod}`
+        : joinState.activeView;
+    const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${attrValue}"]`);
     if ($nextAutofocus) {
       $nextAutofocus.focus();
     }
@@ -67,12 +77,26 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
           <div role='none' className='is-full max-is-[320px]'>
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className={mx(defaultSurface, 'is-full overflow-hidden rounded-be-md p-0')}>
-              <div role='none' className='flex is-[200%]' aria-live='polite'>
+              <div role='none' className='flex is-[400%]' aria-live='polite'>
                 <IdentitySelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
                 />
                 <AdditionMethodSelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'addition method selector' }}
+                />
+                <IdentityCreator
+                  {...{
+                    dispatch,
+                    active:
+                      joinState.activeView === 'create identity init' && joinState.additionMethod === 'create identity'
+                  }}
+                />
+                <IdentityAdded
+                  {...{
+                    dispatch,
+                    identity: joinState.selectedIdentity,
+                    active: joinState.activeView === 'identity added'
+                  }}
                 />
               </div>
             </div>

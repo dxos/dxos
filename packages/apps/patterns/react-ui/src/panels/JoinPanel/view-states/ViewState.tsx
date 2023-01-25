@@ -6,11 +6,14 @@ import React, { ComponentProps } from 'react';
 
 import { mx } from '@dxos/react-components';
 
+import { JoinDispatch } from '../JoinPanelProps';
+
 export interface ViewStateProps extends ComponentProps<'div'> {
   active: boolean;
+  dispatch: JoinDispatch;
 }
 
-export const ViewState = ({ active, children, className, ...props }: ViewStateProps) => {
+export const ViewState = ({ active, children, className, dispatch, ...props }: ViewStateProps) => {
   // note (thure): reserve `order-1` and `order-3` for outgoing steps in different directions
   return (
     <div

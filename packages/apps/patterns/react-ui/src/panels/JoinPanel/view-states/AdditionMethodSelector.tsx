@@ -7,21 +7,19 @@ import React from 'react';
 
 import { Button, CompoundButton, getSize, mx, useTranslation } from '@dxos/react-components';
 
-import { JoinDispatch, Profile } from '../JoinPanelProps';
+import { Profile } from '../JoinPanelProps';
 import { ViewState, ViewStateProps } from './ViewState';
 
 export interface AdditionMethodSelectorProps extends ViewStateProps {
-  dispatch: JoinDispatch;
   availableIdentities: Profile[];
 }
 
-export const AdditionMethodSelector = ({
-  dispatch,
-  availableIdentities,
-  ...viewStateProps
-}: AdditionMethodSelectorProps) => {
+export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps }: AdditionMethodSelectorProps) => {
   const disabled = !viewStateProps.active;
+  const { dispatch } = viewStateProps;
+
   const { t } = useTranslation('os');
+
   return (
     <ViewState {...viewStateProps}>
       <h2 className='font-system-medium text-sm'>{t('addition method selector title')}</h2>
@@ -55,13 +53,14 @@ export const AdditionMethodSelector = ({
           {t('recover identity label')}
         </CompoundButton>
       </div>
-      {availableIdentities.length > 0 && (
-        <Button disabled={disabled} onClick={() => dispatch({ type: 'deselect identity' })}>
-          <CaretLeft className={getSize(4)} weight='bold' />
-          <span className='grow'>{t('deselect identity label')}</span>
-          <CaretRight className={mx(getSize(4), 'invisible')} weight='bold' />
-        </Button>
-      )}
+      <Button
+        disabled={disabled || availableIdentities.length < 1}
+        onClick={() => dispatch({ type: 'deselect identity' })}
+      >
+        <CaretLeft className={getSize(4)} weight='bold' />
+        <span className='grow'>{t('deselect identity label')}</span>
+        <CaretRight className={mx(getSize(4), 'invisible')} weight='bold' />
+      </Button>
     </ViewState>
   );
 };
