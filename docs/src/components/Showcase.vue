@@ -4,6 +4,7 @@
     <ClientOnly>
       <RenderReactDemo
         :demo="demo"
+        <!-- TODO(wittjosiah): CodeSandbox not respecting patch-package from api. -->
         :fork="false"
       />
     </ClientOnly>
