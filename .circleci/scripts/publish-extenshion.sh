@@ -6,7 +6,7 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 ROOT=$(git rev-parse --show-toplevel)
 PACKAGE=${PWD##*/}
 PACKAGE_CAPS=${PACKAGE^^}
-PACKAGE_ENV=DEVTOOLS_EXTENSION
+PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
 eval "CLIENT_ID=$"${PACKAGE_ENV}_CLIENT_ID""
 eval "CLIENT_SECRET=$"${PACKAGE_ENV}_CLIENT_SECRET""
