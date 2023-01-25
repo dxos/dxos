@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentProps, ComponentPropsWithoutRef } from 'react';
+import React, { ComponentProps, ComponentPropsWithoutRef, useMemo } from 'react';
 
-import type { Profile } from '@dxos/client';
-import { mx, useTranslation, Trans, Avatar, useId } from '@dxos/react-components';
+import type { CancellableInvitationObservable, Profile } from '@dxos/client';
+import { Invitation } from '@dxos/client';
+import { useInvitationStatus } from '@dxos/react-client';
+import { mx, useTranslation, Trans, Avatar, useId, getSize, strongShimmer } from '@dxos/react-components';
 
 import { defaultSurface, subduedSurface } from '../../../styles';
 import { JoinDispatch } from '../JoinPanelProps';
@@ -13,8 +15,28 @@ import { JoinDispatch } from '../JoinPanelProps';
 export interface ViewStateProps extends ComponentProps<'div'> {
   active: boolean;
   dispatch: JoinDispatch;
-  selectedIdentity?: Partial<Profile>;
+  selectedIdentity?: true | Profile;
+  activeInvitation?: true | CancellableInvitationObservable;
 }
+
+const pip = mx('rounded-full flex-none', getSize(2));
+const stripe = mx('rounded-full grow', getSize(2));
+const inactiveColor = 'bg-neutral-100 dark:bg-neutral-600';
+const activeColor = 'bg-primary-500 dark:bg-primary-400';
+const successColor = 'bg-success-500 dark:bg-success-400';
+const errorColor = 'bg-error-500 dark:bg-error-400';
+const cancelledColor = 'bg-warning-500 dark:bg-warning-400';
+
+const statusValueMap = new Map<Invitation.State, number>([
+  [Invitation.State.ERROR, -3],
+  [Invitation.State.TIMEOUT, -2],
+  [Invitation.State.CANCELLED, -1],
+  [Invitation.State.INIT, 0],
+  [Invitation.State.CONNECTING, 1],
+  [Invitation.State.CONNECTED, 2],
+  [Invitation.State.AUTHENTICATING, 3],
+  [Invitation.State.SUCCESS, 4]
+]);
 
 export const ViewStateHeading = ({ children, className, ...props }: ComponentPropsWithoutRef<'h2'>) => {
   return (
@@ -24,7 +46,122 @@ export const ViewStateHeading = ({ children, className, ...props }: ComponentPro
   );
 };
 
-export const ViewState = ({ active, children, className, dispatch, selectedIdentity, ...props }: ViewStateProps) => {
+const PureViewStateInvitation = ({
+  halted,
+  cursor,
+  label,
+  resolvedColor
+}: {
+  halted?: boolean;
+  cursor: number;
+  label: string;
+  resolvedColor: string;
+}) => {
+  return (
+    <div role='none' className={mx(defaultSurface, 'p-2')}>
+      <div role='status' aria-label={label} className={'flex gap-2 items-center'}>
+        <div role='none' className={mx(pip, 'relative')}>
+          <div
+            role='none'
+            className={mx(pip, 'absolute', !halted && cursor === 0 ? 'animate-ping block' : 'hidden', activeColor)}
+          />
+          <div
+            role='none'
+            className={mx(
+              pip,
+              'relative',
+              cursor === 0 ? (halted ? resolvedColor : activeColor) : cursor > 0 ? resolvedColor : inactiveColor
+            )}
+          />
+        </div>
+        <div
+          role='none'
+          className={mx(
+            stripe,
+            !halted && cursor === 1 && strongShimmer,
+            cursor === 1 ? (halted ? resolvedColor : activeColor) : cursor > 1 ? resolvedColor : inactiveColor
+          )}
+        />
+        <div role='none' className={mx(pip, 'relative')}>
+          <div
+            role='none'
+            className={mx(pip, 'absolute', !halted && cursor === 2 ? 'animate-ping block' : 'hidden', activeColor)}
+          />
+          <div
+            role='none'
+            className={mx(
+              pip,
+              'relative',
+              cursor === 2 ? (halted ? resolvedColor : activeColor) : cursor > 2 ? resolvedColor : inactiveColor
+            )}
+          />
+        </div>
+        <div
+          role='none'
+          className={mx(
+            stripe,
+            !halted && cursor === 3 && strongShimmer,
+            cursor === 3 ? activeColor : cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor
+          )}
+        />
+        <div role='none' className={mx(pip, cursor >= 4 ? resolvedColor : inactiveColor)} />
+      </div>
+    </div>
+  );
+};
+
+const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: CancellableInvitationObservable }) => {
+  const { t } = useTranslation('os');
+  const { status, haltedAt } = useInvitationStatus(activeInvitation);
+
+  const halted =
+    status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT || status === Invitation.State.ERROR;
+
+  const cursor = statusValueMap.get(halted ? haltedAt! : status)!;
+
+  const resolvedColor =
+    status === Invitation.State.ERROR
+      ? errorColor
+      : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
+      ? cancelledColor
+      : successColor;
+
+  const statusLabelMap = useMemo(
+    () =>
+      new Map<Invitation.State, string>([
+        [Invitation.State.ERROR, t('error status label')],
+        [Invitation.State.TIMEOUT, t('timeout status label')],
+        [Invitation.State.CANCELLED, t('cancelled status label')],
+        [Invitation.State.INIT, t('init status label')],
+        [Invitation.State.CONNECTING, t('connecting status label')],
+        [Invitation.State.CONNECTED, t('connected status label')],
+        [Invitation.State.AUTHENTICATING, t('authenticating status label')],
+        [Invitation.State.SUCCESS, t('success status label')]
+      ]),
+    [t]
+  );
+
+  return (
+    <PureViewStateInvitation
+      {...{
+        label: statusLabelMap.get(status)!,
+        resolvedColor,
+        cursor,
+        halted
+      }}
+    />
+  );
+};
+
+export const ViewState = ({
+  active,
+  children,
+  className,
+  dispatch,
+  selectedIdentity,
+  activeInvitation,
+  ...props
+}: ViewStateProps) => {
   // note (thure): reserve `order-1` and `order-3` for outgoing steps in different directions
   const { t } = useTranslation('os');
   const identityLabel = useId('selectedIdentityLabel');
@@ -37,7 +174,7 @@ export const ViewState = ({ active, children, className, dispatch, selectedIdent
       className={mx('is-[50%] flex flex-col', active ? 'order-2' : 'order-4', className)}
     >
       {selectedIdentity && (
-        <div className={mx(subduedSurface, 'flex-none flex items-center gap-1 pli-2 pbe-1.5')}>
+        <div role='none' className={mx(subduedSurface, 'flex-none flex items-center gap-1 pli-2 pbe-1.5')}>
           <Trans
             {...{
               defaults: t('join space as identity heading'),
@@ -45,7 +182,7 @@ export const ViewState = ({ active, children, className, dispatch, selectedIdent
                 icon: (
                   <Avatar
                     size={4}
-                    fallbackValue={selectedIdentity?.identityKey?.toHex() ?? ''}
+                    fallbackValue={selectedIdentity === true ? '' : selectedIdentity.identityKey.toHex()}
                     labelId={identityLabel}
                   />
                 ),
@@ -53,12 +190,23 @@ export const ViewState = ({ active, children, className, dispatch, selectedIdent
                 part: <span role='none' className='flex items-center gap-1 leading-none' />
               },
               values: {
-                labelValue: selectedIdentity.displayName ?? selectedIdentity.identityKey?.truncate() ?? ''
+                labelValue:
+                  selectedIdentity === true
+                    ? ' '
+                    : selectedIdentity.displayName ?? selectedIdentity.identityKey.truncate()
               }
             }}
           />
         </div>
       )}
+      {activeInvitation &&
+        (activeInvitation === true ? (
+          <PureViewStateInvitation
+            {...{ halted: false, status: Invitation.State.INIT, label: ' ', cursor: 0, resolvedColor: inactiveColor }}
+          />
+        ) : (
+          <ViewStateInvitationStatus {...{ activeInvitation }} />
+        ))}
       <div role='region' className={mx(defaultSurface, 'rounded-be-md grow shrink-0 flex flex-col gap-1 p-2')}>
         {children}
       </div>
