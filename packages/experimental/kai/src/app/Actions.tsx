@@ -59,11 +59,12 @@ export const Actions = () => {
   };
 
   const handleReset = async () => {
-    await client.reset();
-    await client.initialize();
-
-    // TODO(mykola): Client is not re-entrant after reset.
-    location.reload();
+    try {
+      // TODO(mykola): Client is not re-entrant after reset.
+      await client.reset();
+    } finally {
+      location.reload();
+    }
   };
 
   const handleToggleConnection = async () => {
