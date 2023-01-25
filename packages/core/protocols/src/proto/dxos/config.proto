@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/struct.proto";
 
 package dxos.config;
 
@@ -43,6 +44,8 @@ message Module {
     optional string outdir = 2;
     optional string version = 3;
     optional string tag = 4;
+
+    optional google.protobuf.Struct env = 10;
   }
 
   // TODO(burdon): Requires publicKey.
