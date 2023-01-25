@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { FC, PropsWithChildren } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { appkitTranslations, Fallback } from '@dxos/react-appkit';
@@ -12,7 +12,6 @@ import { ThemeProvider } from '@dxos/react-components';
 import { AppState, AppStateProvider, BotsProvider, FramesProvider, useAppRoutes, useClientProvider } from '../hooks';
 import kaiTranslations from '../translations';
 import { frames } from './Frames';
-import { PWA } from './PWA';
 
 const Routes = () => {
   return useAppRoutes();
@@ -21,7 +20,7 @@ const Routes = () => {
 /**
  * Main app container with routes.
  */
-export const App: FC<{ initialState: AppState }> = ({ initialState = {} }) => {
+export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider();
 
   // TODO(burdon): Error boundary and indicator.
@@ -37,7 +36,7 @@ export const App: FC<{ initialState: AppState }> = ({ initialState = {} }) => {
             <FramesProvider frames={frames}>
               <HashRouter>
                 <Routes />
-                {initialState.pwa && <PWA />}
+                {children}
               </HashRouter>
             </FramesProvider>
           </BotsProvider>

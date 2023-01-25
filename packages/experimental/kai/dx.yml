@@ -9,7 +9,7 @@ package:
       build:
         command: pnpm -w nx bundle kai
         env:
-          PWA_ENABLE: true
+          KAI_PWA: true
       # TODO(wittjosiah): Currently breaking publish to dev kube.
       # tunnel: true
 
@@ -18,7 +18,9 @@ package:
       displayName: kai-web
       description: Kai Demo.
       build:
-        command: pnpm -w nx bundle kai
+        command: pnpm -w nx bundle kai --outputPath packages/experimental/kai/out/kai-web
+        env:
+          KAI_DEV: true
 
 runtime:
   client:

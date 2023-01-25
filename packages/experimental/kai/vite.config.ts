@@ -69,7 +69,6 @@ export default defineConfig({
 
   // TODO(burdon): Document.
   build: {
-    outDir: process.env.PWA_ENABLE === 'true' ? 'out/kai' : 'out/kai-web',
     sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
