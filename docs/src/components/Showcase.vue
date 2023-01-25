@@ -2,9 +2,9 @@
   <!-- TODO(wittjosiah): Move suspense to app-level? -->
   <Suspense>
     <ClientOnly>
+      <!-- TODO(wittjosiah): CodeSandbox not respecting patch-package from api. -->
       <RenderReactDemo
         :demo="demo"
-        <!-- TODO(wittjosiah): CodeSandbox not respecting patch-package from api. -->
         :fork="false"
       />
     </ClientOnly>
