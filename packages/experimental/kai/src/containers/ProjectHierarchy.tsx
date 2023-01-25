@@ -33,7 +33,7 @@ export const mapProjectToItem = (project: Project): FolderHierarchyItem => ({
 });
 
 export const ProjectHierarchy: FC<{ header?: boolean }> = withReactor(({ header = false }) => {
-  const space = useSpace();
+  const space = useSpace(); // TODO(burdon): Factor out.
   // TODO(burdon): useQuery should not return undefined.
   // TODO(burdon): Need subscription for children.
   const projects = useQuery(space, Project.filter()) ?? [];

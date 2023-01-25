@@ -5,58 +5,44 @@
 import React, { FC } from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { Client, fromHost, fromIFrame } from '@dxos/client';
-import { Config, Defaults, Dynamics } from '@dxos/config';
+import { appkitTranslations, Fallback } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
+import { ThemeProvider } from '@dxos/react-components';
 
-import { AppStateProvider, BotsProvider, FramesProvider } from '../hooks';
-import { Generator, schema } from '../proto';
+import { AppState, AppStateProvider, BotsProvider, FramesProvider, useAppRoutes, useClientProvider } from '../hooks';
+import kaiTranslations from '../translations';
 import { frames } from './Frames';
-import { Routes } from './Routes';
+import { PWA } from './PWA';
 
-const clientProvider = async (demo: boolean) => {
-  const config = new Config(await Dynamics(), Defaults());
-  const client = new Client({
-    config,
-    services: process.env.DX_VAULT === 'true' ? fromIFrame(config) : fromHost(config)
-  });
-
-  client.echo.dbRouter.setSchema(schema);
-  await client.initialize();
-
-  // Auto create if in demo mode.
-  // TODO(burdon): Different modes (testing). ENV/Config?
-  // TODO(burdon): Auto invite/join if demo mode.
-  // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
-  // chrome.windows.create({ '/join', incognito: true });
-  if (demo && !client.halo.profile) {
-    await client.halo.createProfile();
-    const space = await client.echo.createSpace();
-
-    // TODO(burdon): Create context.
-    const generator = new Generator(space.experimental.db);
-    await generator.generate();
-  }
-
-  return client;
+const Routes = () => {
+  return useAppRoutes();
 };
 
 /**
  * Main app container with routes.
  */
-export const App: FC<{ debug?: boolean; demo?: boolean }> = ({ debug = false, demo = true }) => {
+export const App: FC<{ initialState: AppState }> = ({ initialState = {} }) => {
+  const clientProvider = useClientProvider();
+
   // TODO(burdon): Error boundary and indicator.
   return (
-    <ClientProvider client={() => clientProvider(demo)}>
-      <AppStateProvider value={{ debug, demo }}>
-        <BotsProvider>
-          <FramesProvider frames={frames}>
-            <HashRouter>
-              <Routes />
-            </HashRouter>
-          </FramesProvider>
-        </BotsProvider>
-      </AppStateProvider>
-    </ClientProvider>
+    <ThemeProvider
+      appNs='kai'
+      resourceExtensions={[appkitTranslations, kaiTranslations]}
+      fallback={<Fallback message='Loading...' />}
+    >
+      <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>
+        <AppStateProvider value={initialState}>
+          <BotsProvider>
+            <FramesProvider frames={frames}>
+              <HashRouter>
+                <Routes />
+                {initialState.pwa && <PWA />}
+              </HashRouter>
+            </FramesProvider>
+          </BotsProvider>
+        </AppStateProvider>
+      </ClientProvider>
+    </ThemeProvider>
   );
 };

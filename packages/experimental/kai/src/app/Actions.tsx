@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import MobileDetect from 'mobile-detect';
 import { DownloadSimple, UploadSimple, Gear, Robot, Trash, WifiHigh, WifiSlash } from 'phosphor-react';
 import React, { FC, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,8 +13,10 @@ import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { FileUploadDialog } from '../components';
-import { useFileDownload, useGenerator, useSpace } from '../hooks';
-import { createSpacePath } from './Routes';
+import { useFileDownload, useGenerator, useSpace, createSpacePath } from '../hooks';
+
+// TODO(burdon): Factor out.
+export const isMobile = new MobileDetect(window.navigator.userAgent).mobile();
 
 export type Action = {
   Icon: FC<any>;
@@ -56,15 +59,12 @@ export const Actions = () => {
   };
 
   const handleReset = async () => {
-    await client.reset();
-    await client.initialize();
-
-    // TODO(burdon): Hangs (no error) if profile not created?
-    if (!client.halo.profile) {
-      await client.halo.createProfile();
+    try {
+      // TODO(mykola): Client is not re-entrant after reset.
+      await client.reset();
+    } finally {
+      location.reload();
     }
-
-    location.reload(); // TODO(mykola): Client is not re-entrant after reset.
   };
 
   const handleToggleConnection = async () => {
@@ -86,16 +86,18 @@ export const Actions = () => {
       title: 'Settings',
       handler: () => handleSettings()
     },
-    {
-      Icon: DownloadSimple,
-      title: 'Export data',
-      handler: () => handleExportSpace()
-    },
-    {
-      Icon: UploadSimple,
-      title: 'Import data',
-      handler: () => setUploadDialogOpen(true)
-    },
+    !isMobile && [
+      {
+        Icon: DownloadSimple,
+        title: 'Export data',
+        handler: () => handleExportSpace()
+      },
+      {
+        Icon: UploadSimple,
+        title: 'Import data',
+        handler: () => setUploadDialogOpen(true)
+      }
+    ],
     {
       Icon: Robot,
       title: 'Generate test data',
@@ -107,17 +109,18 @@ export const Actions = () => {
       handler: () => handleReset()
     },
     {
-      Icon: () => {
-        return connectionState === ConnectionState.ONLINE ? (
+      Icon: () =>
+        connectionState === ConnectionState.ONLINE ? (
           <WifiHigh className={getSize(6)} />
         ) : (
           <WifiSlash className={mx(getSize(6), 'text-orange-500')} />
-        );
-      },
+        ),
       title: 'Toggle connection',
       handler: () => handleToggleConnection()
     }
-  ];
+  ]
+    .filter(Boolean)
+    .flat() as Action[];
 
   return (
     <>

@@ -14,7 +14,7 @@ import { useSpace } from '../hooks';
 import { Address, Contact } from '../proto';
 
 export const ContactList: FC = () => {
-  const space = useSpace();
+  const space = useSpace(); // TODO(burdon): Factor out.
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   return (
@@ -33,21 +33,17 @@ export const ContactRow: FC<{ contact: Contact }> = withReactor(({ contact }) =>
 
   return (
     <CardRow
-      sidebar={
-        <div className='flex flex-shrink-0 justify-center w-6'>
-          <User className={getSize(5)} />
-        </div>
-      }
+      sidebar={<User className={getSize(5)} />}
       header={
         <Input
-          className='w-full outline-0'
+          className='w-full p-1'
           spellCheck={false}
           value={contact.name}
           onChange={(value) => (contact.name = value)}
         />
       }
     >
-      <div className='ml-8 mb-1'>
+      <div className='ml-9 mb-1'>
         {contact.username && <div className='flex text-sm text-green-800'>{contact.username}</div>}
         {contact.email && <div className='flex text-sm text-green-800'>{contact.email}</div>}
         {contact.address && <div className='flex text-sm text-gray-800'>{address(contact.address)}</div>}

@@ -2,26 +2,46 @@
 // Copyright 2022 DXOS.org
 //
 
+import clipboardCopy from 'clipboard-copy';
 import { PlusCircle } from 'phosphor-react';
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useHref, useNavigate, useParams } from 'react-router-dom';
 
-import { useClient } from '@dxos/react-client';
+import { CancellableInvitationObservable, Invitation, PublicKey } from '@dxos/client';
+import { log } from '@dxos/log';
+import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
-import { Button } from '../components';
-import { MemberList, SpaceList } from '../containers';
-import { FrameID, useSpace } from '../hooks';
+import { Button, MemberList, SpaceList } from '../components';
+import { useSpace, createSpacePath, FrameID, useAppState, createInvitationPath } from '../hooks';
 import { Actions } from './Actions';
-import { createSpacePath } from './Routes';
 
 export const Sidebar = () => {
+  const { frame, view } = useParams();
   const navigate = useNavigate();
   const client = useClient();
   const space = useSpace();
-  const { view } = useParams();
+  const spaces = useSpaces();
+  const members = useMembers(space.key);
   const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);
+  const { dev } = useAppState();
+
+  const [observable, setObservable] = useState<CancellableInvitationObservable>();
+  const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
+  useEffect(() => {
+    // TODO(burdon): Unsubscribe.
+    return () => {
+      void observable?.cancel();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (observable) {
+      const url = new URL(href, window.origin);
+      void clipboardCopy(url.toString());
+    }
+  }, [observable]);
 
   // TODO(wittjosiah): Find a better way to do this.
   if (prevSpace !== space) {
@@ -30,12 +50,43 @@ export const Sidebar = () => {
 
   if (prevView !== view) {
     setPrevView(view);
-    view === FrameID.SETTINGS;
   }
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     navigate(createSpacePath(space.key));
+  };
+
+  const handleSelectSpace = (spaceKey: PublicKey) => {
+    navigate(createSpacePath(spaceKey, frame));
+  };
+
+  const handleShareSpace = (spaceKey: PublicKey) => {
+    if (dev) {
+      // TODO(burdon): Cancel/remove.
+      const swarmKey = PublicKey.random();
+      const observable = space.createInvitation({
+        swarmKey,
+        type: Invitation.Type.MULTIUSE_TESTING
+      });
+
+      const unsubscribe = observable.subscribe({
+        onConnecting: () => {
+          setObservable(observable);
+          unsubscribe();
+        },
+        onConnected: () => {},
+        onSuccess: () => {},
+        onError: (error) => {
+          log.error(error);
+          unsubscribe();
+        }
+      });
+
+      return;
+    }
+
+    navigate(createSpacePath(spaceKey, FrameID.SETTINGS));
   };
 
   return (
@@ -50,7 +101,7 @@ export const Sidebar = () => {
       <div className='flex flex-col flex-1 border-r border-slate-200'>
         {/* Spaces */}
         <div className='flex shrink-0 flex-col overflow-y-auto'>
-          <SpaceList />
+          <SpaceList value={space.key} spaces={spaces} onSelect={handleSelectSpace} onShare={handleShareSpace} />
 
           <div className='p-3'>
             <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
@@ -66,7 +117,7 @@ export const Sidebar = () => {
         <div className='flex flex-col shrink-0 mt-6'>
           <div className='flex p-1 pl-3 mb-2 text-xs'>Members</div>
           <div className='flex shrink-0 pl-3'>
-            <MemberList spaceKey={space.key} />
+            <MemberList identityKey={client.halo.profile!.identityKey} members={members} />
           </div>
         </div>
 

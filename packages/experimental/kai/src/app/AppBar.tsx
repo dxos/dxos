@@ -12,26 +12,25 @@ import { FrameID } from '../hooks';
 
 export const Menu = () => {
   return (
-    <div className='flex items-center'>
-      <Link className='p-2' to={FrameID.REGISTRY} title='Registry'>
+    <div className='flex flex-shrink-0 items-center'>
+      <Link className='pl-2' to={FrameID.REGISTRY} title='Registry'>
         <Globe className={getSize(6)} />
       </Link>
-      <Link className='p-2' to='/identity' title='Identity'>
+      <Link className='pl-2' to='/identity' title='Identity'>
         <User className={getSize(6)} />
       </Link>
     </div>
   );
 };
 
+// TODO(burdon): Show Space name in title.
 export const AppBar = () => {
   return (
-    <div className='flex items-center fixed inline-start-0 inline-end-0 block-start-0 bs-appbar bg-orange-400 z-[1] pli-2'>
-      <div className='flex items-center p-2'>
+    <div className='flex items-center justify-between fixed px-3 inline-start-0 inline-end-0 block-start-0 bs-appbar bg-orange-400 z-[1]'>
+      <div className='flex items-center'>
         <Bug className={mx('logo', getSize(8))} />
-        <div className='ml-1 font-system-semibold'>KAI</div>
       </div>
 
-      <div className='flex-1' />
       <Menu />
     </div>
   );
