@@ -12,7 +12,8 @@ import { ClientProvider } from '@dxos/react-client';
 import { Main, SpaceList } from './components';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
-const servicesProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
+const servicesProvider = (config?: Config) =>
+  process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config);
 
 export const App = () => (
   <ClientProvider config={configProvider} services={servicesProvider}>

@@ -22,13 +22,6 @@ html[data-theme=dark] tr:nth-child(2n) {
   background-color: transparent;
 }
 
-// TODO(wittjosiah): Can the plugin add this?
-.showcase-preview {
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
-  padding: 1em;
-}
-
 .home.project .feature:hover {
   transform: none;
   box-shadow: none;
@@ -90,7 +83,7 @@ code {
 }
 
 html[data-theme=light] {
-  div[class*=language-] > button.copy:not(.pure) {
+  div[class*=language-] > button.copy-code-button:not(.pure) {
     background-color: $zinc-300;
     box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
     &:hover {
@@ -100,7 +93,7 @@ html[data-theme=light] {
 }
 
 html[data-theme=dark] {
-  div[class*=language-] > button.copy:not(.pure) {
+  div[class*=language-] > button.copy-code-button:not(.pure) {
     background-color: $zinc-700;
     .copy-icon {
       color: $zinc-400;
