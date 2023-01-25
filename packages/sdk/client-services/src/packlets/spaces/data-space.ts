@@ -137,7 +137,8 @@ export class DataSpace implements ISpace {
       timeout: CONTROL_PIPELINE_READY_TIMEFRAME
     });
 
-    await this._ensureOwnFeedsAreAdmitted();
+    // TODO(dmaretskyi): Enable this later.
+    // await this._ensureOwnFeedsAreAdmitted();
     this.notarizationPlugin.setWriter(
       createMappedFeedWriter<Credential, TypedMessage>(
         (credential) => ({
