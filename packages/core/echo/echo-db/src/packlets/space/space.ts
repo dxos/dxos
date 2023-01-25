@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
@@ -12,17 +13,13 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { Database, DatabaseBackend } from '../database';
+import { Database } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { DataPipelineController } from './data-pipeline-controller';
 import { SpaceProtocol } from './space-protocol';
 
-// TODO(burdon): Factor out types.
-export type DatabaseFactoryParams = {
-  databaseBackend: DatabaseBackend;
-};
-
+// TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
 
 export type SpaceParams = {
@@ -37,7 +34,7 @@ export type SpaceParams = {
 /**
  * Common interface with client.
  */
-// TODO(dmaretskyi): Move to client.
+// TODO(dmaretskyi): Move to client? Not referenced here.
 export interface ISpace {
   key: PublicKey;
   isOpen: boolean;
@@ -46,23 +43,22 @@ export interface ISpace {
   close(): Promise<void>;
 }
 
-// TODO(dmaretskyi): Extract database stuff.
 /**
  * Spaces are globally addressable databases with access control.
  */
+// TODO(dmaretskyi): Extract database stuff.
 @trackLeaks('open', 'close')
 export class Space {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
+  public readonly protocol: SpaceProtocol;
 
   private readonly _key: PublicKey;
-  private readonly _dataFeed: FeedWrapper<FeedMessage>;
-  private readonly _controlFeed: FeedWrapper<FeedMessage>;
-  private readonly _feedProvider: FeedProvider;
-
   private readonly _genesisFeedKey: PublicKey;
+  private readonly _controlFeed: FeedWrapper<FeedMessage>;
+  private readonly _dataFeed: FeedWrapper<FeedMessage>;
+  private readonly _feedProvider: FeedProvider;
   private readonly _controlPipeline: ControlPipeline;
-  public readonly protocol: SpaceProtocol;
 
   private _isOpen = false;
   private _dataPipeline?: Pipeline;
@@ -71,17 +67,12 @@ export class Space {
   constructor({ spaceKey, protocol, genesisFeed, controlFeed, dataFeed, feedProvider }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
+    this._genesisFeedKey = genesisFeed.key;
     this._controlFeed = controlFeed;
     this._dataFeed = dataFeed;
     this._feedProvider = feedProvider;
-    this._genesisFeedKey = genesisFeed.key;
 
-    this._controlPipeline = new ControlPipeline({
-      spaceKey,
-      genesisFeed,
-      feedProvider
-    });
-
+    this._controlPipeline = new ControlPipeline({ spaceKey, genesisFeed, feedProvider });
     this._controlPipeline.setWriteFeed(controlFeed);
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
@@ -139,6 +130,20 @@ export class Space {
     return this._controlPipeline.pipeline;
   }
 
+  /**
+   * Use for diagnostics.
+   */
+  getControlFeeds(): FeedInfo[] {
+    return Array.from(this._controlPipeline.spaceState.feeds.values());
+  }
+
+  /**
+   * Use for diagnostics.
+   */
+  // getDataFeeds(): FeedInfo[] {
+  //   return this._dataPipeline?.getFeeds();
+  // }
+
   @synchronized
   async open() {
     log('opening...');
@@ -189,7 +194,6 @@ export class Space {
         }
 
         await this._dataPipeline.start();
-
         return this._dataPipeline;
       }
     });

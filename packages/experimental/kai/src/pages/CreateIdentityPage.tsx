@@ -17,7 +17,7 @@ import { Generator } from '../proto';
 
 export const CreateIdentityPage = () => {
   const { t } = useTranslation('appkit');
-  const { demo } = useAppState();
+  const { dev } = useAppState();
   const client = useClient();
   const identity = useIdentity();
   const [displayName, setDisplayName] = useState('');
@@ -38,14 +38,15 @@ export const CreateIdentityPage = () => {
     try {
       await client.halo.createProfile({ displayName });
       const space = await client.echo.createSpace();
-      if (demo && !client.config.values.runtime?.client?.storage?.persistent) {
+      if (dev && !client.config.values.runtime?.client?.storage?.persistent) {
         await new Generator(space.experimental.db).generate();
       }
+
       redirect();
     } catch {
       setPending(false);
     }
-  }, [displayName, redirect, demo]);
+  }, [displayName, redirect, dev]);
 
   useEffect(() => {
     if (identity) {

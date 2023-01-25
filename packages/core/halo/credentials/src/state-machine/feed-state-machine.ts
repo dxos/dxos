@@ -12,15 +12,14 @@ import { getCredentialAssertion } from '../credentials';
 
 export interface FeedInfo {
   key: PublicKey;
-  credential: Credential;
-  assertion: AdmittedFeed;
   /**
    * Parent feed from the feed tree.
    * This is the feed where the AdmittedFeed assertion is written.
-   *
    * The genesis feed will have itself as a parent.
    */
   parent: PublicKey;
+  credential: Credential;
+  assertion: AdmittedFeed;
 }
 
 /**
@@ -58,6 +57,7 @@ export class FeedStateMachine {
       assertion,
       parent: fromFeed
     };
+
     this._feeds.set(credential.subject.id, info);
     await this.onFeedAdmitted.callIfSet(info);
   }

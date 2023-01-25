@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { EchoObject } from '@dxos/echo-schema';
+import { mx } from '@dxos/react-components';
 
 // https://github.com/TanStack/table/blob/v7/examples/full-width-resizable-table/src/App.js
 
@@ -27,12 +27,40 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
+export type TableSlots = {
+  root?: string;
+  header?: string;
+  row?: string;
+  selected?: string;
+};
+
+// TODO(burdon): Theme.
+export const defaultTableSlots: TableSlots = {
+  header: 'text-sm',
+  row: 'hover:bg-gray-200',
+  selected: 'bg-slate-300'
+};
+
+export type TableProps<T extends {}> = {
+  classes?: TableSlots;
+  columns: Column<T>[];
+  data?: T[];
+  selected?: T;
+  onSelect?: (item: T) => void;
+};
+
 /**
  * Virtual table.
  * https://react-table-v7.tanstack.com/docs/overview
  */
 // TODO(burdon): Checkbox in left gutter.
-export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = ({ columns, data }) => {
+export const Table = <T extends {}>({
+  columns,
+  data = [],
+  classes = defaultTableSlots,
+  onSelect,
+  selected
+}: TableProps<T>) => {
   const defaultColumn = useMemo(
     () => ({
       // When using the useFlexLayout:
@@ -43,7 +71,7 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
     []
   );
 
-  const { getTableProps, headerGroups, prepareRow, rows } = useTable<EchoObject>(
+  const { getTableProps, headerGroups, prepareRow, rows } = useTable<T>(
     { columns, data, defaultColumn },
     useResizeColumns,
     useFlexLayout
@@ -51,10 +79,10 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
 
   return (
     // TODO(burdon): Remove table class to force scrolling.
-    <div className='flex flex-auto overflow-x-auto'>
-      <div {...getTableProps()} className='table flex-auto'>
+    <div className={mx('flex flex-1 flex-col overflow-x-auto', classes?.root)}>
+      <div className='table' {...getTableProps()}>
         {/* Header */}
-        <div>
+        <div className='thead sticky top-0'>
           {headerGroups.map((headerGroup) => (
             // eslint-disable-next-line react/jsx-key
             <div
@@ -66,7 +94,7 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
-                <div {...column.getHeaderProps(headerProps)} className='th px-4 py-1'>
+                <div {...column.getHeaderProps(headerProps)} className={mx('th px-4 py-1', classes?.header)}>
                   {column.render('Header')}
 
                   {/* Use column.getResizerProps to hook up the events correctly. */}
@@ -80,13 +108,19 @@ export const Table: FC<{ columns: Column<EchoObject>[]; data: EchoObject[] }> = 
         </div>
 
         {/* Body */}
-        <div className='tbody overflow-y-auto mt-2'>
-          {rows.map((row, i) => {
+        <div className='tbody overflow-y-auto'>
+          {rows.map((row) => {
             prepareRow(row);
+
             return (
               // eslint-disable-next-line react/jsx-key
               <div
-                className='tr border-b border-solid border-slate-100 transition-colors duration-300 hover:duration-500 hover:delay-300 hover:border-orange-200'
+                className={mx(
+                  'tr border-b border-solid border-slate-100 cursor-pointer',
+                  row.original === selected && classes?.selected,
+                  classes?.row
+                )}
+                onClick={() => onSelect?.(row.original)}
                 {...row.getRowProps()}
               >
                 {row.cells.map((cell) => {

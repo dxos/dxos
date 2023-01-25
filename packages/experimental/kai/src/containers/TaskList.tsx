@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PlusCircle, Spinner, XCircle } from 'phosphor-react';
+import { Spinner, XCircle } from 'phosphor-react';
 import React, { FC, KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
 import { base, deleted, id } from '@dxos/echo-schema';
@@ -10,45 +10,17 @@ import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button, Card, Input, CardRow, CardMenu } from '../components';
+import { Button, Input, CardRow } from '../components';
 import { useAppState, useSpace } from '../hooks';
-import { createTask, Task } from '../proto';
+import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
-
-export const TaskListCard: FC<{ completed?: boolean; readonly?: boolean; title?: string }> = ({
-  completed = undefined,
-  readonly = false,
-  title = 'Tasks'
-}) => {
-  const { space } = useSpace();
-
-  const handleGenerateTask = async () => {
-    await createTask(space.experimental.db);
-  };
-
-  const Header = () => (
-    <CardMenu title={title}>
-      {!readonly && (
-        <Button onClick={handleGenerateTask}>
-          <PlusCircle className={getSize(5)} />
-        </Button>
-      )}
-    </CardMenu>
-  );
-
-  return (
-    <Card scrollbar header={<Header />}>
-      <TaskList completed={completed} readonly={readonly} />
-    </Card>
-  );
-};
 
 export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   completed = undefined,
   readonly = false
 }) => {
-  const { space } = useSpace();
+  const space = useSpace(); // TODO(burdon): Factor out.
   const tasks = useQuery(space, Task.filter({ completed }));
   const [newTask, setNewTask] = useState<Task>();
   const [saving, setSaving] = useState(false);
@@ -90,8 +62,9 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 
   return (
     <div className='min-bs-full flex flex-1 justify-center bg-gray-100'>
-      <div className={'flex flex-col overflow-y-auto pl-3 pr-3 pt-2 pb-8 bg-white w-screen is-full md:is-[400px]'}>
-        <div className={'mt-2'}>
+      {/* TODO(burdon): Adapt width to container. */}
+      <div className={'flex flex-col overflow-y-auto bg-white w-screen is-full md:is-[400px]'}>
+        <div className={'mt-1'}>
           {tasks?.map((task, index) => (
             <TaskItem
               key={task[id]}
@@ -106,9 +79,8 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
         </div>
 
         {/* TODO(burdon): Keep pinned to bottom on create. */}
-        <div>{newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />}</div>
+        {newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />}
       </div>
-
       {saving && (
         <div className='absolute bottom-0 right-0 z-50 p-3 animate-spin text-red-600'>
           <Spinner />
@@ -124,21 +96,18 @@ export const NewTaskItem: FC<{
   lastIndex?: number;
 }> = ({ task, onEnter, lastIndex }) => {
   const onKeyDown = useCallback(
-    (e: KeyboardEvent<Element>) => {
-      if (e.key === 'PageUp') {
-        e.preventDefault();
+    (event: KeyboardEvent<Element>) => {
+      if (event.key === 'PageUp') {
+        event.preventDefault();
         (document.querySelector(`input[data-orderindex="${lastIndex ?? 0}"]`) as HTMLElement | undefined)?.focus();
       }
     },
     [lastIndex]
   );
+
   return (
     <CardRow
-      sidebar={
-        <div className='flex flex-shrink-0 justify-center w-6 invisible'>
-          <input type='checkbox' autoFocus disabled />
-        </div>
-      }
+      sidebar={<input className='invisible' type='checkbox' disabled />}
       header={
         <Input
           id='new-task'
@@ -159,6 +128,7 @@ export const NewTaskItem: FC<{
           }}
         />
       }
+      action={<div />}
     />
   );
 };
@@ -181,30 +151,32 @@ export const TaskItem: FC<{
   });
 
   const onKeyDown = useCallback(
-    (e: KeyboardEvent<Element>) => {
-      switch (e.key) {
-        case 'PageDown':
-          e.preventDefault();
+    (event: KeyboardEvent<Element>) => {
+      switch (event.key) {
+        case 'PageDown': {
+          event.preventDefault();
           if (isLast) {
             (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
           } else {
             (document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined)?.focus();
           }
           break;
-        case 'PageUp':
-          e.preventDefault();
+        }
+        case 'PageUp': {
+          event.preventDefault();
           (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
           break;
+        }
       }
     },
     [task, orderIndex, isLast]
   );
 
   const onKeyUp = useCallback(
-    (e: KeyboardEvent<Element>) => {
-      switch (e.key) {
-        case 'Enter':
-          if (e.shiftKey) {
+    (event: KeyboardEvent<Element>) => {
+      switch (event.key) {
+        case 'Enter': {
+          if (event.shiftKey) {
             (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
           } else {
             if (isLast) {
@@ -217,6 +189,7 @@ export const TaskItem: FC<{
           }
           onEnter?.(task);
           break;
+        }
       }
     },
     [task, orderIndex, isLast]
@@ -225,14 +198,12 @@ export const TaskItem: FC<{
   return (
     <CardRow
       sidebar={
-        <div className='flex flex-shrink-0 justify-center w-6'>
-          <input
-            type='checkbox'
-            disabled={readonly}
-            checked={!!task.completed}
-            onChange={() => (task.completed = !task.completed)}
-          />
-        </div>
+        <input
+          type='checkbox'
+          disabled={readonly}
+          checked={!!task.completed}
+          onChange={() => (task.completed = !task.completed)}
+        />
       }
       action={
         onDelete && (

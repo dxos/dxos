@@ -1,11 +1,14 @@
 # DXOS Devtools
 
-Package with standalone DEVTOOLS vite app. 
-It listens for client in shared worker started by some app. 
+DXOS Devtools vite app, which can be run and deployed stand-alone, or packaged as a browser extension.
 
-'dx.yml' contains `runtime.client.remoteSource` default endpoint with remote client. 
-it is setup to listen for halo-app shared worker (`pnpm nx serve halo-app`).
+The `dx.yml` config contains `runtime.client.remoteSource` default endpoint with remote client. 
+It is configured to listen for halo-app shared worker (`pnpm nx serve halo-app`).
 
+## Development
 
-## Start
-`pnpm nx serve devtools`
+Serve the devtools app:
+
+`pnpm -w nx serve devtools`
+
+Then open the testbench: `http://localhost:5173/testbench.html`

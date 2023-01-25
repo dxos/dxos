@@ -52,11 +52,10 @@ export class SpaceProtocol {
 
   @logInfo
   private readonly _topic: PublicKey;
+  private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
+  private readonly _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
 
   private _connection?: SwarmConnection;
-
-  private _feeds = new Set<FeedWrapper<FeedMessage>>();
-  private _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
 
   get sessions(): ReadonlyMap<PublicKey, SpaceProtocolSession> {
     return this._sessions;

@@ -15,7 +15,13 @@
       "path": "../../apps/patterns/react-appkit"
     },
     {
+      "path": "../../apps/patterns/react-ui"
+    },
+    {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/debug"
@@ -27,7 +33,13 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/react-components"
     },
     {
       "path": "../../common/timeframe"
@@ -54,6 +66,9 @@
       "path": "../../core/mesh/network-manager"
     },
     {
+      "path": "../../core/mesh/rpc"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -61,6 +76,9 @@
     },
     {
       "path": "../../deprecated/react-toolkit"
+    },
+    {
+      "path": "../../experimental/kai"
     },
     {
       "path": "../../experimental/react-registry-client"

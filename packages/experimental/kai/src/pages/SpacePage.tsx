@@ -5,12 +5,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { Space } from '@dxos/client';
 import { useSpaces } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
-import { createSpacePath, matchSpaceKey, FrameContainer, Sidebar, AppBar, FrameSelector } from '../app';
-import { SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from '../hooks';
+import { FrameContainer, Sidebar, AppBar, FrameSelector } from '../app';
+import { createSpacePath, SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from '../hooks';
+
+// TODO(burdon): Factor out.
+const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
+  spaces.find((space) => space.key.truncate() === spaceKey);
 
 /**
  * Home page with current space.
@@ -18,15 +23,15 @@ import { SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from 
 export const SpacePage = () => {
   const navigate = useNavigate();
   const frames = useActiveFrames();
-  const [context, setContext] = useState<SpaceContextType | undefined>();
   const { spaceKey: currentSpaceKey, frame } = useParams();
   const spaces = useSpaces();
   const space = currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined;
+  const [spaceContext, setSpaceContext] = useState<SpaceContextType>();
 
   // Change space.
   useEffect(() => {
     if (space) {
-      setContext({ space });
+      setSpaceContext({ space });
     } else {
       navigate('/');
     }
@@ -39,12 +44,12 @@ export const SpacePage = () => {
     }
   }, [currentSpaceKey, frame]);
 
-  if (!context) {
+  if (!spaceContext) {
     return null;
   }
 
   return (
-    <SpaceContext.Provider value={context}>
+    <SpaceContext.Provider value={spaceContext}>
       <PanelSidebarProvider
         inlineStart
         slots={{

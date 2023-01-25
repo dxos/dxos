@@ -4,12 +4,50 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import '@dxosTheme';
+import { log } from '@dxos/log';
+import { ServiceWorkerToast } from '@dxos/react-appkit';
+
+import { App } from './app';
+import { AppState } from './hooks';
 
 import '../style.css';
 
-// TODO(burdon): Must be at the top-level for vite.
-import { Root } from './Root';
+const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 
-createRoot(document.getElementById('root')!).render(<Root />);
+const initialState: AppState = {
+  dev: bool(process.env.KAI_DEV),
+  debug: bool(process.env.KAI_DEBUG),
+  pwa: bool(process.env.KAI_PWA)
+};
+
+/**
+ * Progressive web app registration and notifications.
+ * https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps
+ */
+const PWA = () => {
+  const {
+    offlineReady: [offlineReady, _setOfflineReady],
+    needRefresh: [needRefresh, _setNeedRefresh],
+    updateServiceWorker
+  } = useRegisterSW({
+    onRegisterError: (err: any) => {
+      log.error(err);
+    }
+  });
+
+  return needRefresh ? (
+    <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+  ) : offlineReady ? (
+    <ServiceWorkerToast variant='offlineReady' />
+  ) : null;
+};
+
+createRoot(document.getElementById('root')!).render(
+  // prettier-ignore
+  <App initialState={initialState}>
+    {initialState.pwa && <PWA />}
+  </App>
+);

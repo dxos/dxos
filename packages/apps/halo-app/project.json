@@ -102,11 +102,11 @@
       ]
     },
     "preview": {
-      "executor": "nx:run-commands",
+      "executor": "@nrwl/web:file-server",
       "options": {
-        "commands": [
-          "pnpm -w serve -L packages/apps/halo-app/out/halo"
-        ]
+        "buildTarget": "halo-app:bundle",
+        "port": 3967,
+        "staticFilePath": "packages/apps/halo-app/out/halo"
       }
     },
     "serve": {

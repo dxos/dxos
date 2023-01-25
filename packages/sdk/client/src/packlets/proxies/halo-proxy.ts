@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { Event, EventSubscriptions } from '@dxos/async';
@@ -99,9 +100,11 @@ export class HaloProxy implements Halo {
     const gotProfile = this.profileChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
+    assert(this._serviceProvider.services.HaloInvitationsService, 'HaloInvitationsService not available');
     // TODO(burdon): ???
     this._invitationProxy = new HaloInvitationsProxy(this._serviceProvider.services.HaloInvitationsService);
 
+    assert(this._serviceProvider.services.ProfileService, 'ProfileService not available');
     const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
     profileStream.subscribe((data) => {
       this._profile = data.profile;
@@ -157,6 +160,7 @@ export class HaloProxy implements Halo {
       secretKey = PublicKey.from(keyPair.secretKey);
     }
 
+    assert(this._serviceProvider.services.ProfileService, 'ProfileService not available');
     // TODO(burdon): Rename createIdentity?
     this._profile = await this._serviceProvider.services.ProfileService.createProfile({
       publicKey: publicKey?.asUint8Array(),
@@ -171,6 +175,7 @@ export class HaloProxy implements Halo {
    * Joins an existing identity HALO from a recovery seed phrase.
    */
   async recoverProfile(seedPhrase: string) {
+    assert(this._serviceProvider.services.ProfileService, 'ProfileService not available');
     this._profile = await this._serviceProvider.services.ProfileService.recoverProfile({
       seedPhrase
     });
@@ -190,6 +195,7 @@ export class HaloProxy implements Halo {
   // TODO(burdon): Standardize Promise vs. stream.
   async queryDevices(): Promise<DeviceInfo[]> {
     return new Promise((resolve, reject) => {
+      assert(this._serviceProvider.services.DevicesService, 'DevicesService not available');
       const stream = this._serviceProvider.services.DevicesService.queryDevices();
       stream.subscribe(
         (devices) => {

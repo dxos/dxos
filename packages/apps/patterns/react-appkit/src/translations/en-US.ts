@@ -88,5 +88,8 @@ export const appkit = {
   'heartbeat stalled': 'Heartbeat stalled',
   'empty spaces label': 'No spaces here',
   'empty spaces message': 'Why not try creating or joining one?',
-  'current device label': 'This device'
+  'current device label': 'This device',
+  'resume heading label': 'Resume session',
+  'resume description label': 'Only one tab can be active at a time',
+  'resume label': 'Resume'
 };

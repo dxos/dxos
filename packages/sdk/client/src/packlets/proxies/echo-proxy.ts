@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
@@ -94,6 +95,8 @@ export class EchoProxy implements Echo {
   }
 
   async open() {
+    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
+    assert(this._serviceProvider.services.SpaceInvitationsService, 'SpaceInvitationsService is not available.');
     this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
 
     const gotInitialUpdate = new Trigger();
@@ -163,6 +166,7 @@ export class EchoProxy implements Echo {
    * Creates a new space.
    */
   async createSpace(): Promise<Space> {
+    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
     const space = await this._serviceProvider.services.SpaceService.createSpace();
 
     await this._spacesInitialized.waitForCondition(() => {
@@ -182,6 +186,7 @@ export class EchoProxy implements Echo {
    * @internal
    */
   async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
+    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
     const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
 
     const proxy = new Trigger<SpaceProxy>();

@@ -328,11 +328,6 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/devtools-testbench/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/devtools/initializers/bare/package.json",
           "jsonpath": "$.version"
         },
@@ -494,6 +489,11 @@
         {
           "type": "json",
           "path": "tools/executors/protobuf-compiler/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/serve-with-halo/package.json",
           "jsonpath": "$.version"
         },
         {

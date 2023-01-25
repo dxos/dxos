@@ -11,15 +11,12 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
-import { kaiThemeExtension } from './src/util/kaiThemeExtension';
+import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 
 import packageJson from './package.json';
 
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${packageJson.version}` : undefined;
-
-const pwa = false;
 
 /**
  * https://vitejs.dev/config
@@ -39,8 +36,9 @@ export default defineConfig({
   },
 
   define: {
-    'process.env.DEBUG': env(process.env.DEBUG),
-    'process.env.DEMO': env(process.env.DEMO),
+    'process.env.KAI_DEBUG': env(process.env.KAI_DEBUG),
+    'process.env.KAI_DEV': env(process.env.KAI_DEV),
+    'process.env.KAI_PWA': env(process.env.KAI_PWA),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
     'process.env.DX_VAULT': env(process.env.DX_VAULT),
@@ -71,7 +69,6 @@ export default defineConfig({
 
   // TODO(burdon): Document.
   build: {
-    outDir: 'out/kai',
     sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
@@ -109,34 +106,30 @@ export default defineConfig({
 
     // TODO(burdon): Document.
     // To reset, unregister service worker using devtools.
-    ...(pwa
-      ? [
-          VitePWA({
-            workbox: {
-              maximumFileSizeToCacheInBytes: 30000000
-            },
-            includeAssets: ['favicon.ico'],
-            manifest: {
-              name: 'DXOS Kai',
-              short_name: 'Kai',
-              description: 'DXOS Kai Demo',
-              theme_color: '#ffffff',
-              icons: [
-                {
-                  src: 'icons/icon-32.png',
-                  sizes: '32x32',
-                  type: 'image/png'
-                },
-                {
-                  src: 'icons/icon-256.png',
-                  sizes: '256x256',
-                  type: 'image/png'
-                }
-              ]
-            }
-          })
+    VitePWA({
+      workbox: {
+        maximumFileSizeToCacheInBytes: 30000000
+      },
+      includeAssets: ['favicon.ico'],
+      manifest: {
+        name: 'DXOS Kai',
+        short_name: 'Kai',
+        description: 'DXOS Kai Demo',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'icons/icon-32.png',
+            sizes: '32x32',
+            type: 'image/png'
+          },
+          {
+            src: 'icons/icon-256.png',
+            sizes: '256x256',
+            type: 'image/png'
+          }
         ]
-      : []),
+      }
+    }),
 
     /**
      * Bundle fonts.

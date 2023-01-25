@@ -61,15 +61,26 @@ export type FolderHierarchyItem = {
 // TODO(burdon): Slots.
 // TODO(burdon): Navigate up/down.
 // TODO(burdon): Unselect on Escape.
-// TODO(burdon): onSelect.
 
-export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassName?: string }> = ({
+export const FolderHierarchy: FC<{
+  items: FolderHierarchyItem[];
+  highlightClassName?: string;
+  titleClassName?: string;
+  onSelect?: (item: FolderHierarchyItem) => void;
+  selected?: string;
+  expanded?: string[];
+}> = ({
   items,
-  highlightClassName = 'bg-gray-300'
+  highlightClassName = 'bg-gray-300',
+  titleClassName = 'text-blue-600 text-base',
+  onSelect,
+  selected,
+  expanded = []
 }) => {
-  // TODO(burdon): Externalize.
-  const [selected, setSelected] = useState<string>();
-  const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>({});
+  const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>(
+    expanded?.reduce((map, id) => ({ ...map, [id]: true }), {})
+  );
+
   const handleToggle = (item: FolderHierarchyItem) => {
     setOpenMap((map) => {
       if (map[item.id]) {
@@ -82,6 +93,10 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
     });
   };
 
+  const handleSelection = (item: FolderHierarchyItem) => {
+    onSelect?.(item);
+  };
+
   const Item = ({ item, depth = 0 }: { item: FolderHierarchyItem; depth?: number }) => {
     const open = openMap[item.id];
     const sub = item.items && item.items.length > 0;
@@ -91,7 +106,7 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
       <div className='flex flex-1 flex-col'>
         <div
           className={mx('flex select-none cursor-pointer pl-3', item.id === selected && highlightClassName)}
-          onClick={() => setSelected(item.id)}
+          onClick={() => handleSelection(item)}
         >
           <div className='flex items-center' style={{ marginLeft: depth * 16 }}>
             <div style={{ width: 20 }} onClick={() => handleToggle(item)}>
@@ -104,8 +119,11 @@ export const FolderHierarchy: FC<{ items: FolderHierarchyItem[]; highlightClassN
             )}
             {Element || (
               <div style={{ lineHeight: 1.6 }}>
-                <span className='text-blue-600 text-sm'>{item.title}</span>
-                {!item.items && item.value !== undefined && <span className='pl-2'>{String(item.value)}</span>}
+                <span className={titleClassName}>{item.title}</span>
+                {!item.items && item.value !== undefined && (
+                  // eslint-disable-next-line no-octal-escape
+                  <span className='pl-2 empty:after:content-["\00a0"]'>{String(item.value)}</span>
+                )}
               </div>
             )}
           </div>

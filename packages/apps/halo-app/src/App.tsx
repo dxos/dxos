@@ -11,16 +11,15 @@ import { fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
+  appkitTranslations,
+  ClientFallback,
   ErrorProvider,
   Fallback,
   FatalError,
-  GenericFallback,
   ServiceWorkerToast,
-  useTelemetry,
-  appkitTranslations,
-  StatusIndicator
+  useTelemetry
 } from '@dxos/react-appkit';
-import { ClientProvider, useNetworkStatus } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { captureException } from '@dxos/sentry';
 
@@ -40,9 +39,8 @@ const RequireIdentity = React.lazy(() => import('./pages/RequireIdentity'));
 const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
-// prettier-ignore
 log.config({
-  filter: process.env.LOG_FILTER ?? 'halo-app:debug,client:debug,config:debug,warn',
+  filter: process.env.LOG_FILTER ?? 'warn,useStatus:debug',
   prefix: process.env.LOG_BROWSER_PREFIX
 });
 
@@ -111,9 +109,8 @@ export const App = () => {
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider config={configProvider} services={serviceProvider} fallback={<GenericFallback />}>
+          <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
             <HashRouter>
-              <StatusIndicator />
               <Routes />
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />

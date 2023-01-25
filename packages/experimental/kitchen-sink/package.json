@@ -45,7 +45,7 @@
     "debug": "^4.3.3",
     "immutability-helper": "^3.0.2",
     "it-all": "1.0.6",
-    "mobile-detect": "~1.4.5",
+    "mobile-detect": "^1.4.5",
     "uint8arrays": "3.0.0",
     "url-join": "^5.0.0"
   },

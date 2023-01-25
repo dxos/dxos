@@ -52,8 +52,9 @@ export class DataSpace implements ISpace {
   private readonly _presence: Presence;
   private readonly _keyring: Keyring;
   private readonly _signingContext: SigningContext;
-  public readonly authVerifier: TrustedKeySetAuthVerifier;
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
+
+  public readonly authVerifier: TrustedKeySetAuthVerifier;
 
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
@@ -69,11 +70,13 @@ export class DataSpace implements ISpace {
       feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
       snapshotId: params.snapshotId
     });
+
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(this._inner.spaceState.members.keys())),
       update: this._inner.stateUpdate,
       authTimeout: AUTH_TIMEOUT
     });
+
     this._notarizationPluginConsumer = this._inner.spaceState.registerProcessor(new NotarizationPlugin());
   }
 
@@ -81,12 +84,13 @@ export class DataSpace implements ISpace {
     return this._inner.key;
   }
 
-  get inner() {
-    return this._inner;
-  }
-
   get isOpen() {
     return this._inner.isOpen;
+  }
+
+  // TODO(burdon): Can we mark this for debugging only?
+  get inner() {
+    return this._inner;
   }
 
   get dataPipelineController(): DataPipelineControllerImpl {
@@ -113,7 +117,6 @@ export class DataSpace implements ISpace {
   async open() {
     await this.notarizationPlugin.open();
     await this._notarizationPluginConsumer.open();
-
     await this._inner.open();
   }
 
@@ -121,8 +124,8 @@ export class DataSpace implements ISpace {
     await this._ctx.dispose();
 
     await this.authVerifier.close();
-    await this._inner.close();
 
+    await this._inner.close();
     await this._notarizationPluginConsumer.close();
     await this.notarizationPlugin.close();
 

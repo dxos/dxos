@@ -39,7 +39,7 @@ const useTransaction = (db: EchoDatabase): Transaction => {
 };
 
 export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task: currentTask, onClose }) => {
-  const { space } = useSpace();
+  const space = useSpace(); // TODO(burdon): Factor out.
   const tx = useTransaction(space.experimental.db);
   const task = tx.wrap(currentTask); // Projection.
 

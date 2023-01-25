@@ -8,11 +8,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { createSpacePath } from '../../app';
 import { Searchbar } from '../../components';
 import {
   BotID,
   FrameID,
+  createSpacePath,
   useActiveBots,
   useActiveFrames,
   useBotDispatch,
@@ -57,7 +57,7 @@ const Tile: FC<{
  * https://ifttt.com/explore
  */
 export const RegistryFrame = () => {
-  const { space } = useSpace();
+  const space = useSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>('app');
 

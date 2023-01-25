@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "serveProject": {
+      "type": "string",
+      "description": "Project to run with HALO, defaults to current project."
+    },
+    "serveTarget": {
+      "type": "string",
+      "description": "Target to run on both projects.",
+      "default": "serve"
+    }
+  }
+}
