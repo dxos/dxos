@@ -8,7 +8,7 @@ import React, { ComponentPropsWithoutRef, useState } from 'react';
 import { useClient } from '@dxos/react-client';
 import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
-import { ViewState, ViewStateProps } from './ViewState';
+import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export const IdentityCreator = (viewStateProps: ViewStateProps) => {
   const disabled = !viewStateProps.active;
@@ -31,7 +31,7 @@ export const IdentityCreator = (viewStateProps: ViewStateProps) => {
     <ViewState {...viewStateProps}>
       <Input
         disabled={disabled}
-        label={<h2 className='font-system-medium text-sm'>{t('new identity input label')}</h2>}
+        label={<ViewStateHeading>{t('new identity input label')}</ViewStateHeading>}
         onChange={(value) => setDisplayName(value)}
         slots={{
           root: { className: 'm-0' },

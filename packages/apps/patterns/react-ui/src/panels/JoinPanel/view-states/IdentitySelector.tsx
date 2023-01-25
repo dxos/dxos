@@ -9,7 +9,7 @@ import React, { useCallback, useState } from 'react';
 import { Avatar, Button, defaultFocus, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { Profile } from '../JoinPanelProps';
-import { ViewState, ViewStateProps } from './ViewState';
+import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentitySelectorProps extends ViewStateProps {
   availableIdentities: Profile[];
@@ -31,7 +31,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
 
   return (
     <ViewState {...viewStateProps}>
-      <h2 className='font-system-medium text-sm'>{t('identity selector title')}</h2>
+      <ViewStateHeading>{t('identity selector title')}</ViewStateHeading>
       <RadioGroup.Root
         disabled={disabled}
         value={activeIdentity?.identityKey.toHex()}
@@ -78,7 +78,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
         <UserPlus weight='bold' className={getSize(3.5)} />
       </Button>
       <Button
-        disabled={disabled}
+        disabled={disabled || !activeIdentity}
         className='flex items-center gap-2 pli-2'
         onClick={() =>
           dispatch({

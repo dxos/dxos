@@ -70,7 +70,7 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
     <AlertPrimitive.Root defaultOpen>
       <ThemeContext.Provider value={{ themeVariant: 'os' }}>
         <AlertPrimitive.Overlay className='fixed inset-0 backdrop-blur z-50 overflow-auto grid place-items-center p-2 md:p-4 lg:p-8'>
-          <AlertPrimitive.Content aria-labelledby={titleId} className='is-full min-is-[272px] max-is-[320px]'>
+          <AlertPrimitive.Content aria-labelledby={titleId} className='is-full min-is-[260px] max-is-[320px]'>
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className={mx(defaultSurface, 'is-full overflow-hidden rounded-be-md p-0')}>
               <div role='none' className='flex is-[400%]' aria-live='polite'>

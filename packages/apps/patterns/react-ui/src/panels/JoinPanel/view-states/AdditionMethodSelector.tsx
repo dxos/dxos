@@ -8,7 +8,7 @@ import React from 'react';
 import { Button, CompoundButton, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { Profile } from '../JoinPanelProps';
-import { ViewState, ViewStateProps } from './ViewState';
+import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface AdditionMethodSelectorProps extends ViewStateProps {
   availableIdentities: Profile[];
@@ -22,7 +22,7 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
 
   return (
     <ViewState {...viewStateProps}>
-      <h2 className='font-system-medium text-sm'>{t('addition method selector title')}</h2>
+      <ViewStateHeading>{t('addition method selector title')}</ViewStateHeading>
       <div role='none' className='flex flex-col gap-1 grow'>
         <CompoundButton
           description={t('create identity description')}

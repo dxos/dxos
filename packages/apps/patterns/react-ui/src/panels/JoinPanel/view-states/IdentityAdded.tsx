@@ -8,7 +8,7 @@ import React from 'react';
 import { Profile } from '@dxos/client';
 import { Avatar, Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
-import { ViewState, ViewStateProps } from './ViewState';
+import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentityAddedProps extends ViewStateProps {
   identity?: Profile;
@@ -21,7 +21,7 @@ export const IdentityAdded = ({ identity, ...viewStateProps }: IdentityAddedProp
 
   return (
     <ViewState {...viewStateProps}>
-      <h2 className='font-system-medium text-sm'>{t('identity added label')}</h2>
+      <ViewStateHeading>{t('identity added label')}</ViewStateHeading>
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
         <Avatar
           size={20}
