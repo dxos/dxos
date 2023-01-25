@@ -226,6 +226,7 @@ importers:
       '@dxos/apidoc': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/telemetry': workspace:*
       '@types/eslint': ^8.4.6
@@ -262,6 +263,7 @@ importers:
       '@dxos/apidoc': link:../tools/apidoc
       '@dxos/client': link:../packages/sdk/client
       '@dxos/config': link:../packages/sdk/config
+      '@dxos/protocols': link:../packages/core/protocols
       '@dxos/react-client': link:../packages/sdk/react-client
       '@dxos/telemetry': link:../packages/common/telemetry
       '@types/eslint': 8.4.6

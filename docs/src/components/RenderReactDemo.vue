@@ -41,8 +41,8 @@
   const module = await import(`../demos/${props.demo}.tsx`);
   const parameters = getParameters({
     files: {
-      'patches/vite+3.2.5.patch': {
-        content: (await import('../templates/codesandbox/patches/vite+3.2.5.patch?raw')).default,
+      'patches/vite+4.0.4.patch': {
+        content: (await import('../templates/codesandbox/patches/vite+4.0.4.patch?raw')).default,
         isBinary: false
       },
       'src/App.tsx': {

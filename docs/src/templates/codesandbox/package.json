@@ -9,7 +9,7 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
-    "@dxos/react-client": "0.1.16",
+    "@dxos/react-client": "0.1.23",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -20,6 +20,6 @@
     "patch-package": "^6.5.0",
     "postinstall-postinstall": "^2.1.0",
     "typescript": "^4.6.4",
-    "vite": "3.2.5"
+    "vite": "4.0.4"
   }
 }

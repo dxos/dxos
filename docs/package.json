@@ -19,6 +19,7 @@
     "@dxos/apidoc": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@types/eslint": "^8.4.6",
