@@ -15,7 +15,7 @@ const port = browser.runtime.connect({
 });
 
 const sandbox = document.createElement('iframe');
-sandbox.src = `${window.location.origin}/sandbox.html`;
+sandbox.src = browser.runtime.getURL('/sandbox.html');
 window.document.body.appendChild(sandbox);
 
 window.addEventListener('message', async (event) => {

@@ -50,7 +50,7 @@ export default defineConfig({
   },
   build: {
     commonjsOptions: {
-      include: [/packages/, /node_modules/, /src/]
+      include: [/packages/, /node_modules/]
     },
     rollupOptions: {
       input: {
