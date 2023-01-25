@@ -8,19 +8,20 @@ APPS=(
   ./packages/devtools/devtools
   ./packages/experimental/kai
   ./docs
-);
+)
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 ROOT=$(git rev-parse --show-toplevel)
-PACKAGE=${PWD##*/}
-PACKAGE_CAPS=${PACKAGE^^}
-PACKAGE_ENV=${PACKAGE_CAPS//-/_}
-
-eval "export SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
-eval "export TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 
 for APP in "${APPS[@]}"; do
   pushd $APP
+  
+  PACKAGE=${PWD##*/}
+  PACKAGE_CAPS=${PACKAGE^^}
+  PACKAGE_ENV=${PACKAGE_CAPS//-/_}
+
+  eval "export SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
+  eval "export TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 
   if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production
@@ -56,4 +57,3 @@ for APP in "${APPS[@]}"; do
 
   popd
 done
-
