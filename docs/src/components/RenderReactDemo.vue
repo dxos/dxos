@@ -1,6 +1,6 @@
 <template>
   <div class="showcase-preview">
-    <form action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
+    <form v-if="fork" action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
       <input type="hidden" name="parameters" :value="parameters" />
       <input type="submit" class="showcase-fork" value="Fork" />
     </form>
@@ -33,7 +33,7 @@
   import { fromHost } from '@dxos/client';
   import { ClientProvider } from '@dxos/react-client';
 
-  const props = defineProps(['demo']);
+  const props = defineProps(['demo', 'fork']);
   const preview = ref<HTMLDivElement | null>(null);
 
   // Note rollup dynamic import limitations.

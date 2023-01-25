@@ -4,7 +4,7 @@
     <ClientOnly>
       <RenderReactDemo
         :demo="demo"
-        :target="demo"
+        :fork="false"
       />
     </ClientOnly>
   </Suspense>
