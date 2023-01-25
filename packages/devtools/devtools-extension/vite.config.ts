@@ -41,6 +41,7 @@ export default defineConfig({
       '@dxos/log',
       '@dxos/network-manager',
       '@dxos/protocols',
+      '@dxos/react-async',
       '@dxos/react-client',
       '@dxos/react-components',
       '@dxos/react-toolkit',
@@ -55,11 +56,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         panel: resolve(__dirname, 'panel.html')
-      },
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom']
-        }
       }
     }
   },

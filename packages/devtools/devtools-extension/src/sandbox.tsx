@@ -3,22 +3,21 @@
 //
 
 import '@dxosTheme';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 
-import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { ClientServices, ClientServicesProxy } from '@dxos/client-services';
+import { ClientServicesProxy } from '@dxos/client-services';
 import { DevtoolsContextProvider, useRoutes } from '@dxos/devtools';
+import { log } from '@dxos/log';
+import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext, ClientContextProps } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 import { RpcPort } from '@dxos/rpc';
 
-// TODO(burdon): Use dxos/log?
-
-// TODO(burdon): Create class.
-const clientReady = new Event<ClientContextProps>();
+log.config({ filter: 'debug' });
+log('Init Sandbox script.');
 
 const windowPort = (): RpcPort => ({
   send: async (message) =>
@@ -30,9 +29,7 @@ const windowPort = (): RpcPort => ({
       if (typeof message !== 'object' || message === null || message.source !== 'panel') {
         return;
       }
-      // Can't use @dxos/log here because it is accessing LocalStorage which is not available in the sandbox.
-      // https://developer.chrome.com/docs/extensions/mv3/manifest/sandbox/
-      console.log('Received message from panel:', message);
+      log('Received message from panel:', message);
       callback(new Uint8Array(message.data));
     };
 
@@ -50,13 +47,13 @@ const waitForRpc = async () =>
       }
 
       if (message.data === 'open-rpc') {
-        console.log('Panel RPC port ready.');
+        log('Panel RPC port ready.');
         window.removeEventListener('message', handler);
         resolve();
       }
     };
 
-    console.log('Sandbox RPC port ready.');
+    log('Sandbox RPC port ready.');
     window.addEventListener('message', handler);
     window.parent.postMessage({ data: 'open-rpc', source: 'sandbox' }, window.location.origin);
   });
@@ -65,11 +62,20 @@ export const DevtoolsRoutes = () => {
   return useRoutes();
 };
 
-const Devtools = ({ clientReady }: { clientReady: Event<ClientContextProps> }) => {
+const Devtools = () => {
+  log('initializing...');
+
   const [value, setValue] = useState<ClientContextProps>();
 
-  useEffect(() => {
-    clientReady.on((value) => setValue(value));
+  useAsyncEffect(async () => {
+    const rpcPort = windowPort();
+    const servicesProvider = new ClientServicesProxy(rpcPort);
+    await waitForRpc();
+
+    const client = new Client({ services: servicesProvider });
+    await client.initialize();
+    log('initialized client');
+    setValue({ client, services: servicesProvider.services });
   }, []);
 
   return (
@@ -88,19 +94,7 @@ const Devtools = ({ clientReady }: { clientReady: Event<ClientContextProps> }) =
 };
 
 const init = async () => {
-  // TODO(burdon): After client created.
-  createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
-
-  console.log('initializing...');
-  const rpcPort = windowPort();
-  const servicesProvider = new ClientServicesProxy(rpcPort);
-  await waitForRpc();
-
-  const client = new Client({ services: servicesProvider });
-  await client.initialize();
-
-  console.log('initialized client');
-  clientReady.emit({ client, services: servicesProvider.services as ClientServices });
+  createRoot(document.getElementById('root')!).render(<Devtools />);
 };
 
 void init();
