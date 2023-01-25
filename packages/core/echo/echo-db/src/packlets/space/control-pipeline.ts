@@ -75,7 +75,7 @@ export class ControlPipeline {
       for await (const msg of this._pipeline.consume()) {
         try {
           // log('processing', { msg });
-          log('processing', { key: msg.feedKey, seq: msg.seq })
+          log('processing', { key: msg.feedKey, seq: msg.seq });
           if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
             const result = await this._spaceStateMachine.process(
               msg.data.payload.credential,

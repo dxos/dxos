@@ -140,7 +140,7 @@ export class TestAgent {
     const snapshotManager = new SnapshotManager(new SnapshotStore(createStorage().createDirectory('snapshots')));
 
     const metadataStore = new MetadataStore(createStorage().createDirectory('metadata'));
-    await metadataStore.addSpace({key: spaceKey });
+    await metadataStore.addSpace({ key: spaceKey });
     const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl({
       modelFactory: new ModelFactory().registerModel(ObjectModel),
       metadataStore,

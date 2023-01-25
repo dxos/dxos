@@ -222,15 +222,12 @@ export class ReplicatorExtension implements TeleportExtension {
     });
 
     // left for testing
-    if(false) {
-      feed.on('download', (index: number, data: any) => {
-        log('download', {
-          key: info.feedKey,
-          index,
-        })
-      })
-    }
-
+    // feed.on('download', (index: number, data: any) => {
+    //   log('download', {
+    //     key: info.feedKey,
+    //     index
+    //   });
+    // });
 
     replicationStream.on('error', (err) => {
       if (

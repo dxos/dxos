@@ -4,6 +4,7 @@
 
 import assert from 'node:assert';
 
+import { sleep } from '@dxos/async';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,11 +15,10 @@ import { Timeframe } from '@dxos/timeframe';
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
-import { sleep } from '@dxos/async';
 
 export type WaitUntilReachedTargetParams = {
   timeout?: number;
-}
+};
 
 /**
  * External state accessor.
@@ -40,10 +40,9 @@ export class PipelineState {
     private _timeframeClock: TimeframeClock
   ) { }
 
-
   /**
    * Latest theoretical timeframe based on the last mutation in each feed.
-   * NOTE: This might never be reached if the mutation dependencies 
+   * NOTE: This might never be reached if the mutation dependencies
    */
   get endTimeframe() {
     return mapFeedIndexesToTimeframe(
@@ -74,24 +73,24 @@ export class PipelineState {
 
   /**
    * Wait until the pipeline processes all messages in the feed and reaches the target timeframe if that is set.
-   * 
+   *
    * This function will resolve immediately if the pipeline is stalled.
-   * 
+   *
    * @param timeout Timeout in milliseconds to specify the maximum wait time.
    */
   async waitUntilReachedTargetTimeframe({ timeout }: WaitUntilReachedTargetParams = {}) {
-    log(`waitUntilReachedTargetTimeframe`, {
+    log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,
-      target: this.targetTimeframe,
-    })
+      target: this.targetTimeframe
+    });
 
     this._reachedTargetPromise ??= Promise.race([
       this._timeframeClock.update.waitForCondition(() => {
         return Timeframe.dependencies(this.targetTimeframe, this.timeframe).isEmpty();
       }),
       this._iterator.stalled.discardParameter().waitForCount(1)
-    ])
+    ]);
 
     let done = false;
 
@@ -105,14 +104,14 @@ export class PipelineState {
             return;
           }
 
-          log.warn(`waitUntilReachedTargetTimeframe timed out`, {
+          log.warn('waitUntilReachedTargetTimeframe timed out', {
             timeout,
             current: this.timeframe,
             target: this.targetTimeframe,
-            dependencies: Timeframe.dependencies(this.targetTimeframe, this.timeframe),
-          })
-        }),
-      ])
+            dependencies: Timeframe.dependencies(this.targetTimeframe, this.timeframe)
+          });
+        })
+      ]);
     } else {
       return this._reachedTargetPromise;
     }

@@ -69,7 +69,7 @@ export class SpaceProtocol {
   @logInfo
   private get _ownPeerKey() {
     return this._swarmIdentity.peerKey;
-  } 
+  }
 
   constructor({ topic, swarmIdentity, networkManager, onSessionAuth }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
@@ -81,7 +81,7 @@ export class SpaceProtocol {
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
   addFeed(feed: FeedWrapper<FeedMessage>) {
-    log('addFeed', { key: feed.key })
+    log('addFeed', { key: feed.key });
 
     this._feeds.add(feed);
     for (const session of this._sessions.values()) {

@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { ISpace, MetadataStore, SigningContext, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-db';
@@ -14,7 +15,6 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { createDefaultModelFactory, ClientServicesHost, ServiceContext } from '../services';
-import { asyncTimeout } from '@dxos/async';
 
 //
 // TODO(burdon): Replace with test builder.

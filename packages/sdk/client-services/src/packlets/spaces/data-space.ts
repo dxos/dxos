@@ -7,18 +7,27 @@ import assert from 'node:assert';
 import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialConsumer, CredentialGenerator } from '@dxos/credentials';
-import { Database, DataPipelineControllerImpl, ISpace, MetadataStore, Space, SnapshotManager, SigningContext, createMappedFeedWriter } from '@dxos/echo-db';
+import { timed } from '@dxos/debug';
+import {
+  Database,
+  DataPipelineControllerImpl,
+  ISpace,
+  MetadataStore,
+  Space,
+  SnapshotManager,
+  SigningContext,
+  createMappedFeedWriter
+} from '@dxos/echo-db';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
+import { TypedMessage } from '@dxos/protocols';
+import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
 import { NotarizationPlugin } from './notarization-plugin';
-import { timed } from '@dxos/debug';
-import { Keyring } from '@dxos/keyring';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { TypedMessage } from '@dxos/protocols';
 
 const AUTH_TIMEOUT = 30000;
 
@@ -83,7 +92,7 @@ export class DataSpace implements ISpace {
   get dataPipelineController(): DataPipelineControllerImpl {
     return this._dataPipelineController;
   }
- 
+
   get database(): Database {
     assert(this._dataPipelineController.database);
     return this._dataPipelineController.database;
@@ -121,30 +130,45 @@ export class DataSpace implements ISpace {
   }
 
   async initializeDataPipeline() {
-    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: CONTROL_PIPELINE_READY_TIMEFRAME });
+    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
+      timeout: CONTROL_PIPELINE_READY_TIMEFRAME
+    });
 
-    // await this._ensureOwnFeedsAreAdmitted();
-    this.notarizationPlugin.setWriter(createMappedFeedWriter<Credential, TypedMessage>(credential => ({
-      '@type': 'dxos.echo.feed.CredentialsMessage',
-      credential
-    }), this._inner.controlPipeline.writer));
-    
+    await this._ensureOwnFeedsAreAdmitted();
+    this.notarizationPlugin.setWriter(
+      createMappedFeedWriter<Credential, TypedMessage>(
+        (credential) => ({
+          '@type': 'dxos.echo.feed.CredentialsMessage',
+          credential
+        }),
+        this._inner.controlPipeline.writer
+      )
+    );
+
     await this._inner.initDataPipeline(this._dataPipelineController);
   }
 
   @timed(10_000)
   private async _ensureOwnFeedsAreAdmitted() {
-    const credentials: Credential[] = []
-    const generator = new CredentialGenerator(this._keyring, this._signingContext.identityKey, this._signingContext.deviceKey);
+    const credentials: Credential[] = [];
+    const generator = new CredentialGenerator(
+      this._keyring,
+      this._signingContext.identityKey,
+      this._signingContext.deviceKey
+    );
 
-    if(!this._inner.spaceState.feeds.has(this.inner.controlFeedKey)) {
-      credentials.push(await generator.createFeedAdmission(this.key, this._inner.controlFeedKey, AdmittedFeed.Designation.CONTROL))
+    if (!this._inner.spaceState.feeds.has(this.inner.controlFeedKey)) {
+      credentials.push(
+        await generator.createFeedAdmission(this.key, this._inner.controlFeedKey, AdmittedFeed.Designation.CONTROL)
+      );
     }
-    if(!this._inner.spaceState.feeds.has(this.inner.dataFeedKey)) {
-      credentials.push(await generator.createFeedAdmission(this.key, this._inner.dataFeedKey, AdmittedFeed.Designation.DATA))
+    if (!this._inner.spaceState.feeds.has(this.inner.dataFeedKey)) {
+      credentials.push(
+        await generator.createFeedAdmission(this.key, this._inner.dataFeedKey, AdmittedFeed.Designation.DATA)
+      );
     }
 
-    if(credentials.length > 0) {
+    if (credentials.length > 0) {
       await this.notarizationPlugin.notarize(credentials);
     }
   }

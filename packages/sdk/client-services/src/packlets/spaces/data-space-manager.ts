@@ -66,7 +66,9 @@ export class DataSpaceManager {
         log('waiting for latest timeframe', { spaceMetadata });
         await space.dataPipelineController.pipelineState!.setTargetTimeframe(spaceMetadata.dataTimeframe);
       }
-      await space.dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({ timeout: DATA_PIPELINE_READY_TIMEOUT })
+      await space.dataPipelineController.pipelineState!.waitUntilReachedTargetTimeframe({
+        timeout: DATA_PIPELINE_READY_TIMEOUT
+      });
       this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
     }
   }

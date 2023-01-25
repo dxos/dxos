@@ -7,14 +7,13 @@ import { expect } from 'chai';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { test, describe } from '@dxos/test';
 
 import { createSigningContext, syncItems, TestBuilder } from '../testing';
 import { DataSpaceManager } from './data-space-manager';
-import { log } from '@dxos/log';
-import { sleep } from '@dxos/async';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
@@ -40,7 +39,7 @@ describe('DataSpaceManager', () => {
     expect(space.inner.spaceState.members.size).to.equal(1);
     expect(space.inner.spaceState.feeds.size).to.equal(2);
     expect(space.inner.protocol.feeds.size).to.equal(2);
-  })
+  });
 
   test('sync between peers', async () => {
     const builder = new TestBuilder();
@@ -83,15 +82,15 @@ describe('DataSpaceManager', () => {
         identity: identity1.identityKey,
         device: identity1.deviceKey,
         control: space1.inner.controlFeedKey,
-        data: space1.inner.dataFeedKey,
+        data: space1.inner.dataFeedKey
       },
       peer2: {
         identity: identity2.identityKey,
         device: identity2.deviceKey,
         control: space2.inner.controlFeedKey,
-        data: space2.inner.dataFeedKey,
+        data: space2.inner.dataFeedKey
       }
-    })
+    });
 
     // Admit peer2 to space1.
     await writeMessages(
@@ -113,13 +112,13 @@ describe('DataSpaceManager', () => {
     log('', {
       space1: {
         timeframe: space1.inner.controlPipeline.state.timeframe,
-        endTimeframe: space1.inner.controlPipeline.state.endTimeframe,
+        endTimeframe: space1.inner.controlPipeline.state.endTimeframe
       },
       space2: {
         timeframe: space2.inner.controlPipeline.state.timeframe,
-        endTimeframe: space2.inner.controlPipeline.state.endTimeframe,
-      },
-    })
+        endTimeframe: space2.inner.controlPipeline.state.endTimeframe
+      }
+    });
     log.break();
 
     await syncItems(space1, space2);

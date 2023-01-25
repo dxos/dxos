@@ -104,7 +104,6 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      debugger;
       await syncItems(space1, space2);
 
       await space1.close();
