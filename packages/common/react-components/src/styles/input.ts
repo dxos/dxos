@@ -24,12 +24,14 @@ export const defaultInput = (
   return mx(
     'border rounded text-neutral-900 dark:text-white',
     themeVariant === 'os'
-      ? 'text-sm border bg-neutral-50/50 dark:bg-neutral-900/50 border-neutral-200/50 dark:border-neutral-800/50'
+      ? 'text-sm border bg-neutral-50/50 dark:bg-neutral-900/50'
       : 'text-base bg-white/50 dark:bg-neutral-700/50',
     defaultFocus,
     defaultPlaceholder,
-    themeVariant === 'os' ? 'hover:bg-neutral-50 dark:hover:bg-neutral-900' : defaultHover({ disabled }),
-    valenceInputBorder(validationValence),
+    themeVariant === 'os' && !disabled
+      ? 'transition-colors duration-100 linear hover:bg-neutral-50/75 dark:hover:bg-neutral-900/75'
+      : defaultHover({ disabled }),
+    valenceInputBorder(validationValence, themeVariant),
     disabled && defaultDisabled
   );
 };

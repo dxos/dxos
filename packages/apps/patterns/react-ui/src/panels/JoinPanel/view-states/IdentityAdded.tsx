@@ -25,8 +25,12 @@ export const IdentityAdded = ({ identity, ...viewStateProps }: IdentityAddedProp
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
         <Avatar
           size={20}
-          fallbackValue={identity?.identityKey.toHex() ?? 'X'}
-          label={<p>{identity?.displayName ?? 'X'}</p>}
+          fallbackValue={identity?.identityKey.toHex() ?? ''}
+          label={
+            <p className={mx(!identity?.displayName && 'font-mono')}>
+              {identity?.displayName ?? identity?.identityKey.truncate() ?? ' '}
+            </p>
+          }
           variant='circle'
           status='active'
         />

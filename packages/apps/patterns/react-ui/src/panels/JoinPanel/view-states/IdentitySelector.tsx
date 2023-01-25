@@ -45,7 +45,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
           const inputId = `identitySelector__item--${hex}`;
           const labelId = `identitySelector__itemLabel--${hex}`;
           return (
-            <label htmlFor={inputId} key={hex} className='flex items-center mbe-2 gap-2'>
+            <label htmlFor={inputId} key={hex} className='flex items-center mbe-2 gap-2 cursor-pointer'>
               <RadioGroup.Item
                 id={inputId}
                 aria-labelledby={labelId}
@@ -63,7 +63,9 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
                 </RadioGroup.Indicator>
               </RadioGroup.Item>
               <Avatar fallbackValue={hex} labelId={labelId} variant='circle' />
-              <span id={labelId}>{displayName}</span>
+              <span id={labelId} className={mx(!displayName && 'font-mono')}>
+                {displayName ?? identityKey.truncate() ?? ''}
+              </span>
             </label>
           );
         })}

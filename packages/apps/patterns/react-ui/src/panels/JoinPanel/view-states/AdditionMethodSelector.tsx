@@ -20,34 +20,37 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
 
   const { t } = useTranslation('os');
 
+  const sharedButtonProps = {
+    disabled,
+    after: <CaretRight className={getSize(4)} weight='bold' />,
+    slots: { label: { className: 'text-sm' } }
+  };
+
   return (
     <ViewState {...viewStateProps}>
       <ViewStateHeading>{t('addition method selector title')}</ViewStateHeading>
       <div role='none' className='flex flex-col gap-1 grow'>
         <CompoundButton
+          {...sharedButtonProps}
           description={t('create identity description')}
           before={<Plus className={getSize(6)} />}
-          after={<CaretRight className={getSize(4)} weight='bold' />}
-          disabled={disabled}
           onClick={() => dispatch({ type: 'select addition method', method: 'create identity' })}
           data-autofocus='addition method selector'
         >
           {t('create identity label')}
         </CompoundButton>
         <CompoundButton
+          {...sharedButtonProps}
           description={t('join identity description')}
           before={<QrCode className={getSize(6)} />}
-          after={<CaretRight className={getSize(4)} weight='bold' />}
-          disabled={disabled}
           onClick={() => dispatch({ type: 'select addition method', method: 'accept device invitation' })}
         >
           {t('join identity label')}
         </CompoundButton>
         <CompoundButton
+          {...sharedButtonProps}
           description={t('recover identity description')}
           before={<Textbox className={getSize(6)} />}
-          after={<CaretRight className={getSize(4)} weight='bold' />}
-          disabled={disabled}
           onClick={() => dispatch({ type: 'select addition method', method: 'restore identity' })}
         >
           {t('recover identity label')}
