@@ -18,7 +18,7 @@ import { Task, TaskList } from '../proto';
  */
 export const SpacePage = () => {
   const { space } = useOutletContext<{ space: Space }>();
-  const [taskList] = useQuery(space, TaskList.filter());
+  const [taskList] = useQuery(space, { '@type': 'model/object' });
   if (!taskList) {
     return <Loading label='loading' />;
   }
@@ -27,6 +27,7 @@ export const SpacePage = () => {
       taskList={taskList}
       onTitleChanged={(title) => {
         taskList.title = title;
+        // void space.experimental.db.save(taskList);
       }}
       onTaskCreate={() => {
         const task = new Task();
@@ -39,6 +40,8 @@ export const SpacePage = () => {
         task.completed = completed;
       }}
       onTaskDeleted={(task) => {
+        // taskList.tasks // ??
+        // taskList.tasks.splice();
         void space.experimental.db.delete(task);
       }}
     />
