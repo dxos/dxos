@@ -233,6 +233,7 @@ declare module 'hypercore' {
     registerExtension(name: string, handlers?: StreamExtensionHandlers<T>): StreamExtension;
 
     // TODO(dmaretskyi): Add other events.
+    on(event: string, cb: (...args: any) => void): void;
     on(event: 'download', cb: (index: number, data: any) => void): void;
   }
 
