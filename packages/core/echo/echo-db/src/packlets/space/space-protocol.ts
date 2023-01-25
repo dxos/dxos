@@ -52,6 +52,7 @@ export class SpaceProtocol {
 
   @logInfo
   private readonly _topic: PublicKey;
+
   private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
   private readonly _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
 
