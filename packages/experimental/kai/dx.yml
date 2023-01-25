@@ -8,8 +8,19 @@ package:
       description: Kai Demo.
       build:
         command: pnpm -w nx bundle kai
+        env:
+          KAI_PWA: true
       # TODO(wittjosiah): Currently breaking publish to dev kube.
       # tunnel: true
+
+    - name: kai-web
+      type: dxos:type/app
+      displayName: kai-web
+      description: Kai Demo.
+      build:
+        command: pnpm -w nx bundle kai --outputPath packages/experimental/kai/out/kai-web
+        env:
+          KAI_DEV: true
 
 runtime:
   client:
