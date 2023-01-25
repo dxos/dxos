@@ -6,12 +6,12 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 ROOT=$(git rev-parse --show-toplevel)
 PACKAGE=${PWD##*/}
 PACKAGE_CAPS=${PACKAGE^^}
-PACKAGE_ENV=${PACKAGE_CAPS//-/_}
+PACKAGE_ENV=DEVTOOLS_EXTENSION
 
-eval "export CLIENT_ID=$"${PACKAGE_ENV}_CLIENT_ID""
-eval "export CLIENT_SECRET=$"${PACKAGE_ENV}_CLIENT_SECRET""
-eval "export REFRESH_TOKEN=$"${PACKAGE_ENV}_REFRESH_TOKEN""
-eval "export APP_ID=$"${PACKAGE_ENV}_APP_ID""
+eval "CLIENT_ID=$"${PACKAGE_ENV}_CLIENT_ID""
+eval "CLIENT_SECRET=$"${PACKAGE_ENV}_CLIENT_SECRET""
+eval "REFRESH_TOKEN=$"${PACKAGE_ENV}_REFRESH_TOKEN""
+eval "APP_ID=$"${PACKAGE_ENV}_APP_ID""
 
 if [ $BRANCH = "production" ]; then
   pushd $EXTENSION
