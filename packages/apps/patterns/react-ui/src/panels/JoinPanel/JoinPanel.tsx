@@ -4,17 +4,19 @@
 import * as AlertPrimitive from '@radix-ui/react-alert-dialog';
 import React, { useEffect, useReducer } from 'react';
 
+import { useIdentity } from '@dxos/react-client';
 import { mx, ThemeContext, useId } from '@dxos/react-components';
 
 import { defaultSurface } from '../../styles';
+import { JoinHeading } from './JoinHeading';
 import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
-import { JoinSpaceHeading } from './JoinSpaceHeading';
 import { AdditionMethodSelector, IdentitySelector } from './view-states';
 
-export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
+export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
   const titleId = useId('joinTitle');
+  const identity = useIdentity();
 
-  const spaceTitle = space.properties.get('title') ?? '';
+  const availableIdentities = identity ? [identity] : [];
 
   const reducer = (state: JoinState, action: JoinAction) => {
     const nextState = { ...state };
@@ -37,7 +39,8 @@ export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
   };
 
   const [joinState, dispatch] = useReducer(reducer, {
-    space,
+    spaceInvitation: initialInvitation,
+    haloInvitation: undefined,
     activeView: availableIdentities.length > 0 ? 'identity selector' : 'addition method selector',
     selectedIdentity: undefined,
     additionMethod: undefined
@@ -60,7 +63,7 @@ export const JoinPanel = ({ space, availableIdentities }: JoinPanelProps) => {
           className='fixed inset-0 z-[51] flex flex-col items-center justify-center p-2 md:p-4 lg:p-8'
         >
           <div role='none' className='is-full max-is-[320px]'>
-            <JoinSpaceHeading titleId={titleId} spaceTitle={spaceTitle} onClickExit={() => {}} />
+            <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className={mx(defaultSurface, 'is-full overflow-hidden rounded-be-md p-0')}>
               <div role='none' className='flex is-[200%]' aria-live='polite'>
                 <IdentitySelector

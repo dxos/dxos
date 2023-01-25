@@ -31,6 +31,8 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/react-async": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
