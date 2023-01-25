@@ -45,7 +45,7 @@ log.config({
 });
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
-const serviceProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
+const serviceProvider = (config?: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
 
 const Routes = () => {
   useTelemetry({ namespace: 'halo-app' });

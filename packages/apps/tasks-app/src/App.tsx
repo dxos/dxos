@@ -32,7 +32,8 @@ log.config({
 });
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
-const servicesProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
+const servicesProvider = (config?: Config) =>
+  process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config);
 
 export const App = () => {
   const {
