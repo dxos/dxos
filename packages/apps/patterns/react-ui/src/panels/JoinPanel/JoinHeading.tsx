@@ -27,7 +27,7 @@ export const JoinHeading = forwardRef(
     const nameId = useId('spaceDisplayName');
 
     return (
-      <div role='none' className={mx(subduedSurface, 'rounded-bs-md')} ref={ref}>
+      <div role='none' className={mx(subduedSurface, 'p-2 rounded-bs-md')} ref={ref}>
         {invitation ? (
           <div role='group' className='flex items-center gap-2'>
             <Avatar fallbackValue={invitation.invitation?.spaceKey?.toHex() ?? ''} labelId={nameId} />

@@ -26,5 +26,6 @@ export const os = {
   'addition method selector title': 'Add an identity to this device',
   'new identity input label': 'Add a display name',
   'failed to create identity message': 'Failed to create an identity.',
-  'identity added label': 'Created identity & added to this device:'
+  'identity added label': 'Created identity & added to this device:',
+  'join space as identity heading': '<part>as </part><part><icon/><label>{{labelValue}}</label></part>'
 };

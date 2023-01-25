@@ -5,9 +5,8 @@ import * as AlertPrimitive from '@radix-ui/react-alert-dialog';
 import React, { useEffect, useReducer } from 'react';
 
 import { useIdentity } from '@dxos/react-client';
-import { mx, ThemeContext, useId } from '@dxos/react-components';
+import { ThemeContext, useId } from '@dxos/react-components';
 
-import { defaultSurface } from '../../styles';
 import { JoinHeading } from './JoinHeading';
 import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
 import { AdditionMethodSelector, IdentitySelector, IdentityCreator, IdentityAdded } from './view-states';
@@ -70,15 +69,22 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
     <AlertPrimitive.Root defaultOpen>
       <ThemeContext.Provider value={{ themeVariant: 'os' }}>
         <AlertPrimitive.Overlay className='fixed inset-0 backdrop-blur z-50 overflow-auto grid place-items-center p-2 md:p-4 lg:p-8'>
-          <AlertPrimitive.Content aria-labelledby={titleId} className='is-full min-is-[260px] max-is-[320px]'>
+          <AlertPrimitive.Content
+            aria-labelledby={titleId}
+            className='is-full min-is-[260px] max-is-[320px] shadow-md backdrop-blur-md'
+          >
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
-            <div role='none' className={mx(defaultSurface, 'is-full overflow-hidden rounded-be-md p-0')}>
+            <div role='none' className='is-full overflow-hidden'>
               <div role='none' className='flex is-[400%]' aria-live='polite'>
                 <IdentitySelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
                 />
                 <AdditionMethodSelector
-                  {...{ dispatch, availableIdentities, active: joinState.activeView === 'addition method selector' }}
+                  {...{
+                    dispatch,
+                    availableIdentities,
+                    active: joinState.activeView === 'addition method selector'
+                  }}
                 />
                 <IdentityCreator
                   {...{

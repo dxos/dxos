@@ -5,16 +5,16 @@
 import { CaretLeft, CaretRight } from 'phosphor-react';
 import React from 'react';
 
-import { Profile } from '@dxos/client';
+import type { Profile } from '@dxos/client';
 import { Avatar, Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentityAddedProps extends ViewStateProps {
-  identity?: Profile;
+  addedIdentity?: Profile;
 }
 
-export const IdentityAdded = ({ identity, ...viewStateProps }: IdentityAddedProps) => {
+export const IdentityAdded = ({ addedIdentity, ...viewStateProps }: IdentityAddedProps) => {
   const disabled = !viewStateProps.active;
   const { dispatch } = viewStateProps;
   const { t } = useTranslation('os');
@@ -25,10 +25,10 @@ export const IdentityAdded = ({ identity, ...viewStateProps }: IdentityAddedProp
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
         <Avatar
           size={20}
-          fallbackValue={identity?.identityKey.toHex() ?? ''}
+          fallbackValue={addedIdentity?.identityKey.toHex() ?? ''}
           label={
-            <p className={mx(!identity?.displayName && 'font-mono')}>
-              {identity?.displayName ?? identity?.identityKey.truncate() ?? ' '}
+            <p className={mx(!addedIdentity?.displayName && 'font-mono')}>
+              {addedIdentity?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
             </p>
           }
           variant='circle'
