@@ -142,7 +142,7 @@ export class MetadataStore {
     const space = this.spaces.find((space) => space.key === spaceKey);
     assert(space, 'Space not found');
 
-    space.latestTimeframe = timeframe;
+    space.dataTimeframe = timeframe;
     await this._save();
   }
 

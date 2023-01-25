@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { ISpace, MetadataStore, SigningContext, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-db';
@@ -70,14 +71,14 @@ export const syncItems = async (space1: ISpace, space2: ISpace) => {
   {
     // Check item replicated from 1 => 2.
     const item1 = await space1.database!.createItem({ type: 'type-1' });
-    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
+    const item2 = await asyncTimeout(space2.database!.waitForItem({ type: 'type-1' }), 2000);
     expect(item1.id).to.eq(item2.id);
   }
 
   {
     // Check item replicated from 2 => 1.
     const item1 = await space2.database!.createItem({ type: 'type-2' });
-    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
+    const item2 = await asyncTimeout(space1.database!.waitForItem({ type: 'type-2' }), 2000);
     expect(item1.id).to.eq(item2.id);
   }
 };
