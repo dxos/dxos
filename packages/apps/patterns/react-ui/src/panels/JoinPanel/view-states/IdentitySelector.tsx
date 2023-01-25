@@ -41,10 +41,12 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
         {availableIdentities.map(({ displayName, identityKey }) => {
           const hex = identityKey.toHex();
           const inputId = `identitySelector__item--${hex}`;
+          const labelId = `identitySelector__itemLabel--${hex}`;
           return (
             <div key={hex} className='flex items-center mbe-2'>
               <RadioGroup.Item
                 id={inputId}
+                aria-labelledby={labelId}
                 value={hex}
                 className={mx(
                   'peer relative w-4 h-4 rounded-full',
@@ -58,9 +60,10 @@ export const IdentitySelector = ({ dispatch, availableIdentities, ...viewStatePr
                   <div className='w-1.5 h-1.5 rounded-full bg-white' />
                 </RadioGroup.Indicator>
               </RadioGroup.Item>
-              <label htmlFor={inputId} className='pis-1 block text-base grow cursor-pointer flex items-center gap-1'>
-                <Avatar fallbackValue={hex} label={<span>{displayName}</span>} variant='circle' />
-              </label>
+              <div className='pis-1 block text-base grow cursor-pointer flex items-center gap-1'>
+                <Avatar fallbackValue={hex} labelId={labelId} variant='circle' />
+                <span id={labelId}>{displayName}</span>
+              </div>
             </div>
           );
         })}

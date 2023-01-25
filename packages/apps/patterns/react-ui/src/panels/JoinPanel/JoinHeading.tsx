@@ -7,7 +7,7 @@ import React, { ForwardedRef, forwardRef } from 'react';
 
 import { CancellableInvitationObservable } from '@dxos/client';
 import { useSpace } from '@dxos/react-client';
-import { Button, getSize, Heading, mx, Trans, useId, useTranslation } from '@dxos/react-components';
+import { Avatar, Button, getSize, Heading, mx, Trans, useId, useTranslation } from '@dxos/react-components';
 
 import { subduedSurface } from '../../styles';
 
@@ -20,15 +20,17 @@ export interface JoinSpaceHeadingProps {
 export const JoinHeading = forwardRef(
   ({ titleId, invitation, onClickExit }: JoinSpaceHeadingProps, ref: ForwardedRef<HTMLDivElement>) => {
     const { t } = useTranslation('os');
-    const nameId = useId('spaceDisplayName');
+
     const space = useSpace(invitation?.invitation?.spaceKey);
-    const spaceTitle = space?.getProperty('title') ?? '';
+    const spaceTitle = space?.getProperty('title') ?? '(Space title not available)';
+
+    const nameId = useId('spaceDisplayName');
 
     return (
       <div role='none' className={mx(subduedSurface, 'rounded-bs-md')} ref={ref}>
         {invitation ? (
           <div role='group' className='flex items-center gap-2'>
-            <p role='img' className={mx(getSize(10), 'rounded-full bg-primary-500')} aria-labelledby={nameId} />
+            <Avatar fallbackValue={invitation.invitation?.spaceKey?.toHex() ?? ''} labelId={nameId} />
             <Heading level={1} className='font-body font-normal text-base grow' id={titleId}>
               <Trans
                 {...{
