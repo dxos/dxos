@@ -69,12 +69,8 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
   return (
     <AlertPrimitive.Root defaultOpen>
       <ThemeContext.Provider value={{ themeVariant: 'os' }}>
-        <AlertPrimitive.Overlay className='fixed inset-0 backdrop-blur z-50' />
-        <AlertPrimitive.Content
-          aria-labelledby={titleId}
-          className='fixed inset-0 z-[51] flex flex-col items-center justify-center p-2 md:p-4 lg:p-8'
-        >
-          <div role='none' className='is-full max-is-[320px]'>
+        <AlertPrimitive.Overlay className='fixed inset-0 backdrop-blur z-50 overflow-auto grid place-items-center p-2 md:p-4 lg:p-8'>
+          <AlertPrimitive.Content aria-labelledby={titleId} className='is-full min-is-[272px] max-is-[320px]'>
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className={mx(defaultSurface, 'is-full overflow-hidden rounded-be-md p-0')}>
               <div role='none' className='flex is-[400%]' aria-live='polite'>
@@ -100,8 +96,8 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
                 />
               </div>
             </div>
-          </div>
-        </AlertPrimitive.Content>
+          </AlertPrimitive.Content>
+        </AlertPrimitive.Overlay>
       </ThemeContext.Provider>
     </AlertPrimitive.Root>
   );

@@ -21,7 +21,7 @@ export const IdentityAdded = ({ identity, ...viewStateProps }: IdentityAddedProp
 
   return (
     <ViewState {...viewStateProps}>
-      <h2>{t('identity added label')}</h2>
+      <h2 className='font-system-medium text-sm'>{t('identity added label')}</h2>
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
         <Avatar
           size={20}

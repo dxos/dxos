@@ -36,8 +36,8 @@ export const JoinHeading = forwardRef(
                 {...{
                   defaults: t('join space heading'),
                   components: {
-                    small: <span className='block font-system-medium text-sm' />,
-                    large: <span className='block' id={nameId} />
+                    small: <span className='block leading-none mbe-1 font-system-medium text-sm' />,
+                    large: <span className='block leading-none' id={nameId} />
                   },
                   values: { spaceTitle }
                 }}
