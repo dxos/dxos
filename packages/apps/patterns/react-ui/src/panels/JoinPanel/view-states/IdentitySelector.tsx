@@ -6,7 +6,7 @@ import * as RadioGroup from '@radix-ui/react-radio-group';
 import { CaretLeft, CaretRight, UserPlus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
-import { Avatar, Button, defaultFocus, getSize, mx, useTranslation } from '@dxos/react-components';
+import { Avatar, Button, themeVariantFocus, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { Profile } from '../JoinPanelProps';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
@@ -55,7 +55,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
                   'border border-transparent text-white',
                   'radix-state-checked:bg-primary-600',
                   'radix-state-unchecked:bg-neutral-100 dark:radix-state-unchecked:bg-neutral-900',
-                  defaultFocus
+                  themeVariantFocus('os')
                 )}
               >
                 <RadioGroup.Indicator className='absolute inset-0 flex items-center justify-center leading-0'>

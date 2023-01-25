@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defaultDisabled, defaultFocus, defaultHover, defaultActive, osActive } from '../../styles';
+import { defaultDisabled, defaultHover, defaultActive, osActive, themeVariantFocus } from '../../styles';
 import { mx } from '../../util';
 import { ThemeContextValue } from '../ThemeProvider';
 import { ButtonProps } from './ButtonProps';
@@ -31,7 +31,7 @@ export const buttonStyles = (
     resolvedVariant === 'primary' && primaryAppButtonColors,
     resolvedVariant === 'outline' &&
       'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
-    defaultFocus,
+    themeVariantFocus(themeVariant),
     props.disabled
       ? defaultDisabled
       : !isOsTheme && resolvedVariant !== 'outline' && resolvedVariant !== 'ghost' && 'button-elevation',
