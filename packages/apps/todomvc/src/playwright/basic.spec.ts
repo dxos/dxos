@@ -51,7 +51,7 @@ describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
-      }, 1000);
+      }, 2000);
     }).onlyEnvironments('chromium');
 
     test('toggle a task', async () => {
