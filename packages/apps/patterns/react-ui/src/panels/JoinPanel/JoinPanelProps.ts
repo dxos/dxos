@@ -23,14 +23,28 @@ export interface EmptyJoinAction {
   type: 'deselect identity' | 'cancel addition' | 'add identity';
 }
 
+export interface InvitationAction {
+  type:
+    | 'authenticating invitation'
+    | 'cancel invitation'
+    | 'connect invitation'
+    | 'connecting invitation'
+    | 'fail invitation'
+    | 'accepted invitation'
+    | 'timeout invitation';
+  from: 'space' | 'halo';
+}
+
 export interface AdditionMethodAction {
   type: 'select addition method';
   method: 'restore identity' | 'accept device invitation' | 'create identity';
 }
 
-export type JoinAction = IdentityAction | EmptyJoinAction | AdditionMethodAction;
+export type JoinAction = IdentityAction | EmptyJoinAction | AdditionMethodAction | InvitationAction;
 
 export type JoinDispatch = Dispatch<JoinAction>;
+
+export type InvitationView = 'invitation connector' | 'invitation authenticator' | 'invitation accepted';
 
 export type JoinView =
   | 'identity selector'
@@ -38,14 +52,15 @@ export type JoinView =
   | 'identity restorer'
   | 'identity creator'
   | 'identity added'
-  | 'invitation connector'
-  | 'invitation authenticator'
-  | 'invitation accepted';
+  | 'space invitation acceptor'
+  | 'halo invitation acceptor';
 
 export interface JoinState {
   activeView: JoinView;
   spaceInvitation?: CancellableInvitationObservable;
+  spaceViewState: InvitationView;
   haloInvitation?: CancellableInvitationObservable;
+  haloViewState: InvitationView;
   selectedIdentity?: Profile;
   additionMethod?: AdditionMethodAction['method'];
 }

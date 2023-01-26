@@ -59,7 +59,7 @@ const PureViewStateInvitation = ({
 }) => {
   const labelId = useId('invitationState');
   return (
-    <div role='none' className={mx(defaultSurface, 'p-2')}>
+    <div role='none' className={mx(defaultSurface, 'pli-2 pbs-2')}>
       <div role='status' aria-labelledby={labelId} className='flex gap-2 items-center mlb-1'>
         <div
           role='none'

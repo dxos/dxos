@@ -9,8 +9,14 @@ import { ThemeContext, useId } from '@dxos/react-components';
 
 import { JoinHeading } from './JoinHeading';
 import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
-import { AdditionMethodSelector, IdentitySelector, IdentityCreator, IdentityAdded } from './view-states';
-import { InvitationConnector } from './view-states/InvitationConnector';
+import {
+  AdditionMethodSelector,
+  IdentitySelector,
+  IdentityCreator,
+  IdentityAdded,
+  InvitationAuthenticator,
+  InvitationConnector
+} from './view-states';
 
 export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
   const titleId = useId('joinTitle');
@@ -34,13 +40,25 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
         break;
       case 'select identity':
         nextState.selectedIdentity = action.identity;
-        nextState.activeView = 'invitation connector';
+        nextState.activeView = 'space invitation acceptor';
         break;
       case 'deselect identity':
         nextState.selectedIdentity = undefined;
         nextState.activeView = 'identity selector';
         break;
-      // todo: fill this in with the correct logic
+      case 'cancel invitation':
+      case 'fail invitation':
+      case 'timeout invitation':
+      case 'connecting invitation':
+        nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation connector';
+        break;
+      case 'connect invitation':
+      case 'authenticating invitation':
+        nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation authenticator';
+        break;
+      case 'accepted invitation':
+        nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation accepted';
+        break;
     }
     console.log('[reducer]', action, nextState);
     return nextState;
@@ -51,7 +69,9 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
     haloInvitation: undefined,
     activeView: availableIdentities.length > 0 ? 'identity selector' : 'addition method selector',
     selectedIdentity: undefined,
-    additionMethod: undefined
+    additionMethod: undefined,
+    spaceViewState: 'invitation connector',
+    haloViewState: 'invitation connector'
   });
 
   useEffect(() => {
@@ -66,6 +86,30 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
     }
   }, [joinState.activeView]);
 
+  useEffect(() => {
+    joinState.spaceInvitation?.subscribe({
+      onAuthenticating: () => dispatch({ type: 'authenticating invitation', from: 'space' }),
+      onCancelled: () => dispatch({ type: 'cancel invitation', from: 'space' }),
+      onConnected: () => dispatch({ type: 'connect invitation', from: 'space' }),
+      onConnecting: () => dispatch({ type: 'connecting invitation', from: 'space' }),
+      onError: () => dispatch({ type: 'fail invitation', from: 'space' }),
+      onSuccess: () => dispatch({ type: 'accepted invitation', from: 'space' }),
+      onTimeout: () => dispatch({ type: 'timeout invitation', from: 'space' })
+    });
+  }, [joinState.spaceInvitation]);
+
+  useEffect(() => {
+    joinState.haloInvitation?.subscribe({
+      onAuthenticating: () => dispatch({ type: 'authenticating invitation', from: 'halo' }),
+      onCancelled: () => dispatch({ type: 'cancel invitation', from: 'halo' }),
+      onConnected: () => dispatch({ type: 'connect invitation', from: 'halo' }),
+      onConnecting: () => dispatch({ type: 'connecting invitation', from: 'halo' }),
+      onError: () => dispatch({ type: 'fail invitation', from: 'halo' }),
+      onSuccess: () => dispatch({ type: 'accepted invitation', from: 'halo' }),
+      onTimeout: () => dispatch({ type: 'timeout invitation', from: 'halo' })
+    });
+  }, [joinState.haloInvitation]);
+
   return (
     <AlertPrimitive.Root defaultOpen>
       <ThemeContext.Provider value={{ themeVariant: 'os' }}>
@@ -76,7 +120,7 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
           >
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className='is-full overflow-hidden'>
-              <div role='none' className='flex is-[500%]' aria-live='polite'>
+              <div role='none' className='flex is-[600%]' aria-live='polite'>
                 <IdentitySelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
                 />
@@ -106,7 +150,21 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
                     dispatch,
                     activeInvitation: joinState.spaceInvitation || true,
                     selectedIdentity: joinState.selectedIdentity,
-                    active: joinState.activeView === 'invitation connector'
+                    active:
+                      joinState.activeView === 'space invitation acceptor' &&
+                      joinState.spaceViewState === 'invitation connector',
+                    invitationType: 'space'
+                  }}
+                />
+                <InvitationAuthenticator
+                  {...{
+                    dispatch,
+                    activeInvitation: joinState.spaceInvitation || true,
+                    selectedIdentity: joinState.selectedIdentity,
+                    active:
+                      joinState.activeView === 'space invitation acceptor' &&
+                      joinState.spaceViewState === 'invitation authenticator',
+                    invitationType: 'space'
                   }}
                 />
               </div>

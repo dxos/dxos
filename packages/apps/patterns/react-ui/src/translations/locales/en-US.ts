@@ -15,6 +15,7 @@ export const os = {
   'add identity label': 'Add',
   'continue label': 'Continue',
   'back label': 'Back',
+  'next label': 'Next',
   'auth choices label': 'Choose an identity',
   'create identity label': 'Create an identity',
   'create identity description': 'Create a new identity.',
@@ -35,5 +36,7 @@ export const os = {
   'connecting status label': 'Connecting…',
   'connected status label': 'Enter confirmation PIN',
   'authenticating status label': 'Validating PIN…',
-  'success status label': 'Success'
+  'success status label': 'Success',
+  'connect label': 'Connect',
+  'reconnect label': 'Reconnect'
 };
