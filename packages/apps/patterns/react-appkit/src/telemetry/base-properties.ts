@@ -3,13 +3,25 @@
 //
 
 import { Client } from '@dxos/client';
+import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 import { humanize } from '@dxos/util';
 
 const IPDATA_API_KEY = process.env.IPDATA_API_KEY;
 
-export const DX_TELEMETRY = localStorage.getItem('halo-app:telemetry-disabled');
-export const DX_GROUP = localStorage.getItem('halo-app:telemetry-group');
+let DX_TELEMETRY: string | null = null;
+let DX_GROUP: string | null = null;
+try {
+  // LocalStorage is not available in Chrome extensions sandboxed files.
+  // https://developer.chrome.com/docs/extensions/mv3/manifest/sandbox/
+  // And it will throw an error if we try to access it.
+  DX_TELEMETRY = localStorage.getItem('halo-app:telemetry-disabled');
+  DX_GROUP = localStorage.getItem('halo-app:telemetry-group');
+} catch (err) {
+  log.catch(err);
+}
+
+export { DX_TELEMETRY, DX_GROUP };
 export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT;
 export const DX_RELEASE = process.env.DX_RELEASE;
 
