@@ -35,8 +35,10 @@ export const os = {
   'init status label': 'Ready to connect',
   'connecting status label': 'Connecting…',
   'connected status label': 'Enter confirmation PIN',
-  'authenticating status label': 'Validating PIN…',
+  'authenticating status label': 'Enter confirmation PIN',
   'success status label': 'Success',
   'connect label': 'Connect',
-  'reconnect label': 'Reconnect'
+  'reconnect label': 'Reconnect',
+  'cancel label': 'Cancel',
+  'pin input label': 'The PIN provided by the invitation sender'
 };

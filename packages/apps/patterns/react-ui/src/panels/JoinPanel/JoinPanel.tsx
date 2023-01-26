@@ -4,7 +4,7 @@
 import * as AlertPrimitive from '@radix-ui/react-alert-dialog';
 import React, { useEffect, useReducer } from 'react';
 
-import { useIdentity } from '@dxos/react-client';
+import { useClient, useIdentity } from '@dxos/react-client';
 import { ThemeContext, useId } from '@dxos/react-components';
 
 import { JoinHeading } from './JoinHeading';
@@ -19,6 +19,7 @@ import {
 } from './view-states';
 
 export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
+  const client = useClient();
   const titleId = useId('joinTitle');
   const identity = useIdentity();
 
@@ -41,6 +42,7 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
       case 'select identity':
         nextState.selectedIdentity = action.identity;
         nextState.activeView = 'space invitation acceptor';
+        state.spaceInvitation?.invitation && client.echo.acceptInvitation(state.spaceInvitation.invitation);
         break;
       case 'deselect identity':
         nextState.selectedIdentity = undefined;
@@ -79,12 +81,17 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
     const attrValue =
       joinState.activeView === 'identity creator'
         ? `${joinState.activeView}; ${joinState.additionMethod}`
+        : joinState.activeView === 'space invitation acceptor'
+        ? `${joinState.activeView}; ${joinState.spaceViewState}`
+        : joinState.activeView === 'halo invitation acceptor'
+        ? `${joinState.activeView}; ${joinState.haloViewState}`
         : joinState.activeView;
+    console.log('[autofocus value]', attrValue);
     const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${attrValue}"]`);
     if ($nextAutofocus) {
       $nextAutofocus.focus();
     }
-  }, [joinState.activeView]);
+  }, [joinState.activeView, joinState.spaceViewState, joinState.haloViewState]);
 
   useEffect(() => {
     joinState.spaceInvitation?.subscribe({

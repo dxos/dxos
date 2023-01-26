@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { StoryFn } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
-import { Client, Invitation, CancellableInvitationObservable } from '@dxos/client';
+import { Client, Invitation, CancellableInvitationObservable, InvitationEncoder } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';
@@ -38,7 +38,7 @@ export const Default = {
         await Promise.all(clients.map((client) => client.initialize()));
         log('[initialized]');
 
-        const _profile = await clients[0].halo.createProfile({ displayName: 'Os Mutantes' });
+        await clients[0].halo.createProfile({ displayName: 'Os Mutantes' });
 
         const space = await clients[0].echo.createSpace();
         log('[space created]', space);
@@ -48,7 +48,20 @@ export const Default = {
         const invitation = await space.createInvitation({ type: Invitation.Type.INTERACTIVE });
         log('[invitation created]', invitation.invitation);
 
-        setInvitation(invitation);
+        invitation.subscribe({
+          onAuthenticating: log,
+          onCancelled: () => log,
+          onConnected: () => log,
+          onConnecting: () => log,
+          onError: () => log,
+          onSuccess: () => log,
+          onTimeout: () => log
+        });
+
+        const invitationCode = InvitationEncoder.encode(invitation.invitation!);
+        const acceptableInvitation = InvitationEncoder.decode(invitationCode);
+
+        setInvitation(acceptableInvitation);
 
         return () => {
           void Promise.all(clients.map((client) => client.destroy()));

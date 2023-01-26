@@ -57,7 +57,12 @@ const InvitationActions = ({
     case Invitation.State.CANCELLED:
     case Invitation.State.ERROR:
       return (
-        <Button disabled={disabled} className='grow flex items-center gap-2 pli-2' onClick={connectInvitation}>
+        <Button
+          disabled={disabled}
+          className='grow flex items-center gap-2 pli-2'
+          onClick={connectInvitation}
+          data-autofocus='space invitation acceptor; invitation connector'
+        >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
           <span className='grow'>{t('reconnect label')}</span>
           <ArrowsClockwise weight='bold' className={getSize(5)} />
@@ -68,7 +73,7 @@ const InvitationActions = ({
         <Button disabled={disabled} className='grow flex items-center gap-2 pli-2' onClick={connectInvitation}>
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
           <span className='grow'>{t('connect label')}</span>
-          <ArrowsClockwise weight='bold' className={getSize(5)} />
+          <CaretRight weight='bold' className={getSize(5)} />
         </Button>
       );
   }
@@ -81,7 +86,11 @@ export const InvitationConnector = ({ invitationType, ...viewStateProps }: Invit
   return (
     <ViewState {...viewStateProps}>
       {activeInvitation === true || !activeInvitation ? (
-        <Button disabled={disabled} className='grow flex items-center gap-2 pli-2'>
+        <Button
+          disabled={disabled}
+          className='grow flex items-center gap-2 pli-2'
+          data-autofocus='space invitation acceptor; invitation connector'
+        >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
           <span className='grow'>{t('connect label')}</span>
           <ArrowsClockwise weight='bold' className={getSize(5)} />
