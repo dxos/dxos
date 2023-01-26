@@ -75,7 +75,7 @@ export const Primary = () => {
   const config = new Config({
     runtime: {
       client: {
-        debug: 'dxos:bot*'
+        log: { filter: 'dxos:bot*' }
       },
       services: {
         // Must match values from current CLI config (`dx profile config`).

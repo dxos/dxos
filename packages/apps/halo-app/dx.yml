@@ -11,6 +11,8 @@ package:
 
 runtime:
   client:
+    log:
+      filter: halo-app:debug,client:debug,config:debug,warn
     remoteSource: /vault.html
     storage:
       persistent: true

@@ -3,13 +3,18 @@
 //
 
 import { WorkerRuntime } from '@dxos/client';
-import { Config, Defaults, Dynamics } from '@dxos/config';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-log.config({ filter: process.env.LOG_FILTER ?? 'client:debug,info', prefix: process.env.LOG_BROWSER_PREFIX });
+// NOTE: Verbose logging enabled in the shared worker for the time being.
+const LOG_FILTER = 'client:debug,info';
 
-const workerRuntime = new WorkerRuntime(async () => new Config(await Dynamics(), Defaults()));
+const workerRuntime = new WorkerRuntime(async () => {
+  const config = new Config(await Dynamics(), await Envs(), Defaults());
+  log.config({ filter: LOG_FILTER, prefix: config.get('runtime.client.log.prefix') });
+  return config;
+});
 
 const start = Date.now();
 void workerRuntime.start().then(
