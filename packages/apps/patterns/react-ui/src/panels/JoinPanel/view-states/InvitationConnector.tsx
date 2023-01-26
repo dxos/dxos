@@ -5,7 +5,7 @@
 import { ArrowsClockwise, CaretLeft, CaretRight } from 'phosphor-react';
 import React, { useCallback } from 'react';
 
-import { CancellableInvitationObservable, Invitation } from '@dxos/client';
+import { AuthenticatingInvitationObservable, Invitation } from '@dxos/client';
 import { useClient, useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
@@ -20,7 +20,7 @@ const InvitationActions = ({
   disabled,
   invitationType
 }: {
-  activeInvitation: CancellableInvitationObservable;
+  activeInvitation: AuthenticatingInvitationObservable;
   disabled?: boolean;
   dispatch: ViewStateProps['dispatch'];
   invitationType: InvitationConnectorProps['invitationType'];
@@ -30,8 +30,6 @@ const InvitationActions = ({
   const { t } = useTranslation('os');
 
   const connectInvitation = useCallback(() => {
-    activeInvitation.invitation &&
-      client[invitationType === 'halo' ? 'halo' : 'echo'].acceptInvitation(activeInvitation.invitation);
     connect(activeInvitation);
   }, [client, activeInvitation, connect, invitationType]);
 

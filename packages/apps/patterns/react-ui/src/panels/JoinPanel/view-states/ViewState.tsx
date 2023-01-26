@@ -5,7 +5,7 @@
 import { CheckCircle, HourglassSimple, X } from 'phosphor-react';
 import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
-import type { CancellableInvitationObservable, Profile } from '@dxos/client';
+import type { AuthenticatingInvitationObservable, Profile } from '@dxos/client';
 import { Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { mx, useTranslation, Trans, Avatar, useId, getSize, strongShimmer } from '@dxos/react-components';
@@ -17,7 +17,7 @@ export interface ViewStateProps extends ComponentProps<'div'> {
   active: boolean;
   dispatch: JoinDispatch;
   selectedIdentity?: true | Profile;
-  activeInvitation?: true | CancellableInvitationObservable;
+  activeInvitation?: true | AuthenticatingInvitationObservable;
 }
 
 const stripe = mx('rounded-full grow', getSize(3));
@@ -89,7 +89,7 @@ const PureViewStateInvitation = ({
   );
 };
 
-const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: CancellableInvitationObservable }) => {
+const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: AuthenticatingInvitationObservable }) => {
   const { t } = useTranslation('os');
   const { status, haltedAt } = useInvitationStatus(activeInvitation);
 

@@ -4,6 +4,7 @@
 import * as AlertPrimitive from '@radix-ui/react-alert-dialog';
 import React, { useEffect, useReducer } from 'react';
 
+import { InvitationEncoder } from '@dxos/client';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { ThemeContext, useId } from '@dxos/react-components';
 
@@ -17,8 +18,9 @@ import {
   InvitationAuthenticator,
   InvitationConnector
 } from './view-states';
+import { InvitationAccepted } from './view-states/InvitationAccepted';
 
-export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
+export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
   const client = useClient();
   const titleId = useId('joinTitle');
   const identity = useIdentity();
@@ -27,6 +29,10 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
 
   const reducer = (state: JoinState, action: JoinAction) => {
     const nextState = { ...state };
+    // TODO: Why is `onAuthenticating` called twice?
+    if (action.type === 'authenticating invitation' && state.spaceViewState === 'invitation accepted') {
+      return state;
+    }
     switch (action.type) {
       case 'added identity':
         nextState.activeView = 'identity added';
@@ -42,7 +48,12 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
       case 'select identity':
         nextState.selectedIdentity = action.identity;
         nextState.activeView = 'space invitation acceptor';
-        state.spaceInvitation?.invitation && client.echo.acceptInvitation(state.spaceInvitation.invitation);
+        if (state.unredeemedSpaceInvitationCode) {
+          nextState.spaceInvitation = client.echo.acceptInvitation(
+            InvitationEncoder.decode(state.unredeemedSpaceInvitationCode)
+          );
+          nextState.unredeemedSpaceInvitationCode = undefined;
+        }
         break;
       case 'deselect identity':
         nextState.selectedIdentity = undefined;
@@ -67,7 +78,8 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
   };
 
   const [joinState, dispatch] = useReducer(reducer, {
-    spaceInvitation: initialInvitation,
+    unredeemedSpaceInvitationCode: initialInvitationCode,
+    spaceInvitation: undefined,
     haloInvitation: undefined,
     activeView: availableIdentities.length > 0 ? 'identity selector' : 'addition method selector',
     selectedIdentity: undefined,
@@ -86,7 +98,6 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
         : joinState.activeView === 'halo invitation acceptor'
         ? `${joinState.activeView}; ${joinState.haloViewState}`
         : joinState.activeView;
-    console.log('[autofocus value]', attrValue);
     const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${attrValue}"]`);
     if ($nextAutofocus) {
       $nextAutofocus.focus();
@@ -127,7 +138,7 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
           >
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className='is-full overflow-hidden'>
-              <div role='none' className='flex is-[600%]' aria-live='polite'>
+              <div role='none' className='flex is-[700%]' aria-live='polite'>
                 <IdentitySelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
                 />
@@ -171,6 +182,17 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
                     active:
                       joinState.activeView === 'space invitation acceptor' &&
                       joinState.spaceViewState === 'invitation authenticator',
+                    invitationType: 'space'
+                  }}
+                />
+                <InvitationAccepted
+                  {...{
+                    dispatch,
+                    activeInvitation: joinState.spaceInvitation || true,
+                    selectedIdentity: joinState.selectedIdentity,
+                    active:
+                      joinState.activeView === 'space invitation acceptor' &&
+                      joinState.spaceViewState === 'invitation accepted',
                     invitationType: 'space'
                   }}
                 />

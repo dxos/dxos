@@ -40,5 +40,6 @@ export const os = {
   'connect label': 'Connect',
   'reconnect label': 'Reconnect',
   'cancel label': 'Cancel',
+  'done label': 'Done',
   'pin input label': 'The PIN provided by the invitation sender'
 };

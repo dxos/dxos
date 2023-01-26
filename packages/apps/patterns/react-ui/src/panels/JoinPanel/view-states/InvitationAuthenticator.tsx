@@ -5,13 +5,17 @@
 import { CaretLeft, CaretRight } from 'phosphor-react';
 import React, { ComponentProps, ComponentPropsWithoutRef, useCallback, useState } from 'react';
 
-import { CancellableInvitationObservable } from '@dxos/client';
+import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, Input, mx, useTranslation } from '@dxos/react-components';
 
 import { ViewState, ViewStateProps } from './ViewState';
 
 const pinLength = 6;
+
+export interface InvitationAuthenticatorProps extends ViewStateProps {
+  invitationType: 'space' | 'halo';
+}
 
 const PureInvitationAuthenticatorContent = ({
   disabled,
@@ -30,9 +34,11 @@ const PureInvitationAuthenticatorContent = ({
         size='pin'
         length={pinLength}
         onChange={onChange}
+        disabled={disabled}
         slots={{
           label: { className: 'sr-only' },
           input: {
+            disabled,
             inputMode: 'numeric',
             pattern: '\\d*',
             'data-autofocus': 'space invitation acceptor; invitation authenticator'
@@ -41,7 +47,12 @@ const PureInvitationAuthenticatorContent = ({
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>
-        <Button disabled={disabled} className='grow flex items-center gap-2 pli-2 order-2' onClick={onAuthenticate}>
+        <Button
+          disabled={disabled}
+          className='grow flex items-center gap-2 pli-2 order-2'
+          onClick={onAuthenticate}
+          data-autofocus-pinlength
+        >
           <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
           <span className='grow'>{t('next label')}</span>
           <CaretRight weight='bold' className={getSize(4)} />
@@ -57,19 +68,26 @@ const PureInvitationAuthenticatorContent = ({
 
 const InvitationAuthenticatorContent = ({
   disabled,
-  invitation
+  invitation,
+  dispatch,
+  invitationType
 }: {
   disabled?: boolean;
-  invitation: CancellableInvitationObservable;
+  invitation: AuthenticatingInvitationObservable;
+  dispatch: ViewStateProps['dispatch'];
+  invitationType: InvitationAuthenticatorProps['invitationType'];
 }) => {
   const [pinValue, setPinValue] = useState('');
   const { authenticate } = useInvitationStatus(invitation);
-  const onAuthenticate = useCallback(() => authenticate(pinValue), [authenticate, pinValue]);
+  const onAuthenticate = useCallback(
+    () => authenticate(pinValue).then(() => dispatch({ type: 'accepted invitation', from: invitationType })),
+    [dispatch, invitationType, authenticate, pinValue]
+  );
   const onChange = useCallback(
     (value: string) => {
       setPinValue(value);
       if (value.length === pinLength) {
-        void authenticate(pinValue);
+        (document.querySelector('[data-autofocus-pinlength]') as HTMLElement | null)?.focus();
       }
     },
     [authenticate, pinValue]
@@ -77,7 +95,7 @@ const InvitationAuthenticatorContent = ({
   return <PureInvitationAuthenticatorContent {...{ disabled, onChange, onAuthenticate }} />;
 };
 
-export const InvitationAuthenticator = (viewStateProps: ViewStateProps) => {
+export const InvitationAuthenticator = ({ invitationType, ...viewStateProps }: InvitationAuthenticatorProps) => {
   const disabled = !viewStateProps.active;
   const { activeInvitation } = viewStateProps;
   return (
@@ -85,7 +103,9 @@ export const InvitationAuthenticator = (viewStateProps: ViewStateProps) => {
       {!activeInvitation || activeInvitation === true ? (
         <PureInvitationAuthenticatorContent {...{ disabled, onChange: () => {}, onAuthenticate: () => {} }} />
       ) : (
-        <InvitationAuthenticatorContent {...{ disabled, invitation: activeInvitation }} />
+        <InvitationAuthenticatorContent
+          {...{ disabled, invitation: activeInvitation, dispatch: viewStateProps.dispatch, invitationType }}
+        />
       )}
     </ViewState>
   );

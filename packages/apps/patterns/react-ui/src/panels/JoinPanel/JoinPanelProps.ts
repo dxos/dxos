@@ -4,14 +4,18 @@
 
 import { Dispatch } from 'react';
 
-import type { CancellableInvitationObservable, Profile as NaturalProfile, Space as NaturalSpace } from '@dxos/client';
+import type {
+  AuthenticatingInvitationObservable,
+  Profile as NaturalProfile,
+  Space as NaturalSpace
+} from '@dxos/client';
 
 export type Space = Pick<NaturalSpace, 'properties'>;
 
 export type Profile = Pick<NaturalProfile, 'displayName' | 'identityKey'>;
 
 export interface JoinPanelProps {
-  initialInvitation?: CancellableInvitationObservable;
+  initialInvitationCode?: string;
 }
 
 export interface IdentityAction {
@@ -57,9 +61,10 @@ export type JoinView =
 
 export interface JoinState {
   activeView: JoinView;
-  spaceInvitation?: CancellableInvitationObservable;
+  unredeemedSpaceInvitationCode?: string;
+  spaceInvitation?: AuthenticatingInvitationObservable;
   spaceViewState: InvitationView;
-  haloInvitation?: CancellableInvitationObservable;
+  haloInvitation?: AuthenticatingInvitationObservable;
   haloViewState: InvitationView;
   selectedIdentity?: Profile;
   additionMethod?: AdditionMethodAction['method'];
