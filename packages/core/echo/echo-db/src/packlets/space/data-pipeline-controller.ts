@@ -11,7 +11,6 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { TypedMessage } from '@dxos/protocols';
 import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
