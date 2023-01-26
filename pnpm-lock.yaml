@@ -2996,7 +2996,6 @@ importers:
       typescript: ^4.8.4
       url-join: ^5.0.0
       vite: 4.0.4
-      vite-plugin-build-info: ^0.1.1
       vite-plugin-fonts: ^0.7.0
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
@@ -3064,7 +3063,6 @@ importers:
       tailwindcss: 3.1.8_postcss@8.4.18
       typescript: 4.8.4
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
-      vite-plugin-build-info: 0.1.1
       vite-plugin-fonts: 0.7.0_vite@4.0.4
       vite-plugin-pwa: 0.14.1_aln3rhi4rqbizqxdkcc2hwlswu
       workbox-window: 6.5.4
@@ -34009,10 +34007,6 @@ packages:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
-    dev: true
-
-  /vite-plugin-build-info/0.1.1:
-    resolution: {integrity: sha512-3aui4ol/kUUmXkGWO0/CjG9ZUgPvyDrwuS6F2uinMum78PmKzCdFqkDxmLxJo5fSUbw1u6pakHWg/qLfF2cuRw==}
     dev: true
 
   /vite-plugin-fonts/0.7.0_vite@4.0.4:

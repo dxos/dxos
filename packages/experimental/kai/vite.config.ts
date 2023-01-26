@@ -5,7 +5,6 @@
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
-import VitePluginAppinfo from 'vite-plugin-build-info';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
@@ -43,6 +42,7 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/config',
       '@dxos/protocols/proto/dxos/echo/feed',
       '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/protocols/proto/dxos/echo/object',
       '@dxos/protocols/proto/dxos/halo/credentials',
       '@dxos/protocols/proto/dxos/halo/invitations',
       '@dxos/protocols/proto/dxos/halo/keys',
@@ -144,11 +144,6 @@ export default defineConfig({
           }
         ]
       }
-    }),
-
-    // https://github.com/BWrong/vite-plugin-build-info
-    VitePluginAppinfo({
-      enableLog: true
     })
   ]
 });
