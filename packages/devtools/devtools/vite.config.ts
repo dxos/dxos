@@ -106,7 +106,6 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
