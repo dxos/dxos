@@ -86,7 +86,12 @@ message Runtime {
       optional string path = 4;                   // TODO(burdon): Rename data_path.
     }
 
-    optional string debug = 1 [(env) = "DEBUG"];  // TODO(burdon): Change to LOG.
+    message Log {
+      optional string filter = 1 [(env) = "LOG_FILTER"];
+      optional string prefix = 2 [(env) = "LOG_PREFIX"];
+    }
+
+    optional Log log = 1;
     optional Storage storage = 2;
 
     // TODO(burdon): Structure snapshot/epoch related props.
@@ -98,15 +103,25 @@ message Runtime {
     /// Milliseconds
     optional int32 invitation_expiration = 5;
 
-    // TODO(burdon): Remove?
     optional string remote_source = 6;
   }
 
   message App {
+    message BuildInfo {
+      /// RFC-3339 datetime string.
+      optional string timestamp = 1;
+      optional string commit_hash = 2;
+      /// Version from package.json.
+      optional string version = 3;
+    }
+
     optional string org = 1;
     optional string theme = 2;
     optional string website = 3;
     optional string public_url = 4 [(env) = "PUBLIC_URL"];
+
+    optional BuildInfo build = 100;
+    optional google.protobuf.Struct env = 101;
   }
 
   // CLI configuration
