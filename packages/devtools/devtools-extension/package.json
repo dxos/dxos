@@ -7,9 +7,8 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "pack:crx": "crx pack dist -o dxos-devtools.crx",
-    "pack:webext": "web-ext build --source-dir ./dist",
-    "start:firefox": "web-ext run --source-dir ./dist"
+    "pack:crx": "crx pack out/devtools-extension -o dxos-devtools.crx",
+    "pack:webext": "web-ext build --source-dir out/devtools-extension"
   },
   "dependencies": {
     "@babel/runtime": "^7.9.6",
