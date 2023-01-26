@@ -5,7 +5,7 @@
 import { CheckCircle, HourglassSimple, X } from 'phosphor-react';
 import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
-import type { CancellableInvitationObservable, Profile } from '@dxos/client';
+import type { AuthenticatingInvitationObservable, Profile } from '@dxos/client';
 import { Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { mx, useTranslation, Trans, Avatar, useId, getSize, strongShimmer } from '@dxos/react-components';
@@ -17,7 +17,7 @@ export interface ViewStateProps extends ComponentProps<'div'> {
   active: boolean;
   dispatch: JoinDispatch;
   selectedIdentity?: true | Profile;
-  activeInvitation?: true | CancellableInvitationObservable;
+  activeInvitation?: true | AuthenticatingInvitationObservable;
 }
 
 const stripe = mx('rounded-full grow', getSize(3));
@@ -59,7 +59,7 @@ const PureViewStateInvitation = ({
 }) => {
   const labelId = useId('invitationState');
   return (
-    <div role='none' className={mx(defaultSurface, 'pli-2 pbs-2')}>
+    <div role='none' className={mx(defaultSurface, 'pli-3 pbs-3')}>
       <div role='status' aria-labelledby={labelId} className='flex gap-2 items-center mlb-1'>
         <div
           role='none'
@@ -74,16 +74,12 @@ const PureViewStateInvitation = ({
           className={mx(
             stripe,
             !halted && cursor === 3 && strongShimmer,
-            cursor === 3 ? activeColor : cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor
+            cursor === 3 ? (halted ? resolvedColor : activeColor) : cursor > 3 ? resolvedColor : inactiveColor
           )}
         />
         <div
           role='none'
-          className={mx(
-            stripe,
-            !halted && cursor === 3 && strongShimmer,
-            cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor
-          )}
+          className={mx(stripe, cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor)}
         />
       </div>
       <ViewStateHeading id={labelId} className='flex justify-center items-center gap-2'>
@@ -93,7 +89,7 @@ const PureViewStateInvitation = ({
   );
 };
 
-const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: CancellableInvitationObservable }) => {
+const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: AuthenticatingInvitationObservable }) => {
   const { t } = useTranslation('os');
   const { status, haltedAt } = useInvitationStatus(activeInvitation);
 

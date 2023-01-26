@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { StoryFn } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
-import { Client, Invitation, CancellableInvitationObservable } from '@dxos/client';
+import { Client, Invitation, InvitationEncoder } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';
@@ -32,36 +32,49 @@ export const Default = {
         return [...Array(n)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
       }, []);
 
-      const [invitation, setInvitation] = useState<CancellableInvitationObservable>();
+      const [invitationCode, setInvitationCode] = useState<string>();
 
       useAsyncEffect(async () => {
         await Promise.all(clients.map((client) => client.initialize()));
         log('[initialized]');
 
-        const _profile = await clients[0].halo.createProfile({ displayName: 'Os Mutantes' });
+        await clients[0].halo.createProfile({ displayName: 'Os Mutantes' });
 
         const space = await clients[0].echo.createSpace();
         log('[space created]', space);
         await space?.setProperty('title', 'Q3 2022 Planning');
         log('[space title set]', space?.getProperty('title'));
 
-        const invitation = await space.createInvitation({ type: Invitation.Type.INTERACTIVE });
-        log('[invitation created]', invitation.invitation);
+        const invitation = space.createInvitation({ type: Invitation.Type.INTERACTIVE });
+        log('[invitation created]', invitation);
 
-        setInvitation(invitation);
+        invitation.subscribe({
+          onAuthenticating: log,
+          onCancelled: () => log,
+          onConnected: () => log,
+          onConnecting: () => log,
+          onError: () => log,
+          onSuccess: () => log,
+          onTimeout: () => log
+        });
+
+        // TODO (thure): when does `invitation` get populated?
+        setTimeout(() => {
+          setInvitationCode(InvitationEncoder.encode(invitation.invitation!));
+        }, 100);
 
         return () => {
           void Promise.all(clients.map((client) => client.destroy()));
         };
       }, clients);
 
-      if (!invitation) {
+      if (!invitationCode) {
         return <Loading label='Setting things up…' />;
       }
 
       return (
         <ClientProvider client={clients[1]} fallback={() => <Loading label='Loading client…' />}>
-          <Story args={{ initialInvitation: invitation }} />
+          <Story args={{ initialInvitationCode: invitationCode }} />
         </ClientProvider>
       );
     }
