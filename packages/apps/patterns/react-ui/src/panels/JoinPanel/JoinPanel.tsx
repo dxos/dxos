@@ -31,6 +31,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
     const nextState = { ...state };
     // TODO: Why is `onAuthenticating` called twice?
     if (action.type === 'authenticating invitation' && state.spaceViewState === 'invitation accepted') {
+      console.warn('onAuthenticate called after authentication promise was resolved');
       return state;
     }
     switch (action.type) {
