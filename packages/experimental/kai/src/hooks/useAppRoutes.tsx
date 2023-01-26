@@ -5,7 +5,7 @@
 import React from 'react';
 import { useRoutes } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
+import { Invitation, InvitationEncoder } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { RequireIdentity } from '@dxos/react-appkit';
 
@@ -20,19 +20,17 @@ import {
   SpacePage
 } from '../pages';
 
-export const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
-  spaces.find((space) => space.key.truncate() === spaceKey);
-
-// TODO(burdon): Circular deps?
 export const createSpacePath = (spaceKey: PublicKey, frame?: string) =>
   `/${spaceKey.truncate()}` + (frame ? `/${frame}` : '');
+
+export const createInvitationPath = (invitation: Invitation) =>
+  `/space/join?invitation=${InvitationEncoder.encode(invitation)}`;
 
 /**
  * Main app routes.
  */
-// TODO(burdon): Export as hook.
-export const Routes = () => {
-  return useRoutes([
+export const useAppRoutes = () =>
+  useRoutes([
     {
       path: '/',
       element: <InitPage />
@@ -79,4 +77,3 @@ export const Routes = () => {
       ]
     }
   ]);
-};

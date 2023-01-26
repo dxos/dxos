@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 
+import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -254,7 +255,9 @@ describe('verifier', () => {
         chain
       });
 
-      credential.proof.chain!.credential.proof.value![0] = 123;
+      credential.proof.chain!.credential.proof.value = randomBytes(
+        credential.proof.chain!.credential.proof.value.length
+      );
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail'

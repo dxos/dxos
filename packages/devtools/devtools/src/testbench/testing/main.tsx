@@ -6,7 +6,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { sleep } from '@dxos/async';
-import { Root } from '@dxos/kai';
+import { App } from '@dxos/kai';
 import { log } from '@dxos/log';
 
 import '@dxosTheme';
@@ -56,4 +56,4 @@ waitForDXOS()
     throw err;
   });
 
-createRoot(document.getElementById('root')!).render(<Root />);
+createRoot(document.getElementById('root')!).render(<App />);

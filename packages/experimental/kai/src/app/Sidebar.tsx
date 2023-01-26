@@ -2,28 +2,46 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PlusCircle, UserPlus } from 'phosphor-react';
-import React, { useCallback, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import clipboardCopy from 'clipboard-copy';
+import { PlusCircle } from 'phosphor-react';
+import React, { useEffect, useState } from 'react';
+import { useHref, useNavigate, useParams } from 'react-router-dom';
 
-import { useClient } from '@dxos/react-client';
-import { getSize, ThemeContext, Button as NaturalButton } from '@dxos/react-components';
-import { InvitationListContainer, PanelSeparator, SpaceMemberListContainer } from '@dxos/react-ui';
+import { CancellableInvitationObservable, Invitation, PublicKey } from '@dxos/client';
+import { log } from '@dxos/log';
+import { useClient, useMembers, useSpaces } from '@dxos/react-client';
+import { getSize } from '@dxos/react-components';
 
-import { Button } from '../components';
-import { SpaceList } from '../containers';
-import { FrameID, useSpace } from '../hooks';
-import { createInvitationUrl as genericCreateInvitationUrl } from '../util';
+import { Button, MemberList, SpaceList } from '../components';
+import { useSpace, createSpacePath, FrameID, useAppState, createInvitationPath } from '../hooks';
 import { Actions } from './Actions';
-import { createSpacePath } from './Routes';
 
 export const Sidebar = () => {
+  const { frame, view } = useParams();
   const navigate = useNavigate();
   const client = useClient();
   const space = useSpace();
-  const { view } = useParams();
+  const spaces = useSpaces();
+  const members = useMembers(space.key);
   const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);
+  const { dev } = useAppState();
+
+  const [observable, setObservable] = useState<CancellableInvitationObservable>();
+  const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
+  useEffect(() => {
+    // TODO(burdon): Unsubscribe.
+    return () => {
+      void observable?.cancel();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (observable) {
+      const url = new URL(href, window.origin);
+      void clipboardCopy(url.toString());
+    }
+  }, [observable]);
 
   // TODO(wittjosiah): Find a better way to do this.
   if (prevSpace !== space) {
@@ -32,7 +50,6 @@ export const Sidebar = () => {
 
   if (prevView !== view) {
     setPrevView(view);
-    view === FrameID.SETTINGS;
   }
 
   const handleCreateSpace = async () => {
@@ -40,57 +57,72 @@ export const Sidebar = () => {
     navigate(createSpacePath(space.key));
   };
 
-  const handleCreateInvitation = useCallback(() => space.createInvitation(), [space]);
+  const handleSelectSpace = (spaceKey: PublicKey) => {
+    navigate(createSpacePath(spaceKey, frame));
+  };
 
-  const createInvitationUrl = useCallback(
-    (invitationCode: string) => genericCreateInvitationUrl('/space/join', invitationCode),
-    []
-  );
+  const handleShareSpace = (spaceKey: PublicKey) => {
+    if (dev) {
+      // TODO(burdon): Cancel/remove.
+      const swarmKey = PublicKey.random();
+      const observable = space.createInvitation({
+        swarmKey,
+        type: Invitation.Type.MULTIUSE_TESTING
+      });
+
+      const unsubscribe = observable.subscribe({
+        onConnecting: () => {
+          setObservable(observable);
+          unsubscribe();
+        },
+        onConnected: () => {},
+        onSuccess: () => {},
+        onError: (error) => {
+          log.error(error);
+          unsubscribe();
+        }
+      });
+
+      return;
+    }
+
+    navigate(createSpacePath(spaceKey, FrameID.SETTINGS));
+  };
 
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
-      <div
-        role='none'
-        className='flex flex-col overflow-auto min-bs-full box-shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
-      >
-        {/* Match Frame selector. */}
-        <div className='flex p-1 pl-4 h-framepicker pt-2 bg-orange-500'>
-          <div>Spaces</div>
-        </div>
-        <div className='flex flex-col flex-1 border-r border-slate-200'>
-          {/* Spaces */}
-          <div className='flex shrink-0 flex-col overflow-y-auto'>
-            <SpaceList />
-
-            <div className='p-3'>
-              <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
-                <span className='sr-only'>Create new space</span>
-                <PlusCircle className={getSize(6)} />
-              </Button>
-            </div>
-          </div>
-
-          <div className='flex flex-1'></div>
-
-          <div role='none' className='shrink pli-2 overflow-y-auto'>
-            <InvitationListContainer spaceKey={space.key} {...{ createInvitationUrl }} />
-          </div>
-          <PanelSeparator className='mli-2' />
-          <div role='none' className='mli-2'>
-            <NaturalButton compact className='flex gap-2 is-full' onClick={handleCreateInvitation}>
-              <span>Invite</span>
-              <UserPlus className={getSize(4)} weight='bold' />
-            </NaturalButton>
-          </div>
-          <PanelSeparator className='mli-2' />
-          <div role='none' className='shrink pli-2 overflow-y-auto'>
-            <SpaceMemberListContainer spaceKey={space.key} includeSelf />
-          </div>
-          <PanelSeparator className='mli-2' />
-
-          <Actions />
-        </div>
+    <div
+      role='none'
+      className='flex flex-col overflow-auto min-bs-full box-shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
+    >
+      {/* Match Frame selector. */}
+      <div className='flex p-1 pl-4 h-framepicker pt-2 bg-orange-500'>
+        <div>Spaces</div>
       </div>
-    </ThemeContext.Provider>
+      <div className='flex flex-col flex-1 border-r border-slate-200'>
+        {/* Spaces */}
+        <div className='flex shrink-0 flex-col overflow-y-auto'>
+          <SpaceList value={space.key} spaces={spaces} onSelect={handleSelectSpace} onShare={handleShareSpace} />
+
+          <div className='p-3'>
+            <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
+              <span className='sr-only'>Create new space</span>
+              <PlusCircle className={getSize(6)} />
+            </Button>
+          </div>
+        </div>
+
+        <div className='flex flex-1'></div>
+
+        {/* Members */}
+        <div className='flex flex-col shrink-0 mt-6'>
+          <div className='flex p-1 pl-3 mb-2 text-xs'>Members</div>
+          <div className='flex shrink-0 pl-3'>
+            <MemberList identityKey={client.halo.profile!.identityKey} members={members} />
+          </div>
+        </div>
+
+        <Actions />
+      </div>
+    </div>
   );
 };

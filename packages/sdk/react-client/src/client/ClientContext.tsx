@@ -49,7 +49,7 @@ export interface ClientProviderProps {
    *
    * Most apps won't need this.
    */
-  services?: (config: Config) => ClientServicesProvider;
+  services?: (config?: Config) => ClientServicesProvider;
 
   /**
    * Client object or async provider to enable to caller to do custom initialization.
@@ -86,7 +86,6 @@ export const ClientProvider = ({
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
   const [status, setStatus] = useState<Status>();
   const [error, setError] = useState();
-
   if (error) {
     throw error;
   }
@@ -132,7 +131,7 @@ export const ClientProvider = ({
         // Asynchronously construct client (config may be undefined).
         const config = await getAsyncValue(configProvider);
         log('resolved config', { config });
-        const services = config && createServices?.(config);
+        const services = createServices?.(config);
         log('created services', { services });
         const client = new Client({ config, services });
         log('created client', { client });

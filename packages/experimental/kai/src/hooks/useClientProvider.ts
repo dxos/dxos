@@ -1,0 +1,36 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Client, fromHost, fromIFrame } from '@dxos/client';
+import { Config, Defaults, Dynamics } from '@dxos/config';
+
+import { Generator, schema } from '../proto';
+
+export const useClientProvider = () => {
+  return async (dev: boolean) => {
+    const config = new Config(await Dynamics(), Defaults());
+    const client = new Client({
+      config,
+      services: process.env.DX_VAULT === 'true' ? fromIFrame(config) : fromHost(config)
+    });
+
+    client.echo.dbRouter.setSchema(schema);
+    await client.initialize();
+
+    // Auto create if in demo mode.
+    // TODO(burdon): Different modes (testing). ENV/Config?
+    // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
+    // chrome.windows.create({ '/join', incognito: true });
+    if (dev && !client.halo.profile) {
+      await client.halo.createProfile();
+      const space = await client.echo.createSpace();
+
+      // TODO(burdon): Create context.
+      const generator = new Generator(space.experimental.db);
+      await generator.generate();
+    }
+
+    return client;
+  };
+};

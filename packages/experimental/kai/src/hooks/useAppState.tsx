@@ -12,8 +12,10 @@ import React, { Context, Dispatch, SetStateAction, FC, ReactNode, createContext,
 export type AppState = {
   // Debug info.
   debug?: boolean;
-  // Auto-create data.
-  demo?: boolean;
+  // Dev mode (auto profile, simple invitations).
+  dev?: boolean;
+  // App served as PWA.
+  pwa?: boolean;
   // UX state.
   showSidebar?: boolean;
 };
@@ -25,7 +27,7 @@ export const AppStateContext: Context<AppStateContextType | undefined> = createC
 );
 
 export const AppStateProvider: FC<{ children: ReactNode; value?: AppState }> = ({ children, value }) => {
-  const [state, setState] = useState<AppState>(value ?? { showSidebar: true });
+  const [state, setState] = useState<AppState>(value ?? {});
   return <AppStateContext.Provider value={[state, setState]}>{children}</AppStateContext.Provider>;
 };
 

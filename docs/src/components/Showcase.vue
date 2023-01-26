@@ -2,14 +2,13 @@
   <!-- TODO(wittjosiah): Move suspense to app-level? -->
   <Suspense>
     <ClientOnly>
+      <!-- TODO(wittjosiah): CodeSandbox not respecting patch-package from api. -->
       <RenderReactDemo
         :demo="demo"
-        :target="demo"
+        :fork="false"
       />
     </ClientOnly>
   </Suspense>
-  <!-- TODO(wittjosiah): Add link to CodeSandbox for editing. -->
-  <div :id="demo" className="showcase-preview"></div>
 </template>
 
 <script lang='ts'>
@@ -25,5 +24,5 @@
         required: true
       }
     }
-});
+  });
 </script>

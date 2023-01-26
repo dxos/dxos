@@ -31,8 +31,8 @@ export const useAsync = <T>(
       try {
         const data = await getData();
         data && setData(data);
-      } catch (e: unknown) {
-        setError(e);
+      } catch (event: unknown) {
+        setError(event);
       }
     });
   }, deps);

@@ -7,56 +7,53 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { CardMenu, Card } from '../../components';
+import { TileMenu, Tile, GraphComponent } from '../../components';
 import { ContactList } from '../ContactList';
-import { GraphComponent } from '../GraphComponent';
 import { OrganizationList } from '../OrganizationList';
 import { ProjectHierarchy } from '../ProjectHierarchy';
 import { TaskList } from '../TaskList';
 
-export const DashboardFrame: FC = () => {
+export const StackFrame: FC = () => {
   const { ref } = useResizeDetector();
-
-  // TODO(burdon): Create cards here.
-
   const cardStyles = 'flex shrink-0';
 
   return (
     <div
       ref={ref}
       className={mx(
-        'flex flex-col gap-2 overflow-x-hidden overflow-y-scroll p-4',
-        'lg:p-2 lg:grid lg:gap-3 lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
+        'flex flex-col h-full p-0 gap-0 overflow-x-hidden overflow-y-scroll',
+        'md:p-2 md:gap-3 md:grid md:overflow-hidden md:grid-cols-2 md:grid-rows-2',
+        'lg:p-2 lg:gap-3 lg:grid lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
       )}
     >
       <div className={mx(cardStyles)}>
-        <Card scrollbar header={<CardMenu title='Organizations' />}>
+        <Tile scrollbar header={<TileMenu title='Organizations' />}>
           <OrganizationList />
-        </Card>
+        </Tile>
       </div>
 
       <div className={mx(cardStyles)}>
-        <Card scrollbar header={<CardMenu title='Contacts' />}>
+        <Tile scrollbar header={<TileMenu title='Contacts' />}>
           <ContactList />
-        </Card>
+        </Tile>
       </div>
 
       <div className={mx(cardStyles)}>
-        <Card scrollbar header={<CardMenu title='Tasks' />}>
+        <Tile scrollbar header={<TileMenu title='Tasks' />}>
           <TaskList />
-        </Card>
+        </Tile>
       </div>
 
       <div className={mx(cardStyles)}>
-        <Card scrollbar header={<CardMenu title='Projects' />}>
+        <Tile scrollbar header={<TileMenu title='Projects' />}>
           <ProjectHierarchy />
-        </Card>
+        </Tile>
       </div>
 
       <div className={mx(cardStyles, 'col-span-2 hidden lg:flex')}>
-        <Card header={<CardMenu title='Projects' />}>
+        <Tile header={<TileMenu title='Explorer' />}>
           <GraphComponent />
-        </Card>
+        </Tile>
       </div>
     </div>
   );
