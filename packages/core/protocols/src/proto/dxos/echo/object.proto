@@ -1,0 +1,67 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+import "dxos/halo/credentials.proto";
+import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
+
+package dxos.echo.object;
+
+
+/**
+ * Wrapper for all ECHO messages.
+ */
+message EchoObject {
+  string item_id = 1;
+
+  // Create item.
+  optional ItemGenesis genesis = 10;
+
+  // Item system mutations.
+  optional ItemMutation item_mutation = 11;
+
+  // Model-specific mutations.
+  optional bytes mutation = 12;
+
+  /// Set the model to the provided snapshot.
+  optional snapshot.ModelSnapshot snapshot = 13;
+}
+
+
+/// @deprecated
+message LinkData {
+  string source = 1;
+  string target = 2;
+}
+
+/**
+ * Item creation.
+ */
+// TODO(burdon): ObjectGenesis
+message ItemGenesis {
+  optional string item_type = 1;
+  string model_type = 2;
+  optional string model_version = 3;
+  optional LinkData link = 4;
+}
+
+/**
+ * Item mutation.
+ */
+// TODO(dmaretskyi): ObjectMutation.
+message ItemMutation {
+  // TODO(dmaretskyi): Replace with `optional bool` field?
+  enum Action {
+    NOOP = 0;
+    DELETE = 1;
+    RESTORE = 2;
+  }
+
+  optional string parent_id = 1;  // TODO(burdon): Define Action type?
+  optional Action action = 2;
+}

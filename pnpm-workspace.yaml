@@ -2,6 +2,7 @@ packages:
   - docs
   - packages/**/*
   - tools/**/*
+  - '!docs/src/templates/**'
   # TODO(wittjosiah): Stop builds from copying package.json into dist (i.e., kodama).
   - '!**/dist/**'
   - '!**/out/**'

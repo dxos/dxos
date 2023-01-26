@@ -21,8 +21,7 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
 
     for (const credential of credentials) {
       await space.controlPipeline.writer.write({
-        '@type': 'dxos.echo.feed.CredentialsMessage',
-        credential
+        credential: { credential }
       });
     }
   }

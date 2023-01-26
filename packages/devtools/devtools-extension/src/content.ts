@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import browser from 'webextension-polyfill';
 
-const log = debug('dxos:extension:content');
+import { log } from '@dxos/log';
 
 const port = browser.runtime.connect({ name: 'content' });
 

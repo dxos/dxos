@@ -62,6 +62,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
 
   return (
     <div className='min-bs-full flex flex-1 justify-center bg-gray-100'>
+      {/* TODO(burdon): Adapt width to container. */}
       <div className={'flex flex-col overflow-y-auto bg-white w-screen is-full md:is-[400px]'}>
         <div className={'mt-1'}>
           {tasks?.map((task, index) => (
@@ -80,7 +81,6 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
         {/* TODO(burdon): Keep pinned to bottom on create. */}
         {newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />}
       </div>
-
       {saving && (
         <div className='absolute bottom-0 right-0 z-50 p-3 animate-spin text-red-600'>
           <Spinner />

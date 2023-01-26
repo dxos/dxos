@@ -98,15 +98,16 @@ describe('identity/identity-manager', () => {
     });
 
     await identity1.controlPipeline.writer.write({
-      '@type': 'dxos.echo.feed.CredentialsMessage',
-      credential: await identity1.getIdentityCredentialSigner().createCredential({
-        subject: identity2.deviceKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          identityKey: identity2.identityKey,
-          deviceKey: identity2.deviceKey
-        }
-      })
+      credential: {
+        credential: await identity1.getIdentityCredentialSigner().createCredential({
+          subject: identity2.deviceKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            identityKey: identity2.identityKey,
+            deviceKey: identity2.deviceKey
+          }
+        })
+      }
     });
 
     // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
