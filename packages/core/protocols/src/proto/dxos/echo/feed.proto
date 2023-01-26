@@ -50,7 +50,7 @@ message EchoEnvelope {
   optional snapshot.ModelSnapshot snapshot = 13;
 }
 
-// TODO(burdon): Document (different from parent/child).?
+// TODO(burdon): Document (different from parent/child)?
 // TODO(dmaretskyi): Refactor so that entity mutation message is oneof between item mutation and link mutation: items have parents, and links have from/to.
 message LinkData {
   string source = 1;

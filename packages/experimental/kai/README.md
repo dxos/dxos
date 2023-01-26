@@ -11,9 +11,13 @@ pnpm nx serve kai
 
 ## Deploying the App
 
-- Published when committed to `main`.
-- TODO(burdon): How to manually publish?
-- TODO(burdon): Publish to local machine (or dxos.net? later). With tunneling.
+- Published via CI (using KUBE access token) when committed to `main`.
+  - https://kai.dev.dxos.org (w/ PWA; via Cloudflare)
+  - https://kai-web.dev.kube.dxos.org (no PWA; direct from KUBE)
+- To manually publish to local KUBE (via custom `dx.yml`):
+  - TODO(burdon): Change to config app arg name:
+  - `dx app publish --config_path=./dx-local.yml`
+
 
 ```bash
 dx app publish
@@ -21,10 +25,12 @@ dx app publish
 
 ## Roadmap
 
+- TODO(burdon): Move to Milestone.
+
 - [ ] Deprecate Kitchen Sink.
 - [ ] Playwright tests/demo.
-- [ ] Deploy mobile app.
-- [ ] Import/export JSON.
+- [x] Deploy mobile app.
+- [x] Import/export JSON.
 - [ ] OpenAI bot demo (e.g., fill in background information on Orgs).
 
 - [ ] Kanban column width on mobile (change breakpoint dep on phone).
