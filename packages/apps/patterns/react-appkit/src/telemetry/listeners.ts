@@ -5,7 +5,7 @@
 import { Client } from '@dxos/client';
 import * as Telemetry from '@dxos/telemetry';
 
-import { BASE_TELEMETRY_PROPERTIES, DX_GROUP, getTelemetryIdentifier } from '.';
+import { BASE_TELEMETRY_PROPERTIES, DX_GROUP, getTelemetryIdentifier } from './base-properties';
 
 let lastFocusEvent = new Date();
 let totalTime = 0;

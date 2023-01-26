@@ -51,16 +51,18 @@ export const useTelemetry = ({ namespace, router = true }: UseTelemetryOptions) 
       });
 
       const IPDATA_API_KEY = client.config.get('runtime.app.env.IPDATA_API_KEY');
-      await fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
-        .then((res) => res.json())
-        .then((data) => {
-          BASE_TELEMETRY_PROPERTIES.city = data.city;
-          BASE_TELEMETRY_PROPERTIES.region = data.region;
-          BASE_TELEMETRY_PROPERTIES.country = data.country;
-          BASE_TELEMETRY_PROPERTIES.latitude = data.latitude;
-          BASE_TELEMETRY_PROPERTIES.longitude = data.longitude;
-        })
-        .catch((err) => captureException(err));
+      if (IPDATA_API_KEY) {
+        await fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
+          .then((res) => res.json())
+          .then((data) => {
+            BASE_TELEMETRY_PROPERTIES.city = data.city;
+            BASE_TELEMETRY_PROPERTIES.region = data.region;
+            BASE_TELEMETRY_PROPERTIES.country = data.country;
+            BASE_TELEMETRY_PROPERTIES.latitude = data.latitude;
+            BASE_TELEMETRY_PROPERTIES.longitude = data.longitude;
+          })
+          .catch((err) => captureException(err));
+      }
 
       Telemetry.event({
         identityId: getTelemetryIdentifier(client),
