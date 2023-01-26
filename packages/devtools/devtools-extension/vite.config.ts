@@ -20,35 +20,14 @@ const env = (value?: string) => (value ? `"${value}"` : undefined);
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/async',
-      '@dxos/client',
-      '@dxos/client-services',
-      '@dxos/codec-protobuf',
-      '@dxos/config',
-      '@dxos/credentials',
-      '@dxos/debug',
-      '@dxos/devtools',
-      '@dxos/kai',
-      '@dxos/log',
-      '@dxos/network-manager',
-      '@dxos/protocols',
-      '@dxos/react-async',
-      '@dxos/react-client',
-      '@dxos/react-components',
-      '@dxos/react-toolkit',
-      '@dxos/react-ui',
-      '@dxos/rpc'
-    ]
-  },
   build: {
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     },
     rollupOptions: {
       input: {
+        // Everything mentioned in manifest.json will be bundled.
+        // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
         panel: resolve(__dirname, 'panel.html')
       },
       output: {
