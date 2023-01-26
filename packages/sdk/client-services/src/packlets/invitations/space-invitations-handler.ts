@@ -149,8 +149,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
             );
 
             // TODO(dmaretskyi): Refactor.
-            assert(credentials[0]['@type'] === 'dxos.echo.feed.CredentialsMessage');
-            const spaceMemberCredential = credentials[0].credential;
+            assert(credentials[0].credential);
+            const spaceMemberCredential = credentials[0].credential.credential;
             assert(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
 
             await writeMessages(space.inner.controlPipeline.writer, credentials);

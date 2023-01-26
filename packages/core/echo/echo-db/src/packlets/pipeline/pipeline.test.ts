@@ -33,9 +33,10 @@ describe('pipeline/Pipeline', () => {
             checkType<FeedMessage>({
               timeframe: new Timeframe(),
               payload: {
-                '@type': 'dxos.echo.feed.DataMessage',
-                object: {
-                  itemId: `${feedIdx}-${msgIdx}`
+                data: {
+                  object: {
+                    itemId: `${feedIdx}-${msgIdx}`
+                  }
                 }
               }
             })
@@ -52,9 +53,10 @@ describe('pipeline/Pipeline', () => {
 
     for (const msgIdx in range(messagesPerFeed)) {
       await pipeline.writer!.write({
-        '@type': 'dxos.echo.feed.DataMessage',
-        object: {
-          itemId: `local-${msgIdx}`
+        data: {
+          object: {
+            itemId: `local-${msgIdx}`
+          }
         }
       });
     }

@@ -21,7 +21,7 @@ import {
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { TypedMessage } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexSet } from '@dxos/util';
@@ -140,10 +140,9 @@ export class DataSpace implements ISpace {
     // TODO(dmaretskyi): Enable this later.
     // await this._ensureOwnFeedsAreAdmitted();
     this.notarizationPlugin.setWriter(
-      createMappedFeedWriter<Credential, TypedMessage>(
+      createMappedFeedWriter<Credential, FeedMessage.Payload>(
         (credential) => ({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
+          credential: { credential }
         }),
         this._inner.controlPipeline.writer
       )
