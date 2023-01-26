@@ -42,6 +42,8 @@
     "@dxos/react-composer": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/sentry": "workspace:*",
+    "@sentry/react": "^7.17.2",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
     "chess.js": "^1.0.0-alpha.0",

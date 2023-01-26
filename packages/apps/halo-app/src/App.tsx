@@ -107,7 +107,7 @@ export const App = () => {
       appNs='halo'
     >
       <ErrorProvider>
-        {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
+        {/* TODO(wittjosiah): Hook-up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
             <HashRouter>

@@ -14,6 +14,8 @@ export type AppState = {
   debug?: boolean;
   // Dev mode (auto profile, simple invitations).
   dev?: boolean;
+  // PWA mode.
+  pwa?: boolean;
   // UX state.
   showSidebar?: boolean;
 };

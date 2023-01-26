@@ -15,19 +15,23 @@ To run with automatic profile creation and simplified invitation flows:
 KAI_DEV=1 pnpm nx serve kai
 ```
 
-## Deploying the App
+## Deployment
 
-- Published via CI (using KUBE access token) when committed to `main`.
-  - https://kai.dev.dxos.org (w/ PWA; via Cloudflare)
-  - https://kai-web.dev.kube.dxos.org (no PWA; direct from KUBE)
-- To manually publish to local KUBE (via custom `dx.yml`):
-  - TODO(burdon): Change to config app arg name:
-  - `dx app publish --config_path=./dx-local.yml`
+Automatically published to the KUBE network via CI (using KUBE access token) when committed to `main`.
+- https://kai.dev.dxos.org (w/ PWA; via Cloudflare)
+- https://kai-web.dev.kube.dxos.org (no PWA; direct from KUBE)
 
+To manually publish to a local KUBE (via custom `dx.yml`):
 
 ```bash
-dx app publish
+dx app publish --config_path=./dx-local.yml
 ```
+
+
+## Troubleshooting
+
+See the [development guide](./docs/development.md).
+
 
 ## Roadmap
 

@@ -17,7 +17,6 @@ export const init = (options: InitOptions) => {
     transport: options.transport,
     beforeSend: (event) => {
       options.onError?.(event);
-
       return event;
     }
   });

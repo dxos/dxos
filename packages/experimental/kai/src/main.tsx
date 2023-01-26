@@ -9,6 +9,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import '@dxosTheme';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
+import { captureException } from '@dxos/sentry';
 
 import { App } from './app';
 import { AppState } from './hooks';
@@ -34,6 +35,7 @@ const PWA = () => {
     updateServiceWorker
   } = useRegisterSW({
     onRegisterError: (err: any) => {
+      captureException(err);
       log.error(err);
     }
   });
