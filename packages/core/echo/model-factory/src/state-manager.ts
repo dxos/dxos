@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, scheduleTask } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -27,7 +28,7 @@ import {
 } from './types';
 
 type OptimisticMutation = {
-  mutation: Uint8Array;
+  mutation: Any;
 
   meta: MutationProcessMeta;
 
@@ -65,7 +66,7 @@ export class StateManager<M extends Model> {
   /**
    * Mutations that were applied on top of the _snapshot.
    */
-  private _mutations: ModelMessage<Uint8Array>[] = [];
+  private _mutations: ModelMessage<Any>[] = [];
 
   /**
    * Mutations that were optimistically applied and haven't yet passed through the feed store.
@@ -82,7 +83,7 @@ export class StateManager<M extends Model> {
     private readonly _itemId: ItemID,
     private _initialState: ModelSnapshot,
     private readonly _memberKey: PublicKey,
-    private readonly _feedWriter: FeedWriter<Uint8Array> | null
+    private readonly _feedWriter: FeedWriter<Any> | null
   ) {
     if (modelConstructor) {
       this.initialize(modelConstructor);
@@ -131,7 +132,10 @@ export class StateManager<M extends Model> {
     }
 
     // Construct and enqueue an optimistic mutation.
-    const mutationEncoded = this._modelMeta!.mutationCodec.encode(mutation);
+    const mutationEncoded = {
+      type_url: 'google.protobuf.Any',
+      value: this._modelMeta!.mutationCodec.encode(mutation)
+    };
     const optimisticMutation: OptimisticMutation = {
       mutation: mutationEncoded,
       meta: {
@@ -209,7 +213,7 @@ export class StateManager<M extends Model> {
 
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
-      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation);
+      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation.value);
       this._stateMachine.process(mutationDecoded, {
         author: PublicKey.from(mutation.meta.memberKey)
       });
@@ -217,14 +221,14 @@ export class StateManager<M extends Model> {
 
     // Apply mutations that were read from the inbound stream.
     for (const mutation of this._mutations) {
-      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation), {
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value), {
         author: PublicKey.from(mutation.meta.memberKey)
       });
     }
 
     // Apply optimistic mutations.
     for (const mutation of this._optimisticMutations) {
-      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation), mutation.meta);
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value), mutation.meta);
     }
   }
 
@@ -252,7 +256,7 @@ export class StateManager<M extends Model> {
   /**
    * Processes mutations from the inbound stream.
    */
-  processMessage(meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
+  processMessage(meta: MutationMetaWithTimeframe, mutation: Any) {
     // Remove optimistic mutation from the queue.
     const optimisticIndex = this._optimisticMutations.findIndex(
       (message) =>
@@ -289,7 +293,7 @@ export class StateManager<M extends Model> {
       } else if (optimisticIndex === -1) {
         log(`Apply ${JSON.stringify(meta)}`);
         // Mutation can safely be append at the end preserving order.
-        const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation);
+        const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation.value);
         this._stateMachine!.process(mutationDecoded, {
           author: PublicKey.from(meta.memberKey)
         });
