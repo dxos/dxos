@@ -9,7 +9,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
@@ -17,6 +17,7 @@ import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const log = debug('dxos:echo-db:database-backend');
 
@@ -32,7 +33,7 @@ export interface DatabaseBackend {
   open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>;
   close(): Promise<void>;
 
-  getWriteStream(): FeedWriter<EchoObject> | undefined;
+  getWriteStream(): FeedWriter<DataMessage> | undefined;
   createSnapshot(): DatabaseSnapshot;
   createDataServiceHost(): DataServiceHost;
 }
@@ -48,7 +49,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
   private _itemDemuxer!: ItemDemuxer;
 
   constructor(
-    private readonly _outboundStream: FeedWriter<EchoObject> | undefined,
+    private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
     private readonly _snapshot?: DatabaseSnapshot,
     private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
   ) {}
@@ -73,7 +74,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
 
   async close() {}
 
-  getWriteStream(): FeedWriter<EchoObject> | undefined {
+  getWriteStream(): FeedWriter<DataMessage> | undefined {
     return this._outboundStream;
   }
 
@@ -126,12 +127,12 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     this._subscriptions.clear();
   }
 
-  getWriteStream(): FeedWriter<EchoObject> | undefined {
+  getWriteStream(): FeedWriter<DataMessage> | undefined {
     return {
       write: async (mutation) => {
         log('write', mutation);
         const { feedKey, seq } = await this._service.write({
-          mutation,
+          mutation: mutation.object,
           spaceKey: this._spaceKey
         });
         assert(feedKey);

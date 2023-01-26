@@ -12,13 +12,14 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const log = debug('dxos:echo:item-demuxer:test');
 
@@ -28,14 +29,14 @@ describe('Item demuxer', () => {
 
     const modelFactory = new ModelFactory().registerModel(TestModel);
 
-    const feedWriter = new MockFeedWriter();
+    const feedWriter = new MockFeedWriter<DataMessage>();
     const itemManager = new ItemManager(modelFactory, PublicKey.random(), feedWriter);
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
     const inboundStream = itemDemuxer.open();
     feedWriter.written.on(([msg, meta]) =>
       inboundStream({
-        data: msg,
+        data: msg.object,
         meta: { ...meta, memberKey }
       } as any)
     );
@@ -52,11 +53,13 @@ describe('Item demuxer', () => {
     });
 
     const itemId = createId();
-    const message: EchoObject = {
-      itemId,
-      genesis: {
-        itemType: 'dxos:item/test',
-        modelType: TestModel.meta.type
+    const message: DataMessage = {
+      object: {
+        itemId,
+        genesis: {
+          itemType: 'dxos:item/test',
+          modelType: TestModel.meta.type
+        }
       }
     };
 
@@ -109,7 +112,7 @@ describe('Item demuxer', () => {
 
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
     const processor = itemDemuxer.open();
-    const processEchoMessage = (message: EchoObject) =>
+    const processEchoMessage = (message: DataMessage) =>
       processor({
         meta: {
           feedKey: PublicKey.random(),
@@ -117,23 +120,27 @@ describe('Item demuxer', () => {
           seq: 0,
           timeframe: new Timeframe()
         },
-        data: message
+        data: message.object
       });
 
     void processEchoMessage(
-      checkType<EchoObject>({
-        itemId: 'foo',
-        genesis: {
-          modelType: TestModel.meta.type
+      checkType<DataMessage>({
+        object: {
+          itemId: 'foo',
+          genesis: {
+            modelType: TestModel.meta.type
+          }
         }
       })
     );
 
     void processEchoMessage(
-      checkType<EchoObject>({
-        itemId: 'bar',
-        genesis: {
-          modelType: ObjectModel.meta.type
+      checkType<DataMessage>({
+        object: {
+          itemId: 'bar',
+          genesis: {
+            modelType: ObjectModel.meta.type
+          }
         }
       })
     );

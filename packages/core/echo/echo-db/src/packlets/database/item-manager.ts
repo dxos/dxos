@@ -12,7 +12,7 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { createMappedFeedWriter } from '../common';
@@ -20,6 +20,7 @@ import { UnknownModelError } from '../errors';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const log = debug('dxos:echo-db:item-manager');
 
@@ -75,7 +76,7 @@ export class ItemManager {
   constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
-    private readonly _writeStream?: FeedWriter<EchoObject>
+    private readonly _writeStream?: FeedWriter<DataMessage>
   ) {}
 
   get entities() {
@@ -137,13 +138,15 @@ export class ItemManager {
     // Write Item Genesis block.
     log('Item Genesis', { itemId });
     await this._writeStream.write({
-      itemId,
-      genesis: {
-        itemType,
-        modelType
-      },
-      itemMutation: parentId ? { parentId } : undefined,
-      mutation
+      object: {
+        itemId,
+        genesis: {
+          itemType,
+          modelType
+        },
+        itemMutation: parentId ? { parentId } : undefined,
+        mutation
+      }
     });
 
     // Unlocked by construct.
@@ -186,13 +189,15 @@ export class ItemManager {
     // Write Item Genesis block.
     log('Item Genesis:', itemId);
     await this._writeStream.write({
-      itemId,
-      genesis: {
-        itemType,
-        modelType,
-        link: { source, target }
-      },
-      mutation
+      object: {
+        itemId,
+        genesis: {
+          itemType,
+          modelType,
+          link: { source, target }
+        },
+        mutation
+      }
     });
 
     // Unlocked by construct.
@@ -210,7 +215,7 @@ export class ItemManager {
     // Convert model-specific outbound mutation to outbound envelope message.
     const outboundTransform =
       this._writeStream &&
-      createMappedFeedWriter<Uint8Array, EchoObject>((mutation) => ({ itemId, mutation }), this._writeStream);
+      createMappedFeedWriter<Uint8Array, DataMessage>((mutation) => ({ object: { itemId, mutation } }), this._writeStream);
 
     // Create the model with the outbound stream.
     return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);

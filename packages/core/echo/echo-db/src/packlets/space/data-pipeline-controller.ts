@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { TypedMessage } from '@dxos/protocols';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -21,6 +21,7 @@ import { Database, DatabaseBackendHost } from '../database';
 import { SnapshotManager } from '../database/snapshot-manager';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 export type DataPipelineControllerContext = {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;
@@ -109,9 +110,9 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
 
     // Create database backend.
-    const feedWriter = createMappedFeedWriter<EchoObject, TypedMessage>(
+    const feedWriter = createMappedFeedWriter<DataMessage, TypedMessage>(
       (msg) => ({
-        '@type': 'dxos.echo.feed.EchoObject',
+        '@type': 'dxos.echo.feed.DataMessage',
         ...msg
       }),
       this._pipeline.writer ?? failUndefined()
@@ -201,7 +202,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
       try {
         const payload = data.payload as TypedMessage;
-        if (payload['@type'] === 'dxos.echo.feed.EchoObject') {
+        if (payload['@type'] === 'dxos.echo.feed.DataMessage') {
           const feedInfo = this._params.feedInfoProvider(feedKey);
           if (!feedInfo) {
             log.error('Could not find feed.', { feedKey });
@@ -209,7 +210,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
           }
 
           await this.databaseBackend!.echoProcessor({
-            data: payload,
+            data: payload.object,
             meta: {
               feedKey,
               seq,

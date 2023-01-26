@@ -10,7 +10,7 @@ import { failUndefined, raise } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import {
   MutationReceipt,
   SubscribeEntitySetResponse,
@@ -23,6 +23,7 @@ import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const log = debug('dxos:echo-db:data-service-host');
 
@@ -35,7 +36,7 @@ export class DataServiceHost {
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
-    private readonly _writeStream?: FeedWriter<EchoObject>
+    private readonly _writeStream?: FeedWriter<DataMessage>
   ) {}
 
   /**
@@ -144,9 +145,11 @@ export class DataServiceHost {
     });
   }
 
-  async write(request: EchoObject): Promise<MutationReceipt> {
+  async write(object: EchoObject): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
-    return this._writeStream.write(request);
+    return this._writeStream.write({
+      object
+    });
   }
 }

@@ -220,8 +220,8 @@ export type ComplexMapConstructor<K> = new <V>(entries?: readonly (readonly [K, 
  * Create a subclass of ComplexMap with predefined key projection function.
  */
 export const makeMap = <K>(keyProjection: PrimitiveProjection<K>): ComplexMapConstructor<K> =>
-  class BoundComplexMap<V> extends ComplexMap<K, V> {
+  (class BoundComplexMap<V> extends ComplexMap<K, V> {
     constructor(entries?: readonly (readonly [K, V])[] | null) {
       super(keyProjection, entries);
     }
-  };
+  });
