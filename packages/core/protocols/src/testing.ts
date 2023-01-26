@@ -21,8 +21,11 @@ export const createTestItemMutation = (
 ): FeedMessage => ({
   timeframe,
   payload: {
-    '@type': 'dxos.echo.feed.EchoObject',
-    itemId,
-    mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+    data: {
+      object: {
+        itemId,
+        mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+      }
+    }
   }
 });

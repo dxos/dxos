@@ -88,8 +88,7 @@ describe('identity/identity', () => {
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
+          credential: { credential }
         });
       }
     }
@@ -194,8 +193,7 @@ describe('identity/identity', () => {
 
         for (const credential of credentials) {
           await identity.controlPipeline.writer.write({
-            '@type': 'dxos.echo.feed.CredentialsMessage',
-            credential
+            credential: { credential }
           });
         }
       }
@@ -268,15 +266,16 @@ describe('identity/identity', () => {
     {
       const signer = identity1.getIdentityCredentialSigner();
       void identity1.controlPipeline.writer.write({
-        '@type': 'dxos.echo.feed.CredentialsMessage',
-        credential: await signer.createCredential({
-          subject: identity2.deviceKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            identityKey: identity1.identityKey,
-            deviceKey: identity2.deviceKey
-          }
-        })
+        credential: {
+          credential: await signer.createCredential({
+            subject: identity2.deviceKey,
+            assertion: {
+              '@type': 'dxos.halo.credentials.AuthorizedDevice',
+              identityKey: identity1.identityKey,
+              deviceKey: identity2.deviceKey
+            }
+          })
+        }
       });
 
       await identity2.ready();
