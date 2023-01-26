@@ -127,7 +127,6 @@ jobs:
           command: ./.circleci/scripts/publish-extension.sh
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=8198
 
 workflows:
   default:
