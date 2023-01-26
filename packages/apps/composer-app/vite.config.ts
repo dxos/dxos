@@ -10,30 +10,18 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
-import packageJson from './package.json';
-
-const env = (value?: string) => (value ? `"${value}"` : undefined);
-const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/composer-app@${packageJson.version}` : undefined;
-
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
     host: true,
-    https: process.env.HTTPS === 'true' ? {
-      key: './key.pem',
-      cert: './cert.pem'
-    } : false
-  },
-  define: {
-    'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
-    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
-    'process.env.DX_VAULT': env(process.env.DX_VAULT),
-    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.DX_RELEASE': env(DX_RELEASE),
-    'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),
-    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY),
-    'process.env.IPDATA_API_KEY': env(process.env.IPDATA_API_KEY)
+    https:
+      process.env.HTTPS === 'true'
+        ? {
+            key: './key.pem',
+            cert: './cert.pem'
+          }
+        : false
   },
   optimizeDeps: {
     force: true,
@@ -69,7 +57,15 @@ export default defineConfig({
     }
   },
   plugins: [
-    ConfigPlugin(),
+    ConfigPlugin({
+      env: [
+        'DX_ENVIRONMENT',
+        'DX_VAULT',
+        'IPDATA_API_KEY',
+        'SENTRY_DESTINATION',
+        'TELEMETRY_API_KEY'
+      ]
+    }),
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),

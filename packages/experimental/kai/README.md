@@ -12,7 +12,7 @@ pnpm nx serve kai
 To run with automatic profile creation and simplified invitation flows:
 
 ```bash
-KAI_DEV=1 pnpm nx serve kai
+VITE_DEV=1 pnpm nx serve kai
 ```
 
 ## Deployment

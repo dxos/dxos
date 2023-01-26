@@ -23,13 +23,13 @@
           "env": "DX_VAULT"
         },
         {
-          "env": "KAI_DEBUG"
+          "env": "VITE_DEBUG"
         },
         {
-          "env": "KAI_DEV"
+          "env": "VITE_DEV"
         },
         {
-          "env": "KAI_PWA"
+          "env": "VITE_PWA"
         },
         "^production",
         "production"

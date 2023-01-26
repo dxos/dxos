@@ -9,7 +9,7 @@ package:
       build:
         command: pnpm -w nx bundle kai
         env:
-          KAI_PWA: true
+          VITE_PWA: true
       # TODO(wittjosiah): Currently breaking publish to dev kube.
       # tunnel: true
 
