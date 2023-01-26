@@ -51,7 +51,8 @@ describe('Basic test', () => {
       await waitForExpect(async () => {
         expect(await host.page.url()).to.equal(await guest.page.url());
         expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
-      }, 2000);
+        // TODO(wittjosiah): Oversized timeout to try to determine if invitations are slow or failing.
+      }, 15_000);
     }).onlyEnvironments('chromium');
 
     test('toggle a task', async () => {
