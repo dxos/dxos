@@ -68,6 +68,7 @@ export class Client {
     this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
     this._mesh = new MeshProxy(this._services);
 
+    // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = this.config.get('runtime.client.log.filter');
     if (filter) {
       const prefix = this.config.get('runtime.client.log.prefix');
