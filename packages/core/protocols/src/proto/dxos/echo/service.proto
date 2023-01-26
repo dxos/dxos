@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "dxos/echo/feed.proto";
+import "dxos/echo/object.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/keys.proto";
@@ -17,8 +17,8 @@ message SubscribeEntitySetRequest {
 
 message SubscribeEntitySetResponse {
   // TODO(dmaretskyi): This is wrong, the first one should use item snapshot, and deleted should be just list of ids.
-  repeated feed.EchoEnvelope added = 1;
-  repeated feed.EchoEnvelope deleted = 2;
+  repeated dxos.echo.object.EchoObject added = 1;
+  repeated dxos.echo.object.EchoObject deleted = 2;
 }
 
 message SubscribeEntityStreamRequest {
@@ -35,7 +35,7 @@ message SubscribeEntityStreamResponse {
       timeframe.TimeframeVector timeframe = 4;
     }
 
-    feed.EchoEnvelope data = 1;
+    dxos.echo.object.EchoObject data = 1;
     Metadata meta = 2;
   }
 
@@ -48,7 +48,7 @@ message SubscribeEntityStreamResponse {
 
 message WriteRequest {
   dxos.keys.PublicKey space_key = 1;
-  feed.EchoEnvelope mutation = 2;
+  dxos.echo.object.EchoObject mutation = 2;
 }
 
 message MutationReceipt {
