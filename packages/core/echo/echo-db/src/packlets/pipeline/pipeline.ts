@@ -8,7 +8,7 @@ import { sleep } from '@dxos/async';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedMessageBlock, TypedMessage } from '@dxos/protocols';
+import { FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -120,7 +120,7 @@ export class PipelineState {
 
 export interface PipelineAccessor {
   state: PipelineState;
-  writer: FeedWriter<TypedMessage>;
+  writer: FeedWriter<FeedMessage.Payload>;
 }
 
 /**
@@ -168,7 +168,7 @@ export class Pipeline implements PipelineAccessor {
   private readonly _state: PipelineState = new PipelineState(this._feedSetIterator, this._timeframeClock);
 
   // Outbound feed writer.
-  private _writer: FeedWriter<TypedMessage> | undefined;
+  private _writer: FeedWriter<FeedMessage.Payload> | undefined;
 
   private _isOpen = false;
 
@@ -185,7 +185,7 @@ export class Pipeline implements PipelineAccessor {
     return this._state;
   }
 
-  get writer(): FeedWriter<TypedMessage> {
+  get writer(): FeedWriter<FeedMessage.Payload> {
     assert(this._writer, 'Writer not set.');
     return this._writer;
   }
@@ -202,10 +202,10 @@ export class Pipeline implements PipelineAccessor {
     assert(!this._writer, 'Writer already set.');
     assert(feed.properties.writable, 'Feed must be writable.');
 
-    this._writer = createMappedFeedWriter<TypedMessage, FeedMessage>(
-      (data: TypedMessage) => ({
+    this._writer = createMappedFeedWriter<FeedMessage.Payload, FeedMessage>(
+      (payload: FeedMessage.Payload) => ({
         timeframe: this._timeframeClock.timeframe,
-        payload: data
+        payload
       }),
       feed.createFeedWriter()
     );
