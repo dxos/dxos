@@ -25,6 +25,8 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/dx
 ```
 pnpm -w nx bundle devtools-extension
 ```
+### Manifest
+We use Vite to bundle extension, you can find manifest setup inside `vite.config.ts`
 
 ### Chromium
 
@@ -39,12 +41,8 @@ pnpm -w nx bundle devtools-extension
 
 ### Firefox
 
-4. Run `rushx pack:webext`.
-5. Navigate to [This Firefox](about:debugging#/runtime/this-firefox) tab of the `about:debugging` page.
-6. Click `Load Temporary Add-on...` and select the zip file in `web-ext-artifacts`.
-
-An alternative method is to run `rushx start:firefox` which will run a temporary firefox instance with the extension installed. Running this way allows for integration with watch tools and reloading the extension by pressing `r` in the terminal.
-
+- Not yet supported.
+- 
 ### Safari
 
 - Not yet supported.

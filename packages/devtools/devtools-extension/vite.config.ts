@@ -13,8 +13,6 @@ import { ThemePlugin } from '@dxos/react-components/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
 
-import manifest from './manifest.json';
-
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 
 // https://vitejs.dev/config/
@@ -54,7 +52,42 @@ export default defineConfig({
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
 
-    chromeExtensionPlugin({ manifest })
+    chromeExtensionPlugin({
+      manifest: {
+        manifest_version: 3,
+        version: '0.1.23',
+        author: 'DXOS.org',
+        name: 'DXOS Client Developer Tools',
+        short_name: 'DXOS DevTools',
+        description: 'Debugging tools for DXOS Client in the Chrome developer console.',
+        icons: {
+          '48': 'assets/img/icon-dxos-48.png',
+          '128': 'assets/img/icon-dxos-128.png'
+        },
+        action: {
+          default_icon: 'assets/img/icon-dxos-48.png',
+          default_title: 'DXOS',
+          default_popup: '/popup.html'
+        },
+        content_security_policy: {
+          extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+        },
+        sandbox: {
+          pages: ['/sandbox.html']
+        },
+        devtools_page: '/main.html',
+        background: {
+          service_worker: '/src/background.ts'
+        },
+        content_scripts: [
+          {
+            matches: ['http://*/*', 'https://*/*'],
+            js: ['/src/content.ts'],
+            run_at: 'document_start'
+          }
+        ]
+      }
+    })
 
     // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
     /**
