@@ -8,7 +8,7 @@ import { useOutletContext } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { deleted, id } from '@dxos/echo-schema';
-import { useQuery } from '@dxos/react-client';
+import { useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize, Loading } from '@dxos/react-components';
 
 import { CheckboxItem, Input, List } from '.';
@@ -23,7 +23,7 @@ export type TaskListProps = {
   onTaskDeleted?: (task: Task) => any;
 };
 
-export const TaskListComponent = (props: TaskListProps) => {
+export const TaskListComponent = withReactor((props: TaskListProps) => {
   const { taskList, onTitleChanged, onTaskCreate, onTaskTitleChanged, onTaskCompleteChanged, onTaskDeleted } = props;
   if (!taskList) {
     return <Loading label='Loading' />;
@@ -72,4 +72,4 @@ export const TaskListComponent = (props: TaskListProps) => {
       </div>
     </div>
   );
-};
+});
