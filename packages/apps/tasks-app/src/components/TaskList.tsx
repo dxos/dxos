@@ -4,12 +4,15 @@
 
 import { Plus } from 'phosphor-react';
 import React from 'react';
+import { useOutletContext } from 'react-router-dom';
 
+import { Space } from '@dxos/client';
+import { deleted, id } from '@dxos/echo-schema';
+import { useQuery } from '@dxos/react-client';
 import { Button, getSize, Loading } from '@dxos/react-components';
 
 import { CheckboxItem, Input, List } from '.';
 import { TaskList, Task } from '../proto';
-import { id } from '@dxos/echo-schema';
 
 export type TaskListProps = {
   taskList: TaskList;
@@ -26,7 +29,6 @@ export const TaskListComponent = (props: TaskListProps) => {
     return <Loading label='Loading' />;
   }
   const empty = <div className='py-5 px-3 text-neutral-500'>There are no tasks to show</div>;
-  console.log(taskList);
   return (
     <div role='none' className='my-5 py-2 px-6 bg-white dark:bg-neutral-700/50 rounded shadow'>
       <div>
@@ -38,28 +40,30 @@ export const TaskListComponent = (props: TaskListProps) => {
         />
       </div>
       <List empty={empty}>
-        {(taskList.tasks ?? [])?.map((task) => (
-          <CheckboxItem
-            key={task[id]}
-            {...{
-              placeholder: 'type here',
-              text: task.title,
-              isChecked: task.completed,
-              onChecked: (completed) => onTaskCompleteChanged?.(task, completed),
-              onTextChanged: (title) => onTaskTitleChanged?.(task, title),
-              onDeleteClicked: () => onTaskDeleted?.(task),
-              onInputKeyUp: (e) => {
-                if (e.key === 'Enter') {
-                  // TODO: go to next item or create new
-                } else if (e.key === 'Up') {
-                  // TODO: go up one item
-                } else if (e.key === 'Down') {
-                  // TODO: go to next item or create new
+        {(taskList.tasks ?? [])
+          ?.filter((task) => !task[deleted])
+          .map((task) => (
+            <CheckboxItem
+              key={task[id]}
+              {...{
+                placeholder: 'type here',
+                text: task.title,
+                isChecked: task.completed,
+                onChecked: (completed) => onTaskCompleteChanged?.(task, completed),
+                onTextChanged: (title) => onTaskTitleChanged?.(task, title),
+                onDeleteClicked: () => onTaskDeleted?.(task),
+                onInputKeyUp: (e) => {
+                  if (e.key === 'Enter') {
+                    // TODO: go to next item or create new
+                  } else if (e.key === 'Up') {
+                    // TODO: go up one item
+                  } else if (e.key === 'Down') {
+                    // TODO: go to next item or create new
+                  }
                 }
-              }
-            }}
-          />
-        ))}
+              }}
+            />
+          ))}
       </List>
       <div role='none' className='my-5'>
         <Button className='rounded-full p-3 border-none' onClick={() => onTaskCreate?.()}>
