@@ -19,7 +19,7 @@ import { valueEncoding } from '../common';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
-  test.only('admits feeds', async () => {
+  test('admits feeds', async () => {
     const keyring = new Keyring();
     const spaceKey = await keyring.createKey();
     const identityKey = await keyring.createKey();
@@ -70,7 +70,6 @@ describe('space/control-pipeline', () => {
       expect(credentials).toHaveLength(3);
 
       for (const credential of credentials) {
-        debugger;
         await controlPipeline.pipeline.writer?.write({
           credential: {
             credential
