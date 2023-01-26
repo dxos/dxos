@@ -71,8 +71,9 @@ describe('space/control-pipeline', () => {
 
       for (const credential of credentials) {
         await controlPipeline.pipeline.writer?.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
+          credential: {
+            credential
+          }
         });
       }
 
@@ -84,19 +85,20 @@ describe('space/control-pipeline', () => {
     const controlFeed2 = await createFeed();
     {
       await controlPipeline.pipeline.writer!.write({
-        '@type': 'dxos.echo.feed.CredentialsMessage',
-        credential: await createCredential({
-          signer: keyring,
-          issuer: identityKey,
-          subject: controlFeed2.key,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey,
-            identityKey,
-            deviceKey,
-            designation: AdmittedFeed.Designation.CONTROL
-          }
-        })
+        credential: {
+          credential: await createCredential({
+            signer: keyring,
+            issuer: identityKey,
+            subject: controlFeed2.key,
+            assertion: {
+              '@type': 'dxos.halo.credentials.AdmittedFeed',
+              spaceKey,
+              identityKey,
+              deviceKey,
+              designation: AdmittedFeed.Designation.CONTROL
+            }
+          })
+        }
       });
 
       await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
@@ -107,19 +109,20 @@ describe('space/control-pipeline', () => {
     const dataFeed1 = await createFeed();
     {
       await controlPipeline.pipeline.writer!.write({
-        '@type': 'dxos.echo.feed.CredentialsMessage',
-        credential: await createCredential({
-          signer: keyring,
-          issuer: identityKey,
-          subject: dataFeed1.key,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey,
-            identityKey,
-            deviceKey,
-            designation: AdmittedFeed.Designation.DATA
-          }
-        })
+        credential: {
+          credential: await createCredential({
+            signer: keyring,
+            issuer: identityKey,
+            subject: dataFeed1.key,
+            assertion: {
+              '@type': 'dxos.halo.credentials.AdmittedFeed',
+              spaceKey,
+              identityKey,
+              deviceKey,
+              designation: AdmittedFeed.Designation.DATA
+            }
+          })
+        }
       });
 
       const end = controlPipeline.pipeline.state.endTimeframe;
@@ -132,19 +135,22 @@ describe('space/control-pipeline', () => {
     {
       await dataFeed1.append({
         payload: {
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential: await createCredential({
-            signer: keyring,
-            issuer: identityKey,
-            subject: dataFeed2.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              spaceKey,
-              identityKey,
-              deviceKey,
-              designation: AdmittedFeed.Designation.DATA
-            }
-          })
+          '@type': 'dxos.echo.feed.FeedMessage',
+          timeframe: controlPipeline.pipeline.state.timeframe,
+          credential: {
+            credential: await createCredential({
+              signer: keyring,
+              issuer: identityKey,
+              subject: dataFeed2.key,
+              assertion: {
+                '@type': 'dxos.halo.credentials.AdmittedFeed',
+                spaceKey,
+                identityKey,
+                deviceKey,
+                designation: AdmittedFeed.Designation.DATA
+              }
+            })
+          }
         },
         timeframe: new Timeframe()
       });

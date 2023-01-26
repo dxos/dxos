@@ -5,6 +5,7 @@
 import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential, ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, CredentialSigner } from './credential-factory';
@@ -174,7 +175,7 @@ export const createAdmissionCredentials = async (
   dataFeedKey: PublicKey,
   genesisFeedKey: PublicKey,
   profile?: ProfileDocument
-): Promise<TypedMessage[]> => {
+): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: identityKey,
@@ -211,7 +212,6 @@ export const createAdmissionCredentials = async (
   ]);
 
   return credentials.map((credential) => ({
-    '@type': 'dxos.echo.feed.CredentialsMessage',
-    credential
+    credential: { credential }
   }));
 };

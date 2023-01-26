@@ -21,7 +21,14 @@ package dxos.echo.feed;
  */
 message FeedMessage {
   dxos.echo.timeframe.TimeframeVector timeframe = 1;
-  google.protobuf.Any payload = 2;
+  
+  message Payload{
+    oneof payload {
+      CredentialsMessage credential = 10;
+      DataMessage data = 11;
+    }
+  }
+  Payload payload = 2;
 }
 
 /**
