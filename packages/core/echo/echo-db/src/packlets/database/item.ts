@@ -6,7 +6,7 @@ import { FeedWriter } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
-import { EchoEnvelope, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
@@ -62,7 +62,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why allow undefined?
     stateManager: StateManager<NonNullable<M>>,
-    private readonly _writeStream?: FeedWriter<EchoEnvelope>,
+    private readonly _writeStream?: FeedWriter<EchoObject>,
     parent?: Item<any> | null
   ) {
     super(itemManager, itemId, itemType, stateManager);

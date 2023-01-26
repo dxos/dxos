@@ -12,7 +12,7 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -52,7 +52,7 @@ describe('Item demuxer', () => {
     });
 
     const itemId = createId();
-    const message: EchoEnvelope = {
+    const message: EchoObject = {
       itemId,
       genesis: {
         itemType: 'dxos:item/test',
@@ -109,7 +109,7 @@ describe('Item demuxer', () => {
 
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
     const processor = itemDemuxer.open();
-    const processEchoMessage = (message: EchoEnvelope) =>
+    const processEchoMessage = (message: EchoObject) =>
       processor({
         meta: {
           feedKey: PublicKey.random(),
@@ -121,7 +121,7 @@ describe('Item demuxer', () => {
       });
 
     void processEchoMessage(
-      checkType<EchoEnvelope>({
+      checkType<EchoObject>({
         itemId: 'foo',
         genesis: {
           modelType: TestModel.meta.type
@@ -130,7 +130,7 @@ describe('Item demuxer', () => {
     );
 
     void processEchoMessage(
-      checkType<EchoEnvelope>({
+      checkType<EchoObject>({
         itemId: 'bar',
         genesis: {
           modelType: ObjectModel.meta.type

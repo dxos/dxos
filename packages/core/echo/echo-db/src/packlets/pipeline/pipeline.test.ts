@@ -30,7 +30,7 @@ describe('pipeline/Pipeline', () => {
           await feed.append({
             timeframe: new Timeframe(),
             payload: {
-              '@type': 'dxos.echo.feed.EchoEnvelope',
+              '@type': 'dxos.echo.feed.EchoObject',
               itemId: `${feedIdx}-${msgIdx}`
             }
           });
@@ -46,7 +46,7 @@ describe('pipeline/Pipeline', () => {
 
     for (const msgIdx in range(messagesPerFeed)) {
       await pipeline.writer!.write({
-        '@type': 'dxos.echo.feed.EchoEnvelope',
+        '@type': 'dxos.echo.feed.EchoObject',
         itemId: `local-${msgIdx}`
       });
     }

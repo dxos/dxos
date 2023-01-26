@@ -10,7 +10,7 @@ import { failUndefined, raise } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   MutationReceipt,
   SubscribeEntitySetResponse,
@@ -35,7 +35,7 @@ export class DataServiceHost {
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
-    private readonly _writeStream?: FeedWriter<EchoEnvelope>
+    private readonly _writeStream?: FeedWriter<EchoObject>
   ) {}
 
   /**
@@ -45,7 +45,7 @@ export class DataServiceHost {
     return new Stream(({ next }) => {
       const trackedSet = new Set<ItemID>();
 
-      const entityInfo = (id: ItemID): EchoEnvelope => {
+      const entityInfo = (id: ItemID): EchoObject => {
         const entity = this._itemManager.entities.get(id) ?? failUndefined();
         return {
           itemId: id,
@@ -89,7 +89,7 @@ export class DataServiceHost {
 
         next({
           added: Array.from(added).map((id) => entityInfo(id)),
-          deleted: Array.from(added).map((id): EchoEnvelope => ({ itemId: id }))
+          deleted: Array.from(added).map((id): EchoObject => ({ itemId: id }))
         });
       };
 
@@ -144,7 +144,7 @@ export class DataServiceHost {
     });
   }
 
-  async write(request: EchoEnvelope): Promise<MutationReceipt> {
+  async write(request: EchoObject): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
     return this._writeStream.write(request);

@@ -12,7 +12,7 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { createMappedFeedWriter } from '../common';
@@ -70,12 +70,12 @@ export class ItemManager {
   private readonly _pendingItems = new Map<ItemID, (item: Entity<Model>) => void>();
 
   /**
-   * @param _writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
+   * @param _writeStream Outbound `dxos.echo.IEchoObject` mutation stream.
    */
   constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
-    private readonly _writeStream?: FeedWriter<EchoEnvelope>
+    private readonly _writeStream?: FeedWriter<EchoObject>
   ) {}
 
   get entities() {
@@ -210,7 +210,7 @@ export class ItemManager {
     // Convert model-specific outbound mutation to outbound envelope message.
     const outboundTransform =
       this._writeStream &&
-      createMappedFeedWriter<Uint8Array, EchoEnvelope>((mutation) => ({ itemId, mutation }), this._writeStream);
+      createMappedFeedWriter<Uint8Array, EchoObject>((mutation) => ({ itemId, mutation }), this._writeStream);
 
     // Create the model with the outbound stream.
     return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);

@@ -5,7 +5,7 @@
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 import {
@@ -18,7 +18,7 @@ import {
 } from '../database';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
-  const feed = new MockFeedWriter<EchoEnvelope>();
+  const feed = new MockFeedWriter<EchoObject>();
   const backend = new DatabaseBackendHost(feed, undefined, { snapshots: true });
 
   feed.written.on(([data, meta]) =>

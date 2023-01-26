@@ -9,7 +9,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
@@ -32,7 +32,7 @@ export interface DatabaseBackend {
   open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>;
   close(): Promise<void>;
 
-  getWriteStream(): FeedWriter<EchoEnvelope> | undefined;
+  getWriteStream(): FeedWriter<EchoObject> | undefined;
   createSnapshot(): DatabaseSnapshot;
   createDataServiceHost(): DataServiceHost;
 }
@@ -48,7 +48,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
   private _itemDemuxer!: ItemDemuxer;
 
   constructor(
-    private readonly _outboundStream: FeedWriter<EchoEnvelope> | undefined,
+    private readonly _outboundStream: FeedWriter<EchoObject> | undefined,
     private readonly _snapshot?: DatabaseSnapshot,
     private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
   ) {}
@@ -73,7 +73,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
 
   async close() {}
 
-  getWriteStream(): FeedWriter<EchoEnvelope> | undefined {
+  getWriteStream(): FeedWriter<EchoObject> | undefined {
     return this._outboundStream;
   }
 
@@ -126,7 +126,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     this._subscriptions.clear();
   }
 
-  getWriteStream(): FeedWriter<EchoEnvelope> | undefined {
+  getWriteStream(): FeedWriter<EchoObject> | undefined {
     return {
       write: async (mutation) => {
         log('write', mutation);

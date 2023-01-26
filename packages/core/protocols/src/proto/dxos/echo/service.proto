@@ -40,7 +40,7 @@ message SubscribeEntityStreamResponse {
   }
 
   oneof kind {
-    // TODO(dmaretskyi): Move snapshot into EchoEnvelope?
+    // TODO(dmaretskyi): Move snapshot into EchoObject?
     snapshot.ItemSnapshot snapshot = 1;
     Mutation mutation = 2;
   }
