@@ -14,6 +14,7 @@ import { SpacePage, SpacesPage } from './pages';
 export const Routes = () => {
   const client = useClient();
   const identity = useIdentity();
+  const DX_VAULT = client.config.get('runtime.app.env.DX_VAULT');
 
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace: 'tasks-app' });
@@ -59,12 +60,12 @@ export const Routes = () => {
 
   // Allow the client to auto-create an identity if env DX_VAULT=false
   useEffect(() => {
-    if (process.env.DX_VAULT === 'false' && !identity) {
+    if (DX_VAULT === 'false' && !identity) {
       void client.halo.createProfile();
     }
   }, []);
 
-  if (process.env.DX_VAULT === 'false' && !identity) {
+  if (DX_VAULT === 'false' && !identity) {
     return null;
   }
 

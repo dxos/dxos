@@ -7,8 +7,8 @@ import React from 'react';
 import { HashRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { fromHost, fromIFrame, Config } from '@dxos/client';
-import { Defaults, Dynamics } from '@dxos/config';
+import { fromHost, fromIFrame } from '@dxos/client';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
   appkitTranslations,
@@ -26,14 +26,9 @@ import { captureException } from '@dxos/sentry';
 import { Routes } from './Routes';
 import tasksTranslations from './translations';
 
-log.config({
-  filter: process.env.LOG_FILTER ?? 'sdk:debug,warn',
-  prefix: process.env.LOG_BROWSER_PREFIX
-});
-
-const configProvider = async () => new Config(await Dynamics(), Defaults());
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const servicesProvider = (config?: Config) =>
-  process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config);
+  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 export const App = () => {
   const {
