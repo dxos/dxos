@@ -9,7 +9,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
@@ -17,7 +17,6 @@ import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const log = debug('dxos:echo-db:database-backend');
 

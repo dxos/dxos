@@ -29,15 +29,17 @@ describe('pipeline/Pipeline', () => {
 
       setTimeout(async () => {
         for (const msgIdx in range(messagesPerFeed)) {
-          await feed.append(checkType<FeedMessage>({
-            timeframe: new Timeframe(),
-            payload: {
-              '@type': 'dxos.echo.feed.DataMessage',
-              object: {
-                itemId: `${feedIdx}-${msgIdx}`
+          await feed.append(
+            checkType<FeedMessage>({
+              timeframe: new Timeframe(),
+              payload: {
+                '@type': 'dxos.echo.feed.DataMessage',
+                object: {
+                  itemId: `${feedIdx}-${msgIdx}`
+                }
               }
-            }
-          }));
+            })
+          );
         }
       });
     }

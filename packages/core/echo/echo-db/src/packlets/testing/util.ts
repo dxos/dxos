@@ -6,7 +6,6 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { Timeframe } from '@dxos/timeframe';
 
 import {

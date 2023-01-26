@@ -9,8 +9,6 @@ import { ItemID, ItemType } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ItemMutation } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
-
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
 import type { Link } from './link';
@@ -151,11 +149,11 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
     await this._writeStream.write({
       object: {
-      itemId: this.id,
-      itemMutation: {
-        action: ItemMutation.Action.RESTORE
+        itemId: this.id,
+        itemMutation: {
+          action: ItemMutation.Action.RESTORE
+        }
       }
-    }
     });
 
     await onUpdate;
@@ -173,7 +171,6 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
 
     await this._writeStream.write({
       object: {
-
         itemId: this.id,
         itemMutation: {
           parentId

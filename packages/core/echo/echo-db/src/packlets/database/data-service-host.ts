@@ -10,6 +10,7 @@ import { failUndefined, raise } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import {
   MutationReceipt,
@@ -23,7 +24,6 @@ import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const log = debug('dxos:echo-db:data-service-host');
 

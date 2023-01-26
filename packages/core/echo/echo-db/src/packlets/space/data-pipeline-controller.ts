@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { TypedMessage } from '@dxos/protocols';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -21,7 +21,6 @@ import { Database, DatabaseBackendHost } from '../database';
 import { SnapshotManager } from '../database/snapshot-manager';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 export type DataPipelineControllerContext = {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;

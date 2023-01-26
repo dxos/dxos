@@ -9,7 +9,7 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -19,7 +19,6 @@ import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 describe('DataMirror', () => {
   test('basic', async () => {
