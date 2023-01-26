@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentProps, ComponentPropsWithoutRef, useMemo } from 'react';
+import { CheckCircle, HourglassSimple, X } from 'phosphor-react';
+import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
 import type { CancellableInvitationObservable, Profile } from '@dxos/client';
 import { Invitation } from '@dxos/client';
@@ -19,8 +20,7 @@ export interface ViewStateProps extends ComponentProps<'div'> {
   activeInvitation?: true | CancellableInvitationObservable;
 }
 
-const pip = mx('rounded-full flex-none', getSize(2));
-const stripe = mx('rounded-full grow', getSize(2));
+const stripe = mx('rounded-full grow', getSize(3));
 const inactiveColor = 'bg-neutral-100 dark:bg-neutral-600';
 const activeColor = 'bg-primary-500 dark:bg-primary-400';
 const successColor = 'bg-success-500 dark:bg-success-400';
@@ -40,7 +40,7 @@ const statusValueMap = new Map<Invitation.State, number>([
 
 export const ViewStateHeading = ({ children, className, ...props }: ComponentPropsWithoutRef<'h2'>) => {
   return (
-    <h2 {...props} className={mx('font-system-medium text-sm md:text-base mbe-1 mli-1', className)}>
+    <h2 {...props} className={mx('font-system-medium text-sm md:text-base mbe-1 mli-1 text-center', className)}>
       {children}
     </h2>
   );
@@ -54,48 +54,21 @@ const PureViewStateInvitation = ({
 }: {
   halted?: boolean;
   cursor: number;
-  label: string;
+  label: ReactNode;
   resolvedColor: string;
 }) => {
+  const labelId = useId('invitationState');
   return (
     <div role='none' className={mx(defaultSurface, 'p-2')}>
-      <div role='status' aria-label={label} className={'flex gap-2 items-center'}>
-        <div role='none' className={mx(pip, 'relative')}>
-          <div
-            role='none'
-            className={mx(pip, 'absolute', !halted && cursor === 0 ? 'animate-ping block' : 'hidden', activeColor)}
-          />
-          <div
-            role='none'
-            className={mx(
-              pip,
-              'relative',
-              cursor === 0 ? (halted ? resolvedColor : activeColor) : cursor > 0 ? resolvedColor : inactiveColor
-            )}
-          />
-        </div>
+      <div role='status' aria-labelledby={labelId} className='flex gap-2 items-center mlb-1'>
         <div
           role='none'
           className={mx(
             stripe,
             !halted && cursor === 1 && strongShimmer,
-            cursor === 1 ? (halted ? resolvedColor : activeColor) : cursor > 1 ? resolvedColor : inactiveColor
+            cursor === 2 ? (halted ? resolvedColor : activeColor) : cursor > 1 ? resolvedColor : inactiveColor
           )}
         />
-        <div role='none' className={mx(pip, 'relative')}>
-          <div
-            role='none'
-            className={mx(pip, 'absolute', !halted && cursor === 2 ? 'animate-ping block' : 'hidden', activeColor)}
-          />
-          <div
-            role='none'
-            className={mx(
-              pip,
-              'relative',
-              cursor === 2 ? (halted ? resolvedColor : activeColor) : cursor > 2 ? resolvedColor : inactiveColor
-            )}
-          />
-        </div>
         <div
           role='none'
           className={mx(
@@ -104,8 +77,18 @@ const PureViewStateInvitation = ({
             cursor === 3 ? activeColor : cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor
           )}
         />
-        <div role='none' className={mx(pip, cursor >= 4 ? resolvedColor : inactiveColor)} />
+        <div
+          role='none'
+          className={mx(
+            stripe,
+            !halted && cursor === 3 && strongShimmer,
+            cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor
+          )}
+        />
       </div>
+      <ViewStateHeading id={labelId} className='flex justify-center items-center gap-2'>
+        {label}
+      </ViewStateHeading>
     </div>
   );
 };
@@ -128,15 +111,39 @@ const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Can
 
   const statusLabelMap = useMemo(
     () =>
-      new Map<Invitation.State, string>([
-        [Invitation.State.ERROR, t('error status label')],
-        [Invitation.State.TIMEOUT, t('timeout status label')],
-        [Invitation.State.CANCELLED, t('cancelled status label')],
+      new Map<Invitation.State, ReactNode>([
+        [
+          Invitation.State.ERROR,
+          <>
+            <X weight='bold' className={mx(getSize(4), 'text-error-600 dark:text-error-400')} />
+            <span>{t('error status label')}</span>
+          </>
+        ],
+        [
+          Invitation.State.TIMEOUT,
+          <>
+            <HourglassSimple weight='fill' className={mx(getSize(4), 'text-warning-600 dark:text-warning-400')} />
+            <span>{t('timeout status label')}</span>
+          </>
+        ],
+        [
+          Invitation.State.CANCELLED,
+          <>
+            <X weight='bold' className={mx(getSize(4), 'text-warning-600 dark:text-warning-400')} />
+            <span>{t('cancelled status label')}</span>
+          </>
+        ],
         [Invitation.State.INIT, t('init status label')],
         [Invitation.State.CONNECTING, t('connecting status label')],
         [Invitation.State.CONNECTED, t('connected status label')],
         [Invitation.State.AUTHENTICATING, t('authenticating status label')],
-        [Invitation.State.SUCCESS, t('success status label')]
+        [
+          Invitation.State.SUCCESS,
+          <>
+            <CheckCircle weight='fill' className={mx(getSize(4), 'text-success-600 dark:text-success-400')} />
+            <span>{t('success status label')}</span>
+          </>
+        ]
       ]),
     [t]
   );

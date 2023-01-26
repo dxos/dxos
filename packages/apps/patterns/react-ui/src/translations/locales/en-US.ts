@@ -27,5 +27,13 @@ export const os = {
   'new identity input label': 'Add a display name',
   'failed to create identity message': 'Failed to create an identity.',
   'identity added label': 'Created identity & added to this device:',
-  'join space as identity heading': '<part>as </part><part><icon/><label>{{labelValue}}</label></part>'
+  'join space as identity heading': '<part>as </part><part><icon/><label>{{labelValue}}</label></part>',
+  'error status label': 'Failed',
+  'timeout status label': 'Timed out',
+  'cancelled status label': 'Cancelled',
+  'init status label': 'Ready to connect',
+  'connecting status label': 'Connecting…',
+  'connected status label': 'Enter confirmation PIN',
+  'authenticating status label': 'Validating PIN…',
+  'success status label': 'Success'
 };

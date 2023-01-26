@@ -27,7 +27,7 @@ export const IdentityAdded = ({ addedIdentity, ...viewStateProps }: IdentityAdde
           size={20}
           fallbackValue={addedIdentity?.identityKey.toHex() ?? ''}
           label={
-            <p className={mx(!addedIdentity?.displayName && 'font-mono')}>
+            <p className={mx('text-lg', !addedIdentity?.displayName && 'font-mono')}>
               {addedIdentity?.displayName ?? addedIdentity?.identityKey.truncate() ?? ' '}
             </p>
           }
@@ -37,12 +37,9 @@ export const IdentityAdded = ({ addedIdentity, ...viewStateProps }: IdentityAdde
       </div>
       <div className='flex gap-2'>
         <Button
-          disabled={disabled}
+          disabled={disabled || !addedIdentity}
           className='grow flex items-center gap-2 pli-2 order-2'
-          onClick={() => {
-            console.log('Identity added');
-            // dispatch({ type: 'added identity', identity })
-          }}
+          onClick={() => addedIdentity && dispatch({ type: 'select identity', identity: addedIdentity })}
           data-autofocus='identity added'
         >
           <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />

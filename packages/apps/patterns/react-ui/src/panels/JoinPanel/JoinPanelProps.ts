@@ -35,11 +35,12 @@ export type JoinDispatch = Dispatch<JoinAction>;
 export type JoinView =
   | 'identity selector'
   | 'addition method selector'
-  | 'restore identity init'
-  | 'accept device invitation'
-  | 'create identity init'
+  | 'identity restorer'
+  | 'identity creator'
   | 'identity added'
-  | 'accept space invitation';
+  | 'invitation connector'
+  | 'invitation authenticator'
+  | 'invitation accepted';
 
 export interface JoinState {
   activeView: JoinView;

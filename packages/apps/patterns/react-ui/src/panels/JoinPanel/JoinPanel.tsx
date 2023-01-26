@@ -10,6 +10,7 @@ import { ThemeContext, useId } from '@dxos/react-components';
 import { JoinHeading } from './JoinHeading';
 import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
 import { AdditionMethodSelector, IdentitySelector, IdentityCreator, IdentityAdded } from './view-states';
+import { InvitationConnector } from './view-states/InvitationConnector';
 
 export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
   const titleId = useId('joinTitle');
@@ -28,12 +29,12 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
         nextState.activeView = 'addition method selector';
         break;
       case 'select addition method':
-        nextState.activeView = 'create identity init';
+        nextState.activeView = 'identity creator';
         nextState.additionMethod = action.method;
         break;
       case 'select identity':
         nextState.selectedIdentity = action.identity;
-        nextState.activeView = 'accept space invitation';
+        nextState.activeView = 'invitation connector';
         break;
       case 'deselect identity':
         nextState.selectedIdentity = undefined;
@@ -56,7 +57,7 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
   useEffect(() => {
     // TODO (thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
     const attrValue =
-      joinState.activeView === 'create identity init'
+      joinState.activeView === 'identity creator'
         ? `${joinState.activeView}; ${joinState.additionMethod}`
         : joinState.activeView;
     const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${attrValue}"]`);
@@ -75,7 +76,7 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
           >
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className='is-full overflow-hidden'>
-              <div role='none' className='flex is-[400%]' aria-live='polite'>
+              <div role='none' className='flex is-[500%]' aria-live='polite'>
                 <IdentitySelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
                 />
@@ -90,14 +91,22 @@ export const JoinPanel = ({ initialInvitation }: JoinPanelProps) => {
                   {...{
                     dispatch,
                     active:
-                      joinState.activeView === 'create identity init' && joinState.additionMethod === 'create identity'
+                      joinState.activeView === 'identity creator' && joinState.additionMethod === 'create identity'
                   }}
                 />
                 <IdentityAdded
                   {...{
                     dispatch,
-                    identity: joinState.selectedIdentity,
+                    addedIdentity: joinState.selectedIdentity,
                     active: joinState.activeView === 'identity added'
+                  }}
+                />
+                <InvitationConnector
+                  {...{
+                    dispatch,
+                    activeInvitation: joinState.spaceInvitation || true,
+                    selectedIdentity: joinState.selectedIdentity,
+                    active: joinState.activeView === 'invitation connector'
                   }}
                 />
               </div>
