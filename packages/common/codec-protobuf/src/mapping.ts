@@ -14,7 +14,7 @@ export type TypeMapperContext = {
   messageName: string;
 
   fieldName: string;
-}
+};
 
 export type TypeMapper = (value: any, context: TypeMapperContext, ...extraArgs: any) => any;
 
