@@ -44,13 +44,13 @@ export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl =
 
           // Set build info automatically if available.
           try {
+            const timestamp = new Date().toISOString();
+            const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).replace('\n', '');
             const packagePath = pkgUp.sync();
             const packageJson = packagePath && JSON.parse(readFileSync(packagePath, 'utf-8'));
-            const buildTime = new Date().toISOString();
-            const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).replace('\n', '');
-            set(content, ['runtime', 'app', 'build', 'buildTime'], buildTime);
-            set(content, ['runtime', 'app', 'build', 'version'], packageJson?.version);
+            set(content, ['runtime', 'app', 'build', 'timestamp'], timestamp);
             set(content, ['runtime', 'app', 'build', 'commitHash'], commitHash);
+            set(content, ['runtime', 'app', 'build', 'version'], packageJson?.version);
           } catch {}
         }
       } catch (err: any) {

@@ -109,9 +109,10 @@ message Runtime {
   message App {
     message BuildInfo {
       /// RFC-3339 datetime string.
-      optional string build_time = 1;
-      optional string version = 2;
-      optional string commit_hash = 3;
+      optional string timestamp = 1;
+      optional string commit_hash = 2;
+      /// Version from package.json.
+      optional string version = 3;
     }
 
     optional string org = 1;
