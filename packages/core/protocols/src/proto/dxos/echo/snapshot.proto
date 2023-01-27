@@ -77,7 +77,7 @@ message ModelSnapshot {
    * Encoded model snapshot (defined by the model's codec).
    * If undefined the state machine will be initialized with it's default state.
    */
-  optional bytes snapshot = 1;
+  optional google.protobuf.Any snapshot = 1;
 
   /**
    * Mutations to be applied on top of the snapshot, or on top of initial state if the snapshot is undefined.
