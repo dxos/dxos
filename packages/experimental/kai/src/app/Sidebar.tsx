@@ -3,7 +3,7 @@
 //
 
 import clipboardCopy from 'clipboard-copy';
-import { PlusCircle } from 'phosphor-react';
+import { PlusCircle, ArrowCircleDownLeft } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
 import { useHref, useNavigate, useParams } from 'react-router-dom';
 
@@ -57,6 +57,10 @@ export const Sidebar = () => {
     navigate(createSpacePath(space.key));
   };
 
+  const handleJoinSpace = async () => {
+    navigate('/space/join');
+  };
+
   const handleSelectSpace = (spaceKey: PublicKey) => {
     navigate(createSpacePath(spaceKey, frame));
   };
@@ -92,26 +96,33 @@ export const Sidebar = () => {
   return (
     <div
       role='none'
-      className='flex flex-col overflow-auto min-bs-full box-shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
+      className='flex flex-col overflow-auto min-bs-full shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
     >
       {/* Match Frame selector. */}
-      <div className='flex p-1 pl-4 h-framepicker pt-2 bg-orange-500'>
-        <div>Spaces</div>
-      </div>
-      <div className='flex flex-col flex-1 border-r border-slate-200'>
-        {/* Spaces */}
-        <div className='flex shrink-0 flex-col overflow-y-auto'>
-          <SpaceList value={space.key} spaces={spaces} onSelect={handleSelectSpace} onShare={handleShareSpace} />
-
-          <div className='p-3'>
-            <Button className='flex' title='Create new space' onClick={handleCreateSpace}>
+      <div className='flex flex-col-reverse h-framepicker bg-orange-500'>
+        <div className='flex justify-between items-center p-1 pl-4'>
+          <div>Spaces</div>
+          <div className='flex pr-3'>
+            <Button />
+            <Button className='flex ml-2' title='Create new space' onClick={handleCreateSpace}>
               <span className='sr-only'>Create new space</span>
               <PlusCircle className={getSize(6)} />
             </Button>
+            <Button className='flex ml-2' title='Join a space' onClick={handleJoinSpace}>
+              <span className='sr-only'>Join a space</span>
+              <ArrowCircleDownLeft className={getSize(6)} />
+            </Button>
           </div>
         </div>
+      </div>
 
-        <div className='flex flex-1'></div>
+      <div className='flex flex-col flex-1'>
+        {/* Spaces */}
+        <div className='flex shrink-0 flex-col overflow-y-auto'>
+          <SpaceList value={space.key} spaces={spaces} onSelect={handleSelectSpace} onShare={handleShareSpace} />
+        </div>
+
+        <div className='flex-1' />
 
         {/* Members */}
         <div className='flex flex-col shrink-0 mt-6'>
