@@ -10,7 +10,7 @@ import { Any } from '@dxos/codec-protobuf';
 import { failUndefined } from '@dxos/debug';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
-import { DatabaseSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Entity } from './entity';
 import { Item } from './item';
@@ -121,7 +121,7 @@ export class ItemDemuxer {
     };
   }
 
-  createSnapshot(): DatabaseSnapshot {
+  createSnapshot(): EchoSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
       items: this._itemManager.items.map((item) => this.createItemSnapshot(item)),
@@ -154,7 +154,7 @@ export class ItemDemuxer {
     };
   }
 
-  async restoreFromSnapshot(snapshot: DatabaseSnapshot) {
+  async restoreFromSnapshot(snapshot: EchoSnapshot) {
     const { items = [], links = [] } = snapshot;
 
     log(`Restoring ${items.length} items from snapshot.`);

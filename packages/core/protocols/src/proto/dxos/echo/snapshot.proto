@@ -27,14 +27,13 @@ message SpaceSnapshot {
   // TODO(dmaretskyi): Convert to google.protobuf.Timestamp.
   optional int32 timestamp = 3;
 
-  // TODO(dmaretskyi): Rename to EchoSnapshot.
-  DatabaseSnapshot database = 11;
+  EchoSnapshot database = 11;
 }
 
 /**
  * Database Snapshot
  */
-message DatabaseSnapshot {
+message EchoSnapshot {
   repeated ItemSnapshot items = 1;
   repeated LinkSnapshot links = 2;
 }
