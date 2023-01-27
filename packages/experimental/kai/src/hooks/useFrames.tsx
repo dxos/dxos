@@ -13,6 +13,7 @@ export enum FrameID {
   TASKS = 'tasks',
   CALENDAR = 'events',
   DOCUMENTS = 'documents',
+  SKETCH = 'sketch',
   EXPLORER = 'explorer',
   MAPS = 'maps',
   CHESS = 'chess'
@@ -27,7 +28,8 @@ const activeFrames = [
   FrameID.STACK,
   FrameID.TABLE,
   FrameID.TASKS,
-  FrameID.KANBAN
+  FrameID.KANBAN,
+  FrameID.SKETCH
 ];
 
 export type FrameDef = {

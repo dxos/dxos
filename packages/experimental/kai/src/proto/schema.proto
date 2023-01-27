@@ -117,3 +117,20 @@ message Event {
   repeated Contact members = 5;
 }
 
+message Sketch {
+  message Point {
+    int32 x = 1;
+    int32 y = 2;
+  }
+
+  message Path {
+    int32 width = 1;
+    string color = 2;
+    repeated Point points = 3;
+  }
+
+  option (object) = true;
+
+  string title = 1;
+  repeated Path paths = 2;
+}

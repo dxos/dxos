@@ -12,6 +12,7 @@ import {
   Gear,
   Globe,
   Graph,
+  HighlighterCircle,
   Kanban,
   ListChecks,
   Sword,
@@ -34,7 +35,8 @@ import {
   MapFrame,
   RegistryFrame,
   TableFrame,
-  TasksFrame
+  TasksFrame,
+  SketchFrame
 } from '../containers';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
@@ -96,6 +98,13 @@ export const frames: FrameDef[] = [
     description: 'Realtime structured document editing.',
     Icon: Article,
     Component: DocumentFrame
+  },
+  {
+    id: FrameID.SKETCH,
+    title: 'Sketch',
+    description: 'Simple sketches.',
+    Icon: HighlighterCircle,
+    Component: SketchFrame
   },
   {
     id: FrameID.EXPLORER,
