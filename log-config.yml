@@ -1,5 +1,5 @@
 formatter:
-  column: 100
+  column: 60
 
 # processor: debug
 
@@ -7,6 +7,7 @@ filter:
   - warn
   - info
   - test.ts:debug
+  - database:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug
