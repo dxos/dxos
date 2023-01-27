@@ -58,7 +58,7 @@ export class DataMirror {
               modelType: addedEntity.genesis.modelType,
               source: addedEntity.genesis.link.source,
               target: addedEntity.genesis.link.target,
-              snapshot: {}
+              snapshot: { itemId: addedEntity.itemId }
             });
           } else {
             entity = await this._itemManager.constructItem({
@@ -66,7 +66,7 @@ export class DataMirror {
               itemType: addedEntity.genesis.itemType,
               modelType: addedEntity.genesis.modelType,
               parentId: addedEntity.itemMutation?.parentId,
-              snapshot: {}
+              snapshot: { itemId: addedEntity.itemId }
             });
           }
 

@@ -14,7 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { createMappedFeedWriter } from '../common';
 import { UnknownModelError } from '../errors';
@@ -27,7 +27,7 @@ const log = debug('dxos:echo-db:item-manager');
 export interface ModelConstructionOptions {
   itemId: ItemID;
   modelType: ModelType;
-  snapshot: ModelSnapshot;
+  snapshot: EchoObject;
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {

@@ -44,7 +44,15 @@ export class TestBuilder<M extends Model<any>> {
     });
 
     const id = PublicKey.random().toHex();
-    const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, id, {}, key, writer);
+    const stateManager = this._modelFactory.createModel<M>(
+      this._modelConstructor.meta.type,
+      id,
+      {
+        itemId: 'test'
+      },
+      key,
+      writer
+    );
 
     const peer = new TestPeer(stateManager, key);
     this._peers.set(key, peer);
