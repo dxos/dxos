@@ -76,7 +76,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     }
   });
 
-  test.skip('joins multiple swarms', async () => {
+  test('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
     // TODO(burdon): Merge with test below.
     const peer1 = testBuilder.createPeer();
