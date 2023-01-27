@@ -153,7 +153,7 @@ export const FrameSelector: FC = () => {
               <a
                 key={id}
                 className={mx(
-                  'flex lg:pr-2 lg:mr-2 items-center p-1 cursor-pointer rounded-t text-black',
+                  'flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black',
                   id === currentFrame && 'bg-white'
                 )}
                 onClick={() => navigate(createSpacePath(space.key, id))}
