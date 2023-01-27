@@ -6,16 +6,16 @@ import { AbstractValueEncoding, Crypto } from 'hypercore';
 import assert from 'node:assert';
 import { callbackify } from 'node:util';
 
-import { Codec } from '@dxos/codec-protobuf';
+import { Codec, EncodingOptions } from '@dxos/codec-protobuf';
 import { Signer, verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 
 /**
  * Create encoding (e.g., from protobuf codec).
  */
-export const createCodecEncoding = <T>(codec: Codec<T>): AbstractValueEncoding<T> => ({
-  encode: (obj: T) => Buffer.from(codec.encode(obj)),
-  decode: (buffer: Buffer) => codec.decode(buffer)
+export const createCodecEncoding = <T>(codec: Codec<T>, opts?: EncodingOptions): AbstractValueEncoding<T> => ({
+  encode: (obj: T) => Buffer.from(codec.encode(obj, opts)),
+  decode: (buffer: Buffer) => codec.decode(buffer, opts)
 });
 
 /**
