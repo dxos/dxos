@@ -21,6 +21,9 @@ class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {
     assert(update);
 
     if (clientId !== this._doc.clientID) {
+      // Passing empty buffer make the process hang: https://github.com/yjs/yjs/issues/498
+      assert(update.length > 0, 'update buffer is empty') 
+      
       applyUpdate(this._doc, update, { docClientId: clientId });
     }
   }
