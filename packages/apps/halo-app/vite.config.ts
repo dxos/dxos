@@ -28,23 +28,21 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
-      '@dxos/async',
-      '@dxos/client',
+      '@dxos/config',
       '@dxos/keys',
       '@dxos/log',
-      '@dxos/config',
-      '@dxos/metagraph',
-      '@dxos/network-manager',
       '@dxos/protocols',
-      '@dxos/react-appkit',
-      '@dxos/react-async',
-      '@dxos/react-client',
-      '@dxos/react-components',
-      '@dxos/rpc',
-      '@dxos/rpc-tunnel',
-      '@dxos/sentry',
-      '@dxos/telemetry',
-      '@dxos/util'
+      '@dxos/protocols/proto/dxos/client',
+      '@dxos/protocols/proto/dxos/client/services',
+      '@dxos/protocols/proto/dxos/config',
+      '@dxos/protocols/proto/dxos/echo/feed',
+      '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/protocols/proto/dxos/echo/object',
+      '@dxos/protocols/proto/dxos/halo/credentials',
+      '@dxos/protocols/proto/dxos/halo/invitations',
+      '@dxos/protocols/proto/dxos/halo/keys',
+      '@dxos/protocols/proto/dxos/mesh/bridge',
+      '@dxos/protocols/proto/dxos/rpc'
     ]
   },
   build: {
@@ -68,10 +66,10 @@ export default defineConfig({
     ConfigPlugin({
       env: [
         'DX_ENVIRONMENT',
-        'DX_VAULT',
-        'IPDATA_API_KEY',
-        'SENTRY_DESTINATION',
-        'TELEMETRY_API_KEY'
+        'DX_IPDATA_API_KEY',
+        'DX_SENTRY_DESTINATION',
+        'DX_TELEMETRY_API_KEY',
+        'DX_VAULT'
       ]
     }),
     ThemePlugin({

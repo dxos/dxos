@@ -5,19 +5,20 @@
 import { Activity, Eraser } from 'phosphor-react';
 import React, { useCallback } from 'react';
 
-import { BASE_TELEMETRY_PROPERTIES, DX_TELEMETRY, getTelemetryIdentifier } from '@dxos/react-appkit';
+import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, isTelemetryDisabled } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { useTranslation, Button, getSize, Input, Avatar, defaultGroup } from '@dxos/react-components';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
+import { namespace } from '../App';
 import { AlertDialog } from '../components';
 
 const IdentityPage = () => {
   const client = useClient();
   const profile = useIdentity();
   const profileHex = profile!.identityKey.toHex();
-  const telemetryDisabled = DX_TELEMETRY === 'true';
+  const telemetryDisabled = isTelemetryDisabled(namespace);
   const { t } = useTranslation('halo');
 
   const confirmString = humanize(profile!.identityKey.toHex());

@@ -11,5 +11,9 @@
     "src",
     "testing"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../log"
+    }
+  ]
 }

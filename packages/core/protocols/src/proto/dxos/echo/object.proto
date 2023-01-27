@@ -26,7 +26,7 @@ message EchoObject {
   optional ItemMutation item_mutation = 11;
 
   // Model-specific mutations.
-  optional bytes mutation = 12;
+  optional google.protobuf.Any mutation = 12 [preserve_any = true];
 
   /// Set the model to the provided snapshot.
   optional snapshot.ModelSnapshot snapshot = 13;

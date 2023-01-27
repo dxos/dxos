@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import * as pb from 'protobufjs';
 
-import { MapingDescriptors } from '../mapping';
+import { MapingDescriptors, TypeMapperContext } from '../mapping';
 import { codegen, ref } from './codegen';
 
 export type Mapper = (obj: any, extraArgs: any[]) => any;
@@ -30,7 +30,11 @@ const createMessageMapperCached = (
           const genMapScalar = (value: string) => {
             const substitution = field.resolvedType && substitutions[field.resolvedType.fullName.slice(1)];
             if (substitution) {
-              c`${ref(substitution)}(${value}, ...extraArgs)`;
+              const context: TypeMapperContext = {
+                messageName: type.fullName.slice(1),
+                fieldName: field.name
+              };
+              c`${ref(substitution)}(${value}, ${ref(context)}, ...extraArgs)`;
             } else if (field.resolvedType && field.resolvedType instanceof pb.Type) {
               const mapper = createMessageMapperCached(field.resolvedType, substitutions, cache);
               c`${ref(mapper)}.map(${value}, extraArgs)`;

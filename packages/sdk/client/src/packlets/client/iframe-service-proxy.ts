@@ -4,6 +4,7 @@
 
 import { ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
@@ -27,7 +28,6 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
   constructor({ config, channel, timeout = 1000 }: IFrameClientServicesProxyOptions) {
     this.params = { config, channel, timeout };
-    this._clientServicesProxy = new ClientServicesProxy(this._getIFramePort());
   }
 
   get proxy() {
@@ -44,7 +44,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
   async open() {
     if (!this._clientServicesProxy) {
-      this._clientServicesProxy = new ClientServicesProxy(this._getIFramePort());
+      this._clientServicesProxy = new ClientServicesProxy(await this._getIFramePort());
     }
 
     return this._clientServicesProxy.open();
@@ -59,13 +59,17 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     }
   }
 
-  private _getIFramePort(): RpcPort {
+  private async _getIFramePort(): Promise<RpcPort> {
     this._iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
     const source = new URL(
       this.params.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN,
       window.location.origin
     );
     const iframe = createIFrame(source.toString(), this._iframeId);
+    const res = await fetch(source);
+    if (res.status >= 400) {
+      throw new RemoteServiceConnectionTimeout();
+    }
     return createIFramePort({ origin: source.origin, iframe, channel: this.params.channel });
   }
 }

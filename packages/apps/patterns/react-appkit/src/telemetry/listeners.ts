@@ -5,14 +5,14 @@
 import { Client } from '@dxos/client';
 import * as Telemetry from '@dxos/telemetry';
 
-import { BASE_TELEMETRY_PROPERTIES, DX_GROUP, getTelemetryIdentifier } from './base-properties';
+import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier } from './telemetry';
 
 let lastFocusEvent = new Date();
 let totalTime = 0;
 
 export const setupTelemetryListeners = (namespace: string, client: Client) => {
   const clickCallback = (event: any) => {
-    if (DX_GROUP === 'dxos' && event.target && !event.target.id) {
+    if (BASE_TELEMETRY_PROPERTIES.group === 'dxos' && event.target && !event.target.id) {
       // TODO(wittjosiah): Use @dxos/log so these can be filtered.
       console.warn('Click event on element without id:', event.target);
     }
