@@ -14,6 +14,8 @@ import { Button } from '../../components';
 import { useSpace } from '../../hooks';
 import { Path, Sketch } from '../../proto';
 
+// TODO(burdon): Evaluate GLSP: https://www.eclipse.org/glsp
+
 const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Path => ({
   timestamp: startTimestamp,
   width: strokeWidth,
@@ -31,8 +33,9 @@ const convertToCanvasPath = ({ width, color, points }: Path): CanvasPath =>
 
 const sizes: any[] = [
   { weight: 'thin', width: 1 },
-  { weight: 'regular', width: 4 },
-  { weight: 'bold', width: 8 }
+  { weight: 'light', width: 4 },
+  { weight: 'regular', width: 8 },
+  { weight: 'bold', width: 16 }
 ];
 
 const dimensions = { width: 900, height: 600 };
