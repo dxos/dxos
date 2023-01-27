@@ -16,7 +16,11 @@ package dxos.echo.object;
  * Wrapper for all ECHO messages.
  */
 message EchoObject {
-  string item_id = 1;
+  optional string item_id = 1;
+  optional string item_type = 2;
+  optional string model_type = 3;
+  optional string model_version = 4;
+  optional string parent_id = 5;
 
   /// Create item.
   optional ItemGenesis genesis = 10;

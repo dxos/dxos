@@ -91,8 +91,8 @@ export class DataMirror {
       async (update) => {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
         if (update.snapshot) {
-          assert(update.snapshot.model);
-          entity._stateManager.resetToSnapshot(update.snapshot.model);
+          assert(update.snapshot);
+          entity._stateManager.resetToSnapshot(update.snapshot);
         } else if (update.mutation) {
           if (update.mutation.data?.mutations) {
             assert(update.mutation.meta);

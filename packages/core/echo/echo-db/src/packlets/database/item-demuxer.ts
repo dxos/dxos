@@ -10,7 +10,8 @@ import { Any } from '@dxos/codec-protobuf';
 import { failUndefined } from '@dxos/debug';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
-import { EchoSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Entity } from './entity';
 import { Item } from './item';
@@ -129,15 +130,14 @@ export class ItemDemuxer {
     };
   }
 
-  createItemSnapshot(item: Item<Model<any>>): ItemSnapshot {
+  createItemSnapshot(item: Item<Model<any>>): EchoObject {
     const model = item._stateManager.createSnapshot();
 
     return {
-      itemId: item.id,
       itemType: item.type,
       modelType: item.modelType,
       parentId: item.parent?.id,
-      model
+      ...model
     };
   }
 
@@ -161,14 +161,14 @@ export class ItemDemuxer {
     for (const item of sortItemsTopologically(items)) {
       assert(item.itemId);
       assert(item.modelType);
-      assert(item.model);
+      assert(item.snapshot);
 
       await this._itemManager.constructItem({
         itemId: item.itemId,
         modelType: item.modelType,
         itemType: item.itemType,
         parentId: item.parentId,
-        snapshot: item.model
+        snapshot: item // TODO(mykola): Refactor to pass just EchoObject.
       });
     }
 
@@ -194,8 +194,8 @@ export class ItemDemuxer {
  * Sort based on parents.
  * @param items
  */
-export const sortItemsTopologically = (items: ItemSnapshot[]): ItemSnapshot[] => {
-  const snapshots: ItemSnapshot[] = [];
+export const sortItemsTopologically = (items: EchoObject[]): EchoObject[] => {
+  const snapshots: EchoObject[] = [];
   const seenIds = new Set<ItemID>();
 
   while (snapshots.length !== items.length) {

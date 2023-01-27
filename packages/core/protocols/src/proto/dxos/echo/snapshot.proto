@@ -34,19 +34,14 @@ message SpaceSnapshot {
  * Database Snapshot
  */
 message EchoSnapshot {
-  repeated ItemSnapshot items = 1;
+  repeated object.EchoObject items = 1;
   repeated LinkSnapshot links = 2;
 }
 
-message ItemSnapshot {
-  optional string item_id = 1;
-  optional string item_type = 2;
-  string model_type = 3;
-  optional string model_version = 4;
-  optional string parent_id = 5;
-  optional object.EchoObject model = 6;
-}
-
+/**
+ * @deprecated
+ */
+// TODO(mykola): Remove.
 message LinkSnapshot {
   optional string link_id = 1;
   optional string link_type = 2;
