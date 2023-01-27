@@ -2969,6 +2969,7 @@ importers:
       '@types/leaflet': ^1.9.0
       '@types/react': ^18.0.21
       '@types/react-big-calendar': ^0.38.3
+      '@types/react-color': ^3.0.6
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^18.0.6
       '@types/react-syntax-highlighter': ^15.5.5
@@ -3059,6 +3060,7 @@ importers:
       '@types/leaflet': 1.9.0
       '@types/react': 18.0.21
       '@types/react-big-calendar': 0.38.3
+      '@types/react-color': 3.0.6
       '@types/react-copy-to-clipboard': 5.0.4
       '@types/react-dom': 18.0.6
       '@types/react-syntax-highlighter': 15.5.5
@@ -13457,6 +13459,13 @@ packages:
       '@types/react': 18.0.21
     dev: true
 
+  /@types/react-color/3.0.6:
+    resolution: {integrity: sha512-OzPIO5AyRmLA7PlOyISlgabpYUa3En74LP8mTMa0veCA719SvYQov4WLMsHvCgXP+L+KI9yGhYnqZafVGG0P4w==}
+    dependencies:
+      '@types/react': 18.0.21
+      '@types/reactcss': 1.2.6
+    dev: true
+
   /@types/react-copy-to-clipboard/5.0.4:
     resolution: {integrity: sha512-otTJsJpofYAeaIeOwV5xBUGpo6exXG2HX7X4nseToCB2VgPEBxGBHCm/FecZ676doNR7HCSTVtmohxfG2b3/yQ==}
     dependencies:
@@ -13502,6 +13511,12 @@ packages:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
       csstype: 3.1.1
+
+  /@types/reactcss/1.2.6:
+    resolution: {integrity: sha512-qaIzpCuXNWomGR1Xq8SCFTtF4v8V27Y6f+b9+bzHiv087MylI/nTCqqdChNeWS7tslgROmYB7yeiruWX7WnqNg==}
+    dependencies:
+      '@types/react': 18.0.21
+    dev: true
 
   /@types/readable-stream/2.3.14:
     resolution: {integrity: sha512-8jQ5Mp7bsDJEnW/69i6nAaQMoLwAVJVc7ZRAVTrdh/o6XueQsX38TEvKuYyoQj76/mg7WdlRfMrtl9pDLCJWsg==}
@@ -34010,7 +34025,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

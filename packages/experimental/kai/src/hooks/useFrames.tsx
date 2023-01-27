@@ -29,8 +29,7 @@ const activeFrames = [
   FrameID.STACK,
   FrameID.TABLE,
   FrameID.TASKS,
-  FrameID.KANBAN,
-  FrameID.SKETCH
+  FrameID.KANBAN
 ];
 
 export type FrameDef = {

@@ -96,7 +96,7 @@ export const Sidebar = () => {
   return (
     <div
       role='none'
-      className='flex flex-col overflow-auto min-bs-full box-shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
+      className='flex flex-col overflow-auto min-bs-full shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
     >
       {/* Match Frame selector. */}
       <div className='flex flex-col-reverse h-framepicker bg-orange-500'>
