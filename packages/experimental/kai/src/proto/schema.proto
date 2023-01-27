@@ -123,6 +123,7 @@ message Sketch {
     int32 y = 2;
   }
 
+  // TODO(burdon): Should be sub-type but is compiled to top level.
   message Path {
     int32 width = 1;
     string color = 2;

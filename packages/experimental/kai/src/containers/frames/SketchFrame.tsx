@@ -7,26 +7,29 @@ import { GithubPicker } from 'react-color';
 import { useResizeDetector } from 'react-resize-detector';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
-import { Sketch } from '../../proto';
+import { Path, Sketch } from '../../proto';
 
-const convertToSketch = (paths: CanvasPath[]) =>
+const convertToProtoPaths = (paths: CanvasPath[]): Path[] =>
   paths.map(({ strokeWidth, strokeColor, paths }) => ({
     width: strokeWidth,
     color: strokeColor,
     paths
   }));
 
-const convertToPaths = ({ paths = [] }: Sketch) =>
-  paths.map(({ width, color, points }) => ({
-    drawMode: true,
-    strokeWidth: width,
-    strokeColor: color,
-    paths: points
-  }));
+const convertToPaths = ({ paths = [] }: Sketch): CanvasPath[] =>
+  paths.map(
+    ({ width, color, points }) =>
+      ({
+        drawMode: true,
+        strokeWidth: width,
+        strokeColor: color,
+        paths: points
+      } as CanvasPath)
+  );
 
 export const SketchFrame = () => {
-  // https://www.npmjs.com/package/react-art
   // https://www.npmjs.com/package/react-sketch-canvas
+  // https://www.npmjs.com/package/react-art
   // https://www.npmjs.com/package/react-canvas-draw
   // https://www.npmjs.com/package/react-signature-canvas
 
@@ -56,12 +59,19 @@ export const SketchFrame = () => {
   useEffect(() => {
     const paths = convertToPaths(sketch);
     canvasRef.current?.loadPaths(paths);
+    setPaths(paths);
+    console.log('#');
   }, [canvasRef]);
 
-  // TODO(burdon): Diff.
-  const handleChange = (paths: CanvasPath[]) => {
-    const sketch = convertToSketch(paths);
-    console.log('>>', JSON.stringify(sketch, undefined, 2));
+  const handleChange = (updatedPaths: CanvasPath[]) => {
+    // const sketch = convertToProtoPaths(updatedPaths);
+    // console.log('>>', paths.length, updatedPaths.length);
+    // setPaths(updatedPaths);
+  };
+
+  const handleStroke = (updated: CanvasPath) => {
+    const [path] = convertToProtoPaths([updated]);
+    sketch.paths.push(path);
   };
 
   const handleColorChange = ({ hex }: { hex: string }) => setStrokeColor(hex);
@@ -79,6 +89,7 @@ export const SketchFrame = () => {
           width={`${width}px`}
           height={`${height}px`}
           onChange={handleChange}
+          onStroke={handleStroke}
         />
       </div>
       <div className='flex flex-shrink-0 p-2 bg-gray-100'>

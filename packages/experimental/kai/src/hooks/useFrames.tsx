@@ -13,6 +13,7 @@ export enum FrameID {
   TASKS = 'tasks',
   CALENDAR = 'events',
   DOCUMENTS = 'documents',
+  FILES = 'files',
   SKETCH = 'sketch',
   EXPLORER = 'explorer',
   MAPS = 'maps',

@@ -8,6 +8,7 @@ import {
   CaretLeft,
   CaretRight,
   Compass,
+  Files,
   Stack,
   Gear,
   Globe,
@@ -31,12 +32,13 @@ import {
   StackFrame,
   DocumentFrame,
   ExplorerFrame,
+  FileFrame,
   KanbanFrame,
   MapFrame,
   RegistryFrame,
+  SketchFrame,
   TableFrame,
-  TasksFrame,
-  SketchFrame
+  TasksFrame
 } from '../containers';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
@@ -98,6 +100,13 @@ export const frames: FrameDef[] = [
     description: 'Realtime structured document editing.',
     Icon: Article,
     Component: DocumentFrame
+  },
+  {
+    id: FrameID.FILES,
+    title: 'Files',
+    description: 'Distributed file sharing.',
+    Icon: Files,
+    Component: FileFrame
   },
   {
     id: FrameID.SKETCH,
