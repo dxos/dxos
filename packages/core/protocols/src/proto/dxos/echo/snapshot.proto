@@ -11,15 +11,14 @@ import "dxos/keys.proto";
 
 package dxos.echo.snapshot;
 
-//
-// Snapshots define full space state at a given point in time.
-// They must have enough information to be able to recover the space state without reading the feed messages.
-//
-// Each snapshot is identified by a space key and a timeframe.
-// The timeframe defines the set of feed messages that have already been processed.
-// When loading from the snapshot, application would skip all of the feed messages up to (and including) the provided timeframe.
-//
-
+/**
+ * Snapshots define full space state at a given point in time.
+ * They must have enough information to be able to recover the space state without reading the feed messages.
+ *
+ * Each snapshot is identified by a space key and a timeframe.
+ * The timeframe defines the set of feed messages that have already been processed.
+ * When loading from the snapshot, application would skip all of the feed messages up to (and including) the provided timeframe.
+ */
 message SpaceSnapshot {
   bytes space_key = 1;
   optional timeframe.TimeframeVector timeframe = 2;
@@ -28,21 +27,13 @@ message SpaceSnapshot {
   // TODO(dmaretskyi): Convert to google.protobuf.Timestamp.
   optional int32 timestamp = 3;
 
-  optional HaloStateSnapshot halo = 11;
   // TODO(dmaretskyi): Rename to EchoSnapshot.
-  DatabaseSnapshot database = 12;
+  DatabaseSnapshot database = 11;
 }
 
-// TODO(dmaretskyi): Rename to HaloSnapshot.
-// For now we just store and replay a list of all halo messages as thier number is expected to be relatively low.
-message HaloStateSnapshot {
-  repeated dxos.halo.signed.Message messages = 1;
-}
-
-//
-// Database Snapshot
-//
-
+/**
+ * Database Snapshot
+ */
 message DatabaseSnapshot {
   repeated ItemSnapshot items = 1;
   repeated LinkSnapshot links = 2;
