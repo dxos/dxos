@@ -5,6 +5,7 @@
 import { PublicKey } from '@dxos/keys';
 import { NetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { AuthMethod } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from './invitations';
 
@@ -13,6 +14,11 @@ export type InvitationsOptions = {
   timeout?: number;
   // Used for debugging.
   swarmKey?: PublicKey;
+  /**
+   * Authentication method.
+   * @default AuthMethod.SHARED_SECRET
+   */
+  authMethod?: AuthMethod;
 };
 
 /**
