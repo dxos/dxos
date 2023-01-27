@@ -79,7 +79,11 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this.mochaContext, BASE_URL, (page) => page.isVisible(':has-text("KAI")'));
+    const { page } = await setupPage(this.mochaContext, {
+      url: BASE_URL,
+      waitFor: (page) => page.isVisible(':has-text("KAI")'),
+      bridgeLogs: true
+    });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
     this._initialized = true;
