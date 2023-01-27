@@ -87,7 +87,7 @@ message ModelSnapshot {
 
 message ModelMutation {
   // Encoded model mutation, format is defined by model's codec.
-  bytes mutation = 1;
+  google.protobuf.Any mutation = 1;
   ModelMutationMeta meta = 2;
 }
 

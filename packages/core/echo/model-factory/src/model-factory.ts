@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, scheduleTask } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -72,7 +73,7 @@ export class ModelFactory {
     itemId: ItemID,
     snapshot: ModelSnapshot,
     memberKey: PublicKey, // TODO(burdon): Change to client ID?
-    writeStream?: FeedWriter<Uint8Array>
+    writeStream?: FeedWriter<Any>
   ): StateManager<M> {
     assert(itemId);
     const constructor = this._models.get(modelType)?.constructor;

@@ -6,6 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { failUndefined } from '@dxos/debug';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
@@ -66,7 +67,7 @@ export class ItemDemuxer {
           itemId,
           modelType,
           snapshot: {
-            mutations: mutation ? [{ mutation, meta }] : undefined
+            mutations: mutation?.value ? [{ mutation: mutation as Any, meta }] : undefined
           }
         };
 
@@ -104,8 +105,7 @@ export class ItemDemuxer {
       //
       if (mutation && !genesis) {
         assert(message.data.mutation);
-        const modelMessage: ModelMessage<Uint8Array> = { meta, mutation };
-
+        const modelMessage: ModelMessage<Any> = { meta, mutation }; // TODO(mykola): Send google.protobuf.Any instead of Uint8Array.
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, modelMessage);
       }
