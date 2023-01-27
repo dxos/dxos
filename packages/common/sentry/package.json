@@ -18,6 +18,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@sentry/browser": "^7.17.2",
     "@sentry/node": "^7.17.2"
   },

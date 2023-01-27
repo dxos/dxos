@@ -5,6 +5,7 @@
 import type { Event, Transport } from '@sentry/types';
 
 export type InitOptions = {
+  enable?: boolean;
   destination?: string;
   installationId?: string;
   release?: string;
