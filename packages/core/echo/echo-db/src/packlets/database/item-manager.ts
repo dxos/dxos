@@ -6,6 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event, trigger } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
@@ -144,7 +145,11 @@ export class ItemManager {
           modelType
         },
         itemMutation: parentId ? { parentId } : undefined,
-        mutation
+        mutation: {
+          '@type': 'google.protobuf.Any',
+          type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+          value: mutation
+        }
       }
     });
 
@@ -195,7 +200,11 @@ export class ItemManager {
           modelType,
           link: { source, target }
         },
-        mutation
+        mutation: {
+          '@type': 'google.protobuf.Any',
+          type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+          value: mutation
+        }
       }
     });
 
@@ -214,8 +223,13 @@ export class ItemManager {
     // Convert model-specific outbound mutation to outbound envelope message.
     const outboundTransform =
       this._writeStream &&
-      createMappedFeedWriter<Uint8Array, DataMessage>(
-        (mutation) => ({ object: { itemId, mutation } }),
+      createMappedFeedWriter<Any, DataMessage>(
+        (mutation: Any) => ({
+          object: {
+            itemId,
+            mutation
+          }
+        }),
         this._writeStream
       );
 
@@ -330,7 +344,7 @@ export class ItemManager {
    * @param itemId Id of the item containing the model.
    * @param message Encoded model message
    */
-  async processModelMessage(itemId: ItemID, message: ModelMessage<Uint8Array>) {
+  async processModelMessage(itemId: ItemID, message: ModelMessage<Any>) {
     const item = this._entities.get(itemId);
     assert(item);
 
