@@ -31,8 +31,9 @@ const convertToCanvasPath = ({ width, color, points }: Path): CanvasPath =>
 
 const sizes: any[] = [
   { weight: 'thin', width: 1 },
-  { weight: 'regular', width: 4 },
-  { weight: 'bold', width: 8 }
+  { weight: 'light', width: 4 },
+  { weight: 'regular', width: 8 },
+  { weight: 'bold', width: 16 }
 ];
 
 const dimensions = { width: 900, height: 600 };
