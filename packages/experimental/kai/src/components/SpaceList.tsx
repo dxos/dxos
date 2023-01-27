@@ -20,7 +20,10 @@ export const SpaceList: FC<{
       {spaces.map((space) => (
         <div
           key={space.key.toHex()}
-          className={mx('flex p-2 pl-3 pr-4 items-center', space.key.equals(value) && 'bg-orange-200')}
+          className={mx(
+            'flex p-2 pl-3 pr-4 items-center hover:bg-orange-100',
+            space.key.equals(value) && 'hover:bg-orange-200 bg-orange-200'
+          )}
         >
           <div className={mx('flex mr-3', space.key.equals(value) && 'text-orange-500')}>
             <Planet className={getSize(6)} />
@@ -32,7 +35,7 @@ export const SpaceList: FC<{
 
           {space.key.equals(value) && (
             <div className='flex cursor-pointer' onClick={() => onShare(space.key)} data-testid='space-settings'>
-              <ShareNetwork className={getSize(5)} />
+              <ShareNetwork className={getSize(6)} />
             </div>
           )}
         </div>

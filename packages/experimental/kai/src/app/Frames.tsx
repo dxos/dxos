@@ -8,10 +8,12 @@ import {
   CaretLeft,
   CaretRight,
   Compass,
+  Files,
   Stack,
   Gear,
   Globe,
   Graph,
+  HighlighterCircle,
   Kanban,
   ListChecks,
   Sword,
@@ -30,9 +32,11 @@ import {
   StackFrame,
   DocumentFrame,
   ExplorerFrame,
+  FileFrame,
   KanbanFrame,
   MapFrame,
   RegistryFrame,
+  SketchFrame,
   TableFrame,
   TasksFrame
 } from '../containers';
@@ -98,6 +102,20 @@ export const frames: FrameDef[] = [
     Component: DocumentFrame
   },
   {
+    id: FrameID.FILES,
+    title: 'Files',
+    description: 'Distributed file sharing.',
+    Icon: Files,
+    Component: FileFrame
+  },
+  {
+    id: FrameID.SKETCH,
+    title: 'Sketch',
+    description: 'Simple sketches.',
+    Icon: HighlighterCircle,
+    Component: SketchFrame
+  },
+  {
     id: FrameID.EXPLORER,
     title: 'Explorer',
     description: 'Graphical data navigator.',
@@ -153,7 +171,7 @@ export const FrameSelector: FC = () => {
               <a
                 key={id}
                 className={mx(
-                  'flex lg:pr-2 lg:mr-2 items-center p-1 cursor-pointer rounded-t text-black',
+                  'flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black',
                   id === currentFrame && 'bg-white'
                 )}
                 onClick={() => navigate(createSpacePath(space.key, id))}
