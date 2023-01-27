@@ -145,11 +145,13 @@ export class ItemManager {
           modelType
         },
         itemMutation: parentId ? { parentId } : undefined,
-        mutation: !mutation ? undefined : {
-          '@type': 'google.protobuf.Any',
-          type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-          value: mutation
-        } 
+        mutation: !mutation
+          ? undefined
+          : {
+              '@type': 'google.protobuf.Any',
+              type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+              value: mutation
+            }
       }
     });
 
