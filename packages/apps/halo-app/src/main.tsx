@@ -11,7 +11,7 @@ import { initializeAppTelemetry } from '@dxos/react-appkit';
 
 import { App, namespace } from './App';
 
-initializeAppTelemetry(namespace, new Config(Defaults()));
+void initializeAppTelemetry(namespace, new Config(Defaults()));
 
 const root = createRoot(document.getElementById('root')!);
 

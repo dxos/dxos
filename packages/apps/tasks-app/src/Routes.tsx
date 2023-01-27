@@ -11,13 +11,15 @@ import { useClient, useIdentity } from '@dxos/react-client';
 import { SpacesLayout, SpaceLayout, SpaceSettingsLayout } from './layouts';
 import { SpacePage, SpacesPage } from './pages';
 
+export const namespace = 'tasks-app';
+
 export const Routes = () => {
   const client = useClient();
   const identity = useIdentity();
   const DX_VAULT = client.config.get('runtime.app.env.DX_VAULT');
 
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
-  useTelemetry({ namespace: 'tasks-app' });
+  useTelemetry({ namespace });
 
   const routes = useRoutes([
     {
