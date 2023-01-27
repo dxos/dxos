@@ -9,8 +9,8 @@ module.exports = {
   kaiThemeExtension: {
     spacing: {
       appbar: '48px',
-      framepicker: '36px',
-      topbars: '84px'
+      framepicker: '40px',
+      topbars: '88px'
     }
   }
 };

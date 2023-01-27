@@ -58,6 +58,7 @@ describe('Metagraph queries', () => {
         runtime: {
           services: {
             dxns: {
+              // TODO(burdon): dmg.
               // Test with https://dev.kube.dxos.org/.well-known/dx/registry
               server: 'http://localhost:8080/modules'
             }
