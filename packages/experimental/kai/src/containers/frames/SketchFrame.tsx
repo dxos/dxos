@@ -7,76 +7,86 @@ import { GithubPicker } from 'react-color';
 import { useResizeDetector } from 'react-resize-detector';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
+import { withReactor } from '@dxos/react-client';
+
+import { useSpace } from '../../hooks';
 import { Path, Sketch } from '../../proto';
 
-const convertToProtoPaths = (paths: CanvasPath[]): Path[] =>
-  paths.map(({ strokeWidth, strokeColor, paths }) => ({
-    width: strokeWidth,
-    color: strokeColor,
-    paths
-  }));
+const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Path => ({
+  timestamp: startTimestamp,
+  width: strokeWidth,
+  color: strokeColor,
+  points: paths
+});
 
-const convertToPaths = ({ paths = [] }: Sketch): CanvasPath[] =>
-  paths.map(
-    ({ width, color, points }) =>
-      ({
-        drawMode: true,
-        strokeWidth: width,
-        strokeColor: color,
-        paths: points
-      } as CanvasPath)
-  );
+const convertToCanvasPath = ({ width, color, points }: Path): CanvasPath =>
+  ({
+    drawMode: true,
+    strokeWidth: width,
+    strokeColor: color,
+    paths: points
+  } as CanvasPath);
 
-export const SketchFrame = () => {
-  // https://www.npmjs.com/package/react-sketch-canvas
-  // https://www.npmjs.com/package/react-art
-  // https://www.npmjs.com/package/react-canvas-draw
-  // https://www.npmjs.com/package/react-signature-canvas
-
-  // https://www.npmjs.com/package/react-color
-
+export const SketchFrame = withReactor(() => {
   const canvasRef = useRef<any>();
   const { ref: resizeRef, width, height } = useResizeDetector();
-  const [lines, setLines] = useState<{ x: number; y: number }[]>([]);
   const [strokeColor, setStrokeColor] = useState('#333');
   const [strokeWidth, setStrokeWidth] = useState(4);
+
+  const space = useSpace();
+  const [sketch, setSketch] = useState<Sketch>();
   const [paths, setPaths] = useState<CanvasPath[]>([]);
-  const [sketch, setSketch] = useState<Sketch>(
-    new Sketch({
-      paths: [
-        {
-          width: 4,
-          color: '#444',
-          points: [
-            { x: 100, y: 100 },
-            { x: 120, y: 200 }
-          ]
-        }
-      ]
-    })
-  );
-
+  // TODO(burdon): Show list of sketch objects.
   useEffect(() => {
-    const paths = convertToPaths(sketch);
-    canvasRef.current?.loadPaths(paths);
-    setPaths(paths);
-    console.log('#');
-  }, [canvasRef]);
+    let sketch: Sketch;
+    const result = space.experimental.db.query(Sketch.filter());
+    const objects = result.getObjects();
+    if (objects.length) {
+      sketch = objects[0];
+      setSketch(sketch);
+    } else {
+      sketch = new Sketch();
+      setTimeout(async () => {
+        await space.experimental.db.save(sketch);
+        setSketch(sketch);
+      });
+    }
 
-  const handleChange = (updatedPaths: CanvasPath[]) => {
-    // const sketch = convertToProtoPaths(updatedPaths);
-    // console.log('>>', paths.length, updatedPaths.length);
-    // setPaths(updatedPaths);
-  };
+    // TODO(burdon): Pseudo CRDT using timestamp on each path.
+    const handleUpdate = (sketch: Sketch) => {
+      setTimeout(async () => {
+        const canvasPaths: CanvasPath[] = await canvasRef.current.exportPaths();
+        const updatedPaths = sketch.paths.filter(({ timestamp }) => {
+          return !canvasPaths.some((path) => path.startTimestamp === timestamp);
+        });
+
+        console.log(canvasPaths.length, updatedPaths.length);
+        canvasRef.current.loadPaths(updatedPaths.map(convertToCanvasPath));
+      });
+    };
+
+    handleUpdate(sketch);
+
+    return result.subscribe(() => {
+      if (sketch) {
+        handleUpdate(sketch);
+      }
+    });
+  }, []);
 
   const handleStroke = (updated: CanvasPath) => {
-    const [path] = convertToProtoPaths([updated]);
-    sketch.paths.push(path);
+    const { endTimestamp } = updated;
+    if (!endTimestamp) {
+      return;
+    }
+
+    sketch?.paths.push(convertToProtoPath(updated));
   };
 
   const handleColorChange = ({ hex }: { hex: string }) => setStrokeColor(hex);
 
-  // TODO(burdon): Lazy draw.
+  // https://www.npmjs.com/package/react-sketch-canvas
+  // https://www.npmjs.com/package/react-color
 
   return (
     <div className='flex flex-col flex-1'>
@@ -88,7 +98,7 @@ export const SketchFrame = () => {
           strokeColor={strokeColor}
           width={`${width}px`}
           height={`${height}px`}
-          onChange={handleChange}
+          withTimestamp={true}
           onStroke={handleStroke}
         />
       </div>
@@ -97,4 +107,4 @@ export const SketchFrame = () => {
       </div>
     </div>
   );
-};
+});
