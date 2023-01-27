@@ -18,24 +18,24 @@ package dxos.echo.object;
 message EchoObject {
   string item_id = 1;
 
-  // Create item.
+  /// Create item.
   optional ItemGenesis genesis = 10;
 
-  // Item system mutations.
+  /// Item system mutations.
   optional ItemMutation item_mutation = 11;
-
-  // Model-specific mutations.
-  optional google.protobuf.Any mutation = 12 [preserve_any = true];
 
   /// Set the model to the provided snapshot.
   optional google.protobuf.Any snapshot = 13 [preserve_any = true]; 
+
+  // Model-specific mutations.
   repeated ModelMutation mutations = 14;
 }
 
 message ModelMutation {
   // Encoded model mutation, format is defined by model's codec.
   google.protobuf.Any mutation = 1 [preserve_any = true];
-  ModelMutationMeta meta = 2;
+  /// For snapshot messages.
+  optional ModelMutationMeta meta = 2;
 }
 
 message ModelMutationMeta {
