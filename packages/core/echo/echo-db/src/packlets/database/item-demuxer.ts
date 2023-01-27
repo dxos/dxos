@@ -51,9 +51,10 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the SpaceProcessor?
     return async (message: IEchoStream) => {
       const {
-        data: { itemId, genesis, itemMutation, mutation, snapshot },
+        data: { itemId, genesis, itemMutation, mutations, snapshot },
         meta
       } = message;
+      const mutation = mutations?.length === 1 ? mutations?.[0].mutation : undefined;
       assert(itemId);
 
       //
@@ -105,7 +106,7 @@ export class ItemDemuxer {
       // Model mutations.
       //
       if (mutation && !genesis) {
-        assert(message.data.mutation);
+        assert(message.data.mutations);
         const modelMessage: ModelMessage<Any> = { meta, mutation }; // TODO(mykola): Send google.protobuf.Any instead of Uint8Array.
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, modelMessage);

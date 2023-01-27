@@ -94,8 +94,9 @@ export class DataMirror {
           assert(update.snapshot.model);
           entity._stateManager.resetToSnapshot(update.snapshot.model);
         } else if (update.mutation) {
-          if (update.mutation.data?.mutation) {
+          if (update.mutation.data?.mutations) {
             assert(update.mutation.meta);
+            assert(update.mutation.data.mutations.length === 1, 'We support only one mutation per message.');
             await entity._stateManager.processMessage(
               {
                 feedKey: update.mutation.meta.feedKey ?? failUndefined(),
@@ -103,7 +104,7 @@ export class DataMirror {
                 seq: update.mutation.meta.seq ?? failUndefined(),
                 timeframe: update.mutation.meta.timeframe ?? failUndefined()
               },
-              update.mutation.data.mutation ?? failUndefined()
+              update.mutation.data.mutations[0].mutation ?? failUndefined()
             );
           }
         }

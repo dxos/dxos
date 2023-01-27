@@ -145,13 +145,17 @@ export class ItemManager {
           modelType
         },
         itemMutation: parentId ? { parentId } : undefined,
-        mutation: !mutation
-          ? undefined
-          : {
-              '@type': 'google.protobuf.Any',
-              type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-              value: mutation
-            }
+        mutations: [
+          {
+            mutation: !mutation
+              ? undefined
+              : {
+                  '@type': 'google.protobuf.Any',
+                  type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+                  value: mutation
+                }
+          }
+        ]
       }
     });
 
@@ -202,11 +206,15 @@ export class ItemManager {
           modelType,
           link: { source, target }
         },
-        mutation: {
-          '@type': 'google.protobuf.Any',
-          type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-          value: mutation
-        }
+        mutations: [
+          {
+            mutation: {
+              '@type': 'google.protobuf.Any',
+              type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+              value: mutation
+            }
+          }
+        ]
       }
     });
 
@@ -229,7 +237,11 @@ export class ItemManager {
         (mutation: Any) => ({
           object: {
             itemId,
-            mutation
+            mutations: [
+              {
+                mutation
+              }
+            ]
           }
         }),
         this._writeStream

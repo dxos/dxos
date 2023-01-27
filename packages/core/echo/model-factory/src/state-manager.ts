@@ -133,7 +133,7 @@ export class StateManager<M extends Model> {
 
     // Construct and enqueue an optimistic mutation.
     const mutationEncoded = {
-      type_url: 'google.protobuf.Any',
+      type_url: 'todo', // TODO(mykola): this._modelMeta!.mutationCodec.typeUrl ???
       value: this._modelMeta!.mutationCodec.encode(mutation)
     };
     const optimisticMutation: OptimisticMutation = {
@@ -214,6 +214,7 @@ export class StateManager<M extends Model> {
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
       const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation.value);
+      assert(mutation.meta);
       this._stateMachine.process(mutationDecoded, {
         author: PublicKey.from(mutation.meta.memberKey)
       });
@@ -315,7 +316,7 @@ export class StateManager<M extends Model> {
         itemId: this._itemId,
         snapshot: {
           '@type': 'google.protobuf.Any',
-          typeUrl: 'snapshot', // TODO(mykola): use model type.
+          typeUrl: 'todo', // TODO(mykola): use model type.
           value: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
         }
       };

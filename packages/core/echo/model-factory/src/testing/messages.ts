@@ -17,10 +17,14 @@ export const createSetPropertyMutation = (
     data: {
       object: {
         itemId,
-        mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({
-          key,
-          value
-        })
+        mutations: [
+          {
+            mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({
+              key,
+              value
+            })
+          }
+        ]
       }
     }
   }
