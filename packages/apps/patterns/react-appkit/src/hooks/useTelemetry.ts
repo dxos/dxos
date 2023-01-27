@@ -15,6 +15,11 @@ export type UseTelemetryOptions = {
   router?: boolean;
 };
 
+/**
+ * Hooks up navigation and click events to telemetry.
+ *
+ * Must be called inside a react router context.
+ */
 export const useTelemetry = ({ namespace, router = true }: UseTelemetryOptions) => {
   const location = router ? useLocation() : null;
   const client = useClient();

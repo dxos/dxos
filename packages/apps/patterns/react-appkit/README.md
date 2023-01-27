@@ -8,6 +8,29 @@ DXOS opinions for building React applications
 pnpm i @dxos/react-appkit
 ```
 
+## Usage
+
+### Sentry & Telemetry
+
+Put the following in the entrypoint of an app:
+
+```ts
+initializeAppTelemetry(namespace, new Config(Defaults()));
+```
+
+Config is required to provide environment variables to the initialization.
+It reads from the following variables:
+
+- DX_SENTRY_DESTINATION
+- DX_TELEMETRY_API_KEY
+- DX_IPDATA_API_KEY
+
+To hook up navigation and click telemetry events in an app, with the react-router context:
+
+```ts
+useTelemetry({ namespace });
+```
+
 ## DXOS Resources
 
 - [Website](https://dxos.org)
