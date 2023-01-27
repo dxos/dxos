@@ -14,9 +14,6 @@ export const config: ConfigProto = {
       }
     },
     services: {
-      dxns: {
-        server: 'wss://node1.devnet.dxos.network/dxns/ws'
-      },
       signal: {
         server: 'wss://kube.dxos.org/.well-known/dx/signal'
       },

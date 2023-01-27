@@ -49,22 +49,6 @@
     },
     "prerelease": {
       "executor": "nx:run-script",
-      "inputs": [
-        {
-          "env": "DX_ENVIRONMENT"
-        },
-        {
-          "env": "NODE_ENV"
-        },
-        {
-          "env": "SENTRY_DESTINATION"
-        },
-        {
-          "env": "TELEMETRY_API_KEY"
-        },
-        "^production",
-        "default"
-      ],
       "options": {
         "script": "prerelease"
       },

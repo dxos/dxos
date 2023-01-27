@@ -24,7 +24,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@types/node": "^18.11.9",
-    "yjs": "^13.5.41"
+    "yjs": "^13.5.44"
   },
   "devDependencies": {
     "@dxos/feed-store": "workspace:*",

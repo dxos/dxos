@@ -38,12 +38,13 @@ const RequireIdentity = React.lazy(() => import('./pages/RequireIdentity'));
 const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
+export const namespace = 'halo-app';
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const serviceProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 const Routes = () => {
-  useTelemetry({ namespace: 'halo-app' });
+  useTelemetry({ namespace });
 
   return useRoutes([
     {
