@@ -207,7 +207,7 @@ export class StateManager<M extends Model> {
     // Apply the snapshot.
     if (this._initialState.snapshot) {
       assert(this._modelMeta.snapshotCodec);
-      const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot);
+      const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot.value);
       this._stateMachine.reset(decoded);
     }
 
@@ -312,7 +312,11 @@ export class StateManager<M extends Model> {
     if (this.initialized && this.modelMeta.snapshotCodec) {
       // Returned reduced snapshot if possible.
       return {
-        snapshot: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
+        snapshot: {
+          '@type': 'google.protobuf.Any',
+          typeUrl: 'snapshot', // TODO(mykola): use model type.
+          value: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
+        }
       };
     }
 
