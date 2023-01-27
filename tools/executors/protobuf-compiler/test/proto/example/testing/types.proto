@@ -80,8 +80,9 @@ message ComplexFields {
 
   Any myAny = 20;
   google.protobuf.Any googleAny = 21;
-  example.testing.any.Any importedAny = 22;
-  optional example.testing.util.Test test = 23;
+  google.protobuf.Any undecodedAny = 22 [preserve_any = true];
+  example.testing.any.Any importedAny = 23;
+  optional example.testing.util.Test test = 24;
 }
 
 message WithTimestamp {
