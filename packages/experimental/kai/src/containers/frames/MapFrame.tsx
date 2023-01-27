@@ -89,6 +89,7 @@ export const MapControl = () => {
           return null;
         }
 
+        // TODO(burdon): Marker icon doesn't load on mobile?
         return <Marker key={getter.id(object)} position={{ lat, lng }} />;
       })}
 
