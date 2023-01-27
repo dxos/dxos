@@ -21,8 +21,8 @@ export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
  * Defines a generic encoder/decoder.
  */
 export interface Codec<T> {
-  encode(obj: T): Uint8Array;
-  decode(buffer: Uint8Array): T;
+  encode(obj: T, opts?: EncodingOptions): Uint8Array;
+  decode(buffer: Uint8Array, opts?: EncodingOptions): T;
 }
 
 /**

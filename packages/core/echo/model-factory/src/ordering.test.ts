@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
@@ -65,12 +66,15 @@ describe('Ordering', () => {
   });
 });
 
-const createMutation = (feedKey: PublicKey, seq: number, timeframe: Timeframe): ModelMessage<Uint8Array> => ({
+const createMutation = (feedKey: PublicKey, seq: number, timeframe: Timeframe): ModelMessage<Any> => ({
   meta: {
     feedKey,
     memberKey: feedKey,
     seq,
     timeframe
   },
-  mutation: new Uint8Array()
+  mutation: {
+    type_url: 'something',
+    value: new Uint8Array()
+  }
 });

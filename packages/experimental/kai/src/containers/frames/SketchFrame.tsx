@@ -65,7 +65,6 @@ export const SketchFrame = () => {
   };
 
   const handleColorChange = ({ hex }: { hex: string }) => setStrokeColor(hex);
-  console.log(strokeColor);
 
   // TODO(burdon): Lazy draw.
 
@@ -83,7 +82,7 @@ export const SketchFrame = () => {
         />
       </div>
       <div className='flex flex-shrink-0 p-2 bg-gray-100'>
-        <GithubPicker width={'100%'} triangle='hide-triangle' onChangeComplete={handleColorChange} />
+        <GithubPicker width={'100%'} triangle={null} onChangeComplete={handleColorChange} />
       </div>
     </div>
   );

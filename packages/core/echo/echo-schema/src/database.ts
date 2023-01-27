@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { base, db, deleted, id } from './defs';
+import { base, db, deleted, id, type } from './defs';
 import { DELETED, Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -80,6 +80,7 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
+    log('save', { id: obj[id], type: (obj as any)[type] });
     assert(obj[id]); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
     if (obj[base]._database) {
