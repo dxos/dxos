@@ -11,6 +11,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
+import { resolve } from 'node:path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -83,9 +84,9 @@ export default defineConfig({
     ConfigPlugin({
       env: [
         'DX_ENVIRONMENT',
-        'IPDATA_API_KEY',
-        'SENTRY_DESTINATION',
-        'TELEMETRY_API_KEY'
+        'DX_IPDATA_API_KEY',
+        'DX_SENTRY_DESTINATION',
+        'DX_TELEMETRY_API_KEY'
       ]
     }),
     ThemePlugin({
