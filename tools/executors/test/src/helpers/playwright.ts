@@ -13,6 +13,7 @@ export type SetupOptions = {
   timeout?: number;
   bridgeLogs?: boolean;
 };
+
 export const setupPage = async (mochaContext: Context, options: SetupOptions) => {
   const { url, waitFor, timeout = 30_000, bridgeLogs } = options;
 
