@@ -102,6 +102,7 @@ export const SketchFrame = withReactor(() => {
     sketch!.paths = [];
   };
 
+  // TODO(burdon): Erase/undo.
   // https://www.npmjs.com/package/react-sketch-canvas
   // https://www.npmjs.com/package/react-color
 
