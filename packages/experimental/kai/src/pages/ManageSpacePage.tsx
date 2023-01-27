@@ -50,6 +50,7 @@ export const ManageSpacePage = () => {
               onClick={handleCreateInvitation}
               className='flex gap-1 items-center'
               disabled={!space}
+              data-testid='create-invitation-button'
             >
               <span>{t('create invitation label', { ns: 'appkit' })}</span>
               <UserPlus className={getSize(5)} />
