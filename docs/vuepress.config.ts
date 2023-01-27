@@ -23,6 +23,7 @@ const DXOS_DEPS = [
   '@dxos/protocols/proto/dxos/config',
   '@dxos/protocols/proto/dxos/echo/feed',
   '@dxos/protocols/proto/dxos/echo/model/object',
+  '@dxos/protocols/proto/dxos/echo/object',
   '@dxos/protocols/proto/dxos/halo/credentials',
   '@dxos/protocols/proto/dxos/halo/invitations',
   '@dxos/protocols/proto/dxos/halo/keys',
@@ -102,7 +103,7 @@ const config: UserConfig = defineUserConfig({
       define: {
         'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
         'process.env.DX_RELEASE': env(process.env.DX_RELEASE),
-        'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY)
+        'process.env.DX_TELEMETRY_API_KEY': env(process.env.DX_TELEMETRY_API_KEY)
       },
       optimizeDeps: {
         force: true,

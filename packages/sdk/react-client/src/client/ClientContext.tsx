@@ -135,8 +135,10 @@ export const ClientProvider = ({
         log('created services', { services });
         const client = new Client({ config, services });
         log('created client', { client });
-        await client.initialize().catch((err) => setError(err));
-        await done(client);
+        await client
+          .initialize()
+          .then(() => done(client))
+          .catch((err) => setError(err));
       }
     });
 
