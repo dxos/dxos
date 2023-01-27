@@ -1245,11 +1245,13 @@ importers:
 
   packages/common/sentry:
     specifiers:
+      '@dxos/log': workspace:*
       '@sentry/browser': ^7.17.2
       '@sentry/node': ^7.17.2
       '@sentry/types': ^7.16.0
       sentry-testkit: ^4.1.0
     dependencies:
+      '@dxos/log': link:../log
       '@sentry/browser': 7.20.0
       '@sentry/node': 7.20.0
     devDependencies:
