@@ -64,6 +64,7 @@ export const SketchFrame = withReactor(() => {
     }
 
     // TODO(burdon): Pseudo CRDT using timestamp on each path.
+    // TODO(burdon): Bug if concurrently editing (seems to connect points from both users?) Timestamp collision?
     const handleUpdate = (sketch: Sketch) => {
       setTimeout(async () => {
         if (sketch.paths.length === 0) {
@@ -104,6 +105,7 @@ export const SketchFrame = withReactor(() => {
     sketch!.paths = [];
   };
 
+  // TODO(burdon): Erase/undo.
   // https://www.npmjs.com/package/react-sketch-canvas
   // https://www.npmjs.com/package/react-color
 
@@ -114,18 +116,19 @@ export const SketchFrame = withReactor(() => {
           ref={canvasRef}
           style={{}}
           className='shadow-md'
-          strokeWidth={strokeWidth}
-          strokeColor={strokeColor}
           width={`${dimensions.width}px`}
           height={`${dimensions.height}px`}
+          strokeWidth={strokeWidth}
+          strokeColor={strokeColor}
           withTimestamp={true}
           onStroke={handleStroke}
         />
       </div>
 
-      <div className='flex flex-shrink-0 p-2 bg-gray-100'>
+      {/* TODO(burdon): Vertical unless mobile. */}
+      <div className='flex flex-shrink-0 p-2 bg-gray-200'>
         <Button onClick={handleErase}>
-          <Trash className={mx(getSize(8), 'mr-2')} />
+          <Trash className={mx(getSize(6), 'mr-2')} />
         </Button>
         <GithubPicker width={'100%'} triangle='hide' onChangeComplete={handleColorChange} />
         <div className='flex items-center'>

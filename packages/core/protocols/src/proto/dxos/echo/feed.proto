@@ -21,7 +21,7 @@ package dxos.echo.feed;
  */
 message FeedMessage {
   dxos.echo.timeframe.TimeframeVector timeframe = 1;
-  
+
   message Payload{
     oneof payload {
       CredentialsMessage credential = 10;

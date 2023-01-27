@@ -2963,6 +2963,8 @@ importers:
       '@dxos/react-composer': workspace:*
       '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/sentry': workspace:*
+      '@sentry/react': ^7.17.2
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
       '@types/faker': ^5.5.9
@@ -3030,6 +3032,8 @@ importers:
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/sentry': link:../../common/sentry
+      '@sentry/react': 7.20.0_react@18.2.0
       assert: 2.0.0
       base-x: 3.0.9
       chess.js: 1.0.0-alpha.0
@@ -4218,7 +4222,7 @@ importers:
     devDependencies:
       '@dxos/config': link:../../packages/sdk/config
       '@mdx-js/rollup': 2.1.5_rollup@3.9.1
-      '@react-pdf/renderer': 3.0.1_biqbaboplfbrettd7655fr4n2y
+      '@react-pdf/renderer': 3.0.1_react@18.2.0
       '@tailwindcss/aspect-ratio': 0.4.2_tailwindcss@3.1.8
       '@tailwindcss/typography': 0.5.8_tailwindcss@3.1.8
       '@types/d3': 7.4.0
@@ -6767,7 +6771,7 @@ packages:
     resolution: {integrity: sha512-emOueVCqFRFmpcfT80Xsm4mfuFw9VSp5GY4eh5qeLDeiP81g0hddlobVQCo0pE2ZvNnWbyhLrXEYAaMAXjNL6A==}
     engines: {node: '>=14'}
     peerDependencies:
-      vite: ^2.9.0
+      vite: 4.0.4
     dependencies:
       '@rollup/pluginutils': 4.2.1
       '@webcomponents/custom-elements': 1.5.1
@@ -10315,11 +10319,10 @@ packages:
       svg-arc-to-cubic-bezier: 3.2.0
     dev: true
 
-  /@react-pdf/renderer/3.0.1_biqbaboplfbrettd7655fr4n2y:
+  /@react-pdf/renderer/3.0.1_react@18.2.0:
     resolution: {integrity: sha512-NuyXB8dsKVO1r+MBXl/SHZ8rAV979TgnRg8/5L9oiPYwG+WsV4gu2xm2bqoRdU8ltasKkVALK7hdgwh9XX+ZCA==}
     peerDependencies:
       react: ^18.0.0
-      react-dom: ^18.0.0
     dependencies:
       '@babel/runtime': 7.19.4
       '@react-pdf/font': 2.3.1
@@ -10330,7 +10333,6 @@ packages:
       '@react-pdf/types': 2.1.0
       queue: 6.0.2
       react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
       react-reconciler: 0.23.0_react@18.2.0
       scheduler: 0.17.0
     transitivePeerDependencies:
@@ -29645,7 +29647,7 @@ packages:
   /react-motion/0.5.2_react@18.2.0:
     resolution: {integrity: sha512-9q3YAvHoUiWlP3cK0v+w1N5Z23HXMj4IF4YuvjvWegWqNPfLXsOBE/V7UvQGpXxHFKRQQcNcVQE31g9SB/6qgQ==}
     peerDependencies:
-      react: ^0.14.9 || ^15.3.0 || ^16.0.0
+      react: ^18.0.0
     dependencies:
       performance-now: 0.2.0
       prop-types: 15.8.1
@@ -29850,7 +29852,7 @@ packages:
     resolution: {integrity: sha512-WuYZrwrH/cXgxKcynciuwZ6+6V9a5N43qa4Wwfgll/tyLq+ACcJ5m8fHFXQk7fQBK80RAp61Oc+a+T64woorvw==}
     engines: {node: '>=0.10.0', npm: '>=3.0'}
     peerDependencies:
-      react: 15.3.0 - 16.x
+      react: ^18.0.0
     dependencies:
       d3-array: 1.2.4
       d3-collection: 1.0.7
@@ -31850,13 +31852,7 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
     transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - sass
-      - stylus
-      - sugarss
       - supports-color
-      - terser
     dev: true
 
   /stream-browserify/2.0.2:
@@ -34025,7 +34021,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
