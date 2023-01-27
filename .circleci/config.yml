@@ -101,10 +101,9 @@ jobs:
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
             NODE_OPTIONS: --max_old_space_size=8198
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1
-          environment:
+            # NOTE: This affects the logs which are output by apps when running e2e tests.
             LOG_FILTER: debug
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
       - *codecov_upload
       - *store_test_results
