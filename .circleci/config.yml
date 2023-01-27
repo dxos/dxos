@@ -95,14 +95,14 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1
       # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
             NODE_OPTIONS: --max_old_space_size=8198
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
       - *codecov_upload
       - *store_test_results
 

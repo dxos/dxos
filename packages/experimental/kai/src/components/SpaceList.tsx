@@ -34,7 +34,7 @@ export const SpaceList: FC<{
           </div>
 
           {space.key.equals(value) && (
-            <div className='flex cursor-pointer' onClick={() => onShare(space.key)}>
+            <div className='flex cursor-pointer' onClick={() => onShare(space.key)} data-testid='space-settings'>
               <ShareNetwork className={getSize(6)} />
             </div>
           )}

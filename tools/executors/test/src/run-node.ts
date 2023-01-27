@@ -6,7 +6,8 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { execTool, getBin, mochaComment, resolveFiles } from './util';
+import { execTool, getBin, resolveFiles } from './node-util';
+import { mochaComment } from './util';
 import { formatArgs } from './util/formatArgs';
 
 export type NodeOptions = {
