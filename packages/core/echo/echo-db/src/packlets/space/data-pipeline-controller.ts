@@ -11,8 +11,7 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { TypedMessage } from '@dxos/protocols';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -109,11 +108,8 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
 
     // Create database backend.
-    const feedWriter = createMappedFeedWriter<EchoEnvelope, TypedMessage>(
-      (msg) => ({
-        '@type': 'dxos.echo.feed.EchoEnvelope',
-        ...msg
-      }),
+    const feedWriter = createMappedFeedWriter<DataMessage, FeedMessage.Payload>(
+      (data: DataMessage) => ({ data }),
       this._pipeline.writer ?? failUndefined()
     );
 
@@ -200,8 +196,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       log('processing message', { msg });
 
       try {
-        const payload = data.payload as TypedMessage;
-        if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
+        if (data.payload.data) {
           const feedInfo = this._params.feedInfoProvider(feedKey);
           if (!feedInfo) {
             log.error('Could not find feed.', { feedKey });
@@ -209,7 +204,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
           }
 
           await this.databaseBackend!.echoProcessor({
-            data: payload,
+            data: data.payload.data.object,
             meta: {
               feedKey,
               seq,

@@ -7,10 +7,8 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "bundle-skip": "node scripts/build.js",
-    "pack:crx": "crx pack dist -o dxos-devtools.crx",
-    "pack:webext": "web-ext build --source-dir ./dist",
-    "start:firefox": "web-ext run --source-dir ./dist"
+    "pack:crx": "crx pack out/devtools-extension -o dxos-devtools.crx",
+    "pack:webext": "web-ext build --source-dir out/devtools-extension"
   },
   "dependencies": {
     "@babel/runtime": "^7.9.6",
@@ -22,9 +20,15 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
+    "@dxos/kai": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/react-async": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
@@ -33,15 +37,16 @@
     "@mui/material": "^5.8.1",
     "clsx": "^1.1.1",
     "color-hash": "^1.0.3",
-    "debug": "^4.3.3",
     "moment": "^2.24.0",
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0",
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@crxjs/vite-plugin": "^1.0.14",
     "@dxos/esbuild-plugins": "workspace:*",
     "@types/chrome": "^0.0.125",
     "@types/debug": "^4.1.7",
@@ -49,6 +54,7 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/webextension-polyfill": "^0.8.0",
+    "@vitejs/plugin-react": "^3.0.1",
     "body-parser": "1.19.0",
     "chalk": "^4.1.0",
     "copy": "~0.3.2",
@@ -56,8 +62,11 @@
     "download": "^8.0.0",
     "esbuild-plugin-inline-image": "^0.0.9",
     "express": "4.17.1",
+    "postcss": "^8.4.17",
     "rmdir": "~1.2.0",
     "safe-compare": "~1.1.4",
-    "web-ext": "~6.6.0"
+    "tailwindcss": "^3.1.8",
+    "vite": "4.0.4",
+    "vite-plugin-fonts": "^0.7.0"
   }
 }

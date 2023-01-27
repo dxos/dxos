@@ -17,11 +17,17 @@ import '../style.css';
 
 const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);
 
+// TODO(wittjosiah): Migrate to ES Modules.
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 const initialState: AppState = {
-  dev: bool(process.env.KAI_DEV),
-  debug: bool(process.env.KAI_DEBUG),
-  pwa: bool(process.env.KAI_PWA)
+  // @ts-ignore
+  dev: bool(import.meta.env.VITE_DEV),
+  // @ts-ignore
+  debug: bool(import.meta.env.VITE_DEBUG),
+  // @ts-ignore
+  pwa: bool(import.meta.env.VITE_PWA)
 };
+/* eslint-enable @typescript-eslint/ban-ts-comment */
 
 /**
  * Progressive web app registration and notifications.

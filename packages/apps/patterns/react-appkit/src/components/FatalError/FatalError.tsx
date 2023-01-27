@@ -13,6 +13,7 @@ export interface FatalErrorProps {
 
 export const FatalError = ({ error }: FatalErrorProps) => {
   const { t } = useTranslation('appkit');
+  // TODO(wittjosiah): process.env.NODE_ENV not available. Make a prop and determine from config?
   const isDev = process.env.NODE_ENV === 'development';
 
   const message = String(error); // Error.name + Error.message

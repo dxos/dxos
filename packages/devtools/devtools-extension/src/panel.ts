@@ -2,12 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import browser from 'webextension-polyfill';
 
-import { waitForDXOS } from './utils';
+import { log } from '@dxos/log';
 
-const log = debug('dxos:extension:panel');
+import { waitForDXOS } from './utils';
 
 log('Initialize panel starting...');
 
@@ -16,7 +15,7 @@ const port = browser.runtime.connect({
 });
 
 const sandbox = document.createElement('iframe');
-sandbox.src = `${window.location.origin}/sandbox.html`;
+sandbox.src = browser.runtime.getURL('/sandbox.html');
 window.document.body.appendChild(sandbox);
 
 window.addEventListener('message', async (event) => {

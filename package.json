@@ -133,7 +133,6 @@
       "@nrwl/storybook@15.4.5": "patches/@nrwl__storybook@15.4.5.patch",
       "@nrwl/vite@15.4.5": "patches/@nrwl__vite@15.4.5.patch",
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
-      "process@0.11.10": "patches/process@0.11.10.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",
       "vite@4.0.4": "patches/vite@4.0.4.patch"

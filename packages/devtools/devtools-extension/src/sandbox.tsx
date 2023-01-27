@@ -2,21 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
-import React from 'react';
+import '@dxosTheme';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { HashRouter } from 'react-router-dom';
 
-import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientServicesProxy } from '@dxos/client-services';
-import { ClientAndServices, Devtools } from '@dxos/devtools';
+import { DevtoolsContextProvider, useRoutes } from '@dxos/devtools';
+import { log } from '@dxos/log';
+import { useAsyncEffect } from '@dxos/react-async';
+import { ClientContext, ClientContextProps } from '@dxos/react-client';
+import { ErrorBoundary } from '@dxos/react-toolkit';
 import { RpcPort } from '@dxos/rpc';
 
-// TODO(burdon): Use dxos/log?
-const log = debug('dxos:extension:sandbox');
-
-// TODO(burdon): Create class.
-const clientReady = new Event<ClientAndServices>();
+log.config({ filter: 'debug' });
+log('Init Sandbox script.');
 
 const windowPort = (): RpcPort => ({
   send: async (message) =>
@@ -28,7 +29,6 @@ const windowPort = (): RpcPort => ({
       if (typeof message !== 'object' || message === null || message.source !== 'panel') {
         return;
       }
-
       log('Received message from panel:', message);
       callback(new Uint8Array(message.data));
     };
@@ -58,20 +58,43 @@ const waitForRpc = async () =>
     window.parent.postMessage({ data: 'open-rpc', source: 'sandbox' }, window.location.origin);
   });
 
-const init = async () => {
-  // TODO(burdon): After client created.
-  createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
+export const DevtoolsRoutes = () => {
+  return useRoutes();
+};
 
+const Devtools = () => {
   log('initializing...');
-  const rpcPort = windowPort();
-  const servicesProvider = new ClientServicesProxy(rpcPort);
-  await waitForRpc();
 
-  const client = new Client({ services: servicesProvider });
-  await client.initialize();
+  const [value, setValue] = useState<ClientContextProps>();
 
-  log('initialized client');
-  clientReady.emit({ client, services: servicesProvider.services });
+  useAsyncEffect(async () => {
+    const rpcPort = windowPort();
+    const servicesProvider = new ClientServicesProxy(rpcPort);
+    await waitForRpc();
+
+    const client = new Client({ services: servicesProvider });
+    await client.initialize();
+    log('initialized client');
+    setValue({ client, services: servicesProvider.services });
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      {value && (
+        <ClientContext.Provider value={value}>
+          <DevtoolsContextProvider>
+            <HashRouter>
+              <DevtoolsRoutes />
+            </HashRouter>
+          </DevtoolsContextProvider>
+        </ClientContext.Provider>
+      )}
+    </ErrorBoundary>
+  );
+};
+
+const init = async () => {
+  createRoot(document.getElementById('root')!).render(<Devtools />);
 };
 
 void init();

@@ -2,12 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
-
 import { sleep } from '@dxos/async';
-
-const log = debug('dxos:extension:hook');
-const error = log.extend('error');
+import { log } from '@dxos/log';
 
 // TODO(burdon): ?
 const checkForDXOS = () =>
@@ -31,7 +27,7 @@ const checkForDXOS = () =>
 // TODO(burdon): Rename.
 export const waitForDXOS = async (timeout = 100000, interval = 1000) => {
   while (timeout > 0) {
-    const isReady = await checkForDXOS().catch(error);
+    const isReady = await checkForDXOS().catch((err) => log.catch(err));
     if (isReady) {
       return;
     }

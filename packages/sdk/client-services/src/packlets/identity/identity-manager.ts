@@ -113,8 +113,7 @@ export class IdentityManager {
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
+          credential: { credential }
         });
       }
     }

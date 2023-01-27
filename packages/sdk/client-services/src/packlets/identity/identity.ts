@@ -18,7 +18,7 @@ import { Space } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TypedMessage } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
@@ -191,7 +191,7 @@ export class Identity {
             designation: AdmittedFeed.Designation.DATA
           }
         })
-      ].map((credential): TypedMessage => ({ '@type': 'dxos.echo.feed.CredentialsMessage', credential }))
+      ].map((credential): FeedMessage.Payload => ({ credential: { credential } }))
     );
   }
 }

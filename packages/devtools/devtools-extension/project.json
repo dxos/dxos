@@ -2,13 +2,13 @@
   "sourceRoot": "packages/devtools/devtools-extension/src",
   "projectType": "application",
   "targets": {
-    "bundle-skip": {
-      "executor": "nx:run-script",
+    "bundle": {
+      "executor": "@nrwl/vite:build",
       "options": {
-        "script": "bundle-skip"
+        "outputPath": "packages/devtools/devtools-extension/out/devtools-extension"
       },
       "outputs": [
-        "packages/devtools/devtools-extension/dist"
+        "{options.outputPath}"
       ]
     },
     "lint": {

@@ -76,9 +76,9 @@ export class ControlPipeline {
         try {
           // log('processing', { msg });
           log('processing', { key: msg.feedKey, seq: msg.seq });
-          if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
+          if (msg.data.payload.credential) {
             const result = await this._spaceStateMachine.process(
-              msg.data.payload.credential,
+              msg.data.payload.credential.credential,
               PublicKey.from(msg.feedKey)
             );
             if (!result) {
