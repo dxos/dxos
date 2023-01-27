@@ -497,7 +497,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       y-protocols: ^1.0.5
-      yjs: ^13.5.41
+      yjs: ^13.5.44
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
@@ -507,7 +507,7 @@ importers:
       '@dxos/react-components': link:../../../common/react-components
       '@dxos/text-model': link:../../../core/echo/text-model
       '@tiptap/core': 2.0.0-beta.199
-      '@tiptap/extension-collaboration': 2.0.0-beta.199_cqilutfevdyuwlti5pasjm52fe
+      '@tiptap/extension-collaboration': 2.0.0-beta.199_nnszoayjhdoucvdi5heuc7vndi
       '@tiptap/extension-placeholder': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
       '@tiptap/starter-kit': 2.0.0-beta.199
@@ -516,7 +516,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       y-protocols: 1.0.5
-      yjs: 13.5.41
+      yjs: 13.5.44
     devDependencies:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -1495,7 +1495,7 @@ importers:
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       minisearch: ^3.0.2
-      yjs: ^13.5.41
+      yjs: ^13.5.44
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -1508,7 +1508,7 @@ importers:
       lodash.get: 4.4.2
       lodash.set: 4.3.2
       minisearch: 3.3.0
-      yjs: 13.5.41
+      yjs: 13.5.44
     devDependencies:
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
@@ -1530,7 +1530,7 @@ importers:
       '@types/faker': ^5.5.9
       '@types/node': ^18.11.9
       faker: ^5.5.3
-      yjs: ^13.5.41
+      yjs: ^13.5.44
     dependencies:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/echo-db': link:../echo-db
@@ -1538,7 +1538,7 @@ importers:
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
       '@types/node': 18.11.9
-      yjs: 13.5.41
+      yjs: 13.5.44
     devDependencies:
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/object-model': link:../object-model
@@ -2816,7 +2816,7 @@ importers:
       react-dom: ^18.2.0
       use-subscription: ^1.8.0
       y-monaco: ^0.1.0
-      yjs: ^13.5.41
+      yjs: ^13.5.44
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -2840,8 +2840,8 @@ importers:
       esbuild-wasm: 0.16.17
       monaco-editor: 0.25.2
       use-subscription: 1.8.0_react@18.2.0
-      y-monaco: 0.1.4_6vz2b6jwfgrdkbkbegnkzpgtiy
-      yjs: 13.5.41
+      y-monaco: 0.1.4_32hbp247o7cyndrd5jnsixlimy
+      yjs: 13.5.44
     devDependencies:
       '@dxos/react-components': link:../../common/react-components
       '@testing-library/dom': 8.19.0
@@ -12354,14 +12354,14 @@ packages:
       '@tiptap/core': 2.0.0-beta.199
     dev: false
 
-  /@tiptap/extension-collaboration/2.0.0-beta.199_cqilutfevdyuwlti5pasjm52fe:
+  /@tiptap/extension-collaboration/2.0.0-beta.199_nnszoayjhdoucvdi5heuc7vndi:
     resolution: {integrity: sha512-ub3doQvy7o7YLwLDz8B/LK7zZ6aEy19C36FJbSXfr93Ws8FhVy2PYvgwBnRYPIifXrS8FVkNL5ULjsH+QlEd5Q==}
     peerDependencies:
       '@tiptap/core': ^2.0.0-beta.193
     dependencies:
       '@tiptap/core': 2.0.0-beta.199
       prosemirror-state: 1.4.2
-      y-prosemirror: 1.0.20_dq33y6evzqeobzwyfvmh4ldzre
+      y-prosemirror: 1.0.20_lodp2vto6q3rcicj252ptl3hxi
     transitivePeerDependencies:
       - prosemirror-model
       - prosemirror-view
@@ -35452,7 +35452,7 @@ packages:
       cuint: 0.2.2
     dev: false
 
-  /y-monaco/0.1.4_6vz2b6jwfgrdkbkbegnkzpgtiy:
+  /y-monaco/0.1.4_32hbp247o7cyndrd5jnsixlimy:
     resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
     peerDependencies:
       monaco-editor: '>=0.20.0'
@@ -35460,10 +35460,10 @@ packages:
     dependencies:
       lib0: 0.2.52
       monaco-editor: 0.25.2
-      yjs: 13.5.41
+      yjs: 13.5.44
     dev: false
 
-  /y-prosemirror/1.0.20_dq33y6evzqeobzwyfvmh4ldzre:
+  /y-prosemirror/1.0.20_lodp2vto6q3rcicj252ptl3hxi:
     resolution: {integrity: sha512-LVMtu3qWo0emeYiP+0jgNcvZkqhzE/otOoro+87q0iVKxy/sMKuiJZnokfJdR4cn9qKx0Un5fIxXqbAlR2bFkA==}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -35477,7 +35477,7 @@ packages:
       prosemirror-state: 1.4.2
       prosemirror-view: 1.29.0
       y-protocols: 1.0.5
-      yjs: 13.5.41
+      yjs: 13.5.44
     dev: false
 
   /y-protocols/1.0.5:
@@ -35699,8 +35699,8 @@ packages:
       - supports-color
     dev: false
 
-  /yjs/13.5.41:
-    resolution: {integrity: sha512-4eSTrrs8OeI0heXKKioRY4ag7V5Bk85Z4MeniUyown3o3y0G7G4JpAZWrZWfTp7pzw2b53GkAQWKqHsHi9j9JA==}
+  /yjs/13.5.44:
+    resolution: {integrity: sha512-UL+abIh2lQonqXfaJ+en7z9eGshpY11j1zNLc2kDYs0vrTjee4gZJUXC3ZsuhP6geQt0IRU04epCGRaVPQAVCA==}
     dependencies:
       lib0: 0.2.52
     dev: false
