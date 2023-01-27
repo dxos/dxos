@@ -33,7 +33,7 @@ export const useTelemetry = ({ namespace, router = true }: UseTelemetryOptions) 
       BASE_TELEMETRY_PROPERTIES.release = release;
       BASE_TELEMETRY_PROPERTIES.environment = environment;
 
-      const SENTRY_DESTINATION = client.config.get('runtime.app.env.SENTRY_DESTINATION');
+      const SENTRY_DESTINATION = client.config.get('runtime.app.env.DX_SENTRY_DESTINATION');
       if (SENTRY_DESTINATION && !telemetryDisabled) {
         Sentry.init({
           destination: SENTRY_DESTINATION,
@@ -44,13 +44,13 @@ export const useTelemetry = ({ namespace, router = true }: UseTelemetryOptions) 
         });
       }
 
-      const TELEMETRY_API_KEY = client.config.get('runtime.app.env.TELEMETRY_API_KEY');
+      const TELEMETRY_API_KEY = client.config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
       Telemetry.init({
         apiKey: TELEMETRY_API_KEY,
         enable: Boolean(TELEMETRY_API_KEY) && !telemetryDisabled
       });
 
-      const IPDATA_API_KEY = client.config.get('runtime.app.env.IPDATA_API_KEY');
+      const IPDATA_API_KEY = client.config.get('runtime.app.env.DX_IPDATA_API_KEY');
       if (IPDATA_API_KEY) {
         await fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
           .then((res) => res.json())
