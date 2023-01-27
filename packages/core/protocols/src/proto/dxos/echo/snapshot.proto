@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "dxos/echo/timeframe.proto";
+import "dxos/echo/object.proto";
 import "dxos/halo/signed.proto";
 import "dxos/keys.proto";
 
@@ -53,7 +54,7 @@ message ItemSnapshot {
   string model_type = 3;
   optional string model_version = 4;
   optional string parent_id = 5;
-  optional ModelSnapshot model = 6;
+  optional object.EchoObject model = 6;
 }
 
 message LinkSnapshot {
@@ -63,36 +64,5 @@ message LinkSnapshot {
   optional string model_version = 4;
   string source = 5;
   string target = 6;
-  optional ModelSnapshot model = 7;
-}
-
-/**
- * Represents the reified state of a state machine.
- * The snapshots make consist of a custom snapshot object and/or a list of mutations
- * that are applied to the snapshot or the initial state.
- */
-// TODO(burdon): Rename?
-message ModelSnapshot {
-  /**
-   * Encoded model snapshot (defined by the model's codec).
-   * If undefined the state machine will be initialized with it's default state.
-   */
-  optional google.protobuf.Any snapshot = 1;
-
-  /**
-   * Mutations to be applied on top of the snapshot, or on top of initial state if the snapshot is undefined.
-   */
-  repeated ModelMutation mutations = 2;
-}
-
-message ModelMutation {
-  // Encoded model mutation, format is defined by model's codec.
-  google.protobuf.Any mutation = 1;
-  ModelMutationMeta meta = 2;
-}
-
-message ModelMutationMeta {
-  dxos.keys.PublicKey feed_key = 1;
-  int32 seq = 2;
-  dxos.keys.PublicKey member_key = 3;
+  optional object.EchoObject model = 7;
 }
