@@ -117,3 +117,22 @@ message Event {
   repeated Contact members = 5;
 }
 
+message Sketch {
+  message Point {
+    int32 x = 1;
+    int32 y = 2;
+  }
+
+  // TODO(burdon): Should be sub-type but is compiled to top level.
+  message Path {
+    int32 timestamp = 1;
+    int32 width = 2;
+    string color = 3;
+    repeated Point points = 4;
+  }
+
+  option (object) = true;
+
+  string title = 1;
+  repeated Path paths = 2;
+}
