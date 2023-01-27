@@ -17,13 +17,18 @@ import { useSpace } from '../../hooks';
 import { LatLng, Organization } from '../../proto';
 
 // TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
-// TODO(burdon): Popup card.
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
+// Resources: https://www.latlong.net
+
+const defaults = {
+  center: { lat: 37.970833, lng: 23.72611 } as LatLngExpression,
+  zoom: 14
+};
 
 export const MapFrame = () => {
   return (
     <div className='flex flex-1 overflow-hidden'>
-      <MapContainer className='flex flex-1'>
+      <MapContainer className='flex flex-1' center={defaults.center} zoom={defaults.zoom}>
         <MapControl />
       </MapContainer>
     </div>
@@ -91,6 +96,7 @@ export const MapControl = () => {
       {objects.length > 0 && (
         <div className='flex flex-col absolute top-4 bottom-4 right-4 overflow-hidden' style={{ zIndex: 1000 }}>
           <div className='flex bg-white border rounded-md overflow-y-auto' style={{ width: 240 }}>
+            {/* TODO(burdon): Clicking on list starts map drag. */}
             <PlaceList<Organization> items={objects} value={selected} onSelect={handleSelect} getter={getter} />
           </div>
         </div>
@@ -99,15 +105,14 @@ export const MapControl = () => {
   );
 };
 
-// TODO(burdon): Standardize pattern.
-
-type PlaceListProps<T = {}> = {
+export type PlaceListProps<T = {}> = {
   items: T[];
   value?: string;
   onSelect: (object?: T) => void;
   getter: MapPropsGetter<T>;
 };
 
+// TODO(burdon): Generalize list control/selector.
 export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps<T>) => {
   const [selected, setSelected] = useState<string | undefined>(value);
   useEffect(() => setSelected(value), [value]);
