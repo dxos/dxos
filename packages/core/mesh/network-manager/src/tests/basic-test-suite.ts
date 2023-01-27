@@ -111,48 +111,48 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   });
 
   // TODO(mykola): Flaky test because of test signal server.
-  test
-    .skip('going offline and back online', async () => {
-      const peer1 = testBuilder.createPeer();
-      const peer2 = testBuilder.createPeer();
-      await openAndCloseAfterTest([peer1, peer2]);
+  test('going offline and back online', async () => {
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
+    await openAndCloseAfterTest([peer1, peer2]);
 
-      const topic = PublicKey.random();
+    const topic = PublicKey.random();
 
-      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
-      await exchangeMessages(swarm1, swarm2);
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
+    await exchangeMessages(swarm1, swarm2);
 
-      //
-      // Going offline and back online
-      //
-      const connectionDropped = peer2._networkManager
-        .getSwarm(topic)
-        ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
+    //
+    // Going offline and back online
+    //
+    const connectionDropped = peer2._networkManager
+      .getSwarm(topic)
+      ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
-      const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor(
-        (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer)
-      );
+    const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor(
+      (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer)
+    );
 
-      await peer1.goOffline();
-      await connectionDropped;
-      await peerLeft;
+    await peer1.goOffline();
+    await connectionDropped;
+    await peerLeft;
 
-      // Wait for peer to be removed from the swarm.
-      await waitForExpect(() => {
-        expect(!!peer2._networkManager.getSwarm(topic)!._peers.get(peer1.peerId)?.advertizing).to.be.false;
-      }, 1_000);
+    // Wait for peer to be removed from the swarm.
+    await waitForExpect(() => {
+      expect(!!peer2._networkManager.getSwarm(topic)!._peers.get(peer1.peerId)?.advertizing).to.be.false;
+    }, 1_000);
 
-      await peer1.goOnline();
+    await peer1.goOnline();
 
-      await waitForExpect(() => {
-        expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
+    await waitForExpect(() => {
+      expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
 
-        expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
-      }, 2_000);
+      expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
+    }, 2_000);
 
-      await exchangeMessages(swarm1, swarm2);
-      await leaveSwarm([peer1, peer2], topic);
-    })
+    await exchangeMessages(swarm1, swarm2);
+    await leaveSwarm([peer1, peer2], topic);
+  })
+    .tag('e2e')
     .timeout(2_000);
 
   // TODO(mykola): broken.
