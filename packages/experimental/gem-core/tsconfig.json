@@ -15,6 +15,9 @@
   "references": [
     {
       "path": "../../common/esbuild-plugins"
+    },
+    {
+      "path": "../../common/node-std"
     }
   ]
 }

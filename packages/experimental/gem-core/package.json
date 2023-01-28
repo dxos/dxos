@@ -19,6 +19,7 @@
     "book": "esbuild-server book"
   },
   "dependencies": {
+    "@dxos/node-std": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.9.0",
     "assert": "^2.0.0",

@@ -2,70 +2,64 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Archive } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { Input, Selector } from '../../components';
 import { useSpace } from '../../hooks';
-import { Project } from '../../proto';
+import { Document } from '../../proto';
 
 export const DocumentFrame: FC = withReactor(() => {
   const space = useSpace();
-  const projects = useQuery(space, Project.filter());
-  const [project, setProject] = useState<Project>();
+  const documents = useQuery(space, Document.filter());
+  const [document, setDocument] = useState<Document>();
   useEffect(() => {
-    setProject(undefined);
+    setDocument(undefined);
   }, [space]);
 
   return (
-    <div className='flex flex-col flex-1'>
-      <div className='flex p-3' style={{ width: 300 }}>
-        <Selector
-          placeholder='Project'
-          options={projects.map((project) => ({ id: project[id], title: project.title }))}
-          onSelect={(selected) => {
-            setProject(selected ? projects.find((project) => project[id] === selected) : undefined);
-          }}
-        />
-      </div>
+    <div className='flex flex-1 overflow-hidden justify-center bg-gray-300'>
+      <div className='flex flex-col overflow-hidden w-full lg:w-[800px] bg-white shadow-lg'>
+        <div className='flex p-3'>
+          <Selector
+            placeholder='Project'
+            options={documents.map((document) => ({ id: document[id], title: document.title }))}
+            onSelect={(selected) => {
+              setDocument(selected ? documents.find((document) => document[id] === selected) : undefined);
+            }}
+          />
+        </div>
 
-      {project && (
-        <>
-          <div className='flex p-2 pb-0 items-center'>
-            <div className='pl-2 pr-1'>
-              <Archive className={getSize(6)} />
+        {document && (
+          <div className='flex flex-col flex-1 overflow-hidden'>
+            <div className='flex p-4 border-b items-center'>
+              <Input
+                className='w-full p-1 text-lg outline-0'
+                spellCheck={false}
+                value={document.title}
+                onChange={(value) => (document.title = value)}
+              />
             </div>
-            <Input
-              className='w-full p-1 text-lg outline-0'
-              spellCheck={false}
-              value={project.title}
-              onChange={(value) => (project.title = value)}
-            />
-          </div>
 
-          {project.description?.doc && (
-            <div className='flex flex-col flex-1 m-2'>
-              <div className='text-xs pb-1'>Description</div>
-              <div className='flex flex-1 overflow-y-auto border'>
+            {document.content?.doc && (
+              <div className='flex flex-1 m-2 overflow-y-auto'>
                 <Composer
-                  doc={project.description?.doc}
+                  doc={document.content?.doc}
                   slots={{
                     root: { className: 'grow' },
                     editor: {
-                      className: 'z-0 bg-white text-black w-full m-2 p-2 min-bs-[12em]'
+                      className: 'z-0 bg-white text-black w-full p-3 min-bs-[12em] text-xl md:text-base'
                     }
                   }}
                 />
               </div>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 });

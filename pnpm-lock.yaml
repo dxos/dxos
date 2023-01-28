@@ -1880,6 +1880,7 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/teleport': workspace:*
@@ -1891,6 +1892,7 @@ importers:
       '@dxos/context': link:../../../common/context
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
@@ -2862,6 +2864,7 @@ importers:
       '@dxos/esbuild-book-knobs': ~2.28.3
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
+      '@dxos/node-std': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
       '@types/d3': ^7.1.0
@@ -2876,6 +2879,7 @@ importers:
       react-dom: ^18.2.0
       react-resize-detector: ^7.1.2
     dependencies:
+      '@dxos/node-std': link:../../common/node-std
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       assert: 2.0.0
@@ -2955,6 +2959,7 @@ importers:
       '@dxos/gem-spore': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -3024,6 +3029,7 @@ importers:
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async

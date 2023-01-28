@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'node:assert';
 import { ScribbleLoop, Trash } from 'phosphor-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
@@ -44,6 +45,7 @@ export const SketchFrame = withReactor(() => {
   const canvasRef = useRef<any>();
   const [strokeColor, setStrokeColor] = useState('#333');
   const [strokeWidth, setStrokeWidth] = useState(4);
+  const active = useRef(false); // TODO(burdon): Review ref pattern.
 
   const space = useSpace();
   const [sketch, setSketch] = useState<Sketch>();
@@ -63,45 +65,50 @@ export const SketchFrame = withReactor(() => {
       });
     }
 
-    // TODO(burdon): Pseudo CRDT using timestamp on each path.
-    // TODO(burdon): Bug if concurrently editing (seems to connect points from both users?) Timestamp collision?
-    const handleUpdate = (sketch: Sketch) => {
-      setTimeout(async () => {
-        if (sketch.paths.length === 0) {
-          canvasRef.current.resetCanvas();
-          return;
-        }
-
-        const canvasPaths: CanvasPath[] = await canvasRef.current.exportPaths();
-        const updatedPaths = sketch.paths.filter(({ timestamp }) => {
-          return !canvasPaths.some((path) => path.startTimestamp === timestamp);
-        });
-
-        canvasRef.current.loadPaths(updatedPaths.map(convertToCanvasPath));
-      });
-    };
-
-    handleUpdate(sketch);
+    void handleUpdate(sketch);
 
     return result.subscribe(() => {
-      if (sketch) {
-        handleUpdate(sketch);
+      if (sketch && !active.current) {
+        void handleUpdate(sketch);
       }
     });
   }, []);
 
-  const handleStroke = (updated: CanvasPath) => {
-    const { endTimestamp } = updated;
-    if (!endTimestamp) {
+  // TODO(burdon): Pseudo CRDT using timestamp on each path.
+  const handleUpdate = async (sketch: Sketch) => {
+    if (sketch.paths.length === 0) {
+      canvasRef.current.resetCanvas();
       return;
     }
 
-    sketch?.paths.push(convertToProtoPath(updated));
+    const canvasPaths: CanvasPath[] = await canvasRef.current.exportPaths();
+    const updatedPaths = sketch.paths.filter(({ timestamp }) => {
+      return !canvasPaths.some((path) => path.startTimestamp === timestamp);
+    });
+
+    canvasRef.current.loadPaths(updatedPaths.map(convertToCanvasPath));
+  };
+
+  const handleStroke = (updated: CanvasPath) => {
+    const { endTimestamp } = updated;
+    if (!endTimestamp) {
+      active.current = true;
+      return;
+    }
+
+    assert(sketch);
+    sketch.paths.push(convertToProtoPath(updated));
+    active.current = false;
+
+    // TODO(burdon): Check if updated.
+    // TODO(burdon): Bug if concurrently editing (seems to connect points from both users?) Timestamp collision?
+    //  - Delay update until stop drawing.
+    void handleUpdate(sketch);
   };
 
   const handleColorChange = ({ hex }: { hex: string }) => setStrokeColor(hex);
 
-  const handleErase = () => {
+  const handleClear = () => {
     sketch!.paths = [];
   };
 
@@ -127,7 +134,7 @@ export const SketchFrame = withReactor(() => {
 
       {/* TODO(burdon): Vertical unless mobile. */}
       <div className='flex flex-shrink-0 p-2 bg-gray-200'>
-        <Button onClick={handleErase}>
+        <Button onClick={handleClear}>
           <Trash className={mx(getSize(6), 'mr-2')} />
         </Button>
         <GithubPicker width={'100%'} triangle='hide' onChangeComplete={handleColorChange} />
