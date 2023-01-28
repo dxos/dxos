@@ -137,3 +137,10 @@ message Sketch {
   string title = 1;
   repeated Path paths = 2;
 }
+
+message File {
+  option (object) = true;
+
+  string title = 1;
+  string cid = 2;
+}

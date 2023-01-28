@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import assert from 'assert';
 import { ScribbleLoop, Trash } from 'phosphor-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
