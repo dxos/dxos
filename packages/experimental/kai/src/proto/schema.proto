@@ -91,9 +91,10 @@ message Project {
 message Document {
   option (object) = true;
 
-  TextObject description = 1;
+  string title = 1;
+  TextObject content = 2;
 //  repeated string tags = 2;
-  string tag = 2;
+  string tag = 3;
 }
 
 message Message {
