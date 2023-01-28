@@ -1,22 +1,12 @@
 <template>
-  <div class="showcase-preview">
-    <form v-if="fork" action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
-      <input type="hidden" name="parameters" :value="parameters" />
-      <input type="submit" class="showcase-fork" value="Fork" />
-    </form>
-    <div ref="preview"></div>
-  </div>
+  <form v-if="fork" action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
+    <input type="hidden" name="parameters" :value="parameters" />
+    <input type="submit" class="showcase-fork" value="Fork" />
+  </form>
+  <div ref="preview"></div>
 </template>
 
 <style>
-.showcase-preview {
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
-  padding: 1em;
-  position: relative;
-  min-height: 2em;
-}
-
 .showcase-fork {
   position: absolute;
   right: 1em;
