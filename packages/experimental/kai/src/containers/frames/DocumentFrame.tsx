@@ -20,12 +20,14 @@ export const DocumentFrame: FC = withReactor(() => {
     setDocument(undefined);
   }, [space]);
 
+  const fragment = document?.content.doc!.getXmlFragment('content');
+
   return (
     <div className='flex flex-1 overflow-hidden justify-center bg-gray-300'>
       <div className='flex flex-col overflow-hidden w-full lg:w-[800px] bg-white shadow-lg'>
         <div className='flex p-3'>
           <Selector
-            placeholder='Project'
+            placeholder='Document'
             options={documents.map((document) => ({ id: document[id], title: document.title }))}
             onSelect={(selected) => {
               setDocument(selected ? documents.find((document) => document[id] === selected) : undefined);
@@ -47,11 +49,11 @@ export const DocumentFrame: FC = withReactor(() => {
             {document.content?.doc && (
               <div className='flex flex-1 m-2 overflow-y-auto'>
                 <Composer
-                  doc={document.content?.doc}
+                  fragment={fragment}
                   slots={{
                     root: { className: 'grow' },
                     editor: {
-                      className: 'z-0 bg-white text-black w-full p-3 min-bs-[12em] text-xl md:text-base'
+                      className: 'z-0 bg-white text-black h-full w-full p-3 min-bs-[12em] text-xl md:text-base'
                     }
                   }}
                 />
