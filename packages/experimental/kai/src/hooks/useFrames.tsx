@@ -20,7 +20,7 @@ export enum FrameID {
   CHESS = 'chess'
 }
 
-export const defaultFrameId = FrameID.STACK;
+export const defaultFrameId = FrameID.DOCUMENTS;
 
 // prettier-ignore
 const activeFrames = [
@@ -29,7 +29,8 @@ const activeFrames = [
   FrameID.STACK,
   FrameID.TABLE,
   FrameID.TASKS,
-  FrameID.KANBAN
+  FrameID.KANBAN,
+  FrameID.DOCUMENTS
 ];
 
 export type FrameDef = {

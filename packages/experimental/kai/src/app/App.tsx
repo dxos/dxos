@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { appkitTranslations, Fallback } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, Fallback, FatalError } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 
@@ -30,18 +31,22 @@ export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initia
       resourceExtensions={[appkitTranslations, kaiTranslations]}
       fallback={<Fallback message='Loading...' />}
     >
-      <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>
-        <AppStateProvider value={initialState}>
-          <BotsProvider>
-            <FramesProvider frames={frames}>
-              <HashRouter>
-                <Routes />
-                {children}
-              </HashRouter>
-            </FramesProvider>
-          </BotsProvider>
-        </AppStateProvider>
-      </ClientProvider>
+      <ErrorProvider>
+        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+          <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>
+            <AppStateProvider value={initialState}>
+              <BotsProvider>
+                <FramesProvider frames={frames}>
+                  <HashRouter>
+                    <Routes />
+                    {children}
+                  </HashRouter>
+                </FramesProvider>
+              </BotsProvider>
+            </AppStateProvider>
+          </ClientProvider>
+        </ErrorBoundary>
+      </ErrorProvider>
     </ThemeProvider>
   );
 };
