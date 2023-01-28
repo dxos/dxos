@@ -176,7 +176,9 @@ export const FrameSelector: FC = () => {
                 )}
                 onClick={() => navigate(createSpacePath(space.key, id))}
               >
-                <Icon weight='light' className={getSize(6)} />
+                <div className='px-2 md:px-0'>
+                  <Icon weight='light' className={getSize(6)} />
+                </div>
                 <div className='hidden lg:flex ml-1'>{title}</div>
               </a>
             );

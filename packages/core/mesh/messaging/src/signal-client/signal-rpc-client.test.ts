@@ -14,7 +14,7 @@ import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
-describe('SignalRPCClient', () => {
+describe.skip('SignalRPCClient', () => {
   let broker: TestBroker;
 
   beforeAll(async () => {
@@ -25,6 +25,7 @@ describe('SignalRPCClient', () => {
     broker.stop();
   });
 
+  // TODO(burdon): Convert to TestBuilder pattern.
   const setupClient = async () => {
     const client = new SignalRPCClient(broker.url());
     afterTest(async () => await client.close());

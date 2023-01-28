@@ -19,6 +19,7 @@ interface TestBrokerOptions {
   timeout?: number;
 }
 
+// TODO(burdon): Convert to TestBuilder pattern.
 export class TestBroker {
   private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
 
@@ -113,6 +114,7 @@ export class TestBroker {
  *
  * @param port Port to start the signal server on, random by default.
  */
+// TODO(burdon): Convert to TestBuilder pattern.
 export const createTestBroker = async (port?: number): Promise<TestBroker> => {
   const server = new TestBroker({ port: port ?? randomInt(10000, 50000) });
   await server.waitUntilStarted();

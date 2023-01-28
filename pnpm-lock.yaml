@@ -1880,6 +1880,7 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/teleport': workspace:*
@@ -1891,6 +1892,7 @@ importers:
       '@dxos/context': link:../../../common/context
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
@@ -2862,6 +2864,7 @@ importers:
       '@dxos/esbuild-book-knobs': ~2.28.3
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~2.29.0
+      '@dxos/node-std': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
       '@types/d3': ^7.1.0
@@ -2876,6 +2879,7 @@ importers:
       react-dom: ^18.2.0
       react-resize-detector: ^7.1.2
     dependencies:
+      '@dxos/node-std': link:../../common/node-std
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       assert: 2.0.0
@@ -2955,6 +2959,7 @@ importers:
       '@dxos/gem-spore': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -2963,6 +2968,8 @@ importers:
       '@dxos/react-composer': workspace:*
       '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/sentry': workspace:*
+      '@sentry/react': ^7.17.2
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
       '@types/faker': ^5.5.9
@@ -2986,6 +2993,10 @@ importers:
       openai: ^3.1.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
+      prosemirror-model: ^1.7.1
+      prosemirror-schema-basic: ^1.2.1
+      prosemirror-state: ^1.4.2
+      prosemirror-view: ^1.9.10
       react: ^18.2.0
       react-big-calendar: ^1.5.2
       react-color: ^2.19.3
@@ -3004,6 +3015,9 @@ importers:
       vite-plugin-fonts: ^0.7.0
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
+      y-prosemirror: ^1.2.0
+      y-protocols: ^1.0.5
+      yjs: ^13.5.44
     dependencies:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
@@ -3022,6 +3036,7 @@ importers:
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
@@ -3030,6 +3045,8 @@ importers:
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/sentry': link:../../common/sentry
+      '@sentry/react': 7.20.0_react@18.2.0
       assert: 2.0.0
       base-x: 3.0.9
       chess.js: 1.0.0-alpha.0
@@ -3039,6 +3056,10 @@ importers:
       mobile-detect: 1.4.5
       openai: 3.1.0
       phosphor-react: 1.4.1_react@18.2.0
+      prosemirror-model: 1.19.0
+      prosemirror-schema-basic: 1.2.1
+      prosemirror-state: 1.4.2
+      prosemirror-view: 1.29.0
       react: 18.2.0
       react-big-calendar: 1.5.2_biqbaboplfbrettd7655fr4n2y
       react-color: 2.19.3_react@18.2.0
@@ -3051,6 +3072,9 @@ importers:
       react-syntax-highlighter: 15.5.0_react@18.2.0
       react-table: 7.8.0_react@18.2.0
       url-join: 5.0.0
+      y-prosemirror: 1.2.0_bxerzyxcxwljqz6lzhld3qlf7u
+      y-protocols: 1.0.5
+      yjs: 13.5.44
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/client-testing': link:../client-testing
@@ -4218,7 +4242,7 @@ importers:
     devDependencies:
       '@dxos/config': link:../../packages/sdk/config
       '@mdx-js/rollup': 2.1.5_rollup@3.9.1
-      '@react-pdf/renderer': 3.0.1_biqbaboplfbrettd7655fr4n2y
+      '@react-pdf/renderer': 3.0.1_react@18.2.0
       '@tailwindcss/aspect-ratio': 0.4.2_tailwindcss@3.1.8
       '@tailwindcss/typography': 0.5.8_tailwindcss@3.1.8
       '@types/d3': 7.4.0
@@ -6767,7 +6791,7 @@ packages:
     resolution: {integrity: sha512-emOueVCqFRFmpcfT80Xsm4mfuFw9VSp5GY4eh5qeLDeiP81g0hddlobVQCo0pE2ZvNnWbyhLrXEYAaMAXjNL6A==}
     engines: {node: '>=14'}
     peerDependencies:
-      vite: ^2.9.0
+      vite: 4.0.4
     dependencies:
       '@rollup/pluginutils': 4.2.1
       '@webcomponents/custom-elements': 1.5.1
@@ -10315,11 +10339,10 @@ packages:
       svg-arc-to-cubic-bezier: 3.2.0
     dev: true
 
-  /@react-pdf/renderer/3.0.1_biqbaboplfbrettd7655fr4n2y:
+  /@react-pdf/renderer/3.0.1_react@18.2.0:
     resolution: {integrity: sha512-NuyXB8dsKVO1r+MBXl/SHZ8rAV979TgnRg8/5L9oiPYwG+WsV4gu2xm2bqoRdU8ltasKkVALK7hdgwh9XX+ZCA==}
     peerDependencies:
       react: ^18.0.0
-      react-dom: ^18.0.0
     dependencies:
       '@babel/runtime': 7.19.4
       '@react-pdf/font': 2.3.1
@@ -10330,7 +10353,6 @@ packages:
       '@react-pdf/types': 2.1.0
       queue: 6.0.2
       react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
       react-reconciler: 0.23.0_react@18.2.0
       scheduler: 0.17.0
     transitivePeerDependencies:
@@ -28991,6 +29013,18 @@ packages:
       orderedmap: 2.1.0
     dev: false
 
+  /prosemirror-model/1.19.0:
+    resolution: {integrity: sha512-/CvFGJnwc41EJSfDkQLly1cAJJJmBpZwwUJtwZPTjY2RqZJfM8HVbCreOY/jti8wTRbVyjagcylyGoeJH/g/3w==}
+    dependencies:
+      orderedmap: 2.1.0
+    dev: false
+
+  /prosemirror-schema-basic/1.2.1:
+    resolution: {integrity: sha512-vYBdIHsYKSDIqYmPBC7lnwk9DsKn8PnVqK97pMYP5MLEDFqWIX75JiaJTzndBii4bRuNqhC2UfDOfM3FKhlBHg==}
+    dependencies:
+      prosemirror-model: 1.19.0
+    dev: false
+
   /prosemirror-schema-list/1.2.2:
     resolution: {integrity: sha512-rd0pqSDp86p0MUMKG903g3I9VmElFkQpkZ2iOd3EOVg1vo5Cst51rAsoE+5IPy0LPXq64eGcCYlW1+JPNxOj2w==}
     dependencies:
@@ -29002,7 +29036,7 @@ packages:
   /prosemirror-state/1.4.2:
     resolution: {integrity: sha512-puuzLD2mz/oTdfgd8msFbe0A42j5eNudKAAPDB0+QJRw8cO1ygjLmhLrg9RvDpf87Dkd6D4t93qdef00KKNacQ==}
     dependencies:
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
       prosemirror-transform: 1.7.0
       prosemirror-view: 1.29.0
     dev: false
@@ -29010,13 +29044,13 @@ packages:
   /prosemirror-transform/1.7.0:
     resolution: {integrity: sha512-O4T697Cqilw06Zvc3Wm+e237R6eZtJL/xGMliCi+Uo8VL6qHk6afz1qq0zNjT3eZMuYwnP8ZS0+YxX/tfcE9TQ==}
     dependencies:
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
     dev: false
 
   /prosemirror-view/1.29.0:
     resolution: {integrity: sha512-bifVd5aD9uCNtpLL1AyhquG/cVbNZSv+ALBxTEGYv51a6OHDhq+aOuzqq4MermNdeBdT+5uyURXCALgzk0EN5g==}
     dependencies:
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-transform: 1.7.0
     dev: false
@@ -29645,7 +29679,7 @@ packages:
   /react-motion/0.5.2_react@18.2.0:
     resolution: {integrity: sha512-9q3YAvHoUiWlP3cK0v+w1N5Z23HXMj4IF4YuvjvWegWqNPfLXsOBE/V7UvQGpXxHFKRQQcNcVQE31g9SB/6qgQ==}
     peerDependencies:
-      react: ^0.14.9 || ^15.3.0 || ^16.0.0
+      react: ^18.0.0
     dependencies:
       performance-now: 0.2.0
       prop-types: 15.8.1
@@ -29850,7 +29884,7 @@ packages:
     resolution: {integrity: sha512-WuYZrwrH/cXgxKcynciuwZ6+6V9a5N43qa4Wwfgll/tyLq+ACcJ5m8fHFXQk7fQBK80RAp61Oc+a+T64woorvw==}
     engines: {node: '>=0.10.0', npm: '>=3.0'}
     peerDependencies:
-      react: 15.3.0 - 16.x
+      react: ^18.0.0
     dependencies:
       d3-array: 1.2.4
       d3-collection: 1.0.7
@@ -31850,13 +31884,7 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
     transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - sass
-      - stylus
-      - sugarss
       - supports-color
-      - terser
     dev: true
 
   /stream-browserify/2.0.2:
@@ -35470,6 +35498,24 @@ packages:
       prosemirror-model: 1.18.1
       prosemirror-state: 1.4.2
       prosemirror-view: 1.29.0
+      y-protocols: 1.0.5
+      yjs: 13.5.44
+    dev: false
+
+  /y-prosemirror/1.2.0_bxerzyxcxwljqz6lzhld3qlf7u:
+    resolution: {integrity: sha512-t3uxuX4HIkb1GNt8jV+dplRbNH2OmQD/BNeCCbjLD3Mq0o6JEXxHedv58ZIPFDE6ma24jljlL+u8pGvN6B37XQ==}
+    peerDependencies:
+      prosemirror-model: ^1.7.1
+      prosemirror-state: ^1.2.3
+      prosemirror-view: ^1.9.10
+      y-protocols: ^1.0.1
+      yjs: ^13.5.38
+    dependencies:
+      lib0: 0.2.52
+      prosemirror-model: 1.19.0
+      prosemirror-state: 1.4.2
+      prosemirror-view: 1.29.0
+      typescript: 4.8.4
       y-protocols: 1.0.5
       yjs: 13.5.44
     dev: false

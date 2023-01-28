@@ -44,10 +44,16 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/node-std"
+    },
+    {
       "path": "../../common/react-async"
     },
     {
       "path": "../../common/react-components"
+    },
+    {
+      "path": "../../common/sentry"
     },
     {
       "path": "../../core/echo/echo-schema"
