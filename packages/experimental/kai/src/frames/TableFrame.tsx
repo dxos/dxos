@@ -8,9 +8,9 @@ import { Column } from 'react-table';
 import { DocumentBase, EchoObject, id, TypeFilter } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { Searchbar, Selector, SelectorOption, Table } from '../../components';
-import { useSpace } from '../../hooks';
-import { Contact, Organization, Project } from '../../proto';
+import { Searchbar, Selector, SelectorOption, Table } from '../components';
+import { useSpace } from '../hooks';
+import { Contact, Organization, Project } from '../proto';
 
 type ColumnType<T extends DocumentBase> = SelectorOption & {
   filter: TypeFilter<any>;

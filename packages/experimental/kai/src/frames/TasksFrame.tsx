@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { TaskList } from '../TaskList';
+import { TaskList } from '../containers';
 
 export const TasksFrame = () => {
   return <TaskList />;

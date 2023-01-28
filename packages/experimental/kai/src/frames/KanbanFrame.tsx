@@ -7,10 +7,10 @@ import React, { FC, useState } from 'react';
 import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { Kanban, KanbanColumnDef, Searchbar } from '../../components';
-import { useSpace } from '../../hooks';
-import { Project, tags } from '../../proto';
-import { ProjectCard } from '../cards';
+import { Kanban, KanbanColumnDef, Searchbar } from '../components';
+import { ProjectCard } from '../containers';
+import { useSpace } from '../hooks';
+import { Project, tags } from '../proto';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
   return <ProjectCard project={object as Project} />;

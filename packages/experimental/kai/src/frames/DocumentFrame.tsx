@@ -8,9 +8,9 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Composer } from '@dxos/react-composer';
 
-import { Input, Selector } from '../../components';
-import { useSpace } from '../../hooks';
-import { Document } from '../../proto';
+import { Input, Selector } from '../components';
+import { useSpace } from '../hooks';
+import { Document } from '../proto';
 
 export const DocumentFrame: FC = withReactor(() => {
   const space = useSpace();

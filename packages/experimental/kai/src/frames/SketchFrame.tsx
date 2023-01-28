@@ -11,9 +11,9 @@ import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 import { withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button } from '../../components';
-import { useSpace } from '../../hooks';
-import { Path, Sketch } from '../../proto';
+import { Button } from '../components';
+import { useSpace } from '../hooks';
+import { Path, Sketch } from '../proto';
 
 // TODO(burdon): Evaluate GLSP: https://www.eclipse.org/glsp
 
