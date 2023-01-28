@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'node:assert';
 import { ScribbleLoop, Trash } from 'phosphor-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
@@ -13,6 +14,8 @@ import { getSize, mx } from '@dxos/react-components';
 import { Button } from '../../components';
 import { useSpace } from '../../hooks';
 import { Path, Sketch } from '../../proto';
+
+// TODO(burdon): Evaluate GLSP: https://www.eclipse.org/glsp
 
 const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Path => ({
   timestamp: startTimestamp,
@@ -31,8 +34,9 @@ const convertToCanvasPath = ({ width, color, points }: Path): CanvasPath =>
 
 const sizes: any[] = [
   { weight: 'thin', width: 1 },
-  { weight: 'regular', width: 4 },
-  { weight: 'bold', width: 8 }
+  { weight: 'light', width: 4 },
+  { weight: 'regular', width: 8 },
+  { weight: 'bold', width: 16 }
 ];
 
 const dimensions = { width: 900, height: 600 };
@@ -41,6 +45,7 @@ export const SketchFrame = withReactor(() => {
   const canvasRef = useRef<any>();
   const [strokeColor, setStrokeColor] = useState('#333');
   const [strokeWidth, setStrokeWidth] = useState(4);
+  const active = useRef(false); // TODO(burdon): Review ref pattern.
 
   const space = useSpace();
   const [sketch, setSketch] = useState<Sketch>();
@@ -60,47 +65,54 @@ export const SketchFrame = withReactor(() => {
       });
     }
 
-    // TODO(burdon): Pseudo CRDT using timestamp on each path.
-    const handleUpdate = (sketch: Sketch) => {
-      setTimeout(async () => {
-        if (sketch.paths.length === 0) {
-          canvasRef.current.resetCanvas();
-          return;
-        }
-
-        const canvasPaths: CanvasPath[] = await canvasRef.current.exportPaths();
-        const updatedPaths = sketch.paths.filter(({ timestamp }) => {
-          return !canvasPaths.some((path) => path.startTimestamp === timestamp);
-        });
-
-        canvasRef.current.loadPaths(updatedPaths.map(convertToCanvasPath));
-      });
-    };
-
-    handleUpdate(sketch);
+    void handleUpdate(sketch);
 
     return result.subscribe(() => {
-      if (sketch) {
-        handleUpdate(sketch);
+      if (sketch && !active.current) {
+        void handleUpdate(sketch);
       }
     });
   }, []);
 
-  const handleStroke = (updated: CanvasPath) => {
-    const { endTimestamp } = updated;
-    if (!endTimestamp) {
+  // TODO(burdon): Pseudo CRDT using timestamp on each path.
+  const handleUpdate = async (sketch: Sketch) => {
+    if (sketch.paths.length === 0) {
+      canvasRef.current.resetCanvas();
       return;
     }
 
-    sketch?.paths.push(convertToProtoPath(updated));
+    const canvasPaths: CanvasPath[] = await canvasRef.current.exportPaths();
+    const updatedPaths = sketch.paths.filter(({ timestamp }) => {
+      return !canvasPaths.some((path) => path.startTimestamp === timestamp);
+    });
+
+    canvasRef.current.loadPaths(updatedPaths.map(convertToCanvasPath));
+  };
+
+  const handleStroke = (updated: CanvasPath) => {
+    const { endTimestamp } = updated;
+    if (!endTimestamp) {
+      active.current = true;
+      return;
+    }
+
+    assert(sketch);
+    sketch.paths.push(convertToProtoPath(updated));
+    active.current = false;
+
+    // TODO(burdon): Check if updated.
+    // TODO(burdon): Bug if concurrently editing (seems to connect points from both users?) Timestamp collision?
+    //  - Delay update until stop drawing.
+    void handleUpdate(sketch);
   };
 
   const handleColorChange = ({ hex }: { hex: string }) => setStrokeColor(hex);
 
-  const handleErase = () => {
+  const handleClear = () => {
     sketch!.paths = [];
   };
 
+  // TODO(burdon): Erase/undo.
   // https://www.npmjs.com/package/react-sketch-canvas
   // https://www.npmjs.com/package/react-color
 
@@ -111,18 +123,19 @@ export const SketchFrame = withReactor(() => {
           ref={canvasRef}
           style={{}}
           className='shadow-md'
-          strokeWidth={strokeWidth}
-          strokeColor={strokeColor}
           width={`${dimensions.width}px`}
           height={`${dimensions.height}px`}
+          strokeWidth={strokeWidth}
+          strokeColor={strokeColor}
           withTimestamp={true}
           onStroke={handleStroke}
         />
       </div>
 
-      <div className='flex flex-shrink-0 p-2 bg-gray-100'>
-        <Button onClick={handleErase}>
-          <Trash className={mx(getSize(8), 'mr-2')} />
+      {/* TODO(burdon): Vertical unless mobile. */}
+      <div className='flex flex-shrink-0 p-2 bg-gray-200'>
+        <Button onClick={handleClear}>
+          <Trash className={mx(getSize(6), 'mr-2')} />
         </Button>
         <GithubPicker width={'100%'} triangle='hide' onChangeComplete={handleColorChange} />
         <div className='flex items-center'>

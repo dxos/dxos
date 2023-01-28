@@ -5,11 +5,13 @@
 import add from 'date-fns/add';
 import roundToNearestMinutes from 'date-fns/roundToNearestMinutes';
 import faker from 'faker';
+import { schema } from 'prosemirror-schema-basic';
+import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
 import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 
 import { cities } from './data';
-import { Contact, Event, Organization, Project, Task } from './gen/schema';
+import { Contact, Document, Event, Organization, Project, Task } from './gen/schema';
 
 export type MinMax = { min: number; max: number } | number;
 
@@ -21,6 +23,7 @@ export type GeneratorOptions = {
   tasks: MinMax;
   contacts: MinMax;
   events: MinMax;
+  documents: MinMax;
 };
 
 export class Generator {
@@ -31,7 +34,8 @@ export class Generator {
       projects: { min: 1, max: 2 },
       tasks: { min: 1, max: 8 },
       contacts: { min: 20, max: 30 },
-      events: { min: 20, max: 40 }
+      events: { min: 20, max: 40 },
+      documents: { min: 1, max: 3 }
     }
   ) {}
 
@@ -101,6 +105,9 @@ export class Generator {
         return event;
       })
     );
+
+    // Documents.
+    await Promise.all(range(this._options.documents).map(async () => this.createDocument()));
   }
 
   createOrganization = async () => {
@@ -112,10 +119,6 @@ export class Generator {
 
   createProject = async (tag?: string) => {
     const project = createProject(tag);
-
-    // TODO(burdon): Not working?
-    project.description.model?.insert('Hello world', 0);
-
     return await this._db.save(project);
   };
 
@@ -136,6 +139,30 @@ export class Generator {
   createEvent = async () => {
     const event = createEvent();
     return await this._db.save(event);
+  };
+
+  createDocument = async () => {
+    const document = createDocument();
+    await this._db.save(document);
+
+    // TODO(burdon): Factor out into TextModel.
+    // https://prosemirror.net/docs/guide/#doc
+    const doc = schema.node(
+      'doc',
+      null,
+      range({ min: 1, max: 5 }).flatMap(() => [
+        schema.node('paragraph', null, [schema.text(faker.lorem.sentences(5))]),
+        schema.node('paragraph')
+      ])
+    );
+
+    // TODO(burdon): Cannot update until saved.
+    // TODO(burdon): Configure 'content' field.
+    // https://docs.yjs.dev/api/shared-types/y.xmlfragment
+    const fragment = document.content.doc!.getXmlFragment('content');
+    prosemirrorToYXmlFragment(doc, fragment);
+
+    return document;
   };
 }
 
@@ -194,4 +221,11 @@ export const createEvent = () => {
     start: start.toISOString(),
     end: end.toISOString()
   });
+};
+
+export const createDocument = () => {
+  const document = new Document();
+  document.title = faker.lorem.sentence(3);
+  document.content = new TextObject();
+  return document;
 };
