@@ -145,6 +145,7 @@ export class Generator {
     const document = createDocument();
     await this._db.save(document);
 
+    // TODO(burdon): Factor out into TextModel.
     // https://prosemirror.net/docs/guide/#doc
     const doc = schema.node(
       'doc',
