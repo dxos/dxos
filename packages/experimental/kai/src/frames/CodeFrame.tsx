@@ -129,6 +129,7 @@ const EXAMPLE = `
 import React from 'react'
 import { useQuery, useSpaces } from '@dxos/react-client'
 import { Task } from '@kai/schema'
+import { id } from '@dxos/echo-schema'
 
 const Frame = () => {
   const [space] = useSpaces()
@@ -137,7 +138,7 @@ const Frame = () => {
   return (
     <ul>
       {tasks.map(task => (
-        <li key={task.id}>{task.title}</li>
+        <li key={task[id]}>{task.title}</li>
       ))}
     </ul>
   )
