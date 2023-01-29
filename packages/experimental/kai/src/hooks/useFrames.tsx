@@ -18,7 +18,7 @@ export enum FrameID {
   EXPLORER = 'explorer',
   MAPS = 'maps',
   CHESS = 'chess',
-  CODE = 'code',
+  CODE = 'code'
 }
 
 export const defaultFrameId = FrameID.CODE;

@@ -2,16 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { XCircle } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
 
-import { data, deleted, id, TextObject } from '@dxos/echo-schema';
+import { data, TextObject } from '@dxos/echo-schema';
 import { compile, Editor, Frame } from '@dxos/framebox';
-import { log } from '@dxos/log';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
 
-import { CardRow, Input } from '../components';
 import { EmbeddedFrame } from '../frame-container';
 import { useSpace } from '../hooks';
 

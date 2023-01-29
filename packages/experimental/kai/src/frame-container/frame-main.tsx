@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+
 import { ClientServicesProxy } from '@dxos/client-services';
 import { ClientProvider } from '@dxos/react-client';
 import { createIFramePort } from '@dxos/rpc-tunnel';
-import React from 'react';
-import { createRoot } from 'react-dom/client';
 
 console.log('frame main');
 
@@ -25,7 +25,7 @@ reexportModule('@kai/schema', await import('../proto/gen/schema'));
 const port = createIFramePort({
   channel: 'frame',
   origin: '*'
-})
+});
 
 const services = new ClientServicesProxy(port);
 
@@ -37,6 +37,6 @@ createRoot(document.getElementById('root')!).render(
   </div>
 );
 
-function reexportModule(key: string, module: any) {
+const reexportModule = (key: string, module: any) => {
   ((window as any).__DXOS_FRAMEBOX_MODULES ??= {})[key] = module;
-}
+};
