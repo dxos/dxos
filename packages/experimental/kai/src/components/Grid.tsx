@@ -14,7 +14,7 @@ import { Button } from '../components';
 export type Item = {
   id: string;
   label: string;
-  content: string;
+  content?: string;
   children?: Item[];
 };
 

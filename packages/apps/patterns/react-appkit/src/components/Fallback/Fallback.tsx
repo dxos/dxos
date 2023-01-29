@@ -4,6 +4,7 @@
 
 import React, { useState, useCallback } from 'react';
 
+import { Trigger } from '@dxos/async';
 import { Status } from '@dxos/client';
 import { ClientContextProps } from '@dxos/react-client';
 import { Button, Heading, Loading, useTranslation } from '@dxos/react-components';
@@ -24,16 +25,19 @@ export const GenericFallback = () => {
 
 /**
  * Fallback component for the ClientProvider from @dxos/react-client.
- *
  * Allows the user to resume their client when it has been suspended.
  */
 export const ClientFallback = ({ client, status }: Partial<ClientContextProps>) => {
   const { t } = useTranslation('appkit');
-  const [pending, setPending] = useState(false);
+  const [pending, setPending] = useState(true);
 
+  // TODO(burdon): Set timeout to prevent flickering.
   const resume = useCallback(async () => {
     setPending(true);
+    const done = new Trigger();
+    setTimeout(() => done.wake(), 1000);
     await client?.resumeHostServices();
+    await done.wait();
     setPending(false);
   }, [client]);
 

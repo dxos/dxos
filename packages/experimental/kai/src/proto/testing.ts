@@ -39,7 +39,7 @@ export class Generator {
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
       documents: { min: 1, max: 3 },
-      notes: { min: 5, max: 12 }
+      notes: { min: 8, max: 16 }
     }
   ) {}
 
@@ -163,6 +163,7 @@ export class Generator {
   };
 }
 
+// TODO(burdon): TextObject initial state isn't replicated.
 // TODO(burdon): Factor out into TextModel.
 const createTextObjectContent = (content: TextObject, sentences = 5) => {
   // https://prosemirror.net/docs/guide/#doc

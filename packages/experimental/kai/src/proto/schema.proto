@@ -119,7 +119,7 @@ message Event {
 }
 
 message Sketch {
-  message Point {
+  message SketchPoint {
     int32 x = 1;
     int32 y = 2;
   }
@@ -129,7 +129,7 @@ message Sketch {
     int32 timestamp = 1;
     int32 width = 2;
     string color = 3;
-    repeated Point points = 4;
+    repeated SketchPoint points = 4;
   }
 
   option (object) = true;
@@ -154,13 +154,13 @@ message NoteBoard {
 
   option (object) = true;
 
-  string name = 1;
+  string title = 1;
   repeated NotePoint points = 2;
 }
 
 message Note {
   option (object) = true;
 
-  string name = 1;
+  string title = 1;
   TextObject content = 2;
 }

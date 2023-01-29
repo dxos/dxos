@@ -20,11 +20,13 @@ export const NotesFrame = () => {
 
   const items: Item[] = useMemo(
     () =>
-      notes.map((note) => ({
-        id: note[id],
-        label: note.title,
-        content: note.content.model?.textContent // TODO(burdon): Util.
-      })),
+      notes.map((note) => {
+        return {
+          id: note[id],
+          label: note.title,
+          content: note.content?.model?.textContent // TODO(burdon): Util.
+        };
+      }),
     [notes]
   );
 
