@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/assets"
+    },
+    {
       "path": "../../apps/patterns/react-appkit"
     },
     {
