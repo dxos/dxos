@@ -26,10 +26,23 @@ export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
     JSON.stringify({
       imports: {
         '@frame/main': mainUrl,
-        '@frame/bundle': `data:text/javascript;base64,${btoa(code)}`
+        '@frame/bundle': `data:text/javascript;base64,${btoa(code)}`,
+        ...Object.fromEntries(frame.compiled?.imports?.filter(entry => !entry.moduleUrl!.startsWith('http')).map(entry => [
+          entry.moduleUrl!,
+          createReexportingModule(entry.namedImports!, entry.moduleUrl!)
+        ]) ?? [])
       }
     })
   );
 
   return <iframe srcDoc={html} />;
 };
+
+const createReexportingModule = (namedImports: string[], key: string) => {
+  const code = `
+    const { ${namedImports.join(',')} } = window.__DXOS_FRAMEBOX_MODULES[${JSON.stringify(key)}];
+    export { ${namedImports.join(',')} }
+    export default window.__DXOS_FRAMEBOX_MODULES[${JSON.stringify(key)}].default;
+  `
+  return `data:text/javascript;base64,${btoa(code)}`
+}

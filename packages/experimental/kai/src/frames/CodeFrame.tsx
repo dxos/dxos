@@ -5,7 +5,7 @@
 import { XCircle } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
 
-import { deleted, id, TextObject } from '@dxos/echo-schema';
+import { data, deleted, id, TextObject } from '@dxos/echo-schema';
 import { compile, Editor, Frame } from '@dxos/framebox';
 import { log } from '@dxos/log';
 import { useQuery, withReactor } from '@dxos/react-client';
@@ -22,7 +22,7 @@ export const CodeFrame = withReactor(() => {
     const id = setInterval(async () => {
       if (selected) {
         await compile(selected);
-        console.log(selected);
+        console.log(selected[data]);
       }
     }, 1000);
 
@@ -124,9 +124,11 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
 });
 
 const EXAMPLE = `
-import React from 'https://cdn.jsdelivr.net/npm/@esm-bundle/react@17.0.2-fix.1/esm/react.development.min.js'
+import React, { useState } from 'react'
 
 const Frame = () => {
+  const [counter, setCounter] = useState(0)
+
   return <div>Hello world</div>
 }
 

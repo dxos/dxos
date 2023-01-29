@@ -17,7 +17,8 @@ export enum FrameID {
   SKETCH = 'sketch',
   EXPLORER = 'explorer',
   MAPS = 'maps',
-  CHESS = 'chess'
+  CHESS = 'chess',
+  CODE = 'code',
 }
 
 export const defaultFrameId = FrameID.STACK;
