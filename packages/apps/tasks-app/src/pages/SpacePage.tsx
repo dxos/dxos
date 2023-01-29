@@ -6,10 +6,11 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import type { Space } from '@dxos/client';
+import { deleted, id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
-import { TaskListComponent } from '../components/TaskList';
+import { TaskList as TaskListComponent } from '../components/TaskList';
 import { Task, TaskList } from '../proto';
 
 /**
@@ -22,29 +23,25 @@ export const SpacePage = withReactor(() => {
   if (!taskList) {
     return <Loading label='loading' />;
   }
-  console.log('space page render');
   return (
     <TaskListComponent
-      taskList={taskList}
+      title={taskList.title}
+      tasks={taskList.tasks?.filter((t) => !t[deleted])}
       onTitleChanged={(title) => {
-        console.log('task list title', taskList);
         taskList.title = title;
       }}
       onTaskCreate={() => {
-        console.log('create task');
         const task = new Task();
         taskList.tasks.push(task);
       }}
       onTaskTitleChanged={(task, title) => {
-        console.log('change title', task);
+        console.log('task title changed', task, title);
         task.title = title;
       }}
       onTaskCompleteChanged={(task, completed) => {
-        console.log('click', task, completed, 'was', task.completed);
         task.completed = completed;
       }}
       onTaskDeleted={(task) => {
-        console.log('delete', task);
         void space.experimental.db.delete(task);
       }}
     />

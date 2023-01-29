@@ -22,7 +22,6 @@ export type CheckBoxItemProps = {
 
 export const CheckboxItem = (props: CheckBoxItemProps) => {
   const { text, isChecked, placeholder, onTextChanged, onChecked, onDeleteClicked, onInputKeyUp } = props;
-  console.log('checkbox item render', isChecked);
   return (
     <li className='flex items-center gap-2 mbe-2 pl-3'>
       <input
@@ -42,7 +41,7 @@ export const CheckboxItem = (props: CheckBoxItemProps) => {
         <Input
           type='text'
           placeholder={placeholder}
-          defaultValue={text ?? ''}
+          value={text ?? ''}
           onChange={(e) => onTextChanged?.(e.target.value)}
           onKeyUp={onInputKeyUp}
         />
