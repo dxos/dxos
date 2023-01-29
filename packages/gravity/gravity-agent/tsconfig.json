@@ -28,12 +28,6 @@
       "path": "../../common/log"
     },
     {
-<<<<<<< Updated upstream
-=======
-      "path": "../../common/testutils"
-    },
-    {
->>>>>>> Stashed changes
       "path": "../../common/util"
     },
     {

@@ -32,12 +32,9 @@ message Command {
     CreateSpaceCommand create_space = 2;
     CreateSpaceInvitationCommand create_space_invitation = 3;
     AcceptSpaceInvitationCommand accept_space_invitation = 4;
-<<<<<<< Updated upstream
     SyncServer sync_server = 5;
     SyncClient sync_client = 6;
     TearDown tear_down = 7;
-=======
->>>>>>> Stashed changes
   }
 }
 
@@ -45,13 +42,9 @@ message Command {
 // Commands.
 //
 
-<<<<<<< Updated upstream
 message CreateProfileCommand {
   optional bool _noop_ = 1;
 }
-=======
-message CreateProfileCommand {}
->>>>>>> Stashed changes
 
 message CreateSpaceCommand {
   optional string id = 1;
@@ -59,7 +52,6 @@ message CreateSpaceCommand {
 
 message CreateSpaceInvitationCommand {
   string id = 1;
-<<<<<<< Updated upstream
   string swarm_key = 2;
 }
 
@@ -84,11 +76,4 @@ message SyncClient {
 
 message TearDown {
   optional bool _noop_ = 1;
-=======
-  dxos.keys.PublicKey swarm_key = 2;
-}
-
-message AcceptSpaceInvitationCommand {
-  dxos.keys.PublicKey swarm_key = 1;
->>>>>>> Stashed changes
 }

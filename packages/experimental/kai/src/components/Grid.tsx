@@ -2,10 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { DotsThreeCircle } from 'phosphor-react';
+import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { mx } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/react-components';
+
+import { Button } from '../components';
 
 export type Item = {
   id: string;
@@ -18,7 +21,11 @@ export type Point = { x: number; y: number };
 
 export type Bounds = { x: number; y: number; width: number; height: number };
 
-export type Layout = (item: Item) => Bounds;
+export interface Layout {
+  updateItems(items: Item[]): void;
+  updateBounds(bounds: Bounds, grid: number, size: number): void;
+  getBounds(id: string): Bounds | undefined;
+}
 
 //
 // Cell
@@ -31,8 +38,9 @@ const Cell = ({ item, bounds, onClick }: CellProps) => {
   return (
     <div
       className={mx(
+        'group',
         'absolute flex flex-col overflow-hidden p-2',
-        'bg-white border border-gray-500 select-none cursor-pointer'
+        'bg-yellow-100 shadow select-none cursor-pointer'
       )}
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
       onClick={(event) => {
@@ -41,10 +49,20 @@ const Cell = ({ item, bounds, onClick }: CellProps) => {
       }}
     >
       <div className='flex flex-col overflow-hidden'>
-        <div className='text-sm mb-2'>
-          <h2>{item.label}</h2>
+        <div className='flex w-full items-center text-sm mb-2'>
+          <div className='flex flex-1 overflow-hidden'>
+            <h2 className='overflow-hidden text-ellipsis whitespace-nowrap'>{item.label}</h2>
+          </div>
+          <div className='flex flex-shrink-0 pl-2'>
+            <div className='invisible group-hover:visible text-gray-500'>
+              <Button>
+                <DotsThreeCircle className={getSize(6)} />
+              </Button>
+            </div>
+          </div>
         </div>
-        <div className='text-xs text-gray-500'>
+
+        <div className='flex overflow-hidden text-xs text-gray-600'>
           {item.content}
         </div>
       </div>
@@ -56,7 +74,7 @@ const Cell = ({ item, bounds, onClick }: CellProps) => {
 // Grid
 //
 
-export type GridProps = { items?: Item[]; layout?: Layout; onSelect?: (item: Item) => void };
+export type GridProps = { items?: Item[]; layout: Layout; onSelect?: (item: Item) => void };
 
 export const Grid = ({ items = [], layout, onSelect }: GridProps) => {
   const transitionDelay = 500;
@@ -78,26 +96,14 @@ export const Grid = ({ items = [], layout, onSelect }: GridProps) => {
     transform: 'scale(1)'
   });
 
-  // TODO(burdon): Store logical position in object list (splice).
-  const bounds = useMemo(() => {
-    const map = new Map<string, Bounds>();
-    if (layout) {
-      items.forEach((item) => {
-        map.set(item.id, layout(item));
-      });
-    }
-
-    return map;
-  }, [layout, items]);
-
-  // TODO(burdon): Overdraw bounds so can click outside.
+  // TODO(burdon): Editable mode on zoom.
   const handleSelect = (item: Item) => {
     if (item === selected) {
       handleReset();
       return;
     }
 
-    const { x, y, width, height } = bounds.get(item.id)!;
+    const { x, y, width, height } = layout.getBounds(item.id)!;
 
     // Center on cell.
     const dx = center!.x - x - width / 2;
@@ -123,7 +129,14 @@ export const Grid = ({ items = [], layout, onSelect }: GridProps) => {
   return (
     <div ref={containerRef} className='flex flex-1 bg-gray-200' style={style} onClick={() => handleReset()}>
       {layout &&
-        items.map((item) => <Cell key={item.id} item={item} bounds={bounds.get(item.id)!} onClick={handleSelect} />)}
+        items.map((item) => {
+          const bounds = layout.getBounds(item.id);
+          if (!bounds) {
+            return null;
+          }
+
+          return <Cell key={item.id} item={item} bounds={bounds} onClick={handleSelect} />;
+        })}
     </div>
   );
 };

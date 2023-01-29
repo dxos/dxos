@@ -8,53 +8,9 @@ import { Event } from '@dxos/async';
 import { Client, ClientServicesProvider, fromHost, PublicKey } from '@dxos/client';
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-<<<<<<< Updated upstream
 import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
 
 import { AgentStateMachine, AgentContext, DummyStateMachine } from './statemachine';
-=======
-import { AgentSpec, Command, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
-
-export type StateMachineFactory = (id: string) => AgentStateMachine;
-
-/**
- * Base class for custom state machines.
- */
-export abstract class AgentStateMachine {
-  public _agent?: AgentContext;
-
-  get agent(): AgentContext {
-    assert(this._agent);
-    return this._agent;
-  }
-
-  setContext(agent: AgentContext) {
-    assert(agent);
-    this._agent = agent;
-    return this;
-  }
-
-  abstract processCommand(command: Command): Promise<void>;
-}
-
-/**
- * Dummy state machine.
- */
-export class DummyStateMachine extends AgentStateMachine {
-  public count = 0;
-  override async processCommand(command: Command) {
-    this.count++;
-  }
-}
-
-/**
- * Interface for state machine to acess agent state.
- * E.g., client, stats, etc.
- */
-export interface AgentContext {
-  client: Client;
-}
->>>>>>> Stashed changes
 
 export type AgentParams = {
   config: ConfigProto;
@@ -117,10 +73,6 @@ export class Agent implements AgentContext {
   }
 
   async start() {
-<<<<<<< Updated upstream
-=======
-    log('starting...', { id: this.id });
->>>>>>> Stashed changes
     if (this._running) {
       return;
     }
@@ -129,7 +81,6 @@ export class Agent implements AgentContext {
       await this.runSequence(this._spec.startSequence);
     }
 
-<<<<<<< Updated upstream
     log.info('Starting test sequences...');
     for (const sequence of this._spec.testSequences ?? []) {
       await this.runSequence(sequence);
@@ -137,18 +88,6 @@ export class Agent implements AgentContext {
     }
     log.info('Test sequences complete.');
 
-=======
-    // TODO(burdon): Config sequentially or randomly run test sequences.
-    //  - Config interval.
-    setTimeout(async () => {
-      for (const sequence of this._spec.testSequences ?? []) {
-        await this.runSequence(sequence);
-        this.sequenceComplete.emit(sequence);
-      }
-    });
-
-    log('started', { id: this.id });
->>>>>>> Stashed changes
     this._running = true;
   }
 
@@ -168,11 +107,7 @@ export class Agent implements AgentContext {
 
   async runSequence(sequence: CommandSequence) {
     for (const command of sequence.commands ?? []) {
-<<<<<<< Updated upstream
       log.info('processing: ', { command });
-=======
-      log('processing', { command });
->>>>>>> Stashed changes
       await this._stateMachine.processCommand(command);
     }
   }

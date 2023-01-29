@@ -12,10 +12,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-<<<<<<< Updated upstream
 import { schema } from '@dxos/protocols';
-=======
->>>>>>> Stashed changes
 import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Agent } from './agent';
@@ -58,7 +55,6 @@ const main = () => {
         config: string;
         spec: string;
       }) => {
-<<<<<<< Updated upstream
         try {
           const config: ConfigProto = yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
           if (verbose) {
@@ -85,22 +81,6 @@ const main = () => {
           log.error(err);
           process.exit(1);
         }
-=======
-        const config: ConfigProto = yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
-        if (verbose) {
-          log('config', { config });
-        }
-
-        const spec: AgentSpec = yaml.load(fs.readFileSync(specFilepath).toString()) as ConfigProto;
-        if (verbose) {
-          log('spec', { spec });
-        }
-
-        // TODO(burdon): Start with config; e.g., create party and invitation from pre-configured swarm.
-        const agent = await new Agent({ config, spec });
-        await agent.initialize();
-        await agent.start();
->>>>>>> Stashed changes
       }
     }).argv;
   // parser.parse();
