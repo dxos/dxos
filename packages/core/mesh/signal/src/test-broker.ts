@@ -87,6 +87,7 @@ export class TestBroker {
         waited = waited + waitInc;
       }
     }
+
     if (waited >= this._timeout) {
       this.stop();
       this._serverProcess = this.startProcess();
@@ -94,6 +95,7 @@ export class TestBroker {
       if (this._startRetries > this._retriesLimit) {
         throw new Error('Test Signal server was not started');
       }
+
       return await this.waitUntilStarted();
     }
   }

@@ -39,7 +39,7 @@ import {
   SketchFrame,
   TableFrame,
   TasksFrame
-} from '../containers';
+} from '../frames';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
 

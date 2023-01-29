@@ -11,9 +11,9 @@ import { log } from '@dxos/log';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { CardRow, Input } from '../../components';
-import { EmbeddedFrame } from '../../frames';
-import { useSpace } from '../../hooks';
+import { CardRow, Input } from '../components';
+import { EmbeddedFrame } from '../frame-container';
+import { useSpace } from '../hooks';
 
 export const CodeFrame = withReactor(() => {
   const [selected, setSelected] = useState<Frame | undefined>(undefined);

@@ -13,6 +13,8 @@ import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 import { cities } from './data';
 import { Contact, Document, Event, Organization, Project, Task } from './gen/schema';
 
+// TODO(burdon): Factor out all testing deps (and separately testing protos).
+
 export type MinMax = { min: number; max: number } | number;
 
 export const range = (range: MinMax) => Array.from({ length: faker.datatype.number(range as any) });
