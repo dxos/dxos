@@ -12,6 +12,10 @@ import mainUrl from './frame-main?url';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import frameSrc from './frame.html?raw';
+import { useClient } from '@dxos/react-client';
+import { clientServiceBundle } from '@dxos/client-services'
+import { createProtoRpcPeer } from '@dxos/rpc';
+import { createIFramePort } from '@dxos/rpc-tunnel';
 
 export type EmbeddedFrameProps = {
   frame: Frame;
@@ -38,8 +42,25 @@ export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  const client = useClient();
   useEffect(() => {
     if(iframeRef.current) {
+      const port = createIFramePort({
+        channel: 'frame',
+        iframe: iframeRef.current,
+        origin: '*',
+      })
+      
+      const rpc = createProtoRpcPeer({
+        port,
+        exposed: clientServiceBundle,
+        handlers: (client as any)._services.services,
+      })
+
+      rpc.open().catch(console.error);
+      return () => {
+        rpc.close().catch(console.error);
+      }
     }
   }, [iframeRef]);
 

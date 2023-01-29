@@ -2958,6 +2958,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
@@ -2978,6 +2979,8 @@ importers:
       '@dxos/react-composer': workspace:*
       '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
       '@sentry/react': ^7.17.2
       '@swc-node/register': ^1.5.4
@@ -3040,6 +3043,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
@@ -3059,6 +3063,8 @@ importers:
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
       '@sentry/react': 7.20.0_react@18.2.0
       assert: 2.0.0

@@ -125,11 +125,13 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
 
 const EXAMPLE = `
 import React, { useState } from 'react'
+import { useIdentity } from '@dxos/react-client'
 
 const Frame = () => {
   const [counter, setCounter] = useState(0)
+  const identity = useIdentity()
 
-  return <div>Hello world</div>
+  return <div>Identity: {JSON.stringify(identity)}</div>
 }
 
 export default Frame;
