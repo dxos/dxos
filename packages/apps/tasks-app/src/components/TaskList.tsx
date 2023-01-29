@@ -3,7 +3,7 @@
 //
 
 import { Plus } from 'phosphor-react';
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { Button, getSize, Loading } from '@dxos/react-components';
@@ -26,6 +26,21 @@ export type Task = {
   completed: boolean;
 };
 
+const setCaretPosition = (el: any, pos: number) => {
+  if (el.createTextRange) {
+    const range = el.createTextRange();
+    range.move('character', pos);
+    range.select();
+  } else {
+    if (el.selectionStart) {
+      el.focus();
+      el.setSelectionRange(pos, pos);
+    } else {
+      el.focus();
+    }
+  }
+};
+
 export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
   const { tasks, title, onTitleChanged, onTaskCreate, onTaskTitleChanged, onTaskCompleteChanged, onTaskDeleted } =
     props;
@@ -33,6 +48,10 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
     return <Loading label='Loading' />;
   }
   const empty = <div className='py-5 px-3 text-neutral-500'>There are no tasks to show</div>;
+  const tasksRefs = useRef<HTMLInputElement[]>([]);
+  useEffect(() => {
+    tasksRefs.current = tasksRefs.current.slice(0, props.tasks.length);
+  }, [tasks]);
   return (
     <div role='none' className='my-5 py-2 px-6 bg-white dark:bg-neutral-700/50 rounded shadow'>
       <div>
@@ -44,8 +63,9 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
         />
       </div>
       <List empty={empty}>
-        {(tasks ?? []).map((task) => (
+        {(tasks ?? []).map((task, i) => (
           <CheckboxItem
+            ref={(el) => (el ? (tasksRefs.current[i] = el) : null)}
             key={task[id]}
             {...{
               placeholder: 'type here',
@@ -54,13 +74,26 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
               onChecked: (completed) => onTaskCompleteChanged?.(task, completed),
               onTextChanged: (title) => onTaskTitleChanged?.(task, title),
               onDeleteClicked: () => onTaskDeleted?.(task),
+              onInputKeyDown: (e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                }
+              },
               onInputKeyUp: (e) => {
-                if (e.key === 'Enter') {
-                  // TODO: go to next item or create new
-                } else if (e.key === 'Up') {
-                  // TODO: go up one item
-                } else if (e.key === 'Down') {
-                  // TODO: go to next item or create new
+                const caret = (e.target as HTMLInputElement).selectionStart;
+                console.log(e.key, caret);
+                if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                  const el = tasksRefs.current[i + 1];
+                  if (el) {
+                    el?.focus();
+                    setCaretPosition(el, caret ?? 0);
+                  }
+                } else if (e.key === 'ArrowUp') {
+                  const el = tasksRefs.current[i - 1];
+                  if (el) {
+                    el?.focus();
+                    setCaretPosition(el, caret ?? 0);
+                  }
                 }
               }
             }}

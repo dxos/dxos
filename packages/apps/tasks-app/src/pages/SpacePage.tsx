@@ -35,7 +35,6 @@ export const SpacePage = withReactor(() => {
         taskList.tasks.push(task);
       }}
       onTaskTitleChanged={(task, title) => {
-        console.log('task title changed', task, title);
         task.title = title;
       }}
       onTaskCompleteChanged={(task, completed) => {
