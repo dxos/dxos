@@ -18,6 +18,7 @@ export type IPFSFile = {
  * Returns a list of mapped IPFS files.
  * @param space
  * @param type
+ * @deprecated
  */
 export const useIpfsFiles = (space: Space | undefined, type: string) => {
   // TODO(burdon): Schema definitions for types?
@@ -38,6 +39,9 @@ export const useIpfsFiles = (space: Space | undefined, type: string) => {
   return files;
 };
 
+/**
+ * @deprecated
+ */
 // TODO(wittjosiah): This is not returning IPFSFiles.
 export const uploadFilesToIpfs = async (ipfsClient: IPFSHTTPClient, files: File[], onError?: (error: Error) => void) =>
   await Promise.all(

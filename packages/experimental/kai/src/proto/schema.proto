@@ -141,6 +141,7 @@ message Sketch {
 message File {
   option (object) = true;
 
-  string title = 1;
-  string cid = 2;
+  string name = 1;
+  string timestamp = 2;
+  string cid = 3;
 }
