@@ -64,7 +64,7 @@ export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
     }
   }, [iframeRef]);
 
-  return <iframe ref={iframeRef} srcDoc={html} sandbox="allow-scripts" />;
+  return <iframe style={{ width: '100%', height: '100%' }} ref={iframeRef} srcDoc={html} sandbox="allow-scripts" />;
 };
 
 const createReexportingModule = (namedImports: string[], key: string) => {

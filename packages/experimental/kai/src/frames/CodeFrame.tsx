@@ -59,12 +59,14 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
         frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
         onSelected(frame);
       });
+    } else {
+      onSelected(frames[0]);
     }
   }, []);
 
   return (
     <div>
-      {frames.map((frame) => (
+      {/* {frames.map((frame) => (
         <CardRow
           key={frame[id]}
           action={
@@ -89,8 +91,8 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
             />
           }
         />
-      ))}
-      <CardRow
+      ))} */}
+      {/* <CardRow
         action={
           <Button
             className='text-gray-300'
@@ -118,7 +120,7 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
             onChange={(e) => setNewFrame(e.target.value)}
           />
         }
-      />
+      /> */}
     </div>
   );
 });

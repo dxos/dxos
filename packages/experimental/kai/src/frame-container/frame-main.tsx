@@ -16,7 +16,7 @@ const Component = Function('React', "return React.lazy(() => import('@frame/bund
 
 // TODO(dmaretskyi): This can actually be done from the parent window via `iframe.contentWindow`.
 reexportModule('react', await import('react'));
-reexportModule('react-dom', await import('react-dom'));
+reexportModule('react-dom/client', await import('react-dom/client'));
 reexportModule('@dxos/client', await import('@dxos/client'));
 reexportModule('@dxos/react-client', await import('@dxos/react-client'));
 reexportModule('@dxos/echo-schema', await import('@dxos/echo-schema'));
@@ -30,7 +30,7 @@ const port = createIFramePort({
 const services = new ClientServicesProxy(port);
 
 createRoot(document.getElementById('root')!).render(
-  <div>
+  <div className='flex w-full h-full'>
     <ClientProvider services={() => services}>
       <Component />
     </ClientProvider>

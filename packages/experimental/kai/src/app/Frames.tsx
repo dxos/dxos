@@ -140,7 +140,7 @@ export const frames: FrameDef[] = [
   },
   {
     id: FrameID.CODE,
-    title: 'Code',
+    title: 'Sandbox',
     description: 'Realtime collaborative code sandbox.',
     Icon: Code,
     Component: CodeFrame
