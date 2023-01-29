@@ -145,3 +145,22 @@ message File {
   string timestamp = 2;
   string cid = 3;
 }
+
+message NoteBoard {
+  message NotePoint { // TODO(burdon): Name collision.
+    int32 x = 1;
+    int32 y = 2;
+  }
+
+  option (object) = true;
+
+  string name = 1;
+  repeated NotePoint points = 2;
+}
+
+message Note {
+  option (object) = true;
+
+  string name = 1;
+  TextObject content = 2;
+}

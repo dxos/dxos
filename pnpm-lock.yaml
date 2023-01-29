@@ -221,8 +221,13 @@ importers:
   docs:
     specifiers:
       '@dxos/apidoc': workspace:*
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/telemetry': workspace:*
@@ -258,8 +263,13 @@ importers:
       vuepress-theme-hope: 2.0.0-beta.143
     devDependencies:
       '@dxos/apidoc': link:../tools/apidoc
+      '@dxos/async': link:../packages/common/async
       '@dxos/client': link:../packages/sdk/client
       '@dxos/config': link:../packages/sdk/config
+      '@dxos/echo-schema': link:../packages/core/echo/echo-schema
+      '@dxos/echo-typegen': link:../packages/core/echo/echo-typegen
+      '@dxos/keys': link:../packages/common/keys
+      '@dxos/log': link:../packages/common/log
       '@dxos/protocols': link:../packages/core/protocols
       '@dxos/react-client': link:../packages/sdk/react-client
       '@dxos/telemetry': link:../packages/common/telemetry

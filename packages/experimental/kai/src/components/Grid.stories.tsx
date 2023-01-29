@@ -10,7 +10,7 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { Bounds, Grid, Item, Layout, Point } from './Grid';
+import { TestGridLayout, Grid, Item } from './Grid';
 
 export default {
   component: Grid,
@@ -49,48 +49,9 @@ faker.seed(100);
 // TODO(burdon): Simple card stack on mobile.
 // TODO(burdon): Move to separate repo.
 
-// TODO(burdon): Check doesn't overlap.
-// TODO(burdon): Figure out coordinates: logical [x, y] to projected (based on center translation).
-class TestLayout implements Layout {
-  private readonly _logical = new Map<string, Point | undefined>();
-  private readonly _items = new Map<string, Bounds | undefined>();
-
-  private _center?: Point;
-
-  // TODO(burdon): Garbage collection.
-  updateItems(items: Item[]) {
-    const range = 3;
-    items.forEach((item) => {
-      this._logical.set(item.id, {
-        x: faker.datatype.number({ min: -range, max: range }),
-        y: faker.datatype.number({ min: -range, max: range })
-      });
-    });
-  }
-
-  updateBounds(bounds: Bounds, grid: number, size: number): void {
-    this._center = { x: bounds.width / 2, y: bounds.height / 2 };
-    this._items.clear();
-    for (const [id, point] of this._logical) {
-      if (point) {
-        this._items.set(id, {
-          x: this._center.x - grid / 2 + point.x * grid,
-          y: this._center.y - grid / 2 + point.y * grid,
-          width: size + 1,
-          height: size + 1
-        });
-      }
-    }
-  }
-
-  getBounds(id: string) {
-    return this._items.get(id);
-  }
-}
-
 const Test = () => {
-  const { ref: containerRef, width, height } = useResizeDetector();
-  const layout = useMemo(() => new TestLayout(), []);
+  const { ref: containerRef } = useResizeDetector();
+  const layout = useMemo(() => new TestGridLayout(), []);
 
   const num = 20;
   const items: Item[] = useMemo(
@@ -106,13 +67,6 @@ const Test = () => {
   useEffect(() => {
     layout.updateItems(items);
   }, [items]);
-
-  const size = 200;
-  const padding = 20;
-  useEffect(() => {
-    const bounds = containerRef.current.getBoundingClientRect();
-    layout.updateBounds(bounds, size + padding, size);
-  }, [width, height, size, padding]);
 
   const handleSelect = (item: Item) => {
     console.log(item);
