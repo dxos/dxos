@@ -7,6 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { range } from '@dxos/util';
+
 import '@dxosTheme';
 
 import { Bounds, Grid, Item, Layout, Point } from './Grid';
@@ -18,7 +19,18 @@ export default {
 
 faker.seed(100);
 
-// TODO(burdon): https://th.ink
+//     un-think-able
+//   free-think-ing
+// double-think
+//  group-think
+//    out-think-ing
+//     re-think
+//   over-think
+//        think-er
+//     me-think-s
+//        think-about-it
+//        think
+
 // TODO(burdon): Test drag-and-drop (with react and d3 libs).
 // TODO(burdon): Text editor inside each cell (only editable when focused).
 // TODO(burdon): Create node in empty cell and placeholder on drag.

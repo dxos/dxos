@@ -10,6 +10,7 @@ export * from './ExplorerFrame';
 export * from './FileFrame';
 export * from './KanbanFrame';
 export * from './MapFrame';
+export * from './NotesFrame';
 export * from './RegistryFrame';
 export * from './SketchFrame';
 export * from './StackFrame';
