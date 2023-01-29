@@ -14,6 +14,10 @@ console.log('frame main');
 // eslint-disable-next-line no-new-func
 const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
 
+const reexportModule = (key: string, module: any) => {
+  ((window as any).__DXOS_FRAMEBOX_MODULES ??= {})[key] = module;
+};
+
 // TODO(dmaretskyi): This can actually be done from the parent window via `iframe.contentWindow`.
 reexportModule('react', await import('react'));
 reexportModule('react-dom/client', await import('react-dom/client'));
@@ -37,6 +41,3 @@ createRoot(document.getElementById('root')!).render(
   </div>
 );
 
-const reexportModule = (key: string, module: any) => {
-  ((window as any).__DXOS_FRAMEBOX_MODULES ??= {})[key] = module;
-};
