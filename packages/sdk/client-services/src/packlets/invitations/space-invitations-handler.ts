@@ -328,6 +328,9 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
     scheduleTask(ctx, async () => {
       assert(invitation.swarmKey);
+      assert(!invitation.invitationId);
+      invitation.invitationId = PublicKey.random().toHex();
+
       const topic = invitation.swarmKey;
       const swarmConnection = await this._networkManager.joinSwarm({
         topic,

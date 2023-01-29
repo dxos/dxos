@@ -29,7 +29,10 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
+<<<<<<< Updated upstream
     "@dxos/testutils": "0.1.13",
+=======
+>>>>>>> Stashed changes
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
@@ -39,6 +42,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
+    "@dxos/testutils": "workspace:*",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^18.11.9",
     "@types/node-ipc": "^9.2.0",

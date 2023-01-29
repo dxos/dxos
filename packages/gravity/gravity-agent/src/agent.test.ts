@@ -11,10 +11,16 @@ import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AgentSpec, Command } from '@dxos/protocols/proto/dxos/gravity';
+<<<<<<< Updated upstream
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Agent } from './agent';
 import { AgentStateMachine, StateMachineFactory } from './statemachine';
+=======
+import { afterTest } from '@dxos/testutils';
+
+import { Agent, AgentStateMachine, StateMachineFactory } from './agent';
+>>>>>>> Stashed changes
 
 // TODO(burdon): Run local signal server for tests.
 describe('Agent', () => {
@@ -31,8 +37,12 @@ describe('Agent', () => {
     await agent.destroy();
   });
 
+<<<<<<< Updated upstream
   // TODO(burdon): Skipped since hangs on closing.
   test.skip('creates a space', async () => {
+=======
+  it('creates a space', async function () {
+>>>>>>> Stashed changes
     const config: ConfigProto = { version: 1 };
     const agent = new Agent({ config });
     await agent.initialize();
@@ -42,9 +52,14 @@ describe('Agent', () => {
     await agent.destroy();
   });
 
+<<<<<<< Updated upstream
   // TODO(burdon): Skipped since hangs on closing.
   test.skip('tests two agents', async () => {
+=======
+  it.only('tests two agents', async function () {
+>>>>>>> Stashed changes
     const config: ConfigProto = { version: 1 };
+
     const swarmKey = PublicKey.random();
 
     const spec1: AgentSpec = {
@@ -67,7 +82,11 @@ describe('Agent', () => {
             {
               createSpaceInvitation: {
                 id: 'space-1',
+<<<<<<< Updated upstream
                 swarmKey: swarmKey.toHex()
+=======
+                swarmKey
+>>>>>>> Stashed changes
               }
             }
           ]
@@ -89,7 +108,11 @@ describe('Agent', () => {
           commands: [
             {
               acceptSpaceInvitation: {
+<<<<<<< Updated upstream
                 swarmKey: swarmKey.toHex()
+=======
+                swarmKey
+>>>>>>> Stashed changes
               }
             }
           ]
@@ -101,6 +124,7 @@ describe('Agent', () => {
     // TODO(burdon): Error handling.
 
     const testBuilder = new TestBuilder();
+<<<<<<< Updated upstream
 
     // TODO(burdon): Extend TestBuilder pattern for gravity-agent package.
     const agent1 = new Agent({
@@ -120,6 +144,25 @@ describe('Agent', () => {
     await Promise.all([agent1.initialize(), agent2.initialize()]);
     afterTest(() => Promise.all([agent1.destroy(), agent2.destroy()]));
 
+=======
+    const agent1 = new Agent({
+      config,
+      services: testBuilder.createClientServicesHost(),
+      spec: spec1,
+      stateMachine: testStateMachineFactory(spec1.stateMachine!)
+    });
+    const agent2 = new Agent({
+      config,
+      services: testBuilder.createClientServicesHost(),
+      spec: spec2,
+      stateMachine: testStateMachineFactory(spec2.stateMachine!)
+    });
+
+    // Initialize.
+    await Promise.all([agent1.initialize(), agent2.initialize()]);
+    afterTest(() => Promise.all([agent1.destroy(), agent2.destroy()]));
+
+>>>>>>> Stashed changes
     // Run sequences.
     const space1 = new Trigger<Space>();
     const space2 = new Trigger<Space>();
@@ -186,7 +229,11 @@ class HostAgentStateMachine extends AgentStateMachine {
       const space = this.spaces.get(id)!;
       const observable = await space.createInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,
+<<<<<<< Updated upstream
         swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey)
+=======
+        swarmKey: command.createSpaceInvitation.swarmKey
+>>>>>>> Stashed changes
       });
 
       const trigger = new Trigger();
@@ -216,7 +263,11 @@ class GuestAgentStateMachine extends AgentStateMachine {
     } else if (command.acceptSpaceInvitation) {
       const observable = await this.agent.client.echo.acceptInvitation({
         type: Invitation.Type.INTERACTIVE_TESTING,
+<<<<<<< Updated upstream
         swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey)
+=======
+        swarmKey: command.acceptSpaceInvitation.swarmKey
+>>>>>>> Stashed changes
       });
 
       const trigger = new Trigger();
