@@ -124,14 +124,21 @@ export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) 
 });
 
 const EXAMPLE = `
-import React, { useState } from 'react'
-import { useIdentity } from '@dxos/react-client'
+import React from 'react'
+import { useQuery, useSpaces } from '@dxos/react-client'
+import { Task } from '@kai/schema'
 
 const Frame = () => {
-  const [counter, setCounter] = useState(0)
-  const identity = useIdentity()
+  const [space] = useSpaces()
+  const tasks = useQuery(space, Task.filter())
 
-  return <div>Identity: {JSON.stringify(identity)}</div>
+  return (
+    <ul>
+      {tasks.map(task => (
+        <li key={task.id}>{task.title}</li>
+      ))}
+    </ul>
+  )
 }
 
 export default Frame;

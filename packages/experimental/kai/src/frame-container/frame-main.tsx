@@ -19,6 +19,8 @@ reexportModule('react', await import('react'));
 reexportModule('react-dom', await import('react-dom'));
 reexportModule('@dxos/client', await import('@dxos/client'));
 reexportModule('@dxos/react-client', await import('@dxos/react-client'));
+reexportModule('@dxos/echo-schema', await import('@dxos/echo-schema'));
+reexportModule('@kai/schema', await import('../proto/gen/schema'));
 
 const port = createIFramePort({
   channel: 'frame',
