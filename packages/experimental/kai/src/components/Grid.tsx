@@ -5,9 +5,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { mx } from '@dxos/react-components';
+
 export type Item = {
   id: string;
   label: string;
+  content: string;
   children?: Item[];
 };
 
@@ -27,14 +30,24 @@ const Cell = ({ item, bounds, onClick }: CellProps) => {
   // prettier-ignore
   return (
     <div
-      className='absolute flex justify-center items-center bg-white border border-gray-500 select-none cursor-pointer'
+      className={mx(
+        'absolute flex flex-col overflow-hidden p-2',
+        'bg-white border border-gray-500 select-none cursor-pointer'
+      )}
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
       onClick={(event) => {
         event.stopPropagation();
         onClick?.(item, event);
       }}
     >
-      {item.label}
+      <div className='flex flex-col overflow-hidden'>
+        <div className='text-sm mb-2'>
+          <h2>{item.label}</h2>
+        </div>
+        <div className='text-xs text-gray-500'>
+          {item.content}
+        </div>
+      </div>
     </div>
   );
 };
@@ -46,6 +59,7 @@ const Cell = ({ item, bounds, onClick }: CellProps) => {
 export type GridProps = { items?: Item[]; layout?: Layout; onSelect?: (item: Item) => void };
 
 export const Grid = ({ items = [], layout, onSelect }: GridProps) => {
+  const transitionDelay = 500;
   const zoomFactor = 2;
 
   const [selected, setSelected] = useState<Item>();
@@ -60,7 +74,7 @@ export const Grid = ({ items = [], layout, onSelect }: GridProps) => {
 
   // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
   const [style, setStyle] = useState<any>({
-    transition: '500ms ease-in-out',
+    transition: `${transitionDelay}ms ease-in-out`,
     transform: 'scale(1)'
   });
 

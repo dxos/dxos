@@ -18,35 +18,43 @@ export default {
 
 faker.seed(100);
 
-// TODO(burdon): Grid class.
-// TODO(burdon): Border (inset). Set position.
-const snapper = (n: number, s: number) => Math.floor(n / s) * s;
+// TODO(burdon): Cartesian coordinates.
 
-const items: Item[] = range(50).map((i) => ({ id: String(i), label: `${i}` }));
+// TODO(burdon): Test drag-and-drop (with react and d3 libs).
+// TODO(burdon): Text editor inside each cell (only editable when focused).
 
-// TODO(burdon): Zoom to cell.
+// TODO(burdon): Hierarchical data model (zoom into children then redraw/reset zoom).
 // TODO(burdon): Test containers with nested transform/scaled.
+// TODO(burdon): Layout class.
 
-// TODO(burdon): Test drag-and-drop.
-// TODO(burdon): Test animate move.
-// TODO(burdon): Hierarchical data model.
 // TODO(burdon): SVG connection points.
-// TODO(burdon): Layout with precise positioning (fractions). Snap grid.
 // TODO(burdon): Draw grid.
+
+// TODO(burdon): Grid class.
+// TODO(burdon): Simple card stack on mobile.
+
+const snapper = (n: number, s: number) => Math.floor(n / s) * s;
 
 const Test = () => {
   const { ref: containerRef, width, height } = useResizeDetector();
 
-  const size = 120;
-  const snap = (n: number) => snapper(n, size);
+  const size = 160;
+  const padding = 16;
+  const num = 20;
 
-  // TODO(burdon): Layout class.
-  // TODO(burdon): Grid vs. size.
+  const snap = (n: number) => snapper(n, size + padding);
+
+  const items: Item[] = range(num).map((i) => ({
+    id: String(i),
+    label: faker.lorem.words(3),
+    content: faker.lorem.sentences(faker.datatype.number(3))
+  }));
+
   const layout =
     width && height
       ? (item: Item): Bounds => ({
-          x: snap(faker.datatype.number(width)),
-          y: snap(faker.datatype.number(height)),
+          x: snap(faker.datatype.number(width)) + padding / 2,
+          y: snap(faker.datatype.number(height)) + padding / 2,
           width: size + 1,
           height: size + 1
         })
@@ -57,7 +65,7 @@ const Test = () => {
   };
 
   return (
-    <div ref={containerRef} className='absolute flex left-0 right-0 top-0 bottom-0'>
+    <div ref={containerRef} className='flex absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 overflow-auto bg-gray-500'>
         <Grid items={items} layout={layout} onSelect={handleSelect} />
       </div>

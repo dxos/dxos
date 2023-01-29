@@ -22,7 +22,7 @@ import { LatLng, Organization } from '../proto';
 
 const defaults = {
   center: { lat: 37.970833, lng: 23.72611 } as LatLngExpression,
-  zoom: 14
+  zoom: 13
 };
 
 export const MapFrame = () => {
