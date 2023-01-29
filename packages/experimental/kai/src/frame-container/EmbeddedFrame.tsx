@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { Frame } from '@dxos/framebox';
 
@@ -35,7 +35,15 @@ export const EmbeddedFrame = ({ frame }: EmbeddedFrameProps) => {
     })
   );
 
-  return <iframe srcDoc={html} />;
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if(iframeRef.current) {
+    }
+  }, [iframeRef]);
+
+  return <iframe ref={iframeRef} srcDoc={html} sandbox="allow-scripts" />;
 };
 
 const createReexportingModule = (namedImports: string[], key: string) => {

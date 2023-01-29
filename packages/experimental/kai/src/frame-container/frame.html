@@ -21,7 +21,8 @@ Copyright 2023 DXOS.org
   <body>
     <div id="root"></div>
     <script type="module">
-      import '@frame/main';
+      // Trick vite into not compiling this code.
+      eval('import("@frame/main")');
     </script>
   </body>
 </html>

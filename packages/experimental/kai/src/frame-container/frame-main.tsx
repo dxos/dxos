@@ -10,6 +10,7 @@ console.log('frame main');
 // eslint-disable-next-line no-new-func
 const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
 
+// TODO(dmaretskyi): This can actually be done from the parent window via `iframe.contentWindow`.
 reexportModule('react', await import('react'));
 reexportModule('react-dom', await import('react-dom'));
 
