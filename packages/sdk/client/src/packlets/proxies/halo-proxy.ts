@@ -73,7 +73,7 @@ export class HaloProxy implements Halo {
   // TODO(burdon): Include deviceId.
   toJSON() {
     return {
-      key: this._profile?.identityKey
+      key: this._profile?.identityKey.truncate()
     };
   }
 

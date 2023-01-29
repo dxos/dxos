@@ -4,7 +4,11 @@
     <!-- TODO(wittjosiah): CodeSandbox not respecting patch-package from api. -->
     <RenderReactDemo
       :demo="demo"
-      :fork="false"
+      :peerCount="peers"
+      :airplaneControl="controls.includes('airplane')"
+      :forkable="controls.includes('fork')"
+      :createIdentity="setup.includes('identity')"
+      :createSpace="setup.includes('space')"
     />
 
     <template #fallback>
@@ -16,7 +20,7 @@
   </div>
 </template>
 
-<style>
+<style scoped>
 .showcase-preview {
   border: 1px solid var(--c-border);
   border-radius: 6px;
@@ -35,7 +39,7 @@
   transition-duration: 150ms;
 }
 
-.showcase-loading.show {
+.show {
   opacity: 1;
 }
 </style>
@@ -49,6 +53,18 @@
     demo: {
       type: String,
       required: true
+    },
+    peers: {
+      type: Number,
+      default: 1
+    },
+    controls: {
+      type: Array,
+      default: []
+    },
+    setup: {
+      type: Array,
+      default: []
     }
   });
 
