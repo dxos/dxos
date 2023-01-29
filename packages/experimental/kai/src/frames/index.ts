@@ -1,5 +1,17 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-export * from './EmbeddedFrame';
+export * from './CalendarFrame';
+export * from './ChessFrame';
+export * from './CodeFrame';
+export * from './DocumentFrame';
+export * from './ExplorerFrame';
+export * from './FileFrame';
+export * from './KanbanFrame';
+export * from './MapFrame';
+export * from './RegistryFrame';
+export * from './SketchFrame';
+export * from './StackFrame';
+export * from './TableFrame';
+export * from './TasksFrame';

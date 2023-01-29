@@ -12,9 +12,9 @@ import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { List, ListItemButton } from '../../components';
-import { useSpace } from '../../hooks';
-import { LatLng, Organization } from '../../proto';
+import { List, ListItemButton } from '../components';
+import { useSpace } from '../hooks';
+import { LatLng, Organization } from '../proto';
 
 // TODO(burdon): Needs to resize when sidebar opens/closes (if is open initially).
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4

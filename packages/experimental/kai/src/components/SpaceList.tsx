@@ -9,6 +9,7 @@ import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { getSize, mx } from '@dxos/react-components';
 
+// TODO(burdon): Generic List control.
 export const SpaceList: FC<{
   value: PublicKey;
   spaces: Space[];

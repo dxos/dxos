@@ -9,9 +9,9 @@ import { id } from '@dxos/echo-schema';
 import { withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
-import { Input, CardRow, Button } from '../../components';
-import { Project, Task } from '../../proto';
-import { DraggableTaskList } from '../DraggableTaskList';
+import { Input, CardRow, Button } from '../components';
+import { Project, Task } from '../proto';
+import { DraggableTaskList } from './DraggableTaskList';
 
 export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) => {
   const handleExpand = () => {};

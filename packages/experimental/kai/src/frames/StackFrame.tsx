@@ -7,11 +7,8 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { TileMenu, Tile, GraphComponent } from '../../components';
-import { ContactList } from '../ContactList';
-import { OrganizationList } from '../OrganizationList';
-import { ProjectHierarchy } from '../ProjectHierarchy';
-import { TaskList } from '../TaskList';
+import { TileMenu, Tile, GraphComponent } from '../components';
+import { ContactList, OrganizationList, ProjectHierarchy, TaskList } from '../containers';
 
 export const StackFrame: FC = () => {
   const { ref } = useResizeDetector();

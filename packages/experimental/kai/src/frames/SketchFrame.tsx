@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
-import { ScribbleLoop, Trash } from 'phosphor-react';
+import assert from 'assert';
+import { DownloadSimple, UploadSimple, ScribbleLoop, Trash } from 'phosphor-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
@@ -11,11 +11,9 @@ import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 import { withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button } from '../../components';
-import { useSpace } from '../../hooks';
-import { Path, Sketch } from '../../proto';
-
-// TODO(burdon): Evaluate GLSP: https://www.eclipse.org/glsp
+import { Button } from '../components';
+import { useFileDownload, useIpfsClient, useSpace } from '../hooks';
+import { File, Path, Sketch } from '../proto';
 
 const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Path => ({
   timestamp: startTimestamp,
@@ -42,10 +40,12 @@ const sizes: any[] = [
 const dimensions = { width: 900, height: 600 };
 
 export const SketchFrame = withReactor(() => {
+  const download = useFileDownload();
   const canvasRef = useRef<any>();
   const [strokeColor, setStrokeColor] = useState('#333');
   const [strokeWidth, setStrokeWidth] = useState(4);
   const active = useRef(false); // TODO(burdon): Review ref pattern.
+  const ipfsClient = useIpfsClient();
 
   const space = useSpace();
   const [sketch, setSketch] = useState<Sketch>();
@@ -112,7 +112,23 @@ export const SketchFrame = withReactor(() => {
     sketch!.paths = [];
   };
 
-  // TODO(burdon): Erase/undo.
+  const handleDownload = async () => {
+    const svg = await canvasRef.current.exportSvg();
+    download(new Blob([svg], { type: 'image/svg+xml' }), 'image.svg');
+  };
+
+  // TODO(burdon): Factor out.
+  const handleUpload = async () => {
+    const name = new Date().toISOString().slice(0, 10) + '.svg';
+    const svg = await canvasRef.current.exportSvg();
+    const { cid, path } = await ipfsClient.add(new Blob([svg]));
+    await ipfsClient.pin.add(cid);
+    const file = new File({ name, cid: path });
+    await space.experimental.db.save(file);
+  };
+
+  // TODO(burdon): Erase mode: eraseMode.
+  // TODO(burdon): Undo.
   // https://www.npmjs.com/package/react-sketch-canvas
   // https://www.npmjs.com/package/react-color
 
@@ -134,19 +150,33 @@ export const SketchFrame = withReactor(() => {
 
       {/* TODO(burdon): Vertical unless mobile. */}
       <div className='flex flex-shrink-0 p-2 bg-gray-200'>
-        <Button onClick={handleClear}>
-          <Trash className={mx(getSize(6), 'mr-2')} />
-        </Button>
-        <GithubPicker width={'100%'} triangle='hide' onChangeComplete={handleColorChange} />
+        <div className='flex items-center mr-4'>
+          <GithubPicker width={'100%'} triangle='hide' onChangeComplete={handleColorChange} />
+        </div>
+
         <div className='flex items-center'>
           {sizes.map(({ weight, width }, i) => (
             <Button key={i} onClick={() => setStrokeWidth(width)}>
               <ScribbleLoop
                 weight={weight}
-                className={mx(getSize(8), 'mx-1', width === strokeWidth && 'bg-gray-200')}
+                className={mx(getSize(8), 'ml-1', width === strokeWidth && 'bg-gray-200')}
               />
             </Button>
           ))}
+        </div>
+
+        <div className='flex-1' />
+
+        <div className='flex items-center'>
+          <Button title='Clear' onClick={handleClear}>
+            <Trash className={mx(getSize(6), 'mr-2')} />
+          </Button>
+          <Button title='Download' onClick={handleDownload}>
+            <DownloadSimple className={mx(getSize(6), 'mr-2')} />
+          </Button>
+          <Button title='Upload' onClick={handleUpload}>
+            <UploadSimple className={mx(getSize(6), 'mr-2')} />
+          </Button>
         </div>
       </div>
     </div>
