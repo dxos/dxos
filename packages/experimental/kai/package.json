@@ -45,6 +45,7 @@
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/sentry": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@sentry/react": "^7.17.2",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",

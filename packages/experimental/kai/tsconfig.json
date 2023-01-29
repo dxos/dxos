@@ -56,6 +56,9 @@
       "path": "../../common/sentry"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
