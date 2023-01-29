@@ -8,9 +8,9 @@ import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
-import { Input } from '../../components';
-import { useSpace } from '../../hooks';
-import { Contact, Organization } from '../../proto';
+import { Input } from '../components';
+import { useSpace } from '../hooks';
+import { Contact, Organization } from '../proto';
 
 // TODO(burdon): Custom views:
 //  - https://jquense.github.io/react-big-calendar/examples/index.html?path=/docs/examples--example-8

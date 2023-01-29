@@ -6,6 +6,7 @@ export * from './app';
 export * from './bots';
 export * from './components';
 export * from './containers';
+export * from './frame-container';
 export * from './frames';
 export * from './hooks';
 export * from './pages';

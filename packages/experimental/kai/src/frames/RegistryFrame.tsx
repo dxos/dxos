@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { Searchbar } from '../../components';
+import { Searchbar } from '../components';
 import {
   BotID,
   FrameID,
@@ -20,7 +20,7 @@ import {
   useFrameDispatch,
   useFrames,
   useSpace
-} from '../../hooks';
+} from '../hooks';
 
 type ExtensionType = 'app' | 'bot';
 
