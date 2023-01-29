@@ -3,7 +3,8 @@
   "targets": {
     "apidoc": {
       "dependsOn": [
-        "^build"
+        "^build",
+        "typedoc"
       ],
       "executor": "nx:run-script",
       "options": {
@@ -47,6 +48,15 @@
         ]
       }
     },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "docs/src/proto/gen"
+      ]
+    },
     "prerelease": {
       "executor": "nx:run-script",
       "options": {
@@ -70,6 +80,9 @@
       "executor": "@dxos/toolbox:exec"
     },
     "typedoc": {
+      "dependsOn": [
+        "^build"
+      ],
       "executor": "nx:run-script",
       "options": {
         "script": "typedoc"
