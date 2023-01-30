@@ -40,7 +40,6 @@ export class DataMirror {
     });
     entities.subscribe(
       async (msg) => {
-        loaded.wake();
         for (const object of msg.objects ?? []) {
           assert(object.itemId);
 
@@ -71,6 +70,9 @@ export class DataMirror {
             }
           }
         }
+
+        // Notify that initial set of items has been loaded.
+        loaded.wake();
       },
       (err) => {
         log(`Connection closed: ${err}`);

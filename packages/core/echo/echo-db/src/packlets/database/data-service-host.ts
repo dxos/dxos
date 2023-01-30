@@ -71,9 +71,9 @@ export class DataServiceHost {
 
       this._itemDemuxer.mutation.on(ctx, (mutation) => {
         log(`Object update`, { mutation });
-        // assert(mutation.data.mutations?.length === 1, 'Only single mutation per item supported');
         next({
           objects: [{
+            ...mutation.data,
             mutations: mutation.data.mutations?.map((m) => ({
               mutation: m.mutation,
               meta: {

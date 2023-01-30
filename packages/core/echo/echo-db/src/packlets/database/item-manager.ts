@@ -70,7 +70,7 @@ export class ItemManager {
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
     private readonly _writeStream?: FeedWriter<DataMessage>
-  ) {}
+  ) { }
 
   get entities() {
     return this._entities;
@@ -134,15 +134,13 @@ export class ItemManager {
           modelType
         },
         itemMutation: parentId ? { parentId } : undefined,
-        mutations: [
+        mutations: !mutation ? [] : [
           {
-            mutation: !mutation
-              ? undefined
-              : {
-                  '@type': 'google.protobuf.Any',
-                  type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-                  value: mutation
-                }
+            mutation: {
+              '@type': 'google.protobuf.Any',
+              type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+              value: mutation
+            }
           }
         ]
       }
