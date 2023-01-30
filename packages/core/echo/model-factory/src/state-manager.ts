@@ -213,7 +213,6 @@ export class StateManager<M extends Model> {
 
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
-      debugger;
       const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation.value);
       assert(mutation.meta);
       this._stateMachine.process(mutationDecoded, {
