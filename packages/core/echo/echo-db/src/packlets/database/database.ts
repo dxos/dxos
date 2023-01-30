@@ -16,7 +16,6 @@ import { DatabaseBackend } from './database-backend';
 import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
-import { Link } from './link';
 import { RootFilter, Selection, createSelection } from './selection';
 
 export interface CreateItemOption<M extends Model> {
@@ -135,31 +134,6 @@ export class Database {
       options.parent,
       options.props
     )) as any;
-  }
-
-  async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>>(
-    options: CreateLinkOptions<M, S, T>
-  ): Promise<Link<M, S, T>> {
-    this._assertInitialized();
-
-    const model = options.model ?? ObjectModel;
-    if (!model) {
-      throw new TypeError('Missing model class.');
-    }
-
-    validateModelClass(model);
-
-    if (options.type && typeof options.type !== ('string' as ItemType)) {
-      throw new TypeError('Invalid type.');
-    }
-
-    return this._itemManager.createLink(
-      model.meta.type,
-      options.type,
-      options.source.id,
-      options.target.id,
-      options.props
-    );
   }
 
   /**

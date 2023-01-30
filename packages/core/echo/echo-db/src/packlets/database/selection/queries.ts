@@ -6,7 +6,6 @@ import { ItemID } from '@dxos/protocols';
 
 import { Entity } from '../entity';
 import { Item } from '../item';
-import { Link } from '../link';
 import { coerceToId, OneOrMultiple, testOneOrMultiple } from './util';
 
 //
@@ -20,10 +19,6 @@ export type ItemIdFilter = {
 export type ItemFilter = {
   type?: OneOrMultiple<string>;
   parent?: ItemID | Item;
-};
-
-export type LinkFilter = {
-  type?: OneOrMultiple<string>;
 };
 
 export type Predicate<T extends Entity> = (entity: T) => boolean;
@@ -83,11 +78,6 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
       (!filter.parent || item.parent?.id === coerceToId(filter.parent));
   }
 };
-
-export const linkFilterToPredicate =
-  (filter: LinkFilter): Predicate<Link> =>
-  (link) =>
-    !filter.type || testOneOrMultiple(filter.type, link.type);
 
 export const createQueryOptionsFilter =
   ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Entity> =>

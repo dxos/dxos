@@ -27,22 +27,7 @@ message SubscribeEntityStreamRequest {
 }
 
 message SubscribeEntityStreamResponse {
-  message Mutation {
-    message Metadata {
-     dxos.keys.PublicKey feed_key = 1;
-     dxos.keys.PublicKey member_key = 2;
-      int32 seq = 3;
-      timeframe.TimeframeVector timeframe = 4;
-    }
-
-    dxos.echo.object.EchoObject data = 1;
-    Metadata meta = 2;
-  }
-
-  oneof kind {
-    object.EchoObject snapshot = 1;
-    Mutation mutation = 2;
-  }
+  object.EchoObject object = 1;
 }
 
 message WriteRequest {

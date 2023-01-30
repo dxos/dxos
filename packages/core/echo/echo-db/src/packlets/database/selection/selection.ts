@@ -6,14 +6,11 @@ import { Event } from '@dxos/async';
 
 import { Entity } from '../entity';
 import { Item } from '../item';
-import { Link } from '../link';
 import {
   createQueryOptionsFilter,
   filterToPredicate,
-  linkFilterToPredicate,
   Callable,
   ItemFilter,
-  LinkFilter,
   Predicate,
   QueryOptions,
   RootFilter
@@ -152,56 +149,6 @@ export class Selection<T extends Entity<any>, R = void> {
   parent(this: Selection<Item<any>, R>): Selection<Item<any>, R> {
     return this._createSubSelection(([items, result], options) => [
       items.flatMap((item) => (item.parent ? [item.parent].filter(createQueryOptionsFilter(options)) : [])),
-      result
-    ]);
-  }
-
-  /**
-   * Select links sourcing from the items in this selection.
-   */
-  links(this: Selection<Item<any>, R>, filter: LinkFilter = {}): Selection<Link, R> {
-    const predicate = linkFilterToPredicate(filter);
-    return this._createSubSelection(([items, result], options) => [
-      items.flatMap((item) => item.links.filter(predicate).filter(createQueryOptionsFilter(options))),
-      result
-    ]);
-  }
-
-  /**
-   * Select links pointing to items in this selection.
-   */
-  refs(this: Selection<Item<any>, R>, filter: LinkFilter = {}): Selection<Link, R> {
-    const predicate = linkFilterToPredicate(filter);
-    return this._createSubSelection(([items, result], options) => [
-      items.flatMap((item) => item.refs.filter(predicate).filter(createQueryOptionsFilter(options))),
-      result
-    ]);
-  }
-
-  /**
-   * Select targets of links in this selection.
-   */
-  target(this: Selection<Link, R>, filter: ItemFilter = {}): Selection<Item<any>, R> {
-    const predicate = filterToPredicate(filter);
-    return this._createSubSelection(([links, result], options) => [
-      links
-        .flatMap((link) => link.target)
-        .filter(predicate)
-        .filter(createQueryOptionsFilter(options)),
-      result
-    ]);
-  }
-
-  /**
-   * Select sources of links in this selection.
-   */
-  source(this: Selection<Link, R>, filter: ItemFilter = {}): Selection<Item<any>, R> {
-    const predicate = filterToPredicate(filter);
-    return this._createSubSelection(([links, result], options) => [
-      links
-        .flatMap((link) => link.source)
-        .filter(predicate)
-        .filter(createQueryOptionsFilter(options)),
       result
     ]);
   }
