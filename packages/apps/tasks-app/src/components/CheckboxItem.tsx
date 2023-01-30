@@ -16,6 +16,7 @@ export type CheckBoxItemProps = {
   text?: string;
   placeholder?: string;
   isChecked?: boolean;
+  autoFocus?: boolean;
   onTextChanged?: (value: string) => any;
   onChecked?: (value: boolean) => any;
   onDeleteClicked?: () => any;
@@ -24,8 +25,17 @@ export type CheckBoxItemProps = {
 };
 
 export const CheckboxItem = forwardRef<Ref, CheckBoxItemProps>((props, ref) => {
-  const { text, isChecked, placeholder, onTextChanged, onChecked, onDeleteClicked, onInputKeyUp, onInputKeyDown } =
-    props;
+  const {
+    text,
+    isChecked,
+    autoFocus,
+    placeholder,
+    onTextChanged,
+    onChecked,
+    onDeleteClicked,
+    onInputKeyUp,
+    onInputKeyDown
+  } = props;
   return (
     <li className='flex items-center gap-2 mbe-2 pl-3'>
       <input
@@ -45,6 +55,7 @@ export const CheckboxItem = forwardRef<Ref, CheckBoxItemProps>((props, ref) => {
         <Input
           ref={ref}
           type='text'
+          autoFocus={autoFocus}
           placeholder={placeholder}
           value={text ?? ''}
           onChange={(e) => onTextChanged?.(e.target.value)}

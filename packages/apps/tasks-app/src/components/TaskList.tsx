@@ -3,7 +3,7 @@
 //
 
 import { Plus } from 'phosphor-react';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, Ref } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { Button, getSize, Loading } from '@dxos/react-components';
@@ -48,6 +48,7 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
     return <Loading label='Loading' />;
   }
   const empty = <div className='py-5 px-3 text-neutral-500'>There are no tasks to show</div>;
+  const titleRef = useRef<HTMLInputElement | null>(null);
   const tasksRefs = useRef<HTMLInputElement[]>([]);
   useEffect(() => {
     tasksRefs.current = tasksRefs.current.slice(0, props.tasks.length);
@@ -56,10 +57,26 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
     <div role='none' className='my-5 py-2 px-6 bg-white dark:bg-neutral-700/50 rounded shadow'>
       <div>
         <Input
+          ref={titleRef}
           className='text-xl'
           placeholder='Title this list ...'
           value={title ?? ''}
-          onChange={(e) => onTitleChanged?.(e.target.value)}
+          autoFocus
+          onChange={(e) => {
+            onTitleChanged?.(e.target.value);
+          }}
+          onKeyUp={(e) => {
+            const caret = (e.target as HTMLInputElement).selectionStart ?? 0;
+            if (e.key === 'Enter' || e.key === 'ArrowDown') {
+              const el = tasksRefs.current[0];
+              if (el) {
+                el?.focus();
+                setCaretPosition(el, caret ?? 0);
+              } else if (!tasksRefs.current.length) {
+                onTaskCreate?.();
+              }
+            }
+          }}
         />
       </div>
       <List empty={empty}>
@@ -67,6 +84,7 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
           <CheckboxItem
             ref={(el) => (el ? (tasksRefs.current[i] = el) : null)}
             key={task[id]}
+            autoFocus
             {...{
               placeholder: 'type here',
               text: task.title,
@@ -80,19 +98,23 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
                 }
               },
               onInputKeyUp: (e) => {
-                const caret = (e.target as HTMLInputElement).selectionStart;
-                console.log(e.key, caret);
+                const caret = (e.target as HTMLInputElement).selectionStart ?? 0;
                 if (e.key === 'Enter' || e.key === 'ArrowDown') {
                   const el = tasksRefs.current[i + 1];
                   if (el) {
                     el?.focus();
                     setCaretPosition(el, caret ?? 0);
+                  } else if (i + 1 >= tasksRefs.current.length) {
+                    onTaskCreate?.();
                   }
                 } else if (e.key === 'ArrowUp') {
                   const el = tasksRefs.current[i - 1];
                   if (el) {
                     el?.focus();
                     setCaretPosition(el, caret ?? 0);
+                  } else if (i - 1 < 0) {
+                    titleRef.current?.focus();
+                    setCaretPosition(titleRef.current, caret);
                   }
                 }
               }

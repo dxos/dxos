@@ -23,37 +23,44 @@ export const Input: FC<InputProps> = ({
   onChange,
   onEnter,
   onBlur,
-  delay = 1000,
+  // delay = 1000,
   ...props
 }) => {
+  const delay = 0;
   const t = useRef<ReturnType<typeof setTimeout>>();
-  const [value, setValue] = useState<string | undefined>(initialValue);
+  // const [value, setValue] = useState<string | undefined>(initialValue);
 
   // TODO(burdon): How to check if value has been updated? Controlled vs. uncontrolled!
-  useEffect(() => {
-    setValue((initialValue as string) ?? '');
-  }, [initialValue]);
-
+  // useEffect(() => {
+  //   setValue((initialValue as string) ?? '');
+  // }, [initialValue]);
+  console.log('input render', JSON.stringify(initialValue));
+  
   const handleUpdate = (value?: string) => {
-    clearTimeout(t.current);
-    setValue(value);
+    console.log('updating', value);
+    // clearTimeout(t.current);
+    // setValue(value);
     onChange?.(value ?? '');
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    clearTimeout(t.current);
-    setValue(event.target.value);
+    // console.log('changing', value);
+    // clearTimeout(t.current);
+    // setValue(event.target.value);
     if (delay > 0) {
       t.current = setTimeout(() => handleUpdate(event.target.value), delay);
+    } else {
+      onChange?.(event.target.value ?? '');
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    const value = (event.target as any).value;
     switch (event.key) {
       case 'Enter': {
         clearTimeout(t.current);
         if (onEnter?.(value ?? '')) {
-          setValue('');
+          // setValue('');
         } else {
           handleUpdate(value);
         }
@@ -71,10 +78,21 @@ export const Input: FC<InputProps> = ({
     }
   };
 
-  const handleBlur = () => {
-    handleUpdate(value);
-    onBlur?.();
-  };
+  // const handleBlur = (e) => {
+  //   handleUpdate(value);
+  //   onBlur?.();
+  // };
 
-  return <input value={value ?? ''} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} {...props} />;
+  return (
+    <input
+      value={initialValue ?? ''}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      onBlur={(e) => {
+        handleUpdate(e.target.value);
+        onBlur?.();
+      }}
+      {...props}
+    />
+  );
 };

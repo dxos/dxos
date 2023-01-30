@@ -3,7 +3,12 @@
 }
 
 [type="checkbox"], [type="radio"] {
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
+
+[type="text"]:focus {
+  border: none;
+  outline: none;
+}
