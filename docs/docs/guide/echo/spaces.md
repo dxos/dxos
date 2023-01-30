@@ -15,8 +15,6 @@ There are several steps to establishing a space between peers:
 4.  Peer A generates an authorization code
 5.  Finally, Peer B must provide the authorization code to Peer A over the connection just established to verify the security of the channel
 
-After a space with a peer is established, the peer's public key becomes "known" to the user's [HALO](../halo) and subsequent mutual spaces are easier to negotiate.
-
 :::tip
 If you're using `react`, DXOS provides a simple [UI flow](react) that implements generating and accepting invitations to spaces.
 :::

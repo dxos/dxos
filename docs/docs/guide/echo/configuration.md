@@ -15,8 +15,9 @@ import { Client } from '@dxos/client';
 // create a client
 const client = new Client();
 ```
-
-In React, wrap your app with `<ClientProvider/>`. See [usage with React](react).
+:::tip
+If using React, `<ClientProvider/>` creates a `Client` for you. See usage with [React](react).
+:::
 
 Before manipulating data, the client needs to create or join a [space](spaces).
 

@@ -1,9 +1,9 @@
 ---
 order: 10
-description: Using ECHO with React
+description: React
 ---
 
-# Using ECHO with React
+# React
 
 Create a `ClientProvider` to allow nested components to `useClient` as well as use the other hooks in `@dxos/react-client`.
 

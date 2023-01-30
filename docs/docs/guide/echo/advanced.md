@@ -1,5 +1,5 @@
 ---
-title: Advanced Scenarios
+title: Advanced scenarios
 order: 20
 ---
 # Advanced scenarios
