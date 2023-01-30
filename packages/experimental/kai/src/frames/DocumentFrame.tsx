@@ -12,7 +12,7 @@ import { Input, Selector } from '../components';
 import { useSpace } from '../hooks';
 import { Document } from '../proto';
 
-export const DocumentFrame: FC = withReactor(() => {
+const DocumentFrame: FC = withReactor(() => {
   const space = useSpace();
   const documents = useQuery(space, Document.filter());
   const [document, setDocument] = useState<Document>();
@@ -65,3 +65,5 @@ export const DocumentFrame: FC = withReactor(() => {
     </div>
   );
 });
+
+export default DocumentFrame;

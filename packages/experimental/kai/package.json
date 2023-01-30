@@ -75,6 +75,7 @@
     "react-syntax-highlighter": "^15.5.0",
     "react-table": "^7.8.0",
     "url-join": "^5.0.0",
+    "vite-plugin-inspect": "^0.7.15",
     "y-prosemirror": "^1.2.0",
     "y-protocols": "^1.0.5",
     "yjs": "^13.5.44"

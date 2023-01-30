@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-components';
 import { TileMenu, Tile, GraphComponent } from '../components';
 import { ContactList, OrganizationList, ProjectHierarchy, TaskList } from '../containers';
 
-export const StackFrame: FC = () => {
+const StackFrame: FC = () => {
   const { ref } = useResizeDetector();
   const cardStyles = 'flex shrink-0';
 
@@ -55,3 +55,5 @@ export const StackFrame: FC = () => {
     </div>
   );
 };
+
+export default StackFrame;

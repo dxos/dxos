@@ -14,7 +14,7 @@ import { getSize, mx } from '@dxos/react-components';
 
 import { useAppState } from '../hooks';
 
-export const SettingsPage = () => {
+const SettingsPage = () => {
   const client = useClient();
   const state = useAppState();
 
@@ -52,3 +52,5 @@ export const SettingsPage = () => {
     </div>
   );
 };
+
+export default SettingsPage;
