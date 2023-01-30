@@ -214,13 +214,6 @@ export class SpaceBuilder {
       }
     }
   }
-
-  async createLink(source: Item<ObjectModel>, target: Item<ObjectModel>) {
-    await this._space.database.createLink({
-      source,
-      target
-    });
-  }
 }
 
 export type Options = {
