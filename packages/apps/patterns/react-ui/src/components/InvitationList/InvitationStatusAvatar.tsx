@@ -5,19 +5,24 @@
 import React, { ComponentPropsWithoutRef } from 'react';
 
 import { Invitation } from '@dxos/client';
-import { getSize, Size } from '@dxos/react-components';
+import { getSize, mx, Size } from '@dxos/react-components';
 
 import { inactiveStrokeColor, activeStrokeColor, resolvedStrokeColor } from '../../styles';
 import { invitationStatusValue } from '../../util';
+
+export interface InvitationStatusAvatarSlots {
+  svg?: ComponentPropsWithoutRef<'svg'>;
+}
 
 export interface InvitationStatusAvatarProps {
   size?: Size;
   status: Invitation.State;
   haltedAt?: Invitation.State;
+  slots?: InvitationStatusAvatarSlots;
 }
 
 const svgSize = 32;
-const strokeWidth = 4;
+const strokeWidth = 5;
 const radius = (svgSize - strokeWidth) / 2;
 const circumference = Math.PI * 2 * radius;
 const gap = circumference / 12;
@@ -31,17 +36,17 @@ const circleProps: ComponentPropsWithoutRef<'circle'> = {
   cx: svgSize / 2,
   cy: svgSize / 2,
   r: radius,
-  strokeWidth: 4,
+  strokeWidth,
   strokeDasharray: `${segment - gap} ${2 * segment + gap}`
 };
 
-export const InvitationStatusAvatar = ({ size = 10, status, haltedAt }: InvitationStatusAvatarProps) => {
+export const InvitationStatusAvatar = ({ size = 10, status, haltedAt, slots = {} }: InvitationStatusAvatarProps) => {
   const resolvedColor = resolvedStrokeColor(status);
   const halted =
     status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT || status === Invitation.State.ERROR;
   const cursor = invitationStatusValue.get(halted ? haltedAt! : status)!;
   return (
-    <svg viewBox={`0 0 ${svgSize} ${svgSize}`} className={getSize(size)}>
+    <svg {...slots.svg} viewBox={`0 0 ${svgSize} ${svgSize}`} className={mx(getSize(size), slots.svg?.className)}>
       {[...Array(nSegments)].map((_, index) => (
         <circle
           key={index}

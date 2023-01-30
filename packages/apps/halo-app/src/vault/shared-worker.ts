@@ -31,6 +31,7 @@ onconnect = async (event) => {
   const portMuxer = new PortMuxer(event.ports[0]);
   await workerRuntime.createSession({
     appPort: portMuxer.createWorkerPort({ channel: 'dxos:app' }),
-    systemPort: portMuxer.createWorkerPort({ channel: 'dxos:system' })
+    systemPort: portMuxer.createWorkerPort({ channel: 'dxos:system' }),
+    shellPort: portMuxer.createWorkerPort({ channel: 'dxos:shell' })
   });
 };

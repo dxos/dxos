@@ -3,13 +3,13 @@
 //
 
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import { fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { Main, SpaceList } from './components';
+import { Main, Layout } from './components';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const servicesProvider = (config?: Config) =>
@@ -17,22 +17,13 @@ const servicesProvider = (config?: Config) =>
 
 export const App = () => (
   <ClientProvider config={configProvider} services={servicesProvider}>
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
-        <Route path='/' element={<SpaceList />}>
-          <Route path='/:space' element={<Main />} />
-          <Route path='/:space/:state' element={<Main />} />
+        <Route path='/' element={<Layout />}>
+          <Route path='/:spaceKey' element={<Main />} />
+          <Route path='/:spaceKey/:state' element={<Main />} />
         </Route>
       </Routes>
-    </HashRouter>
-    <footer className='info'>
-      <p>Double-click to edit a todo</p>
-      <p>
-        Created by <a href='https://github.com/dxos/'>DXOS</a>
-      </p>
-      <p>
-        Based on <a href='https://todomvc.com'>TodoMVC</a>
-      </p>
-    </footer>
+    </BrowserRouter>
   </ClientProvider>
 );

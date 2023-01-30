@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
+import { Button, getSize, mx, useId, useTranslation } from '@dxos/react-components';
 
 import { invitationStatusValue } from '../../util';
 import { SharedInvitationListProps } from './InvitationListProps';
@@ -27,18 +27,19 @@ export const InvitationListItem = ({
   createInvitationUrl
 }: InvitationListItemProps) => {
   const { t } = useTranslation('os');
+  const qrLabel = useId('qrLabel');
 
   const { cancel, status, haltedAt, invitationCode, authenticationCode } = useInvitationStatus(invitation);
   const statusValue = invitationStatusValue.get(status) ?? 0;
 
   const isCancellable = statusValue < 4 && statusValue >= 0;
   const showShare = statusValue < 3 && statusValue >= 0;
-  const showPin = statusValue === 3;
+  const showAuthCode = statusValue === 3;
 
   const handleClickRemove = useCallback(() => onClickRemove(invitation), [invitation, onClickRemove]);
 
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
-  const handleCLickCopy = useCallback(() => {
+  const handleClickCopy = useCallback(() => {
     if (invitationUrl) {
       void navigator.clipboard.writeText(invitationUrl);
     }
@@ -47,15 +48,21 @@ export const InvitationListItem = ({
   return (
     <AccordionPrimitive.Item value={value}>
       <AccordionPrimitive.Header className='flex gap-2 items-center'>
-        <InvitationStatusAvatar {...{ status, haltedAt }} />
+        <InvitationStatusAvatar {...{ status, haltedAt, size: 8 }} />
         {showShare && invitationUrl ? (
-          <AccordionPrimitive.Trigger asChild>
-            <Button className='grow flex gap-1'>
-              <span>{t('open share panel label')}</span>
-              <QrCode className={getSize(4)} weight='bold' />
+          <>
+            <AccordionPrimitive.Trigger asChild>
+              <Button className='grow flex gap-1' data-testid='show-qrcode'>
+                <span>{t('open share panel label')}</span>
+                <QrCode className={getSize(4)} weight='bold' />
+              </Button>
+            </AccordionPrimitive.Trigger>
+            <Button className='flex gap-1' onClick={handleClickCopy} data-testid='copy-invitation'>
+              <span className='pli-1'>{t('copy invitation code label')}</span>
+              <Copy className={getSize(4)} weight='bold' />
             </Button>
-          </AccordionPrimitive.Trigger>
-        ) : showPin ? (
+          </>
+        ) : showAuthCode ? (
           <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>
             {authenticationCode}
           </p>
@@ -63,31 +70,35 @@ export const InvitationListItem = ({
           <span role='none' className='grow' />
         )}
         {isCancellable ? (
-          <Button variant='ghost' compact className='flex gap-1' onClick={cancel}>
+          <Button variant='ghost' compact className='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>
             <span className='sr-only'>{t('cancel invitation label')}</span>
             <ProhibitInset className={getSize(4)} weight='bold' />
           </Button>
         ) : (
-          <Button variant='ghost' compact className='flex gap-1' onClick={handleClickRemove}>
+          <Button
+            variant='ghost'
+            compact
+            className='flex gap-1'
+            onClick={handleClickRemove}
+            data-testid='remove-invitation'
+          >
             <span className='sr-only'>{t('remove invitation label')}</span>
             <X className={getSize(4)} weight='bold' />
           </Button>
         )}
       </AccordionPrimitive.Header>
       {showShare && invitationUrl && (
-        <AccordionPrimitive.Content>
-          <Button className='flex gap-2 is-full p-2' onClick={handleCLickCopy}>
-            <QRCodeSVG
-              bgColor='transparent'
-              fgColor='currentColor'
-              value={invitationUrl}
-              className={mx('grow aspect-square is-24 bs-auto')}
-            />
-            <span className='pli-1'>
-              {t('copy invitation code label')}
-              <Copy className={mx(getSize(4), 'inline mis-1')} weight='bold' />
-            </span>
-          </Button>
+        <AccordionPrimitive.Content className='flex gap-2 is-full radix-state-open:p-1 items-center'>
+          <QRCodeSVG
+            bgColor='transparent'
+            fgColor='currentColor'
+            value={invitationUrl}
+            className={mx('grow-[2] aspect-square is-24 bs-auto')}
+            aria-labelledby={qrLabel}
+          />
+          <span className='pli-1 flex-1 font-system-normal text-sm text-center' id={qrLabel}>
+            {t('qr label')}
+          </span>
         </AccordionPrimitive.Content>
       )}
     </AccordionPrimitive.Item>

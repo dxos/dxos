@@ -5,7 +5,7 @@
 import { ThemeVariant } from '../components';
 
 /**
- * @deprecated
+ * @deprecated use {@link themeVariantFocus} instead.
  */
 export const defaultFocus =
   'focus:outline-none focus-visible:z-[1] focus-visible:hover:outline-none dark:focus-visible:hover:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-primary-350 focus-visible:ring-offset-white dark:focus-visible:ring-primary-450 dark:focus-visible:ring-offset-black';
@@ -16,7 +16,7 @@ export const defaultFocus =
 export const subduedFocus = 'focus:outline-none focus-visible:outline-none';
 
 /**
- * @deprecated
+ * @deprecated use {@link themeVariantFocus} instead.
  */
 export const osFocus =
   'focus:outline-none focus-visible:z-[1] focus-visible:hover:outline-none dark:focus-visible:hover:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-primary-350 focus-visible:ring-offset-white dark:focus-visible:ring-primary-450 dark:focus-visible:ring-offset-black';

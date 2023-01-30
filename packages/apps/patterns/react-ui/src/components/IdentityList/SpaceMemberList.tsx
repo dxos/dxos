@@ -9,21 +9,17 @@ import type { SpaceMember } from '@dxos/client';
 import { IdentityListItem } from './IdentityListItem';
 
 export interface SpaceMemberListProps {
-  spaceMembers: SpaceMember[];
+  members: SpaceMember[];
 }
 
-export const SpaceMemberList = ({ spaceMembers }: SpaceMemberListProps) => {
+export const SpaceMemberList = ({ members }: SpaceMemberListProps) => {
   return (
     <ul className='flex flex-col gap-2'>
-      {spaceMembers
-        .filter((spaceMember) => spaceMember.profile)
-        .map((spaceMember) => {
+      {members
+        .filter((member) => member.profile)
+        .map((member) => {
           return (
-            <IdentityListItem
-              key={spaceMember.identityKey.toHex()}
-              identity={spaceMember.profile!}
-              presence={spaceMember.presence}
-            />
+            <IdentityListItem key={member.identityKey.toHex()} identity={member.profile!} presence={member.presence} />
           );
         })}
     </ul>
