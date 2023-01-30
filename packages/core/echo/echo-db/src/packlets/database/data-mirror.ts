@@ -6,11 +6,11 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { failUndefined } from '@dxos/debug';
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
 
@@ -44,7 +44,7 @@ export class DataMirror {
           assert(object.itemId);
 
           let entity: Entity<any>;
-          if(object.genesis) {
+          if (object.genesis) {
             log('Construct', { object });
             assert(object.genesis.modelType);
             entity = await this._itemManager.constructItem({
@@ -55,15 +55,15 @@ export class DataMirror {
               snapshot: { itemId: object.itemId } // TODO(dmaretskyi): Fix.
             });
           } else {
-            entity = await this._itemManager.entities.get(object.itemId) ?? failUndefined();
+            entity = (await this._itemManager.entities.get(object.itemId)) ?? failUndefined();
           }
 
           if (object.snapshot) {
-            log('reset to snapshot', { object })
+            log('reset to snapshot', { object });
             entity._stateManager.resetToSnapshot(object);
           } else if (object.mutations) {
             for (const mutation of object.mutations) {
-              log('mutate', { id: object.itemId, mutation })
+              log('mutate', { id: object.itemId, mutation });
               assert(mutation.meta);
               assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
               await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
