@@ -2,13 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PlusCircle, XCircle } from 'phosphor-react';
+import { ArrowsOut, PlusCircle, XCircle } from 'phosphor-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { getSize, mx } from '@dxos/react-components';
 
 import { Button } from '../components';
+
+// TODO(burdon): Split into package.
+// TODO(burdon): Rename Surface?
 
 // TODO(burdon): Factor out common geometry.
 export type Point = { x: number; y: number };
@@ -85,29 +88,37 @@ export class TestGridLayout implements Layout {
 
 type CellProps = {
   item: Item;
-  bounds: Bounds;
-  onClick?: (item: Item, zoom: number) => void;
+  bounds?: Bounds;
+  level?: number;
+  onClick?: (item: Item) => void;
+  onZoom?: (item: Item) => void;
   onDelete?: (item: Item) => void;
 };
 
-const Cell = ({ item, bounds, onClick, onDelete }: CellProps) => {
+const Cell = ({ item, bounds, level = 1, onClick, onZoom, onDelete }: CellProps) => {
   const handleDelete = (event: any) => {
     event.stopPropagation();
     onDelete?.(item);
+  };
+
+  const handleZoom = (event: any) => {
+    event.stopPropagation();
+    onZoom?.(item);
   };
 
   // prettier-ignore
   return (
     <div
       className={mx(
+        bounds && 'absolute',
         'group',
-        'absolute flex flex-col overflow-hidden p-2',
+        'flex flex-col overflow-hidden p-2',
         'bg-yellow-100 shadow select-none cursor-pointer'
       )}
-      style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
+      style={bounds && { left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
       onClick={(event) => {
         event.stopPropagation();
-        onClick?.(item, event.details);
+        onClick?.(item);
       }}
     >
       <div className='flex flex-col overflow-hidden'>
@@ -117,9 +128,16 @@ const Cell = ({ item, bounds, onClick, onDelete }: CellProps) => {
           </div>
           <div className='flex flex-shrink-0 pl-2'>
             <div className='invisible group-hover:visible text-gray-500'>
-              <Button onClick={handleDelete}>
-                <XCircle className={getSize(6)} />
-              </Button>
+              {level === 0 && (
+                <Button onClick={handleDelete}>
+                  <XCircle className={getSize(6)} />
+                </Button>
+              )}
+              {level === 1 && (
+                <Button onClick={handleZoom}>
+                  <ArrowsOut className={getSize(6)} />
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -143,15 +161,22 @@ const Placeholder = ({ bounds, onCreate }: { bounds: Bounds; onCreate?: (point: 
 
   return (
     <div
-      className='flex absolute group border cursor-pointer'
+      className='group flex absolute cursor-pointer border border-gray-300 border-dashed rounded-lg'
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
     >
-      <div className='relative flex flex-col flex-1 justify-center items-center invisible group-hover:visible border border-gray-300 border-dashed rounded-lg'>
+      <div
+        className={mx(
+          'relative flex flex-col flex-1 justify-center items-center text-gray-500',
+          'transition ease-in-out delay-300 opacity-0 group-hover:opacity-100'
+        )}
+      >
         <Button onClick={handleClick}>
-          <PlusCircle className={mx(getSize(8), 'text-gray-500')} />
+          <PlusCircle className={getSize(8)} />
         </Button>
-        {/* <div className='absolute left-2 bottom-1 text-gray-400'>[{bounds.point?.x + ',' + bounds.point?.y}]</div> */}
       </div>
+      {false && (
+        <div className='absolute left-2 bottom-1 text-gray-300'>[{bounds.point?.x + ',' + bounds.point?.y}]</div>
+      )}
     </div>
   );
 };
@@ -208,21 +233,24 @@ export const Grid = ({ items = [], layout, onSelect, onCreate, onDelete }: GridP
   // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
   const [style, setStyle] = useState<any>({
     transition: `${options.transitionDelay}ms ease-in-out`,
-    transform: 'scale(1)'
+    transform: 'scale(1)',
+    opacity: 1
   });
 
+  // TODO(burdon): Reuse.
   const handleZoom = (zoom = 1) => {
     setSelected(undefined);
     setStyle((style: any) => ({
       ...style,
-      transform: `scale(${zoom})`
+      transform: `scale(${zoom})`,
+      opacity: 1
     }));
   };
 
   // TODO(burdon): Editable mode on zoom.
   const [selected, setSelected] = useState<Item>();
-  const handleSelect = (item: Item, level: number) => {
-    if (item === selected) {
+  const handleSelect = (item: Item, level = 1) => {
+    if (item === selected && level === 1) {
       handleZoom(1);
       return;
     }
@@ -236,8 +264,13 @@ export const Grid = ({ items = [], layout, onSelect, onCreate, onDelete }: GridP
     setSelected(item);
     setStyle((style: any) => ({
       ...style,
-      transform: `scale(${options.zoomIn}) translate(${dx}px, ${dy}px)`
+      transform: `scale(${level === 1 ? options.zoomIn : options.zoomDetail}) translate(${dx}px, ${dy}px)`
+      // opacity: level === 1 ? 1 : 0
     }));
+
+    // TODO(burdon): Navigate to frame.
+    // TODO(burdon): Render different element if zoomed?
+    // TODO(burdon): Define states (zoom, selected, etc.)
   };
 
   // TODO(burdon): Scrolling is relative to top-left.
@@ -265,7 +298,17 @@ export const Grid = ({ items = [], layout, onSelect, onCreate, onDelete }: GridP
                 return null;
               }
 
-              return <Cell key={item.id} item={item} bounds={bounds} onClick={handleSelect} onDelete={onDelete} />;
+              return (
+                <Cell
+                  key={item.id}
+                  item={item}
+                  bounds={bounds}
+                  level={item === selected ? 1 : 0}
+                  onClick={() => handleSelect(item, 1)}
+                  onZoom={() => handleSelect(item, 2)}
+                  onDelete={onDelete}
+                />
+              );
             })}
         </div>
       </div>

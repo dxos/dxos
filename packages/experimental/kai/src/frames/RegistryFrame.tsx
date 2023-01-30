@@ -56,7 +56,7 @@ const Tile: FC<{
  * DMG Explorer.
  * https://ifttt.com/explore
  */
-const RegistryFrame = () => {
+export const RegistryFrame = () => {
   const space = useSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>('app');

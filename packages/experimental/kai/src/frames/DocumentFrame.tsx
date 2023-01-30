@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
@@ -12,7 +12,7 @@ import { Input, Selector } from '../components';
 import { useSpace } from '../hooks';
 import { Document } from '../proto';
 
-const DocumentFrame: FC = withReactor(() => {
+export const DocumentFrame = withReactor(() => {
   const space = useSpace();
   const documents = useQuery(space, Document.filter());
   const [document, setDocument] = useState<Document>();

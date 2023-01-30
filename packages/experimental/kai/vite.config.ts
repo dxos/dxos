@@ -27,11 +27,12 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false,
+        : false
 
     // TODO(burdon): Disable HMR due to code size issues.
+    // TODO(burdon): If disabled then tailwind doesn't update.
     // https://vitejs.dev/config/server-options.html#server-hmr
-    hmr: false
+    // hmr: false
   },
 
   // TODO(burdon): Document.

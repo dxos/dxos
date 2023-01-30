@@ -56,3 +56,5 @@ export const NotesFrame = () => {
 
   return <Grid items={items} layout={layout} onCreate={handleCreate} onDelete={handleDelete} />;
 };
+
+export default NotesFrame;
