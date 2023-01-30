@@ -56,3 +56,16 @@ export const TaskCard: Card<Task> = {
     </BaseCard>
   )
 };
+
+export const ALL_CARDS = [
+  TaskListCard,
+  TaskCard,
+  // NOTE: Must be last.
+  DefaultCard
+];
+
+export const GenericCard: Card['render'] = ({ data }) => {
+  const card = ALL_CARDS.find((card) => card.canRender(data));
+
+  return card!.render({ data });
+};
