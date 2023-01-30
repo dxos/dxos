@@ -3,25 +3,39 @@
 //
 
 import { X } from 'phosphor-react';
-import React, { KeyboardEvent } from 'react';
+import React, { KeyboardEvent, forwardRef } from 'react';
 
 import { mx, getSize, defaultFocus, Button, defaultHover } from '@dxos/react-components';
 
 import { Input } from './Input';
+
+type Ref = HTMLInputElement;
 
 export type CheckBoxItemProps = {
   isLoading?: boolean;
   text?: string;
   placeholder?: string;
   isChecked?: boolean;
+  autoFocus?: boolean;
   onTextChanged?: (value: string) => any;
   onChecked?: (value: boolean) => any;
   onDeleteClicked?: () => any;
   onInputKeyUp?: (e: KeyboardEvent<HTMLInputElement>) => any;
+  onInputKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => any;
 };
 
-export const CheckboxItem = (props: CheckBoxItemProps) => {
-  const { text, isChecked, placeholder, onTextChanged, onChecked, onDeleteClicked, onInputKeyUp } = props;
+export const CheckboxItem = forwardRef<Ref, CheckBoxItemProps>((props, ref) => {
+  const {
+    text,
+    isChecked,
+    autoFocus,
+    placeholder,
+    onTextChanged,
+    onChecked,
+    onDeleteClicked,
+    onInputKeyUp,
+    onInputKeyDown
+  } = props;
   return (
     <li className='flex items-center gap-2 mbe-2 pl-3'>
       <input
@@ -39,11 +53,14 @@ export const CheckboxItem = (props: CheckBoxItemProps) => {
       />
       <div role='none' className='grow'>
         <Input
+          ref={ref}
           type='text'
+          autoFocus={autoFocus}
           placeholder={placeholder}
-          defaultValue={text ?? ''}
+          value={text ?? ''}
           onChange={(e) => onTextChanged?.(e.target.value)}
           onKeyUp={onInputKeyUp}
+          onKeyDown={onInputKeyDown}
         />
       </div>
       <div role='none' className='actions'>
@@ -53,4 +70,4 @@ export const CheckboxItem = (props: CheckBoxItemProps) => {
       </div>
     </li>
   );
-};
+});
