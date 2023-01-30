@@ -7,4 +7,5 @@ export * from './echo';
 export * from './halo';
 export * from './invitations';
 export * from './network';
+export * from './os';
 export * from './util';
