@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemType, ItemID } from '@dxos/protocols';
-import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
@@ -212,7 +212,7 @@ export class Database {
     );
   }
 
-  createSnapshot(): DatabaseSnapshot {
+  createSnapshot(): EchoSnapshot {
     this._assertInitialized();
     return this._backend.createSnapshot();
   }

@@ -24,7 +24,7 @@ describe('ItemManager', () => {
         itemId,
         modelType: ObjectModel.meta.type,
         itemType: undefined,
-        snapshot: {}
+        snapshot: { itemId }
       });
       expect(item.id).toEqual(itemId);
       expect(item.model).toBeInstanceOf(ObjectModel);
@@ -180,12 +180,13 @@ describe('ItemManager', () => {
   test('item can be created and the model registered later', async () => {
     const modelFactory = new ModelFactory();
     const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
+    const itemId = createId();
 
     const item = await itemManager.constructItem({
-      itemId: createId(),
+      itemId,
       modelType: ObjectModel.meta.type,
       itemType: undefined,
-      snapshot: {}
+      snapshot: { itemId }
     });
 
     expect(item.model).toBe(null);
@@ -200,9 +201,12 @@ describe('ItemManager', () => {
   });
 });
 
-const defaultOpts = () => ({
-  itemId: createId(),
-  modelType: ObjectModel.meta.type,
-  itemType: undefined,
-  snapshot: {}
-});
+const defaultOpts = () => {
+  const itemId = createId();
+  return {
+    itemId,
+    modelType: ObjectModel.meta.type,
+    itemType: undefined,
+    snapshot: { itemId }
+  };
+};
