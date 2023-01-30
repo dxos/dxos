@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
-import Inspect from 'vite-plugin-inspect'
+import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -27,7 +27,11 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false
+        : false,
+
+    // TODO(burdon): Disable HMR due to code size issues.
+    // https://vitejs.dev/config/server-options.html#server-hmr
+    hmr: false
   },
 
   // TODO(burdon): Document.
@@ -145,7 +149,7 @@ export default defineConfig({
           }
         ]
       }
-    }),
+    })
 
     // Inspect()
   ]
