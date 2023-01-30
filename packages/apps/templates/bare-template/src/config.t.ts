@@ -12,7 +12,7 @@ import path from 'path';
 export { appTsx, indexHtml };
 
 export default defineConfig({
-  exclude: ['project.json', 'tsconfig.plate.json'],
+  exclude: ({ monorepo }) => ['project.json', 'tsconfig.plate.json', ...(monorepo ? ['patches/vite*'] : [])],
   inputShape: z
     .object({
       name: z.string().describe('Name the new package'),
