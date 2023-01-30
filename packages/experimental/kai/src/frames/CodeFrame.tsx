@@ -44,7 +44,7 @@ export type FrameListProps = {
 const FrameList = withReactor(({ selected, onSelected }: FrameListProps) => {
   const space = useSpace();
   const frames = useQuery(space, Frame.filter());
-  const [newFrame, setNewFrame] = useState<string>('');
+  const [_newFrame, _setNewFrame] = useState<string>('');
 
   useEffect(() => {
     if (frames.length === 0) {

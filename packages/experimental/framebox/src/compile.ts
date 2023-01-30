@@ -89,9 +89,9 @@ const analyzeImports = (build: BuildResult): Import[] => {
 // $4 = module identifier
 // $5 = quotes used (either ' or ")
 const IMPORT_REGEX =
-  /import(?:(?:(?:[ \n\t]+([^ *\n\t\{\},]+)[ \n\t]*(?:,|[ \n\t]+))?([ \n\t]*\{(?:[ \n\t]*[^ \n\t"'\{\}]+[ \n\t]*,?)+\})?[ \n\t]*)|[ \n\t]*\*[ \n\t]*as[ \n\t]+([^ \n\t\{\}]+)[ \n\t]+)from[ \n\t]*(?:['"])([^'"\n]+)(['"])/gm;
+  /import(?:(?:(?:[ \n\t]+([^ *\n\t{},]+)[ \n\t]*(?:,|[ \n\t]+))?([ \n\t]*{(?:[ \n\t]*[^ \n\t"'{}]+[ \n\t]*,?)+})?[ \n\t]*)|[ \n\t]*\*[ \n\t]*as[ \n\t]+([^ \n\t{}]+)[ \n\t]+)from[ \n\t]*(?:['"])([^'"\n]+)(['"])/gm;
 
-const NAMED_IMPORTS_REGEX = /[ \n\t]*\{((?:[ \n\t]*[^ \n\t"'\{\}]+[ \n\t]*,?)+)\}[ \n\t]*/gm;
+const NAMED_IMPORTS_REGEX = /[ \n\t]*{((?:[ \n\t]*[^ \n\t"'{}]+[ \n\t]*,?)+)}[ \n\t]*/gm;
 
 const allMatches = (regex: RegExp, str: string) => {
   regex.lastIndex = 0;

@@ -6,11 +6,6 @@ import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-services';
 import { Frame } from '@dxos/framebox';
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { useClient } from '@dxos/react-client';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
