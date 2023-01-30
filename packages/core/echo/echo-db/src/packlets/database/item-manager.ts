@@ -198,7 +198,6 @@ export class ItemManager {
 
     // Write Item Genesis block.
     log('Item Genesis:', itemId);
-    debugger;
     await this._writeStream.write({
       object: {
         itemId,
