@@ -3,7 +3,7 @@
 //
 
 import { Plus } from 'phosphor-react';
-import React, { useRef, useEffect, useState, Ref } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { Button, getSize, Loading } from '@dxos/react-components';

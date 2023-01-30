@@ -6,7 +6,7 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import type { Space } from '@dxos/client';
-import { deleted, id } from '@dxos/echo-schema';
+import { deleted } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
