@@ -9,11 +9,11 @@
   "main": "dist/src/config.t.js",
   "types": "dist/src/config.t.d.ts",
   "scripts": {
-    "tsc": "tsc",
     "build": "tsc && plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
     "build-resources": "plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
     "clean": "rm -rf test/out",
-    "gen": "test/generate"
+    "gen": "test/generate",
+    "tsc": "tsc"
   },
   "dependencies": {
     "@dxos/plate": "workspace:*",

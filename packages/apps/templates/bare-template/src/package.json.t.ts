@@ -5,7 +5,8 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { defineTemplate, ExtractInput, z } from '@dxos/plate';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
-import { PackageJson } from 'types-package-json';
+import { PackageJson } from './utils.t/packageJson';
+
 import merge from 'lodash.merge';
 
 import config from './config.t';
@@ -18,7 +19,7 @@ export namespace Features {
       '@dxos/react-client': depVersion,
       react: '^18.2.0',
       'react-dom': '^18.2.0',
-      'react-router-dom': '^6.3.0'
+      // 'react-router-dom': '^6.3.0'
     },
     devDependencies: {
       '@types/react': '^18.0.21',
@@ -71,11 +72,12 @@ export namespace Features {
   });
 }
 
-export const base = ({ name, version, depVersion }: Context): Partial<PackageJson> => {
+export const base = ({ name, monorepo, version, depVersion }: Context): Partial<PackageJson> => {
   return {
-    name,
+    name: `${monorepo ? '@dxos/' : ''}${name}`,
     version: version,
-    description: `${name} - a DXOS application`,
+    description: `${name}${monorepo ? '' : '- a DXOS application'}`,
+    private: true,
     scripts: {
       build: 'NODE_OPTIONS="--max-old-space-size=4096" tsc --noEmit && vite build',
       deploy: 'NODE_OPTIONS="--max-old-space-size=4096" dx app publish',
