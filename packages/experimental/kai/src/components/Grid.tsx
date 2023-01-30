@@ -86,7 +86,7 @@ export class TestGridLayout implements Layout {
 type CellProps = {
   item: Item;
   bounds: Bounds;
-  onClick?: (item: Item, event: any) => void;
+  onClick?: (item: Item, zoom: number) => void;
   onDelete?: (item: Item) => void;
 };
 
@@ -107,7 +107,7 @@ const Cell = ({ item, bounds, onClick, onDelete }: CellProps) => {
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
       onClick={(event) => {
         event.stopPropagation();
-        onClick?.(item, event);
+        onClick?.(item, event.details);
       }}
     >
       <div className='flex flex-col overflow-hidden'>
@@ -133,11 +133,11 @@ const Cell = ({ item, bounds, onClick, onDelete }: CellProps) => {
 };
 
 // TODO(burdon): Show button after delay (fade-in).
-const Placeholder = ({ bounds, onClick }: { bounds: Bounds; onClick?: (point: Point) => void }) => {
+const Placeholder = ({ bounds, onCreate }: { bounds: Bounds; onCreate?: (point: Point) => void }) => {
   const handleClick = (event: any) => {
-    if (onClick) {
+    if (onCreate) {
       event.stopPropagation();
-      onClick(bounds.point!);
+      onCreate(bounds.point!);
     }
   };
 
@@ -172,8 +172,9 @@ export const Grid = ({ items = [], layout, onSelect, onCreate, onDelete }: GridP
   // TODO(burdon): Options.
   const options = {
     transitionDelay: 500,
+    zoomOut: 0.55,
     zoomIn: 2,
-    zoomOut: 0.55
+    zoomDetail: 4
   };
 
   useEffect(() => {
@@ -210,11 +211,19 @@ export const Grid = ({ items = [], layout, onSelect, onCreate, onDelete }: GridP
     transform: 'scale(1)'
   });
 
+  const handleZoom = (zoom = 1) => {
+    setSelected(undefined);
+    setStyle((style: any) => ({
+      ...style,
+      transform: `scale(${zoom})`
+    }));
+  };
+
   // TODO(burdon): Editable mode on zoom.
   const [selected, setSelected] = useState<Item>();
-  const handleSelect = (item: Item) => {
+  const handleSelect = (item: Item, level: number) => {
     if (item === selected) {
-      handleReset(1);
+      handleZoom(1);
       return;
     }
 
@@ -231,14 +240,6 @@ export const Grid = ({ items = [], layout, onSelect, onCreate, onDelete }: GridP
     }));
   };
 
-  const handleReset = (zoom: number) => {
-    setSelected(undefined);
-    setStyle((style: any) => ({
-      ...style,
-      transform: `scale(${zoom})`
-    }));
-  };
-
   // TODO(burdon): Scrolling is relative to top-left.
   //  - Outer container should be max range (don't consider infinite scrolling).
   //  - Scroll center into view.
@@ -247,11 +248,11 @@ export const Grid = ({ items = [], layout, onSelect, onCreate, onDelete }: GridP
       <div
         className='flex flex-1 bg-gray-200'
         style={style}
-        onClick={(event: any) => handleReset(event.detail === 2 ? options.zoomOut : 1)}
+        onClick={(event: any) => handleZoom(event.detail === 2 ? options.zoomOut : 1)}
       >
         <div>
           {placeholders?.map((bounds, i) => (
-            <Placeholder key={i} bounds={bounds} onClick={onCreate} />
+            <Placeholder key={i} bounds={bounds} onCreate={onCreate} />
           ))}
         </div>
 

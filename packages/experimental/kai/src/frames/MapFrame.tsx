@@ -25,7 +25,7 @@ const defaults = {
   zoom: 13
 };
 
-export const MapFrame = () => {
+const MapFrame = () => {
   return (
     <div className='flex flex-1 overflow-hidden'>
       <MapContainer className='flex flex-1' center={defaults.center} zoom={defaults.zoom}>
@@ -152,3 +152,5 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
     </div>
   );
 };
+
+export default MapFrame;

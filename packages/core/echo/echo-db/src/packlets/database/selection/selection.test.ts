@@ -13,7 +13,6 @@ import { describe, test } from '@dxos/test';
 
 import { Entity } from '../entity';
 import { Item } from '../item';
-import { Link } from '../link';
 import { RootFilter } from './queries';
 import { createSelection } from './selection';
 
@@ -22,24 +21,11 @@ const ids = (entities: Entity[]) => entities.map((entity) => entity.id);
 
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
-const createModel = (id: ItemID) => modelFactory.createModel(ObjectModel.meta.type, id, {}, PublicKey.random());
+const createModel = (id: ItemID) =>
+  modelFactory.createModel(ObjectModel.meta.type, id, { itemId: id }, PublicKey.random());
 
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
   new Item(null as any, id, type, createModel(id), undefined, parent);
-
-const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
-  const link = new Link(null as any, id, type, createModel(id), {
-    sourceId: source.id,
-    targetId: target.id,
-    source,
-    target
-  });
-
-  source._links.add(link);
-  target._refs.add(link);
-
-  return link;
-};
 
 const createRootSelection = (filter?: RootFilter) =>
   createSelection<void>(
@@ -64,7 +50,6 @@ const createReducer = <R>(result: R) =>
 const ITEM_ORG = 'example:item/org';
 const ITEM_PROJECT = 'example:item/project';
 const ITEM_PERSON = 'example:item/person';
-const LINK_MEMBER = 'example:link/member';
 
 const org1 = createItem('org/1', ITEM_ORG);
 const org2 = createItem('org/2', ITEM_ORG);
@@ -79,13 +64,6 @@ const person3 = createItem('person/3', ITEM_PERSON, org2);
 const person4 = createItem('person/4', ITEM_PERSON, org2);
 
 const items: Item<any>[] = [org1, org2, project1, project2, project3, person1, person2, person3, person4];
-
-const links: Link<any>[] = [
-  createLink('link/1', LINK_MEMBER, project1, person1),
-  createLink('link/2', LINK_MEMBER, project1, person2),
-  createLink('link/3', LINK_MEMBER, project2, person1),
-  createLink('link/4', LINK_MEMBER, project2, person3)
-];
 
 // TODO(burdon): Test subscriptions/reactivity.
 
@@ -166,24 +144,6 @@ describe('Selection', () => {
     });
   });
 
-  describe('links', () => {
-    test('links from single item', () => {
-      expect(ids(createRootSelection({ id: project1.id }).links().target().exec().entities)).toStrictEqual(
-        ids([person1, person2])
-      );
-    });
-
-    test('links from multiple items', () => {
-      expect(createRootSelection({ type: ITEM_PROJECT }).links().exec().entities).toHaveLength(links.length);
-    });
-
-    test('sources', () => {
-      expect(ids(createRootSelection({ type: ITEM_PERSON }).refs().source().exec().entities)).toStrictEqual(
-        ids([project1, project2])
-      );
-    });
-  });
-
   describe('reducer', () => {
     test('simple reducer', () => {
       const query = createReducer(0)
@@ -194,7 +154,7 @@ describe('Selection', () => {
 
     // TODO(burdon): Support nested traverals (context as third arg?)
     test('complex reducer', () => {
-      const query = createReducer({ numItems: 0, numLinks: 0 })
+      const query = createReducer({ numItems: 0 })
         .filter({ type: ITEM_ORG })
         .call((items: Item[], { numItems, ...rest }) => ({
           ...rest,
@@ -207,16 +167,9 @@ describe('Selection', () => {
           numItems: numItems + items.length,
           stage: 'b'
         }))
-        .links({ type: LINK_MEMBER })
-        .call((links: Link[], { numLinks, ...rest }) => ({
-          ...rest,
-          numLinks: numLinks + links.length,
-          stage: 'c'
-        }))
-        .target()
         .exec();
 
-      expect(query.value).toEqual({ numItems: 5, numLinks: 4, stage: 'c' });
+      expect(query.value).toEqual({ numItems: 5, stage: 'b' });
     });
   });
 

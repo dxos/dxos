@@ -11,7 +11,6 @@ import { ItemMutation } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
-import type { Link } from './link';
 import { createItemSelection, Selection } from './selection';
 
 /**
@@ -36,18 +35,6 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
    * @internal
    */
   readonly _children = new Set<Item<any>>();
-
-  /**
-   * Managed set of links with this item as the source.
-   * @internal
-   */
-  readonly _links = new Set<Link<any, any, any>>();
-
-  /**
-   * Managed set of links with this item as the target.
-   * @internal
-   */
-  readonly _refs = new Set<Link<any, any, any>>();
 
   /**
    * Items are constructed by the `Database` object.
@@ -92,14 +79,6 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
 
   get children(): Item<any>[] {
     return Array.from(this._children.values()).filter((item) => !item.deleted);
-  }
-
-  get links(): Link<any, any, any>[] {
-    return Array.from(this._links.values()).filter((link) => !link._isDangling());
-  }
-
-  get refs(): Link<any, any, any>[] {
-    return Array.from(this._refs.values()).filter((link) => !link._isDangling());
   }
 
   /**

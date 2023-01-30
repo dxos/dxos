@@ -14,10 +14,6 @@ import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemFilterDeleted } from './selection';
 
-const OBJECT_ORG = 'example:object/org';
-const OBJECT_PERSON = 'example:object/person';
-const LINK_EMPLOYEE = 'example:link/employee';
-
 describe('Database', () => {
   describe('remote', () => {
     const setupBackend = async (modelFactory: ModelFactory) => {
@@ -138,72 +134,6 @@ describe('Database', () => {
       expect(item.deleted).toBeFalsy();
     });
 
-    test('link', async () => {
-      const { frontend: database } = await setupDatabase();
-
-      const source = await database.createItem({ model: ObjectModel });
-      const target = await database.createItem({ model: ObjectModel });
-
-      const link = await database.createLink({ source, target });
-
-      expect(link.source).toBe(source);
-      expect(link.target).toBe(target);
-    });
-
-    test('directed links', async () => {
-      const { frontend: database } = await setupDatabase();
-
-      const p1 = await database.createItem({
-        model: ObjectModel,
-        type: OBJECT_PERSON,
-        props: { name: 'Person-1' }
-      });
-      const p2 = await database.createItem({
-        model: ObjectModel,
-        type: OBJECT_PERSON,
-        props: { name: 'Person-2' }
-      });
-
-      const org1 = await database.createItem({
-        model: ObjectModel,
-        type: OBJECT_ORG,
-        props: { name: 'Org-1' }
-      });
-      const org2 = await database.createItem({
-        model: ObjectModel,
-        type: OBJECT_ORG,
-        props: { name: 'Org-2' }
-      });
-
-      await database.createLink({
-        source: org1,
-        type: LINK_EMPLOYEE,
-        target: p1
-      });
-      await database.createLink({
-        source: org1,
-        type: LINK_EMPLOYEE,
-        target: p2
-      });
-      await database.createLink({
-        source: org2,
-        type: LINK_EMPLOYEE,
-        target: p2
-      });
-
-      // Find all employees for org.
-      expect(org1.links.filter((link) => link.type === LINK_EMPLOYEE).map((link) => link.target)).toStrictEqual([
-        p1,
-        p2
-      ]);
-
-      // Find all orgs for person.
-      expect(p2.refs.filter((link) => link.type === LINK_EMPLOYEE).map((link) => link.source)).toStrictEqual([
-        org1,
-        org2
-      ]);
-    });
-
     describe('non-idempotent models', () => {
       test('messages written from frontend', async () => {
         const { frontend: database } = await setupDatabase();
@@ -285,30 +215,6 @@ describe('Database', () => {
           const result = database.select().exec({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
           expect(result.entities).toHaveLength(1);
         }
-      });
-
-      test('link between items generates updates to items', async () => {
-        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
-        const database = await setupBackend(modelFactory);
-
-        const item1 = await database.createItem({ model: ObjectModel });
-        const item2 = await database.createItem({ model: ObjectModel });
-
-        // 1. Create a query
-        const query = database.select().exec();
-        const update = query.update.waitForCount(1);
-
-        // 2. Create a link
-        await database.createLink({
-          model: ObjectModel,
-          source: item1,
-          target: item2
-        });
-        expect(item1.links.length).toEqual(1);
-        expect(item2.refs.length).toEqual(1);
-
-        // 3. Expect an update
-        await asyncTimeout(update, 100, new Error('timeout'));
       });
 
       test('adding an item emits update for parent', async () => {

@@ -10,34 +10,58 @@ import { TextObject } from '@dxos/echo-schema';
 
 export type EditorProps = {
   document: TextObject;
+  onChange?: () => void;
 };
 
-export const Editor = ({ document }: EditorProps) => {
+export const Editor = ({ document, onChange }: EditorProps) => {
   const monacoRef = useRef(null);
 
   const handleEditorWillMount = (monaco: any) => {
-    // here is the monaco instance
-    // do something before editor is mounted
+    // https://microsoft.github.io/monaco-editor/api/modules/monaco.languages.typescript.html
+    // https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.typescript.CompilerOptions.html
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-      jsx: 'react'
+      jsx: 'react',
+      noLib: true
+      // TODO(burdon): Error.
+      // https://github.com/microsoft/monaco-editor/issues/2249
+      // allowNonTsExtensions: true
     });
   };
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
-    // here is another way to get monaco instance
-    // you can also store it in `useRef` for further usage
+    // Get instance.
     const _ = new MonacoBinding(document.doc!.getText('monaco'), editor.getModel(), new Set([editor]));
     monacoRef.current = editor;
   };
 
+  // https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.IDiffEditorConstructionOptions.html
+  // prettier-ignore
+  const options = {
+    readOnly: false,
+    minimap: {
+      enabled: false
+    },
+    // https://github.com/microsoft/monaco-editor/blob/212670ceb460441b3ebed29e6ca30aa1e9bdde85/website/typedoc/monaco.d.ts#L4035
+    scrollbar: {
+      useShadows: false,
+      verticalScrollbarSize: 4,
+      horizontalScrollbarSize: 4
+    }
+  };
+
+  // https://www.npmjs.com/package/@monaco-editor/react#monaco-instance
+  // https://www.npmjs.com/package/@monaco-editor/react#props
+  // TODO(burdon): Throws the following error:
+  //  Uncaught (in promise) Error: Could not find source file: 'inmemory://model/1'.
+  //  https://github.com/microsoft/monaco-editor/issues/2249
   return (
     <MonacoEditor
-      height='90vh'
-      width='50vw'
       defaultLanguage='typescript'
-      defaultValue='// some comment'
+      defaultValue='// (c) 2023, DXOS.org'
       beforeMount={handleEditorWillMount}
+      options={options}
       onMount={handleEditorDidMount}
+      onChange={onChange}
     />
   );
 };

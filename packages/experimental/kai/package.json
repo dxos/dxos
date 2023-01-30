@@ -26,6 +26,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -45,6 +46,8 @@
     "@dxos/react-composer": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@sentry/react": "^7.17.2",
@@ -102,7 +105,11 @@
     "typescript": "^4.8.4",
     "vite": "4.0.4",
     "vite-plugin-fonts": "^0.7.0",
+    "vite-plugin-inspect": "^0.7.15",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
+  },
+  "publishConfig": {
+    "access": "private"
   }
 }

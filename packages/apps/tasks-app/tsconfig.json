@@ -27,6 +27,12 @@
       "path": "../../common/sentry"
     },
     {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-typegen"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

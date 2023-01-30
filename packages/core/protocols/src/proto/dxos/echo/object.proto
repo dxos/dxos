@@ -7,36 +7,45 @@ syntax = "proto3";
 import "google/protobuf/any.proto";
 
 import "dxos/halo/credentials.proto";
-import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
 
 package dxos.echo.object;
-
 
 /**
  * Wrapper for all ECHO messages.
  */
 message EchoObject {
-  string item_id = 1;
+  optional string item_id = 1;
+  optional string item_type = 2;
+  optional string model_type = 3;
+  optional string model_version = 4;
+  optional string parent_id = 5;
 
-  // Create item.
+  /// Create item.
   optional ItemGenesis genesis = 10;
 
-  // Item system mutations.
+  /// Item system mutations.
   optional ItemMutation item_mutation = 11;
 
-  // Model-specific mutations.
-  optional google.protobuf.Any mutation = 12 [preserve_any = true];
-
   /// Set the model to the provided snapshot.
-  optional snapshot.ModelSnapshot snapshot = 13;
+  optional google.protobuf.Any snapshot = 13 [preserve_any = true]; 
+
+  // Model-specific mutations.
+  repeated ModelMutation mutations = 14;
 }
 
+message ModelMutation {
+  // Encoded model mutation, format is defined by model's codec.
+  google.protobuf.Any mutation = 1 [preserve_any = true];
+  /// For snapshot messages.
+  optional ModelMutationMeta meta = 2;
+}
 
-/// @deprecated
-message LinkData {
-  string source = 1;
-  string target = 2;
+message ModelMutationMeta {
+  dxos.keys.PublicKey feed_key = 1;
+  int32 seq = 2;
+  dxos.keys.PublicKey member_key = 3;
+  optional timeframe.TimeframeVector timeframe = 4;
 }
 
 /**
@@ -47,7 +56,6 @@ message ItemGenesis {
   optional string item_type = 1;
   string model_type = 2;
   optional string model_version = 3;
-  optional LinkData link = 4;
 }
 
 /**

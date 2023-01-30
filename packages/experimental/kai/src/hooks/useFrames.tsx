@@ -19,7 +19,8 @@ export enum FrameID {
   EXPLORER = 'explorer',
   MAPS = 'maps',
   PRESENTER = 'presenter', // TODO(burdon): MDX.
-  CHESS = 'chess'
+  CHESS = 'chess',
+  SANDBOX = 'sandbox'
 }
 
 export const defaultFrameId = FrameID.NOTES;

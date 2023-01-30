@@ -50,7 +50,7 @@ const views = [
 /**
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/story/about-big-calendar--page
  */
-export const CalendarFrame = () => {
+const CalendarFrame = () => {
   const space = useSpace();
   const events = useQuery(space, EventType.filter()).map(mapEvents);
   // TODO(burdon): Manage global state persistently.
@@ -130,3 +130,5 @@ export const CalendarFrame = () => {
     </div>
   );
 };
+
+export default CalendarFrame;

@@ -15,7 +15,7 @@ import { apiSidebar, telemetryPlugin } from './src';
 
 const env = (value?: string) => (value ? `'${value}'` : undefined);
 
-const DXOS_DEPS = [
+const OPTIMIZE_DEPS = [
   '@dxos/client/testing',
   '@dxos/config',
   '@dxos/keys',
@@ -110,11 +110,11 @@ const config: UserConfig = defineUserConfig({
       },
       optimizeDeps: {
         force: true,
-        include: DXOS_DEPS
+        include: OPTIMIZE_DEPS
       },
       // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
       ssr: {
-        external: DXOS_DEPS
+        external: ['@dxos/client', '@dxos/client/testing', '@dxos/react-client']
       },
       build: {
         commonjsOptions: {

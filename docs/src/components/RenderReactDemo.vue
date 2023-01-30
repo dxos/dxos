@@ -33,11 +33,8 @@
   import { onMounted, ref } from 'vue';
 
   import { Trigger } from '@dxos/async';
-  import { Client, fromHost, Invitation, PublicKey } from '@dxos/client';
-  import { TestBuilder } from '@dxos/client/testing';
   import { log } from '@dxos/log';
   import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-  import { ClientProvider, useSpaces } from '@dxos/react-client';
 
   const props = defineProps({
     demo: {
@@ -63,6 +60,11 @@
 
   const peers = ref<HTMLDivElement[]>([])
   const peerWidth = `${100 / props.peerCount}%`;
+
+  // TODO(wittjosiah): Prevent from importing during ssr.
+  const { Client, fromHost, Invitation, PublicKey } = await import('@dxos/client');
+  const { TestBuilder } = await import('@dxos/client/testing');
+  const { ClientProvider, useSpaces } = await import('@dxos/react-client');
 
   // Note rollup dynamic import limitations.
   //   https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations

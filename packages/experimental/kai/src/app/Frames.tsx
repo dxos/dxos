@@ -18,7 +18,8 @@ import {
   Kanban,
   ListChecks,
   Sword,
-  Table
+  Table,
+  Code
 } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -40,7 +41,8 @@ import {
   RegistryFrame,
   SketchFrame,
   TableFrame,
-  TasksFrame
+  TasksFrame,
+  SandboxFrame
 } from '../frames';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
@@ -144,6 +146,13 @@ export const frames: FrameDef[] = [
     description: 'Peer-to-peer and engine powered games.',
     Icon: Sword,
     Component: ChessFrame
+  },
+  {
+    id: FrameID.SANDBOX,
+    title: 'Sandbox',
+    description: 'Collaborative code sandbox.',
+    Icon: Code,
+    Component: SandboxFrame
   }
 ];
 
