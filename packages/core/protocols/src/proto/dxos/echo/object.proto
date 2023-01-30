@@ -11,7 +11,6 @@ import "dxos/echo/timeframe.proto";
 
 package dxos.echo.object;
 
-
 /**
  * Wrapper for all ECHO messages.
  */
@@ -46,13 +45,7 @@ message ModelMutationMeta {
   dxos.keys.PublicKey feed_key = 1;
   int32 seq = 2;
   dxos.keys.PublicKey member_key = 3;
-}
-
-
-/// @deprecated
-message LinkData {
-  string source = 1;
-  string target = 2;
+  optional timeframe.TimeframeVector timeframe = 4;
 }
 
 /**
@@ -63,7 +56,6 @@ message ItemGenesis {
   optional string item_type = 1;
   string model_type = 2;
   optional string model_version = 3;
-  optional LinkData link = 4;
 }
 
 /**

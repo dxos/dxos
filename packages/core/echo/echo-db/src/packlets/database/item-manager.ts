@@ -20,7 +20,6 @@ import { createMappedFeedWriter } from '../common';
 import { UnknownModelError } from '../errors';
 import { Entity } from './entity';
 import { Item } from './item';
-import { Link } from './link';
 
 const log = debug('dxos:echo-db:item-manager');
 
@@ -33,12 +32,6 @@ export interface ModelConstructionOptions {
 export interface ItemConstructionOptions extends ModelConstructionOptions {
   itemType: ItemType | undefined;
   parentId?: ItemID;
-}
-
-export interface LinkConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined;
-  source: ItemID;
-  target: ItemID;
 }
 
 /**
@@ -85,10 +78,6 @@ export class ItemManager {
 
   get items(): Item<any>[] {
     return Array.from(this._entities.values()).filter((entity): entity is Item<Model> => entity instanceof Item);
-  }
-
-  get links(): Link<any>[] {
-    return Array.from(this._entities.values()).filter((entity): entity is Link<Model> => entity instanceof Link);
   }
 
   async destroy() {
@@ -164,65 +153,6 @@ export class ItemManager {
     const item = await waitForCreation();
     assert(item instanceof Item);
     return item;
-  }
-
-  @timed(5_000)
-  async createLink(
-    modelType: ModelType,
-    itemType: ItemType | undefined,
-    source: ItemID,
-    target: ItemID,
-    initProps?: any
-  ): Promise<Link<any, any, any>> {
-    assert(this._writeStream);
-    assert(modelType);
-
-    if (!this._modelFactory.hasModel(modelType)) {
-      throw new UnknownModelError(modelType);
-    }
-
-    let mutation: Uint8Array | undefined;
-    if (initProps) {
-      const meta = this._modelFactory.getModelMeta(modelType);
-      if (!meta.getInitMutation) {
-        throw new Error('Tried to provide initialization params to a model with no initializer.');
-      }
-      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
-    }
-
-    // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Entity<Model>>();
-
-    const itemId = createId();
-    this._pendingItems.set(itemId, callback);
-
-    // Write Item Genesis block.
-    log('Item Genesis:', itemId);
-    await this._writeStream.write({
-      object: {
-        itemId,
-        genesis: {
-          itemType,
-          modelType,
-          link: { source, target }
-        },
-        mutations: [
-          {
-            mutation: {
-              '@type': 'google.protobuf.Any',
-              type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-              value: mutation
-            }
-          }
-        ]
-      }
-    });
-
-    // Unlocked by construct.
-    log('Pending Item:', itemId);
-    const link = await waitForCreation();
-    assert(link instanceof Link);
-    return link;
   }
 
   private async _constructModel({
@@ -309,51 +239,6 @@ export class ItemManager {
   }
 
   /**
-   * Constructs an item with the appropriate model.
-   */
-  @timed(5_000)
-  async constructLink({
-    itemId, // TODO(burdon): link_id?
-    itemType,
-    modelType,
-    snapshot,
-    source,
-    target
-  }: LinkConstructionOptions): Promise<Link<any>> {
-    assert(itemId);
-    assert(modelType);
-
-    const model = await this._constructModel({
-      itemId,
-      modelType,
-      snapshot
-    });
-
-    const sourceItem = this.getItem(source);
-    const targetItem = this.getItem(target);
-
-    const link = new Link(this, itemId, itemType, model, {
-      sourceId: source,
-      targetId: target,
-      source: sourceItem,
-      target: targetItem
-    });
-
-    if (sourceItem) {
-      sourceItem._links.add(link);
-      this.update.emit(sourceItem);
-    }
-    if (targetItem) {
-      targetItem._refs.add(link);
-      this.update.emit(targetItem);
-    }
-
-    this._addEntity(link);
-
-    return link;
-  }
-
-  /**
    * Process a message directed to a specific model.
    * @param itemId Id of the item containing the model.
    * @param message Encoded model message
@@ -399,14 +284,6 @@ export class ItemManager {
 
       for (const child of item.children) {
         this.deconstructItem(child.id);
-      }
-
-      for (const ref of item.refs) {
-        ref._link!.target = undefined;
-      }
-
-      for (const link of item.links) {
-        link._link!.source = undefined;
       }
     }
   }
