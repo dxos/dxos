@@ -79,6 +79,11 @@ const main = async () => {
       requiresArg: false,
       type: 'boolean'
     })
+    .options('printMessage', {
+      description: 'whether to print the template message if any',
+      requiresArg: false,
+      type: 'boolean'
+    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
@@ -97,6 +102,7 @@ const main = async () => {
           interactive: boolean;
           executeFileTemplates: boolean;
           inheritance: boolean;
+          printMessage: boolean;
         } & any
       ) => {
         const tstart = Date.now();
@@ -114,6 +120,7 @@ const main = async () => {
           overwrite,
           interactive,
           executeFileTemplates,
+          printMessage,
           ...restArgs
         } = args;
         const debug = logger(verbose);
@@ -136,7 +143,8 @@ const main = async () => {
           exclude: exclude?.split(','),
           interactive,
           executeFileTemplates,
-          inheritance
+          inheritance,
+          printMessage
         });
         let written = 0;
         debug(`output folder: ${output}`);

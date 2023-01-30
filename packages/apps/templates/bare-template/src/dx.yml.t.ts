@@ -11,7 +11,7 @@ export default defineTemplate<typeof config>(({ input }) => {
         type: dxos:type/app
         build:
           command: npm run build
-          outdir: out/app/${name}
+          outdir: out/${name}
   runtime:
     client:
       storage:
