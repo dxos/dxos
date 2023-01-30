@@ -113,7 +113,7 @@ const Cell = ({ item, bounds, level = 1, onClick, onZoom, onDelete }: CellProps)
         bounds && 'absolute',
         'group',
         'flex flex-col overflow-hidden p-2',
-        'bg-yellow-100 shadow select-none cursor-pointer'
+        'bg-yellow-100 shadow select-none cursor-pointer text-black'
       )}
       style={bounds && { left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
       onClick={(event) => {

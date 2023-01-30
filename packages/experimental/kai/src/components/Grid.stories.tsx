@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { range } from '@dxos/util';
@@ -53,20 +53,24 @@ const Test = () => {
   const { ref: containerRef } = useResizeDetector();
   const layout = useMemo(() => new TestGridLayout(), []);
 
-  const num = 20;
-  const items: Item[] = useMemo(
-    () =>
-      range(num).map((i) => ({
+  const num = 10;
+  const items: Item[] = useMemo(() => {
+    const dim = 3;
+
+    return range(num).map((i) => {
+      const point = {
+        x: faker.datatype.number({ min: -dim, max: dim }),
+        y: faker.datatype.number({ min: -dim, max: dim })
+      };
+
+      return {
         id: String(i),
+        point,
         label: faker.lorem.words(3),
         content: faker.lorem.sentences(faker.datatype.number(3))
-      })),
-    [num]
-  );
-
-  useEffect(() => {
-    layout.updateItems(items);
-  }, [items]);
+      };
+    });
+  }, [num]);
 
   const handleSelect = (item: Item) => {
     console.log(item);
