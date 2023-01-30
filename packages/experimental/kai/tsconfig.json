@@ -3,11 +3,11 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react",
-    "module": "ESNext",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist"
   },
   "exclude": [

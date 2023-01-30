@@ -1,6 +1,7 @@
 {
   "name": "@dxos/gem-spore",
   "version": "0.1.23",
+  "private": true,
   "description": "Gem spore.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -13,7 +13,7 @@ export const SketchFrame = React.lazy(() => import('./SketchFrame'));
 export const StackFrame = React.lazy(() => import('./StackFrame'));
 export const TableFrame = React.lazy(() => import('./TableFrame'));
 export const TasksFrame = React.lazy(() => import('./TasksFrame'));
-export const CodeFrame = React.lazy(() => import('./CodeFrame'));
+export const SandboxFrame = React.lazy(() => import('./SandboxFrame'));
 export const CalendarFrame = React.lazy(() => import('./CalendarFrame'));
 export const ChessFrame = React.lazy(() => import('./ChessFrame'));
 export const DocumentFrame = React.lazy(() => import('./DocumentFrame'));

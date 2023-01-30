@@ -147,6 +147,9 @@ export class Generator {
     const document = createDocument();
     await this._db.save(document);
 
+    // TODO(burdon): Use pattern:
+    // frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
+
     // TODO(burdon): Factor out into TextModel.
     // https://prosemirror.net/docs/guide/#doc
     const doc = schema.node(
