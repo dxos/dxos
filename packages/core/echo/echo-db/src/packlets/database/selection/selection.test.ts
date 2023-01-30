@@ -50,7 +50,6 @@ const createReducer = <R>(result: R) =>
 const ITEM_ORG = 'example:item/org';
 const ITEM_PROJECT = 'example:item/project';
 const ITEM_PERSON = 'example:item/person';
-const LINK_MEMBER = 'example:link/member';
 
 const org1 = createItem('org/1', ITEM_ORG);
 const org2 = createItem('org/2', ITEM_ORG);

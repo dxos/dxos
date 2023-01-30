@@ -6,14 +6,13 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
-import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Model } from '@dxos/model-factory';
+import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
-import { MutationMetaWithTimeframe } from '@dxos/protocols';
 
 const log = debug('dxos:echo-db:data-mirror');
 
