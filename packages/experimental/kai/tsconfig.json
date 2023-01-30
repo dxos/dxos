@@ -3,6 +3,7 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react",
+    "module": "ESNext",
     "lib": [
       "DOM",
       "ESNext"
@@ -62,10 +63,19 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"

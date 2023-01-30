@@ -2,16 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { XCircle } from 'phosphor-react';
 import React, { useEffect, useState } from 'react';
 
-import { deleted, id, TextObject } from '@dxos/echo-schema';
+import { data, TextObject } from '@dxos/echo-schema';
 import { compile, Editor, Frame } from '@dxos/framebox';
-import { log } from '@dxos/log';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { Button, getSize, mx } from '@dxos/react-components';
 
-import { CardRow, Input } from '../components';
 import { EmbeddedFrame } from '../frame-container';
 import { useSpace } from '../hooks';
 
@@ -22,7 +18,7 @@ const CodeFrame = withReactor(() => {
     const id = setInterval(async () => {
       if (selected) {
         await compile(selected);
-        console.log(selected);
+        console.log(selected[data]);
       }
     }, 1000);
 
@@ -48,7 +44,7 @@ export type FrameListProps = {
 const FrameList = withReactor(({ selected, onSelected }: FrameListProps) => {
   const space = useSpace();
   const frames = useQuery(space, Frame.filter());
-  const [newFrame, setNewFrame] = useState<string>('');
+  const [_newFrame, _setNewFrame] = useState<string>('');
 
   useEffect(() => {
     if (frames.length === 0) {
@@ -61,12 +57,14 @@ const FrameList = withReactor(({ selected, onSelected }: FrameListProps) => {
         frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
         onSelected(frame);
       });
+    } else {
+      onSelected(frames[0]);
     }
   }, []);
 
   return (
     <div>
-      {frames.map((frame) => (
+      {/* {frames.map((frame) => (
         <CardRow
           key={frame[id]}
           action={
@@ -91,8 +89,8 @@ const FrameList = withReactor(({ selected, onSelected }: FrameListProps) => {
             />
           }
         />
-      ))}
-      <CardRow
+      ))} */}
+      {/* <CardRow
         action={
           <Button
             className='text-gray-300'
@@ -120,16 +118,28 @@ const FrameList = withReactor(({ selected, onSelected }: FrameListProps) => {
             onChange={(e) => setNewFrame(e.target.value)}
           />
         }
-      />
+      /> */}
     </div>
   );
 });
 
 const EXAMPLE = `
-import React from 'https://cdn.jsdelivr.net/npm/@esm-bundle/react@17.0.2-fix.1/esm/react.development.min.js'
+import React from 'react'
+import { useQuery, useSpaces } from '@dxos/react-client'
+import { Task } from '@kai/schema'
+import { id } from '@dxos/echo-schema'
 
 const Frame = () => {
-  return <div>Hello world</div>
+  const [space] = useSpaces()
+  const tasks = useQuery(space, Task.filter())
+
+  return (
+    <ul>
+      {tasks.map(task => (
+        <li key={task[id]}>{task.title}</li>
+      ))}
+    </ul>
+  )
 }
 
 export default Frame;
