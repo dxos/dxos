@@ -21,7 +21,7 @@ import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
 describe('DataMirror', () => {
-  test.only('basic', async () => {
+  test('basic', async () => {
     // Setup
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<DataMessage>();
