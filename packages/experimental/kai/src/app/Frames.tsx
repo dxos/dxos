@@ -40,7 +40,7 @@ import {
   SketchFrame,
   TableFrame,
   TasksFrame,
-  CodeFrame
+  SandboxFrame
 } from '../frames';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
@@ -139,11 +139,11 @@ export const frames: FrameDef[] = [
     Component: ChessFrame
   },
   {
-    id: FrameID.CODE,
+    id: FrameID.SANDBOX,
     title: 'Sandbox',
-    description: 'Realtime collaborative code sandbox.',
+    description: 'Collaborative code sandbox.',
     Icon: Code,
-    Component: CodeFrame
+    Component: SandboxFrame
   }
 ];
 
