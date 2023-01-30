@@ -78,11 +78,11 @@ export class DataMirror {
         if (update.object.snapshot) {
           entity._stateManager.resetToSnapshot(update.object);
         } else if (update.object.mutations) {
-          assert(update.object.mutations.length === 1, 'We support only one mutation per message.');
-          const mutation = update.object.mutations[0];
-          assert(mutation.meta);
-          assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-          await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
+          for (const mutation of update.object.mutations) {
+            assert(mutation.meta);
+            assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+            await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
+          }
         }
       },
       (err) => {

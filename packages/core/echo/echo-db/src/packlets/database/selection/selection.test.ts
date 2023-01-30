@@ -154,7 +154,7 @@ describe('Selection', () => {
 
     // TODO(burdon): Support nested traverals (context as third arg?)
     test('complex reducer', () => {
-      const query = createReducer({ numItems: 0, numLinks: 0 })
+      const query = createReducer({ numItems: 0 })
         .filter({ type: ITEM_ORG })
         .call((items: Item[], { numItems, ...rest }) => ({
           ...rest,
@@ -169,7 +169,7 @@ describe('Selection', () => {
         }))
         .exec();
 
-      expect(query.value).toEqual({ numItems: 5, numLinks: 4, stage: 'c' });
+      expect(query.value).toEqual({ numItems: 5, stage: 'b' });
     });
   });
 

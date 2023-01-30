@@ -115,20 +115,18 @@ export class DataServiceHost {
         }
 
         log(`Entity stream ${request.itemId}: ${JSON.stringify({ mutation })}`);
-        assert(mutation.data.mutations?.length === 1, 'Only single mutation per item supported');
+        // assert(mutation.data.mutations?.length === 1, 'Only single mutation per item supported');
         next({
           object: {
-            mutations: [
-              {
-                mutation: mutation.data.mutations[0].mutation,
-                meta: {
-                  feedKey: PublicKey.from(mutation.meta.feedKey),
-                  memberKey: PublicKey.from(mutation.meta.memberKey),
-                  seq: mutation.meta.seq,
-                  timeframe: mutation.meta.timeframe
-                }
+            mutations: mutation.data.mutations?.map((m) => ({
+              mutation: m.mutation,
+              meta: {
+                feedKey: PublicKey.from(mutation.meta.feedKey),
+                memberKey: PublicKey.from(mutation.meta.memberKey),
+                seq: mutation.meta.seq,
+                timeframe: mutation.meta.timeframe
               }
-            ]
+            }))
           }
         });
       });
