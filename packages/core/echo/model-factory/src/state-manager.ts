@@ -11,7 +11,7 @@ import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { MutationMeta, MutationMetaWithTimeframe, ItemID } from '@dxos/protocols';
-import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
@@ -81,7 +81,7 @@ export class StateManager<M extends Model> {
     private readonly _modelType: ModelType,
     modelConstructor: ModelConstructor<M> | undefined,
     private readonly _itemId: ItemID,
-    private _initialState: ModelSnapshot,
+    private _initialState: EchoObject,
     private readonly _memberKey: PublicKey,
     private readonly _feedWriter: FeedWriter<Any> | null
   ) {
@@ -133,7 +133,7 @@ export class StateManager<M extends Model> {
 
     // Construct and enqueue an optimistic mutation.
     const mutationEncoded = {
-      type_url: 'google.protobuf.Any',
+      type_url: 'todo', // TODO(mykola): this._modelMeta!.mutationCodec.typeUrl ???
       value: this._modelMeta!.mutationCodec.encode(mutation)
     };
     const optimisticMutation: OptimisticMutation = {
@@ -214,6 +214,7 @@ export class StateManager<M extends Model> {
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
       const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation.value);
+      assert(mutation.meta);
       this._stateMachine.process(mutationDecoded, {
         author: PublicKey.from(mutation.meta.memberKey)
       });
@@ -308,19 +309,21 @@ export class StateManager<M extends Model> {
   /**
    * Create a snapshot of the current state.
    */
-  createSnapshot(): ModelSnapshot {
+  createSnapshot(): EchoObject {
     if (this.initialized && this.modelMeta.snapshotCodec) {
       // Returned reduced snapshot if possible.
       return {
+        itemId: this._itemId,
         snapshot: {
           '@type': 'google.protobuf.Any',
-          typeUrl: 'snapshot', // TODO(mykola): use model type.
+          typeUrl: 'todo', // TODO(mykola): use model type.
           value: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
         }
       };
     }
 
     return {
+      itemId: this._itemId,
       snapshot: this._initialState.snapshot,
       mutations: [...(this._initialState.mutations ?? []), ...this._mutations]
     };
@@ -329,7 +332,7 @@ export class StateManager<M extends Model> {
   /**
    * Reset the state to existing snapshot.
    */
-  resetToSnapshot(snapshot: ModelSnapshot) {
+  resetToSnapshot(snapshot: EchoObject) {
     this._initialState = snapshot;
     this._mutations = [];
 

@@ -24,7 +24,8 @@ const createId = () => PublicKey.random().toHex();
 
 describe('StateManager', () => {
   test('construct readonly and apply mutations', () => {
-    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
+    const itemId = createId();
+    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, itemId, { itemId }, feedA, null);
 
     expect(stateManager.model).toBeInstanceOf(TestListModel);
     expect(stateManager.model).toBeInstanceOf(Model);
@@ -46,7 +47,8 @@ describe('StateManager', () => {
 
   describe('snapshot and restore', () => {
     test('with model snapshots - TestListModel', () => {
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
+      const itemId = createId();
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, itemId, { itemId }, feedA, null);
       stateManager.processMessage(createMeta(feedA, 0), {
         type_url: 'example.testing.data.TestListMutation',
         value: TestListModel.meta.mutationCodec.encode({ data: 'message1' })
@@ -64,7 +66,8 @@ describe('StateManager', () => {
     });
 
     test('with framework snapshots - TestListModel', () => {
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
+      const itemId = createId();
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, itemId, { itemId }, feedA, null);
 
       stateManager.processMessage(createMeta(feedA, 0), {
         type_url: 'example.testing.data.TestListMutation',
@@ -85,7 +88,17 @@ describe('StateManager', () => {
 
   test('write loop', async () => {
     const feedWriter = new MockFeedWriter<Any>();
-    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
+    const itemId = createId();
+    const stateManager = new StateManager(
+      TestListModel.meta.type,
+      TestListModel,
+      itemId,
+      {
+        itemId
+      },
+      feedA,
+      feedWriter
+    );
     feedWriter.written.on(([message, meta]) =>
       stateManager.processMessage(
         {
@@ -108,7 +121,7 @@ describe('StateManager', () => {
       TestListModel.meta.type,
       undefined,
       createId(),
-      {},
+      { itemId: 'test' },
       feedA,
       null
     );
@@ -132,7 +145,17 @@ describe('StateManager', () => {
   });
 
   test('update event gets triggered', async () => {
-    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
+    const itemId = createId();
+    const stateManager = new StateManager(
+      TestListModel.meta.type,
+      TestListModel,
+      itemId,
+      {
+        itemId
+      },
+      feedA,
+      null
+    );
 
     const gotUpdate = stateManager.model.update.waitForCount(1);
     stateManager.processMessage(createMeta(feedA, 0), {
@@ -146,7 +169,17 @@ describe('StateManager', () => {
   describe('optimistic mutations', () => {
     test('single mutation gets applied synchronously', async () => {
       const feedWriter = new MockFeedWriter<Any>();
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
+      const itemId = createId();
+      const stateManager = new StateManager(
+        TestListModel.meta.type,
+        TestListModel,
+        itemId,
+        {
+          itemId
+        },
+        feedA,
+        feedWriter
+      );
       feedWriter.written.on(([message, meta]) =>
         stateManager.processMessage(
           {
@@ -168,7 +201,17 @@ describe('StateManager', () => {
 
     test('two optimistic mutations queued together', async () => {
       const feedWriter = new MockFeedWriter<Any>();
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
+      const itemId = createId();
+      const stateManager = new StateManager(
+        TestListModel.meta.type,
+        TestListModel,
+        itemId,
+        {
+          itemId
+        },
+        feedA,
+        feedWriter
+      );
       feedWriter.written.on(([message, meta]) =>
         stateManager.processMessage(
           {
@@ -194,7 +237,17 @@ describe('StateManager', () => {
 
     test('with reordering', async () => {
       const feedWriter = new MockFeedWriter<Any>(feedB);
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
+      const itemId = createId();
+      const stateManager = new StateManager(
+        TestListModel.meta.type,
+        TestListModel,
+        itemId,
+        {
+          itemId
+        },
+        feedA,
+        feedWriter
+      );
       feedWriter.written.on(([message, meta]) =>
         stateManager.processMessage(
           {
