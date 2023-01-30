@@ -58,7 +58,7 @@ export class DataMirror {
               modelType: addedEntity.genesis.modelType,
               source: addedEntity.genesis.link.source,
               target: addedEntity.genesis.link.target,
-              snapshot: {}
+              snapshot: { itemId: addedEntity.itemId }
             });
           } else {
             entity = await this._itemManager.constructItem({
@@ -66,7 +66,7 @@ export class DataMirror {
               itemType: addedEntity.genesis.itemType,
               modelType: addedEntity.genesis.modelType,
               parentId: addedEntity.itemMutation?.parentId,
-              snapshot: {}
+              snapshot: { itemId: addedEntity.itemId }
             });
           }
 
@@ -91,11 +91,12 @@ export class DataMirror {
       async (update) => {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
         if (update.snapshot) {
-          assert(update.snapshot.model);
-          entity._stateManager.resetToSnapshot(update.snapshot.model);
+          assert(update.snapshot);
+          entity._stateManager.resetToSnapshot(update.snapshot);
         } else if (update.mutation) {
-          if (update.mutation.data?.mutation) {
+          if (update.mutation.data?.mutations) {
             assert(update.mutation.meta);
+            assert(update.mutation.data.mutations.length === 1, 'We support only one mutation per message.');
             await entity._stateManager.processMessage(
               {
                 feedKey: update.mutation.meta.feedKey ?? failUndefined(),
@@ -103,7 +104,7 @@ export class DataMirror {
                 seq: update.mutation.meta.seq ?? failUndefined(),
                 timeframe: update.mutation.meta.timeframe ?? failUndefined()
               },
-              update.mutation.data.mutation ?? failUndefined()
+              update.mutation.data.mutations[0].mutation ?? failUndefined()
             );
           }
         }

@@ -10,7 +10,8 @@ import { Any } from '@dxos/codec-protobuf';
 import { failUndefined } from '@dxos/debug';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
-import { DatabaseSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Entity } from './entity';
 import { Item } from './item';
@@ -51,9 +52,10 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the SpaceProcessor?
     return async (message: IEchoStream) => {
       const {
-        data: { itemId, genesis, itemMutation, mutation, snapshot },
+        data: { itemId, genesis, itemMutation, mutations, snapshot },
         meta
       } = message;
+      const mutation = mutations?.length === 1 ? mutations?.[0].mutation : undefined;
       assert(itemId);
 
       //
@@ -67,7 +69,8 @@ export class ItemDemuxer {
           itemId,
           modelType,
           snapshot: {
-            mutations: mutation?.value ? [{ mutation: mutation as Any, meta }] : undefined
+            itemId,
+            mutations: mutation?.value?.length > 0 ? [{ mutation: mutation as Any, meta }] : undefined
           }
         };
 
@@ -104,7 +107,7 @@ export class ItemDemuxer {
       // Model mutations.
       //
       if (mutation && !genesis) {
-        assert(message.data.mutation);
+        assert(message.data.mutations);
         const modelMessage: ModelMessage<Any> = { meta, mutation }; // TODO(mykola): Send google.protobuf.Any instead of Uint8Array.
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, modelMessage);
@@ -119,7 +122,7 @@ export class ItemDemuxer {
     };
   }
 
-  createSnapshot(): DatabaseSnapshot {
+  createSnapshot(): EchoSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
       items: this._itemManager.items.map((item) => this.createItemSnapshot(item)),
@@ -127,15 +130,14 @@ export class ItemDemuxer {
     };
   }
 
-  createItemSnapshot(item: Item<Model<any>>): ItemSnapshot {
+  createItemSnapshot(item: Item<Model<any>>): EchoObject {
     const model = item._stateManager.createSnapshot();
 
     return {
-      itemId: item.id,
       itemType: item.type,
       modelType: item.modelType,
       parentId: item.parent?.id,
-      model
+      ...model
     };
   }
 
@@ -152,21 +154,21 @@ export class ItemDemuxer {
     };
   }
 
-  async restoreFromSnapshot(snapshot: DatabaseSnapshot) {
+  async restoreFromSnapshot(snapshot: EchoSnapshot) {
     const { items = [], links = [] } = snapshot;
 
     log(`Restoring ${items.length} items from snapshot.`);
     for (const item of sortItemsTopologically(items)) {
       assert(item.itemId);
       assert(item.modelType);
-      assert(item.model);
+      assert(item.snapshot);
 
       await this._itemManager.constructItem({
         itemId: item.itemId,
         modelType: item.modelType,
         itemType: item.itemType,
         parentId: item.parentId,
-        snapshot: item.model
+        snapshot: item // TODO(mykola): Refactor to pass just EchoObject.
       });
     }
 
@@ -192,8 +194,8 @@ export class ItemDemuxer {
  * Sort based on parents.
  * @param items
  */
-export const sortItemsTopologically = (items: ItemSnapshot[]): ItemSnapshot[] => {
-  const snapshots: ItemSnapshot[] = [];
+export const sortItemsTopologically = (items: EchoObject[]): EchoObject[] => {
+  const snapshots: EchoObject[] = [];
   const seenIds = new Set<ItemID>();
 
   while (snapshots.length !== items.length) {
