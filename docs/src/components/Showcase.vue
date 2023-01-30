@@ -1,15 +1,18 @@
 <template>
   <div class="showcase-preview">
   <Suspense>
-    <!-- TODO(wittjosiah): CodeSandbox not respecting patch-package from api. -->
-    <RenderReactDemo
-      :demo="demo"
-      :peerCount="peers"
-      :airplaneControl="controls.includes('airplane')"
-      :forkable="controls.includes('fork')"
-      :createIdentity="setup.includes('identity')"
-      :createSpace="setup.includes('space')"
-    />
+    <!-- TODO(wittjosiah): DXOS demos are not SSR-ready. -->
+    <ClientOnly>
+      <!-- TODO(wittjosiah): CodeSandbox not respecting patch-package from api. -->
+      <RenderReactDemo
+        :demo="demo"
+        :peerCount="peers"
+        :airplaneControl="controls.includes('airplane')"
+        :forkable="controls.includes('fork')"
+        :createIdentity="setup.includes('identity')"
+        :createSpace="setup.includes('space')"
+      />
+    </ClientOnly>
 
     <template #fallback>
       <div class="showcase-loading" ref="loading">

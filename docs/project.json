@@ -17,7 +17,8 @@
     "bundle": {
       "dependsOn": [
         "^build",
-        "^bundle"
+        "^bundle",
+        "prebuild"
       ],
       "executor": "nx:run-script",
       "options": {
