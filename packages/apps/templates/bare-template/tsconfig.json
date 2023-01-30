@@ -12,7 +12,9 @@
     ]
   },
   "include": [
-    "src"
+    "src",
+    "src/.vscode/*",
+    "src/.storybook/*"
   ],
   "references": [
     {
