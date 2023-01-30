@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react'
+import React from 'react';
 
 export const CreateIdentityPage = React.lazy(() => import('./CreateIdentityPage'));
 export const IdentityPage = React.lazy(() => import('./IdentityPage'));

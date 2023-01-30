@@ -19,7 +19,7 @@ import {
   Sword,
   Table
 } from 'phosphor-react';
-import React, { FC, lazy, useContext } from 'react';
+import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';

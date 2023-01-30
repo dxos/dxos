@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-
 import { Game } from '@dxos/chess-app';
 import { EchoDatabase } from '@dxos/echo-schema';
 
