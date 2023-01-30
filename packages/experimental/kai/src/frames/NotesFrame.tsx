@@ -2,37 +2,50 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useMemo } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import faker from 'faker';
+import React, { useMemo } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
-import { Grid, Item, TestGridLayout } from '../components';
+import { Grid, Item, Point, TestGridLayout } from '../components';
 import { useSpace } from '../hooks';
 import { Note } from '../proto';
 
 export const NotesFrame = () => {
-  const { ref: containerRef } = useResizeDetector();
-  const layout = useMemo(() => new TestGridLayout({ range: 2, size: 200, padding: 20 }), []);
+  const range = 2;
+  const layout = useMemo(() => new TestGridLayout({ range, size: 200, padding: 20 }), []);
   const space = useSpace();
   const notes = useQuery(space, Note.filter());
 
-  const items: Item[] = useMemo(
-    () =>
-      notes.map((note) => {
-        return {
-          id: note[id],
-          label: note.title,
-          content: note.content?.model?.textContent // TODO(burdon): Util.
+  // TODO(burdon): Store points in kanban object.
+  const points = useMemo(() => new Map<string, Point | undefined>(), []);
+  const items: Item[] = useMemo(() => {
+    return notes.map((note) => {
+      let point = points.get(note[id]);
+      if (!point) {
+        point = {
+          x: faker.datatype.number({ min: -range, max: range }),
+          y: faker.datatype.number({ min: -range, max: range })
         };
-      }),
-    [notes]
-  );
 
-  useEffect(() => {
-    layout.updateItems(items);
-  }, [items]);
+        points.set(note[id], point);
+      }
+
+      return {
+        id: note[id],
+        point,
+        label: note.title,
+        content: note.content?.model?.textContent // TODO(burdon): Util.
+      };
+    });
+  }, [notes]);
+
+  const handleCreate = async (point: Point) => {
+    const note = new Note({ title: 'note' });
+    await space.experimental.db.save(note);
+    points.set(note[id], point);
+  };
 
   const handleDelete = (item: Item) => {
     const note = notes.find((note) => item.id === note[id]);
@@ -41,9 +54,5 @@ export const NotesFrame = () => {
     }
   };
 
-  return (
-    <div ref={containerRef} className='flex flex-1 overflow-hidden bg-gray-500'>
-      <Grid items={items} layout={layout} onDelete={handleDelete} />
-    </div>
-  );
+  return <Grid items={items} layout={layout} onCreate={handleCreate} onDelete={handleDelete} />;
 };
