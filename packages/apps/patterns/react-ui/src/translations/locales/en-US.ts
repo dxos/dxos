@@ -8,7 +8,9 @@ export const os = {
   'sidebar label': 'DXOS sidebar',
   'copy invitation code label': 'Copy',
   'open share panel label': 'Share',
-  'join space heading': '<small>Joining</small><large>{{spaceTitle}}</large>',
+  'joining heading': '<small>Joining</small><large>{{name}}</large>',
+  'join space heading': 'Join a space',
+  'halo heading': 'Initialize device identity',
   'exit label': 'Exit',
   'identity selector title': 'Join as',
   'identity radio group title': 'Select an identity you’ve associated with this device already',
@@ -45,6 +47,14 @@ export const os = {
   'cancel label': 'Cancel',
   'done label': 'Done',
   'reset label': 'Start over',
-  'pin input label': 'The PIN provided by the invitation sender',
-  'invitation input label': 'Paste an invitation code or URL'
+  'auth code input label': 'Auth code provided by the invitation sender',
+  'invitation input label': 'Paste an invitation code or URL',
+  'create space invitation label': 'Invite',
+  'qr label': 'Scan to accept invitation',
+  'empty invitations message': 'No pending invitations',
+  'show all spaces label': 'All spaces',
+  'all spaces label': 'All spaces',
+  'create space label': 'Create a new space',
+  'join space label': 'Join a space',
+  'show current space label': 'Current space'
 };

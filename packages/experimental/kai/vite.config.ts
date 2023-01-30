@@ -55,6 +55,7 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/halo/credentials',
       '@dxos/protocols/proto/dxos/halo/invitations',
       '@dxos/protocols/proto/dxos/halo/keys',
+      '@dxos/protocols/proto/dxos/iframe',
       '@dxos/protocols/proto/dxos/mesh/bridge',
       '@dxos/protocols/proto/dxos/rpc'
     ]

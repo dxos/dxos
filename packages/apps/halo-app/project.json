@@ -6,7 +6,7 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/apps/halo-app/src/index.ts",
-        "outputPath": "packages/apps/halo-app/dist",
+        "outputPath": "packages/apps/halo-app/dist/types",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
@@ -38,6 +38,21 @@
       "executor": "@nrwl/vite:build",
       "options": {
         "outputPath": "packages/apps/halo-app/out/halo"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/apps/halo-app/src/testing.ts"
+        ],
+        "outputPath": "packages/apps/halo-app/dist/lib",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

@@ -2,15 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
-import { Invitation, InvitationEncoder, Space } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { deleted, id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
 import { FILTER } from '../constants';
 import { Todo, TodoList } from '../proto';
+import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 
@@ -22,6 +23,12 @@ export const Main = withReactor(() => {
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const [list] = useQuery(space, TodoList.filter());
+
+  useEffect(() => {
+    if (!list) {
+      void space.experimental.db.save(new TodoList());
+    }
+  }, [list]);
 
   if (!list) {
     return null;
@@ -43,20 +50,6 @@ export const Main = withReactor(() => {
       list.todos.push(new Todo({ title }));
       inputRef.current!.value = '';
     }
-  };
-
-  const handleShare = async () => {
-    space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING }).subscribe({
-      onConnecting: (invitation) => {
-        const invitationCode = InvitationEncoder.encode(invitation);
-        // TODO(wittjosiah): Playwright only supports reading clipboard in chromium.
-        //   https://github.com/microsoft/playwright/issues/13037
-        console.log(JSON.stringify({ invitationCode }));
-        void navigator.clipboard.writeText(invitationCode);
-      },
-      onError: (error) => console.error(error),
-      onSuccess: (invitation) => {}
-    });
   };
 
   const handleToggleAll = (event: ChangeEvent<HTMLInputElement>) => {
@@ -82,17 +75,7 @@ export const Main = withReactor(() => {
 
   return (
     <div>
-      <header className='header'>
-        <h1>todos</h1>
-        <input
-          ref={inputRef}
-          className='new-todo'
-          placeholder='What needs to be done?'
-          onKeyDown={handleNewTodoKeyDown}
-          autoFocus={true}
-          data-testid='new-todo'
-        />
-      </header>
+      <Header onKeyDown={handleNewTodoKeyDown} ref={inputRef} />
       {todos.length > 0 && (
         <section className='main'>
           <input
@@ -105,9 +88,6 @@ export const Main = withReactor(() => {
           <label htmlFor='toggle-all' data-testid='toggle-all'>
             Mark all as complete
           </label>
-          <button id='share' onClick={handleShare} data-testid='share-button'>
-            Share
-          </button>
           <ul className='todo-list'>
             {todos.map((todo) => (
               <TodoItem

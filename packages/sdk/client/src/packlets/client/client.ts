@@ -96,6 +96,13 @@ export class Client {
     return this._config;
   }
 
+  /**
+   * Current client services provider.
+   */
+  get services(): ClientServicesProvider {
+    return this._services;
+  }
+
   // TODO(burdon): Rename isOpen.
   /**
    * Returns true if the client has been initialized. Initialize by calling `.initialize()`
@@ -149,6 +156,7 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services.SystemService.initSession();
 
+    // TODO(wittjosiah): Promise.all?
     await this._halo.open();
     await this._echo.open();
     await this._mesh.open();

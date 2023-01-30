@@ -6,9 +6,9 @@ import * as RadioGroup from '@radix-ui/react-radio-group';
 import { CaretLeft, CaretRight, UserPlus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
+import type { Profile } from '@dxos/client';
 import { Avatar, Button, themeVariantFocus, getSize, mx, useTranslation } from '@dxos/react-components';
 
-import { Profile } from '../JoinPanelProps';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentitySelectorProps extends ViewStateProps {
@@ -57,6 +57,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
                   'radix-state-unchecked:bg-neutral-100 dark:radix-state-unchecked:bg-neutral-900',
                   themeVariantFocus('os')
                 )}
+                data-testid='identity-selector-item'
               >
                 <RadioGroup.Indicator className='absolute inset-0 flex items-center justify-center leading-0'>
                   <div className='w-1.5 h-1.5 rounded-full bg-white' />
@@ -75,6 +76,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
         compact
         onClick={() => dispatch({ type: 'add identity' })}
         className='flex items-center gap-2 pli-2'
+        data-testid='add-identity'
       >
         <span>{t('add identity label')}</span>
         <UserPlus weight='bold' className={getSize(3.5)} />
@@ -88,6 +90,7 @@ export const IdentitySelector = ({ availableIdentities, ...viewStateProps }: Ide
             identity: activeIdentity
           })
         }
+        data-testid='select-identity'
       >
         <CaretLeft weight='bold' className={mx(getSize(4), 'invisible')} />
         <span className='grow'>{t('continue label')}</span>

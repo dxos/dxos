@@ -53,11 +53,15 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   if (options.serve) {
     const [project, target] = options.serve.split(':');
 
-    // TODO(wittjosiah): Provide base url to tests from executor?
-    // Based on https://github.com/nrwl/nx/blob/a5766a8/packages/cypress/src/executors/cypress/cypress.impl.ts#L63-L72.
-    for await (const _ of await runExecutor({ project, target }, options.serveOptions ?? {}, context)) {
+    // TODO(wittjosiah): Servers seem to shut down during tests.
+    //   Pages can be loaded during beforeAll but no reloaded during tests.
+    for await (const { success: _, ...executorResult } of await runExecutor(
+      { project, target },
+      options.serveOptions ?? {},
+      context
+    )) {
       try {
-        success = await runTests({ ...resolvedOptions, skipBrowserTests }, context);
+        success = await runTests({ ...resolvedOptions, skipBrowserTests, executorResult }, context);
         if (!options.watch) {
           break;
         }
@@ -93,6 +97,7 @@ const getEnvironments = (options: MochaExecutorOptions): TestEnvironment[] => {
 export type RunTestsOptions = Omit<MochaExecutorOptions, 'environments'> & {
   environments: TestEnvironment[];
   skipBrowserTests?: boolean;
+  executorResult?: object;
 };
 
 // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.

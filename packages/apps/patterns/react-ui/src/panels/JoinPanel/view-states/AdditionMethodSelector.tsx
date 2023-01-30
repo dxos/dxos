@@ -5,9 +5,9 @@
 import { CaretLeft, CaretRight, Plus, QrCode, Textbox } from 'phosphor-react';
 import React from 'react';
 
+import type { Profile } from '@dxos/client';
 import { Button, CompoundButton, getSize, mx, useTranslation } from '@dxos/react-components';
 
-import { Profile } from '../JoinPanelProps';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface AdditionMethodSelectorProps extends ViewStateProps {
@@ -36,6 +36,7 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
           before={<Plus className={getSize(6)} />}
           onClick={() => dispatch({ type: 'select addition method', method: 'create identity' })}
           data-autofocus='addition method selector'
+          data-testid='create-identity'
         >
           {t('create identity label')}
         </CompoundButton>
@@ -44,6 +45,7 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
           description={t('join identity description')}
           before={<QrCode className={getSize(6)} />}
           onClick={() => dispatch({ type: 'select addition method', method: 'accept device invitation' })}
+          data-testid='join-identity'
         >
           {t('join identity label')}
         </CompoundButton>
@@ -52,6 +54,7 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
           description={t('recover identity description')}
           before={<Textbox className={getSize(6)} />}
           onClick={() => dispatch({ type: 'select addition method', method: 'recover identity' })}
+          data-testid='recover-identity'
         >
           {t('recover identity label')}
         </CompoundButton>
@@ -59,6 +62,7 @@ export const AdditionMethodSelector = ({ availableIdentities, ...viewStateProps 
       <Button
         disabled={disabled || availableIdentities.length < 1}
         onClick={() => dispatch({ type: 'deselect identity' })}
+        data-testid='deselect-identity'
       >
         <CaretLeft className={getSize(4)} weight='bold' />
         <span className='grow'>{t('deselect identity label')}</span>

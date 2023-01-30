@@ -33,17 +33,20 @@ export {
   type AuthenticatingInvitationObservable,
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
+  ClientServicesProxy,
   type ClientServicesProvider,
   IFrameHostRuntime,
   IFrameProxyRuntime,
   WorkerRuntime,
-  WorkerSession
+  WorkerSession,
+  ShellRuntime
 } from '@dxos/client-services';
 
 export { ApiError } from '@dxos/errors';
 
 export { Contact, Profile, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 
 // TODO(burdon): Remove.
 export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';

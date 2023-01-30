@@ -6,7 +6,7 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "node",
       "sharedworker"
@@ -67,6 +67,9 @@
     },
     {
       "path": "../patterns/react-appkit"
+    },
+    {
+      "path": "../patterns/react-ui"
     }
   ]
 }

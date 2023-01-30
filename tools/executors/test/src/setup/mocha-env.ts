@@ -4,5 +4,6 @@
 
 (globalThis as any).mochaExecutor = {
   environment: process.env.MOCHA_ENV ?? 'nodejs',
-  tags: (process.env.MOCHA_TAGS ?? '').split(',')
+  tags: (process.env.MOCHA_TAGS ?? '').split(','),
+  executorResult: JSON.parse(process.env.EXECUTOR_RESULT ?? '{}')
 };

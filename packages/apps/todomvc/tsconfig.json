@@ -40,6 +40,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../halo-app"
     }
   ]
 }

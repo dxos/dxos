@@ -41,6 +41,7 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/halo/credentials',
       '@dxos/protocols/proto/dxos/halo/invitations',
       '@dxos/protocols/proto/dxos/halo/keys',
+      '@dxos/protocols/proto/dxos/iframe',
       '@dxos/protocols/proto/dxos/mesh/bridge',
       '@dxos/protocols/proto/dxos/rpc'
     ]
@@ -74,10 +75,11 @@ export default defineConfig({
     }),
     ThemePlugin({
       content: [
-        resolve(__dirname, './index.html'),
+        resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
       ]
     }),
     ReactPlugin(),

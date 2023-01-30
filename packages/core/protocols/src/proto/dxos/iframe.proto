@@ -6,6 +6,8 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
+import "dxos/keys.proto";
+
 package dxos.iframe;
 
 message StartRequest {
@@ -21,4 +23,39 @@ service IframeService {
 service WorkerService {
   rpc Start(StartRequest) returns (google.protobuf.Empty);
   rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+enum ShellDisplay {
+  NONE = 0;
+  FULLSCREEN = 1;
+}
+
+message AppContextRequest {
+  ShellDisplay display = 1;
+  optional dxos.keys.PublicKey space_key = 2;
+  optional string invitation_code = 3;
+}
+
+/// App RPCs for the shell.
+service AppService {
+  rpc SetContext(AppContextRequest) returns (google.protobuf.Empty);
+}
+
+enum ShellLayout {
+  DEFAULT = 0;
+  AUTH = 1;
+  CURRENT_SPACE = 2;
+  SPACE_LIST = 3;
+  JOIN_SPACE = 4;
+}
+
+message LayoutRequest {
+  ShellLayout layout = 1;
+  optional string invitation_code = 2;
+  optional dxos.keys.PublicKey space_key = 3;
+}
+
+/// Shell UI RPCs.
+service ShellService {
+  rpc SetLayout(LayoutRequest) returns (google.protobuf.Empty);
 }

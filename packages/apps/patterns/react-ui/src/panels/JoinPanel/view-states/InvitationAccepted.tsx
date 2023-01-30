@@ -33,6 +33,7 @@ const PureInvitationAcceptedContent = ({
       disabled={disabled}
       className='grow flex items-center gap-2 pli-2'
       data-autofocus={`${invitationType} invitation acceptor; invitation accepted`}
+      data-testid={`${invitationType}-invitation-accepted-done`}
     >
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
       <span className='grow'>{t('done label')}</span>

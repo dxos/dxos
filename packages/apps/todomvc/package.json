@@ -28,6 +28,7 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
+    "@dxos/halo-app": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",

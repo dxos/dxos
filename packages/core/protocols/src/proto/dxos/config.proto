@@ -103,6 +103,7 @@ message Runtime {
     /// Milliseconds
     optional int32 invitation_expiration = 5;
 
+    /// Location of the remote client host.
     optional string remote_source = 6;
   }
 

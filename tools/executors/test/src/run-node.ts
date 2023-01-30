@@ -24,6 +24,7 @@ export type NodeOptions = {
   checkLeaks: boolean;
   forceExit: boolean;
   domRequired: boolean;
+  executorResult?: object;
   playwright: boolean;
   browser?: string;
   headless: boolean;
@@ -47,6 +48,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
       STAY_OPEN: String(options.stayOpen),
       MOCHA_TAGS: options.tags.join(','),
       MOCHA_ENV: options.browser ?? 'nodejs',
+      EXECUTOR_RESULT: JSON.stringify(options.executorResult),
       DX_TRACK_LEAKS: options.trackLeakedResources ? '1' : undefined,
 
       // Patch in ts-node will read this.

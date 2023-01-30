@@ -64,11 +64,11 @@ export const TodoItem = ({
   );
 
   return (
-    <li className={cx({ completed, editing })} data-test='todo'>
+    <li className={cx({ completed, editing })} data-testid='todo'>
       <div className='view'>
-        <input className='toggle' type='checkbox' checked={completed} onChange={onToggle} data-test='todo-toggle' />
+        <input className='toggle' type='checkbox' checked={completed} onChange={onToggle} data-testid='todo-toggle' />
         <label onDoubleClick={() => handleEdit()}>{title}</label>
-        <button className='destroy' onClick={onDestroy} data-test='destroy-button' />
+        <button className='destroy' onClick={onDestroy} data-testid='destroy-button' />
       </div>
       {editing && (
         <input
