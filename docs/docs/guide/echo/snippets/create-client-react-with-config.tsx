@@ -12,7 +12,6 @@ const App = () => {
   return (
     <ClientProvider
       config={async () => new Config(Defaults(), await Dynamics())}
-      fallback={<div>Loading</div>}
     >
       {/* Your components here  */}
     </ClientProvider>

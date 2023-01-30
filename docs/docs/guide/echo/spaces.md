@@ -12,8 +12,8 @@ There are several steps to establishing a space between peers:
 1.  Peer A listens on the peer network for peers intereseted in a specific invite code it generated
 2.  Peer B obtains the invite code and locates the listening peer A via the signaling network
 3.  Peer A and B establish a secure connection via Diffie Hellmann key exchange
-4.  Peer A decides on a secret PIN code
-5.  Finally, Peer B must provide the PIN code to Peer A over the connection just established to verify its security
+4.  Peer A generates an authorization code
+5.  Finally, Peer B must provide the authorization code to Peer A over the connection just established to verify the security of the channel
 
 After a space with a peer is established, the peer's public key becomes "known" to the user's [HALO](../halo) and subsequent mutual spaces are easier to negotiate.
 
