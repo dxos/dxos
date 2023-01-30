@@ -17,6 +17,10 @@ There are several steps to establishing a space between peers:
 
 After a space with a peer is established, the peer's public key becomes "known" to the user's [HALO](../halo) and subsequent mutual spaces are easier to negotiate.
 
+:::tip
+If you're using `react`, DXOS provides a simple [UI flow](react) that implements generating and accepting invitations to spaces.
+:::
+
 ## Creating spaces
 
 ```ts file=./snippets/create-space.ts#L5-
