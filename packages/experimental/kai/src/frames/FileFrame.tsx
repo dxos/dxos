@@ -49,7 +49,7 @@ const Preview: FC<{ file: File }> = ({ file }) => {
   return <iframe className='w-full h-full' srcDoc={doc} />;
 };
 
-export const FileFrame = () => {
+const FileFrame = () => {
   const config = useConfig();
   const space = useSpace();
   const files = useQuery(space, File.filter());
@@ -165,3 +165,5 @@ export const FileFrame = () => {
     </div>
   );
 };
+
+export default FileFrame;
