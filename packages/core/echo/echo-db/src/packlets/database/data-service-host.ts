@@ -109,11 +109,12 @@ export class DataServiceHost {
         }
 
         log(`Entity stream ${request.itemId}: ${JSON.stringify({ mutation })}`);
+        assert(mutation.data.mutations?.length === 1, 'Only single mutation per item supported');
         next({
           object: {
             mutations: [
               {
-                mutation: mutation.data,
+                mutation: mutation.data.mutations[0].mutation,
                 meta: {
                   feedKey: PublicKey.from(mutation.meta.feedKey),
                   memberKey: PublicKey.from(mutation.meta.memberKey),
