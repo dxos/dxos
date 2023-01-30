@@ -35,19 +35,4 @@ message SpaceSnapshot {
  */
 message EchoSnapshot {
   repeated object.EchoObject items = 1;
-  repeated LinkSnapshot links = 2;
-}
-
-/**
- * @deprecated
- */
-// TODO(mykola): Remove.
-message LinkSnapshot {
-  optional string link_id = 1;
-  optional string link_type = 2;
-  string model_type = 3;
-  optional string model_version = 4;
-  string source = 5;
-  string target = 6;
-  optional object.EchoObject model = 7;
 }
