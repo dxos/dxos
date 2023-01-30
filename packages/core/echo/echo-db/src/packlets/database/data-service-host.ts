@@ -52,7 +52,13 @@ export class DataServiceHost {
           genesis: {
             itemType: entity.type,
             modelType: entity.modelType
-          }
+          },
+          itemMutation:
+            entity instanceof Item
+              ? {
+                  parentId: entity.parent?.id
+                }
+              : undefined
         };
       };
 
