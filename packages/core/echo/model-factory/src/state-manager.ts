@@ -294,6 +294,7 @@ export class StateManager<M extends Model> {
       } else if (optimisticIndex === -1) {
         log(`Apply ${JSON.stringify(meta)}`);
         // Mutation can safely be append at the end preserving order.
+        debugger;
         const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation.value);
         this._stateMachine!.process(mutationDecoded, {
           author: PublicKey.from(meta.memberKey)

@@ -13,6 +13,7 @@ import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
+import { MutationMetaWithTimeframe } from '@dxos/protocols';
 
 const log = debug('dxos:echo-db:data-mirror');
 
@@ -47,28 +48,13 @@ export class DataMirror {
           assert(addedEntity.genesis);
           assert(addedEntity.genesis.modelType);
 
-          let entity: Entity<Model<any>>;
-          if (addedEntity.genesis.link) {
-            assert(addedEntity.genesis.link.source);
-            assert(addedEntity.genesis.link.target);
-
-            entity = await this._itemManager.constructLink({
-              itemId: addedEntity.itemId,
-              itemType: addedEntity.genesis.itemType,
-              modelType: addedEntity.genesis.modelType,
-              source: addedEntity.genesis.link.source,
-              target: addedEntity.genesis.link.target,
-              snapshot: { itemId: addedEntity.itemId }
-            });
-          } else {
-            entity = await this._itemManager.constructItem({
-              itemId: addedEntity.itemId,
-              itemType: addedEntity.genesis.itemType,
-              modelType: addedEntity.genesis.modelType,
-              parentId: addedEntity.itemMutation?.parentId,
-              snapshot: { itemId: addedEntity.itemId }
-            });
-          }
+          const entity = await this._itemManager.constructItem({
+            itemId: addedEntity.itemId,
+            itemType: addedEntity.genesis.itemType,
+            modelType: addedEntity.genesis.modelType,
+            parentId: addedEntity.itemMutation?.parentId,
+            snapshot: { itemId: addedEntity.itemId }
+          });
 
           this._subscribeToUpdates(entity);
         }
@@ -90,23 +76,14 @@ export class DataMirror {
     stream.subscribe(
       async (update) => {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
-        if (update.snapshot) {
-          assert(update.snapshot);
-          entity._stateManager.resetToSnapshot(update.snapshot);
-        } else if (update.mutation) {
-          if (update.mutation.data?.mutations) {
-            assert(update.mutation.meta);
-            assert(update.mutation.data.mutations.length === 1, 'We support only one mutation per message.');
-            await entity._stateManager.processMessage(
-              {
-                feedKey: update.mutation.meta.feedKey ?? failUndefined(),
-                memberKey: update.mutation.meta.memberKey ?? failUndefined(),
-                seq: update.mutation.meta.seq ?? failUndefined(),
-                timeframe: update.mutation.meta.timeframe ?? failUndefined()
-              },
-              update.mutation.data.mutations[0].mutation ?? failUndefined()
-            );
-          }
+        if (update.object.snapshot) {
+          entity._stateManager.resetToSnapshot(update.object);
+        } else if (update.object.mutations) {
+          assert(update.object.mutations.length === 1, 'We support only one mutation per message.');
+          const mutation = update.object.mutations[0];
+          assert(mutation.meta);
+          assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+          await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
         }
       },
       (err) => {

@@ -23,7 +23,6 @@ import { EntityNotFoundError } from '../errors';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { Link } from './link';
 
 const log = debug('dxos:echo-db:data-service-host');
 
@@ -52,21 +51,8 @@ export class DataServiceHost {
           itemId: id,
           genesis: {
             itemType: entity.type,
-            modelType: entity.modelType,
-            link:
-              entity instanceof Link
-                ? {
-                    source: entity.sourceId,
-                    target: entity.targetId
-                  }
-                : undefined
-          },
-          itemMutation:
-            entity instanceof Item
-              ? {
-                  parentId: entity.parent?.id
-                }
-              : undefined
+            modelType: entity.modelType
+          }
         };
       };
 
@@ -109,20 +95,13 @@ export class DataServiceHost {
     return new Stream(({ next }) => {
       assert(request.itemId);
       const entityItem = this._itemManager.items.find((item) => item.id === request.itemId);
-      let snapshot;
-      if (entityItem) {
-        snapshot = this._itemDemuxer.createItemSnapshot(entityItem as Item);
-      } else {
-        const entityLink = this._itemManager.links.find((link) => link.id === request.itemId);
-        if (entityLink) {
-          snapshot = this._itemDemuxer.createLinkSnapshot(entityLink as Link);
-        } else {
-          raise(new EntityNotFoundError(request.itemId));
-        }
+      if (!entityItem) {
+        raise(new EntityNotFoundError(request.itemId));
       }
+      const snapshot = this._itemDemuxer.createItemSnapshot(entityItem as Item);
 
       log(`Entity stream ${request.itemId}: ${JSON.stringify({ snapshot })}`);
-      next({ snapshot });
+      next({ object: snapshot });
 
       return this._itemDemuxer.mutation.on((mutation) => {
         if (mutation.data.itemId !== request.itemId) {
@@ -131,14 +110,18 @@ export class DataServiceHost {
 
         log(`Entity stream ${request.itemId}: ${JSON.stringify({ mutation })}`);
         next({
-          mutation: {
-            data: mutation.data,
-            meta: {
-              feedKey: PublicKey.from(mutation.meta.feedKey),
-              memberKey: PublicKey.from(mutation.meta.memberKey),
-              seq: mutation.meta.seq,
-              timeframe: mutation.meta.timeframe
-            }
+          object: {
+            mutations: [
+              {
+                mutation: mutation.data,
+                meta: {
+                  feedKey: PublicKey.from(mutation.meta.feedKey),
+                  memberKey: PublicKey.from(mutation.meta.memberKey),
+                  seq: mutation.meta.seq,
+                  timeframe: mutation.meta.timeframe
+                }
+              }
+            ]
           }
         });
       });

@@ -11,12 +11,10 @@ import { failUndefined } from '@dxos/debug';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
-import { EchoSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager, ModelConstructionOptions } from './item-manager';
-import { Link } from './link';
 
 const log = debug('dxos:echo-db:item-demuxer');
 
@@ -74,21 +72,11 @@ export class ItemDemuxer {
           }
         };
 
-        let entity: Entity<any>;
-        if (genesis.link) {
-          entity = await this._itemManager.constructLink({
-            ...modelOpts,
-            itemType,
-            source: genesis.link.source ?? failUndefined(),
-            target: genesis.link.target ?? failUndefined()
-          });
-        } else {
-          entity = await this._itemManager.constructItem({
-            ...modelOpts,
-            parentId: itemMutation?.parentId,
-            itemType
-          });
-        }
+        const entity = await this._itemManager.constructItem({
+          ...modelOpts,
+          parentId: itemMutation?.parentId,
+          itemType
+        });
 
         assert(entity.id === itemId);
       }
@@ -125,8 +113,7 @@ export class ItemDemuxer {
   createSnapshot(): EchoSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.items.map((item) => this.createItemSnapshot(item)),
-      links: this._itemManager.links.map((link) => this.createLinkSnapshot(link))
+      items: this._itemManager.items.map((item) => this.createItemSnapshot(item))
     };
   }
 
@@ -141,21 +128,8 @@ export class ItemDemuxer {
     };
   }
 
-  createLinkSnapshot(link: Link<Model<any>>): LinkSnapshot {
-    const model = link._stateManager.createSnapshot();
-
-    return {
-      linkId: link.id,
-      linkType: link.type,
-      modelType: link.modelMeta.type,
-      source: link.source.id,
-      target: link.target.id,
-      model
-    };
-  }
-
   async restoreFromSnapshot(snapshot: EchoSnapshot) {
-    const { items = [], links = [] } = snapshot;
+    const { items = [] } = snapshot;
 
     log(`Restoring ${items.length} items from snapshot.`);
     for (const item of sortItemsTopologically(items)) {
@@ -169,22 +143,6 @@ export class ItemDemuxer {
         itemType: item.itemType,
         parentId: item.parentId,
         snapshot: item // TODO(mykola): Refactor to pass just EchoObject.
-      });
-    }
-
-    log(`Restoring ${links.length} links from snapshot.`);
-    for (const link of links) {
-      assert(link.linkId);
-      assert(link.modelType);
-      assert(link.model);
-
-      await this._itemManager.constructLink({
-        itemId: link.linkId,
-        itemType: link.linkType,
-        modelType: link.modelType,
-        source: link.source,
-        target: link.target,
-        snapshot: link.model
       });
     }
   }
