@@ -27,6 +27,9 @@
       "path": "../../common/sentry"
     },
     {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
