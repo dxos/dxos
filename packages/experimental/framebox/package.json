@@ -1,6 +1,7 @@
 {
   "name": "@dxos/framebox",
   "version": "0.1.23",
+  "private": true,
   "description": "Frame sandbox",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -57,9 +58,6 @@
   "peerDependencies": {
     "react": "*",
     "react-dom": "*"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "typedoc": {
     "entryPoint": "src/index.ts"
