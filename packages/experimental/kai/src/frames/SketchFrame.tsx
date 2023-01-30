@@ -39,7 +39,7 @@ const sizes: any[] = [
 
 const dimensions = { width: 900, height: 600 };
 
-export const SketchFrame = withReactor(() => {
+const SketchFrame = withReactor(() => {
   const download = useFileDownload();
   const canvasRef = useRef<any>();
   const [strokeColor, setStrokeColor] = useState('#333');
@@ -182,3 +182,5 @@ export const SketchFrame = withReactor(() => {
     </div>
   );
 });
+
+export default SketchFrame;

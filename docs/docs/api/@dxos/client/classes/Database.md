@@ -64,7 +64,7 @@ Arguments:
 ### [createSnapshot()]()
 
 
-Returns: <code>DatabaseSnapshot</code>
+Returns: <code>EchoSnapshot</code>
 
 Arguments: none
 ### [destroy()]()

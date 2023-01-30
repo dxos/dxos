@@ -17,7 +17,7 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
 };
 
 // TODO(burdon): Generalize type.
-export const KanbanFrame: FC = () => {
+const KanbanFrame: FC = () => {
   const space = useSpace();
 
   const [text, setText] = useState<string>();
@@ -60,3 +60,5 @@ export const KanbanFrame: FC = () => {
     </div>
   );
 };
+
+export default KanbanFrame;

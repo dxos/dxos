@@ -14,7 +14,7 @@ import { createSpacePath } from '../hooks';
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const InitPage = () => {
+const InitPage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -47,3 +47,5 @@ export const InitPage = () => {
     </main>
   );
 };
+
+export default InitPage;

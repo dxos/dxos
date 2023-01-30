@@ -15,7 +15,7 @@ import { invitationCodeFromUrl } from '../util';
 /**
  * Join space via invitation URL.
  */
-export const JoinSpacePage = () => {
+const JoinSpacePage = () => {
   const { t } = useTranslation('appkit');
   const client = useClient();
   const navigate = useNavigate();
@@ -42,3 +42,5 @@ export const JoinSpacePage = () => {
     </div>
   );
 };
+
+export default JoinSpacePage;
