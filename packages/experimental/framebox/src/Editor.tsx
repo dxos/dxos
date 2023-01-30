@@ -38,6 +38,7 @@ export const Editor = ({ document }: EditorProps) => {
       defaultValue='// some comment'
       beforeMount={handleEditorWillMount}
       onMount={handleEditorDidMount}
+      options={{ readOnly: false, minimap: { enabled: false } }}
     />
   );
 };

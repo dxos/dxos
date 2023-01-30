@@ -8,6 +8,8 @@ Copyright 2023 DXOS.org
       ${importMap}
     </script>
 
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Required for vite -->
     <script type="module">
       import RefreshRuntime from "/@react-refresh"
@@ -21,8 +23,8 @@ Copyright 2023 DXOS.org
   <body>
     <div id="root"></div>
     <script type="module">
-      // TODO(dmaretskyi): Disabled until we configure the bundler.
-      // import '@frame/main';
+      // Trick vite into not compiling this code.
+      eval('import("@frame/main")');
     </script>
   </body>
 </html>

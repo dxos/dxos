@@ -103,11 +103,11 @@ export const createType = (field: pb.Field): string => {
 
   field.resolve();
   if (field.repeated) {
-    if (field.resolvedType) {
-      return `${scalar()}[]`;
-    } else {
-      return `Set<${scalar()}>`;
-    }
+    // if (field.resolvedType) {
+    return `${scalar()}[]`;
+    // } else {
+    //   return `Set<${scalar()}>`;
+    // }
   } else {
     return scalar();
   }
