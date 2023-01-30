@@ -8,7 +8,7 @@ import { mx, defaultInput } from '@dxos/react-components';
 
 export type InputProps = ComponentProps<'input'>;
 
-export type Ref = HTMLInputElement;
+type Ref = HTMLInputElement;
 
 export const Input = forwardRef<Ref, InputProps>((props, ref) => {
   const { className, disabled, value: propValue, onChange, ...rest } = props;

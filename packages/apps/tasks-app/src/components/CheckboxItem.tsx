@@ -9,7 +9,7 @@ import { mx, getSize, defaultFocus, Button, defaultHover } from '@dxos/react-com
 
 import { Input } from './Input';
 
-export type Ref = HTMLInputElement;
+type Ref = HTMLInputElement;
 
 export type CheckBoxItemProps = {
   isLoading?: boolean;
