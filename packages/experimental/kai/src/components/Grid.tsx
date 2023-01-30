@@ -35,7 +35,6 @@ export type TestGridLayoutOptions = {
 };
 
 // TODO(burdon): Factor out.
-// TODO(burdon): Check doesn't overlap.
 // TODO(burdon): Figure out coordinates: logical [x, y] to projected (based on center translation).
 export class TestGridLayout implements Layout {
   private readonly _logical = new Map<string, Point | undefined>();
@@ -195,7 +194,12 @@ export const Grid = ({ items = [], layout, onSelect, onDelete }: GridProps) => {
   // TODO(burdon): Recursive layout.
   // TODO(burdon): Cache layout and trigger on update.
   return (
-    <div ref={containerRef} className='flex flex-1 bg-gray-200' style={style} onClick={() => handleReset()}>
+    <div
+      ref={containerRef}
+      className='flex flex-1 overflow-auto bg-gray-200'
+      style={style}
+      onClick={() => handleReset()}
+    >
       {layout &&
         items.map((item) => {
           const bounds = layout?.getBounds(item.id);

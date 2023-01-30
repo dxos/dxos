@@ -24,8 +24,11 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
+          // TODO(burdon): Missing exports?
           '@dxos/protocols',
+          '@dxos/protocols/proto/dxos/config',
           '@dxos/protocols/proto/dxos/echo/model/object',
+          '@dxos/protocols/proto/dxos/halo/credentials',
           'storybook-dark-mode'
         ]
       },

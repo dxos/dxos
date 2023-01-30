@@ -41,9 +41,8 @@ export const NotesFrame = () => {
     }
   };
 
-  // TODO(burdon): Overdraw bounds so can click outside.
   return (
-    <div ref={containerRef} className='flex flex-1 overflow-auto bg-gray-500'>
+    <div ref={containerRef} className='flex flex-1 overflow-hidden bg-gray-500'>
       <Grid items={items} layout={layout} onDelete={handleDelete} />
     </div>
   );
