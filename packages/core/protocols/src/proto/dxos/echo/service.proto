@@ -11,27 +11,18 @@ import "dxos/keys.proto";
 
 package dxos.echo.service;
 
-message SubscribeEntitySetRequest {
+message SubscribeRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
-message SubscribeEntitySetResponse {
-  // TODO(dmaretskyi): This is wrong, the first one should use item snapshot, and deleted should be just list of ids.
-  repeated dxos.echo.object.EchoObject added = 1;
-  repeated dxos.echo.object.EchoObject deleted = 2;
-}
-
-message SubscribeEntityStreamRequest {
-  dxos.keys.PublicKey space_key = 1;
-  string item_id = 2;
-}
-
-message SubscribeEntityStreamResponse {
-  object.EchoObject object = 1;
+message SubscribeResponse {
+  // TODO(dmaretskyi): Use batch message.
+  repeated dxos.echo.object.EchoObject objects = 1;
 }
 
 message WriteRequest {
   dxos.keys.PublicKey space_key = 1;
+  // TODO(dmaretskyi): Mutation batch.
   dxos.echo.object.EchoObject mutation = 2;
 }
 
@@ -41,7 +32,6 @@ message MutationReceipt {
 }
 
 service DataService {
-  rpc SubscribeEntitySet(SubscribeEntitySetRequest) returns (stream SubscribeEntitySetResponse);
-  rpc SubscribeEntityStream(SubscribeEntityStreamRequest) returns (stream SubscribeEntityStreamResponse);
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse);
   rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
 }
