@@ -20,7 +20,7 @@ const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
 /**
  * Home page with current space.
  */
-export const SpacePage = () => {
+const SpacePage = () => {
   const navigate = useNavigate();
   const frames = useActiveFrames();
   const { spaceKey: currentSpaceKey, frame } = useParams();
@@ -66,3 +66,5 @@ export const SpacePage = () => {
     </SpaceContext.Provider>
   );
 };
+
+export default SpacePage;
