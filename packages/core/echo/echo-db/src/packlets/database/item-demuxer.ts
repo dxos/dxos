@@ -70,7 +70,7 @@ export class ItemDemuxer {
           modelType,
           snapshot: {
             itemId,
-            mutations: mutation?.value ? [{ mutation: mutation as Any, meta }] : undefined
+            mutations: mutation?.value.length > 0 ? [{ mutation: mutation as Any, meta }] : undefined
           }
         };
 

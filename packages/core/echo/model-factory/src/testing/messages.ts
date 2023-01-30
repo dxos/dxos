@@ -19,10 +19,14 @@ export const createSetPropertyMutation = (
         itemId,
         mutations: [
           {
-            mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({
-              key,
-              value
-            })
+            mutation: {
+              '@type': 'google.protobuf.Any',
+              typeUrl: 'todo',
+              value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({
+                key,
+                value
+              })
+            }
           }
         ]
       }
