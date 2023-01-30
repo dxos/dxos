@@ -15,7 +15,7 @@ import { CardRow, Input } from '../components';
 import { EmbeddedFrame } from '../frame-container';
 import { useSpace } from '../hooks';
 
-export const CodeFrame = withReactor(() => {
+const CodeFrame = withReactor(() => {
   const [selected, setSelected] = useState<Frame | undefined>(undefined);
 
   useEffect(() => {
@@ -38,12 +38,14 @@ export const CodeFrame = withReactor(() => {
   );
 });
 
+export default CodeFrame;
+
 export type FrameListProps = {
   selected: Frame | undefined;
   onSelected: (frame: Frame) => void;
 };
 
-export const FrameList = withReactor(({ selected, onSelected }: FrameListProps) => {
+const FrameList = withReactor(({ selected, onSelected }: FrameListProps) => {
   const space = useSpace();
   const frames = useQuery(space, Frame.filter());
   const [newFrame, setNewFrame] = useState<string>('');
