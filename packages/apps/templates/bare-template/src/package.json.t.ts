@@ -3,7 +3,7 @@
 //
 import path from 'path';
 import { promises as fs } from 'fs';
-import { defineTemplate, ExtractInput, z } from '@dxos/plate';
+import { defineTemplate, ExtractInput } from '@dxos/plate';
 import { getDxosRepoInfo } from './utils.t/getDxosRepoInfo';
 import { PackageJson } from './utils.t/packageJson';
 
