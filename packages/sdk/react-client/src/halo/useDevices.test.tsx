@@ -9,7 +9,7 @@ import React from 'react';
 import { Client, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
-import { ClientProvider } from '../client';
+import { ClientContext } from '../client';
 import { useDevices } from './useDevices';
 
 describe('useDevices', () => {
@@ -18,7 +18,9 @@ describe('useDevices', () => {
     await client.initialize();
     await client.halo.createProfile();
     // TODO(wittjosiah): Factor out.
-    const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
+    const wrapper = ({ children }: any) => (
+      <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
+    );
     const { result } = renderHook(() => useDevices(), { wrapper });
     expect(result.current?.length).to.eq(1);
   });

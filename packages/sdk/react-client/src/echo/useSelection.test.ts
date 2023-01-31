@@ -30,6 +30,7 @@ describe('useSelection', () => {
     expect(result.current?.length).to.eq(count);
   });
 
+  // TODO(wittjosiah): Emits "act" warning, but not when run with "only".
   test('gets items selection updates', async () => {
     const selection = space.select({ type: TYPE_EXAMPLE }).exec();
     const { result } = renderHook(() => useSelection(selection));
@@ -38,8 +39,7 @@ describe('useSelection', () => {
 
     await act(async () => {
       await space.database.createItem({ type: TYPE_EXAMPLE });
-      // TODO(wittjosiah): Why does createItem fire 2 selection updates?
-      await selection.update.waitForCount(2);
+      await selection.update.waitForCount(1);
     });
 
     expect(result.current?.length).to.eq(count + 1);
