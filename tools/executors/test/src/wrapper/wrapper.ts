@@ -12,6 +12,7 @@ const mocha = require('mocha/lib/mocha');
 class TestBuilder {
   private _timeout?: number;
   private _retries?: number;
+  private _repeat?: number;
   private _tags: string[] = ['unit'];
   private _environments: {
     include?: TestEnvironment[];
@@ -24,6 +25,7 @@ class TestBuilder {
     return {
       timeout: this._timeout,
       retries: this._retries,
+      repeat: this._repeat,
       tags: this._tags,
       environments: this._environments
     };
@@ -36,6 +38,14 @@ class TestBuilder {
 
   retries(count: number) {
     this._retries = count;
+    return this;
+  }
+
+  /**
+   * Run test multiple times. Useful for debugging flaky tests.
+   */
+  repeat(count: number) {
+    this._repeat = count;
     return this;
   }
 
@@ -66,6 +76,7 @@ interface Test {
   retries(count: number): Test;
   // TODO(wittjosiah): Support on describe as well.
   tag(...tags: string[]): Test;
+  repeat(count: number): Test;
   onlyEnvironments(...environments: string[]): Test;
   skipEnvironments(...environments: string[]): Test;
 }
@@ -74,7 +85,7 @@ const testBase = (mochaFn: NaturalTestFunction) => (name: string, body: Func | A
   const builder = new TestBuilder(name, body);
 
   (mochaFn as NaturalTestFunction)(builder.name, async function (...args) {
-    const { timeout, retries, tags, environments } = builder.info;
+    const { timeout, retries, repeat, tags, environments } = builder.info;
 
     if (timeout) {
       this.timeout(timeout);
@@ -92,7 +103,13 @@ const testBase = (mochaFn: NaturalTestFunction) => (name: string, body: Func | A
       this.skip();
     }
 
-    await builder.body.bind(this)(...args);
+    if (repeat) {
+      for (let i = 0; i < repeat; i += 1) {
+        await builder.body.bind(this)(...args);
+      }
+    } else {
+      await builder.body.bind(this)(...args);
+    }
   });
 
   return builder;
