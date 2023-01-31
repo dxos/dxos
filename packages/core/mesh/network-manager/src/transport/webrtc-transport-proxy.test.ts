@@ -88,7 +88,9 @@ describe('WebRTCTransportProxy', () => {
     await sleep(1); // Process events.
 
     expect(callsCounter).toEqual(1);
-  }).timeout(1_000);
+  })
+    .timeout(1_000)
+    .tag('e2e');
 
   test('establish connection and send data through with protocol', async () => {
     const stream1 = new TestStream();
@@ -113,7 +115,9 @@ describe('WebRTCTransportProxy', () => {
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
     await TestStream.assertConnectivity(stream1, stream2);
-  }).timeout(1_000);
+  })
+    .timeout(1_000)
+    .tag('e2e');
 
   describe('Multiplexing', () => {
     let service: any;
@@ -180,6 +184,8 @@ describe('WebRTCTransportProxy', () => {
       afterTest(() => proxy2.errors.assertNoUnhandledErrors());
 
       await TestStream.assertConnectivity(stream1, stream2);
-    }).timeout(1_000);
+    })
+      .timeout(1_000)
+      .tag('e2e');
   });
 });
