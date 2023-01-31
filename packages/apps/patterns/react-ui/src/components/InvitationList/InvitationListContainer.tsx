@@ -18,8 +18,8 @@ export const InvitationListContainer = ({ spaceKey, createInvitationUrl }: Invit
   const space = useSpace(spaceKey);
   const invitations = useSpaceInvitations(spaceKey);
   const onClickRemove = useCallback(
-    (invitation: CancellableInvitationObservable) => {
-      invitation.invitation?.invitationId && space?.removeInvitation(invitation.invitation.invitationId);
+    ({ invitation }: CancellableInvitationObservable) => {
+      invitation?.invitationId && space?.removeInvitation(invitation.invitationId);
     },
     [space]
   );
