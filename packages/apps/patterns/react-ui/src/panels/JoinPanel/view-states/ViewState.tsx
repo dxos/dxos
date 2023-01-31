@@ -11,6 +11,7 @@ import { useInvitationStatus } from '@dxos/react-client';
 import { mx, useTranslation, Trans, Avatar, useId, getSize, strongShimmer } from '@dxos/react-components';
 
 import { defaultSurface, subduedSurface } from '../../../styles';
+import { invitationStatusValue } from '../../../util';
 import { JoinDispatch } from '../JoinPanelProps';
 
 export interface ViewStateProps extends ComponentProps<'div'> {
@@ -26,17 +27,6 @@ const activeColor = 'bg-primary-500 dark:bg-primary-400';
 const successColor = 'bg-success-500 dark:bg-success-400';
 const errorColor = 'bg-error-500 dark:bg-error-400';
 const cancelledColor = 'bg-warning-500 dark:bg-warning-400';
-
-const statusValueMap = new Map<Invitation.State, number>([
-  [Invitation.State.ERROR, -3],
-  [Invitation.State.TIMEOUT, -2],
-  [Invitation.State.CANCELLED, -1],
-  [Invitation.State.INIT, 0],
-  [Invitation.State.CONNECTING, 1],
-  [Invitation.State.CONNECTED, 2],
-  [Invitation.State.AUTHENTICATING, 3],
-  [Invitation.State.SUCCESS, 4]
-]);
 
 export const ViewStateHeading = ({ children, className, ...props }: ComponentPropsWithoutRef<'h2'>) => {
   return (
@@ -96,7 +86,7 @@ const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Aut
   const halted =
     status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT || status === Invitation.State.ERROR;
 
-  const cursor = statusValueMap.get(halted ? haltedAt! : status)!;
+  const cursor = invitationStatusValue.get(halted ? haltedAt! : status)!;
 
   const resolvedColor =
     status === Invitation.State.ERROR

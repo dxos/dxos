@@ -6,23 +6,13 @@ import { Copy, ProhibitInset, QrCode, X } from 'phosphor-react';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback } from 'react';
 
-import { Invitation, CancellableInvitationObservable } from '@dxos/client';
+import { CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
+import { invitationStatusValue } from '../../util';
 import { SharedInvitationListProps } from './InvitationListProps';
 import { InvitationStatusAvatar } from './InvitationStatusAvatar';
-
-const statusValueMap = new Map<Invitation.State, number>([
-  [Invitation.State.ERROR, -3],
-  [Invitation.State.TIMEOUT, -2],
-  [Invitation.State.CANCELLED, -1],
-  [Invitation.State.INIT, 0],
-  [Invitation.State.CONNECTING, 1],
-  [Invitation.State.CONNECTED, 2],
-  [Invitation.State.AUTHENTICATING, 3],
-  [Invitation.State.SUCCESS, 4]
-]);
 
 export interface InvitationListItemProps extends SharedInvitationListProps {
   invitation: CancellableInvitationObservable;
@@ -39,7 +29,7 @@ export const InvitationListItem = ({
   const { t } = useTranslation('os');
 
   const { cancel, status, haltedAt, invitationCode, authenticationCode } = useInvitationStatus(invitation);
-  const statusValue = statusValueMap.get(status) ?? 0;
+  const statusValue = invitationStatusValue.get(status) ?? 0;
 
   const isCancellable = statusValue < 4 && statusValue >= 0;
   const showShare = statusValue < 3 && statusValue >= 0;
