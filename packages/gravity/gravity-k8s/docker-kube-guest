@@ -1,0 +1,9 @@
+FROM ubuntu:22.04
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get upgrade -y
+WORKDIR /
+RUN mkdir -p /root/.kube/profiles
+COPY ./kube.default-guest.yml /root/.kube/profiles/default
+COPY ./bin/kube /usr/local/bin/
+RUN chmod a+x /usr/local/bin/kube
+EXPOSE 4318 10001 9004 3479 4002 5002 8889
+CMD ["/usr/local/bin/kube", "daemon", "-debug"]

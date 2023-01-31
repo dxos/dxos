@@ -17,7 +17,7 @@ RUN n i ${NODE_VER}
 ARG GIT_TOKEN
 RUN git config --global url."https://${GIT_TOKEN}:@github.com/".insteadOf "https://github.com/"
 RUN mkdir /dxos && cd /dxos && git clone https://github.com/dxos/dxos.git
-RUN cd /dxos/dxos && git checkout feature/gravity-sync
+RUN cd /dxos/dxos && git checkout a1ex-gravity-multikube
 RUN cd /dxos/dxos && pnpm install
 RUN cd /dxos/dxos && pnpm run build
 RUN mkdir -p /tmp/gravity-results
@@ -25,9 +25,15 @@ WORKDIR /dxos/dxos/packages/gravity/gravity-agent
 COPY ./*.yml ./config/
 COPY ./run_agent.sh ./
 RUN chmod a+x ./run_agent.sh
+WORKDIR /opt
+RUN curl https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.5.3-linux-x86_64.tar.gz
+RUN tar xfz ./filebeat-8.5.3-linux-x86_64.tar.gz
+WORKDIR /opt/filebeat-8.5.3
+COPY ./filebeat/filebeat.yml .
 ARG GRAVITY_TEST_SCENARIO
 ENV GRAVITY_TEST_SCENARIO=${GRAVITY_TEST_SCENARIO:-host}
 EXPOSE 43430
+
 # FROM alpine:latest
 # RUN apk update && apk upgrade && apk add bash curl npm jq libc6-compat libxtst-dev
 # RUN npm i -g n pnpm@7.17.0

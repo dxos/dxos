@@ -1,0 +1,38 @@
+runtime:
+  client:
+    storage:
+      persistent: false
+      # path: '/tmp/dx/gravity'
+  kube:
+    autoupdate:
+      enabled: true
+      interval: 21600
+    host: '165.22.188.172'
+    https:
+      port: "443"
+    monitoring:
+      endpoint: 165.22.188.172:4317
+      interval: 60
+    p2p:
+      port: "10000"
+    port: "80"
+    telemetry: {}
+    trace: {}
+  services:
+    ice:
+    - urls: stun:165.22.188.172:3478
+    - credential: dxos
+      urls: turn:165.22.188.172:3478
+      username: dxos
+    - urls: stun:165.22.188.172:3478
+    - credential: dxos
+      urls: turn:165.22.188.172:3478
+      username: dxos
+    ipfs:
+      gateway: http://165.22.188.172/ipfs/gateway
+      server: http://165.22.188.172/ipfs/api
+    publisher:
+      server: ws://165.22.188.172/.well-known/dx/deploy
+    signal:
+      server: ws://165.22.188.172/.well-known/dx/signal
+version: 1

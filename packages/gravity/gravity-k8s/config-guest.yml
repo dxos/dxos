@@ -7,32 +7,32 @@ runtime:
     autoupdate:
       enabled: true
       interval: 21600
-    host: localhost
+    host: '165.22.188.175'
     https:
       port: "443"
     monitoring:
-      endpoint: localhost:4317
+      endpoint: 165.22.188.175:4318
       interval: 60
     p2p:
       port: "10000"
-    port: "9003"
+    port: "80"
     telemetry: {}
     trace: {}
   services:
     ice:
-    - urls: stun:kube.dxos.org:3478
+    - urls: stun:165.22.188.175:3478
     - credential: dxos
-      urls: turn:kube.dxos.org:3478
+      urls: turn:165.22.188.175:3478
       username: dxos
-    - urls: stun:localhost:3478
+    - urls: stun:165.22.188.175:3478
     - credential: dxos
-      urls: turn:localhost:3478
+      urls: turn:165.22.188.175:3478
       username: dxos
     ipfs:
-      gateway: http://localhost:9003/ipfs/gateway
-      server: http://localhost:9003/ipfs/api
+      gateway: http://165.22.188.175/ipfs/gateway
+      server: http://165.22.188.175/ipfs/api
     publisher:
-      server: ws://localhost:9003/.well-known/dx/deploy
+      server: ws://165.22.188.175/.well-known/dx/deploy
     signal:
-      server: ws://localhost:9003/.well-known/dx/signal
+      server: ws://165.22.188.175/.well-known/dx/signal
 version: 1

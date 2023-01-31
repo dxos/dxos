@@ -8,6 +8,7 @@ import { LogConfig, LogFilter, LogLevel, LogOptions, LogProcessorType, levels } 
 import { LogProcessor } from './context';
 import { loadOptions } from './platform';
 import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR, BROWSER_PROCESSOR } from './processors';
+import { FILE_PROCESSOR } from './processors/file-processor';
 
 /**
  * Processor variants.
@@ -46,16 +47,24 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
     }
   );
 
-  // TODO(burdon): Verbose option.
-  // console.log(JSON.stringify(options, undefined, 2));
-  options = defaultsDeep({}, loadOptions(options.file), options);
+  if (options.file) {
+    options = defaultsDeep({}, loadOptions(options.file), options);
+    // TODO(burdon): Verbose option.
+    // console.log(JSON.stringify(options, undefined, 2));
+  }
 
+  const processorsArr: LogProcessor[] = []
   const defaultProcessor = IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
+  processorsArr.push(options.processor ? processors[options.processor] : defaultProcessor)
+
+  if (typeof window === 'undefined') { // Running in Node.
+    processorsArr.push(FILE_PROCESSOR);
+  }
 
   return {
     options,
     filters: parseFilter(options.filter ?? LogLevel.INFO),
-    processor: options.processor ? processors[options.processor] : defaultProcessor,
+    processors: processorsArr,
     prefix: options.prefix
   };
 };

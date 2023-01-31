@@ -8,52 +8,6 @@ spec:
       persistentVolumeClaim:
         claimName: gravity-pv-claim
   containers:
-  - name: dxos-kube-host
-    image: dxos-kube-host
-    terminationMessagePath: "/tmp/dxos-kube"
-    imagePullPolicy: Never
-    resources:
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
-    ports:
-      - containerPort: 4317
-      - containerPort: 10000
-      - containerPort: 9003
-      - containerPort: 3478
-      - containerPort: 4001
-      - containerPort: 5001
-      - containerPort: 8888
-    env:
-    - name: "IPFS_LOGGING"
-      value: "debug"
-
-  - name: dxos-kube-guest
-    image: dxos-kube-guest
-    terminationMessagePath: "/tmp/dxos-kube"
-    imagePullPolicy: Never
-    resources:
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
-    ports:
-      - containerPort: 4317
-      - containerPort: 10001
-      - containerPort: 9004
-      - containerPort: 3478
-      - containerPort: 4002
-      - containerPort: 5002
-      - containerPort: 8889
-    env:
-    - name: "DXOS_KUBE_API"
-      value: "5002"
-    - name: "DXOS_KUBE_GATEWAY"
-      value: "8889"
-    - name: "DXOS_KUBE_SWARM"
-      value: "4002"
-    - name: "IPFS_LOGGING"
-      value: "debug"
-
   - name: dxos-agent-host
     image: dxos-agent
     terminationMessagePath: "/tmp/dxos-agent-host"
