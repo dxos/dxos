@@ -119,7 +119,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
       })
     );
 
-    await dataMirror.open();
+    this._subscriptions.add(await dataMirror.open());
   }
 
   async close(): Promise<void> {

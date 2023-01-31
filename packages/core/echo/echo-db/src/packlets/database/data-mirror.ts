@@ -81,5 +81,9 @@ export class DataMirror {
 
     // Wait for initial set of items.
     await loaded.wait();
+
+    return () => {
+      entities.close();
+    };
   }
 }
