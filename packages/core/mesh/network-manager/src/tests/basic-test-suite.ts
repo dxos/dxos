@@ -10,9 +10,10 @@ import { log } from '@dxos/log';
 import { afterTest, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { TestBuilder } from '../testing';
+import { TestBuilder, TestSwarmConnection } from '../testing';
 import { FullyConnectedTopology, StarTopology } from '../topology';
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
+import { asyncTimeout, latch } from '@dxos/async';
 
 // TODO(burdon): Use PublicKey throughout (remove conversion to strings, from buffers, etc.)
 
@@ -154,26 +155,35 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     .tag('e2e')
     .timeout(2_000);
 
-  // TODO(mykola): broken.
+  // TODO(mykola): Fails with large amount of peers ~10.
+  // Time wasted: 1 hour (increment when you work on it).
   test.skip('many peers and connections', async () => {
-    const numTopics = 5;
-    const peersPerTopic = 5;
+    const numTopics = 2;
+    const peersPerTopic = 3;
+    const swarmsAllPeersConnected: Promise<any>[] = [];
 
-    await Promise.all(
-      range(numTopics).map(async () => {
-        const topic = PublicKey.random();
+    await asyncTimeout(
+      Promise.all(
+        range(numTopics).map(async () => {
+          const topic = PublicKey.random();
 
-        await Promise.all(
-          range(peersPerTopic).map(async () => {
-            const peer = testBuilder.createPeer();
-            await openAndCloseAfterTest([peer]);
-            const swarm = await peer.createSwarm(topic).join();
-            await swarm.protocol.connected.waitForCondition(
-              () => swarm.protocol.connections.size === peersPerTopic - 1
-            );
-          })
-        );
-      })
+          return Promise.all(
+            range(peersPerTopic).map(async () => {
+              const peer = testBuilder.createPeer();
+              await openAndCloseAfterTest([peer]);
+              const swarm = peer.createSwarm(topic);
+
+              swarmsAllPeersConnected.push(
+                swarm.protocol.connected.waitFor(() => swarm.protocol.connections.size === peersPerTopic - 1)
+              );
+              await swarm.join();
+            })
+          );
+        })
+      ),
+      2_000
     );
+
+    await asyncTimeout(Promise.all(swarmsAllPeersConnected), 2_000);
   });
 };
