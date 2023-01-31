@@ -102,8 +102,8 @@ export class Database {
       return;
     }
 
-    await this._itemManager.destroy();
     await this._backend.close();
+    await this._itemManager.destroy();
     this._state = State.DESTROYED;
   }
 
