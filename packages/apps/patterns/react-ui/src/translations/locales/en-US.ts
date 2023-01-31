@@ -29,6 +29,7 @@ export const os = {
   'recover identity input label': 'Type or paste your seed phrase',
   'failed to create identity message': 'Failed to create an identity.',
   'failed to recover identity message': 'Failed to recover an identity from the provided seed phrase.',
+  'failed to authenticate message': 'Incorrect PIN.',
   'identity added label': 'Created identity & added to this device:',
   'join space as identity heading': '<part>as </part><part><icon/><label>{{labelValue}}</label></part>',
   'error status label': 'Failed',

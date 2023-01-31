@@ -30,6 +30,7 @@ export interface EmptyJoinAction {
 export interface InvitationAction {
   type:
     | 'authenticating invitation'
+    | 'authenticate invitation'
     | 'cancel invitation'
     | 'cancelled invitation'
     | 'connect invitation'
@@ -64,8 +65,10 @@ export interface JoinState {
   unredeemedSpaceInvitationCode?: string;
   spaceInvitation?: AuthenticatingInvitationObservable;
   spaceViewState: InvitationView;
+  spaceInvitationAnnotation?: 'authenticating' | 'authentication failed';
   haloInvitation?: AuthenticatingInvitationObservable;
   haloViewState: InvitationView;
+  haloInvitationAnnotation?: 'authenticating' | 'authentication failed';
   selectedIdentity?: Profile;
   additionMethod?: AdditionMethodAction['method'];
 }

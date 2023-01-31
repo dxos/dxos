@@ -73,6 +73,10 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
           void state.haloInvitation?.cancel();
         }
         break;
+      case 'authenticating invitation':
+        log.info('[authenticating]');
+        nextState[action.from === 'halo' ? 'haloInvitationAnnotation' : 'spaceInvitationAnnotation'] = 'authenticating';
+        break;
       case 'cancelled invitation':
       case 'fail invitation':
       case 'timeout invitation':
@@ -80,7 +84,15 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation connector';
         break;
       case 'connect invitation':
-      case 'authenticating invitation':
+      case 'authenticate invitation':
+        if (action.from === 'halo' && state.haloInvitationAnnotation === 'authenticating') {
+          log.info('[authenticating]');
+          nextState.haloInvitationAnnotation = 'authentication failed';
+        }
+        if (action.from === 'space' && state.spaceInvitationAnnotation === 'authenticating') {
+          log.info('[authenticating]');
+          nextState.spaceInvitationAnnotation = 'authentication failed';
+        }
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation authenticator';
         break;
       case 'accepted invitation':
@@ -120,10 +132,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
 
   useEffect(() => {
     joinState.spaceInvitation?.subscribe({
-      onAuthenticating: (...args) => {
-        log.info('[space invitation authenticating]', args);
-        dispatch({ type: 'authenticating invitation', from: 'space' });
-      },
+      onAuthenticating: () => dispatch({ type: 'authenticate invitation', from: 'space' }),
       onCancelled: () => dispatch({ type: 'cancelled invitation', from: 'space' }),
       onConnected: () => dispatch({ type: 'connect invitation', from: 'space' }),
       onConnecting: () => dispatch({ type: 'connecting invitation', from: 'space' }),
@@ -135,7 +144,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
 
   useEffect(() => {
     joinState.haloInvitation?.subscribe({
-      onAuthenticating: () => dispatch({ type: 'authenticating invitation', from: 'halo' }),
+      onAuthenticating: () => dispatch({ type: 'authenticate invitation', from: 'halo' }),
       onCancelled: () => dispatch({ type: 'cancelled invitation', from: 'halo' }),
       onConnected: () => dispatch({ type: 'connect invitation', from: 'halo' }),
       onConnecting: () => dispatch({ type: 'connecting invitation', from: 'halo' }),
@@ -208,7 +217,8 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
                     active:
                       joinState.activeView === 'space invitation acceptor' &&
                       joinState.spaceViewState === 'invitation authenticator',
-                    invitationType: 'space'
+                    invitationType: 'space',
+                    ...(joinState.spaceInvitationAnnotation === 'authentication failed' && { failed: true })
                   }}
                 />
                 <InvitationAccepted

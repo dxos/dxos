@@ -15,10 +15,12 @@ const pinLength = 6;
 
 export interface InvitationAuthenticatorProps extends ViewStateProps {
   invitationType: 'space' | 'halo';
+  failed?: boolean;
 }
 
 const PureInvitationAuthenticatorContent = ({
   disabled,
+  failed,
   dispatch,
   invitationType,
   onChange,
@@ -27,6 +29,7 @@ const PureInvitationAuthenticatorContent = ({
   disabled?: boolean;
   dispatch: ViewStateProps['dispatch'];
   invitationType: InvitationAuthenticatorProps['invitationType'];
+  failed: InvitationAuthenticatorProps['failed'];
   onChange: ComponentProps<typeof Input>['onChange'];
   onAuthenticate: ComponentProps<typeof Button>['onClick'];
 }) => {
@@ -42,6 +45,7 @@ const PureInvitationAuthenticatorContent = ({
         slots={{
           root: { className: 'm-0' },
           label: { className: 'sr-only' },
+          description: { className: 'text-center' },
           input: {
             disabled,
             inputMode: 'numeric',
@@ -49,6 +53,10 @@ const PureInvitationAuthenticatorContent = ({
             'data-autofocus': 'space invitation acceptor; invitation authenticator'
           } as ComponentPropsWithoutRef<'input'>
         }}
+        {...(failed && {
+          validationValence: 'error',
+          validationMessage: t('failed to authenticate message')
+        })}
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>
@@ -79,23 +87,21 @@ const InvitationAuthenticatorContent = ({
   disabled,
   invitation,
   dispatch,
-  invitationType
+  invitationType,
+  failed
 }: {
   disabled?: boolean;
   invitation: AuthenticatingInvitationObservable;
   dispatch: ViewStateProps['dispatch'];
   invitationType: InvitationAuthenticatorProps['invitationType'];
+  failed: InvitationAuthenticatorProps['failed'];
 }) => {
   const [pinValue, setPinValue] = useState('');
   const { authenticate } = useInvitationStatus(invitation);
-  const onAuthenticate = useCallback(
-    () =>
-      authenticate(pinValue).then(
-        () => dispatch({ type: 'accepted invitation', from: invitationType }),
-        () => dispatch({ type: 'fail invitation', from: invitationType })
-      ),
-    [dispatch, invitationType, authenticate, pinValue]
-  );
+  const onAuthenticate = useCallback(() => {
+    dispatch({ type: 'authenticating invitation', from: invitationType });
+    void authenticate(pinValue);
+  }, [dispatch, invitationType, authenticate, pinValue]);
   const onChange = useCallback(
     (value: string) => {
       setPinValue(value);
@@ -105,20 +111,28 @@ const InvitationAuthenticatorContent = ({
     },
     [authenticate, pinValue]
   );
-  return <PureInvitationAuthenticatorContent {...{ disabled, dispatch, invitationType, onChange, onAuthenticate }} />;
+  return (
+    <PureInvitationAuthenticatorContent {...{ disabled, failed, dispatch, invitationType, onChange, onAuthenticate }} />
+  );
 };
 
-export const InvitationAuthenticator = ({ invitationType, ...viewStateProps }: InvitationAuthenticatorProps) => {
+export const InvitationAuthenticator = ({
+  invitationType,
+  failed,
+  ...viewStateProps
+}: InvitationAuthenticatorProps) => {
   const disabled = !viewStateProps.active;
   const { activeInvitation, dispatch } = viewStateProps;
   return (
     <ViewState {...viewStateProps}>
       {!activeInvitation || activeInvitation === true ? (
         <PureInvitationAuthenticatorContent
-          {...{ disabled, dispatch, invitationType, onChange: () => {}, onAuthenticate: () => {} }}
+          {...{ disabled, failed, dispatch, invitationType, onChange: () => {}, onAuthenticate: () => {} }}
         />
       ) : (
-        <InvitationAuthenticatorContent {...{ disabled, invitation: activeInvitation, dispatch, invitationType }} />
+        <InvitationAuthenticatorContent
+          {...{ disabled, failed, invitation: activeInvitation, dispatch, invitationType }}
+        />
       )}
     </ViewState>
   );
