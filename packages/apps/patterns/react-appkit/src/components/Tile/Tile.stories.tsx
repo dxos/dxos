@@ -8,10 +8,10 @@ import React from 'react';
 import { DocumentBase } from '@dxos/echo-schema';
 
 import { Task as EchoTask, TaskList as EchoTaskList } from '../../proto';
-import { BaseCard, DefaultCard, GenericCard, TaskCard, TaskListCard } from './Card';
+import { BaseTile, DefaultTile, GenericTile, TaskTile, TaskListTile } from './Tile';
 
 export default {
-  component: BaseCard
+  component: BaseTile
 } as any;
 
 const props = {
@@ -29,14 +29,14 @@ export const Base = {
 const example = new DocumentBase(props);
 
 export const Default = {
-  render: DefaultCard.render,
+  render: DefaultTile.render,
   args: { data: example }
 };
 
 const step1 = new EchoTask({ title: 'step 1', description: 'Build component', completed: true });
 
 export const Task = {
-  render: TaskCard.render,
+  render: TaskTile.render,
   args: { data: step1 }
 };
 
@@ -46,7 +46,7 @@ const taskList = new EchoTaskList({
 });
 
 export const TaskList = {
-  render: TaskListCard.render,
+  render: TaskListTile.render,
   args: { data: taskList }
 };
 
@@ -54,7 +54,7 @@ export const Generic = {
   render: (args: { data: any[] }) => (
     <>
       {args.data.map((data, index) => (
-        <GenericCard key={index} data={data} />
+        <GenericTile key={index} data={data} />
       ))}
     </>
   ),

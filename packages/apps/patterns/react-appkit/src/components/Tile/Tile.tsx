@@ -4,45 +4,45 @@
 
 import React from 'react';
 
-import { DocumentBase, id, type } from '@dxos/echo-schema';
+import { Document, DocumentBase, id, type } from '@dxos/echo-schema';
 import { Group } from '@dxos/react-components';
 
 import { Task, TaskList } from '../../proto';
 
-export type Card<T = any> = {
+export type Tile<T = DocumentBase> = {
   canRender: (data: DocumentBase) => boolean;
   render: (props: { data: T }) => JSX.Element;
 };
 
-export const BaseCard = Group;
+export const BaseTile = Group;
 
-export const DefaultCard: Card = {
+export const DefaultTile: Tile<Document> = {
   canRender: (_data) => true,
   render: ({ data }) => (
-    <BaseCard label={{ children: data ? data.title : 'Unknown object' }}>
+    <BaseTile label={{ children: data ? data.title : 'Unknown object' }}>
       <pre>{JSON.stringify(data, null, 2)}</pre>
-    </BaseCard>
+    </BaseTile>
   )
 };
 
-export const TaskListCard: Card<TaskList> = {
+export const TaskListTile: Tile<TaskList> = {
   // TODO(wittjosiah): Ideally the type string would be exported from the schema as a constant.
-  canRender: (data) => data[type] === new TaskList()[type],
+  canRender: (data) => data[type] === TaskList.type.name,
   render: ({ data }) => (
-    <BaseCard label={{ children: data.title }}>
+    <BaseTile label={{ children: data.title }}>
       <ul>
         {data.tasks.map((task) => (
           <li key={task[id]}>{task.title}</li>
         ))}
       </ul>
-    </BaseCard>
+    </BaseTile>
   )
 };
 
-export const TaskCard: Card<Task> = {
-  canRender: (data) => data[type] === new Task()[type],
+export const TaskTile: Tile<Task> = {
+  canRender: (data) => data[type] === Task.type.name,
   render: ({ data }) => (
-    <BaseCard
+    <BaseTile
       label={{
         children: (
           <>
@@ -53,19 +53,20 @@ export const TaskCard: Card<Task> = {
       }}
     >
       {data.description}
-    </BaseCard>
+    </BaseTile>
   )
 };
 
 export const ALL_CARDS = [
-  TaskListCard,
-  TaskCard,
+  TaskListTile,
+  TaskTile,
   // NOTE: Must be last.
-  DefaultCard
+  DefaultTile
 ];
 
-export const GenericCard: Card['render'] = ({ data }) => {
+export const GenericTile: Tile<Document>['render'] = ({ data }) => {
   const card = ALL_CARDS.find((card) => card.canRender(data));
 
-  return card!.render({ data });
+  // TODO(wittjosiah): Infer type of data from `canRender`?
+  return card!.render({ data: data as any });
 };
