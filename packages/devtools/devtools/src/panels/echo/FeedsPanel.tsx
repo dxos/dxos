@@ -10,7 +10,7 @@ import { MessageTable, PublicKeySelector } from '../../components';
 import { SpaceToolbar } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
 
-export const FeedsPanel = () => {
+const FeedsPanel = () => {
   const setContext = useDevtoolsDispatch();
   const { spaceInfo: metadata, feedKey } = useDevtoolsState();
 
@@ -43,3 +43,5 @@ export const FeedsPanel = () => {
     </div>
   );
 };
+
+export default FeedsPanel;
