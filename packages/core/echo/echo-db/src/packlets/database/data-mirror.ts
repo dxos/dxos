@@ -6,8 +6,8 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { Model } from '@dxos/model-factory';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -35,28 +35,44 @@ export class DataMirror {
   async open() {
     const loaded = new Trigger();
 
-    const entities = this._dataService.subscribeEntitySet({
+    const entities = this._dataService.subscribe({
       spaceKey: this._spaceKey
     });
     entities.subscribe(
-      async (diff) => {
-        loaded.wake();
-        for (const addedEntity of diff.added ?? []) {
-          log(`Construct: ${JSON.stringify(addedEntity)}`);
-          assert(addedEntity.itemId);
-          assert(addedEntity.genesis);
-          assert(addedEntity.genesis.modelType);
+      async (msg) => {
+        for (const object of msg.objects ?? []) {
+          assert(object.itemId);
 
-          const entity = await this._itemManager.constructItem({
-            itemId: addedEntity.itemId,
-            itemType: addedEntity.genesis.itemType,
-            modelType: addedEntity.genesis.modelType,
-            parentId: addedEntity.itemMutation?.parentId,
-            snapshot: { itemId: addedEntity.itemId }
-          });
+          let entity: Entity<any>;
+          if (object.genesis) {
+            log('Construct', { object });
+            assert(object.genesis.modelType);
+            entity = await this._itemManager.constructItem({
+              itemId: object.itemId,
+              itemType: object.genesis.itemType,
+              modelType: object.genesis.modelType,
+              parentId: object.itemMutation?.parentId,
+              snapshot: { itemId: object.itemId } // TODO(dmaretskyi): Fix.
+            });
+          } else {
+            entity = (await this._itemManager.entities.get(object.itemId)) ?? failUndefined();
+          }
 
-          this._subscribeToUpdates(entity);
+          if (object.snapshot) {
+            log('reset to snapshot', { object });
+            entity._stateManager.resetToSnapshot(object);
+          } else if (object.mutations) {
+            for (const mutation of object.mutations) {
+              log('mutate', { id: object.itemId, mutation });
+              assert(mutation.meta);
+              assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+              await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
+            }
+          }
         }
+
+        // Notify that initial set of items has been loaded.
+        loaded.wake();
       },
       (err) => {
         log(`Connection closed: ${err}`);
@@ -65,29 +81,9 @@ export class DataMirror {
 
     // Wait for initial set of items.
     await loaded.wait();
-  }
 
-  private _subscribeToUpdates(entity: Entity<Model<any>>) {
-    const stream = this._dataService.subscribeEntityStream({
-      spaceKey: this._spaceKey,
-      itemId: entity.id
-    });
-    stream.subscribe(
-      async (update) => {
-        log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
-        if (update.object.snapshot) {
-          entity._stateManager.resetToSnapshot(update.object);
-        } else if (update.object.mutations) {
-          for (const mutation of update.object.mutations) {
-            assert(mutation.meta);
-            assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-            await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
-          }
-        }
-      },
-      (err) => {
-        log(`Connection closed: ${err}`);
-      }
-    );
+    return () => {
+      entities.close();
+    };
   }
 }
