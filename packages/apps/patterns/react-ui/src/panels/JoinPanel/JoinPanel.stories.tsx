@@ -5,7 +5,7 @@
 import '@dxosTheme';
 
 import { StoryFn } from '@storybook/react';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Client, Invitation, InvitationEncoder } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
@@ -33,6 +33,10 @@ export const Default = {
 
       const [invitationCode, setInvitationCode] = useState<string>();
 
+      const onInvitationEvent = useCallback((invitation: Invitation) => {
+        setInvitationCode(InvitationEncoder.encode(invitation));
+      }, []);
+
       useAsyncEffect(async () => {
         await Promise.all(clients.map((client) => client.initialize()));
         log.info('[initialized]');
@@ -48,19 +52,14 @@ export const Default = {
         log.info('[invitation created]', invitation);
 
         invitation.subscribe({
-          onAuthenticating: (...args) => log.info('[authenticating]', args),
+          onAuthenticating: onInvitationEvent,
           onCancelled: (...args) => log.warn('[cancelled]', args),
-          onConnected: (...args) => log.info('[connected]', args),
-          onConnecting: (...args) => log.info('[connecting]', args),
-          onError: (...args) => log.error('[error]', args),
-          onSuccess: (...args) => log.info('[success]', args),
+          onConnected: onInvitationEvent,
+          onConnecting: onInvitationEvent,
+          onError: onInvitationEvent,
+          onSuccess: onInvitationEvent,
           onTimeout: (...args) => log.warn('[timeout]', args)
         });
-
-        // TODO (thure): when does `invitation` get populated?
-        setTimeout(() => {
-          setInvitationCode(InvitationEncoder.encode(invitation.invitation!));
-        }, 100);
 
         return () => {
           void Promise.all(clients.map((client) => client.destroy()));
