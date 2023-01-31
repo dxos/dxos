@@ -40,8 +40,5 @@
     "@types/faker": "^5.5.9",
     "@types/lodash": "^4.14.182",
     "faker": "^5.5.3"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

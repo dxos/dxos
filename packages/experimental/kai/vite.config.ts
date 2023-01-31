@@ -7,7 +7,6 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
-import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -27,11 +26,12 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false,
+        : false
 
     // TODO(burdon): Disable HMR due to code size issues.
+    // TODO(burdon): If disabled then tailwind doesn't update.
     // https://vitejs.dev/config/server-options.html#server-hmr
-    hmr: false
+    // hmr: false
   },
 
   // TODO(burdon): Document.
@@ -81,6 +81,7 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/hypercard/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
@@ -150,7 +151,5 @@ export default defineConfig({
         ]
       }
     })
-
-    // Inspect()
   ]
 });

@@ -8,6 +8,7 @@ export const ExplorerFrame = React.lazy(() => import('./ExplorerFrame'));
 export const FileFrame = React.lazy(() => import('./FileFrame'));
 export const KanbanFrame = React.lazy(() => import('./KanbanFrame'));
 export const MapFrame = React.lazy(() => import('./MapFrame'));
+export const NotesFrame = React.lazy(() => import('./NotesFrame'));
 export const RegistryFrame = React.lazy(() => import('./RegistryFrame'));
 export const SketchFrame = React.lazy(() => import('./SketchFrame'));
 export const StackFrame = React.lazy(() => import('./StackFrame'));
