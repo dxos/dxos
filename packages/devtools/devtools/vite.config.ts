@@ -3,6 +3,8 @@
 //
 
 import ReactPlugin from '@vitejs/plugin-react';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
@@ -11,7 +13,6 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
-import { resolve } from 'node:path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -75,6 +76,8 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
+          faker: ['faker'],
+          monaco: ['monaco-editor', '@monaco-editor/react'],
           vendor: ['react', 'react-router-dom', 'react-dom']
         }
       }
@@ -82,12 +85,7 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin({
-      env: [
-        'DX_ENVIRONMENT',
-        'DX_IPDATA_API_KEY',
-        'DX_SENTRY_DESTINATION',
-        'DX_TELEMETRY_API_KEY'
-      ]
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY']
     }),
     ThemePlugin({
       content: [
@@ -99,7 +97,7 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
@@ -130,7 +128,6 @@ export default defineConfig({
         ]
       }
     }),
-
     /**
      * Bundle fonts.
      * https://fonts.google.com
@@ -159,6 +156,26 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    {
+      name: 'bundle-buddy',
+      buildEnd() {
+        const deps: { source: string; target: string }[] = [];
+        for (const id of this.getModuleIds()) {
+          const m = this.getModuleInfo(id);
+          if (m != null && !m.isExternal) {
+            for (const target of m.importedIds) {
+              deps.push({ source: m.id, target });
+            }
+          }
+        }
+
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+      }
+    }
   ]
 });
