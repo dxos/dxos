@@ -3,6 +3,8 @@
 //
 
 import './main.css';
+import '@dxos/react-client/embed.css';
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 

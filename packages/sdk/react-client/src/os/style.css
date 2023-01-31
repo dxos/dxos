@@ -1,3 +1,17 @@
-#red {
+#__DXOS_LEFT_PANEL {
   background-color: red;
+  width: 200px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+
+#__DXOS_LEFT_PANEL.__DXOS_EMBED_HIDDEN {
+  left: -200px;
+}
+
+.__DXOS_EMBED_HIDDEN {
+  display: none;
+  opacity: 0;
 }

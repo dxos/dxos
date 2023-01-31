@@ -9,6 +9,23 @@ import { PublicKeyLike } from '@dxos/keys';
 
 import { useClient } from '../client';
 
+export type SpaceContextProps = {
+  space?: Space;
+  setSpace: (space: Space) => void;
+};
+
+export const SpaceContext: React.Context<SpaceContextProps> = createContext<SpaceContextProps>({ setSpace: () => {} });
+
+export const SpaceProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
+  const [space, setSpace] = useState<Space>();
+  return <SpaceContext.Provider value={{ space, setSpace }}>{children}</SpaceContext.Provider>;
+};
+
+export const useSpaceSetter = () => {
+  const { setSpace } = useContext(SpaceContext);
+  return setSpace;
+};
+
 /**
  * Get a specific Space via its key.
  * Requires ClientContext to be set via ClientProvider.
