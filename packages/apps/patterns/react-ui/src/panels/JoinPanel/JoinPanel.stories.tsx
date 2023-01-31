@@ -34,7 +34,9 @@ export const Default = {
       const [invitationCode, setInvitationCode] = useState<string>();
 
       const onInvitationEvent = useCallback((invitation: Invitation) => {
-        setInvitationCode(InvitationEncoder.encode(invitation));
+        if (!invitationCode) {
+          setInvitationCode(InvitationEncoder.encode(invitation));
+        }
       }, []);
 
       useAsyncEffect(async () => {

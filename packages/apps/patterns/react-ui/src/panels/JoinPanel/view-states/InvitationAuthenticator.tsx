@@ -36,6 +36,7 @@ const PureInvitationAuthenticatorContent = ({
         onChange={onChange}
         disabled={disabled}
         slots={{
+          root: { className: 'm-0' },
           label: { className: 'sr-only' },
           input: {
             disabled,

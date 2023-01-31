@@ -72,7 +72,7 @@ const PureViewStateInvitation = ({
           className={mx(stripe, cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor)}
         />
       </div>
-      <ViewStateHeading id={labelId} className='flex justify-center items-center gap-2'>
+      <ViewStateHeading id={labelId} className='mbs-2 flex justify-center items-center gap-2'>
         {label}
       </ViewStateHeading>
     </div>
