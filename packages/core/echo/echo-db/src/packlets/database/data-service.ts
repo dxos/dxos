@@ -11,10 +11,8 @@ import { log } from '@dxos/log';
 import {
   DataService,
   MutationReceipt,
-  SubscribeEntitySetRequest,
-  SubscribeEntitySetResponse,
-  SubscribeEntityStreamRequest,
-  SubscribeEntityStreamResponse,
+  SubscribeRequest,
+  SubscribeResponse,
   WriteRequest
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
@@ -52,18 +50,11 @@ export class DataServiceSubscriptions {
 export class DataServiceImpl implements DataService {
   constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
 
-  subscribeEntitySet(request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
+  subscribe(request: SubscribeRequest): Stream<SubscribeResponse> {
     assert(request.spaceKey);
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
-    return host.subscribeEntitySet();
-  }
-
-  subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
-    assert(request.spaceKey);
-    const host =
-      this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
-    return host.subscribeEntityStream(request);
+    return host.subscribe();
   }
 
   write(request: WriteRequest): Promise<MutationReceipt> {
