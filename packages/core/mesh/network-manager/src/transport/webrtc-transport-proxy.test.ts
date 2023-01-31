@@ -16,8 +16,7 @@ import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
-// TODO(burdon): Flaky.
-describe.skip('WebRTCTransportProxy', () => {
+describe('WebRTCTransportProxy', () => {
   const setupProxy = async ({
     initiator = true,
     stream = new TestStream(),
@@ -89,9 +88,7 @@ describe.skip('WebRTCTransportProxy', () => {
     await sleep(1); // Process events.
 
     expect(callsCounter).toEqual(1);
-  })
-    .timeout(1_000)
-    .retries(3);
+  }).timeout(1_000);
 
   test('establish connection and send data through with protocol', async () => {
     const stream1 = new TestStream();
@@ -116,9 +113,7 @@ describe.skip('WebRTCTransportProxy', () => {
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
     await TestStream.assertConnectivity(stream1, stream2);
-  })
-    .timeout(2_000)
-    .retries(3);
+  }).timeout(1_000);
 
   describe('Multiplexing', () => {
     let service: any;
@@ -185,8 +180,6 @@ describe.skip('WebRTCTransportProxy', () => {
       afterTest(() => proxy2.errors.assertNoUnhandledErrors());
 
       await TestStream.assertConnectivity(stream1, stream2);
-    })
-      .timeout(5_000)
-      .retries(3);
+    }).timeout(1_000);
   });
 });
