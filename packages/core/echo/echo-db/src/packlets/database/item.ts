@@ -6,11 +6,11 @@ import { FeedWriter } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
-import { EchoEnvelope, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { ItemMutation } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
-import type { Link } from './link';
 import { createItemSelection, Selection } from './selection';
 
 /**
@@ -37,18 +37,6 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
   readonly _children = new Set<Item<any>>();
 
   /**
-   * Managed set of links with this item as the source.
-   * @internal
-   */
-  readonly _links = new Set<Link<any, any, any>>();
-
-  /**
-   * Managed set of links with this item as the target.
-   * @internal
-   */
-  readonly _refs = new Set<Link<any, any, any>>();
-
-  /**
    * Items are constructed by the `Database` object.
    * @param itemManager
    * @param itemId        Addressable ID.
@@ -62,7 +50,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why allow undefined?
     stateManager: StateManager<NonNullable<M>>,
-    private readonly _writeStream?: FeedWriter<EchoEnvelope>,
+    private readonly _writeStream?: FeedWriter<DataMessage>,
     parent?: Item<any> | null
   ) {
     super(itemManager, itemId, itemType, stateManager);
@@ -93,14 +81,6 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     return Array.from(this._children.values()).filter((item) => !item.deleted);
   }
 
-  get links(): Link<any, any, any>[] {
-    return Array.from(this._links.values()).filter((link) => !link._isDangling());
-  }
-
-  get refs(): Link<any, any, any>[] {
-    return Array.from(this._refs.values()).filter((link) => !link._isDangling());
-  }
-
   /**
    * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
@@ -126,9 +106,11 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
 
     const onUpdate = this._onUpdate.waitFor(() => this.deleted);
     await this._writeStream.write({
-      itemId: this.id,
-      itemMutation: {
-        action: ItemMutation.Action.DELETE
+      object: {
+        itemId: this.id,
+        itemMutation: {
+          action: ItemMutation.Action.DELETE
+        }
       }
     });
 
@@ -145,9 +127,11 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
 
     const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
     await this._writeStream.write({
-      itemId: this.id,
-      itemMutation: {
-        action: ItemMutation.Action.RESTORE
+      object: {
+        itemId: this.id,
+        itemMutation: {
+          action: ItemMutation.Action.RESTORE
+        }
       }
     });
 
@@ -165,9 +149,11 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     const onUpdate = this._onUpdate.waitFor(() => parentId === this._parent?.id);
 
     await this._writeStream.write({
-      itemId: this.id,
-      itemMutation: {
-        parentId
+      object: {
+        itemId: this.id,
+        itemMutation: {
+          parentId
+        }
       }
     });
 

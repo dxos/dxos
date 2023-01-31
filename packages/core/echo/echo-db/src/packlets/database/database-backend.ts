@@ -9,9 +9,9 @@ import { EventSubscriptions } from '@dxos/async';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
-import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
@@ -32,8 +32,8 @@ export interface DatabaseBackend {
   open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>;
   close(): Promise<void>;
 
-  getWriteStream(): FeedWriter<EchoEnvelope> | undefined;
-  createSnapshot(): DatabaseSnapshot;
+  getWriteStream(): FeedWriter<DataMessage> | undefined;
+  createSnapshot(): EchoSnapshot;
   createDataServiceHost(): DataServiceHost;
 }
 
@@ -48,8 +48,8 @@ export class DatabaseBackendHost implements DatabaseBackend {
   private _itemDemuxer!: ItemDemuxer;
 
   constructor(
-    private readonly _outboundStream: FeedWriter<EchoEnvelope> | undefined,
-    private readonly _snapshot?: DatabaseSnapshot,
+    private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
+    private readonly _snapshot?: EchoSnapshot,
     private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
   ) {}
 
@@ -73,7 +73,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
 
   async close() {}
 
-  getWriteStream(): FeedWriter<EchoEnvelope> | undefined {
+  getWriteStream(): FeedWriter<DataMessage> | undefined {
     return this._outboundStream;
   }
 
@@ -126,12 +126,12 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     this._subscriptions.clear();
   }
 
-  getWriteStream(): FeedWriter<EchoEnvelope> | undefined {
+  getWriteStream(): FeedWriter<DataMessage> | undefined {
     return {
       write: async (mutation) => {
         log('write', mutation);
         const { feedKey, seq } = await this._service.write({
-          mutation,
+          mutation: mutation.object,
           spaceKey: this._spaceKey
         });
         assert(feedKey);
@@ -144,7 +144,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     };
   }
 
-  createSnapshot(): DatabaseSnapshot {
+  createSnapshot(): EchoSnapshot {
     throw new Error('Method not supported.');
   }
 

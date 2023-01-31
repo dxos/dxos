@@ -23,13 +23,13 @@
           "env": "DX_VAULT"
         },
         {
-          "env": "KAI_DEBUG"
+          "env": "VITE_DEBUG"
         },
         {
-          "env": "KAI_DEV"
+          "env": "VITE_DEV"
         },
         {
-          "env": "KAI_PWA"
+          "env": "VITE_PWA"
         },
         "^production",
         "production"
@@ -53,6 +53,27 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/experimental/kai",
+        "outputPath": "tmp/mocha/packages/experimental/kai",
+        "playwright": true,
+        "resultsPath": "test-results/packages/experimental/kai",
+        "serve": "kai:preview",
+        "testPatterns": [
+          "packages/experimental/kai/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/kai/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -73,6 +94,13 @@
       "outputs": [
         "packages/experimental/kai/src/proto/gen"
       ]
+    },
+    "preview": {
+      "executor": "@nrwl/web:file-server",
+      "options": {
+        "buildTarget": "kai:bundle",
+        "staticFilePath": "packages/experimental/kai/out/kai"
+      }
     },
     "serve": {
       "executor": "@nrwl/vite:dev-server",

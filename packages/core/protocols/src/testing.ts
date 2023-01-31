@@ -21,8 +21,19 @@ export const createTestItemMutation = (
 ): FeedMessage => ({
   timeframe,
   payload: {
-    '@type': 'dxos.echo.feed.EchoEnvelope',
-    itemId,
-    mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+    data: {
+      object: {
+        itemId,
+        mutations: [
+          {
+            mutation: {
+              '@type': 'google.protobuf.Any',
+              typeUrl: 'todo',
+              value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+            }
+          }
+        ]
+      }
+    }
   }
 });

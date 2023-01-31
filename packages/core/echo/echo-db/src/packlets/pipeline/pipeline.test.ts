@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { checkType } from '@dxos/debug';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
@@ -27,13 +29,18 @@ describe('pipeline/Pipeline', () => {
 
       setTimeout(async () => {
         for (const msgIdx in range(messagesPerFeed)) {
-          await feed.append({
-            timeframe: new Timeframe(),
-            payload: {
-              '@type': 'dxos.echo.feed.EchoEnvelope',
-              itemId: `${feedIdx}-${msgIdx}`
-            }
-          });
+          await feed.append(
+            checkType<FeedMessage>({
+              timeframe: new Timeframe(),
+              payload: {
+                data: {
+                  object: {
+                    itemId: `${feedIdx}-${msgIdx}`
+                  }
+                }
+              }
+            })
+          );
         }
       });
     }
@@ -46,8 +53,11 @@ describe('pipeline/Pipeline', () => {
 
     for (const msgIdx in range(messagesPerFeed)) {
       await pipeline.writer!.write({
-        '@type': 'dxos.echo.feed.EchoEnvelope',
-        itemId: `local-${msgIdx}`
+        data: {
+          object: {
+            itemId: `local-${msgIdx}`
+          }
+        }
       });
     }
 

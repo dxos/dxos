@@ -7,6 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import React, { ComponentProps } from 'react';
+import * as Y from 'yjs';
 
 import { Item } from '@dxos/client';
 import { useTranslation, mx } from '@dxos/react-components';
@@ -21,6 +22,8 @@ export interface ComposerSlots {
 
 export interface ComposerProps {
   doc?: Doc;
+  field?: string;
+  fragment?: Y.XmlFragment;
   /**
    * @deprecated Use `doc` instead.
    */
@@ -28,13 +31,20 @@ export interface ComposerProps {
   slots?: ComposerSlots;
 }
 
-export const Composer = ({ item, doc = item?.model?.doc, slots = {} }: ComposerProps) => {
+// TODO(burdon): Pass in document (or fragment?) directly (remove dependency on item).
+export const Composer = ({ item, doc = item?.model?.doc, field = 'content', fragment, slots = {} }: ComposerProps) => {
   const { t } = useTranslation('appkit');
+
+  // Reference:
+  // https://tiptap.dev/installation/react
+  // https://github.com/ueberdosis/tiptap
+  // https://tiptap.dev/guide/output/#option-3-yjs
   const editor = useEditor(
     {
       extensions: [
         StarterKit.configure({ history: false }),
-        Collaboration.configure({ document: doc, field: 'content' }),
+        // https://github.com/ueberdosis/tiptap/tree/main/packages/extension-collaboration
+        Collaboration.configure({ document: doc, field, fragment }),
         Placeholder.configure({
           placeholder: t('composer placeholder'),
           emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'

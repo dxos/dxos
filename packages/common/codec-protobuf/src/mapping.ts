@@ -7,7 +7,18 @@ import protobufjs from 'protobufjs';
 
 import { Substitutions } from './common';
 
-export type MapingDescriptors = Partial<Record<string, (value: any, ...extraArgs: any) => any>>;
+export type TypeMapperContext = {
+  /**
+   * Message FQN.
+   */
+  messageName: string;
+
+  fieldName: string;
+};
+
+export type TypeMapper = (value: any, context: TypeMapperContext, ...extraArgs: any) => any;
+
+export type MapingDescriptors = Partial<Record<string, TypeMapper>>;
 
 export interface BidirectionalMapingDescriptors {
   encode: MapingDescriptors;

@@ -9,14 +9,13 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemType, ItemID } from '@dxos/protocols';
-import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
 import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
-import { Link } from './link';
 import { RootFilter, Selection, createSelection } from './selection';
 
 export interface CreateItemOption<M extends Model> {
@@ -137,31 +136,6 @@ export class Database {
     )) as any;
   }
 
-  async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>>(
-    options: CreateLinkOptions<M, S, T>
-  ): Promise<Link<M, S, T>> {
-    this._assertInitialized();
-
-    const model = options.model ?? ObjectModel;
-    if (!model) {
-      throw new TypeError('Missing model class.');
-    }
-
-    validateModelClass(model);
-
-    if (options.type && typeof options.type !== ('string' as ItemType)) {
-      throw new TypeError('Invalid type.');
-    }
-
-    return this._itemManager.createLink(
-      model.meta.type,
-      options.type,
-      options.source.id,
-      options.target.id,
-      options.props
-    );
-  }
-
   /**
    * Retrieves a item from the index.
    * @param itemId
@@ -212,7 +186,7 @@ export class Database {
     );
   }
 
-  createSnapshot(): DatabaseSnapshot {
+  createSnapshot(): EchoSnapshot {
     this._assertInitialized();
     return this._backend.createSnapshot();
   }

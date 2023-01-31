@@ -12,25 +12,35 @@ pnpm nx serve kai
 To run with automatic profile creation and simplified invitation flows:
 
 ```bash
-KAI_DEV=1 pnpm nx serve kai
+VITE_DEV=1 pnpm nx serve kai
 ```
 
-## Deploying the App
+## Deployment
 
-- Published when committed to `main`.
-- TODO(burdon): How to manually publish?
-- TODO(burdon): Publish to local machine (or dxos.net? later). With tunneling.
+Automatically published to the KUBE network via CI (using KUBE access token) when committed to `main`.
+- https://kai.dev.dxos.org (w/ PWA; via Cloudflare)
+- https://kai-web.dev.kube.dxos.org (no PWA; direct from KUBE)
+
+To manually publish to a local KUBE (via custom `dx.yml`):
 
 ```bash
-dx app publish
+dx app publish --config_path=./dx-local.yml
 ```
+
+
+## Troubleshooting
+
+See the [development guide](./docs/development.md).
+
 
 ## Roadmap
 
+- TODO(burdon): Move to Milestone.
+
 - [ ] Deprecate Kitchen Sink.
 - [ ] Playwright tests/demo.
-- [ ] Deploy mobile app.
-- [ ] Import/export JSON.
+- [x] Deploy mobile app.
+- [x] Import/export JSON.
 - [ ] OpenAI bot demo (e.g., fill in background information on Orgs).
 
 - [ ] Kanban column width on mobile (change breakpoint dep on phone).

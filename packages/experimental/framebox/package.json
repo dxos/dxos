@@ -1,6 +1,7 @@
 {
   "name": "@dxos/framebox",
   "version": "0.1.23",
+  "private": true,
   "description": "Frame sandbox",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,7 +39,7 @@
     "monaco-editor": "^0.25.0",
     "use-subscription": "^1.8.0",
     "y-monaco": "^0.1.0",
-    "yjs": "^13.5.41"
+    "yjs": "^13.5.44"
   },
   "devDependencies": {
     "@dxos/react-components": "workspace:*",
@@ -57,9 +58,6 @@
   "peerDependencies": {
     "react": "*",
     "react-dom": "*"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "typedoc": {
     "entryPoint": "src/index.ts"

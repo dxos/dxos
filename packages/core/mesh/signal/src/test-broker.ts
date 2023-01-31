@@ -19,6 +19,7 @@ interface TestBrokerOptions {
   timeout?: number;
 }
 
+// TODO(burdon): Convert to TestBuilder pattern.
 export class TestBroker {
   private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
 
@@ -86,6 +87,7 @@ export class TestBroker {
         waited = waited + waitInc;
       }
     }
+
     if (waited >= this._timeout) {
       this.stop();
       this._serverProcess = this.startProcess();
@@ -93,6 +95,7 @@ export class TestBroker {
       if (this._startRetries > this._retriesLimit) {
         throw new Error('Test Signal server was not started');
       }
+
       return await this.waitUntilStarted();
     }
   }
@@ -111,6 +114,7 @@ export class TestBroker {
  *
  * @param port Port to start the signal server on, random by default.
  */
+// TODO(burdon): Convert to TestBuilder pattern.
 export const createTestBroker = async (port?: number): Promise<TestBroker> => {
   const server = new TestBroker({ port: port ?? randomInt(10000, 50000) });
   await server.waitUntilStarted();

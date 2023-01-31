@@ -20,8 +20,8 @@ for APP in "${APPS[@]}"; do
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
-  eval "export SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
-  eval "export TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
+  eval "export DX_SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
+  eval "export DX_TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 
   if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production

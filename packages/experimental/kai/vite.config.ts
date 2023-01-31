@@ -5,18 +5,13 @@
 import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
-import VitePluginAppinfo from 'vite-plugin-build-info';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
+import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
-
-import packageJson from './package.json';
-
-const env = (value?: string) => (value ? `"${value}"` : undefined);
-const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${packageJson.version}` : undefined;
 
 /**
  * https://vitejs.dev/config
@@ -32,18 +27,11 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false
-  },
+        : false,
 
-  define: {
-    'process.env.KAI_DEBUG': env(process.env.KAI_DEBUG),
-    'process.env.KAI_DEV': env(process.env.KAI_DEV),
-    'process.env.KAI_PWA': env(process.env.KAI_PWA),
-    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.DX_RELEASE': env(DX_RELEASE),
-    'process.env.DX_VAULT': env(process.env.DX_VAULT),
-    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
-    'process.env.LOG_FILTER': env(process.env.LOG_FILTER)
+    // TODO(burdon): Disable HMR due to code size issues.
+    // https://vitejs.dev/config/server-options.html#server-hmr
+    hmr: false
   },
 
   // TODO(burdon): Document.
@@ -59,6 +47,7 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/config',
       '@dxos/protocols/proto/dxos/echo/feed',
       '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/protocols/proto/dxos/echo/object',
       '@dxos/protocols/proto/dxos/halo/credentials',
       '@dxos/protocols/proto/dxos/halo/invitations',
       '@dxos/protocols/proto/dxos/halo/keys',
@@ -84,7 +73,7 @@ export default defineConfig({
 
   plugins: [
     // TODO(burdon): Document.
-    ConfigPlugin(),
+    ConfigPlugin({ env: ['DX_VAULT'] }),
 
     // TODO(burdon): Document.
     ThemePlugin({
@@ -107,6 +96,7 @@ export default defineConfig({
     // TODO(burdon): Document.
     // To reset, unregister service worker using devtools.
     VitePWA({
+      selfDestroying: true,
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },
@@ -159,11 +149,8 @@ export default defineConfig({
           }
         ]
       }
-    }),
-
-    // https://github.com/BWrong/vite-plugin-build-info
-    VitePluginAppinfo({
-      enableLog: true
     })
+
+    // Inspect()
   ]
 });

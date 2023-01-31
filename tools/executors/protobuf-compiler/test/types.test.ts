@@ -97,6 +97,11 @@ describe('Schema', () => {
         key: new MyKey(Buffer.from('foo')),
         type: TaskType.IN_PROGRESS
       },
+      undecodedAny: {
+        '@type': 'google.protobuf.Any',
+        type_url: 'bar',
+        value: Buffer.from('foo')
+      },
       importedAny: {
         bar: 123
       }
@@ -128,6 +133,11 @@ describe('Schema', () => {
         title: 'Baz',
         key: new MyKey(Buffer.from('foo')),
         type: TaskType.IN_PROGRESS
+      },
+      undecodedAny: {
+        '@type': 'google.protobuf.Any',
+        type_url: 'bar',
+        value: Buffer.from('foo')
       },
       importedAny: {
         bar: 123

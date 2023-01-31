@@ -10,7 +10,8 @@ import { failUndefined, raise } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import {
   MutationReceipt,
   SubscribeEntitySetResponse,
@@ -22,7 +23,6 @@ import { EntityNotFoundError } from '../errors';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { Link } from './link';
 
 const log = debug('dxos:echo-db:data-service-host');
 
@@ -35,7 +35,7 @@ export class DataServiceHost {
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
-    private readonly _writeStream?: FeedWriter<EchoEnvelope>
+    private readonly _writeStream?: FeedWriter<DataMessage>
   ) {}
 
   /**
@@ -45,20 +45,13 @@ export class DataServiceHost {
     return new Stream(({ next }) => {
       const trackedSet = new Set<ItemID>();
 
-      const entityInfo = (id: ItemID): EchoEnvelope => {
+      const entityInfo = (id: ItemID): EchoObject => {
         const entity = this._itemManager.entities.get(id) ?? failUndefined();
         return {
           itemId: id,
           genesis: {
             itemType: entity.type,
-            modelType: entity.modelType,
-            link:
-              entity instanceof Link
-                ? {
-                    source: entity.sourceId,
-                    target: entity.targetId
-                  }
-                : undefined
+            modelType: entity.modelType
           },
           itemMutation:
             entity instanceof Item
@@ -89,7 +82,7 @@ export class DataServiceHost {
 
         next({
           added: Array.from(added).map((id) => entityInfo(id)),
-          deleted: Array.from(added).map((id): EchoEnvelope => ({ itemId: id }))
+          deleted: Array.from(added).map((id): EchoObject => ({ itemId: id }))
         });
       };
 
@@ -108,20 +101,13 @@ export class DataServiceHost {
     return new Stream(({ next }) => {
       assert(request.itemId);
       const entityItem = this._itemManager.items.find((item) => item.id === request.itemId);
-      let snapshot;
-      if (entityItem) {
-        snapshot = this._itemDemuxer.createItemSnapshot(entityItem as Item);
-      } else {
-        const entityLink = this._itemManager.links.find((link) => link.id === request.itemId);
-        if (entityLink) {
-          snapshot = this._itemDemuxer.createLinkSnapshot(entityLink as Link);
-        } else {
-          raise(new EntityNotFoundError(request.itemId));
-        }
+      if (!entityItem) {
+        raise(new EntityNotFoundError(request.itemId));
       }
+      const snapshot = this._itemDemuxer.createItemSnapshot(entityItem as Item);
 
       log(`Entity stream ${request.itemId}: ${JSON.stringify({ snapshot })}`);
-      next({ snapshot });
+      next({ object: snapshot });
 
       return this._itemDemuxer.mutation.on((mutation) => {
         if (mutation.data.itemId !== request.itemId) {
@@ -129,24 +115,29 @@ export class DataServiceHost {
         }
 
         log(`Entity stream ${request.itemId}: ${JSON.stringify({ mutation })}`);
+        // assert(mutation.data.mutations?.length === 1, 'Only single mutation per item supported');
         next({
-          mutation: {
-            data: mutation.data,
-            meta: {
-              feedKey: PublicKey.from(mutation.meta.feedKey),
-              memberKey: PublicKey.from(mutation.meta.memberKey),
-              seq: mutation.meta.seq,
-              timeframe: mutation.meta.timeframe
-            }
+          object: {
+            mutations: mutation.data.mutations?.map((m) => ({
+              mutation: m.mutation,
+              meta: {
+                feedKey: PublicKey.from(mutation.meta.feedKey),
+                memberKey: PublicKey.from(mutation.meta.memberKey),
+                seq: mutation.meta.seq,
+                timeframe: mutation.meta.timeframe
+              }
+            }))
           }
         });
       });
     });
   }
 
-  async write(request: EchoEnvelope): Promise<MutationReceipt> {
+  async write(object: EchoObject): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
-    return this._writeStream.write(request);
+    return this._writeStream.write({
+      object
+    });
   }
 }

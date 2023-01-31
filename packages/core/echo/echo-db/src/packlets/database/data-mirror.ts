@@ -6,9 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
-import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Model } from '@dxos/model-factory';
+import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Entity } from './entity';
@@ -47,28 +47,13 @@ export class DataMirror {
           assert(addedEntity.genesis);
           assert(addedEntity.genesis.modelType);
 
-          let entity: Entity<Model<any>>;
-          if (addedEntity.genesis.link) {
-            assert(addedEntity.genesis.link.source);
-            assert(addedEntity.genesis.link.target);
-
-            entity = await this._itemManager.constructLink({
-              itemId: addedEntity.itemId,
-              itemType: addedEntity.genesis.itemType,
-              modelType: addedEntity.genesis.modelType,
-              source: addedEntity.genesis.link.source,
-              target: addedEntity.genesis.link.target,
-              snapshot: {}
-            });
-          } else {
-            entity = await this._itemManager.constructItem({
-              itemId: addedEntity.itemId,
-              itemType: addedEntity.genesis.itemType,
-              modelType: addedEntity.genesis.modelType,
-              parentId: addedEntity.itemMutation?.parentId,
-              snapshot: {}
-            });
-          }
+          const entity = await this._itemManager.constructItem({
+            itemId: addedEntity.itemId,
+            itemType: addedEntity.genesis.itemType,
+            modelType: addedEntity.genesis.modelType,
+            parentId: addedEntity.itemMutation?.parentId,
+            snapshot: { itemId: addedEntity.itemId }
+          });
 
           this._subscribeToUpdates(entity);
         }
@@ -90,21 +75,13 @@ export class DataMirror {
     stream.subscribe(
       async (update) => {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
-        if (update.snapshot) {
-          assert(update.snapshot.model);
-          entity._stateManager.resetToSnapshot(update.snapshot.model);
-        } else if (update.mutation) {
-          if (update.mutation.data?.mutation) {
-            assert(update.mutation.meta);
-            await entity._stateManager.processMessage(
-              {
-                feedKey: update.mutation.meta.feedKey ?? failUndefined(),
-                memberKey: update.mutation.meta.memberKey ?? failUndefined(),
-                seq: update.mutation.meta.seq ?? failUndefined(),
-                timeframe: update.mutation.meta.timeframe ?? failUndefined()
-              },
-              update.mutation.data.mutation ?? failUndefined()
-            );
+        if (update.object.snapshot) {
+          entity._stateManager.resetToSnapshot(update.object);
+        } else if (update.object.mutations) {
+          for (const mutation of update.object.mutations) {
+            assert(mutation.meta);
+            assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+            await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
           }
         }
       },

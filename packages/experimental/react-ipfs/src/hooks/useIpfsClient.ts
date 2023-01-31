@@ -18,13 +18,16 @@ export const getIpfsUrl = (gateway: string, cid: CID, filename?: string) => {
 };
 
 /**
+ * https://www.npmjs.com/package/ipfs-http-client
  * https://www.npmjs.com/package/ipfs-http-client#example
+ * https://docs.ipfs.tech/reference/kubo/cli
+ * https://github.com/ipfs/ipfs-desktop/releases
+ * http://127.0.0.1:5001/webui
  * NOTE: We need to run our own servers to enable CORS.
  * Ports
  * - 8001 Gateway
  * - 5001 API
  */
-// TODO(kaplanski): Factor out IPFS related functionality to its own package.
 export const useIpfsClient = (url?: string) =>
   useMemo(() => {
     if (!url) {

@@ -5,6 +5,7 @@
 import debug from 'debug';
 
 import { Trigger } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { createFeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
@@ -38,12 +39,20 @@ export class TestBuilder<M extends Model<any>> {
 
   createPeer(): TestPeer<M> {
     const key = PublicKey.random();
-    const writer = createFeedWriter<Uint8Array>((data: Uint8Array) => {
+    const writer = createFeedWriter<Any>((data: Any) => {
       return Promise.resolve(this._writeMessage(key, data));
     });
 
     const id = PublicKey.random().toHex();
-    const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, id, {}, key, writer);
+    const stateManager = this._modelFactory.createModel<M>(
+      this._modelConstructor.meta.type,
+      id,
+      {
+        itemId: 'test'
+      },
+      key,
+      writer
+    );
 
     const peer = new TestPeer(stateManager, key);
     this._peers.set(key, peer);
@@ -61,13 +70,13 @@ export class TestBuilder<M extends Model<any>> {
     log('Replications started.');
   }
 
-  _writeMessage(peerKey: PublicKey, mutation: Uint8Array): WriteReceipt {
+  _writeMessage(peerKey: PublicKey, mutation: Any): WriteReceipt {
     const peer = this._peers.get(peerKey)!;
     const seq = peer.mutations.length;
     const timeframe = peer.timeframe;
 
     log(`Write ${peerKey}:${seq}`);
-    const message: ModelMessage<Uint8Array> = {
+    const message: ModelMessage<Any> = {
       meta: {
         feedKey: peerKey,
         memberKey: peerKey,
@@ -121,7 +130,7 @@ export class TestBuilder<M extends Model<any>> {
 
 export class TestPeer<M extends Model> {
   public timeframe = new Timeframe();
-  public mutations: ModelMessage<Uint8Array>[] = [];
+  public mutations: ModelMessage<Any>[] = [];
 
   // prettier-ignore
   constructor(
@@ -133,7 +142,7 @@ export class TestPeer<M extends Model> {
     return this.stateManager.model;
   }
 
-  processMutation(message: ModelMessage<Uint8Array>) {
+  processMutation(message: ModelMessage<Any>) {
     this.stateManager.processMessage(message.meta, message.mutation);
     this.timeframe = Timeframe.merge(
       this.timeframe,

@@ -14,7 +14,7 @@ import { createSpacePath } from '../hooks';
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const InitPage = () => {
+const InitPage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -23,6 +23,11 @@ export const InitPage = () => {
   const spaces = useSpaces();
 
   if (profile) {
+    // TODO(burdon): Better way to throw/display errors?
+    if (!spaces.length) {
+      throw new Error('No spaces.');
+    }
+
     return <Navigate to={createSpacePath(spaces[0].key)} />;
   }
 
@@ -42,3 +47,5 @@ export const InitPage = () => {
     </main>
   );
 };
+
+export default InitPage;

@@ -3,7 +3,6 @@
 //
 
 import ReactPlugin from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
@@ -12,24 +11,13 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
-
-import packageJson from './package.json';
-
-const env = (value?: string) => (value ? `"${value}"` : undefined);
-const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/devtools@${packageJson.version}` : undefined;
+import { resolve } from 'node:path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
     host: true
-  },
-  define: {
-    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.DX_RELEASE': env(DX_RELEASE),
-    'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),
-    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY),
-    'process.env.IPDATA_API_KEY': env(process.env.IPDATA_API_KEY)
   },
   optimizeDeps: {
     force: true,
@@ -93,8 +81,14 @@ export default defineConfig({
     }
   },
   plugins: [
-    ConfigPlugin(),
-
+    ConfigPlugin({
+      env: [
+        'DX_ENVIRONMENT',
+        'DX_IPDATA_API_KEY',
+        'DX_SENTRY_DESTINATION',
+        'DX_TELEMETRY_API_KEY'
+      ]
+    }),
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
@@ -106,7 +100,6 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs')
       ],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),

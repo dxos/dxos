@@ -1,0 +1,75 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+import "dxos/halo/credentials.proto";
+import "dxos/echo/timeframe.proto";
+
+package dxos.echo.object;
+
+/**
+ * Wrapper for all ECHO messages.
+ */
+message EchoObject {
+  optional string item_id = 1;
+  optional string item_type = 2;
+  optional string model_type = 3;
+  optional string model_version = 4;
+  optional string parent_id = 5;
+
+  /// Create item.
+  optional ItemGenesis genesis = 10;
+
+  /// Item system mutations.
+  optional ItemMutation item_mutation = 11;
+
+  /// Set the model to the provided snapshot.
+  optional google.protobuf.Any snapshot = 13 [preserve_any = true]; 
+
+  // Model-specific mutations.
+  repeated ModelMutation mutations = 14;
+}
+
+message ModelMutation {
+  // Encoded model mutation, format is defined by model's codec.
+  google.protobuf.Any mutation = 1 [preserve_any = true];
+  /// For snapshot messages.
+  optional ModelMutationMeta meta = 2;
+}
+
+message ModelMutationMeta {
+  dxos.keys.PublicKey feed_key = 1;
+  int32 seq = 2;
+  dxos.keys.PublicKey member_key = 3;
+  optional timeframe.TimeframeVector timeframe = 4;
+}
+
+/**
+ * Item creation.
+ */
+// TODO(burdon): ObjectGenesis
+message ItemGenesis {
+  optional string item_type = 1;
+  string model_type = 2;
+  optional string model_version = 3;
+}
+
+/**
+ * Item mutation.
+ */
+// TODO(dmaretskyi): ObjectMutation.
+message ItemMutation {
+  // TODO(dmaretskyi): Replace with `optional bool` field?
+  enum Action {
+    NOOP = 0;
+    DELETE = 1;
+    RESTORE = 2;
+  }
+
+  optional string parent_id = 1;  // TODO(burdon): Define Action type?
+  optional Action action = 2;
+}

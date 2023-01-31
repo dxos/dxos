@@ -28,7 +28,7 @@
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "minisearch": "^3.0.2",
-    "yjs": "^13.5.41"
+    "yjs": "^13.5.44"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

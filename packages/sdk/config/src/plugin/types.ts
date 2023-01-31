@@ -37,4 +37,9 @@ export interface ConfigPluginOpts {
    * @default ''
    */
   publicUrl?: string;
+
+  /**
+   * Environment variables to be passed to the app.
+   */
+  env?: string[];
 }

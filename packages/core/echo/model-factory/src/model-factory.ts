@@ -5,11 +5,12 @@
 import assert from 'node:assert';
 
 import { Event, scheduleTask } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
-import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Model } from './model';
 import { StateManager } from './state-manager';
@@ -70,9 +71,9 @@ export class ModelFactory {
   createModel<M extends Model>(
     modelType: ModelType,
     itemId: ItemID,
-    snapshot: ModelSnapshot,
+    snapshot: EchoObject,
     memberKey: PublicKey, // TODO(burdon): Change to client ID?
-    writeStream?: FeedWriter<Uint8Array>
+    writeStream?: FeedWriter<Any>
   ): StateManager<M> {
     assert(itemId);
     const constructor = this._models.get(modelType)?.constructor;

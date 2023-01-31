@@ -17,7 +17,7 @@ import { createInvitationUrl } from '../util';
 // NOTE: Copied from react-appkit.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const ManageSpacePage = () => {
+const ManageSpacePage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
   const space = useSpace();
@@ -50,6 +50,7 @@ export const ManageSpacePage = () => {
               onClick={handleCreateInvitation}
               className='flex gap-1 items-center'
               disabled={!space}
+              data-testid='create-invitation-button'
             >
               <span>{t('create invitation label', { ns: 'appkit' })}</span>
               <UserPlus className={getSize(5)} />
@@ -74,3 +75,5 @@ export const ManageSpacePage = () => {
     </div>
   );
 };
+
+export default ManageSpacePage;

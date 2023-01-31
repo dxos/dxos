@@ -1,26 +1,28 @@
 <template>
-  <div class="showcase-preview">
-    <form v-if="fork" action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
-      <input type="hidden" name="parameters" :value="parameters" />
-      <input type="submit" class="showcase-fork" value="Fork" />
-    </form>
-    <div ref="preview"></div>
+  <form v-if="forkable" action="https://codesandbox.io/api/v1/sandboxes/define" method="POST" target="_blank">
+    <input type="hidden" name="parameters" :value="parameters" />
+    <input type="submit" class="showcase-fork" value="Fork" />
+  </form>
+  <input v-if="airplaneControl" id="airplane-control" type="checkbox" @change="handleAirplaneToggle" />
+  <label>Toggle Replication</label>
+  <div class="peers">
+    <div v-for="i in peerCount" ref="peers"></div>
   </div>
 </template>
 
-<style>
-.showcase-preview {
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
-  padding: 1em;
-  position: relative;
-  min-height: 2em;
-}
-
+<style scoped>
 .showcase-fork {
   position: absolute;
   right: 1em;
   cursor: pointer;
+}
+
+.peers {
+  display: flex;
+}
+
+.peers>div {
+  width: v-bind('peerWidth');
 }
 </style>
 
@@ -30,11 +32,39 @@
   import { createRoot } from 'react-dom/client';
   import { onMounted, ref } from 'vue';
 
-  import { fromHost } from '@dxos/client';
-  import { ClientProvider } from '@dxos/react-client';
+  import { Trigger } from '@dxos/async';
+  import { log } from '@dxos/log';
+  import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
-  const props = defineProps(['demo', 'fork']);
-  const preview = ref<HTMLDivElement | null>(null);
+  const props = defineProps({
+    demo: {
+      type: String,
+      required: true
+    },
+    peerCount: {
+      type: Number
+    },
+    airplaneControl: {
+      type: Boolean
+    },
+    forkable: {
+      type: Boolean
+    },
+    createIdentity: {
+      type: Boolean
+    },
+    createSpace: {
+      type: Boolean
+    }
+  });
+
+  const peers = ref<HTMLDivElement[]>([])
+  const peerWidth = `${100 / props.peerCount}%`;
+
+  // TODO(wittjosiah): Prevent from importing during ssr.
+  const { Client, fromHost, Invitation, PublicKey } = await import('@dxos/client');
+  const { TestBuilder } = await import('@dxos/client/testing');
+  const { ClientProvider, useSpaces } = await import('@dxos/react-client');
 
   // Note rollup dynamic import limitations.
   //   https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations
@@ -76,14 +106,76 @@
     }
   });
 
+  const testBuilder = new TestBuilder();
+  const clients = [...Array(props.peerCount)].map(() =>
+    new Client({ services: testBuilder.createClientServicesHost() })
+  );
+
+  await Promise.all(clients.map((client) => client.initialize()));
+  log('clients initialized');
+
+  if (props.createIdentity) {
+    await Promise.all(clients.map((client) => client.halo.createProfile()));
+    log('identities created');
+  }
+
+  if (props.createSpace) {
+    const space = await clients[0].echo.createSpace();
+    log('space created', { key: space.key });
+
+    await Promise.all(
+      clients.slice(1).map(async (client) => {
+        const success1 = new Trigger<Invitation>();
+        const success2 = new Trigger<Invitation>();
+
+        const observable1 = space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+        log('invitation created');
+        observable1.subscribe({
+          onConnecting: (invitation) => {
+            const observable2 = client.echo.acceptInvitation(invitation);
+            log('invitation accepted');
+
+            observable2.subscribe({
+              onSuccess: (invitation: Invitation) => {
+                success2.wake(invitation);
+                log('invitation success2');
+              },
+              onError: (err: Error) => raise(err)
+            });
+          },
+          onSuccess: (invitation) => {
+            success1.wake(invitation);
+            log('invitation success1');
+          },
+          onError: (err) => raise(err)
+        });
+
+        await Promise.all([success1.wait(), success2.wait()]);
+      })
+    );
+  }
+
+  const handleAirplaneToggle = async (event) => {
+    const mode = event.target.checked ? ConnectionState.OFFLINE : ConnectionState.ONLINE;
+    await Promise.all(clients.map((client) => client.mesh.setConnectionState(mode)));
+  };
+
+  const SpaceWrapper = () => {
+    const [space] = useSpaces();
+
+    return createElement(module.default, { space }, null);
+  };
+
   onMounted(() => {
-    createRoot(preview.value)
-      .render(
-        createElement(
-          ClientProvider,
-          { services: (config) => fromHost(config) }, 
-          createElement(module.default, {}, null)
-        )
-      );
+    peers.value.forEach((peer, i) => {
+      createRoot(peer)
+        .render(
+          createElement(
+            ClientProvider,
+            { client: clients[i] }, 
+            createElement(SpaceWrapper, {}, null)
+          )
+        );
+    });
   });
 </script>

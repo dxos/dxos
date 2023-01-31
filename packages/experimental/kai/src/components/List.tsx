@@ -13,9 +13,10 @@ export type ListSlots = {
 export type ListProps = { classes?: ListSlots; children?: ReactNode };
 
 export const List: FC<ListProps> = ({ classes, children }) => {
-  return <ul className={mx('flex flex-col', classes?.root)}>{children}</ul>;
+  return <ul className={mx('flex flex-col w-full overflow-hidden', classes?.root)}>{children}</ul>;
 };
 
+// TODO(burdon): Inherit from parent.
 export type ListItemSlots = {
   root?: string;
   hover?: string;
@@ -28,13 +29,13 @@ export const ListItemButton: FC<ListItemProps> = ({ selected, classes, children,
   return (
     <li
       className={mx(
-        'flex items-center',
+        'flex w-full overflow-hidden items-center cursor-pointer',
         classes?.root,
         classes?.hover && `hover:${classes?.hover}`,
         selected && classes?.selected
       )}
     >
-      <div className={mx('flex w-full pl-2 pr-2 overflow-hidden text-ellipsis whitespace-nowrap')} onClick={onClick}>
+      <div className={mx('flex w-full p-2 items-center overflow-hidden')} onClick={onClick}>
         {children}
       </div>
     </li>

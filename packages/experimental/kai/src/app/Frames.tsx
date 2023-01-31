@@ -8,14 +8,17 @@ import {
   CaretLeft,
   CaretRight,
   Compass,
+  Files,
   Stack,
   Gear,
   Globe,
   Graph,
+  HighlighterCircle,
   Kanban,
   ListChecks,
   Sword,
-  Table
+  Table,
+  Code
 } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -30,12 +33,15 @@ import {
   StackFrame,
   DocumentFrame,
   ExplorerFrame,
+  FileFrame,
   KanbanFrame,
   MapFrame,
   RegistryFrame,
+  SketchFrame,
   TableFrame,
-  TasksFrame
-} from '../containers';
+  TasksFrame,
+  SandboxFrame
+} from '../frames';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
 
@@ -98,6 +104,20 @@ export const frames: FrameDef[] = [
     Component: DocumentFrame
   },
   {
+    id: FrameID.FILES,
+    title: 'Files',
+    description: 'Distributed file sharing.',
+    Icon: Files,
+    Component: FileFrame
+  },
+  {
+    id: FrameID.SKETCH,
+    title: 'Sketch',
+    description: 'Simple sketches.',
+    Icon: HighlighterCircle,
+    Component: SketchFrame
+  },
+  {
     id: FrameID.EXPLORER,
     title: 'Explorer',
     description: 'Graphical data navigator.',
@@ -117,6 +137,13 @@ export const frames: FrameDef[] = [
     description: 'Peer-to-peer and engine powered games.',
     Icon: Sword,
     Component: ChessFrame
+  },
+  {
+    id: FrameID.SANDBOX,
+    title: 'Sandbox',
+    description: 'Collaborative code sandbox.',
+    Icon: Code,
+    Component: SandboxFrame
   }
 ];
 
@@ -153,12 +180,14 @@ export const FrameSelector: FC = () => {
               <a
                 key={id}
                 className={mx(
-                  'flex lg:pr-2 lg:mr-2 items-center p-1 cursor-pointer rounded-t text-black',
+                  'flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black',
                   id === currentFrame && 'bg-white'
                 )}
                 onClick={() => navigate(createSpacePath(space.key, id))}
               >
-                <Icon weight='light' className={getSize(6)} />
+                <div className='px-2 md:px-0'>
+                  <Icon weight='light' className={getSize(6)} />
+                </div>
                 <div className='hidden lg:flex ml-1'>{title}</div>
               </a>
             );

@@ -6,7 +6,7 @@ import { Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
 import { cwd } from 'process';
 
-import bare from '@dxos/bare-template';
+import bare, { isDxosMonorepoSync } from '@dxos/bare-template';
 import hello from '@dxos/hello-template';
 import { exists } from '@dxos/plate';
 import tasks from '@dxos/tasks-template';
@@ -86,23 +86,16 @@ export default class Create extends BaseCommand {
         hello
       };
 
+      const monorepo = isDxosMonorepoSync();
+
       const result = await plates[template as keyof typeof plates].execute({
         outputDirectory,
         interactive,
         verbose,
-        input: interactive
-          ? {
-              monorepo: false,
-              name
-            }
-          : {
-              monorepo: false,
-              name,
-              react: true,
-              dxosUi: true,
-              storybook: false,
-              pwa: true
-            }
+        input: {
+          monorepo,
+          name
+        }
       });
       await Promise.all(
         result.map(async (file) => {
@@ -113,9 +106,7 @@ export default class Create extends BaseCommand {
         })
       );
     } catch (err: any) {
-      this.error(err);
-      this.error(err?.stack);
-      this.error('Unable to create application', { exit: 1 });
+      this.error(err, { exit: 1 });
     }
   }
 }

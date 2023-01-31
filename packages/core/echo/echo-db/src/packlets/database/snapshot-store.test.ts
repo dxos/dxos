@@ -19,8 +19,7 @@ describe('SnapshotStore', () => {
       spaceKey: PublicKey.random().asBuffer(),
       timeframe: new Timeframe(),
       database: {
-        items: [],
-        links: []
+        items: []
       }
     };
 
