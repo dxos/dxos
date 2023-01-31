@@ -19,10 +19,14 @@ export interface InvitationAuthenticatorProps extends ViewStateProps {
 
 const PureInvitationAuthenticatorContent = ({
   disabled,
+  dispatch,
+  invitationType,
   onChange,
   onAuthenticate
 }: {
   disabled?: boolean;
+  dispatch: ViewStateProps['dispatch'];
+  invitationType: InvitationAuthenticatorProps['invitationType'];
   onChange: ComponentProps<typeof Input>['onChange'];
   onAuthenticate: ComponentProps<typeof Button>['onClick'];
 }) => {
@@ -58,7 +62,11 @@ const PureInvitationAuthenticatorContent = ({
           <span className='grow'>{t('next label')}</span>
           <CaretRight weight='bold' className={getSize(4)} />
         </Button>
-        <Button disabled={disabled} className='flex items-center gap-2 pis-2 pie-4'>
+        <Button
+          disabled={disabled}
+          className='flex items-center gap-2 pis-2 pie-4'
+          onClick={() => dispatch({ type: 'cancel invitation', from: invitationType })}
+        >
           <CaretLeft weight='bold' className={getSize(4)} />
           <span>{t('cancel label')}</span>
         </Button>
@@ -81,7 +89,11 @@ const InvitationAuthenticatorContent = ({
   const [pinValue, setPinValue] = useState('');
   const { authenticate } = useInvitationStatus(invitation);
   const onAuthenticate = useCallback(
-    () => authenticate(pinValue).then(() => dispatch({ type: 'accepted invitation', from: invitationType })),
+    () =>
+      authenticate(pinValue).then(
+        () => dispatch({ type: 'accepted invitation', from: invitationType }),
+        () => dispatch({ type: 'fail invitation', from: invitationType })
+      ),
     [dispatch, invitationType, authenticate, pinValue]
   );
   const onChange = useCallback(
@@ -93,20 +105,20 @@ const InvitationAuthenticatorContent = ({
     },
     [authenticate, pinValue]
   );
-  return <PureInvitationAuthenticatorContent {...{ disabled, onChange, onAuthenticate }} />;
+  return <PureInvitationAuthenticatorContent {...{ disabled, dispatch, invitationType, onChange, onAuthenticate }} />;
 };
 
 export const InvitationAuthenticator = ({ invitationType, ...viewStateProps }: InvitationAuthenticatorProps) => {
   const disabled = !viewStateProps.active;
-  const { activeInvitation } = viewStateProps;
+  const { activeInvitation, dispatch } = viewStateProps;
   return (
     <ViewState {...viewStateProps}>
       {!activeInvitation || activeInvitation === true ? (
-        <PureInvitationAuthenticatorContent {...{ disabled, onChange: () => {}, onAuthenticate: () => {} }} />
-      ) : (
-        <InvitationAuthenticatorContent
-          {...{ disabled, invitation: activeInvitation, dispatch: viewStateProps.dispatch, invitationType }}
+        <PureInvitationAuthenticatorContent
+          {...{ disabled, dispatch, invitationType, onChange: () => {}, onAuthenticate: () => {} }}
         />
+      ) : (
+        <InvitationAuthenticatorContent {...{ disabled, invitation: activeInvitation, dispatch, invitationType }} />
       )}
     </ViewState>
   );

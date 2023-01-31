@@ -31,6 +31,7 @@ export interface InvitationAction {
   type:
     | 'authenticating invitation'
     | 'cancel invitation'
+    | 'cancelled invitation'
     | 'connect invitation'
     | 'connecting invitation'
     | 'fail invitation'

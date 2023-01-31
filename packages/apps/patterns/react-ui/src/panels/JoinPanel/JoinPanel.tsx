@@ -66,6 +66,14 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
         nextState.activeView = 'identity selector';
         break;
       case 'cancel invitation':
+        if (action.from === 'space' && state.spaceInvitation?.invitation) {
+          void state.spaceInvitation?.cancel();
+        }
+        if (action.from === 'halo' && state.haloInvitation?.invitation) {
+          void state.haloInvitation?.cancel();
+        }
+        break;
+      case 'cancelled invitation':
       case 'fail invitation':
       case 'timeout invitation':
       case 'connecting invitation':
@@ -112,8 +120,11 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
 
   useEffect(() => {
     joinState.spaceInvitation?.subscribe({
-      onAuthenticating: () => dispatch({ type: 'authenticating invitation', from: 'space' }),
-      onCancelled: () => dispatch({ type: 'cancel invitation', from: 'space' }),
+      onAuthenticating: (...args) => {
+        log.info('[space invitation authenticating]', args);
+        dispatch({ type: 'authenticating invitation', from: 'space' });
+      },
+      onCancelled: () => dispatch({ type: 'cancelled invitation', from: 'space' }),
       onConnected: () => dispatch({ type: 'connect invitation', from: 'space' }),
       onConnecting: () => dispatch({ type: 'connecting invitation', from: 'space' }),
       onError: () => dispatch({ type: 'fail invitation', from: 'space' }),
@@ -125,7 +136,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
   useEffect(() => {
     joinState.haloInvitation?.subscribe({
       onAuthenticating: () => dispatch({ type: 'authenticating invitation', from: 'halo' }),
-      onCancelled: () => dispatch({ type: 'cancel invitation', from: 'halo' }),
+      onCancelled: () => dispatch({ type: 'cancelled invitation', from: 'halo' }),
       onConnected: () => dispatch({ type: 'connect invitation', from: 'halo' }),
       onConnecting: () => dispatch({ type: 'connecting invitation', from: 'halo' }),
       onError: () => dispatch({ type: 'fail invitation', from: 'halo' }),
