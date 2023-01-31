@@ -88,7 +88,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     expect(topics).to.have.length(numSwarms);
   });
 
-  test.skip('joins multiple swarms concurrently', async () => {
+  test('joins multiple swarms concurrently', async () => {
     const createSwarm = async () => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
@@ -106,7 +106,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     await Promise.all([
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
-      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId)
+      test2.swarm1a.protocol.testConnection(test2.peer2a.peerId)
     ]);
   });
 
