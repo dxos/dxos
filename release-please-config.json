@@ -63,6 +63,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/tasks-app-2/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },

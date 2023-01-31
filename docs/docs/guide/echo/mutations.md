@@ -2,7 +2,7 @@
 order: 6
 ---
 
-# Mutating data
+# Mutations
 
 ```ts file=./snippets/write-items.ts#L5-
 import { Client, ObjectModel } from '@dxos/client';

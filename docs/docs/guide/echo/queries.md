@@ -2,7 +2,7 @@
 order: 5
 ---
 
-# Reading data
+# Queries
 
 Once access is obtained to a space, select items to retrieve them.
 

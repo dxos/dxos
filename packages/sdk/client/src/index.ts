@@ -59,3 +59,5 @@ export * from './packlets/proxies';
 
 // TODO(burdon): Create separate export like testing?
 export * from './packlets/devtools';
+
+export * from '@dxos/echo-schema';

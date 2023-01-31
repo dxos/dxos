@@ -90,6 +90,7 @@
     "spyglass": "packages/experimental/spyglass",
     "swc-log-plugin": "tools/swc-log-plugin",
     "tasks-app": "packages/apps/tasks-app",
+    "tasks-app-2": "packages/apps/tasks-app-2",
     "tasks-template": "packages/apps/templates/tasks-template",
     "telemetry": "packages/common/telemetry",
     "teleport": "packages/core/mesh/teleport",
