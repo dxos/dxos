@@ -27,19 +27,26 @@ export interface EmptyJoinAction {
   type: 'deselect identity' | 'cancel addition' | 'add identity';
 }
 
-export interface InvitationAction {
+export interface EmptyInvitationAction {
   type:
     | 'authenticating invitation'
     | 'authenticate invitation'
     | 'cancel invitation'
     | 'cancelled invitation'
     | 'connect invitation'
-    | 'connecting invitation'
     | 'fail invitation'
     | 'accepted invitation'
     | 'timeout invitation';
   from: 'space' | 'halo';
 }
+
+export interface InvitationCodeAction {
+  type: 'connecting invitation';
+  from: 'space' | 'halo';
+  invitationCode: string;
+}
+
+export type InvitationAction = EmptyInvitationAction | InvitationCodeAction;
 
 export interface AdditionMethodAction {
   type: 'select addition method';
@@ -50,7 +57,11 @@ export type JoinAction = IdentityAction | EmptyJoinAction | AdditionMethodAction
 
 export type JoinDispatch = Dispatch<JoinAction>;
 
-export type InvitationView = 'invitation connector' | 'invitation authenticator' | 'invitation accepted';
+export type InvitationView =
+  | 'invitation input'
+  | 'invitation connector'
+  | 'invitation authenticator'
+  | 'invitation accepted';
 
 export type JoinView =
   | 'identity selector'
@@ -66,6 +77,7 @@ export interface JoinState {
   spaceInvitation?: AuthenticatingInvitationObservable;
   spaceViewState: InvitationView;
   spaceInvitationAnnotation?: 'authenticating' | 'authentication failed';
+  unredeemedHaloInvitationCode?: string;
   haloInvitation?: AuthenticatingInvitationObservable;
   haloViewState: InvitationView;
   haloInvitationAnnotation?: 'authenticating' | 'authentication failed';

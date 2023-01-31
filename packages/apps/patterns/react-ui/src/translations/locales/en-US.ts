@@ -44,5 +44,6 @@ export const os = {
   'reconnect label': 'Reconnect',
   'cancel label': 'Cancel',
   'done label': 'Done',
-  'pin input label': 'The PIN provided by the invitation sender'
+  'pin input label': 'The PIN provided by the invitation sender',
+  'invitation input label': 'Paste an invitation code or URL'
 };

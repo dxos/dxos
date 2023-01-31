@@ -17,9 +17,10 @@ import {
   IdentityInput,
   IdentityAdded,
   InvitationAuthenticator,
-  InvitationConnector
+  InvitationConnector,
+  InvitationInput,
+  InvitationAccepted
 } from './view-states';
-import { InvitationAccepted } from './view-states/InvitationAccepted';
 
 export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
   const client = useClient();
@@ -46,6 +47,14 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
       case 'select addition method':
         if (action.method === 'accept device invitation') {
           nextState.activeView = 'halo invitation acceptor';
+          if (state.unredeemedHaloInvitationCode) {
+            nextState.haloInvitation = client.echo.acceptInvitation(
+              InvitationEncoder.decode(state.unredeemedHaloInvitationCode)
+            );
+            nextState.unredeemedHaloInvitationCode = undefined;
+          } else {
+            nextState.haloViewState = 'invitation input';
+          }
         } else {
           nextState.activeView = 'identity input';
           nextState.additionMethod = action.method;
@@ -59,6 +68,8 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
             InvitationEncoder.decode(state.unredeemedSpaceInvitationCode)
           );
           nextState.unredeemedSpaceInvitationCode = undefined;
+        } else {
+          nextState.spaceViewState = 'invitation input';
         }
         break;
       case 'deselect identity':
@@ -74,7 +85,6 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
         }
         break;
       case 'authenticating invitation':
-        log.info('[authenticating]');
         nextState[action.from === 'halo' ? 'haloInvitationAnnotation' : 'spaceInvitationAnnotation'] = 'authenticating';
         break;
       case 'cancelled invitation':
@@ -86,11 +96,9 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
       case 'connect invitation':
       case 'authenticate invitation':
         if (action.from === 'halo' && state.haloInvitationAnnotation === 'authenticating') {
-          log.info('[authenticating]');
           nextState.haloInvitationAnnotation = 'authentication failed';
         }
         if (action.from === 'space' && state.spaceInvitationAnnotation === 'authenticating') {
-          log.info('[authenticating]');
           nextState.spaceInvitationAnnotation = 'authentication failed';
         }
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation authenticator';
@@ -104,6 +112,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
   };
 
   const [joinState, dispatch] = useReducer(reducer, {
+    unredeemedHaloInvitationCode: undefined,
     unredeemedSpaceInvitationCode: initialInvitationCode,
     spaceInvitation: undefined,
     haloInvitation: undefined,
@@ -135,7 +144,6 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
       onAuthenticating: () => dispatch({ type: 'authenticate invitation', from: 'space' }),
       onCancelled: () => dispatch({ type: 'cancelled invitation', from: 'space' }),
       onConnected: () => dispatch({ type: 'connect invitation', from: 'space' }),
-      onConnecting: () => dispatch({ type: 'connecting invitation', from: 'space' }),
       onError: () => dispatch({ type: 'fail invitation', from: 'space' }),
       onSuccess: () => dispatch({ type: 'accepted invitation', from: 'space' }),
       onTimeout: () => dispatch({ type: 'timeout invitation', from: 'space' })
@@ -147,7 +155,6 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
       onAuthenticating: () => dispatch({ type: 'authenticate invitation', from: 'halo' }),
       onCancelled: () => dispatch({ type: 'cancelled invitation', from: 'halo' }),
       onConnected: () => dispatch({ type: 'connect invitation', from: 'halo' }),
-      onConnecting: () => dispatch({ type: 'connecting invitation', from: 'halo' }),
       onError: () => dispatch({ type: 'fail invitation', from: 'halo' }),
       onSuccess: () => dispatch({ type: 'accepted invitation', from: 'halo' }),
       onTimeout: () => dispatch({ type: 'timeout invitation', from: 'halo' })
@@ -165,7 +172,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
           >
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className='is-full overflow-hidden'>
-              <div role='none' className='flex is-[800%]' aria-live='polite'>
+              <div role='none' className='flex is-[1300%]' aria-live='polite'>
                 <IdentitySelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
                 />
@@ -191,11 +198,63 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
                     method: 'recover identity'
                   }}
                 />
+                <InvitationInput
+                  {...{
+                    dispatch,
+                    activeInvitation: joinState.haloInvitation || true,
+                    active:
+                      joinState.activeView === 'halo invitation acceptor' &&
+                      joinState.haloViewState === 'invitation input',
+                    invitationType: 'halo'
+                  }}
+                />
+                <InvitationConnector
+                  {...{
+                    dispatch,
+                    activeInvitation: joinState.haloInvitation || true,
+                    active:
+                      joinState.activeView === 'halo invitation acceptor' &&
+                      joinState.haloViewState === 'invitation connector',
+                    invitationType: 'halo'
+                  }}
+                />
+                <InvitationAuthenticator
+                  {...{
+                    dispatch,
+                    activeInvitation: joinState.haloInvitation || true,
+                    active:
+                      joinState.activeView === 'halo invitation acceptor' &&
+                      joinState.haloViewState === 'invitation authenticator',
+                    invitationType: 'halo',
+                    ...(joinState.spaceInvitationAnnotation === 'authentication failed' && { failed: true })
+                  }}
+                />
+                <InvitationAccepted
+                  {...{
+                    dispatch,
+                    activeInvitation: joinState.haloInvitation || true,
+                    active:
+                      joinState.activeView === 'halo invitation acceptor' &&
+                      joinState.haloViewState === 'invitation accepted',
+                    invitationType: 'halo'
+                  }}
+                />
                 <IdentityAdded
                   {...{
                     dispatch,
                     addedIdentity: joinState.selectedIdentity,
                     active: joinState.activeView === 'identity added'
+                  }}
+                />
+                <InvitationInput
+                  {...{
+                    dispatch,
+                    activeInvitation: joinState.spaceInvitation || true,
+                    selectedIdentity: joinState.selectedIdentity,
+                    active:
+                      joinState.activeView === 'space invitation acceptor' &&
+                      joinState.spaceViewState === 'invitation input',
+                    invitationType: 'space'
                   }}
                 />
                 <InvitationConnector

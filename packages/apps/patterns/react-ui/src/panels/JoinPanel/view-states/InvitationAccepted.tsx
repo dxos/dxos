@@ -10,7 +10,11 @@ import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { ViewState, ViewStateProps } from './ViewState';
 
-export const InvitationAccepted = (viewStateProps: ViewStateProps) => {
+export interface InvitationAcceptedProps extends ViewStateProps {
+  invitationType: 'space' | 'halo';
+}
+
+export const InvitationAccepted = ({ invitationType, ...viewStateProps }: InvitationAcceptedProps) => {
   const disabled = !viewStateProps.active;
   const { t } = useTranslation('os');
 

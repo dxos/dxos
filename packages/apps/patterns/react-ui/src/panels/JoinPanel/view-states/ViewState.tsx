@@ -195,7 +195,13 @@ export const ViewState = ({
       {activeInvitation &&
         (activeInvitation === true ? (
           <PureViewStateInvitation
-            {...{ halted: false, status: Invitation.State.INIT, label: ' ', cursor: 0, resolvedColor: inactiveColor }}
+            {...{
+              halted: false,
+              status: Invitation.State.INIT,
+              label: t('invitation input label'),
+              cursor: 0,
+              resolvedColor: inactiveColor
+            }}
           />
         ) : (
           <ViewStateInvitationStatus {...{ activeInvitation }} />
