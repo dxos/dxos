@@ -8,7 +8,6 @@ export * from './FileUploadDialog';
 export * from './FolderHierarchy';
 export * from './Input';
 export * from './GraphComponent';
-export * from './Grid';
 export * from './Kanban';
 export * from './List';
 export * from './MemberList';

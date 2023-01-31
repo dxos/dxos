@@ -6,15 +6,15 @@ import faker from 'faker';
 import React, { useMemo } from 'react';
 
 import { id } from '@dxos/echo-schema';
+import { Hypercard, Item, Point, GridHypercardLayout } from '@dxos/hypercard';
 import { useQuery } from '@dxos/react-client';
 
-import { Grid, Item, Point, TestGridLayout } from '../components';
 import { useSpace } from '../hooks';
 import { Note } from '../proto';
 
 export const NotesFrame = () => {
   const range = 2;
-  const layout = useMemo(() => new TestGridLayout({ range, size: 200, padding: 20 }), []);
+  const layout = useMemo(() => new GridHypercardLayout({ range, size: 200, padding: 20 }), []);
   const space = useSpace();
   const notes = useQuery(space, Note.filter());
 
@@ -54,7 +54,17 @@ export const NotesFrame = () => {
     }
   };
 
-  return <Grid items={items} layout={layout} onCreate={handleCreate} onDelete={handleDelete} />;
+  return (
+    <Hypercard
+      items={items}
+      layout={layout}
+      classes={{
+        cell: 'bg-yellow-100 shadow select-none cursor-pointer text-black'
+      }}
+      onCreate={handleCreate}
+      onDelete={handleDelete}
+    />
+  );
 };
 
 export default NotesFrame;

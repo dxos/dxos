@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/kai",
+  "name": "@dxos/hypercard",
   "version": "0.1.23",
   "private": true,
-  "description": "Kai Demo.",
+  "description": "Configurable grid control.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -13,10 +13,6 @@
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
-  "scripts": {
-    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dnd-kit/core": "^6.0.5",
     "@dnd-kit/modifiers": "^6.0.0",
@@ -35,7 +31,6 @@
     "@dxos/framebox": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
-    "@dxos/hypercard": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
@@ -109,5 +104,8 @@
     "vite-plugin-inspect": "^0.7.15",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
+  },
+  "peerDependencies": {
+    "phosphor-react": "^1.4.1"
   }
 }

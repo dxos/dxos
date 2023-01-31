@@ -45,6 +45,7 @@
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
     "halo-app": "packages/apps/halo-app",
     "hello-template": "packages/apps/templates/hello-template",
+    "hypercard": "packages/experimental/hypercard",
     "hypercore": "packages/common/hypercore",
     "kai": "packages/experimental/kai",
     "keyring": "packages/core/halo/keyring",

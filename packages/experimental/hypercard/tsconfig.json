@@ -103,9 +103,6 @@
     },
     {
       "path": "../gem-spore"
-    },
-    {
-      "path": "../hypercard"
     }
   ],
   "ts-node": {

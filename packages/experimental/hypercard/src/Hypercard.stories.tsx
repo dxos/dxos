@@ -10,10 +10,12 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { TestGridLayout, Grid, Item } from './Grid';
+import { GridHypercardLayout } from './GridHypercardLayout';
+import { Hypercard } from './Hypercard';
+import { Item } from './defs';
 
 export default {
-  component: Grid,
+  component: Hypercard,
   argTypes: {}
 };
 
@@ -51,7 +53,7 @@ faker.seed(100);
 
 const Test = () => {
   const { ref: containerRef } = useResizeDetector();
-  const layout = useMemo(() => new TestGridLayout(), []);
+  const layout = useMemo(() => new GridHypercardLayout(), []);
 
   const num = 10;
   const items: Item[] = useMemo(() => {
@@ -80,7 +82,15 @@ const Test = () => {
   return (
     <div ref={containerRef} className='flex absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 overflow-auto bg-gray-500'>
-        <Grid items={items} layout={layout} onSelect={handleSelect} />
+        <Hypercard
+          items={items}
+          layout={layout}
+          onSelect={handleSelect}
+          // TODO(burdon): Provide content renderer for cells.
+          classes={{
+            cell: 'bg-yellow-100 shadow select-none cursor-pointer text-black'
+          }}
+        />
       </div>
     </div>
   );
