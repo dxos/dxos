@@ -8,7 +8,7 @@ import { SpaceProxy } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 
 import { useInvitationStatus } from '../invitations';
-import { useSpace } from './useSpaces';
+import { useSpace } from './SpaceContext';
 
 export const useSpaceInvitations = (spaceKey?: PublicKey) => {
   const space = useSpace(spaceKey);

@@ -24,6 +24,7 @@ export const Main = withReactor(() => {
   const [list] = useQuery(space, TodoList.filter());
 
   if (!list) {
+    void space.experimental.db.save(new TodoList());
     return null;
   }
 
