@@ -29,9 +29,7 @@ module.exports = {
         '@dxos/react-client',
         '@dxos/react-components',
         '@dxos/util',
-        'storybook-dark-mode',
-        'i18next',
-        'lodash/merge'
+        'storybook-dark-mode'
       ]
     },
     build: {

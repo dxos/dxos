@@ -41,7 +41,7 @@ export interface InvitationAction {
 
 export interface AdditionMethodAction {
   type: 'select addition method';
-  method: 'restore identity' | 'accept device invitation' | 'create identity';
+  method: 'recover identity' | 'accept device invitation' | 'create identity';
 }
 
 export type JoinAction = IdentityAction | EmptyJoinAction | AdditionMethodAction | InvitationAction;
@@ -53,8 +53,7 @@ export type InvitationView = 'invitation connector' | 'invitation authenticator'
 export type JoinView =
   | 'identity selector'
   | 'addition method selector'
-  | 'identity restorer'
-  | 'identity creator'
+  | 'identity input'
   | 'identity added'
   | 'space invitation acceptor'
   | 'halo invitation acceptor';

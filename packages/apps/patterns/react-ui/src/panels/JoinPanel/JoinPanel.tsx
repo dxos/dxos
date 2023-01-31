@@ -14,7 +14,7 @@ import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
 import {
   AdditionMethodSelector,
   IdentitySelector,
-  IdentityCreator,
+  IdentityInput,
   IdentityAdded,
   InvitationAuthenticator,
   InvitationConnector
@@ -44,8 +44,12 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
         nextState.activeView = 'addition method selector';
         break;
       case 'select addition method':
-        nextState.activeView = 'identity creator';
-        nextState.additionMethod = action.method;
+        if (action.method === 'accept device invitation') {
+          nextState.activeView = 'halo invitation acceptor';
+        } else {
+          nextState.activeView = 'identity input';
+          nextState.additionMethod = action.method;
+        }
         break;
       case 'select identity':
         nextState.selectedIdentity = action.identity;
@@ -75,7 +79,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation accepted';
         break;
     }
-    log.info('[reducer]', { action, nextState });
+    log.info('[join panel reducer]', { action, nextState });
     return nextState;
   };
 
@@ -93,7 +97,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
   useEffect(() => {
     // TODO (thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
     const attrValue =
-      joinState.activeView === 'identity creator'
+      joinState.activeView === 'identity input'
         ? `${joinState.activeView}; ${joinState.additionMethod}`
         : joinState.activeView === 'space invitation acceptor'
         ? `${joinState.activeView}; ${joinState.spaceViewState}`
@@ -137,10 +141,11 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
           <AlertPrimitive.Content
             aria-labelledby={titleId}
             className='is-full min-is-[260px] max-is-[320px] shadow-md backdrop-blur-md'
+            onEscapeKeyDown={(event) => event.preventDefault()}
           >
             <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
             <div role='none' className='is-full overflow-hidden'>
-              <div role='none' className='flex is-[700%]' aria-live='polite'>
+              <div role='none' className='flex is-[800%]' aria-live='polite'>
                 <IdentitySelector
                   {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
                 />
@@ -151,11 +156,19 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
                     active: joinState.activeView === 'addition method selector'
                   }}
                 />
-                <IdentityCreator
+                <IdentityInput
+                  {...{
+                    dispatch,
+                    active: joinState.activeView === 'identity input' && joinState.additionMethod === 'create identity',
+                    method: 'create identity'
+                  }}
+                />
+                <IdentityInput
                   {...{
                     dispatch,
                     active:
-                      joinState.activeView === 'identity creator' && joinState.additionMethod === 'create identity'
+                      joinState.activeView === 'identity input' && joinState.additionMethod === 'recover identity',
+                    method: 'recover identity'
                   }}
                 />
                 <IdentityAdded
