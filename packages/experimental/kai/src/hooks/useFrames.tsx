@@ -23,7 +23,7 @@ export enum FrameID {
   SANDBOX = 'sandbox'
 }
 
-export const defaultFrameId = FrameID.NOTES;
+export const defaultFrameId = FrameID.STACK;
 
 // prettier-ignore
 const activeFrames = [
@@ -31,8 +31,7 @@ const activeFrames = [
   FrameID.REGISTRY,
   FrameID.STACK,
   FrameID.TABLE,
-  FrameID.TASKS,
-  FrameID.NOTES
+  FrameID.TASKS
 ];
 
 export type FrameDef = {
