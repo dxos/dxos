@@ -7,7 +7,6 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
-import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -152,7 +151,5 @@ export default defineConfig({
         ]
       }
     })
-
-    // Inspect()
   ]
 });
