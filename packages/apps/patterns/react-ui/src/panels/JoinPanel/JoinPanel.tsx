@@ -5,6 +5,7 @@ import * as AlertPrimitive from '@radix-ui/react-alert-dialog';
 import React, { useEffect, useReducer } from 'react';
 
 import { InvitationEncoder } from '@dxos/client';
+import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { ThemeContext, useId } from '@dxos/react-components';
 
@@ -74,7 +75,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation accepted';
         break;
     }
-    console.log('[reducer]', action, nextState);
+    log.info('[reducer]', { action, nextState });
     return nextState;
   };
 

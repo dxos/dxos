@@ -568,6 +568,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -607,6 +608,7 @@ importers:
       url-join: 5.0.0
     devDependencies:
       '@dxos/async': link:../../../common/async
+      '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
       '@types/debug': 4.1.7
       '@types/react': 18.0.21

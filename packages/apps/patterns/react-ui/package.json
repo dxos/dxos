@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/react": "^18.0.21",

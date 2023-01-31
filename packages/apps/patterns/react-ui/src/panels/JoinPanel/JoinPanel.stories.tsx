@@ -9,14 +9,13 @@ import React, { useMemo, useState } from 'react';
 
 import { Client, Invitation, InvitationEncoder } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
+import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
 import { JoinPanel } from './JoinPanel';
 import { JoinPanelProps } from './JoinPanelProps';
-
-const log = console.log;
 
 export default {
   component: JoinPanel
@@ -36,26 +35,26 @@ export const Default = {
 
       useAsyncEffect(async () => {
         await Promise.all(clients.map((client) => client.initialize()));
-        log('[initialized]');
+        log.info('[initialized]');
 
         await clients[0].halo.createProfile({ displayName: 'Os Mutantes' });
 
         const space = await clients[0].echo.createSpace();
-        log('[space created]', space);
+        log.info('[space created]', space);
         await space?.setProperty('title', 'Q3 2022 Planning');
-        log('[space title set]', space?.getProperty('title'));
+        log.info('[space title set]', space?.getProperty('title'));
 
         const invitation = space.createInvitation({ type: Invitation.Type.INTERACTIVE });
-        log('[invitation created]', invitation);
+        log.info('[invitation created]', invitation);
 
         invitation.subscribe({
-          onAuthenticating: log,
-          onCancelled: () => log,
-          onConnected: () => log,
-          onConnecting: () => log,
-          onError: () => log,
-          onSuccess: () => log,
-          onTimeout: () => log
+          onAuthenticating: (...args) => log.info('[authenticating]', args),
+          onCancelled: (...args) => log.warn('[cancelled]', args),
+          onConnected: (...args) => log.info('[connected]', args),
+          onConnecting: (...args) => log.info('[connecting]', args),
+          onError: (...args) => log.error('[error]', args),
+          onSuccess: (...args) => log.info('[success]', args),
+          onTimeout: (...args) => log.warn('[timeout]', args)
         });
 
         // TODO (thure): when does `invitation` get populated?
