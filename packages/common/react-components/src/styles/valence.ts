@@ -46,7 +46,7 @@ export const valenceInputBorder = (
       return errorInputBorder;
     default:
       return themeVariant === 'os'
-        ? 'border-neutral-900/75 dark:border-100/75 focus-visible:border-transparent dark:focus-visible:border-transparent'
+        ? 'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent'
         : neutralInputBorder;
   }
 };

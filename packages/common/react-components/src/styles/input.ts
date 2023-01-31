@@ -22,10 +22,10 @@ export const defaultInput = (
   themeVariant: ThemeContextValue['themeVariant'] = 'app'
 ) => {
   return mx(
-    'text-neutral-900 dark:text-white',
+    'text-neutral-900 dark:text-white border',
     themeVariant === 'os'
-      ? 'rounded-sm border-be text-sm bg-neutral-50/50 dark:bg-neutral-900/50'
-      : 'rounded border text-base bg-white/50 dark:bg-neutral-700/50',
+      ? 'rounded-sm text-sm bg-neutral-50/50 dark:bg-neutral-900/50'
+      : 'rounded text-base bg-white/50 dark:bg-neutral-700/50',
     themeVariantFocus(themeVariant),
     defaultPlaceholder,
     themeVariant === 'os' && !disabled
