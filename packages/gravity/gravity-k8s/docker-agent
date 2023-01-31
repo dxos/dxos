@@ -17,7 +17,7 @@ RUN n i ${NODE_VER}
 ARG GIT_TOKEN
 RUN git config --global url."https://${GIT_TOKEN}:@github.com/".insteadOf "https://github.com/"
 RUN mkdir /dxos && cd /dxos && git clone https://github.com/dxos/dxos.git
-RUN cd /dxos/dxos && git checkout a1ex-gravity-multikube
+RUN cd /dxos/dxos && git checkout a1ex-gravity-kibana
 RUN cd /dxos/dxos && pnpm install
 RUN cd /dxos/dxos && pnpm run build
 RUN mkdir -p /tmp/gravity-results
