@@ -8,11 +8,7 @@ import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity
 
 import { useClient } from '../client';
 
-export type UseDevicesResult = {
-  devices: DeviceInfo[];
-};
-
-export const useDevices = (): UseDevicesResult => {
+export const useDevices = (): DeviceInfo[] => {
   const client = useClient();
   const observable = useMemo(() => client.halo.queryDevices(), [client]);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,5 +26,5 @@ export const useDevices = (): UseDevicesResult => {
       () => observable.value
     ) ?? [];
 
-  return { devices };
+  return devices;
 };

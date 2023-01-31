@@ -14,10 +14,10 @@ import { useClient } from '../client';
  * Requires ClientContext to be set via ClientProvider.
  */
 export const useSpace = (spaceKey?: PublicKeyLike) => {
-  const { spaces } = useSpaces();
+  const spaces = useSpaces();
   const space = spaces.find((space) => spaceKey && space.key.equals(spaceKey));
 
-  return { space };
+  return space;
 };
 
 /**
@@ -29,5 +29,5 @@ export const useSpaces = () => {
   const result = useMemo(() => client.echo.querySpaces(), [client]);
   const spaces: Space[] = useSyncExternalStore(result.subscribe, () => result.value);
 
-  return { spaces };
+  return spaces;
 };

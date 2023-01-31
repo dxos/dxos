@@ -17,5 +17,5 @@ export const useIdentity = () => {
     () => client.halo.profile
   );
 
-  return { identity };
+  return identity;
 };

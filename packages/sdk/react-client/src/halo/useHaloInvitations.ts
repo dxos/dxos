@@ -15,11 +15,11 @@ export const useHaloInvitations = () => {
       () => client.halo.invitations
     ) ?? [];
 
-  return { invitations };
+  return invitations;
 };
 
 export const useHaloInvitation = (invitationId?: string) => {
-  const { invitations } = useHaloInvitations();
+  const invitations = useHaloInvitations();
   const invitation = useMemo(
     () => invitations.find(({ invitation }) => invitation?.invitationId === invitationId),
     [invitations]

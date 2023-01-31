@@ -21,6 +21,6 @@ describe('useSpaces', () => {
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(() => useSpaces(), { wrapper });
-    expect(result.current.spaces?.length).to.eq(1);
+    expect(result.current?.length).to.eq(1);
   });
 });

@@ -4,4 +4,3 @@
 
 export * from './ClientSpaceDecorator';
 export * from './ProfileInitializer';
-export * from './templateForComponent';

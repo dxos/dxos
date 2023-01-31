@@ -47,8 +47,7 @@ export const useQuery = (space?: Space, query?: string): Item<ObjectModel>[] => 
 
         const title = itemAdapter.title(item)?.toLowerCase();
         return title?.indexOf(text) !== -1;
-      }),
-      [text]
+      })
     ) ?? [];
 
   items.sort(sortItems);

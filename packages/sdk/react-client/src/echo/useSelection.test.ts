@@ -27,14 +27,14 @@ describe('useSelection', () => {
 
   test('gets items selection', () => {
     const { result } = renderHook(() => useSelection(space.select({ type: TYPE_EXAMPLE })));
-    expect(result.current.data?.length).to.eq(count);
+    expect(result.current?.length).to.eq(count);
   });
 
   test('gets items selection updates', async () => {
     const selection = space.select({ type: TYPE_EXAMPLE }).exec();
     const { result } = renderHook(() => useSelection(selection));
-    const listA = result.current.data;
-    const itemA = result.current.data?.[0];
+    const listA = result.current;
+    const itemA = result.current?.[0];
 
     await act(async () => {
       await space.database.createItem({ type: TYPE_EXAMPLE });
@@ -42,9 +42,9 @@ describe('useSelection', () => {
       await selection.update.waitForCount(2);
     });
 
-    expect(result.current.data?.length).to.eq(count + 1);
-    const listB = result.current.data;
-    const itemB = result.current.data?.[0];
+    expect(result.current?.length).to.eq(count + 1);
+    const listB = result.current;
+    const itemB = result.current?.[0];
 
     // Ensure lists are no referentially equal after selection updates.
     expect(listA).to.not.eq(listB);

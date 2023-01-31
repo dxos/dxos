@@ -6,23 +6,23 @@ import React, { useCallback } from 'react';
 
 import { Item, ObjectModel, PublicKey, Space } from '@dxos/client';
 import { log } from '@dxos/log';
-import { Button } from '@dxos/react-ui';
+import { Button } from '@dxos/react-components';
 
-import { ClientSpaceDecorator, templateForComponent } from '../testing';
+import { ClientSpaceDecorator } from '../testing';
 import { useSelection } from './useSelection';
 import { useSpace } from './useSpaces';
 
 log.config({ filter: 'react-client:debug,warn' });
 
 export default {
-  title: 'react-client/useSelection'
+  title: 'echo/useSelection'
 };
 
 const TASK_TYPE = 'example:task';
 let count = 1;
 
-const Template = ({ spaceKey }: { spaceKey?: PublicKey }) => {
-  const { space } = useSpace(spaceKey);
+const render = ({ spaceKey }: { spaceKey?: PublicKey }) => {
+  const space = useSpace(spaceKey);
 
   const handleAddTask = useCallback(
     () =>
@@ -43,7 +43,7 @@ const Template = ({ spaceKey }: { spaceKey?: PublicKey }) => {
 };
 
 const TaskList = ({ space }: { space?: Space }) => {
-  const { data } = useSelection(space?.database.select({ type: TASK_TYPE }));
+  const data = useSelection(space?.database.select({ type: TASK_TYPE }));
 
   return (
     <ul>
@@ -56,8 +56,12 @@ const TaskList = ({ space }: { space?: Space }) => {
 
 const Task = ({ item }: { item: Item<ObjectModel> }) => <li>{item.model.get('title')}</li>;
 
-export const Default = templateForComponent(Template)({});
-Default.decorators = [ClientSpaceDecorator({ count: 1 })];
+export const Default = {
+  render,
+  decorators: [ClientSpaceDecorator({ count: 1 })]
+};
 
-export const Peers = templateForComponent(Template)({});
-Peers.decorators = [ClientSpaceDecorator({ count: 4 })];
+export const Peers = {
+  render,
+  decorators: [ClientSpaceDecorator({ count: 4 })]
+};

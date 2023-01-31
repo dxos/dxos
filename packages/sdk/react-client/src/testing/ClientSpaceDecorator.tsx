@@ -3,7 +3,7 @@
 //
 
 import { DecoratorFunction } from '@storybook/csf';
-import { ReactFramework } from '@storybook/react';
+import { ReactRenderer } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
@@ -12,12 +12,12 @@ import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
-import { Loading } from '@dxos/react-ui';
+import { Loading } from '@dxos/react-components';
 
 import { ClientProvider } from '../client';
 
 export const ClientSpaceDecorator =
-  ({ count = 2 } = {}): DecoratorFunction<ReactFramework, any> =>
+  ({ count = 2 } = {}): DecoratorFunction<ReactRenderer, any> =>
   (Story) => {
     const clients = useMemo(() => {
       const testBuilder = new TestBuilder();
@@ -82,7 +82,7 @@ export const ClientSpaceDecorator =
     return (
       <div className='flex' style={{ display: 'flex' }}>
         {clients.map((client, index) => (
-          <ClientProvider key={index} client={client} fallback={<Loading label='Loading…' />}>
+          <ClientProvider key={index} client={client} fallback={() => <Loading label='Loading…' />}>
             <Story args={{ spaceKey, id: index }} />
           </ClientProvider>
         ))}

@@ -101,7 +101,7 @@ const ListStory = () => {
   const [orderedList, setOrderedList] = useState<OrderedList>();
   const [initialOrder, setInitialOrder] = useState<string[]>([]);
   const [currentOrder, setCurrentOrder] = useState<string[]>([]);
-  const items = useSelection(space?.select().filter({ type: TYPE_LIST_ITEM }), [list]) ?? [];
+  const items = useSelection(space?.select().filter({ type: TYPE_LIST_ITEM })) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
@@ -221,7 +221,7 @@ const MultipleListStory = () => {
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
   const [initialOrders, setInitialOrders] = useState<{ id: string; values: string[] }[]>([]);
   const [currentOrders, setCurrentOrders] = useState<{ id: string; values: string[] }[]>([]);
-  const items = useSelection(space?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
+  const items = useSelection(space?.select().filter({ type: TYPE_LIST_ITEM })) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
@@ -509,7 +509,7 @@ const TableStory = () => {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string>();
 
-  const items = useSelection(space?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
+  const items = useSelection(space?.select().filter({ type: TYPE_TEST_PERSON })) ?? [];
 
   useAsyncEffect(async () => {
     const newSpace = await client.echo.createSpace();
@@ -648,7 +648,7 @@ const MultipleContainersStory = () => {
   const [initialColumnOrder, setInitialColumnOrder] = useState<string[]>([]);
   const [columnOrderedList, setColumnOrderedList] = useState<OrderedList>();
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
-  const items = useSelection(space?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
+  const items = useSelection(space?.select().filter({ type: TYPE_TEST_PERSON })) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {

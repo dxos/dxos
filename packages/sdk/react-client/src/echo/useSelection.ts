@@ -8,10 +8,6 @@ import { Entity, Selection, SelectionResult } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Falsy } from '@dxos/util';
 
-export type UseSelectionResult<T> = {
-  data: T[] | undefined;
-};
-
 /**
  * Hook to generate values from a selection using a selector function.
  *
@@ -23,9 +19,8 @@ export type UseSelectionResult<T> = {
  * @param deps Array of values that trigger the selector when changed.
  */
 export const useSelection = <T extends Entity<any>>(
-  selection: Selection<T> | SelectionResult<T> | Falsy,
-  deps: readonly any[] = []
-): UseSelectionResult<T> => {
+  selection: Selection<T> | SelectionResult<T> | Falsy
+): T[] | undefined => {
   const result = useMemo(() => {
     log('coerce selection', selection);
     return coerceSelection(selection);
@@ -53,7 +48,7 @@ export const useSelection = <T extends Entity<any>>(
     }
   );
 
-  return { data };
+  return data;
 };
 
 /**

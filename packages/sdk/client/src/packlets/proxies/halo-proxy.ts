@@ -198,29 +198,10 @@ export class HaloProxy implements Halo {
   /**
    * Get set of authenticated devices.
    */
-<<<<<<< HEAD
-  // TODO(burdon): Standardize Promise vs. stream.
-  async queryDevices(): Promise<DeviceInfo[]> {
-    return new Promise((resolve, reject) => {
-      assert(this._serviceProvider.services.DevicesService, 'DevicesService not available');
-      const stream = this._serviceProvider.services.DevicesService.queryDevices();
-      stream.subscribe(
-        (devices) => {
-          resolve(
-            devices.devices?.map((device) => ({
-              publicKey: device.deviceKey,
-              displayName: humanize(device.deviceKey)
-            })) ?? []
-          );
-          stream.close();
-        },
-        (error) => {
-          reject(error);
-          stream.close();
-=======
   queryDevices() {
     // TODO(wittjosiah): Try to make this easier to use for simple cases like this.
     const observable = new ObservableProvider<DeviceEvents, DeviceInfo[]>();
+    assert(this._serviceProvider.services.DevicesService, 'DeviceService not available');
     const stream = this._serviceProvider.services.DevicesService.queryDevices();
 
     // TODO(wittjosiah): Does stream need to be closed?
@@ -237,7 +218,6 @@ export class HaloProxy implements Halo {
       (err) => {
         if (err) {
           observableError(observable, err);
->>>>>>> 8eb10567b (refactor(react-client): cleanup all hooks)
         }
       }
     );

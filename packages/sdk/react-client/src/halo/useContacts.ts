@@ -16,5 +16,5 @@ export const useContacts = () => {
   const result = useMemo(() => client.halo.queryContacts(), [client]);
   const contacts = useSyncExternalStore(result.subscribe, () => result.value);
 
-  return { contacts };
+  return contacts;
 };
