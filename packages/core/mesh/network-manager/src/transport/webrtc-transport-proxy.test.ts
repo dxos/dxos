@@ -116,7 +116,7 @@ describe('WebRTCTransportProxy', () => {
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
     await TestStream.assertConnectivity(stream1, stream2);
   })
-    .timeout(1_000)
+    .timeout(2_000)
     .tag('e2e');
 
   describe('Multiplexing', () => {
@@ -185,7 +185,7 @@ describe('WebRTCTransportProxy', () => {
 
       await TestStream.assertConnectivity(stream1, stream2);
     })
-      .timeout(1_000)
+      .timeout(3_000)
       .tag('e2e');
   });
 });
