@@ -28,7 +28,7 @@ const createChess = (game: Game) => {
 
 // TODO(burdon): Invite/determine player.
 // TODO(burdon): Move to @dxos/chess-app (stand-alone app).
-const ChessFrame: FC = () => {
+export const ChessFrame: FC = () => {
   const [style] = useState(ChessPieces.RIOHACHA);
   const [game, setGame] = useState<Game | undefined>();
   const space = useSpace();

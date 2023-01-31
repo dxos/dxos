@@ -22,6 +22,7 @@
     "@dnd-kit/modifiers": "^6.0.0",
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
+    "@dxos/assets": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -34,6 +35,7 @@
     "@dxos/framebox": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/hypercard": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
@@ -48,6 +50,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@sentry/react": "^7.17.2",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
@@ -106,8 +109,5 @@
     "vite-plugin-inspect": "^0.7.15",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
-  },
-  "publishConfig": {
-    "access": "private"
   }
 }

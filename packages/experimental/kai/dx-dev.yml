@@ -20,5 +20,7 @@ runtime:
         username: dxos
         credential: dxos
     ipfs:
+#      server: https://kube.dxos.org/ipfs/api
+#      gateway: https://kube.dxos.org/ipfs/gateway
       server: http://localhost:5001/api/v0
       gateway: http://localhost:8080/ipfs

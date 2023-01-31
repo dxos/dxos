@@ -6,7 +6,7 @@ import React from 'react';
 
 import { TaskList } from '../containers';
 
-const TasksFrame = () => {
+export const TasksFrame = () => {
   return <TaskList />;
 };
 

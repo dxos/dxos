@@ -14,7 +14,7 @@ import { Button } from '../components';
 import { EmbeddedFrame } from '../frame-container';
 import { useSpace } from '../hooks';
 
-const SandboxFrame = withReactor(() => {
+export const SandboxFrame = withReactor(() => {
   const space = useSpace();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
