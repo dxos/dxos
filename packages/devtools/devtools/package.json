@@ -63,6 +63,7 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/react-ui": "workspace:*",
+    "@monaco-editor/react": "^4.4.6",
     "@types/color-hash": "^1.0.1",
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
@@ -72,6 +73,7 @@
     "@types/react-vis": "^1.11.11",
     "@vitejs/plugin-react": "^3.0.1",
     "faker": "^5.5.3",
+    "monaco-editor": "^0.25.0",
     "postcss": "^8.4.17",
     "tailwindcss": "^3.1.8",
     "typescript": "^4.8.4",
