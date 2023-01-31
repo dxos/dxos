@@ -7,6 +7,7 @@ import {
   Calendar,
   CaretLeft,
   CaretRight,
+  Cards,
   Compass,
   Files,
   Stack,
@@ -36,6 +37,7 @@ import {
   FileFrame,
   KanbanFrame,
   MapFrame,
+  NotesFrame,
   RegistryFrame,
   SketchFrame,
   TableFrame,
@@ -102,6 +104,13 @@ export const frames: FrameDef[] = [
     description: 'Realtime structured document editing.',
     Icon: Article,
     Component: DocumentFrame
+  },
+  {
+    id: FrameID.NOTES,
+    title: 'Notes',
+    description: 'Brainstorming notes.',
+    Icon: Cards,
+    Component: NotesFrame
   },
   {
     id: FrameID.FILES,

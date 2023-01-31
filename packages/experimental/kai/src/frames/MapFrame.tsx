@@ -22,10 +22,10 @@ import { LatLng, Organization } from '../proto';
 
 const defaults = {
   center: { lat: 37.970833, lng: 23.72611 } as LatLngExpression,
-  zoom: 14
+  zoom: 13
 };
 
-const MapFrame = () => {
+export const MapFrame = () => {
   return (
     <div className='flex flex-1 overflow-hidden'>
       <MapContainer className='flex flex-1' center={defaults.center} zoom={defaults.zoom}>

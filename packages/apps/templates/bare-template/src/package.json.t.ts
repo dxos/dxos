@@ -46,6 +46,7 @@ export namespace Features {
 
   export const storybook = (): Partial<PackageJson> => ({
     scripts: {
+      // TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
       storybook: 'start-storybook -p 9009 --no-open'
     },
     devDependencies: {
