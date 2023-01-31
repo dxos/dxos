@@ -33,6 +33,7 @@ Now you can use the `dx` command line tool:
 ```bash
 dx app create hello # or with --template=bare
 cd hello
+pnpm install
 pnpm serve
 ```
 
