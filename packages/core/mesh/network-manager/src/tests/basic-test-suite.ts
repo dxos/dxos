@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
+import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { afterTest, test } from '@dxos/test';
@@ -76,7 +77,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     }
   });
 
-  test.skip('joins multiple swarms', async () => {
+  test('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
     // TODO(burdon): Merge with test below.
     const peer1 = testBuilder.createPeer();
@@ -88,7 +89,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     expect(topics).to.have.length(numSwarms);
   });
 
-  test.skip('joins multiple swarms concurrently', async () => {
+  test('joins multiple swarms concurrently', async () => {
     const createSwarm = async () => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
@@ -106,75 +107,83 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     await Promise.all([
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
-      test2.swarm1a.protocol.testConnection(test1.peer2a.peerId)
+      test2.swarm1a.protocol.testConnection(test2.peer2a.peerId)
     ]);
   });
 
-  // TODO(mykola): Flaky test because of test signal server.
-  test
-    .skip('going offline and back online', async () => {
-      const peer1 = testBuilder.createPeer();
-      const peer2 = testBuilder.createPeer();
-      await openAndCloseAfterTest([peer1, peer2]);
+  test('going offline and back online', async () => {
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
+    await openAndCloseAfterTest([peer1, peer2]);
 
-      const topic = PublicKey.random();
+    const topic = PublicKey.random();
 
-      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
-      await exchangeMessages(swarm1, swarm2);
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
+    await exchangeMessages(swarm1, swarm2);
 
-      //
-      // Going offline and back online
-      //
-      const connectionDropped = peer2._networkManager
-        .getSwarm(topic)
-        ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
+    //
+    // Going offline and back online
+    //
+    const connectionDropped = peer2._networkManager
+      .getSwarm(topic)
+      ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
-      const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor(
-        (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer)
-      );
+    const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor(
+      (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer)
+    );
 
-      await peer1.goOffline();
-      await connectionDropped;
-      await peerLeft;
+    await peer1.goOffline();
+    await connectionDropped;
+    await peerLeft;
 
-      // Wait for peer to be removed from the swarm.
-      await waitForExpect(() => {
-        expect(!!peer2._networkManager.getSwarm(topic)!._peers.get(peer1.peerId)?.advertizing).to.be.false;
-      }, 1_000);
+    // Wait for peer to be removed from the swarm.
+    await waitForExpect(() => {
+      expect(!!peer2._networkManager.getSwarm(topic)!._peers.get(peer1.peerId)?.advertizing).to.be.false;
+    }, 1_000);
 
-      await peer1.goOnline();
+    await peer1.goOnline();
 
-      await waitForExpect(() => {
-        expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
+    await waitForExpect(() => {
+      expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
 
-        expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
-      }, 2_000);
+      expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
+    }, 2_000);
 
-      await exchangeMessages(swarm1, swarm2);
-      await leaveSwarm([peer1, peer2], topic);
-    })
+    await exchangeMessages(swarm1, swarm2);
+    await leaveSwarm([peer1, peer2], topic);
+  })
+    .tag('e2e')
     .timeout(2_000);
 
-  // TODO(mykola): broken.
+  // TODO(mykola): Fails with large amount of peers ~10.
+  // Time wasted: 1 hour (increment when you work on it).
   test.skip('many peers and connections', async () => {
-    const numTopics = 5;
-    const peersPerTopic = 5;
+    const numTopics = 2;
+    const peersPerTopic = 3;
+    const swarmsAllPeersConnected: Promise<any>[] = [];
 
-    await Promise.all(
-      range(numTopics).map(async () => {
-        const topic = PublicKey.random();
+    await asyncTimeout(
+      Promise.all(
+        range(numTopics).map(async () => {
+          const topic = PublicKey.random();
 
-        await Promise.all(
-          range(peersPerTopic).map(async () => {
-            const peer = testBuilder.createPeer();
-            await openAndCloseAfterTest([peer]);
-            const swarm = await peer.createSwarm(topic).join();
-            await swarm.protocol.connected.waitForCondition(
-              () => swarm.protocol.connections.size === peersPerTopic - 1
-            );
-          })
-        );
-      })
+          return Promise.all(
+            range(peersPerTopic).map(async () => {
+              const peer = testBuilder.createPeer();
+              await openAndCloseAfterTest([peer]);
+              const swarm = peer.createSwarm(topic);
+
+              swarmsAllPeersConnected.push(
+                swarm.protocol.connected.waitFor(() => swarm.protocol.connections.size === peersPerTopic - 1)
+              );
+              await swarm.join();
+            })
+          );
+        })
+      ),
+      2_000
     );
+
+    await asyncTimeout(Promise.all(swarmsAllPeersConnected), 2_000);
   });
 };
