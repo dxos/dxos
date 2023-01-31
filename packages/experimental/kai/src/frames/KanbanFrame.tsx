@@ -16,8 +16,8 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
   return <ProjectCard project={object as Project} />;
 };
 
-// TODO(burdon): Generalize type.
-const KanbanFrame: FC = () => {
+// TODO(burdon): Generalize type and field.
+export const KanbanFrame: FC = () => {
   const space = useSpace();
 
   const [text, setText] = useState<string>();

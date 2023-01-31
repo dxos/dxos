@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 
 import { GraphComponent } from '../components';
 
-const ExplorerFrame: FC = () => {
+export const ExplorerFrame: FC = () => {
   return <GraphComponent />;
 };
 

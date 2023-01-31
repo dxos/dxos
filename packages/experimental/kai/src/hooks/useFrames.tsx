@@ -13,10 +13,12 @@ export enum FrameID {
   TASKS = 'tasks',
   CALENDAR = 'events',
   DOCUMENTS = 'documents',
+  NOTES = 'notes',
   FILES = 'files',
   SKETCH = 'sketch',
   EXPLORER = 'explorer',
   MAPS = 'maps',
+  PRESENTER = 'presenter', // TODO(burdon): MDX.
   CHESS = 'chess',
   SANDBOX = 'sandbox'
 }

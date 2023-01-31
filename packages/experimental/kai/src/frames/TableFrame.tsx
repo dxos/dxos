@@ -64,7 +64,7 @@ const getType = (id: string): ColumnType<any> => types.find((type) => type.id ==
 const stringMatch = (value?: string, match?: string) =>
   !match?.length || value?.toLocaleLowerCase().indexOf(match) !== -1;
 
-const TableFrame = () => {
+export const TableFrame = () => {
   const space = useSpace();
   const [type, setType] = useState<ColumnType<any>>(getType('contact'));
   const [text, setText] = useState<string>();
