@@ -24,13 +24,12 @@ module.exports = {
       force: true,
       include: [
         '@dxos/client',
+        '@dxos/client/testing',
         '@dxos/config',
         '@dxos/react-client',
         '@dxos/react-components',
         '@dxos/util',
-        'storybook-dark-mode',
-        'i18next',
-        'lodash/merge'
+        'storybook-dark-mode'
       ]
     },
     build: {
