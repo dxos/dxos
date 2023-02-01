@@ -14,15 +14,13 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
-import { JoinDialog, JoinDialogProps } from './JoinDialog';
+import { JoinDialog } from './JoinDialog';
 
 export default {
   component: JoinDialog
 };
 export const Default = {
-  render: (props: JoinDialogProps) => <JoinDialog {...props} />,
   decorators: [
-    // TODO(wittjosiah): Factor out.
     (Story: StoryFn) => {
       const n = 2;
       const testBuilder = new TestBuilder();

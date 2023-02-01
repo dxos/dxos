@@ -30,7 +30,8 @@ export const JoinPanel = ({
   onDone
 }: JoinPanelProps) => {
   const client = useClient();
-  const titleId = propsTitleId ?? useId('joinPanel__title');
+  const internalTitleId = useId('joinPanel__title');
+  const titleId = propsTitleId ?? internalTitleId;
   const identity = useIdentity();
 
   const availableIdentities = identity ? [identity] : [];

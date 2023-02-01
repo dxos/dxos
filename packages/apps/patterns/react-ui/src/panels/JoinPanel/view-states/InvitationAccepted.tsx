@@ -5,6 +5,7 @@
 import { CaretLeft, Check } from 'phosphor-react';
 import React, { cloneElement } from 'react';
 
+import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
@@ -16,22 +17,15 @@ export interface InvitationAcceptedProps extends ViewStateProps {
   onDone?: (result: InvitationResult | null) => void;
 }
 
-export const InvitationAccepted = ({
-  invitationType,
-  doneActionParent,
+const PureInvitationAcceptedContent = ({
   onDone,
+  result,
   ...viewStateProps
-}: InvitationAcceptedProps) => {
+}: InvitationAcceptedProps & { result: InvitationResult | null }) => {
   const disabled = !viewStateProps.active;
   const { t } = useTranslation('os');
-  const { activeInvitation } = viewStateProps;
-  const { result } = activeInvitation
-    ? activeInvitation === true
-      ? { result: null }
-      : useInvitationStatus(activeInvitation)
-    : { result: null };
 
-  const doneButton = (
+  return (
     <Button
       {...(onDone && { onClick: () => onDone(result) })}
       disabled={disabled}
@@ -43,6 +37,28 @@ export const InvitationAccepted = ({
       <Check weight='bold' className={getSize(4)} />
     </Button>
   );
+};
+
+const InvitationAcceptedContent = (props: InvitationAcceptedProps) => {
+  const { result } = useInvitationStatus(props.activeInvitation as AuthenticatingInvitationObservable);
+  return <PureInvitationAcceptedContent {...props} result={result} />;
+};
+
+export const InvitationAccepted = (props: InvitationAcceptedProps) => {
+  const {
+    invitationType: _invitationType,
+    activeInvitation,
+    doneActionParent,
+    onDone: _onDone,
+    ...viewStateProps
+  } = props;
+
+  const doneButton =
+    !activeInvitation || activeInvitation === true ? (
+      <PureInvitationAcceptedContent {...props} result={null} />
+    ) : (
+      <InvitationAcceptedContent {...props} />
+    );
 
   return (
     <ViewState {...viewStateProps}>
