@@ -105,7 +105,8 @@ export class SpaceStateMachine implements SpaceState {
       return false;
     }
 
-    switch (getCredentialAssertion(credential)['@type']) {
+    const assertion = getCredentialAssertion(credential);
+    switch (assertion['@type']) {
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
           log.warn('Space already has a genesis credential.');
@@ -125,6 +126,10 @@ export class SpaceStateMachine implements SpaceState {
       }
 
       case 'dxos.halo.credentials.SpaceMember': {
+        if(!assertion.spaceKey.equals(this._spaceKey)) { 
+          return true; // Ignore credentials for other spaces.
+        }
+
         if (!this._genesisCredential) {
           log.warn('Space must have a genesis credential before adding members.');
           return false;

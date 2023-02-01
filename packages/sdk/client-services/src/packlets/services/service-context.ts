@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
   valueEncoding,
@@ -18,7 +19,9 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
+import assert from 'node:assert';
 
 import { CreateIdentityOptions, IdentityManager } from '../identity';
 import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
@@ -142,8 +145,16 @@ export class ServiceContext {
       this.networkManager,
       this.dataSpaceManager,
       signingContext,
-      this.keyring
+      this.keyring,
+      this._onSpaceAdmission.bind(this)
     );
     this.initialized.wake();
+  }
+
+  private async _onSpaceAdmission(credential: Credential) {
+    assert(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+
+    const identity = this.identityManager.identity ?? failUndefined();
+    await identity.controlPipeline.writer.write({ credential: { credential } })
   }
 }
