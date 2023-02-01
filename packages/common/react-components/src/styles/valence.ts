@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ThemeContextValue } from '../components';
 import { MessageValence } from '../props';
 
 export const successText = 'text-xs font-medium text-success-700 dark:text-success-300';
@@ -30,7 +31,10 @@ export const infoInputBorder = 'border-info-500 dark:border-info-600';
 export const warningInputBorder = 'border-warning-500 dark:border-warning-600';
 export const errorInputBorder = 'border-error-500 dark:border-error-600';
 
-export const valenceInputBorder = (valence?: MessageValence) => {
+export const valenceInputBorder = (
+  valence?: MessageValence,
+  themeVariant: ThemeContextValue['themeVariant'] = 'app'
+) => {
   switch (valence) {
     case 'success':
       return successInputBorder;
@@ -41,7 +45,9 @@ export const valenceInputBorder = (valence?: MessageValence) => {
     case 'error':
       return errorInputBorder;
     default:
-      return neutralInputBorder;
+      return themeVariant === 'os'
+        ? 'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent'
+        : neutralInputBorder;
   }
 };
 
