@@ -120,7 +120,7 @@ export const JoinPanel = ({
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation input';
         break;
     }
-    log.info('[join panel reducer]', { action, nextState });
+    log.debug('[join panel reducer]', { action, nextState });
     return nextState;
   };
 
@@ -146,7 +146,7 @@ export const JoinPanel = ({
         : joinState.activeView === 'halo invitation acceptor'
         ? `${joinState.activeView}; ${joinState.haloViewState}`
         : joinState.activeView;
-    log.info('[autofocus value]', { attrValue });
+    log.debug('[autofocus value]', { attrValue });
     const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${attrValue}"]`);
     if ($nextAutofocus) {
       $nextAutofocus.focus();
