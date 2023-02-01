@@ -103,7 +103,11 @@ message Runtime {
     /// Milliseconds
     optional int32 invitation_expiration = 5;
 
+    /// Destination of the remote client host.
     optional string remote_source = 6;
+
+    /// Destionation of the OS embeded interface.
+    optional string embed_source = 7;
   }
 
   message App {

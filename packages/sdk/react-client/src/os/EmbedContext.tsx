@@ -2,90 +2,77 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, FC, PropsWithChildren, useContext, useReducer } from 'react';
+import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 
-import { humanize } from '@dxos/util';
+import { schema } from '@dxos/protocols';
+import { EmbedLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { useClient } from '../client';
+import { useConfig } from '../client';
 import { useSpaces, useSpaceSetter } from '../echo';
 
-export type Layout = 'hidden' | 'left';
-export type Panel = 'left';
-
-export type EmbedState = {
-  layout: Layout;
-};
-
-export type ActionType = 'set-layout';
-
-export type EmbedAction = { type: 'set-layout'; layout: Layout };
-
 export type EmbedContextProps = {
-  state: EmbedState;
-  dispatch: (action: EmbedAction) => void;
+  layout: EmbedLayout;
+  setLayout: (layout: EmbedLayout) => void;
 };
 
-const reducer = (state: EmbedState, action: EmbedAction) => {
-  switch (action.type) {
-    case 'set-layout':
-      return {
-        ...state,
-        layout: action.layout
-      };
-
-    default:
-      return state;
-  }
-};
-
-const initialState: EmbedState = {
-  layout: 'hidden'
-};
-
-export const EmbedContext = createContext<EmbedContextProps>({ state: initialState, dispatch: () => {} });
+export const EmbedContext = createContext<EmbedContextProps>({ layout: EmbedLayout.HIDDEN, setLayout: () => {} });
 
 export const useEmbed = () => useContext(EmbedContext);
 
-const getPanelClassList = (layout: Layout, panel: Panel) => {
-  if (layout === 'left' && panel === 'left') {
-    return '';
-  } else {
-    return '__DXOS_EMBED_HIDDEN';
-  }
-};
+export const EMBED_CHANNEL = 'dxos:embed';
+// TODO(wittjosiah): Factor out defaults.
+const DEFAULT_SRC = 'https://halo.dxos.org/embed.html';
 
 export const EmbedProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const client = useClient();
+  const [layout, setLayout] = useState(EmbedLayout.HIDDEN);
+  const config = useConfig();
   const setSpace = useSpaceSetter();
   const spaces = useSpaces();
+  const [rpc, setRpc] = useState<ProtoRpcPeer<{}>>();
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const iframeSrc = config.get('runtime.client.embedSource') ?? DEFAULT_SRC;
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      const origin = new URL(iframeSrc).origin;
+      const port = await createIFramePort({ iframe: iframeRef.current!, origin, channel: EMBED_CHANNEL });
+      const rpc = createProtoRpcPeer({
+        exposed: {
+          OsEmbedService: schema.getService('dxos.iframe.OsEmbedService')
+        },
+        handlers: {
+          OsEmbedService: {
+            setLayout: async ({ layout }) => setLayout(layout),
+            setSpace: async ({ spaceKey }) => {
+              const space = spaces.find((space) => space.key.equals(spaceKey));
+              setSpace(space);
+            }
+          }
+        },
+        port
+      });
+      await rpc.open();
+      setRpc(rpc);
+    });
+
+    return () => {
+      clearTimeout(timeout);
+      void rpc?.close();
+    };
+  }, []);
 
   return (
-    <EmbedContext.Provider value={{ state, dispatch }}>
+    <EmbedContext.Provider value={{ layout, setLayout }}>
       {children}
-      {/* TODO(wittjosiah): Embed iframe. */}
-      <div id='__DXOS_LEFT_PANEL' className={getPanelClassList(state.layout, 'left')}>
-        <div className='flex'>
-          <h2>Spaces</h2>
-          <div className='flex-grow'></div>
-          <button id='add' onClick={() => client.echo.createSpace()}>
-            +
-          </button>
-          <button id='close' onClick={() => dispatch({ type: 'set-layout', layout: 'hidden' })}>
-            ❯
-          </button>
-        </div>
-        <ul>
-          {spaces.map((space) => {
-            const key = space.key.toHex();
-            return (
-              <li key={key} onClick={() => setSpace(space)}>
-                {humanize(key)}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      {/* TODO(wittjosiah): Transition opacity. */}
+      <iframe
+        id='__DXOS_EMBED'
+        ref={iframeRef}
+        src={iframeSrc}
+        style={{ display: layout === EmbedLayout.HIDDEN ? 'none' : undefined }}
+      />
     </EmbedContext.Provider>
   );
 };

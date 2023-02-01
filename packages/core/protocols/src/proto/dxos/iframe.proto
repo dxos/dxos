@@ -6,6 +6,8 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
+import "dxos/keys.proto";
+
 package dxos.iframe;
 
 message StartRequest {
@@ -21,4 +23,23 @@ service IframeService {
 service WorkerService {
   rpc Start(StartRequest) returns (google.protobuf.Empty);
   rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+enum EmbedLayout {
+  HIDDEN = 0;
+  FULLSCREEN = 1;
+}
+
+message LayoutRequest {
+  EmbedLayout layout = 1;
+}
+
+message SpaceRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
+/// OS Embedded UI RPCs.
+service OsEmbedService {
+  rpc SetLayout(LayoutRequest) returns (google.protobuf.Empty);
+  rpc SetSpace(SpaceRequest) returns (google.protobuf.Empty);
 }

@@ -5,9 +5,12 @@
 import { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
+import { initializeAppTelemetry } from '@dxos/react-appkit';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 
 import { mobileAndTabletCheck } from './util';
+
+void initializeAppTelemetry('halo-vault', new Config(Defaults()));
 
 log.config({
   filter: process.env.LOG_FILTER ?? 'warn,vault:debug',
