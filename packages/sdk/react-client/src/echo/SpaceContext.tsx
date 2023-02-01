@@ -11,7 +11,7 @@ import { useClient } from '../client';
 
 export type SpaceContextProps = {
   space?: Space;
-  setSpace: (space: Space) => void;
+  setSpace: (space?: Space) => void;
 };
 
 export const SpaceContext: React.Context<SpaceContextProps> = createContext<SpaceContextProps>({ setSpace: () => {} });
