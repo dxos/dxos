@@ -59,6 +59,7 @@
     "model-factory": "packages/core/echo/model-factory",
     "network-manager": "packages/core/mesh/network-manager",
     "node-std": "packages/common/node-std",
+    "noreact-app": "packages/apps/noreact-app",
     "object-model": "packages/core/echo/object-model",
     "plate": "packages/common/plate",
     "presenter": "tools/presenter",
