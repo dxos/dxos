@@ -20,23 +20,27 @@ export interface InvitationAcceptedProps extends ViewStateProps {
 const PureInvitationAcceptedContent = ({
   onDone,
   result,
-  ...viewStateProps
+  invitationType,
+  doneActionParent,
+  active
 }: InvitationAcceptedProps & { result: InvitationResult | null }) => {
-  const disabled = !viewStateProps.active;
+  const disabled = !active;
   const { t } = useTranslation('os');
 
-  return (
+  const doneButton = (
     <Button
       {...(onDone && { onClick: () => onDone(result) })}
       disabled={disabled}
       className='grow flex items-center gap-2 pli-2'
-      data-autofocus='space invitation acceptor; invitation accepted'
+      data-autofocus={`${invitationType} invitation acceptor; invitation accepted`}
     >
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
       <span className='grow'>{t('done label')}</span>
       <Check weight='bold' className={getSize(4)} />
     </Button>
   );
+
+  return doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton;
 };
 
 const InvitationAcceptedContent = (props: InvitationAcceptedProps) => {
@@ -45,19 +49,21 @@ const InvitationAcceptedContent = (props: InvitationAcceptedProps) => {
 };
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
-  const { invitationType: _invitationType, doneActionParent, onDone: _onDone, ...viewStateProps } = props;
+  const {
+    invitationType: _invitationType,
+    doneActionParent: _doneActionParent,
+    onDone: _onDone,
+    ...viewStateProps
+  } = props;
   const { activeInvitation } = viewStateProps;
-
-  const doneButton =
-    !activeInvitation || activeInvitation === true ? (
-      <PureInvitationAcceptedContent {...props} result={null} />
-    ) : (
-      <InvitationAcceptedContent {...props} />
-    );
 
   return (
     <ViewState {...viewStateProps}>
-      {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
+      {!activeInvitation || activeInvitation === true ? (
+        <PureInvitationAcceptedContent {...props} result={null} />
+      ) : (
+        <InvitationAcceptedContent {...props} />
+      )}
     </ViewState>
   );
 };
