@@ -153,6 +153,15 @@ export class MetadataStore {
     space.snapshot = snapshot;
     await this._save();
   }
+
+  async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey) {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+
+    space.controlFeedKey = controlFeedKey;
+    space.dataFeedKey = dataFeedKey;
+    await this._save();
+  }
 }
 
 const toBytesInt32 = (num: number) => {

@@ -46,7 +46,7 @@ describe('identity/identity-manager', () => {
       feedStore,
       networkManager
     });
-    const identityManager = new IdentityManager(metadataStore, keyring, spaceManager);
+    const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
 
     return {
       identityManager,
