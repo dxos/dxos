@@ -15,6 +15,8 @@ import { deferFunction } from '@dxos/util';
 
 import { Identity } from '../identity';
 import { createAuthProvider } from './authenticator';
+import { FeedStore } from '@dxos/feed-store';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
@@ -43,6 +45,7 @@ export class IdentityManager {
   constructor(
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
+    private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _spaceManager: SpaceManager
   ) {}
 
@@ -170,6 +173,11 @@ export class IdentityManager {
       },
       identityKey: identityRecord.identityKey
     });
+    const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeControlFeedKey, { writable: true });
+    space.setControlFeed(controlFeed);
+    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeDataFeedKey, { writable: true });
+    space.setDataFeed(dataFeed);
+    
     const identity: Identity = new Identity({
       space,
       signer: this._keyring,
@@ -186,8 +194,6 @@ export class IdentityManager {
       metadata: {
         key: spaceRecord.spaceKey,
         genesisFeedKey: spaceRecord.genesisFeedKey,
-        controlFeedKey: spaceRecord.writeControlFeedKey,
-        dataFeedKey: spaceRecord.writeDataFeedKey
       },
       swarmIdentity,
       onNetworkConnection: () => {}

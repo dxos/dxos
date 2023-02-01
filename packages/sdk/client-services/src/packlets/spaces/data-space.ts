@@ -152,13 +152,16 @@ export class DataSpace implements ISpace {
   }
 
   @timed(10_000)
-  private async _ensureOwnFeedsAreAdmitted() {
+  private async _createWritableFeeds() {
     const credentials: Credential[] = [];
     const generator = new CredentialGenerator(
       this._keyring,
       this._signingContext.identityKey,
       this._signingContext.deviceKey
     );
+
+    
+
 
     if (!this._inner.spaceState.feeds.has(this.inner.controlFeedKey)) {
       credentials.push(

@@ -7,7 +7,6 @@ import assert from 'node:assert';
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
-  AcceptSpaceOptions,
   DataServiceSubscriptions,
   MetadataStore,
   SigningContext,
@@ -29,6 +28,11 @@ import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
 
 const DATA_PIPELINE_READY_TIMEOUT = 3_000;
+
+export type AcceptSpaceOptions = {
+  spaceKey: PublicKey;
+  dataFeedKey: PublicKey;
+}
 
 @trackLeaks('open', 'close')
 export class DataSpaceManager {
@@ -115,8 +119,6 @@ export class DataSpaceManager {
 
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
-      genesisFeedKey: opts.genesisFeedKey,
-      controlFeedKey: opts.controlFeedKey,
       dataFeedKey: opts.dataFeedKey
     };
 

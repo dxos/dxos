@@ -18,14 +18,6 @@ import { ComplexMap } from '@dxos/util';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
-// TODO(burdon): ???
-export interface AcceptSpaceOptions {
-  spaceKey: PublicKey;
-  genesisFeedKey: PublicKey;
-  controlFeedKey: PublicKey;
-  dataFeedKey: PublicKey;
-}
-
 // TODO(burdon): Factor out to CredentialGenerator?
 export interface SigningContext {
   identityKey: PublicKey;
@@ -76,9 +68,6 @@ export class SpaceManager {
   async constructSpace({ metadata, swarmIdentity, onNetworkConnection }: ConstructSpaceParams) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
-    const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
-    const dataFeed = await this._feedStore.openFeed(metadata.dataFeedKey ?? failUndefined(), { writable: true });
-
     // The genesis feed will be the same as the control feed if the space was created by the local agent.
     const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
@@ -94,8 +83,6 @@ export class SpaceManager {
       spaceKey,
       protocol,
       genesisFeed,
-      controlFeed,
-      dataFeed,
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey)
     });
     this._spaces.set(space.key, space);
