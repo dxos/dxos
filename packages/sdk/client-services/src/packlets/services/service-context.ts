@@ -134,6 +134,7 @@ export class ServiceContext {
       this.keyring,
       signingContext,
       this.modelFactory,
+      this.feedStore,
       this.snapshotStore
     );
     await this.dataSpaceManager.open();

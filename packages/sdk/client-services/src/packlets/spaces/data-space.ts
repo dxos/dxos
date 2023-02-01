@@ -28,6 +28,7 @@ import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
 import { NotarizationPlugin } from './notarization-plugin';
+import { FeedStore } from '@dxos/feed-store';
 
 const AUTH_TIMEOUT = 30000;
 
@@ -38,6 +39,7 @@ export type DataSpaceParams = {
   snapshotManager: SnapshotManager;
   presence: Presence;
   keyring: Keyring;
+  feedStore: FeedStore<FeedMessage>;
   signingContext: SigningContext;
   memberKey: PublicKey;
   snapshotId?: string | undefined;
@@ -51,6 +53,8 @@ export class DataSpace implements ISpace {
   private readonly _inner: Space;
   private readonly _presence: Presence;
   private readonly _keyring: Keyring;
+  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
 
@@ -60,6 +64,8 @@ export class DataSpace implements ISpace {
     this._inner = params.inner;
     this._presence = params.presence;
     this._keyring = params.keyring;
+    this._feedStore = params.feedStore;
+    this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
     this._dataPipelineController = new DataPipelineControllerImpl({
       modelFactory: params.modelFactory,
@@ -137,8 +143,7 @@ export class DataSpace implements ISpace {
       timeout: CONTROL_PIPELINE_READY_TIMEFRAME
     });
 
-    // TODO(dmaretskyi): Enable this later.
-    // await this._ensureOwnFeedsAreAdmitted();
+    await this._createWritableFeeds();
     this.notarizationPlugin.setWriter(
       createMappedFeedWriter<Credential, FeedMessage.Payload>(
         (credential) => ({
@@ -160,22 +165,26 @@ export class DataSpace implements ISpace {
       this._signingContext.deviceKey
     );
 
-    
-
-
-    if (!this._inner.spaceState.feeds.has(this.inner.controlFeedKey)) {
+    if(!this.inner.controlFeedKey) {
+      const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
+      this.inner.setControlFeed(controlFeed);
       credentials.push(
-        await generator.createFeedAdmission(this.key, this._inner.controlFeedKey, AdmittedFeed.Designation.CONTROL)
+        await generator.createFeedAdmission(this.key, controlFeed.key, AdmittedFeed.Designation.CONTROL)
       );
     }
-    if (!this._inner.spaceState.feeds.has(this.inner.dataFeedKey)) {
+    if(!this.inner.dataFeedKey) {
+      const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
+      this.inner.setDataFeed(dataFeed);
       credentials.push(
-        await generator.createFeedAdmission(this.key, this._inner.dataFeedKey, AdmittedFeed.Designation.DATA)
+        await generator.createFeedAdmission(this.key, dataFeed.key, AdmittedFeed.Designation.DATA)
       );
     }
 
     if (credentials.length > 0) {
       await this.notarizationPlugin.notarize(credentials);
     }
+
+    // Set this after credentials are notarized so that on failure we will retry.
+    await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
   }
 }

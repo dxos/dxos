@@ -28,6 +28,7 @@ describe('DataSpaceManager', () => {
       peer.keyring,
       identity,
       new ModelFactory().registerModel(ObjectModel),
+      peer.feedStore,
       peer.snapshotStore
     );
     const space = await dataSpaceManager.createSpace();
@@ -53,6 +54,7 @@ describe('DataSpaceManager', () => {
       peer1.keyring,
       identity1,
       new ModelFactory().registerModel(ObjectModel),
+      peer1.feedStore,
       peer1.snapshotStore
     );
 
@@ -65,11 +67,26 @@ describe('DataSpaceManager', () => {
       peer2.keyring,
       identity2,
       new ModelFactory().registerModel(ObjectModel),
+      peer2.feedStore,
       peer1.snapshotStore
     );
 
     const space1 = await dataSpaceManager1.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+   
+
+    // Admit peer2 to space1.
+    await writeMessages(
+      space1.inner.controlPipeline.writer,
+      await createAdmissionCredentials(
+        identity1.credentialSigner,
+        identity2.identityKey,
+        space1.key,
+        space1.inner.genesisFeedKey
+      )
+    );
+
+    // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await dataSpaceManager2.acceptSpace({
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
@@ -89,17 +106,6 @@ describe('DataSpaceManager', () => {
         data: space2.inner.dataFeedKey
       }
     });
-
-    // Admit peer2 to space1.
-    await writeMessages(
-      space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        identity1.credentialSigner,
-        identity2.identityKey,
-        space1.key,
-        space2.inner.genesisFeedKey
-      )
-    );
 
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
     await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);

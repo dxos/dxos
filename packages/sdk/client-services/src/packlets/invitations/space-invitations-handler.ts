@@ -37,6 +37,7 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const MAX_OTP_ATTEMPTS = 3;
 
@@ -137,13 +138,10 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
             log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
             // TODO(burdon): Check if already admitted.
-            const credentials = await createAdmissionCredentials(
+            const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
               this._signingContext.credentialSigner,
               identityKey,
-              deviceKey,
               space.key,
-              controlFeedKey,
-              dataFeedKey,
               space.inner.genesisFeedKey,
               guestProfile
             );
@@ -305,8 +303,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
               const space = await this._spaceManager.acceptSpace({
                 spaceKey: assertion.spaceKey,
                 genesisFeedKey: assertion.genesisFeedKey,
-                controlFeedKey,
-                dataFeedKey
               });
 
               // 5. Success.

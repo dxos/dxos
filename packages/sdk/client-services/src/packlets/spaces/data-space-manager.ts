@@ -26,6 +26,8 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
+import { FeedStore } from '@dxos/feed-store';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const DATA_PIPELINE_READY_TIMEOUT = 3_000;
 
@@ -49,8 +51,9 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _modelFactory: ModelFactory,
+    private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _snapshotStore: SnapshotStore
-  ) {}
+  ) { }
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -100,8 +103,14 @@ export class DataSpaceManager {
       dataFeedKey
     };
 
+    // Ensure feeds are writable.
+    const controlFeed = await this._feedStore.openFeed(controlFeedKey, { writable: true });
+    const dataFeed = await this._feedStore.openFeed(dataFeedKey, { writable: true });
+    
     log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
+    space.inner.setControlFeed(controlFeed);
+    space.inner.setDataFeed(dataFeed);
 
     await spaceGenesis(this._keyring, this._signingContext, space.inner);
     await this._metadataStore.addSpace(metadata);
@@ -165,6 +174,7 @@ export class DataSpaceManager {
       presence,
       memberKey: this._signingContext.identityKey,
       keyring: this._keyring,
+      feedStore: this._feedStore,
       signingContext: this._signingContext,
       snapshotId: metadata.snapshot
     });
