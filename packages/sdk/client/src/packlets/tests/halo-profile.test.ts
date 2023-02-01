@@ -9,6 +9,7 @@ import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 describe('Halo', () => {
   test('creates a profile', async () => {
@@ -25,7 +26,7 @@ describe('Halo', () => {
     expect(client.halo.profile?.displayName).to.equal('test-user');
   });
 
-  test.only('device invitations', async () => {
+  test('device invitations', async () => {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createClientServicesHost() });
@@ -42,10 +43,10 @@ describe('Halo', () => {
     await client2.initialize();
 
     const done = new Trigger();
-    const invitation = client1.halo.createInvitation();
+    const invitation = client1.halo.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
     invitation.subscribe({
       onSuccess: async (invitation) => {
-        client2.halo.acceptInvitation(invitation);
+        client2.halo.acceptInvitation(invitation, { type: Invitation.Type.INTERACTIVE_TESTING });
         done.wake();
       },
       onError: (error) => {

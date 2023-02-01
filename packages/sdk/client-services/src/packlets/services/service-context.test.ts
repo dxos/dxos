@@ -6,7 +6,7 @@ import { MemorySignalManagerContext } from '@dxos/messaging';
 import { describe, test } from '@dxos/test';
 
 import { createServiceContext, syncItems } from '../testing';
-import { performInvitation } from '../testing/invitaiton-utils';
+import { performInvitation } from '../testing/invitation-utils';
 
 describe('services/ServiceContext', () => {
   test('existing space is synchronized on device invitations', async () => {

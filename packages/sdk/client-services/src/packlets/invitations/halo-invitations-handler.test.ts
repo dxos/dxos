@@ -9,7 +9,7 @@ import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createPeers, createServiceContext } from '../testing';
-import { performInvitation } from '../testing/invitaiton-utils';
+import { performInvitation } from '../testing/invitation-utils';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());

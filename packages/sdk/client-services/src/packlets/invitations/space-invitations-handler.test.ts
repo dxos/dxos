@@ -15,7 +15,7 @@ import { range } from '@dxos/util';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItems } from '../testing';
-import { performInvitation } from '../testing/invitaiton-utils';
+import { performInvitation } from '../testing/invitation-utils';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
