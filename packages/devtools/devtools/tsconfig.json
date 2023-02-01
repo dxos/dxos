@@ -15,6 +15,12 @@
       "path": "../../apps/patterns/react-appkit"
     },
     {
+      "path": "../../apps/patterns/react-composer"
+    },
+    {
+      "path": "../../apps/patterns/react-list"
+    },
+    {
       "path": "../../apps/patterns/react-ui"
     },
     {
@@ -76,6 +82,9 @@
     },
     {
       "path": "../../deprecated/react-toolkit"
+    },
+    {
+      "path": "../../experimental/chess-app"
     },
     {
       "path": "../../experimental/kai"
