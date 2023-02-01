@@ -10,11 +10,12 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, test, afterTest } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItems } from '../testing';
+import { performInvitation } from '../testing/invitaiton-utils';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
@@ -48,6 +49,27 @@ describe('services/space-invitations-handler', () => {
     await space.close();
   });
 
+  test('invitation with no auth', async () => {
+    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+
+    const space1 = await host.dataSpaceManager!.createSpace();
+    const spaceKey = space1.key;
+
+    await performInvitation(host.spaceInvitations!, guest.spaceInvitations!, space1);
+
+    {
+      const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
+      const space2 = guest.dataSpaceManager!.spaces.get(spaceKey)!;
+      expect(space1).not.to.be.undefined;
+      expect(space2).not.to.be.undefined;
+
+      await syncItems(space1, space2);
+
+      await space1.close();
+      await space2.close();
+    }
+  });
+
   test('creates and accepts invitation with retry', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
@@ -63,7 +85,7 @@ describe('services/space-invitations-handler', () => {
       onConnecting: async (invitation1: Invitation) => {
         const observable2 = guest.spaceInvitations!.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnecting: async () => {},
+          onConnecting: async () => { },
           onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
@@ -79,8 +101,8 @@ describe('services/space-invitations-handler', () => {
             complete2.wake(invitation.spaceKey!);
           },
           onCancelled: () => raise(new Error()),
-          onTimeout: (err: Error) => raise(new Error(err.message)),
-          onError: (err: Error) => raise(new Error(err.message))
+          onTimeout: (err: Error) => raise(err),
+          onError: (err: Error) => raise(err)
         });
       },
       onConnected: (invitation: Invitation) => {
@@ -91,8 +113,8 @@ describe('services/space-invitations-handler', () => {
         complete1.wake(invitation.spaceKey!);
       },
       onCancelled: () => raise(new Error()),
-      onTimeout: (err: Error) => raise(new Error(err.message)),
-      onError: (err: Error) => raise(new Error(err.message))
+      onTimeout: (err: Error) => raise(err),
+      onError: (err: Error) => raise(err)
     });
 
     const [spaceKey1, spaceKey2] = await Promise.all([complete1.wait(), complete2.wait()]);
@@ -109,6 +131,8 @@ describe('services/space-invitations-handler', () => {
       await space1.close();
       await space2.close();
     }
+
+    expect(guest.identityManager.identity?.space.spaceState.getCredentialsOfType('dxos.halo.credentials.SpaceMember').length).to.equal(2); // own halo + newly joined space.
   });
 
   test('cancels invitation', async () => {
@@ -130,20 +154,20 @@ describe('services/space-invitations-handler', () => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
             connecting2.wake(invitation2);
           },
-          onConnected: async (invitation2: Invitation) => {},
-          onSuccess: () => {},
+          onConnected: async (invitation2: Invitation) => { },
+          onSuccess: () => { },
           onCancelled: () => raise(new Error()),
-          onTimeout: (err: Error) => raise(new Error(err.message)),
-          onError: (err: Error) => raise(new Error(err.message))
+          onTimeout: (err: Error) => raise(err),
+          onError: (err: Error) => raise(err)
         });
       },
-      onConnected: async (invitation1: Invitation) => {},
+      onConnected: async (invitation1: Invitation) => { },
       onCancelled: () => {
         cancelled.wake();
       },
       onSuccess: () => raise(new Error()),
-      onTimeout: (err: Error) => raise(new Error(err.message)),
-      onError: (err: Error) => raise(new Error(err.message))
+      onTimeout: (err: Error) => raise(err),
+      onError: (err: Error) => raise(err)
     });
 
     const invitation1 = await connecting1.wait();
@@ -175,14 +199,14 @@ describe('services/space-invitations-handler', () => {
 
     const [done, count] = latch({ count: GUEST_COUNT });
     hostObservable.subscribe({
-      onConnecting: async (invitation2: Invitation) => {},
-      onConnected: async (invitation2: Invitation) => {},
+      onConnecting: async (invitation2: Invitation) => { },
+      onConnected: async (invitation2: Invitation) => { },
       onSuccess: () => {
         count();
       },
-      onCancelled: () => {},
-      onTimeout: (err: Error) => raise(new Error(err.message)),
-      onError: (err: Error) => raise(new Error(err.message))
+      onCancelled: () => { },
+      onTimeout: (err: Error) => raise(err),
+      onError: (err: Error) => raise(err)
     });
 
     await Promise.all(
@@ -193,14 +217,14 @@ describe('services/space-invitations-handler', () => {
         });
         const success = new Trigger();
         observable.subscribe({
-          onConnecting: async (invitation2: Invitation) => {},
-          onConnected: async (invitation2: Invitation) => {},
+          onConnecting: async (invitation2: Invitation) => { },
+          onConnected: async (invitation2: Invitation) => { },
           onSuccess: () => {
             success.wake();
           },
           onCancelled: () => raise(new Error()),
-          onTimeout: (err: Error) => raise(new Error(err.message)),
-          onError: (err: Error) => raise(new Error(err.message))
+          onTimeout: (err: Error) => raise(err),
+          onError: (err: Error) => raise(err)
         });
         await success.wait({ timeout: 300 });
       })
