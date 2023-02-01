@@ -20,7 +20,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
       );
 
       next({
-        spaces: filteredSpaces.map((space) => {
+        spaces: filteredSpaces.map((space): SubscribeToSpacesResponse.SpaceInfo => {
           const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
             spaceMetadata.key.equals(space.key)
           );
@@ -30,8 +30,8 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
             isOpen: space.isOpen,
             timeframe: spaceMetadata?.dataTimeframe,
             genesisFeed: space.genesisFeedKey,
-            controlFeed: space.controlFeedKey,
-            dataFeed: space.dataFeedKey
+            controlFeed: space.controlFeedKey!, // TODO(dmaretskyi): Those keys may be missing.
+            dataFeed: space.dataFeedKey!
           };
         })
       });

@@ -60,10 +60,10 @@ describe('identity/identity', () => {
       spaceKey,
       protocol,
       genesisFeed: controlFeed,
-      controlFeed,
-      dataFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-    });
+    })
+      .setControlFeed(controlFeed)
+      .setDataFeed(dataFeed);
 
     const identity = new Identity({
       signer: keyring,
@@ -165,10 +165,10 @@ describe('identity/identity', () => {
         spaceKey,
         protocol,
         genesisFeed: controlFeed,
-        controlFeed,
-        dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-      });
+      })
+        .setControlFeed(controlFeed)
+        .setDataFeed(dataFeed);
 
       const identity = (identity1 = new Identity({
         signer: keyring,
@@ -244,10 +244,10 @@ describe('identity/identity', () => {
         spaceKey,
         protocol,
         genesisFeed: await feedStore.openFeed(genesisFeedKey),
-        controlFeed,
-        dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-      });
+      })
+        .setControlFeed(controlFeed)
+        .setDataFeed(dataFeed);
 
       const identity = (identity2 = new Identity({
         signer: keyring,

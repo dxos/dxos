@@ -8,6 +8,7 @@ filter:
   - info
   - test.ts:debug
   - database:debug
+  - notarization:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug

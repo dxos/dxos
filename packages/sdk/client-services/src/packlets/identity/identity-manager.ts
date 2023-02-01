@@ -7,9 +7,11 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
 import { MetadataStore, SpaceManager, SwarmIdentity } from '@dxos/echo-db';
+import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { deferFunction } from '@dxos/util';
 
@@ -43,6 +45,7 @@ export class IdentityManager {
   constructor(
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
+    private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _spaceManager: SpaceManager
   ) {}
 
@@ -161,6 +164,12 @@ export class IdentityManager {
     assert(!this._identity);
     log('constructing identity', { identityRecord });
 
+    // Must be created before the space so the feeds are writable.
+    const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeControlFeedKey, {
+      writable: true
+    });
+    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeDataFeedKey, { writable: true });
+
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
@@ -170,6 +179,9 @@ export class IdentityManager {
       },
       identityKey: identityRecord.identityKey
     });
+    space.setControlFeed(controlFeed);
+    space.setDataFeed(dataFeed);
+
     const identity: Identity = new Identity({
       space,
       signer: this._keyring,
@@ -185,9 +197,7 @@ export class IdentityManager {
     return this._spaceManager.constructSpace({
       metadata: {
         key: spaceRecord.spaceKey,
-        genesisFeedKey: spaceRecord.genesisFeedKey,
-        controlFeedKey: spaceRecord.writeControlFeedKey,
-        dataFeedKey: spaceRecord.writeDataFeedKey
+        genesisFeedKey: spaceRecord.genesisFeedKey
       },
       swarmIdentity,
       onNetworkConnection: () => {}

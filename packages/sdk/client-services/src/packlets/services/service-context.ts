@@ -71,6 +71,7 @@ export class ServiceContext {
     this.identityManager = new IdentityManager(
       this.metadataStore,
       this.keyring,
+      this.feedStore,
       this.spaceManager
     );
 
@@ -133,6 +134,7 @@ export class ServiceContext {
       this.keyring,
       signingContext,
       this.modelFactory,
+      this.feedStore,
       this.snapshotStore
     );
     await this.dataSpaceManager.open();

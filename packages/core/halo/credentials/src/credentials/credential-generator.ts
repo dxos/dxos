@@ -169,10 +169,7 @@ export const createDeviceAuthorization = async (
 export const createAdmissionCredentials = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
-  deviceKey: PublicKey,
   spaceKey: PublicKey,
-  controlFeedKey: PublicKey,
-  dataFeedKey: PublicKey,
   genesisFeedKey: PublicKey,
   profile?: ProfileDocument
 ): Promise<FeedMessage.Payload[]> => {
@@ -186,29 +183,29 @@ export const createAdmissionCredentials = async (
         profile,
         genesisFeedKey
       }
-    }),
-
-    await signer.createCredential({
-      subject: controlFeedKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey,
-        deviceKey,
-        identityKey,
-        designation: AdmittedFeed.Designation.CONTROL
-      }
-    }),
-
-    await signer.createCredential({
-      subject: dataFeedKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey,
-        deviceKey,
-        identityKey,
-        designation: AdmittedFeed.Designation.DATA
-      }
     })
+
+    // await signer.createCredential({
+    //   subject: controlFeedKey,
+    //   assertion: {
+    //     '@type': 'dxos.halo.credentials.AdmittedFeed',
+    //     spaceKey,
+    //     deviceKey,
+    //     identityKey,
+    //     designation: AdmittedFeed.Designation.CONTROL
+    //   }
+    // }),
+
+    // await signer.createCredential({
+    //   subject: dataFeedKey,
+    //   assertion: {
+    //     '@type': 'dxos.halo.credentials.AdmittedFeed',
+    //     spaceKey,
+    //     deviceKey,
+    //     identityKey,
+    //     designation: AdmittedFeed.Designation.DATA
+    //   }
+    // })
   ]);
 
   return credentials.map((credential) => ({
