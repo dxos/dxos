@@ -51,7 +51,7 @@ export default defineConfig({
           faker: ['faker'],
           highlighter: ['react-syntax-highlighter'],
           monaco: ['monaco-editor', '@monaco-editor/react'],
-          vendor: ['react', 'react-router-dom', 'react-dom'],
+          vendor: ['react', 'react-router-dom', 'react-dom']
         }
       }
     }
