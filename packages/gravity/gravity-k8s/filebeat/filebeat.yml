@@ -22,14 +22,14 @@ filebeat.inputs:
 - type: filestream
 
   # Unique ID among all inputs, an ID is required.
-  id: dxos-gravity-kube
+  id: dxos-gravity-agent
 
   # Change to true to enable this input configuration.
   enabled: true 
 
   # Paths that should be crawled and fetched. Glob based paths.
   paths:
-    - "/tmp/kube/dxos-kube-*.json"
+    - "/tmp/dxos/gravity-*.json"
     #- c:\programdata\elasticsearch\logs\*
 
   # Exclude lines. A list of regular expressions to match. It drops the lines that are

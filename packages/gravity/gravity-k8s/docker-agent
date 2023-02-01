@@ -4,6 +4,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y software
     psmisc git wget curl gnupg \
     apt-utils build-essential \
     autoconf libtool build-essential cmake
+
 # RUN curl -sSL https://get.docker.com/ | sh
 RUN apt-get install -y libxtst-dev libpng++-dev npm coreutils jq
 
@@ -16,20 +17,20 @@ ENV NODE_VER=${NODE_VER:-18.12.1}
 RUN n i ${NODE_VER}
 ARG GIT_TOKEN
 RUN git config --global url."https://${GIT_TOKEN}:@github.com/".insteadOf "https://github.com/"
-RUN mkdir /dxos && cd /dxos && git clone https://github.com/dxos/dxos.git
-RUN cd /dxos/dxos && git checkout a1ex-gravity-kibana
-RUN cd /dxos/dxos && pnpm install
-RUN cd /dxos/dxos && pnpm run build
+RUN mkdir /dxos && cd /dxos && git clone https://github.com/dxos/dxos.git && cd dxos && git checkout a1ex-gravity-kibana 
+WORKDIR /dxos/dxos
+RUN pnpm install
+RUN pnpm -w run build
 RUN mkdir -p /tmp/gravity-results
 WORKDIR /dxos/dxos/packages/gravity/gravity-agent
 COPY ./*.yml ./config/
 COPY ./run_agent.sh ./
 RUN chmod a+x ./run_agent.sh
 WORKDIR /opt
-RUN curl https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.5.3-linux-x86_64.tar.gz
-RUN tar xfz ./filebeat-8.5.3-linux-x86_64.tar.gz
-WORKDIR /opt/filebeat-8.5.3
-COPY ./filebeat/filebeat.yml .
+RUN curl -o filebeat-8.5.3-linux-x86_64.tar.gz https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.5.3-linux-x86_64.tar.gz && tar xfz ./filebeat-8.5.3-linux-x86_64.tar.gz
+WORKDIR /opt/filebeat-8.5.3-linux-x86_64
+COPY ./filebeat/filebeat.yml /opt/filebeat-8.5.3-linux-x86_64/
+WORKDIR /dxos/dxos/packages/gravity/gravity-agent
 ARG GRAVITY_TEST_SCENARIO
 ENV GRAVITY_TEST_SCENARIO=${GRAVITY_TEST_SCENARIO:-host}
 EXPOSE 43430
