@@ -49,7 +49,7 @@ const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): 
   };
 };
 
-export const SignalStatusComp = () => {
+const SignalStatusComp = () => {
   const devtoolsHost = useDevtools();
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), { servers: [] });
   const status = servers!.map(getSignalStatus);
@@ -99,3 +99,5 @@ export const SignalStatusComp = () => {
     </div>
   );
 };
+
+export default SignalStatusComp;

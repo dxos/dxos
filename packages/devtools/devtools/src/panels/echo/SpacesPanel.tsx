@@ -11,7 +11,7 @@ import { SpaceToolbar } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
 
 // TODO(burdon): Show master/detail table with currently selected.
-export const SpacesPanel = () => {
+const SpacesPanel = () => {
   const { spaceInfo: metadata } = useDevtoolsState();
   const object = useMemo(() => {
     if (!metadata) {
@@ -39,3 +39,5 @@ export const SpacesPanel = () => {
     </div>
   );
 };
+
+export default SpacesPanel;

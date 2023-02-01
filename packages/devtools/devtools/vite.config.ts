@@ -49,8 +49,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           faker: ['faker'],
-          highlight: ['react-syntax-highlighter'],
-          kai: ['@dxos/kai'],
+          highlighter: ['react-syntax-highlighter'],
           monaco: ['monaco-editor', '@monaco-editor/react'],
           vendor: ['react', 'react-router-dom', 'react-dom']
         }

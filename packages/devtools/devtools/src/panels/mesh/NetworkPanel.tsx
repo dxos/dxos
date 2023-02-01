@@ -25,7 +25,7 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => (
   label: topic.label!
 });
 
-export const NetworkPanel = () => {
+const NetworkPanel = () => {
   const devtoolsHost = useDevtools();
   const [selectedTopic, setSelectedTopic] = useState<string>();
   const [peers, setPeers] = useState<PeerInfo[]>([]);
@@ -89,3 +89,5 @@ export const NetworkPanel = () => {
     </Box>
   );
 };
+
+export default NetworkPanel;

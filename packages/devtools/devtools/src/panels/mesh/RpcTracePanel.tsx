@@ -10,7 +10,7 @@ import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { Panel } from '../../components';
 
-export const RpcTracePanel = () => {
+const RpcTracePanel = () => {
   const client = useClient();
   const [messages, setMessages] = useState<RpcMessage[]>([]);
   const services = useClientServices();
@@ -36,3 +36,5 @@ export const RpcTracePanel = () => {
     </Panel>
   );
 };
+
+export default RpcTracePanel;
