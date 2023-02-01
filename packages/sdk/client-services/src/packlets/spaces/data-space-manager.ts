@@ -103,14 +103,8 @@ export class DataSpaceManager {
       dataFeedKey
     };
 
-    // Ensure feeds are writable.
-    const controlFeed = await this._feedStore.openFeed(controlFeedKey, { writable: true });
-    const dataFeed = await this._feedStore.openFeed(dataFeedKey, { writable: true });
-    
     log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
-    space.inner.setControlFeed(controlFeed);
-    space.inner.setDataFeed(dataFeed);
 
     await spaceGenesis(this._keyring, this._signingContext, space.inner);
     await this._metadataStore.addSpace(metadata);
@@ -149,6 +143,9 @@ export class DataSpaceManager {
     });
     const snapshotManager = new SnapshotManager(this._snapshotStore);
 
+    const controlFeed = metadata.controlFeedKey && await this._feedStore.openFeed(metadata.controlFeedKey, { writable: true });
+    const dataFeed = metadata.dataFeedKey && await this._feedStore.openFeed(metadata.dataFeedKey, { writable: true });
+    
     const space: Space = await this._spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
@@ -160,11 +157,14 @@ export class DataSpaceManager {
         session.addExtension(
           'dxos.mesh.teleport.presence',
           presence.createExtension({ remotePeerId: session.remotePeerId })
-        );
-        session.addExtension('dxos.mesh.teleport.objectsync', snapshotManager.objectSync.createExtension());
-        session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-      }
-    });
+          );
+          session.addExtension('dxos.mesh.teleport.objectsync', snapshotManager.objectSync.createExtension());
+          session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+        }
+      });
+      controlFeed && space.setControlFeed(controlFeed);
+      dataFeed && space.setDataFeed(dataFeed);
+
 
     const dataSpace = new DataSpace({
       inner: space,
