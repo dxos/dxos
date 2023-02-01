@@ -62,6 +62,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/chess-app": "workspace:*",
+    "@dxos/react-composer": "workspace:*",
+    "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@monaco-editor/react": "^4.4.6",
     "@types/color-hash": "^1.0.1",

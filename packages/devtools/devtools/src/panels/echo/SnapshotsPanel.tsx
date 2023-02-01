@@ -13,7 +13,7 @@ import { JsonTreeView } from '@dxos/react-components-deprecated';
 
 import { KeySelect, Panel } from '../../components';
 
-export const SnapshotsPanel = () => {
+const SnapshotsPanel = () => {
   const devtoolsHost = useDevtools();
   const spaces = useSpaces();
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
@@ -63,3 +63,5 @@ export const SnapshotsPanel = () => {
     </Panel>
   );
 };
+
+export default SnapshotsPanel;
