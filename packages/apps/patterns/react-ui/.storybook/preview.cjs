@@ -1,7 +1,7 @@
 import React, { createElement, useEffect } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
 import { ThemeProvider } from '@dxos/react-components';
-import { ClientProvider } from '../src/testing';
+import {osTranslations} from '../src'
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -16,6 +16,7 @@ export const parameters = {
 const ThemeWrapper = ({ children }) => {
   // render your custom theme provider
   const darkMode = useDarkMode();
+  console.log('[dark mode]', darkMode);
   useEffect(() => {
     document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
   }, [darkMode]);
@@ -25,6 +26,7 @@ const ThemeWrapper = ({ children }) => {
 export const decorators = [
   (Story) => (
     createElement(ThemeProvider, {
+      resourceExtensions: [osTranslations],
       children: createElement(ThemeWrapper, {
         children: createElement(Story)
       })

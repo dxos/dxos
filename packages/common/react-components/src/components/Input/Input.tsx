@@ -67,6 +67,8 @@ export const Input = ({
     value: internalValue,
     onChange: onInternalChange,
     inputSlot: {
+      id: inputId,
+      disabled,
       ...inputSlot,
       ...(autoFocus && !hasIosKeyboard && { autoFocus: true })
     },
@@ -100,7 +102,7 @@ export const Input = ({
       {(description || validationMessage) && (
         <p
           {...(!isInvalid && { id: descriptionId })}
-          className={mx(descriptionVisuallyHidden && !isInvalid && 'sr-only')}
+          className={mx(descriptionVisuallyHidden && !isInvalid && 'sr-only', slots.description?.className)}
         >
           {validationMessage && (
             <span id={validationId} className={mx(valenceColorText(validationValence), slots.validation?.className)}>
@@ -109,7 +111,7 @@ export const Input = ({
           )}
           <span
             {...(isInvalid && { id: descriptionId })}
-            className={mx(defaultDescription, descriptionVisuallyHidden && 'sr-only', slots.description?.className)}
+            className={mx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
           >
             {description}
           </span>

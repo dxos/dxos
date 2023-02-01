@@ -4,7 +4,8 @@
 
 import React, { ComponentProps } from 'react';
 
-import { defaultInput } from '../../styles/input';
+import { useThemeContext } from '../../hooks';
+import { defaultInput } from '../../styles';
 import { mx } from '../../util';
 import { InputProps, InputSize, InputSlots } from './InputProps';
 
@@ -28,6 +29,7 @@ export const BareTextInput = ({
   value,
   inputSlot
 }: BareTextInputProps) => {
+  const { themeVariant } = useThemeContext();
   return (
     <input
       {...inputSlot}
@@ -35,12 +37,16 @@ export const BareTextInput = ({
       onChange={onChange}
       value={value}
       className={mx(
-        defaultInput({
-          disabled,
-          ...(validationMessage && { validationValence })
-        }),
+        defaultInput(
+          {
+            disabled,
+            ...(validationMessage && { validationValence })
+          },
+          themeVariant
+        ),
         sizeMap[size ?? 'md'],
-        'block w-full px-2.5 py-2',
+        'block w-full',
+        themeVariant === 'os' ? 'pli-1.5 plb-1' : 'pli-2.5 plb-2',
         inputSlot?.className
       )}
     />
