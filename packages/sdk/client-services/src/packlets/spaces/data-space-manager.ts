@@ -7,7 +7,6 @@ import assert from 'node:assert';
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
-  AcceptSpaceOptions,
   DataServiceSubscriptions,
   MetadataStore,
   SigningContext,
@@ -17,10 +16,12 @@ import {
   SpaceManager,
   SnapshotManager
 } from '@dxos/echo-db';
+import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap, deferFunction } from '@dxos/util';
@@ -29,6 +30,11 @@ import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
 
 const DATA_PIPELINE_READY_TIMEOUT = 3_000;
+
+export type AcceptSpaceOptions = {
+  spaceKey: PublicKey;
+  genesisFeedKey: PublicKey;
+};
 
 @trackLeaks('open', 'close')
 export class DataSpaceManager {
@@ -45,6 +51,7 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _modelFactory: ModelFactory,
+    private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _snapshotStore: SnapshotStore
   ) {}
 
@@ -115,9 +122,7 @@ export class DataSpaceManager {
 
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
-      genesisFeedKey: opts.genesisFeedKey,
-      controlFeedKey: opts.controlFeedKey,
-      dataFeedKey: opts.dataFeedKey
+      genesisFeedKey: opts.genesisFeedKey
     };
 
     const space = await this._constructSpace(metadata);
@@ -138,6 +143,10 @@ export class DataSpaceManager {
     });
     const snapshotManager = new SnapshotManager(this._snapshotStore);
 
+    const controlFeed =
+      metadata.controlFeedKey && (await this._feedStore.openFeed(metadata.controlFeedKey, { writable: true }));
+    const dataFeed = metadata.dataFeedKey && (await this._feedStore.openFeed(metadata.dataFeedKey, { writable: true }));
+
     const space: Space = await this._spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
@@ -154,6 +163,8 @@ export class DataSpaceManager {
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
       }
     });
+    controlFeed && space.setControlFeed(controlFeed);
+    dataFeed && space.setDataFeed(dataFeed);
 
     const dataSpace = new DataSpace({
       inner: space,
@@ -163,6 +174,7 @@ export class DataSpaceManager {
       presence,
       memberKey: this._signingContext.identityKey,
       keyring: this._keyring,
+      feedStore: this._feedStore,
       signingContext: this._signingContext,
       snapshotId: metadata.snapshot
     });
