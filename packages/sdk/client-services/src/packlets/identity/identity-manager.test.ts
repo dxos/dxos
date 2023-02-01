@@ -91,9 +91,9 @@ describe('identity/identity-manager', () => {
 
     const peer2 = await setupPeer({ signalContext });
 
-    const deviceKey = await peer2.keyring.createKey()
-    const controlFeedKey = await peer2.keyring.createKey()
-    const dataFeedKey = await peer2.keyring.createKey()
+    const deviceKey = await peer2.keyring.createKey();
+    const controlFeedKey = await peer2.keyring.createKey();
+    const dataFeedKey = await peer2.keyring.createKey();
 
     await identity1.controlPipeline.writer.write({
       credential: {

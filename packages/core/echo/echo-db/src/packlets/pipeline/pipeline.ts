@@ -236,7 +236,7 @@ export class Pipeline implements PipelineAccessor {
     this._isOpen = true;
 
     for await (const block of this._feedSetIterator) {
-      this._processingTrigger.reset()
+      this._processingTrigger.reset();
       yield block;
       this._processingTrigger.wake();
 

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialConsumer, CredentialGenerator } from '@dxos/credentials';
+import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
   Database,
@@ -179,7 +179,7 @@ export class DataSpace implements ISpace {
     if (!this.inner.dataFeedKey) {
       const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
       this.inner.setDataFeed(dataFeed);
-      
+
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
           subject: dataFeed.key,

@@ -52,7 +52,7 @@ export class DataSpaceManager {
     private readonly _signingContext: SigningContext,
     private readonly _modelFactory: ModelFactory,
     private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _snapshotStore: SnapshotStore,
+    private readonly _snapshotStore: SnapshotStore
   ) {}
 
   // TODO(burdon): Remove.

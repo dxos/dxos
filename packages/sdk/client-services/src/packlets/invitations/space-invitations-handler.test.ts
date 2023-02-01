@@ -85,7 +85,7 @@ describe('services/space-invitations-handler', () => {
       onConnecting: async (invitation1: Invitation) => {
         const observable2 = guest.spaceInvitations!.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnecting: async () => { },
+          onConnecting: async () => {},
           onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
@@ -132,7 +132,9 @@ describe('services/space-invitations-handler', () => {
       await space2.close();
     }
 
-    expect(guest.identityManager.identity?.space.spaceState.getCredentialsOfType('dxos.halo.credentials.SpaceMember').length).to.equal(2); // own halo + newly joined space.
+    expect(
+      guest.identityManager.identity?.space.spaceState.getCredentialsOfType('dxos.halo.credentials.SpaceMember').length
+    ).to.equal(2); // own halo + newly joined space.
   });
 
   test('cancels invitation', async () => {
@@ -154,14 +156,14 @@ describe('services/space-invitations-handler', () => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
             connecting2.wake(invitation2);
           },
-          onConnected: async (invitation2: Invitation) => { },
-          onSuccess: () => { },
+          onConnected: async (invitation2: Invitation) => {},
+          onSuccess: () => {},
           onCancelled: () => raise(new Error()),
           onTimeout: (err: Error) => raise(err),
           onError: (err: Error) => raise(err)
         });
       },
-      onConnected: async (invitation1: Invitation) => { },
+      onConnected: async (invitation1: Invitation) => {},
       onCancelled: () => {
         cancelled.wake();
       },
@@ -199,12 +201,12 @@ describe('services/space-invitations-handler', () => {
 
     const [done, count] = latch({ count: GUEST_COUNT });
     hostObservable.subscribe({
-      onConnecting: async (invitation2: Invitation) => { },
-      onConnected: async (invitation2: Invitation) => { },
+      onConnecting: async (invitation2: Invitation) => {},
+      onConnected: async (invitation2: Invitation) => {},
       onSuccess: () => {
         count();
       },
-      onCancelled: () => { },
+      onCancelled: () => {},
       onTimeout: (err: Error) => raise(err),
       onError: (err: Error) => raise(err)
     });
@@ -217,8 +219,8 @@ describe('services/space-invitations-handler', () => {
         });
         const success = new Trigger();
         observable.subscribe({
-          onConnecting: async (invitation2: Invitation) => { },
-          onConnected: async (invitation2: Invitation) => { },
+          onConnecting: async (invitation2: Invitation) => {},
+          onConnected: async (invitation2: Invitation) => {},
           onSuccess: () => {
             success.wake();
           },

@@ -132,7 +132,7 @@ export class SpaceStateMachine implements SpaceState {
       }
 
       case 'dxos.halo.credentials.SpaceMember': {
-        if(!assertion.spaceKey.equals(this._spaceKey)) { 
+        if (!assertion.spaceKey.equals(this._spaceKey)) {
           break; // Ignore credentials for other spaces.
         }
 

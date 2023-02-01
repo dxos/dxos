@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { CredentialConsumer, CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { CredentialConsumer, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
   valueEncoding,
@@ -21,7 +21,6 @@ import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
-import assert from 'node:assert';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
@@ -127,8 +126,8 @@ export class ServiceContext {
   }
 
   private async _acceptIdentity(params: JoinIdentityParams) {
-    const identity = await this.identityManager.acceptIdentity(params)
-    
+    const identity = await this.identityManager.acceptIdentity(params);
+
     await this._initialize();
     return identity;
   }
@@ -142,8 +141,8 @@ export class ServiceContext {
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,
       profile: identity.profileDocument,
-      recordCredential: async credential => {
-        await identity.controlPipeline.writer.write({ credential: { credential }})
+      recordCredential: async (credential) => {
+        await identity.controlPipeline.writer.write({ credential: { credential } });
       }
     };
 
@@ -162,39 +161,40 @@ export class ServiceContext {
       this.networkManager,
       this.dataSpaceManager,
       signingContext,
-      this.keyring,
+      this.keyring
     );
     this.initialized.wake();
 
     this._deviceSpaceSync = identity.space.spaceState.registerProcessor({
       process: async (credential: Credential) => {
         const assertion = getCredentialAssertion(credential);
-        if(assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
+        if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
           return;
         }
-        if(assertion.spaceKey.equals(identity.space.key)) { // ignore halo space
+        if (assertion.spaceKey.equals(identity.space.key)) {
+          // ignore halo space
           return;
         }
-        if(!this.dataSpaceManager) {
-          log('dataSpaceManager not initialized yet, ignoring space admission', { details: assertion })
+        if (!this.dataSpaceManager) {
+          log('dataSpaceManager not initialized yet, ignoring space admission', { details: assertion });
           return;
         }
-        if(this.dataSpaceManager.spaces.has(assertion.spaceKey)) {
-          log('space already exists, ignoring space admission', { details: assertion })
+        if (this.dataSpaceManager.spaces.has(assertion.spaceKey)) {
+          log('space already exists, ignoring space admission', { details: assertion });
           return;
         }
 
         try {
-          log('accepting space recorded in halo', { details: assertion })
+          log('accepting space recorded in halo', { details: assertion });
           await this.dataSpaceManager.acceptSpace({
             spaceKey: assertion.spaceKey,
-            genesisFeedKey: assertion.genesisFeedKey,
-          })
-        } catch(err) {
-          log.catch(err)
+            genesisFeedKey: assertion.genesisFeedKey
+          });
+        } catch (err) {
+          log.catch(err);
         }
       }
-    })
+    });
     await this._deviceSpaceSync.open();
   }
 }

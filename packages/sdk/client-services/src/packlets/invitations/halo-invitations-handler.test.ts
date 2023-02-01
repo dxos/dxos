@@ -3,12 +3,8 @@
 //
 
 import { expect } from 'chai';
-import assert from 'node:assert';
 
-import { asyncChain, Trigger } from '@dxos/async';
-import { raise } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { asyncChain } from '@dxos/async';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
@@ -36,7 +32,7 @@ describe('services/halo', () => {
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
-    await performInvitation(host.haloInvitations, guest.haloInvitations, undefined)
+    await performInvitation(host.haloInvitations, guest.haloInvitations, undefined);
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
   });
 });

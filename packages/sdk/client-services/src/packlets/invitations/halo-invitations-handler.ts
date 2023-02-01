@@ -7,6 +7,7 @@ import assert from 'node:assert';
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
@@ -31,15 +32,14 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
-import { Keyring } from '@dxos/keyring';
 
 type HaloInvitationsHandlerParams = {
   networkManager: NetworkManager;
   keyring: Keyring;
 
-  getIdentity: () => Identity
-  acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>
-}
+  getIdentity: () => Identity;
+  acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>;
+};
 
 /**
  * Handles the life-cycle of Halo invitations between peers.
@@ -48,7 +48,7 @@ type HaloInvitationsHandlerParams = {
 export class HaloInvitationsHandler extends AbstractInvitationsHandler {
   // prettier-ignore
   constructor(
-    private readonly _params: HaloInvitationsHandlerParams,
+    private readonly _params: HaloInvitationsHandlerParams
   ) {
     super(_params.networkManager);
   }
@@ -235,13 +235,12 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               const controlFeedKey = await this._params.keyring.createKey();
               const dataFeedKey = await this._params.keyring.createKey();
 
-
               // 3. Send admission credentials to host (with local identity keys).
               log('presenting admission credentials', { identityKey, deviceKey, controlFeedKey, dataFeedKey });
               await extension.rpc.HaloHostService.presentAdmissionCredentials({
                 deviceKey,
                 controlFeedKey,
-                dataFeedKey,
+                dataFeedKey
               });
 
               // 4. Create local identity.

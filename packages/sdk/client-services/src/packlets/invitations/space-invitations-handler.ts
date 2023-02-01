@@ -16,7 +16,7 @@ import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConne
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AuthenticationRequest,
   AuthenticationResponse,
@@ -50,7 +50,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
     networkManager: NetworkManager,
     private readonly _spaceManager: DataSpaceManager,
     private readonly _signingContext: SigningContext,
-    private readonly _keyring: Keyring,
+    private readonly _keyring: Keyring
   ) {
     super(networkManager);
   }
