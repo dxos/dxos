@@ -9,36 +9,34 @@ prev: why
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.<br/> Learn more about our [mission](why).
 
-*   [Templates](#creating-apps-with-dx-cli) for creating local-first apps
-*   [Using the ECHO database](#using-the-echo-database) for real-time, offline-first consensus
-*   [Installing KUBE infrastructure](#starting-a-kube) for hosting apps locally
-*   [Deploying apps to KUBE](#deploying-your-app-to-a-kube)
+- Start a project with an [app template](#create-an-app)
+- Use [ECHO](#echo-state-consensus) for state consensus
+- Start up a [KUBE](#starting-a-kube) to host your app
+- [Deploy](#deploying-your-app-to-a-kube) your app to the KUBE
 
-## Creating apps with `dx` CLI
+## Create an app
 
-The `dx` CLI offers a production-ready application template based on `vite` with `typescript`, `react`, `pwa`, and other opinions built in.
+DXOS project templates are based on `vite`, `typescript`, `react`, `tailwind`, and other opinions to get you going quickly.
 
-Install:
+Initialize an empty folder with `npm init` like this:
 
 ```bash
-pnpm i -g @dxos/cli
+npm init @dxos
 ```
 
-:::note
-Only [`pnpm`](https://pnpm.io/) is supported for now, temporarily (`npm i -g pnpm`).
-:::
-
-Now you can use the `dx` command line tool:
+Then:
 
 ```bash
-dx app create hello # or with --template=bare
-cd hello
+pnpm install
 pnpm serve
 ```
-
 This will start the development server.
 
-## Using the ECHO database
+:::note
+Only [`pnpm`](https://pnpm.io/) is supported for now `npm i -g pnpm`.
+:::
+
+## ECHO State Consensus
 
 [ECHO](overview#echo) is a peer-to-peer graph database designed for offline-first and real-time collaboration. There is no central server, peers exchange data directly over p2p connections.
 
@@ -111,9 +109,9 @@ createRoot(document.body).render(<App />);
 
 Read more:
 
-*   [ECHO configuration](echo/configuration)
-*   [ECHO with React](echo/react)
-*   [Client](../api/@dxos/client/classes/Client.md) API Documentation
+- [ECHO configuration](echo/configuration)
+- [ECHO with React](echo/react)
+- [Client](../api/@dxos/client/classes/Client.md) API Documentation
 
 ## Starting a KUBE
 
@@ -138,9 +136,9 @@ kube status # verify it's running
 
 To deploy to your local KUBE:
 
-*   Ensure a [KUBE](#starting-a-kube) is running
-*   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
-*   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
+- Ensure a [KUBE](#starting-a-kube) is running
+- Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
+- Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
 
 If you're using the DXOS application template (from `dx app create`):
 
@@ -163,11 +161,11 @@ If you started with `dx app create hello`, the app will be on [`hello.localhost`
 :::note
 Coming soon:
 
-*   `tunnelling`: ability to expose apps on your KUBE to the public internet
-*   `console`: a management console for the apps running on your KUBE
-:::
+- `tunnelling`: ability to expose apps on your KUBE to the public internet
+- `console`: a management console for the apps running on your KUBE
+  :::
 
 Read more:
 
-*   [`dx.yml` file schema](kube/dx-yml-file)
-*   DXOS [templates](cli/templates) and [sample](samples).
+- [`dx.yml` file schema](kube/dx-yml-file)
+- DXOS [templates](cli/templates) and [sample](samples).
