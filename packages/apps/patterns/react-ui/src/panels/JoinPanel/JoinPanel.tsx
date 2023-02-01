@@ -52,6 +52,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
               InvitationEncoder.decode(state.unredeemedHaloInvitationCode)
             );
             nextState.unredeemedHaloInvitationCode = undefined;
+            nextState.haloViewState = 'invitation connector';
           } else {
             nextState.haloViewState = 'invitation input';
           }
@@ -68,6 +69,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
             InvitationEncoder.decode(state.unredeemedSpaceInvitationCode)
           );
           nextState.unredeemedSpaceInvitationCode = undefined;
+          nextState.spaceViewState = 'invitation connector';
         } else {
           nextState.spaceViewState = 'invitation input';
         }
@@ -87,10 +89,12 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
       case 'authenticating invitation':
         nextState[action.from === 'halo' ? 'haloInvitationAnnotation' : 'spaceInvitationAnnotation'] = 'authenticating';
         break;
+      case 'connecting invitation':
+        nextState[action.from === 'halo' ? 'haloInvitation' : 'spaceInvitation'] = action.invitation;
+      // eslint-disable-next-line no-fallthrough
       case 'cancelled invitation':
       case 'fail invitation':
       case 'timeout invitation':
-      case 'connecting invitation':
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation connector';
         break;
       case 'connect invitation':
@@ -133,6 +137,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
         : joinState.activeView === 'halo invitation acceptor'
         ? `${joinState.activeView}; ${joinState.haloViewState}`
         : joinState.activeView;
+    log.info('[autofocus value]', { attrValue });
     const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${attrValue}"]`);
     if ($nextAutofocus) {
       $nextAutofocus.focus();

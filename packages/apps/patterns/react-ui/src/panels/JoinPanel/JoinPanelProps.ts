@@ -43,7 +43,7 @@ export interface EmptyInvitationAction {
 export interface InvitationCodeAction {
   type: 'connecting invitation';
   from: 'space' | 'halo';
-  invitationCode: string;
+  invitation: AuthenticatingInvitationObservable;
 }
 
 export type InvitationAction = EmptyInvitationAction | InvitationCodeAction;

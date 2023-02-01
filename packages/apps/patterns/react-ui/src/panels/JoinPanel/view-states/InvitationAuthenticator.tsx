@@ -50,7 +50,7 @@ const PureInvitationAuthenticatorContent = ({
             disabled,
             inputMode: 'numeric',
             pattern: '\\d*',
-            'data-autofocus': 'space invitation acceptor; invitation authenticator'
+            'data-autofocus': `${invitationType} invitation acceptor; invitation authenticator`
           } as ComponentPropsWithoutRef<'input'>
         }}
         {...(failed && {
@@ -64,7 +64,7 @@ const PureInvitationAuthenticatorContent = ({
           disabled={disabled}
           className='grow flex items-center gap-2 pli-2 order-2'
           onClick={onAuthenticate}
-          data-autofocus-pinlength
+          data-autofocus-pinlength={invitationType}
         >
           <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
           <span className='grow'>{t('next label')}</span>
@@ -106,7 +106,7 @@ const InvitationAuthenticatorContent = ({
     (value: string) => {
       setPinValue(value);
       if (value.length === pinLength) {
-        (document.querySelector('[data-autofocus-pinlength]') as HTMLElement | null)?.focus();
+        (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();
       }
     },
     [authenticate, pinValue]

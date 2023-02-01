@@ -35,7 +35,9 @@ export const Default = {
 
       const onInvitationEvent = useCallback((invitation: Invitation) => {
         if (!invitationCode) {
-          setInvitationCode(InvitationEncoder.encode(invitation));
+          const nextInvitationCode = InvitationEncoder.encode(invitation);
+          log.info('[next invitation code]', { nextInvitationCode });
+          setInvitationCode(nextInvitationCode);
         }
       }, []);
 
@@ -74,7 +76,7 @@ export const Default = {
 
       return (
         <ClientProvider client={clients[1]} fallback={() => <Loading label='Loading client…' />}>
-          <Story args={{ initialInvitationCode: invitationCode }} />
+          <Story args={{}} />
         </ClientProvider>
       );
     }
