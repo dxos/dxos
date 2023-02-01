@@ -8,7 +8,7 @@ import { Box, FormControlLabel, Switch, TextField } from '@mui/material';
 
 import { useDevtools } from '@dxos/react-client';
 
-export const LoggingPanel = () => {
+const LoggingPanel = () => {
   const devtoolsHost = useDevtools();
   const [enabled, setEnabled] = useState(false);
   const [namespaces, setNamespaces] = useState('');
@@ -82,3 +82,5 @@ export const LoggingPanel = () => {
     </Box>
   );
 };
+
+export default LoggingPanel;

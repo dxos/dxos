@@ -10,7 +10,7 @@ import { useClientServices } from '@dxos/react-client';
 
 import { JsonView } from '../../components';
 
-export const ConfigPanel = () => {
+const ConfigPanel = () => {
   const services = useClientServices();
   if (!services) {
     return null;
@@ -23,3 +23,5 @@ export const ConfigPanel = () => {
 
   return <JsonView data={config} />;
 };
+
+export default ConfigPanel;

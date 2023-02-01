@@ -8,7 +8,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { useDevtools } from '@dxos/react-client';
 
-export const StoragePanel = () => {
+const StoragePanel = () => {
   const devtoolsHost = useDevtools();
   const handleReset = async () => {
     if (window.confirm('RESET ALL DATA (CANNOT BE UNDONE)?')) {
@@ -26,3 +26,5 @@ export const StoragePanel = () => {
     </Box>
   );
 };
+
+export default StoragePanel;
