@@ -1,0 +1,25 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.tasks;
+
+message TaskList {
+  option (object) = true;
+
+  optional string title = 1;
+  optional string description = 2;
+  repeated Task tasks = 3;
+}
+
+message Task {
+  option (object) = true;
+
+  string title = 1;
+  optional string description = 2;
+  optional bool completed = 3;
+  /// RFC-3339 datetime string.
+  optional string due = 4;
+}

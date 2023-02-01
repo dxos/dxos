@@ -516,6 +516,8 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -542,6 +544,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/protocols': link:../../../core/protocols
@@ -555,6 +558,7 @@ importers:
       lodash.throttle: 4.1.1
       url-join: 5.0.0
     devDependencies:
+      '@dxos/echo-typegen': link:../../../core/echo/echo-typegen
       '@dxos/react-client-testing': link:../../../experimental/react-client-testing
       '@types/lodash.throttle': 4.1.7
       '@types/react': 18.0.21
