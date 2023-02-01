@@ -3,8 +3,9 @@
 //
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
+import { Menubar, SpacesLink } from '@dxos/react-appkit';
 import { useSpace } from '@dxos/react-client';
 
 import { TaskList } from '../containers/TaskList';
@@ -12,5 +13,13 @@ import { TaskList } from '../containers/TaskList';
 export const SpacePage = () => {
   const { spaceId } = useParams();
   const space = useSpace(spaceId);
-  return space ? <TaskList space={space} /> : null;
+  const navigate = useNavigate();
+  return (
+    <>
+      <Menubar>
+        <SpacesLink onClickGoToSpaces={() => navigate('..')} />
+      </Menubar>
+      <div className='mt-14'>{space ? <TaskList space={space} /> : null}</div>
+    </>
+  );
 };

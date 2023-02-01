@@ -11,6 +11,7 @@ import { Button, getSize, Loading } from '@dxos/react-components';
 import { CheckboxItem } from './CheckboxItem';
 import { Input } from './Input';
 import { List } from './List';
+import { withReactor } from '@dxos/react-client';
 
 export type TaskListProps<T extends Task = Task> = {
   title: string;
@@ -54,7 +55,8 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
   const tasksRefs = useRef<HTMLInputElement[]>([]);
   useEffect(() => {
     tasksRefs.current = tasksRefs.current.slice(0, props.tasks.length);
-  }, [tasks]);
+    console.log('sliced', tasksRefs.current.length, props.tasks.length, tasksRefs, props.tasks);
+  }, [tasks, tasks.length]);
   return (
     <div role='none' className='my-5 py-2 px-6 bg-white dark:bg-neutral-700/50 rounded shadow'>
       <div>
@@ -101,15 +103,7 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
               },
               onInputKeyUp: (e) => {
                 const caret = (e.target as HTMLInputElement).selectionStart ?? 0;
-                if (e.key === 'Enter' || e.key === 'ArrowDown') {
-                  const el = tasksRefs.current[i + 1];
-                  if (el) {
-                    el?.focus();
-                    setCaretPosition(el, caret ?? 0);
-                  } else if (i + 1 >= tasksRefs.current.length) {
-                    onTaskCreate?.();
-                  }
-                } else if (e.key === 'ArrowUp') {
+                const goUp = () => {
                   const el = tasksRefs.current[i - 1];
                   if (el) {
                     el?.focus();
@@ -117,6 +111,26 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
                   } else if (i - 1 < 0) {
                     titleRef.current?.focus();
                     setCaretPosition(titleRef.current, caret);
+                  }
+                };
+                const goDown = () => {
+                  const el = tasksRefs.current[i + 1];
+                  console.log(el, i, tasksRefs.current.length);
+                  if (el) {
+                    el?.focus();
+                    setCaretPosition(el, caret ?? 0);
+                  } else if (i + 1 >= tasksRefs.current.length) {
+                    onTaskCreate?.();
+                  }
+                };
+                if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                  goDown();
+                } else if (e.key === 'ArrowUp') {
+                  goUp();
+                } else if (e.key === 'Backspace') {
+                  if (!task.title) {
+                    onTaskDeleted?.(task);
+                    goUp();
                   }
                 }
               }
