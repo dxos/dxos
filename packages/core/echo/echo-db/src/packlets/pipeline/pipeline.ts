@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { sleep } from '@dxos/async';
+import { sleep, Trigger } from '@dxos/async';
 import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -167,6 +167,9 @@ export class Pipeline implements PipelineAccessor {
   // External state accessor.
   private readonly _state: PipelineState = new PipelineState(this._feedSetIterator, this._timeframeClock);
 
+  // Waits for the message consumer to process the message and yield control back to the pipeline.
+  private readonly _processingTrigger = new Trigger().wake();
+
   // Outbound feed writer.
   private _writer: FeedWriter<FeedMessage.Payload> | undefined;
 
@@ -220,6 +223,7 @@ export class Pipeline implements PipelineAccessor {
   async stop() {
     log('stopping...', {});
     await this._feedSetIterator.close();
+    await this._processingTrigger.wait(); // Wait for the in-flight message to be processed.
     log('stopped');
   }
 
@@ -232,7 +236,9 @@ export class Pipeline implements PipelineAccessor {
     this._isOpen = true;
 
     for await (const block of this._feedSetIterator) {
+      this._processingTrigger.reset()
       yield block;
+      this._processingTrigger.wake();
 
       this._timeframeClock.updateTimeframe(PublicKey.from(block.feedKey), block.seq);
     }

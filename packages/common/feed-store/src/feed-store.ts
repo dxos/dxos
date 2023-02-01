@@ -54,7 +54,7 @@ export class FeedStore<T extends {}> {
   async openFeed(feedKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper<T>> {
     log('opening feed', { feedKey });
     assert(feedKey);
-    assert(!this._closed);
+    assert(!this._closed, 'Feed store is closed');
 
     let feed = this.getFeed(feedKey);
     if (feed) {
