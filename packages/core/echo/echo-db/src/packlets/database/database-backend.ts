@@ -91,6 +91,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
  * Uses DataMirror to populate entities in ItemManager.
  */
 export class DatabaseBackendProxy implements DatabaseBackend {
+  private _dataMirror?: DataMirror;
   private readonly _subscriptions = new EventSubscriptions();
   private _itemManager!: ItemManager;
 
@@ -107,7 +108,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
 
-    const dataMirror = new DataMirror(this._itemManager, this._service, this._spaceKey);
+    this._dataMirror = new DataMirror(this._itemManager, this._service, this._spaceKey);
 
     this._subscriptions.add(
       modelFactory.registered.on(async (model) => {
@@ -119,11 +120,12 @@ export class DatabaseBackendProxy implements DatabaseBackend {
       })
     );
 
-    await dataMirror.open();
+    await this._dataMirror.open();
   }
 
   async close(): Promise<void> {
     this._subscriptions.clear();
+    await this._dataMirror?.close();
   }
 
   getWriteStream(): FeedWriter<DataMessage> | undefined {

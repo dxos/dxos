@@ -2,19 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { Model } from '@dxos/model-factory';
+import { log } from '@dxos/log';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
-import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { DataService, SubscribeResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
-
-const log = debug('dxos:echo-db:data-mirror');
 
 // TODO(dmaretskyi): Subscription cleanup.
 
@@ -26,6 +24,8 @@ const log = debug('dxos:echo-db:data-mirror');
  * This class is analogous to ItemDemuxer but for databases running in remote mode.
  */
 export class DataMirror {
+  private _entities?: Stream<SubscribeResponse>;
+
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _dataService: DataService,
@@ -35,28 +35,48 @@ export class DataMirror {
   async open() {
     const loaded = new Trigger();
 
-    const entities = this._dataService.subscribeEntitySet({
+    this._entities = this._dataService.subscribe({
       spaceKey: this._spaceKey
     });
-    entities.subscribe(
-      async (diff) => {
-        loaded.wake();
-        for (const addedEntity of diff.added ?? []) {
-          log(`Construct: ${JSON.stringify(addedEntity)}`);
-          assert(addedEntity.itemId);
-          assert(addedEntity.genesis);
-          assert(addedEntity.genesis.modelType);
+    this._entities.subscribe(
+      async (msg) => {
+        for (const object of msg.objects ?? []) {
+          assert(object.itemId);
 
-          const entity = await this._itemManager.constructItem({
-            itemId: addedEntity.itemId,
-            itemType: addedEntity.genesis.itemType,
-            modelType: addedEntity.genesis.modelType,
-            parentId: addedEntity.itemMutation?.parentId,
-            snapshot: { itemId: addedEntity.itemId }
-          });
+          let entity: Entity<any> | undefined;
+          if (object.genesis) {
+            log('Construct', { object });
+            assert(object.genesis.modelType);
+            entity = await this._itemManager.constructItem({
+              itemId: object.itemId,
+              itemType: object.genesis.itemType,
+              modelType: object.genesis.modelType,
+              parentId: object.itemMutation?.parentId,
+              snapshot: { itemId: object.itemId } // TODO(dmaretskyi): Fix.
+            });
+          } else {
+            entity = this._itemManager.entities.get(object.itemId);
+          }
+          if (!entity) {
+            log.warn('Entity not found', { itemId: object.itemId });
+            return;
+          }
 
-          this._subscribeToUpdates(entity);
+          if (object.snapshot) {
+            log('reset to snapshot', { object });
+            entity._stateManager.resetToSnapshot(object);
+          } else if (object.mutations) {
+            for (const mutation of object.mutations) {
+              log('mutate', { id: object.itemId, mutation });
+              assert(mutation.meta);
+              assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+              await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
+            }
+          }
         }
+
+        // Notify that initial set of items has been loaded.
+        loaded.wake();
       },
       (err) => {
         log(`Connection closed: ${err}`);
@@ -67,27 +87,7 @@ export class DataMirror {
     await loaded.wait();
   }
 
-  private _subscribeToUpdates(entity: Entity<Model<any>>) {
-    const stream = this._dataService.subscribeEntityStream({
-      spaceKey: this._spaceKey,
-      itemId: entity.id
-    });
-    stream.subscribe(
-      async (update) => {
-        log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
-        if (update.object.snapshot) {
-          entity._stateManager.resetToSnapshot(update.object);
-        } else if (update.object.mutations) {
-          for (const mutation of update.object.mutations) {
-            assert(mutation.meta);
-            assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-            await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
-          }
-        }
-      },
-      (err) => {
-        log(`Connection closed: ${err}`);
-      }
-    );
+  async close() {
+    this._entities?.close();
   }
 }

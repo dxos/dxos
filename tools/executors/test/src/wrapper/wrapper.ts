@@ -18,7 +18,7 @@ class TestBuilder {
     exclude?: TestEnvironment[];
   } = {};
 
-  constructor(public readonly name: string, public readonly body: Func | AsyncFunc) {}
+  constructor(public readonly body: Func | AsyncFunc) {}
 
   get info() {
     return {
@@ -59,6 +59,11 @@ interface TestFunction {
   (name: string, body: Func | AsyncFunc): Test;
   only: TestFunction;
   skip: TestFunction;
+
+  /**
+   * Run test multiple times. Useful for debugging flaky tests.
+   */
+  repeat(count: number): TestFunction;
 }
 
 interface Test {
@@ -70,37 +75,56 @@ interface Test {
   skipEnvironments(...environments: string[]): Test;
 }
 
-const testBase = (mochaFn: NaturalTestFunction) => (name: string, body: Func | AsyncFunc) => {
-  const builder = new TestBuilder(name, body);
-
-  (mochaFn as NaturalTestFunction)(builder.name, async function (...args) {
-    const { timeout, retries, tags, environments } = builder.info;
-
-    if (timeout) {
-      this.timeout(timeout);
-    }
-
-    if (retries) {
-      this.retries(retries);
-    }
-
-    const skip =
-      tags.filter((tag) => mochaExecutor.tags.includes(tag)).length === 0 ||
-      (environments.include && !environments.include.includes(mochaExecutor.environment)) ||
-      (environments.exclude && environments.exclude.includes(mochaExecutor.environment));
-    if (skip) {
-      this.skip();
-    }
-
-    await builder.body.bind(this)(...args);
-  });
-
-  return builder;
+type TestParams = {
+  repeat?: number;
 };
+
+const testBase =
+  (mochaFn: NaturalTestFunction, params: TestParams = {}) =>
+  (name: string, body: Func | AsyncFunc) => {
+    const builder = new TestBuilder(body);
+
+    if (params.repeat) {
+      describe(`${name} [${params.repeat} times]`, () => {
+        for (let i = 0; i < params.repeat!; i += 1) {
+          defineTest(`${name} [${i + 1}/${params.repeat}]`);
+        }
+      });
+    } else {
+      defineTest(name);
+    }
+
+    function defineTest(name: string) {
+      (mochaFn as NaturalTestFunction)(name, async function (...args) {
+        const { timeout, retries, tags, environments } = builder.info;
+
+        if (timeout) {
+          this.timeout(timeout);
+        }
+
+        if (retries) {
+          this.retries(retries);
+        }
+
+        const skip =
+          tags.filter((tag) => mochaExecutor.tags.includes(tag)).length === 0 ||
+          (environments.include && !environments.include.includes(mochaExecutor.environment)) ||
+          (environments.exclude && environments.exclude.includes(mochaExecutor.environment));
+        if (skip) {
+          this.skip();
+        }
+
+        await builder.body.bind(this)(...args);
+      });
+    }
+
+    return builder;
+  };
 
 const testWrapper = testBase(mocha.it) as any;
 testWrapper.only = testBase(mocha.it.only);
 testWrapper.skip = testBase(mocha.it.skip);
+testWrapper.repeat = (count: number) => testBase(mocha.it.only, { repeat: count });
 
 export const test: TestFunction = testWrapper;
 export const describe: SuiteFunction = mocha.describe;

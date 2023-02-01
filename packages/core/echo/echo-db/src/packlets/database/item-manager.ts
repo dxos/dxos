@@ -134,17 +134,17 @@ export class ItemManager {
           modelType
         },
         itemMutation: parentId ? { parentId } : undefined,
-        mutations: [
-          {
-            mutation: !mutation
-              ? undefined
-              : {
+        mutations: !mutation
+          ? []
+          : [
+              {
+                mutation: {
                   '@type': 'google.protobuf.Any',
                   type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
                   value: mutation
                 }
-          }
-        ]
+              }
+            ]
       }
     });
 
