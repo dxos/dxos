@@ -45,6 +45,13 @@ export default defineConfig({
       include: [/packages/, /node_modules/]
     },
     rollupOptions: {
+<<<<<<< HEAD
+=======
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        testbench: resolve(__dirname, 'testbench.html')
+      },
+>>>>>>> 2ca1b2e5e (Revert testbench)
       output: {
         manualChunks: {
           faker: ['faker'],
