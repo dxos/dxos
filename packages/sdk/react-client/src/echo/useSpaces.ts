@@ -26,7 +26,7 @@ export const useSpace = (spaceKey?: PublicKeyLike) => {
  */
 export const useSpaces = () => {
   const client = useClient();
-  const result = useMemo(() => client.echo.querySpaces(), []);
+  const result = useMemo(() => client.echo.querySpaces(), [client]);
   const spaces: Space[] = useSyncExternalStore(
     (listener) => result.subscribe(listener),
     () => result.value

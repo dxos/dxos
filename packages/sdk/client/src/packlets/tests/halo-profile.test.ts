@@ -22,7 +22,7 @@ describe('Halo', () => {
     await client.halo.createProfile({ displayName: 'test-user' });
     expect(client.halo.profile).exist;
 
-    expect(await client.halo.queryDevices()).to.have.lengthOf(1);
+    expect(await client.halo.queryDevices().value).to.have.lengthOf(1);
     expect(client.halo.profile?.displayName).to.equal('test-user');
   });
 

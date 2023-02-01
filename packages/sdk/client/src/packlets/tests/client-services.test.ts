@@ -12,6 +12,7 @@ import { ISpace } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
@@ -166,11 +167,30 @@ describe('Client services', () => {
     expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
 
     // Check devices.
-    // TODO(wittjosiah): Update.
-    // await waitForExpect(async () => {
-    //   expect((await client1.halo.queryDevices()).length).to.eq(2);
-    //   expect((await client2.halo.queryDevices()).length).to.eq(2);
-    // });
+    // TODO(burdon): Incorrect number of devices.
+    await waitForExpect(async () => {
+      const devices1 = new Trigger<DeviceInfo[]>();
+      const devices2 = new Trigger<DeviceInfo[]>();
+
+      {
+        client1.halo.queryDevices().subscribe({
+          onUpdate: (devices) => {
+            devices1.wake(devices);
+          },
+          onError: (err: Error) => raise(new Error(err.message))
+        });
+
+        client2.halo.queryDevices().subscribe({
+          onUpdate: (devices) => {
+            devices2.wake(devices);
+          },
+          onError: (err: Error) => raise(new Error(err.message))
+        });
+      }
+
+      expect(await devices1.wait()).to.have.lengthOf(2);
+      expect(await devices2.wait()).to.have.lengthOf(2);
+    });
   });
 
   test('synchronizes data between two spaces after completing invitation', async () => {
