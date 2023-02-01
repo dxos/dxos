@@ -4,6 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { TypedMessage } from '@dxos/protocols';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexSet } from '@dxos/util';
 
@@ -19,6 +20,7 @@ export interface SpaceState {
   readonly genesisCredential: Credential | undefined;
 
   registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T>;
+  getCredentialsOfType(type: TypedMessage['@type']): Credential[];
 }
 
 /**
@@ -84,6 +86,10 @@ export class SpaceStateMachine implements SpaceState {
     return processor;
   }
 
+  getCredentialsOfType(type: TypedMessage['@type']): Credential[] {
+    return this._credentials.filter((credential) => getCredentialAssertion(credential)['@type'] === type);
+  }
+
   /**
    * @param fromFeed Key of the feed where this credential is recorded.
    */
@@ -127,7 +133,7 @@ export class SpaceStateMachine implements SpaceState {
 
       case 'dxos.halo.credentials.SpaceMember': {
         if(!assertion.spaceKey.equals(this._spaceKey)) { 
-          return true; // Ignore credentials for other spaces.
+          break; // Ignore credentials for other spaces.
         }
 
         if (!this._genesisCredential) {

@@ -7,7 +7,6 @@ import assert from 'node:assert';
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
@@ -22,7 +21,7 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { IdentityManager } from '../identity';
+import { Identity, JoinIdentityParams } from '../identity';
 import {
   AuthenticatingInvitationProvider,
   AUTHENTICATION_CODE_LENGTH,
@@ -32,6 +31,15 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
+import { Keyring } from '@dxos/keyring';
+
+type HaloInvitationsHandlerParams = {
+  networkManager: NetworkManager;
+  keyring: Keyring;
+
+  getIdentity: () => Identity
+  acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>
+}
 
 /**
  * Handles the life-cycle of Halo invitations between peers.
@@ -40,10 +48,9 @@ import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-ha
 export class HaloInvitationsHandler extends AbstractInvitationsHandler {
   // prettier-ignore
   constructor(
-    networkManager: NetworkManager,
-    private readonly _identityManager: IdentityManager
+    private readonly _params: HaloInvitationsHandlerParams,
   ) {
-    super(networkManager);
+    super(_params.networkManager);
   }
 
   /**
@@ -52,7 +59,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
   createInvitation(context: void, options?: InvitationsOptions): CancellableInvitationObservable {
     const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
-    const identity = this._identityManager.identity ?? failUndefined();
+    const identity = this._params.getIdentity();
 
     // TODO(dmaretskyi): Add invitation kind: halo/space.
     const invitation: Invitation = {
@@ -224,17 +231,29 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
                 await extension.rpc.HaloHostService.authenticate({ authenticationCode });
               }
 
-              // 3. Create local identity.
-              // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
-              const identity = await this._identityManager.acceptIdentity({
-                identityKey,
-                haloSpaceKey,
-                haloGenesisFeedKey: genesisFeedKey
+              const deviceKey = await this._params.keyring.createKey();
+              const controlFeedKey = await this._params.keyring.createKey();
+              const dataFeedKey = await this._params.keyring.createKey();
+
+
+              // 3. Send admission credentials to host (with local identity keys).
+              log('presenting admission credentials', { identityKey, deviceKey, controlFeedKey, dataFeedKey });
+              await extension.rpc.HaloHostService.presentAdmissionCredentials({
+                deviceKey,
+                controlFeedKey,
+                dataFeedKey,
               });
 
-              // 4. Send admission credentials to host (with local identity keys).
-              log('presenting admission credentials', { guest: identity.deviceKey, identityKey });
-              await extension.rpc.HaloHostService.presentAdmissionCredentials(identity.getAdmissionCredentials());
+              // 4. Create local identity.
+              // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
+              const identity = await this._params.acceptIdentity({
+                identityKey,
+                deviceKey,
+                haloSpaceKey,
+                haloGenesisFeedKey: genesisFeedKey,
+                controlFeedKey,
+                dataFeedKey
+              });
 
               // 5. Success.
               log('admitted by host', { guest: identity.deviceKey, identityKey });

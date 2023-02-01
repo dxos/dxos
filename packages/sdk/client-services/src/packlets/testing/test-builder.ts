@@ -162,6 +162,7 @@ export const createSigningContext = async (keyring: Keyring): Promise<SigningCon
         credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey)
       },
       deviceKey
-    )
+    ),
+    recordCredential: async () => {} // No-op.
   };
 };

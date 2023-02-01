@@ -172,7 +172,7 @@ describe('services/space-invitations-handler', () => {
 
     const invitation1 = await connecting1.wait();
     const invitation2 = await connecting2.wait();
-    expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
+    expect(invitation1.swarmKey).to.eq(invitation2.swarmKey); // TODO(burdon): Normalize to use to.deep.eq.
 
     // TODO(burdon): Simulate network latency.
     setTimeout(async () => {

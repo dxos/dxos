@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { getCredentialAssertion } from '@dxos/credentials';
+import { CredentialConsumer, CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
   valueEncoding,
@@ -23,7 +23,7 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 import assert from 'node:assert';
 
-import { CreateIdentityOptions, IdentityManager } from '../identity';
+import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
 import { DataSpaceManager } from '../spaces/data-space-manager';
 
@@ -42,6 +42,7 @@ export class ServiceContext {
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly haloInvitations: HaloInvitationsHandler;
+  private _deviceSpaceSync?: CredentialConsumer<any>;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -80,7 +81,12 @@ export class ServiceContext {
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this.haloInvitations = new HaloInvitationsHandler(this.networkManager, this.identityManager);
+    this.haloInvitations = new HaloInvitationsHandler({
+      networkManager: this.networkManager,
+      getIdentity: () => this.identityManager.identity ?? failUndefined(),
+      acceptIdentity: this._acceptIdentity.bind(this),
+      keyring: this.keyring
+    });
   }
 
   async open() {
@@ -96,6 +102,7 @@ export class ServiceContext {
 
   async close() {
     log('closing...');
+    await this._deviceSpaceSync?.close();
     await this.dataSpaceManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
@@ -119,6 +126,13 @@ export class ServiceContext {
     return identity;
   }
 
+  private async _acceptIdentity(params: JoinIdentityParams) {
+    const identity = await this.identityManager.acceptIdentity(params)
+    
+    await this._initialize();
+    return identity;
+  }
+
   // Called when identity is created.
   private async _initialize() {
     log('initializing spaces...');
@@ -127,7 +141,10 @@ export class ServiceContext {
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,
-      profile: identity.profileDocument
+      profile: identity.profileDocument,
+      recordCredential: async credential => {
+        await identity.controlPipeline.writer.write({ credential: { credential }})
+      }
     };
 
     this.dataSpaceManager = new DataSpaceManager(
@@ -146,15 +163,38 @@ export class ServiceContext {
       this.dataSpaceManager,
       signingContext,
       this.keyring,
-      this._onSpaceAdmission.bind(this)
     );
     this.initialized.wake();
-  }
 
-  private async _onSpaceAdmission(credential: Credential) {
-    assert(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    this._deviceSpaceSync = identity.space.spaceState.registerProcessor({
+      process: async (credential: Credential) => {
+        const assertion = getCredentialAssertion(credential);
+        if(assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
+          return;
+        }
+        if(assertion.spaceKey.equals(identity.space.key)) { // ignore halo space
+          return;
+        }
+        if(!this.dataSpaceManager) {
+          log('dataSpaceManager not initialized yet, ignoring space admission', { details: assertion })
+          return;
+        }
+        if(this.dataSpaceManager.spaces.has(assertion.spaceKey)) {
+          log('space already exists, ignoring space admission', { details: assertion })
+          return;
+        }
 
-    const identity = this.identityManager.identity ?? failUndefined();
-    await identity.controlPipeline.writer.write({ credential: { credential } })
+        try {
+          log('accepting space recorded in halo', { details: assertion })
+          await this.dataSpaceManager.acceptSpace({
+            spaceKey: assertion.spaceKey,
+            genesisFeedKey: assertion.genesisFeedKey,
+          })
+        } catch(err) {
+          log.catch(err)
+        }
+      }
+    })
+    await this._deviceSpaceSync.open();
   }
 }

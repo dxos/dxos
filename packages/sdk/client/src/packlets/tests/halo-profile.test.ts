@@ -25,7 +25,7 @@ describe('Halo', () => {
     expect(client.halo.profile?.displayName).to.equal('test-user');
   });
 
-  test.skip('device invitations', async () => {
+  test.only('device invitations', async () => {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createClientServicesHost() });

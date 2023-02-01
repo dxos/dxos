@@ -51,7 +51,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
     private readonly _spaceManager: DataSpaceManager,
     private readonly _signingContext: SigningContext,
     private readonly _keyring: Keyring,
-    private readonly _onAdmission: (credential: Credential) => Promise<void>
   ) {
     super(networkManager);
   }
@@ -294,9 +293,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
                 dataFeedKey
               });
 
-              // Record credential in our HALO.
-              await this._onAdmission(credential);
-
               // 4. Create local space.
               const assertion = getCredentialAssertion(credential);
               assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
@@ -306,6 +302,9 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
                 spaceKey: assertion.spaceKey,
                 genesisFeedKey: assertion.genesisFeedKey
               });
+
+              // Record credential in our HALO.
+              await this._signingContext.recordCredential(credential);
 
               // 5. Success.
               log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });

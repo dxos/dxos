@@ -52,7 +52,7 @@ export class DataSpaceManager {
     private readonly _signingContext: SigningContext,
     private readonly _modelFactory: ModelFactory,
     private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _snapshotStore: SnapshotStore
+    private readonly _snapshotStore: SnapshotStore,
   ) {}
 
   // TODO(burdon): Remove.
@@ -108,6 +108,11 @@ export class DataSpaceManager {
 
     await spaceGenesis(this._keyring, this._signingContext, space.inner);
     await this._metadataStore.addSpace(metadata);
+
+    const memberCredentials = space.inner.spaceState.getCredentialsOfType('dxos.halo.credentials.SpaceMember');
+    assert(memberCredentials.length === 1);
+    await this._signingContext.recordCredential(memberCredentials[0]);
+
     await space.initializeDataPipeline();
     this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
 
