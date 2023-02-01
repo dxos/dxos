@@ -4,14 +4,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y software
     psmisc git wget curl gnupg \
     apt-utils build-essential \
     autoconf libtool build-essential cmake
-
-# RUN curl -sSL https://get.docker.com/ | sh
 RUN apt-get install -y libxtst-dev libpng++-dev npm coreutils jq
-
 RUN npm i -g n pnpm@7.17.0
-
 RUN mkdir -p /usr/local/n
-
 ARG NODE_VER
 ENV NODE_VER=${NODE_VER:-18.12.1}
 RUN n i ${NODE_VER}
@@ -24,6 +19,7 @@ RUN pnpm -w run build
 RUN mkdir -p /tmp/gravity-results
 WORKDIR /dxos/dxos/packages/gravity/gravity-agent
 COPY ./*.yml ./config/
+COPY ./log-config.yml .
 COPY ./run_agent.sh ./
 RUN chmod a+x ./run_agent.sh
 WORKDIR /opt

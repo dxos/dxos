@@ -53,11 +53,12 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
     // console.log(JSON.stringify(options, undefined, 2));
   }
 
-  const processorsArr: LogProcessor[] = []
+  const processorsArr: LogProcessor[] = [];
   const defaultProcessor = IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
-  processorsArr.push(options.processor ? processors[options.processor] : defaultProcessor)
+  processorsArr.push(options.processor ? processors[options.processor] : defaultProcessor);
 
-  if (typeof window === 'undefined') { // Running in Node.
+  if (typeof window === 'undefined') {
+    // Running in Node.
     processorsArr.push(FILE_PROCESSOR);
   }
 

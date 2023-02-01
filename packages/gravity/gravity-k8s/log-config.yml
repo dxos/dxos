@@ -1,0 +1,9 @@
+formatter:
+  column: 60
+
+processor: file
+
+filter:
+  - warn
+  - debug
+  - log:info
