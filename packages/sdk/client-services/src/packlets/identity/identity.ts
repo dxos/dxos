@@ -102,7 +102,7 @@ export class Identity {
   async ready() {
     await this._deviceStateMachine.processor.deviceChainReady.wait();
 
-    // TODO(dmaretskyi): Should we also wait for our feeds to be admitted?
+    await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: 3_000 });
   }
 
   get profileDocument(): ProfileDocument | undefined {

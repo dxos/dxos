@@ -1,33 +1,52 @@
+import { log } from "@dxos/log";
 import { MemorySignalManagerContext } from "@dxos/messaging";
 import { describe, test } from "@dxos/test";
-import { createServiceContext } from "../testing";
+import { createServiceContext, syncItems } from "../testing";
+import { performInvitation } from "../testing/invitaiton-utils";
 
 describe('services/ServiceContext', () => {
-  // test('device invitations', async () => {
-  //   const networkContext = new MemorySignalManagerContext();
-  //   const device1 = createServiceContext({ signalContext: networkContext });
-  //   await device1.createIdentity();
+  test('existing space is synchronized on device invitations', async () => {
+    const networkContext = new MemorySignalManagerContext();
+    const device1 = createServiceContext({ signalContext: networkContext });
+    await device1.createIdentity();
+    const space1 = await device1.dataSpaceManager!.createSpace();
 
-  //   const device2 = createServiceContext({ signalContext: networkContext });
-  //   const invitation = device1.haloInvitations.createInvitation()
-  //   invitation.subscribe({
-  //   })
-  //   device1.haloInvitations.acceptInvitation(invitation.invitation)
+    const device2 = createServiceContext({ signalContext: networkContext });
+    await performInvitation(device1.haloInvitations, device2.haloInvitations, undefined)
 
-  //   await device2.haloInvitations.acceptInvitation()
-  // })
+    const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
+    await syncItems(space1, space2!);
+  })
 
-  // test('second device synchronized created space', async () => {
-  //   const networkContext = new MemorySignalManagerContext();
-  //   const device1 = createServiceContext({ signalContext: networkContext });
-  //   await device1.createIdentity();
-  //   const space1 = await device1.dataSpaceManager!.createSpace();
+  test('new space is synchronized on device invitations', async () => {
+    const networkContext = new MemorySignalManagerContext();
+    const device1 = createServiceContext({ signalContext: networkContext });
+    await device1.createIdentity();
+    
+    const device2 = createServiceContext({ signalContext: networkContext });
+    await performInvitation(device1.haloInvitations, device2.haloInvitations, undefined)
 
-  //   const device2 = createServiceContext({ signalContext: networkContext });
+    const space1 = await device1.dataSpaceManager!.createSpace();
+    await device2.dataSpaceManager?.updated.waitForCondition(() => !!device2.dataSpaceManager!.spaces.get(space1.key));
+    const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
+    await syncItems(space1, space2!);
+  })
 
-  //   device1.haloInvitations.createInvitation()
+  test('joined space is synchronized on device invitations', async () => {
+    const networkContext = new MemorySignalManagerContext();
+    const device1 = createServiceContext({ signalContext: networkContext });
+    await device1.createIdentity();
+    
+    const device2 = createServiceContext({ signalContext: networkContext });
+    await performInvitation(device1.haloInvitations, device2.haloInvitations, undefined)
 
-  //   await device2.haloInvitations.acceptInvitation()
+    const identity2 = createServiceContext({ signalContext: networkContext });
+    await identity2.createIdentity()
+    const space1 = await identity2.dataSpaceManager!.createSpace();
+    await performInvitation(identity2.spaceInvitations!, device1.spaceInvitations!, space1)
 
-  // })
+    await device2.dataSpaceManager?.updated.waitForCondition(() => !!device2.dataSpaceManager!.spaces.get(space1.key));
+    const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
+    await syncItems(space1, space2!);
+  })
 })
