@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AuthenticationRequest,
@@ -137,13 +138,10 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
             log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
             // TODO(burdon): Check if already admitted.
-            const credentials = await createAdmissionCredentials(
+            const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
               this._signingContext.credentialSigner,
               identityKey,
-              deviceKey,
               space.key,
-              controlFeedKey,
-              dataFeedKey,
               space.inner.genesisFeedKey,
               guestProfile
             );
@@ -304,9 +302,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
               const space = await this._spaceManager.acceptSpace({
                 spaceKey: assertion.spaceKey,
-                genesisFeedKey: assertion.genesisFeedKey,
-                controlFeedKey,
-                dataFeedKey
+                genesisFeedKey: assertion.genesisFeedKey
               });
 
               // 5. Success.

@@ -3,6 +3,7 @@
 //
 
 import { CredentialGenerator } from '@dxos/credentials';
+import { failUndefined } from '@dxos/debug';
 import { Keyring } from '@dxos/keyring';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -15,8 +16,16 @@ export const spaceGenesis = async (keyring: Keyring, signingContext: SigningCont
     const generator = new CredentialGenerator(keyring, signingContext.identityKey, signingContext.deviceKey);
 
     const credentials = [
-      ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey, signingContext.profile)),
-      await generator.createFeedAdmission(space.key, space.dataFeedKey, AdmittedFeed.Designation.DATA)
+      ...(await generator.createSpaceGenesis(
+        space.key,
+        space.controlFeedKey ?? failUndefined(),
+        signingContext.profile
+      )),
+      await generator.createFeedAdmission(
+        space.key,
+        space.dataFeedKey ?? failUndefined(),
+        AdmittedFeed.Designation.DATA
+      )
     ];
 
     for (const credential of credentials) {

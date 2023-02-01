@@ -62,7 +62,7 @@ const getHierarchicalItem = (item: Item<any>): FolderHierarchyItem => ({
   value: item
 });
 
-export const ItemsPanel = () => {
+const ItemsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
@@ -101,3 +101,5 @@ export const ItemsPanel = () => {
     </div>
   );
 };
+
+export default ItemsPanel;

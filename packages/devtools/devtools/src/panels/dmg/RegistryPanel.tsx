@@ -13,7 +13,7 @@ import { CID, RegistryRecord, ResourceSet } from '@dxos/registry-client';
 import { Panel } from '../../components';
 
 // TODO(wittjosiah): Add table results similar to console.
-export const RegistryPanel = () => {
+const RegistryPanel = () => {
   const registry = useRegistry();
   const model = useRegistrySearchModel(registry);
   const [selectedCID, setSelectedCID] = useState<CID>();
@@ -38,3 +38,5 @@ export const RegistryPanel = () => {
     </Panel>
   );
 };
+
+export default RegistryPanel;

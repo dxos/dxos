@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { SignalMessages } from './SignalMessages';
-import { SignalStatusComp as SignalStatus } from './SignalStatus';
+import SignalMessages from './SignalMessages';
+import SignalStatusComp from './SignalStatus';
 
-export const SignalPanel = () => {
+const SignalPanel = () => {
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='flex flex-shrink-0 overflow-hidden'>
-        <SignalStatus />
+        <SignalStatusComp />
       </div>
       <div className='flex flex-1 overflow-hidden'>
         <SignalMessages />
@@ -19,3 +19,5 @@ export const SignalPanel = () => {
     </div>
   );
 };
+
+export default SignalPanel;
