@@ -3,4 +3,4 @@
 //
 
 export * from './test-builder';
-export * from './invitation-utils'
+export * from './invitation-utils';
