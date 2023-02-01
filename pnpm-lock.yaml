@@ -2411,6 +2411,7 @@ importers:
       tailwindcss: ^3.1.8
       typescript: ^4.8.4
       vite: 4.0.4
+      vite-plugin-fonts: ^0.7.0
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
@@ -2481,6 +2482,7 @@ importers:
       tailwindcss: 3.1.8_postcss@8.4.21
       typescript: 4.8.4
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite-plugin-fonts: 0.7.0_vite@4.0.4
       vite-plugin-pwa: 0.14.1_aln3rhi4rqbizqxdkcc2hwlswu
       workbox-window: 6.5.4
 
