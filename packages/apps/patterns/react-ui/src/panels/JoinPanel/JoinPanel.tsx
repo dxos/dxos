@@ -38,11 +38,6 @@ export const JoinPanel = ({
 
   const reducer = (state: JoinState, action: JoinAction) => {
     const nextState = { ...state };
-    // TODO: Why is `onAuthenticating` called twice?
-    if (action.type === 'authenticating invitation' && state.spaceViewState === 'invitation accepted') {
-      console.warn('onAuthenticate called after authentication promise was resolved');
-      return state;
-    }
     switch (action.type) {
       case 'added identity':
         nextState.activeView = 'identity added';
@@ -159,7 +154,7 @@ export const JoinPanel = ({
   }, [joinState.activeView, joinState.spaceViewState, joinState.haloViewState]);
 
   useEffect(() => {
-    joinState.spaceInvitation?.subscribe({
+    return joinState.spaceInvitation?.subscribe({
       onAuthenticating: () => dispatch({ type: 'authenticate invitation', from: 'space' }),
       onCancelled: () => dispatch({ type: 'cancelled invitation', from: 'space' }),
       onConnected: () => dispatch({ type: 'connect invitation', from: 'space' }),
@@ -170,7 +165,7 @@ export const JoinPanel = ({
   }, [joinState.spaceInvitation]);
 
   useEffect(() => {
-    joinState.haloInvitation?.subscribe({
+    return joinState.haloInvitation?.subscribe({
       onAuthenticating: () => dispatch({ type: 'authenticate invitation', from: 'halo' }),
       onCancelled: () => dispatch({ type: 'cancelled invitation', from: 'halo' }),
       onConnected: () => dispatch({ type: 'connect invitation', from: 'halo' }),
