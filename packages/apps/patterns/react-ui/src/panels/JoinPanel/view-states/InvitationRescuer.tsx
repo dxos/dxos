@@ -3,10 +3,10 @@
 //
 
 import { ArrowsClockwise, CaretLeft, CaretRight } from 'phosphor-react';
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import { AuthenticatingInvitationObservable, Invitation } from '@dxos/client';
-import { useClient, useInvitationStatus } from '@dxos/react-client';
+import { useInvitationStatus } from '@dxos/react-client';
 import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 
 import { ViewState, ViewStateProps } from './ViewState';
@@ -18,6 +18,7 @@ export interface InvitationConnectorProps extends ViewStateProps {
 const InvitationActions = ({
   activeInvitation,
   disabled,
+  dispatch,
   invitationType
 }: {
   activeInvitation: AuthenticatingInvitationObservable;
@@ -25,13 +26,8 @@ const InvitationActions = ({
   dispatch: ViewStateProps['dispatch'];
   invitationType: InvitationConnectorProps['invitationType'];
 }) => {
-  const client = useClient();
-  const { status, cancel, connect } = useInvitationStatus(activeInvitation);
+  const { status, cancel } = useInvitationStatus(activeInvitation);
   const { t } = useTranslation('os');
-
-  const connectInvitation = useCallback(() => {
-    connect(activeInvitation);
-  }, [client, activeInvitation, connect, invitationType]);
 
   switch (status) {
     case Invitation.State.CONNECTING:
@@ -44,7 +40,12 @@ const InvitationActions = ({
               <span className='grow'>{t('next label')}</span>
               <CaretRight weight='bold' className={getSize(4)} />
             </Button>
-            <Button disabled={disabled} className='flex items-center gap-2 pis-2 pie-4' onClick={cancel}>
+            <Button
+              disabled={disabled}
+              className='flex items-center gap-2 pis-2 pie-4'
+              onClick={cancel}
+              data-autofocus={`${invitationType} invitation acceptor; invitation rescuer`}
+            >
               <CaretLeft weight='bold' className={getSize(4)} />
               <span>{t('cancel label')}</span>
             </Button>
@@ -54,30 +55,23 @@ const InvitationActions = ({
     case Invitation.State.TIMEOUT:
     case Invitation.State.CANCELLED:
     case Invitation.State.ERROR:
+    default:
       return (
         <Button
           disabled={disabled}
           className='grow flex items-center gap-2 pli-2'
-          onClick={connectInvitation}
-          data-autofocus='space invitation acceptor; invitation connector'
+          onClick={() => dispatch({ type: 'reset invitation', from: invitationType })}
+          data-autofocus={`${invitationType} invitation acceptor; invitation rescuer`}
         >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
-          <span className='grow'>{t('reconnect label')}</span>
+          <span className='grow'>{t('reset label')}</span>
           <ArrowsClockwise weight='bold' className={getSize(5)} />
-        </Button>
-      );
-    default:
-      return (
-        <Button disabled={disabled} className='grow flex items-center gap-2 pli-2' onClick={connectInvitation}>
-          <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
-          <span className='grow'>{t('connect label')}</span>
-          <CaretRight weight='bold' className={getSize(5)} />
         </Button>
       );
   }
 };
 
-export const InvitationConnector = ({ invitationType, ...viewStateProps }: InvitationConnectorProps) => {
+export const InvitationRescuer = ({ invitationType, ...viewStateProps }: InvitationConnectorProps) => {
   const disabled = !viewStateProps.active;
   const { dispatch, activeInvitation } = viewStateProps;
   const { t } = useTranslation('os');
@@ -87,7 +81,7 @@ export const InvitationConnector = ({ invitationType, ...viewStateProps }: Invit
         <Button
           disabled={disabled}
           className='grow flex items-center gap-2 pli-2'
-          data-autofocus='space invitation acceptor; invitation connector'
+          data-autofocus='space invitation acceptor; invitation rescuer'
         >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
           <span className='grow'>{t('connect label')}</span>

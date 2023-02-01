@@ -17,7 +17,7 @@ import {
   IdentityInput,
   IdentityAdded,
   InvitationAuthenticator,
-  InvitationConnector,
+  InvitationRescuer,
   InvitationInput,
   InvitationAccepted
 } from './view-states';
@@ -52,7 +52,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
               InvitationEncoder.decode(state.unredeemedHaloInvitationCode)
             );
             nextState.unredeemedHaloInvitationCode = undefined;
-            nextState.haloViewState = 'invitation connector';
+            nextState.haloViewState = 'invitation authenticator';
           } else {
             nextState.haloViewState = 'invitation input';
           }
@@ -69,7 +69,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
             InvitationEncoder.decode(state.unredeemedSpaceInvitationCode)
           );
           nextState.unredeemedSpaceInvitationCode = undefined;
-          nextState.spaceViewState = 'invitation connector';
+          nextState.spaceViewState = 'invitation authenticator';
         } else {
           nextState.spaceViewState = 'invitation input';
         }
@@ -95,7 +95,7 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
       case 'cancelled invitation':
       case 'fail invitation':
       case 'timeout invitation':
-        nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation connector';
+        nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation rescuer';
         break;
       case 'connect invitation':
       case 'authenticate invitation':
@@ -110,6 +110,13 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
       case 'accepted invitation':
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation accepted';
         break;
+      case 'reset invitation':
+        nextState[action.from === 'halo' ? 'haloInvitation' : 'spaceInvitation'] = undefined;
+        nextState[action.from === 'halo' ? 'haloInvitationAnnotation' : 'spaceInvitationAnnotation'] = undefined;
+        nextState[action.from === 'halo' ? 'unredeemedHaloInvitationCode' : 'unredeemedSpaceInvitationCode'] =
+          undefined;
+        nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation input';
+        break;
     }
     log.info('[join panel reducer]', { action, nextState });
     return nextState;
@@ -123,8 +130,8 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
     activeView: availableIdentities.length > 0 ? 'identity selector' : 'addition method selector',
     selectedIdentity: undefined,
     additionMethod: undefined,
-    spaceViewState: 'invitation connector',
-    haloViewState: 'invitation connector'
+    spaceViewState: 'invitation input',
+    haloViewState: 'invitation input'
   });
 
   useEffect(() => {
@@ -213,13 +220,13 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
                     invitationType: 'halo'
                   }}
                 />
-                <InvitationConnector
+                <InvitationRescuer
                   {...{
                     dispatch,
                     activeInvitation: joinState.haloInvitation || true,
                     active:
                       joinState.activeView === 'halo invitation acceptor' &&
-                      joinState.haloViewState === 'invitation connector',
+                      joinState.haloViewState === 'invitation rescuer',
                     invitationType: 'halo'
                   }}
                 />
@@ -262,14 +269,14 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
                     invitationType: 'space'
                   }}
                 />
-                <InvitationConnector
+                <InvitationRescuer
                   {...{
                     dispatch,
                     activeInvitation: joinState.spaceInvitation || true,
                     selectedIdentity: joinState.selectedIdentity,
                     active:
                       joinState.activeView === 'space invitation acceptor' &&
-                      joinState.spaceViewState === 'invitation connector',
+                      joinState.spaceViewState === 'invitation rescuer',
                     invitationType: 'space'
                   }}
                 />

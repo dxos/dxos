@@ -8,5 +8,5 @@ export * from './IdentitySelector';
 export * from './IdentityInput';
 export * from './InvitationAccepted';
 export * from './InvitationInput';
-export * from './InvitationConnector';
+export * from './InvitationRescuer';
 export * from './InvitationAuthenticator';

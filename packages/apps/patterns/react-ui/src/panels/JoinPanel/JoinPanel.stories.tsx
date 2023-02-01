@@ -76,7 +76,7 @@ export const Default = {
 
       return (
         <ClientProvider client={clients[1]} fallback={() => <Loading label='Loading client…' />}>
-          <Story args={{}} />
+          <Story args={{ initialInvitationCode: invitationCode }} />
         </ClientProvider>
       );
     }

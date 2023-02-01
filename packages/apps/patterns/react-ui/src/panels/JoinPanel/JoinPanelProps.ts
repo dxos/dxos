@@ -36,7 +36,8 @@ export interface EmptyInvitationAction {
     | 'connect invitation'
     | 'fail invitation'
     | 'accepted invitation'
-    | 'timeout invitation';
+    | 'timeout invitation'
+    | 'reset invitation';
   from: 'space' | 'halo';
 }
 
@@ -59,7 +60,7 @@ export type JoinDispatch = Dispatch<JoinAction>;
 
 export type InvitationView =
   | 'invitation input'
-  | 'invitation connector'
+  | 'invitation rescuer'
   | 'invitation authenticator'
   | 'invitation accepted';
 
