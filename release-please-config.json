@@ -33,11 +33,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/noreact-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/patterns/assets/package.json",
           "jsonpath": "$.version"
         },
@@ -89,6 +84,11 @@
         {
           "type": "json",
           "path": "packages/apps/todomvc/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/vanilla-app/package.json",
           "jsonpath": "$.version"
         },
         {

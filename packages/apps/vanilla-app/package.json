@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/noreact-app",
+  "name": "@dxos/vanilla-app",
   "version": "0.1.23",
   "private": true,
-  "description": "noreact-app",
+  "description": "vanilla-app",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

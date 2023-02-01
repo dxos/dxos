@@ -1,11 +1,11 @@
 version: 1
 package:
   modules:
-    - name: noreact-app
+    - name: vanilla-app
       type: dxos:type/app
       build:
         command: npm run build
-        outdir: out/noreact-app
+        outdir: out/vanilla-app
 runtime:
   client:
     storage:

@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/apps/noreact-app/src",
+  "sourceRoot": "packages/apps/vanilla-app/src",
   "projectType": "application",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/noreact-app/**/*.{ts,js,tsx,jsx}"
+          "packages/apps/vanilla-app/**/*.{ts,js,tsx,jsx}"
         ]
       },
       "outputs": [

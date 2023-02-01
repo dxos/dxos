@@ -1,4 +1,4 @@
-# noreact-app
+# vanilla-app
 
 This app was created with the DXOS `bare` application template.
 

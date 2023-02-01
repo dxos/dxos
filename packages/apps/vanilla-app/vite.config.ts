@@ -25,7 +25,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "out/noreact-app",
+    outDir: "out/vanilla-app",
     commonjsOptions: {
       include: [/packages/, /node_modules/],
     },
