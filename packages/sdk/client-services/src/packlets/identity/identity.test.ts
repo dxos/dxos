@@ -61,7 +61,9 @@ describe('identity/identity', () => {
       protocol,
       genesisFeed: controlFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-    }).setControlFeed(controlFeed).setDataFeed(dataFeed);
+    })
+      .setControlFeed(controlFeed)
+      .setDataFeed(dataFeed);
 
     const identity = new Identity({
       signer: keyring,
@@ -162,9 +164,11 @@ describe('identity/identity', () => {
       const space = new Space({
         spaceKey,
         protocol,
-        genesisFeed: controlFeed,        
+        genesisFeed: controlFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-      }).setControlFeed(controlFeed).setDataFeed(dataFeed);
+      })
+        .setControlFeed(controlFeed)
+        .setDataFeed(dataFeed);
 
       const identity = (identity1 = new Identity({
         signer: keyring,
@@ -241,7 +245,9 @@ describe('identity/identity', () => {
         protocol,
         genesisFeed: await feedStore.openFeed(genesisFeedKey),
         feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-      }).setControlFeed(controlFeed).setDataFeed(dataFeed);
+      })
+        .setControlFeed(controlFeed)
+        .setDataFeed(dataFeed);
 
       const identity = (identity2 = new Identity({
         signer: keyring,

@@ -14,6 +14,7 @@ import {
   CredentialConsumer
 } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
+import { failUndefined } from '@dxos/debug';
 import { Space } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -24,7 +25,6 @@ import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invita
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
-import { failUndefined } from '@dxos/debug';
 
 /**
  * Timeout for the device to be added to the trusted set during auth.

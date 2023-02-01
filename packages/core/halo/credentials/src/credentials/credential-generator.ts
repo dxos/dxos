@@ -183,7 +183,7 @@ export const createAdmissionCredentials = async (
         profile,
         genesisFeedKey
       }
-    }),
+    })
 
     // await signer.createCredential({
     //   subject: controlFeedKey,

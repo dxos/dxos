@@ -155,9 +155,9 @@ export class TestAgent {
       protocol: this.createSpaceProtocol(spaceKey),
       genesisFeed,
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey)
-    });
-    space.setControlFeed(await this.feedStore.openFeed(controlFeedKey, { writable: true }));
-    space.setDataFeed(await this.feedStore.openFeed(dataFeedKey, { writable: true }));
+    })
+      .setControlFeed(controlFeed)
+      .setDataFeed(dataFeed);
     await space.open();
     await space.initDataPipeline(dataPipelineController);
 

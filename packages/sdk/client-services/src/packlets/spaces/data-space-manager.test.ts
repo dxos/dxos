@@ -73,7 +73,6 @@ describe('DataSpaceManager', () => {
 
     const space1 = await dataSpaceManager1.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
-   
 
     // Admit peer2 to space1.
     await writeMessages(
@@ -89,7 +88,7 @@ describe('DataSpaceManager', () => {
     // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await dataSpaceManager2.acceptSpace({
       spaceKey: space1.key,
-      genesisFeedKey: space1.inner.genesisFeedKey,
+      genesisFeedKey: space1.inner.genesisFeedKey
     });
 
     log('', {

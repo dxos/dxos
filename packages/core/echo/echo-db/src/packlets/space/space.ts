@@ -55,7 +55,7 @@ export class Space {
   private readonly _genesisFeedKey: PublicKey;
   private readonly _feedProvider: FeedProvider;
   private readonly _controlPipeline: ControlPipeline;
-  
+
   private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
@@ -126,14 +126,14 @@ export class Space {
   }
 
   setControlFeed(feed: FeedWrapper<FeedMessage>) {
-    assert(!this._controlFeed, 'Control feed already set.')
+    assert(!this._controlFeed, 'Control feed already set.');
     this._controlFeed = feed;
     this._controlPipeline.setWriteFeed(feed);
     return this;
   }
 
   setDataFeed(feed: FeedWrapper<FeedMessage>) {
-    assert(!this._dataFeed, 'Data feed already set.')
+    assert(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
     this._dataPipeline?.setWriteFeed(feed);
     return this;
@@ -195,7 +195,7 @@ export class Space {
         assert(!this._dataPipeline, 'Data pipeline already initialized.'); // TODO(dmaretskyi): Allow concurrent pipelines.
         // Create pipeline.
         this._dataPipeline = new Pipeline(start);
-        if(this._dataFeed) {
+        if (this._dataFeed) {
           this._dataPipeline.setWriteFeed(this._dataFeed);
         }
         for (const feed of this._controlPipeline.spaceState.feeds.values()) {

@@ -18,6 +18,7 @@ import {
   SigningContext,
   createMappedFeedWriter
 } from '@dxos/echo-db';
+import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
@@ -28,7 +29,6 @@ import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
 import { NotarizationPlugin } from './notarization-plugin';
-import { FeedStore } from '@dxos/feed-store';
 
 const AUTH_TIMEOUT = 30000;
 
@@ -165,19 +165,17 @@ export class DataSpace implements ISpace {
       this._signingContext.deviceKey
     );
 
-    if(!this.inner.controlFeedKey) {
+    if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
       this.inner.setControlFeed(controlFeed);
       credentials.push(
         await generator.createFeedAdmission(this.key, controlFeed.key, AdmittedFeed.Designation.CONTROL)
       );
     }
-    if(!this.inner.dataFeedKey) {
+    if (!this.inner.dataFeedKey) {
       const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
       this.inner.setDataFeed(dataFeed);
-      credentials.push(
-        await generator.createFeedAdmission(this.key, dataFeed.key, AdmittedFeed.Designation.DATA)
-      );
+      credentials.push(await generator.createFeedAdmission(this.key, dataFeed.key, AdmittedFeed.Designation.DATA));
     }
 
     if (credentials.length > 0) {

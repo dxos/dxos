@@ -6,13 +6,13 @@ import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { log } from '@dxos/log';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
-import { log } from '@dxos/log';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -58,7 +58,7 @@ describe('Spaces', () => {
 
     await client.destroy();
 
-    log.break()
+    log.break();
 
     await client.initialize();
 

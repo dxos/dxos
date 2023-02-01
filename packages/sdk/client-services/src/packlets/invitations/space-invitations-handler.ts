@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AuthenticationRequest,
@@ -37,7 +38,6 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const MAX_OTP_ATTEMPTS = 3;
 
@@ -302,7 +302,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
 
               const space = await this._spaceManager.acceptSpace({
                 spaceKey: assertion.spaceKey,
-                genesisFeedKey: assertion.genesisFeedKey,
+                genesisFeedKey: assertion.genesisFeedKey
               });
 
               // 5. Success.
