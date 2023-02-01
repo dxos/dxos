@@ -15,8 +15,8 @@ export interface JoinDialogProps extends Omit<PanelAlertDialogProps, 'titleId' |
 export const JoinDialog = ({ slots, ...joinPanelProps }: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');
   return (
-    <ThemeContext.Provider value={{ themeVariant: 'os' }}>
-      <PanelAlertDialog {...{ slots, titleId }}>
+    <PanelAlertDialog {...{ slots, titleId }}>
+      <ThemeContext.Provider value={{ themeVariant: 'os' }}>
         <JoinPanel
           {...{
             ...joinPanelProps,
@@ -25,7 +25,7 @@ export const JoinDialog = ({ slots, ...joinPanelProps }: JoinDialogProps) => {
             doneActionParent: <Action asChild />
           }}
         />
-      </PanelAlertDialog>
-    </ThemeContext.Provider>
+      </ThemeContext.Provider>
+    </PanelAlertDialog>
   );
 };

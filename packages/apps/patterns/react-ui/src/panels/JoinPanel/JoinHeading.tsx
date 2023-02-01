@@ -13,15 +13,12 @@ import { subduedSurface } from '../../styles';
 export interface JoinSpaceHeadingProps {
   titleId: string;
   invitation?: AuthenticatingInvitationObservable;
-  onClickExit?: () => void;
+  onExit?: () => void;
   exitActionParent?: Parameters<typeof cloneElement>[0];
 }
 
 export const JoinHeading = forwardRef(
-  (
-    { titleId, invitation, onClickExit, exitActionParent }: JoinSpaceHeadingProps,
-    ref: ForwardedRef<HTMLDivElement>
-  ) => {
+  ({ titleId, invitation, onExit, exitActionParent }: JoinSpaceHeadingProps, ref: ForwardedRef<HTMLDivElement>) => {
     const { t } = useTranslation('os');
 
     const space = useSpace(invitation?.invitation?.spaceKey);
@@ -30,7 +27,7 @@ export const JoinHeading = forwardRef(
     const nameId = useId('spaceDisplayName');
 
     const exitButton = (
-      <Button compact variant='ghost' {...(onClickExit && { onClick: onClickExit })} className='grow-0 shrink-0'>
+      <Button compact variant='ghost' {...(onExit && { onClick: onExit })} className='grow-0 shrink-0'>
         <ProhibitInset className={getSize(5)} />
         <span className='sr-only'>{t('exit label')}</span>
       </Button>

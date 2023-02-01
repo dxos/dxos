@@ -25,7 +25,9 @@ export const JoinPanel = ({
   initialInvitationCode,
   titleId: propsTitleId,
   exitActionParent,
-  doneActionParent
+  onExit,
+  doneActionParent,
+  onDone
 }: JoinPanelProps) => {
   const client = useClient();
   const titleId = propsTitleId ?? useId('joinPanel__title');
@@ -179,7 +181,7 @@ export const JoinPanel = ({
 
   return (
     <>
-      <JoinHeading {...{ titleId, invitation: joinState.spaceInvitation, onClickExit: () => {}, exitActionParent }} />
+      <JoinHeading {...{ titleId, invitation: joinState.spaceInvitation, onExit, exitActionParent }} />
       <div role='none' className='is-full overflow-hidden'>
         <div role='none' className='flex is-[1300%]' aria-live='polite'>
           <IdentitySelector
@@ -294,7 +296,8 @@ export const JoinPanel = ({
                 joinState.activeView === 'space invitation acceptor' &&
                 joinState.spaceViewState === 'invitation accepted',
               invitationType: 'space',
-              doneActionParent
+              doneActionParent,
+              onDone
             }}
           />
         </div>

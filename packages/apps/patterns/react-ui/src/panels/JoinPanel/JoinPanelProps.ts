@@ -9,6 +9,7 @@ import type {
   Profile as NaturalProfile,
   Space as NaturalSpace
 } from '@dxos/client';
+import { InvitationResult } from '@dxos/react-client';
 
 export type Space = Pick<NaturalSpace, 'properties'>;
 
@@ -18,7 +19,10 @@ export interface JoinPanelProps {
   initialInvitationCode?: string;
   titleId?: string;
   exitActionParent?: Parameters<typeof cloneElement>[0];
+  onExit?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
+  onDone?: (result: InvitationResult | null) => void;
+  parseInvitationCodeInput?: (invitationCodeInput: string) => string;
 }
 
 export interface IdentityAction {

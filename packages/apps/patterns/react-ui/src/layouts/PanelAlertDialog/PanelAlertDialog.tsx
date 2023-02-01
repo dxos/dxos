@@ -11,6 +11,7 @@ export interface PanelAlertDialogSlots {
   root: ComponentPropsWithoutRef<typeof AlertDialog.Root>;
   overlay: ComponentPropsWithoutRef<typeof AlertDialog.Overlay>;
   content: ComponentPropsWithoutRef<typeof AlertDialog.Content>;
+  trigger: ComponentPropsWithoutRef<typeof AlertDialog.Trigger>;
 }
 
 export type PanelAlertDialogProps = PropsWithChildren<{
@@ -21,6 +22,7 @@ export type PanelAlertDialogProps = PropsWithChildren<{
 export const PanelAlertDialog = ({ titleId, slots = {}, children }: PanelAlertDialogProps) => {
   return (
     <AlertDialog.Root defaultOpen {...slots.root}>
+      {slots.trigger && <AlertDialog.Trigger {...slots.trigger} />}
       <AlertDialog.Overlay
         {...slots.overlay}
         className={mx(
