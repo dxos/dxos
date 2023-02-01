@@ -23,45 +23,21 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
-      '@dxos/async',
-      '@dxos/client',
-      '@dxos/client-services',
       '@dxos/config',
-      '@dxos/context',
-      '@dxos/debug',
-      '@dxos/devtools-mesh',
-      '@dxos/feed-store',
-      '@dxos/kai',
       '@dxos/keys',
       '@dxos/log',
-      '@dxos/messaging',
-      '@dxos/messenger-model',
-      '@dxos/model-factory',
-      '@dxos/network-manager',
-      '@dxos/object-model',
       '@dxos/protocols',
-      '@dxos/protocols/proto/dxos/client/services.ts',
-      '@dxos/protocols/proto/dxos/config',
       '@dxos/protocols/proto/dxos/client',
+      '@dxos/protocols/proto/dxos/client/services',
       '@dxos/protocols/proto/dxos/config',
       '@dxos/protocols/proto/dxos/echo/feed',
       '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/protocols/proto/dxos/echo/object',
       '@dxos/protocols/proto/dxos/halo/credentials',
       '@dxos/protocols/proto/dxos/halo/invitations',
       '@dxos/protocols/proto/dxos/halo/keys',
       '@dxos/protocols/proto/dxos/mesh/bridge',
-      '@dxos/protocols/proto/dxos/rpc',
-      '@dxos/react-appkit',
-      '@dxos/react-async',
-      '@dxos/react-client',
-      '@dxos/react-components-deprecated',
-      '@dxos/react-registry-client',
-      '@dxos/react-toolkit',
-      '@dxos/registry-client',
-      '@dxos/rpc',
-      '@dxos/text-model',
-      '@dxos/timeframe',
-      '@dxos/util'
+      '@dxos/protocols/proto/dxos/rpc'
     ]
   },
   build: {
@@ -70,13 +46,11 @@ export default defineConfig({
       include: [/packages/, /node_modules/]
     },
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        testbench: resolve(__dirname, 'testbench.html')
-      },
       output: {
         manualChunks: {
           faker: ['faker'],
+          highlight: ['react-syntax-highlighter'],
+          kai: ['@dxos/kai'],
           monaco: ['monaco-editor', '@monaco-editor/react'],
           vendor: ['react', 'react-router-dom', 'react-dom']
         }
@@ -84,12 +58,10 @@ export default defineConfig({
     }
   },
   plugins: [
-    ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY']
-    }),
+    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'] }),
     ThemePlugin({
       content: [
-        resolve(__dirname, './index.html'),
+        resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
@@ -103,7 +75,8 @@ export default defineConfig({
     }),
     ReactPlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // TODO(wittjosiah): Remove once this has been released.
+      selfDestroying: true,
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
@@ -157,6 +130,7 @@ export default defineConfig({
         ]
       }
     }),
+    // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',
       buildEnd() {
