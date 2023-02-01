@@ -65,6 +65,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          faker: ['faker'],
+          highlighter: ['react-syntax-highlighter'],
+          monaco: ['monaco-editor', '@monaco-editor/react'],
           vendor: ['react', 'react-router-dom', 'react-dom']
         }
       }
