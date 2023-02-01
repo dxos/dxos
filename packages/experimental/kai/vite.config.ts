@@ -10,6 +10,9 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+
+// @ts-ignore
+// NOTE: Vite requires uncompiled JS.
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 
 /**
@@ -27,6 +30,11 @@ export default defineConfig({
             cert: './cert.pem'
           }
         : false
+
+    // TODO(burdon): Disable HMR due to code size issues.
+    // TODO(burdon): If disabled then tailwind doesn't update.
+    // https://vitejs.dev/config/server-options.html#server-hmr
+    // hmr: false
   },
 
   // TODO(burdon): Document.
@@ -76,6 +84,7 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/hypercard/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),

@@ -55,10 +55,7 @@ export class ProjectBuilder {
   async createTasks(n: NumberRange = 1, people?: Item<ObjectModel>[]) {
     return await Promise.all(
       Array.from({ length: getNumber(n) }).map(async () => {
-        const task = await this._builder.createTask(this._project);
-        if (people) {
-          await this._builder.createLink(task, faker.random.arrayElement(people));
-        }
+        await this._builder.createTask(this._project);
       })
     );
   }
@@ -213,13 +210,6 @@ export class SpaceBuilder {
         await this.createRandomItem(parent);
       }
     }
-  }
-
-  async createLink(source: Item<ObjectModel>, target: Item<ObjectModel>) {
-    await this._space.database.createLink({
-      source,
-      target
-    });
   }
 }
 

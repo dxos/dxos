@@ -9,3 +9,5 @@ import { GraphComponent } from '../components';
 export const ExplorerFrame: FC = () => {
   return <GraphComponent />;
 };
+
+export default ExplorerFrame;

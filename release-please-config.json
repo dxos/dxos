@@ -368,6 +368,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/hypercard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/kai/package.json",
           "jsonpath": "$.version"
         },

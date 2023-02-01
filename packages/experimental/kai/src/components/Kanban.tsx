@@ -39,7 +39,7 @@ export const Kanban: FC<{
           return (
             <div
               key={column.id ?? i}
-              className='flex flex-col overflow-hidden w-screen md:w-[314px] snap-center px-4 md:px-2 pb-4'
+              className='flex flex-col overflow-hidden w-screen md:w-column snap-center px-4 md:px-2 pb-4'
             >
               <div className='flex flex-col first:ml-0 overflow-hidden border drop-shadow-md bg-gray-100 rounded'>
                 <div className='flex p-3 rounded-t text-sm'>{column.header}</div>

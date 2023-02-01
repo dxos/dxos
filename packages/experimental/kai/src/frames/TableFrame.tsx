@@ -98,3 +98,5 @@ export const TableFrame = () => {
     </div>
   );
 };
+
+export default TableFrame;

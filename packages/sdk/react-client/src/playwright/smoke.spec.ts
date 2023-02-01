@@ -8,6 +8,7 @@ import { Page } from 'playwright';
 import { beforeAll, describe, setupPage, test } from '@dxos/test';
 
 // TODO(wittjosiah): Factor out.
+// TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
 const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
 
 describe('Smoke test', function () {

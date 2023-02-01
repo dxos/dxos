@@ -99,7 +99,7 @@ export const Sidebar = () => {
       className='flex flex-col overflow-auto min-bs-full shadow backdrop-blur bg-neutral-50/[.33] dark:bg-neutral-950/[.33]'
     >
       {/* Match Frame selector. */}
-      <div className='flex flex-col-reverse h-framepicker bg-orange-500'>
+      <div className='flex flex-col-reverse h-toolbar bg-orange-500'>
         <div className='flex justify-between items-center p-1 pl-4'>
           <div>Spaces</div>
           <div className='flex pr-3'>

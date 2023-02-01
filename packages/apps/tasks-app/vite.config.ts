@@ -33,7 +33,8 @@ export default defineConfig({
       '@dxos/react-client',
       '@dxos/react-list',
       '@dxos/react-components',
-      '@dxos/sentry'
+      '@dxos/sentry',
+      '@dxos/echo-schema'
     ]
   },
   build: {

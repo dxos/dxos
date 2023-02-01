@@ -182,3 +182,5 @@ export const SketchFrame = withReactor(() => {
     </div>
   );
 });
+
+export default SketchFrame;

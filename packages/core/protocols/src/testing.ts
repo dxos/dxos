@@ -24,7 +24,15 @@ export const createTestItemMutation = (
     data: {
       object: {
         itemId,
-        mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+        mutations: [
+          {
+            mutation: {
+              '@type': 'google.protobuf.Any',
+              typeUrl: 'todo',
+              value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
+            }
+          }
+        ]
       }
     }
   }

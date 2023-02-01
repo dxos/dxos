@@ -16,7 +16,12 @@ describe('model factory', () => {
 
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel);
-    const stateManager = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, {}, PublicKey.random());
+    const stateManager = modelFactory.createModel<TestModel>(
+      TestModel.meta.type,
+      itemId,
+      { itemId },
+      PublicKey.random()
+    );
     expect(stateManager.model).toBeTruthy();
   });
 });

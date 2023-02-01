@@ -4,19 +4,17 @@
 
 import React, { useCallback } from 'react';
 
-import { Space, ObjectModel } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { SpacesPage as BaseSpacesPage } from '@dxos/react-appkit';
 
-import { TASK_LIST } from '../containers';
+import { TaskList } from '../proto';
 
 export type SpacesPageProps = {};
 
 export const SpacesPage = (props: SpacesPageProps) => {
   const createListItem = useCallback(async (space: Space) => {
-    await space.database.createItem({
-      model: ObjectModel,
-      type: TASK_LIST
-    });
+    const list = new TaskList();
+    await space.experimental.db.save(list);
   }, []);
   return <BaseSpacesPage onSpaceCreate={createListItem} />;
 };

@@ -16,7 +16,7 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
   return <ProjectCard project={object as Project} />;
 };
 
-// TODO(burdon): Generalize type.
+// TODO(burdon): Generalize type and field.
 export const KanbanFrame: FC = () => {
   const space = useSpace();
 
@@ -49,7 +49,7 @@ export const KanbanFrame: FC = () => {
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='py-3 px-0 md:px-2'>
-        <div className='w-screen md:w-[314px] px-4 md:px-2'>
+        <div className='w-screen md:w-column px-4 md:px-2'>
           <Searchbar onSearch={handleSearch} />
         </div>
       </div>
@@ -60,3 +60,5 @@ export const KanbanFrame: FC = () => {
     </div>
   );
 };
+
+export default KanbanFrame;

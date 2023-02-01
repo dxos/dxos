@@ -20,7 +20,7 @@ const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
 /**
  * Home page with current space.
  */
-export const SpacePage = () => {
+const SpacePage = () => {
   const navigate = useNavigate();
   const frames = useActiveFrames();
   const { spaceKey: currentSpaceKey, frame } = useParams();
@@ -54,7 +54,7 @@ export const SpacePage = () => {
         inlineStart
         slots={{
           content: { children: <Sidebar />, className: 'block-start-appbar' },
-          main: { className: mx(frames.length > 1 ? 'pbs-topbars' : 'pbs-appbar', 'bs-full overflow-hidden') }
+          main: { className: mx(frames.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
         }}
       >
         <AppBar />
@@ -66,3 +66,5 @@ export const SpacePage = () => {
     </SpaceContext.Provider>
   );
 };
+
+export default SpacePage;

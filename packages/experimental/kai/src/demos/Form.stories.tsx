@@ -65,7 +65,7 @@ export const Default = () => {
   });
 
   return (
-    <div className='flex flex-col w-[400px]'>
+    <div className='flex flex-col w-column'>
       <Form object={contact} />
       <div className='mb-2' />
       <Form object={new Contact()} />

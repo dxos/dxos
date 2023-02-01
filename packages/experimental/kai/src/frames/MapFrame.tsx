@@ -152,3 +152,5 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
     </div>
   );
 };
+
+export default MapFrame;

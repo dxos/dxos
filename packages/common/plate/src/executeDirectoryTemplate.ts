@@ -5,7 +5,7 @@ import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 
-import { loadConfig, unDefault, prettyConfig, ConfigDeclaration } from './config';
+import { loadConfig, unDefault, prettyConfig, ConfigDeclaration, forceFilter } from './config';
 import {
   executeFileTemplate,
   TemplatingResult,
@@ -117,12 +117,14 @@ export const executeDirectoryTemplate = async <TInput>(
       : undefined;
   const allFiles = await readDir(
     templateDirectory,
-    (exclude ?? []).map((x) => (x instanceof RegExp ? (entry) => x.test(entry.replace(templateDirectory, '')) : x))
+    forceFilter(exclude, input).map((x) =>
+      x instanceof RegExp ? (entry) => x.test(entry.replace(templateDirectory, '')) : x
+    )
   );
   debug(`${allFiles.length} files discovered`);
   const filteredFiles = filterIncludeExclude(allFiles, {
-    include,
-    exclude,
+    include: forceFilter(include, input),
+    exclude: forceFilter(exclude, input),
     transform: (s) => s.replace(templateDirectory, '').replace(/^\//, '')
   });
   debug(`${filteredFiles.length}/${allFiles.length} files included`);

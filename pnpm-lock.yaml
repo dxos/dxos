@@ -617,6 +617,8 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
@@ -638,6 +640,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
@@ -651,6 +654,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
@@ -2948,7 +2952,7 @@ importers:
       '@types/lodash': 4.14.186
       faker: 5.5.3
 
-  packages/experimental/kai:
+  packages/experimental/hypercard:
     specifiers:
       '@babel/core': ^7.18.13
       '@dnd-kit/core': ^6.0.5
@@ -2959,6 +2963,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
@@ -2979,6 +2984,8 @@ importers:
       '@dxos/react-composer': workspace:*
       '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/util': workspace:*
       '@sentry/react': ^7.17.2
@@ -3029,6 +3036,7 @@ importers:
       url-join: ^5.0.0
       vite: 4.0.4
       vite-plugin-fonts: ^0.7.0
+      vite-plugin-inspect: ^0.7.15
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
       y-prosemirror: ^1.2.0
@@ -3043,6 +3051,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
@@ -3062,6 +3071,191 @@ importers:
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/util': link:../../common/util
+      '@sentry/react': 7.20.0_react@18.2.0
+      assert: 2.0.0
+      base-x: 3.0.9
+      chess.js: 1.0.0-alpha.0
+      clipboard-copy: 4.0.1
+      date-fns: 2.29.3
+      ipfs-http-client: 56.0.3_node-fetch@2.6.7
+      leaflet: 1.9.3
+      mobile-detect: 1.4.5
+      node-fetch: 2.6.7
+      openai: 3.1.0
+      phosphor-react: 1.4.1_react@18.2.0
+      prosemirror-model: 1.19.0
+      prosemirror-schema-basic: 1.2.1
+      prosemirror-state: 1.4.2
+      prosemirror-view: 1.29.0
+      react: 18.2.0
+      react-big-calendar: 1.5.2_biqbaboplfbrettd7655fr4n2y
+      react-color: 2.19.3_react@18.2.0
+      react-copy-to-clipboard: 5.1.0_react@18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
+      react-is: 18.2.0
+      react-leaflet: 4.2.0_yydtlhsdonbqao6vgvkwhv2zki
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      react-sketch-canvas: 6.2.0_react@18.2.0
+      react-syntax-highlighter: 15.5.0_react@18.2.0
+      react-table: 7.8.0_react@18.2.0
+      url-join: 5.0.0
+      y-prosemirror: 1.2.0_bxerzyxcxwljqz6lzhld3qlf7u
+      y-protocols: 1.0.5
+      yjs: 13.5.44
+    devDependencies:
+      '@babel/core': 7.20.12
+      '@dxos/client-testing': link:../client-testing
+      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
+      '@swc/core': 1.3.21
+      '@types/faker': 5.5.9
+      '@types/leaflet': 1.9.0
+      '@types/react': 18.0.21
+      '@types/react-big-calendar': 0.38.3
+      '@types/react-color': 3.0.6
+      '@types/react-copy-to-clipboard': 5.0.4
+      '@types/react-dom': 18.0.6
+      '@types/react-syntax-highlighter': 15.5.5
+      '@types/react-table': 7.7.14
+      '@vitejs/plugin-react': 3.0.1_vite@4.0.4
+      faker: 5.5.3
+      postcss: 8.4.21
+      tailwindcss: 3.1.8
+      typescript: 4.8.4
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite-plugin-fonts: 0.7.0_vite@4.0.4
+      vite-plugin-inspect: 0.7.15_vite@4.0.4
+      vite-plugin-pwa: 0.14.1_vite@4.0.4
+      workbox-window: 6.5.4
+
+  packages/experimental/kai:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
+      '@dxos/assets': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/chess-app': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/framebox': workspace:*
+      '@dxos/gem-core': workspace:*
+      '@dxos/gem-spore': workspace:*
+      '@dxos/hypercard': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-composer': workspace:*
+      '@dxos/react-list': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/util': workspace:*
+      '@sentry/react': ^7.17.2
+      '@swc-node/register': ^1.5.4
+      '@swc/core': ^1.3.21
+      '@types/faker': ^5.5.9
+      '@types/leaflet': ^1.9.0
+      '@types/react': ^18.0.21
+      '@types/react-big-calendar': ^0.38.3
+      '@types/react-color': ^3.0.6
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/react-dom': ^18.0.6
+      '@types/react-syntax-highlighter': ^15.5.5
+      '@types/react-table': ^7.7.14
+      '@vitejs/plugin-react': ^3.0.1
+      assert: ^2.0.0
+      base-x: ~3.0.9
+      chess.js: ^1.0.0-alpha.0
+      clipboard-copy: ^4.0.1
+      date-fns: ^2.29.3
+      faker: ^5.5.3
+      ipfs-http-client: ~56.0.1
+      leaflet: ^1.9.3
+      mobile-detect: ^1.4.5
+      node-fetch: ^2.6.0
+      openai: ^3.1.0
+      phosphor-react: ^1.4.1
+      postcss: ^8.4.17
+      prosemirror-model: ^1.7.1
+      prosemirror-schema-basic: ^1.2.1
+      prosemirror-state: ^1.4.2
+      prosemirror-view: ^1.9.10
+      react: ^18.2.0
+      react-big-calendar: ^1.5.2
+      react-color: ^2.19.3
+      react-copy-to-clipboard: ^5.1.0
+      react-dom: ^18.2.0
+      react-drag-drop-files: ^2.3.8
+      react-is: ^18.2.0
+      react-leaflet: ^4.2.0
+      react-resize-detector: ^7.1.2
+      react-router-dom: ^6.3.0
+      react-sketch-canvas: ^6.2.0
+      react-syntax-highlighter: ^15.5.0
+      react-table: ^7.8.0
+      tailwindcss: ^3.1.8
+      typescript: ^4.8.4
+      url-join: ^5.0.0
+      vite: 4.0.4
+      vite-plugin-fonts: ^0.7.0
+      vite-plugin-inspect: ^0.7.15
+      vite-plugin-pwa: ^0.14.1
+      workbox-window: ^6.5.4
+      y-prosemirror: ^1.2.0
+      y-protocols: ^1.0.5
+      yjs: ^13.5.44
+    dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/assets': link:../../apps/patterns/assets
+      '@dxos/async': link:../../common/async
+      '@dxos/chess-app': link:../chess-app
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/framebox': link:../framebox
+      '@dxos/gem-core': link:../gem-core
+      '@dxos/gem-spore': link:../gem-spore
+      '@dxos/hypercard': link:../hypercard
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
+      '@dxos/react-composer': link:../../apps/patterns/react-composer
+      '@dxos/react-list': link:../../apps/patterns/react-list
+      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
       '@dxos/util': link:../../common/util
       '@sentry/react': 7.20.0_react@18.2.0
@@ -3118,6 +3312,7 @@ importers:
       typescript: 4.8.4
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       vite-plugin-fonts: 0.7.0_vite@4.0.4
+      vite-plugin-inspect: 0.7.15_vite@4.0.4
       vite-plugin-pwa: 0.14.1_vite@4.0.4
       workbox-window: 6.5.4
 
@@ -4446,6 +4641,10 @@ packages:
     dependencies:
       '@jridgewell/gen-mapping': 0.1.1
       '@jridgewell/trace-mapping': 0.3.17
+
+  /@antfu/utils/0.7.2:
+    resolution: {integrity: sha512-vy9fM3pIxZmX07dL+VX1aZe7ynZ+YyB0jY+jE6r3hOK6GNY2t6W8rzpFC4tgpbXUYABkFQwgJq2XYXlxbXAI0g==}
+    dev: true
 
   /@apideck/better-ajv-errors/0.3.6_ajv@8.11.0:
     resolution: {integrity: sha512-P+ZygBLZtkp0qqOAJJVX4oX/sFo5JR3eBWwwuqHHhK0GIgQOKWrAfiAaWX0aArHkRWHMuggFEgAZNxVPwPZYaA==}
@@ -9423,6 +9622,10 @@ packages:
       playwright-core: 1.27.1
     dev: true
 
+  /@polka/url/1.0.0-next.21:
+    resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
+    dev: true
+
   /@polkadot/api-derive/4.17.1:
     resolution: {integrity: sha512-mgq57F1yAiZjuiA0vrR2zWidyyd+mGe7Kbs4SxVeDWLsNbLc9+eASIfX7Hch2SDHIn3CQpv6DQqJH00uDfw9Lw==}
     engines: {node: '>=14.0.0'}
@@ -10545,6 +10748,20 @@ packages:
     resolution: {integrity: sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==}
     engines: {node: '>= 8.0.0'}
     dependencies:
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
+    dev: true
+
+  /@rollup/pluginutils/5.0.2:
+    resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@types/estree': 1.0.0
       estree-walker: 2.0.2
       picomatch: 2.3.1
     dev: true
@@ -24708,6 +24925,10 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
+  /kolorist/1.6.0:
+    resolution: {integrity: sha512-dLkz37Ab97HWMx9KTes3Tbi3D1ln9fCAy2zr2YVExJasDRPGRaKcoE4fycWNtnCAJfjFqe0cnY+f8KT2JePEXQ==}
+    dev: true
+
   /last-one-wins/1.0.4:
     resolution: {integrity: sha512-t+KLJFkHPQk8lfN6WBOiGkiUXoub+gnb2XTYI2P3aiISL+94xgZ1vgz1SXN/N4hthuOoLXarXfBZPUruyjQtfA==}
     dev: false
@@ -26583,6 +26804,11 @@ packages:
   /mri/1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
+
+  /mrmime/1.0.1:
+    resolution: {integrity: sha512-hzzEagAgDyoU1Q6yg5uI+AorQgdvMCur3FcKf7NhMKWsaYg+RnbTyHRa/9IlLF9rf455MOCtcqqrQQ83pPP7Uw==}
+    engines: {node: '>=10'}
+    dev: true
 
   /ms/2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
@@ -31434,6 +31660,15 @@ packages:
     dependencies:
       nanoassert: 2.0.0
 
+  /sirv/2.0.2:
+    resolution: {integrity: sha512-4Qog6aE29nIjAOKe/wowFTxOdmbEZKb+3tsLljaBRzJwtqto0BChD2zzH0LhgCSXiI+V7X+Y45v14wBZQ1TK3w==}
+    engines: {node: '>= 10'}
+    dependencies:
+      '@polka/url': 1.0.0-next.21
+      mrmime: 1.0.1
+      totalist: 3.0.0
+    dev: true
+
   /sisteransi/1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
     dev: true
@@ -32937,6 +33172,11 @@ packages:
     resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
     dev: true
 
+  /totalist/3.0.0:
+    resolution: {integrity: sha512-eM+pCBxXO/njtF7vdFsHuqb+ElbxqtI4r5EAvk6grfAFyJ6IvWlSkfZ5T9ozC6xWw3Fj1fGoSmrl0gUs46JVIw==}
+    engines: {node: '>=6'}
+    dev: true
+
   /tough-cookie/4.1.2:
     resolution: {integrity: sha512-G9fqXWoYFZgTc2z8Q5zaHy/vJMjm+WV0AkAeHxVCQiEB1b+dGvWzFW6QV07cY5jQ5gRkeid2qIkzkxUnmoQZUQ==}
     engines: {node: '>=6'}
@@ -33321,6 +33561,10 @@ packages:
 
   /uc.micro/1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
+    dev: true
+
+  /ufo/1.0.1:
+    resolution: {integrity: sha512-boAm74ubXHY7KJQZLlXrtMz52qFvpsbOxDcZOnw/Wf+LS4Mmyu7JxmzD4tDLtUQtmZECypJ0FrCz4QIe6dvKRA==}
     dev: true
 
   /uglify-js/3.17.3:
@@ -34068,6 +34312,25 @@ packages:
     dependencies:
       fast-glob: 3.2.12
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+    dev: true
+
+  /vite-plugin-inspect/0.7.15_vite@4.0.4:
+    resolution: {integrity: sha512-oxeZCljacA/slhGFbDNlBqdhDU9fgdHL84i7Nz7DnaAIE7DhTiW2djanw3d/BKuZtduKUY82vRUQ4iaG917t2A==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      vite: ^3.1.0 || ^4.0.0
+    dependencies:
+      '@antfu/utils': 0.7.2
+      '@rollup/pluginutils': 5.0.2
+      debug: 4.3.4
+      fs-extra: 11.1.0
+      kolorist: 1.6.0
+      sirv: 2.0.2
+      ufo: 1.0.1
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+    transitivePeerDependencies:
+      - rollup
+      - supports-color
     dev: true
 
   /vite-plugin-pwa/0.14.1_vite@4.0.4:

@@ -17,7 +17,7 @@ import { useSpace } from '../hooks';
 const smallSize = 300;
 const panelWidth = 160;
 
-export const createChess = (game: Game) => {
+const createChess = (game: Game) => {
   const chess = new Chess();
   if (game.fen) {
     chess.loadPgn(game.fen);
@@ -152,3 +152,5 @@ const Grid: FC<{ style: ChessPieces; onSelect: (game: Game) => void; onCreate: (
     </div>
   );
 };
+
+export default ChessFrame;
