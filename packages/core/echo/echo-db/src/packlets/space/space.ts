@@ -129,12 +129,14 @@ export class Space {
     assert(!this._controlFeed, 'Control feed already set.')
     this._controlFeed = feed;
     this._controlPipeline.setWriteFeed(feed);
+    return this;
   }
 
   setDataFeed(feed: FeedWrapper<FeedMessage>) {
     assert(!this._dataFeed, 'Data feed already set.')
     this._dataFeed = feed;
     this._dataPipeline?.setWriteFeed(feed);
+    return this;
   }
 
   /**

@@ -164,6 +164,10 @@ export class IdentityManager {
     assert(!this._identity);
     log('constructing identity', { identityRecord });
 
+    // Must be created before the space so the feeds are writable.
+    const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeControlFeedKey, { writable: true });
+    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeDataFeedKey, { writable: true });
+
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
@@ -173,9 +177,7 @@ export class IdentityManager {
       },
       identityKey: identityRecord.identityKey
     });
-    const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeControlFeedKey, { writable: true });
     space.setControlFeed(controlFeed);
-    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.writeDataFeedKey, { writable: true });
     space.setDataFeed(dataFeed);
     
     const identity: Identity = new Identity({

@@ -24,6 +24,7 @@ import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invita
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
+import { failUndefined } from '@dxos/debug';
 
 /**
  * Timeout for the device to be added to the trusted set during auth.
@@ -126,8 +127,8 @@ export class Identity {
   getAdmissionCredentials(): HaloAdmissionCredentials {
     return {
       deviceKey: this.deviceKey,
-      controlFeedKey: this.space.controlFeedKey,
-      dataFeedKey: this.space.dataFeedKey
+      controlFeedKey: this.space.controlFeedKey ?? failUndefined(),
+      dataFeedKey: this.space.dataFeedKey ?? failUndefined()
     };
   }
 

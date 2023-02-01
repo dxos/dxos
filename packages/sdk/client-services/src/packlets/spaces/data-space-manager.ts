@@ -31,7 +31,7 @@ const DATA_PIPELINE_READY_TIMEOUT = 3_000;
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
-  dataFeedKey: PublicKey;
+  genesisFeedKey: PublicKey;
 }
 
 @trackLeaks('open', 'close')
@@ -119,7 +119,7 @@ export class DataSpaceManager {
 
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
-      dataFeedKey: opts.dataFeedKey
+      genesisFeedKey: opts.genesisFeedKey
     };
 
     const space = await this._constructSpace(metadata);

@@ -71,6 +71,7 @@ export class ServiceContext {
     this.identityManager = new IdentityManager(
       this.metadataStore,
       this.keyring,
+      this.feedStore,
       this.spaceManager
     );
 

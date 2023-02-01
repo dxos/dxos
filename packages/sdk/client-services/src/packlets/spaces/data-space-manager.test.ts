@@ -73,8 +73,6 @@ describe('DataSpaceManager', () => {
     const space2 = await dataSpaceManager2.acceptSpace({
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
-      controlFeedKey: await peer2.keyring.createKey(),
-      dataFeedKey: await peer2.keyring.createKey()
     });
 
     log('', {
@@ -98,10 +96,7 @@ describe('DataSpaceManager', () => {
       await createAdmissionCredentials(
         identity1.credentialSigner,
         identity2.identityKey,
-        identity2.deviceKey,
         space1.key,
-        space2.inner.controlFeedKey,
-        space2.inner.dataFeedKey,
         space2.inner.genesisFeedKey
       )
     );

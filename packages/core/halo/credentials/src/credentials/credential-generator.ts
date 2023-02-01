@@ -169,10 +169,7 @@ export const createDeviceAuthorization = async (
 export const createAdmissionCredentials = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
-  deviceKey: PublicKey,
   spaceKey: PublicKey,
-  controlFeedKey: PublicKey,
-  dataFeedKey: PublicKey,
   genesisFeedKey: PublicKey,
   profile?: ProfileDocument
 ): Promise<FeedMessage.Payload[]> => {
