@@ -1,13 +1,12 @@
 //
 // Copyright 2023 DXOS.org
 //
-import * as AlertPrimitive from '@radix-ui/react-alert-dialog';
 import React, { useEffect, useReducer } from 'react';
 
 import { InvitationEncoder } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { ThemeContext, useId } from '@dxos/react-components';
+import { useId } from '@dxos/react-components';
 
 import { JoinHeading } from './JoinHeading';
 import { JoinAction, JoinPanelProps, JoinState } from './JoinPanelProps';
@@ -22,9 +21,14 @@ import {
   InvitationAccepted
 } from './view-states';
 
-export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
+export const JoinPanel = ({
+  initialInvitationCode,
+  titleId: propsTitleId,
+  exitActionParent,
+  doneActionParent
+}: JoinPanelProps) => {
   const client = useClient();
-  const titleId = useId('joinTitle');
+  const titleId = propsTitleId ?? useId('joinPanel__title');
   const identity = useIdentity();
 
   const availableIdentities = identity ? [identity] : [];
@@ -174,140 +178,127 @@ export const JoinPanel = ({ initialInvitationCode }: JoinPanelProps) => {
   }, [joinState.haloInvitation]);
 
   return (
-    <AlertPrimitive.Root defaultOpen>
-      <ThemeContext.Provider value={{ themeVariant: 'os' }}>
-        <AlertPrimitive.Overlay className='fixed inset-0 backdrop-blur z-50 overflow-auto grid place-items-center p-2 md:p-4 lg:p-8'>
-          <AlertPrimitive.Content
-            aria-labelledby={titleId}
-            className='is-full min-is-[260px] max-is-[320px] shadow-md backdrop-blur-md'
-            onEscapeKeyDown={(event) => event.preventDefault()}
-          >
-            <JoinHeading titleId={titleId} invitation={joinState.spaceInvitation} onClickExit={() => {}} />
-            <div role='none' className='is-full overflow-hidden'>
-              <div role='none' className='flex is-[1300%]' aria-live='polite'>
-                <IdentitySelector
-                  {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
-                />
-                <AdditionMethodSelector
-                  {...{
-                    dispatch,
-                    availableIdentities,
-                    active: joinState.activeView === 'addition method selector'
-                  }}
-                />
-                <IdentityInput
-                  {...{
-                    dispatch,
-                    active: joinState.activeView === 'identity input' && joinState.additionMethod === 'create identity',
-                    method: 'create identity'
-                  }}
-                />
-                <IdentityInput
-                  {...{
-                    dispatch,
-                    active:
-                      joinState.activeView === 'identity input' && joinState.additionMethod === 'recover identity',
-                    method: 'recover identity'
-                  }}
-                />
-                <InvitationInput
-                  {...{
-                    dispatch,
-                    activeInvitation: joinState.haloInvitation || true,
-                    active:
-                      joinState.activeView === 'halo invitation acceptor' &&
-                      joinState.haloViewState === 'invitation input',
-                    invitationType: 'halo'
-                  }}
-                />
-                <InvitationRescuer
-                  {...{
-                    dispatch,
-                    activeInvitation: joinState.haloInvitation || true,
-                    active:
-                      joinState.activeView === 'halo invitation acceptor' &&
-                      joinState.haloViewState === 'invitation rescuer',
-                    invitationType: 'halo'
-                  }}
-                />
-                <InvitationAuthenticator
-                  {...{
-                    dispatch,
-                    activeInvitation: joinState.haloInvitation || true,
-                    active:
-                      joinState.activeView === 'halo invitation acceptor' &&
-                      joinState.haloViewState === 'invitation authenticator',
-                    invitationType: 'halo',
-                    ...(joinState.spaceInvitationAnnotation === 'authentication failed' && { failed: true })
-                  }}
-                />
-                <InvitationAccepted
-                  {...{
-                    dispatch,
-                    activeInvitation: joinState.haloInvitation || true,
-                    active:
-                      joinState.activeView === 'halo invitation acceptor' &&
-                      joinState.haloViewState === 'invitation accepted',
-                    invitationType: 'halo'
-                  }}
-                />
-                <IdentityAdded
-                  {...{
-                    dispatch,
-                    addedIdentity: joinState.selectedIdentity,
-                    active: joinState.activeView === 'identity added'
-                  }}
-                />
-                <InvitationInput
-                  {...{
-                    dispatch,
-                    activeInvitation: joinState.spaceInvitation || true,
-                    selectedIdentity: joinState.selectedIdentity,
-                    active:
-                      joinState.activeView === 'space invitation acceptor' &&
-                      joinState.spaceViewState === 'invitation input',
-                    invitationType: 'space'
-                  }}
-                />
-                <InvitationRescuer
-                  {...{
-                    dispatch,
-                    activeInvitation: joinState.spaceInvitation || true,
-                    selectedIdentity: joinState.selectedIdentity,
-                    active:
-                      joinState.activeView === 'space invitation acceptor' &&
-                      joinState.spaceViewState === 'invitation rescuer',
-                    invitationType: 'space'
-                  }}
-                />
-                <InvitationAuthenticator
-                  {...{
-                    dispatch,
-                    activeInvitation: joinState.spaceInvitation || true,
-                    selectedIdentity: joinState.selectedIdentity,
-                    active:
-                      joinState.activeView === 'space invitation acceptor' &&
-                      joinState.spaceViewState === 'invitation authenticator',
-                    invitationType: 'space',
-                    ...(joinState.spaceInvitationAnnotation === 'authentication failed' && { failed: true })
-                  }}
-                />
-                <InvitationAccepted
-                  {...{
-                    dispatch,
-                    activeInvitation: joinState.spaceInvitation || true,
-                    selectedIdentity: joinState.selectedIdentity,
-                    active:
-                      joinState.activeView === 'space invitation acceptor' &&
-                      joinState.spaceViewState === 'invitation accepted',
-                    invitationType: 'space'
-                  }}
-                />
-              </div>
-            </div>
-          </AlertPrimitive.Content>
-        </AlertPrimitive.Overlay>
-      </ThemeContext.Provider>
-    </AlertPrimitive.Root>
+    <>
+      <JoinHeading {...{ titleId, invitation: joinState.spaceInvitation, onClickExit: () => {}, exitActionParent }} />
+      <div role='none' className='is-full overflow-hidden'>
+        <div role='none' className='flex is-[1300%]' aria-live='polite'>
+          <IdentitySelector
+            {...{ dispatch, availableIdentities, active: joinState.activeView === 'identity selector' }}
+          />
+          <AdditionMethodSelector
+            {...{
+              dispatch,
+              availableIdentities,
+              active: joinState.activeView === 'addition method selector'
+            }}
+          />
+          <IdentityInput
+            {...{
+              dispatch,
+              active: joinState.activeView === 'identity input' && joinState.additionMethod === 'create identity',
+              method: 'create identity'
+            }}
+          />
+          <IdentityInput
+            {...{
+              dispatch,
+              active: joinState.activeView === 'identity input' && joinState.additionMethod === 'recover identity',
+              method: 'recover identity'
+            }}
+          />
+          <InvitationInput
+            {...{
+              dispatch,
+              activeInvitation: joinState.haloInvitation || true,
+              active:
+                joinState.activeView === 'halo invitation acceptor' && joinState.haloViewState === 'invitation input',
+              invitationType: 'halo'
+            }}
+          />
+          <InvitationRescuer
+            {...{
+              dispatch,
+              activeInvitation: joinState.haloInvitation || true,
+              active:
+                joinState.activeView === 'halo invitation acceptor' && joinState.haloViewState === 'invitation rescuer',
+              invitationType: 'halo'
+            }}
+          />
+          <InvitationAuthenticator
+            {...{
+              dispatch,
+              activeInvitation: joinState.haloInvitation || true,
+              active:
+                joinState.activeView === 'halo invitation acceptor' &&
+                joinState.haloViewState === 'invitation authenticator',
+              invitationType: 'halo',
+              ...(joinState.spaceInvitationAnnotation === 'authentication failed' && { failed: true })
+            }}
+          />
+          <InvitationAccepted
+            {...{
+              dispatch,
+              activeInvitation: joinState.haloInvitation || true,
+              active:
+                joinState.activeView === 'halo invitation acceptor' &&
+                joinState.haloViewState === 'invitation accepted',
+              invitationType: 'halo'
+            }}
+          />
+          <IdentityAdded
+            {...{
+              dispatch,
+              addedIdentity: joinState.selectedIdentity,
+              active: joinState.activeView === 'identity added'
+            }}
+          />
+          <InvitationInput
+            {...{
+              dispatch,
+              activeInvitation: joinState.spaceInvitation || true,
+              selectedIdentity: joinState.selectedIdentity,
+              active:
+                joinState.activeView === 'space invitation acceptor' && joinState.spaceViewState === 'invitation input',
+              invitationType: 'space'
+            }}
+          />
+          <InvitationRescuer
+            {...{
+              dispatch,
+              activeInvitation: joinState.spaceInvitation || true,
+              selectedIdentity: joinState.selectedIdentity,
+              active:
+                joinState.activeView === 'space invitation acceptor' &&
+                joinState.spaceViewState === 'invitation rescuer',
+              invitationType: 'space'
+            }}
+          />
+          <InvitationAuthenticator
+            {...{
+              dispatch,
+              activeInvitation: joinState.spaceInvitation || true,
+              selectedIdentity: joinState.selectedIdentity,
+              active:
+                joinState.activeView === 'space invitation acceptor' &&
+                joinState.spaceViewState === 'invitation authenticator',
+              invitationType: 'space',
+              ...(joinState.spaceInvitationAnnotation === 'authentication failed' && { failed: true })
+            }}
+          />
+          <InvitationAccepted
+            {...{
+              dispatch,
+              activeInvitation: joinState.spaceInvitation || true,
+              selectedIdentity: joinState.selectedIdentity,
+              active:
+                joinState.activeView === 'space invitation acceptor' &&
+                joinState.spaceViewState === 'invitation accepted',
+              invitationType: 'space',
+              doneActionParent
+            }}
+          />
+        </div>
+      </div>
+    </>
   );
 };

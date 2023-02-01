@@ -14,14 +14,13 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
-import { JoinPanel } from './JoinPanel';
-import { JoinPanelProps } from './JoinPanelProps';
+import { JoinDialog, JoinDialogProps } from './JoinDialog';
 
 export default {
-  component: JoinPanel
+  component: JoinDialog
 };
 export const Default = {
-  render: (props: JoinPanelProps) => <JoinPanel {...props} />,
+  render: (props: JoinDialogProps) => <JoinDialog {...props} />,
   decorators: [
     // TODO(wittjosiah): Factor out.
     (Story: StoryFn) => {

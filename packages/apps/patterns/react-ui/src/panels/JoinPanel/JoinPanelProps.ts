@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Dispatch } from 'react';
+import { cloneElement, Dispatch } from 'react';
 
 import type {
   AuthenticatingInvitationObservable,
@@ -16,6 +16,9 @@ export type Profile = Pick<NaturalProfile, 'displayName' | 'identityKey'>;
 
 export interface JoinPanelProps {
   initialInvitationCode?: string;
+  titleId?: string;
+  exitActionParent?: Parameters<typeof cloneElement>[0];
+  doneActionParent?: Parameters<typeof cloneElement>[0];
 }
 
 export interface IdentityAction {

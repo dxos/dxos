@@ -1,9 +1,8 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { Cancel } from '@radix-ui/react-alert-dialog';
 import { ProhibitInset } from 'phosphor-react';
-import React, { ForwardedRef, forwardRef } from 'react';
+import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { useSpace } from '@dxos/react-client';
@@ -15,16 +14,27 @@ export interface JoinSpaceHeadingProps {
   titleId: string;
   invitation?: AuthenticatingInvitationObservable;
   onClickExit?: () => void;
+  exitActionParent?: Parameters<typeof cloneElement>[0];
 }
 
 export const JoinHeading = forwardRef(
-  ({ titleId, invitation, onClickExit }: JoinSpaceHeadingProps, ref: ForwardedRef<HTMLDivElement>) => {
+  (
+    { titleId, invitation, onClickExit, exitActionParent }: JoinSpaceHeadingProps,
+    ref: ForwardedRef<HTMLDivElement>
+  ) => {
     const { t } = useTranslation('os');
 
     const space = useSpace(invitation?.invitation?.spaceKey);
     const spaceTitle = space?.getProperty('title') ?? '(Space title not available)';
 
     const nameId = useId('spaceDisplayName');
+
+    const exitButton = (
+      <Button compact variant='ghost' {...(onClickExit && { onClick: onClickExit })} className='grow-0 shrink-0'>
+        <ProhibitInset className={getSize(5)} />
+        <span className='sr-only'>{t('exit label')}</span>
+      </Button>
+    );
 
     return (
       <div role='none' className={mx(subduedSurface, 'p-2 rounded-bs-md')} ref={ref}>
@@ -42,12 +52,7 @@ export const JoinHeading = forwardRef(
               }}
             />
           </Heading>
-          <Cancel asChild>
-            <Button compact variant='ghost' {...(onClickExit && { onClick: onClickExit })} className='grow-0 shrink-0'>
-              <ProhibitInset className={getSize(5)} />
-              <span className='sr-only'>{t('exit label')}</span>
-            </Button>
-          </Cancel>
+          {exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton}
         </div>
       </div>
     );
