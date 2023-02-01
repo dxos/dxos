@@ -5,7 +5,7 @@ import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 
-import { loadConfig, unDefault, prettyConfig, ConfigDeclaration, forceFilter } from './config';
+import { loadConfig, QuestionOptions, unDefault, prettyConfig, ConfigDeclaration, forceFilter } from './config';
 import {
   executeFileTemplate,
   TemplatingResult,
@@ -17,7 +17,7 @@ import { File } from './file';
 import { filterIncludeExclude } from './util/filterIncludeExclude';
 import { logger } from './util/logger';
 import { runPromises } from './util/runPromises';
-import { inquire } from './util/zodInquire';
+import { InquirableZodType, inquire } from './util/zodInquire';
 
 export type DirectoryTemplateOptions<TInput> = {
   templateDirectory: string;
@@ -66,6 +66,7 @@ export const executeDirectoryTemplate = async <TInput>(
     outputDirectory,
     printMessage,
     message,
+    inputQuestions,
     ...restOptions
   } = mergedOptions;
   const debug = logger(verbose);
@@ -78,27 +79,11 @@ export const executeDirectoryTemplate = async <TInput>(
   let input = mergedOptions.input;
   if (inputShape && executeFileTemplates) {
     if (interactive) {
-      const parse = unDefault(inputShape).safeParse(input);
-      if (!parse.success) {
-        const inquired = await inquire(inputShape, {
-          defaults: input
-        });
-        const inquiredParsed = inputShape.safeParse(inquired);
-        if (!inquiredParsed.success) {
-          throw new Error('invalid input: ' + inquiredParsed.error.toString());
-        }
-        input = inquiredParsed.data as TInput;
-      } else {
-        const parseWithEffects = inputShape.safeParse(input);
-        if (!parse.success) {
-          throw new Error('invalid input: ' + parseWithEffects.error.toString());
-        }
-        input = parse.data as TInput;
-      }
+      input = await acquireInput<TInput>(inputShape, input, inputQuestions, verbose);
     } else {
       const parse = inputShape.safeParse(input);
       if (!parse.success) {
-        throw new Error('invalid input: ' + parse.error.toString());
+        throw new Error('invalid input: ' + formatErrors(parse.error));
       }
       input = parse.data as TInput;
     }
@@ -205,3 +190,35 @@ export const executeDirectoryTemplate = async <TInput>(
   }
   return results;
 };
+
+const acquireInput = async <TInput>(
+  inputShape: InquirableZodType,
+  input?: Partial<TInput> | undefined,
+  questionOptions?: QuestionOptions<TInput>,
+  verbose?: boolean
+) => {
+  const log = logger(!!verbose);
+  const parse = unDefault(inputShape).safeParse(input);
+  if (!parse.success) {
+    const inquired = (await inquire(inputShape, {
+      initialAnswers: input,
+      questions: questionOptions
+    })) as TInput;
+    log('inquired result:');
+    log(inquired);
+    const inquiredParsed = inputShape.safeParse(inquired);
+    if (!inquiredParsed.success) {
+      throw new Error('invalid input: ' + formatErrors(inquiredParsed.error.errors));
+    }
+    input = inquiredParsed.data as TInput;
+  } else {
+    const parseWithEffects = inputShape.safeParse(input);
+    if (!parseWithEffects.success) {
+      throw new Error('invalid input: ' + formatErrors(parseWithEffects.error.errors));
+    }
+    input = parse.data as TInput;
+  }
+  return input;
+};
+
+const formatErrors = (errors?: { message: string }[]) => errors?.map((e) => e?.message)?.join(', ');

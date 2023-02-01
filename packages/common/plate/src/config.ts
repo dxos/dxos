@@ -14,22 +14,25 @@ import {
 import { TEMPLATE_FILE_IGNORE, TemplatingResult } from './executeFileTemplate';
 import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
 import { logger } from './util/logger';
-import { InquirableZodType, InquirableZodObject, InquirablePrimitive } from './util/zodInquire';
+import { InquirableZodType, InquirableZodObject, InquirablePrimitive, QuestionOptions } from './util/zodInquire';
+
+export { QuestionOptions };
 
 export type FilterExpression = string | RegExp;
 
 export type Filter<TInput = any> = FilterExpression[] | ((input: TInput) => FilterExpression[]);
 
 export type ConfigDeclaration<
-  TInput extends InquirableZodType = InquirableZodType,
-  TInherited extends InquirableZodType = InquirableZodType
+  TShape extends InquirableZodType = InquirableZodType,
+  TInheritedShape extends InquirableZodType = InquirableZodType
 > = {
-  include?: Filter<z.infer<TInput>>;
-  exclude?: Filter<z.infer<TInput>>;
-  inputShape?: TInput;
-  inherits?: ConfigDefinition<TInherited>;
+  inherits?: ConfigDefinition<TInheritedShape>;
+  include?: Filter<z.infer<TShape>>;
+  exclude?: Filter<z.infer<TShape>>;
+  inputShape?: TShape;
+  inputQuestions?: QuestionOptions<z.infer<TShape>>;
   message?: (
-    context: Required<DirectoryTemplateOptions<z.infer<TInput>>> & {
+    context: Required<DirectoryTemplateOptions<z.infer<TShape>>> & {
       results: TemplatingResult;
       inheritedMessage?: string;
     }
