@@ -45,13 +45,8 @@ const InvitationAcceptedContent = (props: InvitationAcceptedProps) => {
 };
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
-  const {
-    invitationType: _invitationType,
-    activeInvitation,
-    doneActionParent,
-    onDone: _onDone,
-    ...viewStateProps
-  } = props;
+  const { invitationType: _invitationType, doneActionParent, onDone: _onDone, ...viewStateProps } = props;
+  const { activeInvitation } = viewStateProps;
 
   const doneButton =
     !activeInvitation || activeInvitation === true ? (
