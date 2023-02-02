@@ -1,6 +1,7 @@
 ---
 order: 2
 prev: ./quick-start
+next: echo
 ---
 
 # Platform Overview
@@ -24,38 +25,13 @@ Compare DXOS Applications to current Web2 Applications:
 
 ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript. ECHO connects to other peers directly via [WebRTC](https://en.wikipedia.org/wiki/WebRTC), and continuously replicates writes with those peers using technologies based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). ECHO supports multiple concurrent writers collaborating on large objects, bodies of text, and other "custom data models". Peers going offline and returning to reconcile changes with the online swarm are also supported.
 
-### Spaces
-
-Data is replicated within containers called `spaces`. A `space` is an instance of an ECHO database which can be replicated by a number of peers.
-
-### Items
-
-Specific documents or rows of data are referred to as `items`. `Items` always belong to a space and behave according to a **consistency model**.
-
-### Models
-
-Every item behaves according to a consistency model which describes rules for conflict resolution. ECHO provides at least two specific model types and can be extended with custom models.
-
-*   [`ObjectModel`](../api/@dxos/client/classes/ObjectModel) is a document record with keys and values, where last write wins on any given key.
-*   [`TextModel`](../api/@dxos/text-model/classes/TextModel) is for collaborative rich text editing on a "large string" or rich text model.
-
-Continue to [ECHO Installation and usage](echo/installation).
+Learn more about [ECHO](echo).
 
 ## HALO
 
-Establishing user identity in a non authoritative internet is hard. Every peer has to learn how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
+Establishing user identity in a non authoritative internet is hard. Every peer has to learn how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements. 
 
-### Application
-
-The [HALO application](https://halo.dxos.org) is a software wallet that contains user identities, secrets (i.e., private keys) and other credentials.
-
-### SDK
-
-The HALO SDK is part of the [`@dxos/client`](https://www.npmjs.com/package/@dxos/client) library and provides user authentication, profile, and contact management for app developers.
-
-### Protocol
-
-The HALO protocol supports verification, transport, and exchange of identity information between networked peers.
+Learn more about [HALO](halo).
 
 ## KUBE
 

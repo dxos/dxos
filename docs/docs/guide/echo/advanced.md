@@ -42,6 +42,8 @@ const client = new Client({
 });
 ```
 
+To deploy a locally operated HALO application, clone the [`dxos`](https://github.com/dxos/dxos) repo, and follow the [repository guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md) to set up a local HALO build. HALO is a regular DXOS application with a [`dx.yml`](../cli/publishing) configuration file. You should be able to [start up a local KUBE](../quick-start#starting-a-kube) and [deploy to it](../quick-start#deploying-your-app-to-a-kube).
+
 ### Loading config defaults from a file
 
 In a Node environment, you can use `@dxos/config` to load from a `config/default.yml` file in your project.

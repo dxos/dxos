@@ -15,13 +15,13 @@ import { Client } from '@dxos/client';
 // create a client
 const client = new Client();
 ```
-:::tip
+::: info
 If using React, `<ClientProvider/>` creates a `Client` for you. See usage with [React](react).
 :::
 
-Before manipulating data, the client needs to create or join a [space](spaces).
+Optionally, the client can be given a custom configuration via the `config` property.
 
-Optionally, the client can be given a custom configuration via the `config` property. See the API documentaion for [Config](/api/@dxos/client/classes/Config).
+::: details Custom configuration example
 ```ts file=./snippets/create-client-with-options.ts#L5-
 import { Client, Config } from '@dxos/client';
 
@@ -31,5 +31,8 @@ const client = new Client({
   })
 });
 ```
+:::
 
 For more configuration recipes see [advanced scenarios](advanced).
+
+To begin manipulating data, we must [create an identity](identity), and [join or create a space](spaces).

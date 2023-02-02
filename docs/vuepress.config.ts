@@ -86,7 +86,8 @@ const config: UserConfig = defineUserConfig({
       mdEnhance: {
         sub: true,
         sup: true,
-        attrs: true
+        attrs: true,
+        figure: true
       }
     }
   }),
