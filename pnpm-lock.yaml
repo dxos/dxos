@@ -2427,7 +2427,6 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-components-deprecated': workspace:*
       '@dxos/react-composer': workspace:*
       '@dxos/react-registry-client': workspace:*
       '@dxos/react-toolkit': workspace:*
@@ -2482,7 +2481,6 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
-      '@dxos/react-components-deprecated': link:../../deprecated/react-components-deprecated
       '@dxos/react-registry-client': link:../../experimental/react-registry-client
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/registry-client': link:../../experimental/registry-client
