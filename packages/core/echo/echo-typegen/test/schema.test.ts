@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { id, type } from '@dxos/echo-schema';
+import { id, schema, type } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
@@ -75,5 +75,10 @@ describe('schema', () => {
     const contact = new Contact({ name: 'user', address: { coordinates: { lat: -90, lng: 10 } } });
     const { lat, lng } = contact.address.coordinates!;
     expect({ lat, lng }).to.deep.eq({ lat: -90, lng: 10 });
+  });
+
+  test.only('fields', () => {
+    const contact = new Contact({ name: 'user', address: { coordinates: { lat: -90, lng: 10 } } });
+    console.log(JSON.stringify(contact[schema]?.fields));
   });
 });
