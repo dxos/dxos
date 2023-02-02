@@ -7,3 +7,4 @@ export * from './FeedGraph';
 export * from './JsonView';
 export * from './MasterTable';
 export * from './PublicKeySelector';
+export * from './SwarmDetails';

@@ -10,7 +10,7 @@ import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 import { mx } from '@dxos/react-components';
 
 // TODO(mykola): Add proto schema. Decode bytes.
-export const JsonView: FC<{ data: Object; className?: string }> = ({ data, className }) => {
+export const JsonView: FC<{ data?: Object; className?: string }> = ({ data, className }) => {
   return (
     <SyntaxHighlighter className={mx('flex flex-1 text-xs', className)} language='json' style={style}>
       {JSON.stringify(data, undefined, 2)}

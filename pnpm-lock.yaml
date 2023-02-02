@@ -2438,9 +2438,6 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@monaco-editor/react': ^4.4.6
-      '@mui/icons-material': ^5.8.0
-      '@mui/lab': ^5.0.0-alpha.83
-      '@mui/material': ^5.8.1
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -2493,9 +2490,6 @@ importers:
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/lab': 5.0.0-alpha.103_gjvr4sux4trmetcchoqbgk43ye
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -8445,38 +8439,6 @@ packages:
       '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
       '@types/react': 18.0.21
       react: 18.2.0
-
-  /@mui/lab/5.0.0-alpha.103_gjvr4sux4trmetcchoqbgk43ye:
-    resolution: {integrity: sha512-cYfkgSXZH/cG8BM4UGtPK0Vr9P79wfvF4S5VGiEbEsScU7yROylLZW1l11yg5nZEIVUJ7jQmcaLdlwVSTSbjzg==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@emotion/react': ^11.5.0
-      '@emotion/styled': ^11.3.0
-      '@mui/material': ^5.0.0
-      '@types/react': ^17.0.0 || ^18.0.0
-      react: ^17.0.0 || ^18.0.0
-      react-dom: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@emotion/react':
-        optional: true
-      '@emotion/styled':
-        optional: true
-      '@types/react':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.19.4
-      '@mui/base': 5.0.0-alpha.101_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@mui/system': 5.10.9_iapumuv4e6jcjznwuxpf4tt22e
-      '@mui/types': 7.2.0_@types+react@18.0.21
-      '@mui/utils': 5.10.9_react@18.2.0
-      '@types/react': 18.0.21
-      clsx: 1.2.1
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-is: 18.2.0
-    dev: false
 
   /@mui/lab/5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui:
     resolution: {integrity: sha512-cYfkgSXZH/cG8BM4UGtPK0Vr9P79wfvF4S5VGiEbEsScU7yROylLZW1l11yg5nZEIVUJ7jQmcaLdlwVSTSbjzg==}

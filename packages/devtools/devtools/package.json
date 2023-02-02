@@ -19,7 +19,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/devtools-mesh": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/kai": "workspace:*",
     "@dxos/keys": "workspace:*",

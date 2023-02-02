@@ -103,9 +103,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../devtools-mesh"
     }
   ]
 }
