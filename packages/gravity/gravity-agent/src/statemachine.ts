@@ -6,9 +6,10 @@ import assert from 'node:assert';
 
 // import { Trigger } from '@dxos/async';
 import { Invitation, Space, Client, PublicKey } from '@dxos/client';
-import { log } from '@dxos/log';
+// import { log } from '@dxos/log';
 import { Command } from '@dxos/protocols/proto/dxos/gravity';
 
+import { log } from './main';
 import { processSyncClient, processSyncServer } from './process';
 
 export type StateMachineFactory = (id: string) => AgentStateMachine;
@@ -72,6 +73,7 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
+      log.info('createSpaceInvitation swarm_id:', command.createSpaceInvitation.swarmKey);
     }
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
@@ -79,22 +81,26 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
+      log.info('acceptInvitation swarm_id:', command.acceptSpaceInvitation.swarmKey);
     }
     // --- SYNC CHANNEL: SRV ---
     else if (command.syncServer) {
       await processSyncServer(command); // <- process.ts
+      log.info('processSyncServer', command);
     }
     // --- SYNC CHANNEL: CLT ---
     else if (command.syncClient) {
       await processSyncClient(command); // <- process.ts
+      log.info('processSyncClient', command);
     }
     // --- TEAR DOWN ---
     else if (command.tearDown) {
       await this.agent.client.echo.close();
+      log.info('tearDown');
     }
     //
     else {
-      log('Error: invalid command ', { command });
+      log.error('Error: invalid command ', { command });
       throw new Error('Invalid command');
     }
   }

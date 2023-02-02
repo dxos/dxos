@@ -1,3 +1,4 @@
+/* eslint-disable import/order */
 //
 // Copyright 2022 DXOS.org
 //
@@ -7,8 +8,11 @@ import assert from 'assert';
 import { Event } from '@dxos/async';
 import { Client, ClientServicesProvider, fromHost, PublicKey } from '@dxos/client';
 import { Config, ConfigProto } from '@dxos/config';
-import { log } from '@dxos/log';
 import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
+
+import { log } from './main';
+
+// import { log } from '@dxos/log';
 
 import { AgentStateMachine, AgentContext, DummyStateMachine } from './statemachine';
 
@@ -96,12 +100,12 @@ export class Agent implements AgentContext {
       return;
     }
 
-    log('stopping...', { id: this.id });
+    log.info('stopping...', { id: this.id });
     if (this._spec.stopSequence) {
       await this.runSequence(this._spec.stopSequence);
     }
 
-    log('stopped', { id: this.id });
+    log.info('stopped', { id: this.id });
     this._running = false;
   }
 

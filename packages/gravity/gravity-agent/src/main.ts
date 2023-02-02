@@ -20,7 +20,8 @@ import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 import { Agent } from './agent';
 import { testStateMachineFactory } from './statemachine';
 
-const log = winston.createLogger({
+export const log = winston.createLogger({
+  level: 'info',
   format: ecsFormat(),
   transports: [
     new winston.transports.Console(),
@@ -94,7 +95,7 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  log.info('Tests are running...');
+  // log.info('Tests are running...');
 };
 
 void main();
