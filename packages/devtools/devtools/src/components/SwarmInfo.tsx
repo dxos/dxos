@@ -29,9 +29,9 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
     <div>Connections:</div>
     <div className='flex-1 overflow-hidden'>
       {swarmInfo.connections?.map((connection) => (
-        <div key={connection.sessionId.toHex()} className='flex-1 inline-flex overflow-hidden'>
-          <div className='align-middle w-[100]'>{connection.remotePeerId.toHex()}</div>
-          <div className='m-1'>
+        <div key={connection.sessionId.toHex()} className='flex-1 overflow-hidden'>
+          <div className='inline-flex w-[100]'>{connection.remotePeerId.toHex()}</div>
+          <div className='inline-flex m-1'>
             <Button onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
               Details
             </Button>
