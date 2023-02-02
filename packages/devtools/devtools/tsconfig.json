@@ -45,9 +45,6 @@
       "path": "../../common/react-components"
     },
     {
-      "path": "../../common/timeframe"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -82,9 +79,6 @@
     },
     {
       "path": "../../experimental/kai"
-    },
-    {
-      "path": "../../experimental/react-registry-client"
     },
     {
       "path": "../../experimental/registry-client"
