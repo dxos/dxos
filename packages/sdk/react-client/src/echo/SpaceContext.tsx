@@ -26,6 +26,11 @@ export const useSpaceSetter = () => {
   return setSpace;
 };
 
+export const useCurrentSpace = () => {
+  const { space } = useContext(SpaceContext);
+  return space;
+};
+
 /**
  * Get a specific Space via its key.
  * Requires ClientContext to be set via ClientProvider.

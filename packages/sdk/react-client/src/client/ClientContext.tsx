@@ -171,12 +171,12 @@ export const ClientProvider = ({
     return <Fallback client={client} status={status} />;
   }
 
-  if (spaceProvider) {
-    children = <SpaceProvider>{children}</SpaceProvider>;
-  }
-
   if (shellProvider) {
     children = <ShellProvider>{children}</ShellProvider>;
+  }
+
+  if (spaceProvider) {
+    children = <SpaceProvider>{children}</SpaceProvider>;
   }
 
   // prettier-ignore

@@ -444,6 +444,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -481,6 +482,7 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
+      '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry

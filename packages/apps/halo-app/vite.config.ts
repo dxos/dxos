@@ -75,10 +75,11 @@ export default defineConfig({
     }),
     ThemePlugin({
       content: [
-        resolve(__dirname, './index.html'),
+        resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
       ]
     }),
     ReactPlugin(),
