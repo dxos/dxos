@@ -28,6 +28,7 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
+import { getCredentialAssertion } from '@dxos/credentials';
 
 const DATA_PIPELINE_READY_TIMEOUT = 3_000;
 
@@ -106,12 +107,12 @@ export class DataSpaceManager {
     log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
 
-    await spaceGenesis(this._keyring, this._signingContext, space.inner);
+    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner);
     await this._metadataStore.addSpace(metadata);
 
-    const memberCredentials = space.inner.spaceState.getCredentialsOfType('dxos.halo.credentials.SpaceMember');
-    assert(memberCredentials.length === 1);
-    await this._signingContext.recordCredential(memberCredentials[0]);
+    const memberCredential = credentials[1];
+    assert(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    await this._signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline();
     this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
