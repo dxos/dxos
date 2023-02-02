@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { Button } from '@mui/material';
-
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { CopyText, JsonTreeView } from '@dxos/react-components-deprecated';
+import { Button } from '@dxos/react-components';
+
+import { JsonView } from './JsonView';
 
 export interface ConnectionInfoViewProps {
   connectionInfo: ConnectionInfo;
@@ -18,25 +18,17 @@ export interface ConnectionInfoViewProps {
 export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => (
   <div>
     <div>State: {connectionInfo.state}</div>
-    <div>
-      Session id: <CopyText value={connectionInfo.sessionId.toHex()} />
-    </div>
-    <div>
-      Remote peer id: <CopyText value={connectionInfo.remotePeerId.toHex()} />
-    </div>
+    <div>Session id: {connectionInfo.sessionId.toHex()}</div>
+    <div>Remote peer id: {connectionInfo.remotePeerId.toHex()}</div>
     <div>Transport: {connectionInfo.transport}</div>
     <div>Protocol extensions: {connectionInfo.protocolExtensions?.join(',')}</div>
     <hr />
     <div>Connection events:</div>
-    <JsonTreeView
+    <JsonView
       data={{
-        ...connectionInfo.events
+        events: connectionInfo.events
       }}
     />
-    {onReturn && (
-      <Button variant='contained' onClick={onReturn}>
-        Back
-      </Button>
-    )}
+    {onReturn && <Button onClick={onReturn}>Back</Button>}
   </div>
 );

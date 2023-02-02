@@ -45,9 +45,6 @@
       "path": "../../common/react-components"
     },
     {
-      "path": "../../common/timeframe"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -75,9 +72,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../deprecated/react-components-deprecated"
-    },
-    {
       "path": "../../deprecated/react-toolkit"
     },
     {
@@ -85,9 +79,6 @@
     },
     {
       "path": "../../experimental/kai"
-    },
-    {
-      "path": "../../experimental/react-registry-client"
     },
     {
       "path": "../../experimental/registry-client"
@@ -103,9 +94,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../devtools-mesh"
     }
   ]
 }

@@ -323,11 +323,6 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/devtools-mesh/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/devtools/initializers/bare/package.json",
           "jsonpath": "$.version"
         },
