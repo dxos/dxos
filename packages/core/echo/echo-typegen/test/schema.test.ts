@@ -77,8 +77,44 @@ describe('schema', () => {
     expect({ lat, lng }).to.deep.eq({ lat: -90, lng: 10 });
   });
 
-  test.only('fields', () => {
+  test('fields', () => {
     const contact = new Contact({ name: 'user', address: { coordinates: { lat: -90, lng: 10 } } });
-    console.log(JSON.stringify(contact[schema]?.fields));
+    expect(contact[schema]?.fields).to.deep.eq([
+      {
+        name: 'name',
+        type: {
+          kind: 'string'
+        }
+      },
+      {
+        name: 'username',
+        type: {
+          kind: 'string'
+        }
+      },
+      {
+        name: 'email',
+        type: {
+          kind: 'string'
+        }
+      },
+      {
+        name: 'address',
+        type: {
+          kind: 'record',
+          objectType: 'example.test.Address'
+        }
+      },
+      {
+        name: 'tasks',
+        type: {
+          kind: 'array',
+          elementType: {
+            kind: 'ref',
+            objectType: 'example.test.Task'
+          }
+        }
+      }
+    ]);
   });
 });
