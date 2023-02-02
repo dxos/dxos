@@ -6,6 +6,7 @@ import assert from 'node:assert';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { getCredentialAssertion } from '@dxos/credentials';
 import {
   DataServiceSubscriptions,
   MetadataStore,
@@ -28,7 +29,6 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
-import { getCredentialAssertion } from '@dxos/credentials';
 
 const DATA_PIPELINE_READY_TIMEOUT = 3_000;
 
