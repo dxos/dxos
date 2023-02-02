@@ -20,7 +20,11 @@ filebeat.inputs:
 
 # filestream is an input for collecting log messages from files.
 - type: filestream
-
+  parsers:
+      - ndjson:
+        overwrite_keys: true 
+        add_error_key: true 
+        expand_keys: true
   # Unique ID among all inputs, an ID is required.
   id: dxos-gravity-agent
 

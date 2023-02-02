@@ -62,7 +62,9 @@ const createLog = (): LogImp => {
    * Process the current log call.
    */
   const processLog = (level: LogLevel, message: string, context?: LogContext, meta?: LogMetadata, error?: Error) => {
-    log._config.processors.forEach((fn) => fn(log._config, { level, message, context, meta, error }));
+    log._config.processors.forEach(
+      (fn) => fn(log._config, { level, message, context, meta, error })
+    );
   };
 
   return log;

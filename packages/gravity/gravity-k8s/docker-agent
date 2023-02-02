@@ -1,10 +1,9 @@
 FROM ubuntu:22.04 as builder
-
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y software-properties-common \
     psmisc git wget curl gnupg \
     apt-utils build-essential \
-    autoconf libtool build-essential cmake
-RUN apt-get install -y libxtst-dev libpng++-dev npm coreutils jq
+    autoconf libtool build-essential cmake\
+    libxtst-dev libpng++-dev npm coreutils jq
 RUN npm i -g n pnpm@7.17.0
 RUN mkdir -p /usr/local/n
 ARG NODE_VER
@@ -23,9 +22,9 @@ COPY ./log-config.yml .
 COPY ./run_agent.sh ./
 RUN chmod a+x ./run_agent.sh
 WORKDIR /opt
-RUN curl -o filebeat-8.5.3-linux-x86_64.tar.gz https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.5.3-linux-x86_64.tar.gz && tar xfz ./filebeat-8.5.3-linux-x86_64.tar.gz
-WORKDIR /opt/filebeat-8.5.3-linux-x86_64
-COPY ./filebeat/filebeat.yml /opt/filebeat-8.5.3-linux-x86_64/
+RUN curl -o filebeat-8.5.3-linux-arm64.tar.gz https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.5.3-linux-arm64.tar.gz && tar xfz ./filebeat-8.5.3-linux-arm64.tar.gz
+WORKDIR /opt/filebeat-8.5.3-linux-arm64
+COPY ./filebeat/filebeat.yml /opt/filebeat-8.5.3-linux-arm64/
 WORKDIR /dxos/dxos/packages/gravity/gravity-agent
 ARG GRAVITY_TEST_SCENARIO
 ENV GRAVITY_TEST_SCENARIO=${GRAVITY_TEST_SCENARIO:-host}

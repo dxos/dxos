@@ -1,27 +1,37 @@
 //
 // Copyright 2022 DXOS.org
 //
+import ecsFormat from '@elastic/ecs-winston-format';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import { join } from 'path';
 import process from 'process';
+import winston from 'winston';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { TestBuilder } from '@dxos/client/testing';
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { Config, ConfigProto } from '@dxos/config';
-import { log } from '@dxos/log';
+// import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 
 import { Agent } from './agent';
 import { testStateMachineFactory } from './statemachine';
 
-// TODO(burdon): Logging meta doesn't work when running from pnpm agent.
-log.config({
-  filter: 'info'
+const log = winston.createLogger({
+  format: ecsFormat(),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: process!.env?.GRAVITY_LOG_FILE })
+  ]
 });
+
+// TODO(burdon): Logging meta doesn't work when running from pnpm agent.
+// log.config({
+//   filter: 'info'
+// });
 
 const parseYamlWithSchema = <T>(codec: ProtoCodec<T>, yamlSource: string): T => codec.fromObject(yaml.load(yamlSource));
 
@@ -84,7 +94,7 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  log('Tests are running...');
+  log.info('Tests are running...');
 };
 
 void main();

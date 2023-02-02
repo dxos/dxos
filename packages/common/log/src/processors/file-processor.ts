@@ -13,7 +13,7 @@ let fd: number | undefined;
 export const FILE_PROCESSOR: LogProcessor = (config, entry) => {
   if (!fd) {
     try {
-      mkdirSync(dirname(getLogFilePath()))
+      mkdirSync(dirname(getLogFilePath()));
     } catch {}
     fd = openSync(getLogFilePath(), 'w');
   }
@@ -21,10 +21,10 @@ export const FILE_PROCESSOR: LogProcessor = (config, entry) => {
   const record = {
     ...entry,
     meta: {
-      ...entry.meta,
+      ...entry.meta
     }
   };
-  if(record.context) {
+  if (record.context) {
     record.context = jsonify(record.context);
   }
   if (record.meta?.scope) {
@@ -36,10 +36,12 @@ export const FILE_PROCESSOR: LogProcessor = (config, entry) => {
 
 let logFilePath: string | undefined;
 const getLogFilePath = () => {
-  logFilePath ??= process.env.LOG_FILE ?? (process.env.HOME ? `${process.env.HOME}/.dxlog/${new Date().toISOString()}.log` : undefined);
+  logFilePath ??=
+    process.env.LOG_FILE ??
+    (process.env.HOME ? `${process.env.HOME}/.dxlog/${new Date().toISOString()}.log` : undefined);
 
   return logFilePath!;
-}
+};
 
 /**
  * Recursively converts an object into a JSON-compatible object.
@@ -54,13 +56,13 @@ const jsonify = (value: any): any => {
       if (typeof value.toJSON === 'function') {
         return value.toJSON();
       }
-      const res: any = {}
+      const res: any = {};
       for (const key of Object.keys(value)) {
         res[key] = jsonify(value[key]);
       }
-      return res
+      return res;
     }
   } else {
     return value;
   }
-}
+};
