@@ -293,8 +293,6 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
                 dataFeedKey
               });
 
-              // TODO(dmaretskyi): Record credential in our HALO.
-
               // 4. Create local space.
               const assertion = getCredentialAssertion(credential);
               assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
@@ -304,6 +302,9 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<DataSpac
                 spaceKey: assertion.spaceKey,
                 genesisFeedKey: assertion.genesisFeedKey
               });
+
+              // Record credential in our HALO.
+              await this._signingContext.recordCredential(credential);
 
               // 5. Success.
               log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });

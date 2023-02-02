@@ -26,8 +26,11 @@ interface ConstructSpaceParams {
 
 export type JoinIdentityParams = {
   identityKey: PublicKey;
+  deviceKey: PublicKey;
   haloSpaceKey: PublicKey;
   haloGenesisFeedKey: PublicKey;
+  controlFeedKey: PublicKey;
+  dataFeedKey: PublicKey;
 };
 
 export type CreateIdentityOptions = {
@@ -143,12 +146,12 @@ export class IdentityManager {
 
     const identityRecord: IdentityRecord = {
       identityKey: params.identityKey,
-      deviceKey: await this._keyring.createKey(),
+      deviceKey: params.deviceKey,
       haloSpace: {
         spaceKey: params.haloSpaceKey,
         genesisFeedKey: params.haloGenesisFeedKey,
-        writeControlFeedKey: await this._keyring.createKey(),
-        writeDataFeedKey: await this._keyring.createKey()
+        writeControlFeedKey: params.controlFeedKey,
+        writeDataFeedKey: params.dataFeedKey
       }
     };
     const identity = await this._constructIdentity(identityRecord);
@@ -156,6 +159,7 @@ export class IdentityManager {
     await identity.open();
     this._identity = identity;
     await this._metadataStore.setIdentityRecord(identityRecord);
+    await this._identity.ready();
     this.stateUpdate.emit();
     return identity;
   }

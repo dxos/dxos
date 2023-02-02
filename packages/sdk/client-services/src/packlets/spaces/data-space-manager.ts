@@ -6,6 +6,7 @@ import assert from 'node:assert';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { getCredentialAssertion } from '@dxos/credentials';
 import {
   DataServiceSubscriptions,
   MetadataStore,
@@ -106,8 +107,13 @@ export class DataSpaceManager {
     log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
 
-    await spaceGenesis(this._keyring, this._signingContext, space.inner);
+    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner);
     await this._metadataStore.addSpace(metadata);
+
+    const memberCredential = credentials[1];
+    assert(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    await this._signingContext.recordCredential(memberCredential);
+
     await space.initializeDataPipeline();
     this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
 
