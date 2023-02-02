@@ -29,11 +29,11 @@ filebeat.inputs:
 
 # filestream is an input for collecting log messages from files.
 - type: container
-  parsers:
-      - ndjson:
-        overwrite_keys: true 
-        add_error_key: true 
-        expand_keys: true
+  # parsers:
+  #     - ndjson:
+  #       overwrite_keys: true 
+  #       add_error_key: true 
+  #       expand_keys: true
   # Unique ID among all inputs, an ID is required.
   id: dxos-gravity-agent
 
@@ -41,8 +41,8 @@ filebeat.inputs:
   enabled: true 
 
   # Paths that should be crawled and fetched. Glob based paths.
-  paths:
-    - "/tmp/dxos/gravity-*.log"
+  paths: 
+    - '/var/log/containers/*.log'
     #- c:\programdata\elasticsearch\logs\*
 
   # Exclude lines. A list of regular expressions to match. It drops the lines that are
