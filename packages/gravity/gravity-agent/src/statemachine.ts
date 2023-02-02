@@ -9,7 +9,7 @@ import { Invitation, Space, Client, PublicKey } from '@dxos/client';
 // import { log } from '@dxos/log';
 import { Command } from '@dxos/protocols/proto/dxos/gravity';
 
-import { log } from './main';
+import { log, Sprintf } from './main';
 import { processSyncClient, processSyncServer } from './process';
 
 export type StateMachineFactory = (id: string) => AgentStateMachine;
@@ -73,7 +73,7 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
-      log.info('createSpaceInvitation swarm_id:', command.createSpaceInvitation.swarmKey);
+      log.info([Sprintf('swarm_id:{0}', command.createSpaceInvitation.swarmKey), 'createInvitation']);
     }
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
@@ -81,17 +81,17 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
-      log.info('acceptInvitation swarm_id:', command.acceptSpaceInvitation.swarmKey);
+      log.info([Sprintf('swarm_id:{0}', command.acceptSpaceInvitation.swarmKey), 'acceptInvitation']);
     }
     // --- SYNC CHANNEL: SRV ---
     else if (command.syncServer) {
       await processSyncServer(command); // <- process.ts
-      log.info('processSyncServer', command);
+      log.info('processSyncServer');
     }
     // --- SYNC CHANNEL: CLT ---
     else if (command.syncClient) {
       await processSyncClient(command); // <- process.ts
-      log.info('processSyncClient', command);
+      log.info('processSyncClient');
     }
     // --- TEAR DOWN ---
     else if (command.tearDown) {

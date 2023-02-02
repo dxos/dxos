@@ -29,6 +29,12 @@ export const log = winston.createLogger({
   ]
 });
 
+export const Sprintf = (str: string, ...args: string[]) => {
+  for (let idx = 0; idx < args.length; idx++) {
+    str = str.replace(`{${idx}}`, args[idx]);
+  }
+  return str;
+};
 // TODO(burdon): Logging meta doesn't work when running from pnpm agent.
 // log.config({
 //   filter: 'info'
