@@ -20,12 +20,16 @@ import { AgentSpec } from '@dxos/protocols/proto/dxos/gravity';
 import { Agent } from './agent';
 import { testStateMachineFactory } from './statemachine';
 
+export const __component__ = 'gravity-agent';
+export const __loglevel__ = 'info';
+
 export const log = winston.createLogger({
-  level: 'info',
+  level: __loglevel__,
   format: ecsFormat(),
+  defaultMeta: { service: 'gravity-agent' },
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: process!.env?.GRAVITY_LOG_FILE })
+    new winston.transports.File({ filename: process!.env?.GRAVITY_LOG_FILE, level: __loglevel__ })
   ]
 });
 
@@ -101,7 +105,12 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  // log.info('Tests are running...');
+  log.log({
+    level: __loglevel__,
+    component: __component__,
+    operation: 'main',
+    message: Sprintf('Tests are running...')
+  });
 };
 
 void main();

@@ -9,7 +9,7 @@ import { Invitation, Space, Client, PublicKey } from '@dxos/client';
 // import { log } from '@dxos/log';
 import { Command } from '@dxos/protocols/proto/dxos/gravity';
 
-import { log, Sprintf } from './main';
+import { log, Sprintf, __component__, __loglevel__ } from './main';
 import { processSyncClient, processSyncServer } from './process';
 
 export type StateMachineFactory = (id: string) => AgentStateMachine;
@@ -73,7 +73,12 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
-      log.info([Sprintf('swarm_id:{0}', command.createSpaceInvitation.swarmKey), 'createInvitation']);
+      log.log({
+        level: __loglevel__,
+        component: __component__,
+        operation: 'createSpaceInvitatin',
+        message: Sprintf('swarm_id={0}', command.createSpaceInvitation.swarmKey)
+      });
     }
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
@@ -81,22 +86,44 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
-      log.info([Sprintf('swarm_id:{0}', command.acceptSpaceInvitation.swarmKey), 'acceptInvitation']);
+      log.log({
+        level: __loglevel__,
+        component: __component__,
+        operation: 'acceptSpaceInvitatin',
+        message: Sprintf('swarm_id={0}', command.acceptSpaceInvitation.swarmKey)
+      });
     }
     // --- SYNC CHANNEL: SRV ---
     else if (command.syncServer) {
       await processSyncServer(command); // <- process.ts
-      log.info('processSyncServer');
+      log.log({
+        level: __loglevel__,
+        component: __component__,
+        operation: 'processSyncServer',
+        message: ''
+      });
     }
     // --- SYNC CHANNEL: CLT ---
     else if (command.syncClient) {
       await processSyncClient(command); // <- process.ts
       log.info('processSyncClient');
+      log.log({
+        level: __loglevel__,
+        component: __component__,
+        operation: 'processSyncClient',
+        message: ''
+      });
     }
     // --- TEAR DOWN ---
     else if (command.tearDown) {
       await this.agent.client.echo.close();
       log.info('tearDown');
+      log.log({
+        level: __loglevel__,
+        component: __component__,
+        operation: 'tearDown',
+        message: ''
+      });
     }
     //
     else {
