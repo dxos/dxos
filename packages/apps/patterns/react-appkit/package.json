@@ -12,9 +12,13 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "prebuild": "dxtype src/proto/tasks.proto src/proto/gen/tasks.ts"
+  },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -29,6 +33,7 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
+    "@dxos/echo-typegen": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
     "@types/lodash.throttle": "^4.1.7",
     "@types/react": "^18.0.21",

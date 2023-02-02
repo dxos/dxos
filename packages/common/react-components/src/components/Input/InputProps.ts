@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ComponentProps, ReactNode } from 'react';
+import { ComponentProps, ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { MessageValence } from '../../props';
 
@@ -31,11 +31,11 @@ interface SharedSlots {
 }
 
 export interface InputSlots extends SharedSlots {
-  input?: Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled' | 'placeholder'>;
+  input?: Omit<ComponentPropsWithoutRef<'input'>, 'value' | 'onChange' | 'size' | 'disabled' | 'placeholder'>;
 }
 
 export interface TextareaSlots extends SharedSlots {
-  input?: Omit<ComponentProps<'textarea'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled' | 'placeholder'>;
+  input?: Omit<ComponentPropsWithoutRef<'textarea'>, 'value' | 'onChange' | 'size' | 'disabled' | 'placeholder'>;
 }
 
 export interface InputProps extends SharedTextInputProps {
