@@ -13,6 +13,8 @@ import { log } from '@dxos/log';
 import { getAsyncValue, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
 import { printBanner } from '../banner';
+import { SpaceProvider } from '../echo';
+import { ShellProvider } from '../os';
 
 export type ClientContextProps = {
   client: Client;
@@ -64,6 +66,20 @@ export interface ClientProviderProps {
   fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
   /**
+   * Whether or not to include a SpaceProvider as a child.
+   *
+   * Default is true.
+   */
+  spaceProvider?: boolean;
+
+  /**
+   * Whether or not to include a ShellProvider as a child.
+   *
+   * Default is true.
+   */
+  shellProvider?: boolean;
+
+  /**
    * Post initialization hook.
    * @param Client
    * @deprecated Previously used to register models.
@@ -81,6 +97,8 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
+  spaceProvider = true,
+  shellProvider = true,
   onInitialize
 }: ClientProviderProps) => {
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
@@ -151,6 +169,14 @@ export const ClientProvider = ({
 
   if (!client || status !== Status.ACTIVE) {
     return <Fallback client={client} status={status} />;
+  }
+
+  if (spaceProvider) {
+    children = <SpaceProvider>{children}</SpaceProvider>;
+  }
+
+  if (shellProvider) {
+    children = <ShellProvider>{children}</ShellProvider>;
   }
 
   // prettier-ignore

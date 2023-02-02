@@ -25,21 +25,37 @@ service WorkerService {
   rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
-enum EmbedLayout {
-  HIDDEN = 0;
+enum ShellDisplay {
+  NONE = 0;
   FULLSCREEN = 1;
 }
 
-message LayoutRequest {
-  EmbedLayout layout = 1;
+message DisplayRequest {
+  ShellDisplay display = 1;
 }
 
 message SpaceRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
-/// OS Embedded UI RPCs.
-service OsEmbedService {
-  rpc SetLayout(LayoutRequest) returns (google.protobuf.Empty);
+/// OS App UI RPCs.
+service OsAppService {
+  rpc SetDisplay(DisplayRequest) returns (google.protobuf.Empty);
   rpc SetSpace(SpaceRequest) returns (google.protobuf.Empty);
+}
+
+enum ShellLayout {
+  DEFAULT = 0;
+  IDENTITY = 1;
+  DEVICES = 2;
+  SPACES = 3;
+}
+
+message LayoutRequest {
+  ShellLayout layout = 1;
+}
+
+/// OS Shell UI RPCs.
+service OsShellService {
+  rpc SetLayout(LayoutRequest) returns (google.protobuf.Empty);
 }
