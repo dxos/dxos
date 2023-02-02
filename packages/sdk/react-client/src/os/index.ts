@@ -4,4 +4,4 @@
 
 import './style.css';
 
-export * from './EmbedContext';
+export * from './ShellContext';

@@ -14,9 +14,9 @@ import { ClientProvider } from '@dxos/react-client';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { Embed } from './Embed';
+import { Shell } from './Shell';
 
-void initializeAppTelemetry('halo-embed', new Config(Defaults()));
+void initializeAppTelemetry('halo-shell', new Config(Defaults()));
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 const serviceProvider = (config?: Config) =>
@@ -25,10 +25,18 @@ const serviceProvider = (config?: Config) =>
 const root = createRoot(document.getElementById('root')!);
 
 const main = async () => {
-  const port = await createIFramePort({ channel: 'dxos:embed' });
+  const port = await createIFramePort({ channel: 'dxos:shell' });
   const rpc = createProtoRpcPeer({
     requested: {
-      OsEmbedService: schema.getService('dxos.iframe.OsEmbedService')
+      OsAppService: schema.getService('dxos.iframe.OsAppService')
+    },
+    exposed: {
+      OsShellService: schema.getService('dxos.iframe.OsShellService')
+    },
+    handlers: {
+      OsShellService: {
+        setLayout: async (layout) => {}
+      }
     },
     port
   });
@@ -37,7 +45,7 @@ const main = async () => {
   root.render(
     // <StrictMode>
     <ClientProvider config={configProvider} services={serviceProvider}>
-      <Embed rpc={rpc} />
+      <Shell rpc={rpc} />
     </ClientProvider>
     // </StrictMode>
   );

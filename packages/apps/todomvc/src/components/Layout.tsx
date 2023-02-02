@@ -5,15 +5,15 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { EmbedLayout, useEmbed, useSpace } from '@dxos/react-client';
+import { ShellDisplay, useShell, useSpace } from '@dxos/react-client';
 
 export const Layout = () => {
-  const { setLayout } = useEmbed();
+  const { setDisplay } = useShell();
   const space = useSpace();
 
   return (
     <>
-      <button id='open' onClick={() => setLayout(EmbedLayout.FULLSCREEN)} data-testid='open-button'>
+      <button id='open' onClick={() => setDisplay(ShellDisplay.FULLSCREEN)} data-testid='open-button'>
         ❯
       </button>
       <section className='todoapp'>{space && <Outlet context={{ space }} />}</section>

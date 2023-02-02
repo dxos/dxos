@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export { EmbedLayout } from '@dxos/protocols/proto/dxos/iframe';
+export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 
 export * from './client';
 export * from './echo';

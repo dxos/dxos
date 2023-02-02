@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { EmbedLayout, OsEmbedService } from '@dxos/protocols/proto/dxos/iframe';
+import { ShellDisplay, OsAppService } from '@dxos/protocols/proto/dxos/iframe';
 import { useClient, useSpaces } from '@dxos/react-client';
 import { ProtoRpcPeer } from '@dxos/rpc';
 import { humanize } from '@dxos/util';
 
-export const Embed = ({ rpc }: { rpc: ProtoRpcPeer<{ OsEmbedService: OsEmbedService }> }) => {
+export const Shell = ({ rpc }: { rpc: ProtoRpcPeer<{ OsAppService: OsAppService }> }) => {
   const client = useClient();
   const spaces = useSpaces();
 
@@ -22,7 +22,7 @@ export const Embed = ({ rpc }: { rpc: ProtoRpcPeer<{ OsEmbedService: OsEmbedServ
           Create
         </button>
         <button
-          onClick={() => rpc.rpc.OsEmbedService.setLayout({ layout: EmbedLayout.HIDDEN })}
+          onClick={() => rpc.rpc.OsAppService.setDisplay({ display: ShellDisplay.NONE })}
           data-testid='close-left-panel'
         >
           Close
@@ -32,7 +32,7 @@ export const Embed = ({ rpc }: { rpc: ProtoRpcPeer<{ OsEmbedService: OsEmbedServ
         {spaces.map((space) => {
           const key = space.key.toHex();
           return (
-            <li key={key} onClick={() => rpc.rpc.OsEmbedService.setSpace({ spaceKey: space.key })}>
+            <li key={key} onClick={() => rpc.rpc.OsAppService.setSpace({ spaceKey: space.key })}>
               {humanize(key)}
             </li>
           );
