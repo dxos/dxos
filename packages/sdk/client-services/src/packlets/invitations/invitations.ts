@@ -18,7 +18,7 @@ export const AUTHENTICATION_CODE_LENGTH = 6;
 export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
 
 // TODO(burdon): Don't close until RPC has complete (bug).
-export const ON_CLOSE_DELAY = 500;
+export const ON_CLOSE_DELAY = 1000;
 
 export interface InvitationsService {
   createInvitation(invitation: Invitation): Stream<Invitation>;

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialConsumer, CredentialGenerator } from '@dxos/credentials';
+import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
   Database,
@@ -159,23 +159,39 @@ export class DataSpace implements ISpace {
   @timed(10_000)
   private async _createWritableFeeds() {
     const credentials: Credential[] = [];
-    const generator = new CredentialGenerator(
-      this._keyring,
-      this._signingContext.identityKey,
-      this._signingContext.deviceKey
-    );
-
     if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
       this.inner.setControlFeed(controlFeed);
+
       credentials.push(
-        await generator.createFeedAdmission(this.key, controlFeed.key, AdmittedFeed.Designation.CONTROL)
+        await this._signingContext.credentialSigner.createCredential({
+          subject: controlFeed.key,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            spaceKey: this.key,
+            deviceKey: this._signingContext.deviceKey,
+            identityKey: this._signingContext.identityKey,
+            designation: AdmittedFeed.Designation.CONTROL
+          }
+        })
       );
     }
     if (!this.inner.dataFeedKey) {
       const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
       this.inner.setDataFeed(dataFeed);
-      credentials.push(await generator.createFeedAdmission(this.key, dataFeed.key, AdmittedFeed.Designation.DATA));
+
+      credentials.push(
+        await this._signingContext.credentialSigner.createCredential({
+          subject: dataFeed.key,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            spaceKey: this.key,
+            deviceKey: this._signingContext.deviceKey,
+            identityKey: this._signingContext.identityKey,
+            designation: AdmittedFeed.Designation.DATA
+          }
+        })
+      );
     }
 
     if (credentials.length > 0) {

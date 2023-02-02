@@ -9,6 +9,8 @@ filter:
   - test.ts:debug
   - database:debug
   - notarization:debug
+  - feed-store:debug
+  - control-pipeline:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug

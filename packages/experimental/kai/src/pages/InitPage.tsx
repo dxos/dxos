@@ -25,6 +25,7 @@ const InitPage = () => {
   if (profile) {
     // TODO(burdon): Better way to throw/display errors?
     if (!spaces.length) {
+      return null;
       throw new Error('No spaces.');
     }
 
