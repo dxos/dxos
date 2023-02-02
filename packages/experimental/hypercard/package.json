@@ -40,7 +40,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-composer": "workspace:*",
-    "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
