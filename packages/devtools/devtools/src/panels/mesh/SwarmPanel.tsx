@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { SwarmDetails } from '@dxos/devtools-mesh';
 import { useDevtools, useStream } from '@dxos/react-client';
+
+import { SwarmDetails } from '../../components';
 
 const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
