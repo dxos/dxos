@@ -8,11 +8,10 @@ import { createRoot } from 'react-dom/client';
 import '@dxosTheme';
 import { fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
-import { schema } from '@dxos/protocols';
 import { initializeAppTelemetry } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { createProtoRpcPeer } from '@dxos/rpc';
-import { createIFramePort } from '@dxos/rpc-tunnel';
+import { ThemeProvider } from '@dxos/react-components';
+import { osTranslations } from '@dxos/react-ui';
 
 import { Shell } from './Shell';
 
@@ -24,31 +23,12 @@ const serviceProvider = (config?: Config) =>
 
 const root = createRoot(document.getElementById('root')!);
 
-const main = async () => {
-  const port = await createIFramePort({ channel: 'dxos:shell' });
-  const rpc = createProtoRpcPeer({
-    requested: {
-      OsAppService: schema.getService('dxos.iframe.OsAppService')
-    },
-    exposed: {
-      OsShellService: schema.getService('dxos.iframe.OsShellService')
-    },
-    handlers: {
-      OsShellService: {
-        setLayout: async (layout) => {}
-      }
-    },
-    port
-  });
-  await rpc.open();
-
-  root.render(
-    // <StrictMode>
-    <ClientProvider config={configProvider} services={serviceProvider}>
-      <Shell rpc={rpc} />
+root.render(
+  // <StrictMode>
+  <ThemeProvider themeVariant='os' resourceExtensions={[osTranslations]}>
+    <ClientProvider config={configProvider} services={serviceProvider} spaceProvider={false} shellProvider={false}>
+      <Shell />
     </ClientProvider>
-    // </StrictMode>
-  );
-};
-
-void main();
+  </ThemeProvider>
+  // </StrictMode>
+);

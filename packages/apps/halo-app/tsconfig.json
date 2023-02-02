@@ -67,6 +67,9 @@
     },
     {
       "path": "../patterns/react-appkit"
+    },
+    {
+      "path": "../patterns/react-ui"
     }
   ]
 }

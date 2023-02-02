@@ -5,40 +5,38 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useClient, useIdentity, useSpace, useSpaces, useSpaceSetter } from '@dxos/react-client';
-
-import { TodoList } from '../proto';
+import { useClient, useCurrentSpace, useIdentity, useSpaces, useSpaceSetter } from '@dxos/react-client';
 
 export const Navigator = () => {
   const client = useClient();
   const identity = useIdentity();
   const spaces = useSpaces();
-  const space = useSpace();
+  const space = useCurrentSpace();
   const setSpace = useSpaceSetter();
   const { spaceKey } = useParams();
   const navigate = useNavigate();
 
-  // Initialize identity and first space.
-  useEffect(() => {
-    if (!identity) {
-      setTimeout(async () => {
-        // TODO(wittjosiah): HALO onboarding overlay.
-        await client.halo.createProfile();
-        const space = await client.echo.createSpace();
-        await space.experimental.db.save(new TodoList());
-        setSpace(space);
-      });
-    }
-  }, [identity]);
-
   // Navigate to selected spaces.
   useEffect(() => {
-    if (!space && spaces.length > 0) {
-      setSpace(spaces[0]);
-    } else if (space && space.key.toHex() !== spaceKey) {
-      navigate(`/${space.key.toHex()}`);
+    if (!identity) {
+      return;
     }
-  }, [space]);
+
+    const timeout = setTimeout(async () => {
+      if (spaces.length === 0) {
+        const space = await client.echo.createSpace();
+        setSpace(space);
+        navigate(`/${space.key.toHex()}`);
+      } else if (!space) {
+        setSpace(spaces[0]);
+        navigate(`/${spaces[0].key.toHex()}`);
+      } else if (space && space.key.toHex() !== spaceKey) {
+        navigate(`/${space.key.toHex()}`);
+      }
+    });
+
+    return () => clearTimeout(timeout);
+  }, [identity, space]);
 
   return null;
 };

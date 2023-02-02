@@ -4,18 +4,13 @@
 
 import { cloneElement, Dispatch } from 'react';
 
-import type {
-  AuthenticatingInvitationObservable,
-  Profile as NaturalProfile,
-  Space as NaturalSpace
-} from '@dxos/client';
+import type { AuthenticatingInvitationObservable, Profile } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
 
-export type Space = Pick<NaturalSpace, 'properties'>;
-
-export type Profile = Pick<NaturalProfile, 'displayName' | 'identityKey'>;
+export type JoinPanelMode = 'default' | 'halo-only';
 
 export interface JoinPanelProps {
+  mode?: JoinPanelMode;
   initialInvitationCode?: string;
   titleId?: string;
   exitActionParent?: Parameters<typeof cloneElement>[0];

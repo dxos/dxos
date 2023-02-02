@@ -11,7 +11,7 @@ import {
 import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/react-tooltip';
 import React, { createContext, PropsWithChildren } from 'react';
 
-import { defaultFocus } from '../../styles';
+import { themeVariantFocus } from '../../styles';
 import { hasIosKeyboard, mx } from '../../util';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
@@ -57,7 +57,7 @@ export const ThemeProvider = ({
             {...toastViewportProps}
             className={mx(
               'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
-              defaultFocus,
+              themeVariantFocus(themeVariant),
               toastViewportProps?.className
             )}
           />

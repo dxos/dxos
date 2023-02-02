@@ -10,7 +10,9 @@ import { ThemeContext, useId } from '@dxos/react-components';
 import { PanelAlertDialog, PanelAlertDialogProps } from '../../layouts';
 import { JoinPanel, JoinPanelProps } from '../../panels';
 
-export interface JoinDialogProps extends Omit<PanelAlertDialogProps, 'titleId' | 'children'>, JoinPanelProps {}
+export interface JoinDialogProps
+  extends Omit<PanelAlertDialogProps, 'titleId' | 'children'>,
+    Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
 
 export const JoinDialog = ({ slots, ...joinPanelProps }: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
@@ -23,8 +23,13 @@ export const Main = withReactor(() => {
   // TODO(wittjosiah): Support multiple lists in a single space.
   const [list] = useQuery(space, TodoList.filter());
 
+  useEffect(() => {
+    if (!list) {
+      void space.experimental.db.save(new TodoList());
+    }
+  }, [list]);
+
   if (!list) {
-    void space.experimental.db.save(new TodoList());
     return null;
   }
 
