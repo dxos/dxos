@@ -129,5 +129,5 @@ describe('space/space-protocol', () => {
     });
 
     await builder.close();
-  }).skipEnvironments('webkit'); // Some storage drivers may break when there are multiple storage instances.
+  }).skipEnvironments('webkit').tag('e2e'); // Some storage drivers may break when there are multiple storage instances.
 });
