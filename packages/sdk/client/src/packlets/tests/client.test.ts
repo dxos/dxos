@@ -62,9 +62,7 @@ describe('Client', () => {
     await client.initialize();
     afterTest(() => client.destroy());
 
-    expect(() => {
-      void client.echo.createSpace();
-    }).to.throw('This device has no HALO identity available');
+    expect(() => client.echo.createSpace()).to.throw('This device has no HALO identity available');
   }).timeout(1_000);
 
   // TODO(burdon): Memory store is reset on close (feed store is closed).
