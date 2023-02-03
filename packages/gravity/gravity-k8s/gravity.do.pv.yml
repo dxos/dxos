@@ -1,7 +1,14 @@
 apiVersion: v1
 kind: Pod
 metadata:
+  namespace: default
   name: gravity
+  annotations:
+    co.elastic.logs/enabled: "true"
+    co.elastic.logs/fileset: access
+    co.elastic.logs/json.overwrite_keys: "true" 
+    co.elastic.logs/json.add_error_key: "true" 
+    co.elastic.logs/json.expand_keys: "true"
 spec:
   volumes:
     - name: gravity-pv-storage
@@ -41,3 +48,5 @@ spec:
       - mountPath: "/tmp/gravity-results"
         name: gravity-pv-storage
   restartPolicy: Always
+
+

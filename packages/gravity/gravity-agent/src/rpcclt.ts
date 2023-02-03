@@ -33,18 +33,18 @@ export class Client {
         });
 
         server.on(method, ({ error, response }) => {
-          ipc.log(`${serverName}@${method}:response`, error, response);
+          // ipc.log(`${serverName}@${method}:response`, error, response);
           ipc.disconnect(serverName);
           resolve(response);
         });
 
         server.on(On.ERROR, (err) => {
-          ipc.log('Synchronization error:', { err });
+          // ipc.log('Synchronization error:', { err });
           reject(err);
         });
 
         server.on(On.DISCONNECT, (...args) => {
-          ipc.log('Synchronization disconnect:', args);
+          // ipc.log('Synchronization disconnect:', args);
         });
       });
     });

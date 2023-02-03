@@ -46,7 +46,7 @@ export class Server {
     this.trigger = new Trigger();
 
     ipc.serveNet(() => {
-      ipc.log(`[rpc sync] sync srv ${Stage.STARTED}`);
+      // ipc.log(`[rpc sync] sync srv ${Stage.STARTED}`);
     });
 
     ipc.server.on(On.SYNC, (input, socket) => {
@@ -55,21 +55,21 @@ export class Server {
     });
 
     ipc.server.on(On.STOP, () => {
-      ipc.log(On.STOP);
-      ipc.log(`Synchronization ${Stage.STOPPED}`);
+      // ipc.log(On.STOP);
+      // ipc.log(`Synchronization ${Stage.STOPPED}`);
     });
 
     ipc.server.on(On.DONE, (input, socket) => {
-      ipc.log(Stage.STOPPING);
+      //      ipc.log(Stage.STOPPING);
       ipc.server.emit(socket, On.DONE, { response: Stage.DONE });
       ipc.server.stop();
-      ipc.log(Stage.STOPPED);
+      // ipc.log(Stage.STOPPED);
     });
 
     methods.forEach((methodCall: MethodCall, methodName: string) => {
-      ipc.log('register', methodName);
+      // ipc.log('register', methodName);
       ipc.server.on(methodName, (input, socket) => {
-        ipc.log('server:', methodName, input);
+        // ipc.log('server:', methodName, input);
         methodCall(input, (error, output) => {
           ipc.server.emit(socket, methodName, { error, response: output });
         });
@@ -100,7 +100,7 @@ export class Server {
 
   stop(): Promise<void> {
     return new Promise((resolve) => {
-      ipc.log(`Synchronization ${Stage.STOPPED}`);
+      // ipc.log(`Synchronization ${Stage.STOPPED}`);
       ipc.server.stop();
       resolve();
     });

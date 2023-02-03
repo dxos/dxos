@@ -3,11 +3,21 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: filebeat-config
-  namespace: kube-system
+  namespace: default
   labels:
     k8s-app: filebeat
 data:
   filebeat.yml: |-
+    filebeat.autodiscover:
+      providers:
+        - type: kubernetes
+        hints.enabled: true
+        hints.default_config:enabled: false
+        hints.default_config:
+          type: container
+          paths:
+            - /var/log/containers/*${data.kubernetes.container.id}.log
+
     # filebeat.inputs:
     # - type: container
     #   paths:
@@ -30,49 +40,49 @@ data:
     #        paths:
     #          - /var/log/containers/*${data.kubernetes.container.id}.log
 
-    filebeat.autodiscover:
-      providers:
-          - type: kubernetes
-            node: ${NODE_NAME}
-            templates:
-              - condition:
-                  contains:
-                    kubernetes.container.name: "dxos-agent-host"
-                config:
-                  - type: container
-                    paths:
-                      - "/var/log/containers/*-${data.kubernetes.container.id}.log"
-                    json.keys_under_root: true
-                    json.add_error_key: true
-                    json.message_key: message
-              - condition:
-                  contains:
-                    kubernetes.container.name: "dxos-agent-guest"
-                config:
-                  - type: container
-                    paths:
-                      - "/var/log/containers/*-${data.kubernetes.container.id}.log"
-                    json.keys_under_root: true
-                    json.add_error_key: true
-                    json.message_key: message
+    # filebeat.autodiscover:
+    #   providers:
+    #       - type: kubernetes
+    #         node: ${NODE_NAME}
+    #         templates:
+    #           - condition:
+    #               contains:
+    #                 kubernetes.container.name: "dxos-agent-host"
+    #             config:
+    #               - type: container
+    #                 paths:
+    #                   - "/var/log/containers/*-${data.kubernetes.container.id}.log"
+    #                 json.keys_under_root: true
+    #                 json.add_error_key: true
+    #                 json.message_key: message
+    #           - condition:
+    #               contains:
+    #                 kubernetes.container.name: "dxos-agent-guest"
+    #             config:
+    #               - type: container
+    #                 paths:
+    #                   - "/var/log/containers/*-${data.kubernetes.container.id}.log"
+    #                 json.keys_under_root: true
+    #                 json.add_error_key: true
+    #                 json.message_key: message
                 
-    processors:
-      - add_cloud_metadata:
-      - add_host_metadata:
+    # processors:
+    #   - add_cloud_metadata:
+    #   - add_host_metadata:
 
-    cloud.id: ${ELASTIC_CLOUD_ID}
-    cloud.auth: ${ELASTIC_CLOUD_AUTH}
+    # cloud.id: ${ELASTIC_CLOUD_ID}
+    # cloud.auth: ${ELASTIC_CLOUD_AUTH}
 
-    output.elasticsearch:
-      hosts: ['${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
-      username: ${ELASTICSEARCH_USERNAME}
-      password: ${ELASTICSEARCH_PASSWORD}
+    # output.elasticsearch:
+    #   hosts: ['${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
+    #   username: ${ELASTICSEARCH_USERNAME}
+    #   password: ${ELASTICSEARCH_PASSWORD}
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: filebeat
-  namespace: kube-system
+  namespace: default
   labels:
     k8s-app: filebeat
 spec:
@@ -84,6 +94,9 @@ spec:
       labels:
         k8s-app: filebeat
     spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
       serviceAccountName: filebeat
       terminationGracePeriodSeconds: 30
       hostNetwork: true
@@ -160,7 +173,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: filebeat
-  namespace: kube-system
+  namespace: default
 roleRef:
   kind: ClusterRole
   name: filebeat
@@ -170,11 +183,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: filebeat
-  namespace: kube-system
+  namespace: default
 subjects:
   - kind: ServiceAccount
     name: filebeat
-    namespace: kube-system
+    namespace: default
 roleRef:
   kind: Role
   name: filebeat
@@ -184,11 +197,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: filebeat-kubeadm-config
-  namespace: kube-system
+  namespace: default
 subjects:
   - kind: ServiceAccount
     name: filebeat
-    namespace: kube-system
+    namespace: default
 roleRef:
   kind: Role
   name: filebeat-kubeadm-config
@@ -224,7 +237,7 @@ kind: Role
 metadata:
   name: filebeat
   # should be the namespace where filebeat is running
-  namespace: kube-system
+  namespace: default
   labels:
     k8s-app: filebeat
 rules:
@@ -238,7 +251,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: filebeat-kubeadm-config
-  namespace: kube-system
+  namespace: default
   labels:
     k8s-app: filebeat
 rules:
@@ -253,7 +266,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: filebeat
-  namespace: kube-system
+  namespace: default
   labels:
     k8s-app: filebeat
 ---
