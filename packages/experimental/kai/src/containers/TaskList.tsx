@@ -16,9 +16,10 @@ import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
 
-export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
+export const TaskList: FC<{ completed?: boolean; readonly?: boolean; fullWidth?: boolean }> = ({
   completed = undefined,
-  readonly = false
+  readonly = false,
+  fullWidth = false
 }) => {
   const space = useSpace(); // TODO(burdon): Factor out.
   const tasks = useQuery(space, Task.filter({ completed }));
@@ -63,8 +64,10 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean }> = ({
   return (
     <div className='min-bs-full flex flex-1 justify-center bg-gray-100'>
       {/* TODO(burdon): Adapt width to container. */}
-      <div className={'flex flex-col overflow-y-auto bg-white w-screen is-full md:is-[400px]'}>
-        <div className={'mt-1'}>
+      <div
+        className={mx('flex flex-col overflow-y-auto bg-white', fullWidth ? 'w-full' : 'w-screen is-full md:is-column')}
+      >
+        <div className='mt-1'>
           {tasks?.map((task, index) => (
             <TaskItem
               key={task[id]}

@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/hypercard/src",
+  "sourceRoot": "packages/experimental/mosaic/src",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/experimental/hypercard/src/index.ts",
-        "outputPath": "packages/experimental/hypercard/dist/types",
-        "tsConfig": "packages/experimental/hypercard/tsconfig.json"
+        "main": "packages/experimental/mosaic/src/index.ts",
+        "outputPath": "packages/experimental/mosaic/dist/types",
+        "tsConfig": "packages/experimental/mosaic/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/hypercard/src/index.ts"
+          "packages/experimental/mosaic/src/index.ts"
         ],
-        "outputPath": "packages/experimental/hypercard/dist/lib"
+        "outputPath": "packages/experimental/mosaic/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/hypercard/**/*.{ts,tsx,js,jsx}"
+          "packages/experimental/mosaic/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
@@ -46,7 +46,7 @@
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "config": {
-          "configFolder": "packages/experimental/hypercard/.storybook"
+          "configFolder": "packages/experimental/mosaic/.storybook"
         },
         "uiFramework": "@storybook/react"
       }
@@ -57,14 +57,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/hypercard",
-        "outputPath": "tmp/mocha/packages/experimental/hypercard",
-        "resultsPath": "test-results/packages/experimental/hypercard",
+        "coveragePath": "coverage/packages/experimental/mosaic",
+        "outputPath": "tmp/mocha/packages/experimental/mosaic",
+        "resultsPath": "test-results/packages/experimental/mosaic",
         "testPatterns": [
-          "packages/experimental/hypercard/src/**/*.test.{ts,js}"
+          "packages/experimental/mosaic/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/experimental/hypercard/src/**/*"
+          "packages/experimental/mosaic/src/**/*"
         ]
       },
       "outputs": [

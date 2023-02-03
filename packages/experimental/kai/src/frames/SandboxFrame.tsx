@@ -57,7 +57,7 @@ export const SandboxFrame = withReactor(() => {
 
   const Toolbar = () => {
     return (
-      <div className='flex flex-shrink-0 w-full justify-between p-2 bg-gray-200'>
+      <div className='flex shrink-0 w-full justify-between p-2 bg-gray-200'>
         <h2>{selected.name}</h2>
         <Button onClick={handleCompile}>
           <PlayCircle className={getSize(6)} />
