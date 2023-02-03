@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2020 DXOS.org
 //
 
 import { Space } from '@dxos/client';
@@ -11,9 +11,9 @@ import { useClient } from '../client';
  * Get a specific Space via its key.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useSpace = (spaceKey?: PublicKeyLike) => {
+export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
   const spaces = useSpaces();
-  return spaces.find((space) => spaceKey && space.key.equals(spaceKey))!;
+  return spaces.find((space) => spaceKey && space.key.equals(spaceKey));
 };
 
 /**
