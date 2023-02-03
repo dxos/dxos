@@ -7,7 +7,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { TileMenu, Tile, GraphComponent } from '../components';
+import { TileMenu, Tile } from '../components';
 import { ContactList, OrganizationList, ProjectHierarchy, TaskList } from '../containers';
 
 export const StackFrame: FC = () => {
@@ -30,15 +30,15 @@ export const StackFrame: FC = () => {
         </Tile>
       </div>
 
-      <div className={mx(cardStyles)}>
+      <div className={mx(cardStyles, 'row-span-2')}>
         <Tile scrollbar header={<TileMenu title='Contacts' />}>
           <ContactList />
         </Tile>
       </div>
 
-      <div className={mx(cardStyles)}>
+      <div className={mx(cardStyles, 'row-span-2')}>
         <Tile scrollbar header={<TileMenu title='Tasks' />}>
-          <TaskList />
+          <TaskList fullWidth />
         </Tile>
       </div>
 
@@ -48,11 +48,13 @@ export const StackFrame: FC = () => {
         </Tile>
       </div>
 
+      {/*
       <div className={mx(cardStyles, 'col-span-2 hidden lg:flex')}>
         <Tile header={<TileMenu title='Explorer' />}>
           <GraphComponent />
         </Tile>
       </div>
+      */}
     </div>
   );
 };

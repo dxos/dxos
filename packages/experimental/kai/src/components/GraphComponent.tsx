@@ -12,7 +12,11 @@ import { convertTreeToGraph, createTree, Graph as GemGraph, Markers, TestGraphMo
 
 // class Model implements GraphModel<> {}
 
-export const GraphComponent = () => {
+export type GraphComponentParams = {
+  data?: any;
+};
+
+export const GraphComponent = ({ data }: GraphComponentParams) => {
   // const { database: db } = useSpace();
   // const projects = useObjects(Project.filter());
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);

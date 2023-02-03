@@ -3,10 +3,8 @@
 //
 
 import * as d3 from 'd3';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
-
-import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore';
 
 // export type TreeComponentProps = {
 //   object: any;
@@ -14,12 +12,23 @@ import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore'
 
 export const TreeComponent = ({ data }) => {
   const { ref, width, height } = useResizeDetector();
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
+
+  const size = Math.min(width, height);
+  const options = {
+    width: size,
+    height: size,
+    label: (d) => d.name,
+    margin: 20
+  };
 
   useEffect(() => {
-    const el = Tree(data, { width, height });
-    ref.current.append(el);
-  }, []);
+    if (width && height) {
+      if (!ref.current.children.length) {
+        const el = Tree(data, options);
+        ref.current.append(el);
+      }
+    }
+  }, [width, height]);
 
   return <div ref={ref} className='flex flex-1' />;
 };
@@ -66,7 +75,7 @@ const Tree = (
     haloWidth = 3 // padding around the labels
   } = {}
 ) => {
-  // console.log(width);
+  console.log(width, margin);
 
   // If id and parentId options are specified, or the path option, use d3.stratify
   // to convert tabular data to a hierarchy; otherwise we assume that the data is
