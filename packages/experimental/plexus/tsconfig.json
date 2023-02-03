@@ -25,6 +25,12 @@
     },
     {
       "path": "../client-testing"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
     }
   ],
   "ts-node": {

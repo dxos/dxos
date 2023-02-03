@@ -9,14 +9,16 @@ import { Status } from '@dxos/client';
 import { ClientContextProps } from '@dxos/react-client';
 import { Button, Heading, Loading, useTranslation } from '@dxos/react-components';
 
-export const Fallback = ({ message }: { message: string }) => (
-  <div className='py-8 flex flex-col gap-4' aria-live='polite'>
-    <Loading label={message} size='lg' />
-    <Heading level={1} className='text-lg font-light text-center'>
-      {message}
-    </Heading>
-  </div>
-);
+export const Fallback = ({ message }: { message: string }) => {
+  return (
+    <div className='py-8 flex flex-col gap-4' aria-live='polite'>
+      <Loading label={message} size='lg' />
+      <Heading level={1} className='text-lg font-light text-center'>
+        {message}
+      </Heading>
+    </div>
+  );
+};
 
 export const GenericFallback = () => {
   const { t } = useTranslation('appkit');
@@ -32,6 +34,7 @@ export const ClientFallback = ({ client, status }: Partial<ClientContextProps>) 
   const [pending, setPending] = useState(true);
 
   // Set timeout to prevent flickering.
+  // TODO(burdon): Wait 200ms before showing then display for at least 500ms if it is then displayed.
   const resume = useCallback(async () => {
     setPending(true);
     const done = new Trigger();

@@ -388,6 +388,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/plexus/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/react-client-testing/package.json",
           "jsonpath": "$.version"
         },
