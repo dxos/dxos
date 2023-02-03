@@ -4,15 +4,20 @@
 
 import React from 'react';
 
+import { TileSlots } from '../TileProps';
 import { Root } from '../TileSlots';
 
 export interface FallbackTile {
   tile: Object;
+  slots?: TileSlots;
 }
 
-export const FallbackTile = ({ tile }: FallbackTile) => {
+export const FallbackTile = ({ tile, slots = {} }: FallbackTile) => {
   return (
-    <Root label={<h2>{tile && 'title' in tile ? (tile as { title: any }).title : 'Unknown object'}</h2>}>
+    <Root
+      {...slots.root}
+      label={<h2 {...slots.label}>{tile && 'title' in tile ? (tile as { title: any }).title : 'Unknown object'}</h2>}
+    >
       <pre>{JSON.stringify(tile, null, 2)}</pre>
     </Root>
   );

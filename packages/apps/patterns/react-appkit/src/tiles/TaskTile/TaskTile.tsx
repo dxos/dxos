@@ -10,8 +10,8 @@ import { Root } from '../TileSlots';
 
 export type TaskTileProps = TileProps<Task>;
 
-export const TaskTile = ({ tile }: TaskTileProps) => {
-  return <Root label={<h2>{tile.title}</h2>}></Root>;
+export const TaskTile = ({ tile, slots = {} }: TaskTileProps) => {
+  return <Root {...slots.root} label={<h2 {...slots.label}>{tile.title}</h2>}></Root>;
 };
 
 export const isTaskTile = (o: any): o is TaskTileProps => {

@@ -12,9 +12,9 @@ import { Root } from '../TileSlots';
 
 export type TaskListTileProps = TileProps<TaskList>;
 
-export const TaskListTile = ({ tile }: TaskListTileProps) => {
+export const TaskListTile = ({ tile, slots = {} }: TaskListTileProps) => {
   return (
-    <Root label={<h2>{tile.title}</h2>}>
+    <Root {...slots.root} label={<h2 {...slots.label}>{tile.title}</h2>}>
       <ul>
         {tile.tasks.map((task) => (
           <li key={task[id]}>{task.title}</li>
