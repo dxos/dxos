@@ -31,7 +31,7 @@ export const ClientFallback = ({ client, status }: Partial<ClientContextProps>) 
   const { t } = useTranslation('appkit');
   const [pending, setPending] = useState(true);
 
-  // TODO(burdon): Set timeout to prevent flickering.
+  // Set timeout to prevent flickering.
   const resume = useCallback(async () => {
     setPending(true);
     const done = new Trigger();
