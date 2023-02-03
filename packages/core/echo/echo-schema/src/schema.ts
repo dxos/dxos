@@ -17,19 +17,23 @@ export type EchoType =
        * Plain JS object.
        */
       kind: 'record'; // TODO(mykola) Figure out a better name.
+      basic: false;
       objectType: string;
       // TODO(mykola): Add ability to list fields.
     }
   | {
       kind: 'ref';
+      basic: false;
       objectType: string;
     }
   | {
       kind: 'array';
+      basic: false;
       elementType: EchoType;
     }
   | {
       kind: 'enum';
+      basic: false;
       enumType: string;
       // TODO(mykola): Add ability to list enum values.
     };
@@ -45,12 +49,12 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
   return type.fieldsArray.map((field) => {
     const getComplexType = (type: pb.Type | pb.Enum): EchoType => {
       if (type instanceof pb.Enum) {
-        return { kind: 'enum', enumType: type.fullName.slice(1) };
+        return { kind: 'enum', basic: false, enumType: type.fullName.slice(1) };
       } else if (type instanceof pb.Type) {
         if (type.options && type.options['(object)']) {
-          return { kind: 'ref', objectType: type.fullName.slice(1) };
+          return { kind: 'ref', basic: false, objectType: type.fullName.slice(1) };
         } else {
-          return { kind: 'record', objectType: type.fullName.slice(1) };
+          return { kind: 'record', basic: false, objectType: type.fullName.slice(1) };
         }
       }
 
@@ -86,14 +90,14 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
     const getEchoType = (field: pb.Field): EchoType => {
       if (field.resolvedType) {
         if (field.repeated) {
-          return { kind: 'array', elementType: getComplexType(field.resolvedType) };
+          return { kind: 'array', basic: false, elementType: getComplexType(field.resolvedType) };
         } else {
           return getComplexType(field.resolvedType);
         }
       }
 
       if (field.repeated) {
-        return { kind: 'array', elementType: getBasicType(field.type) };
+        return { kind: 'array', basic: false, elementType: getBasicType(field.type) };
       } else {
         return getBasicType(field.type);
       }
@@ -121,6 +125,10 @@ export class EchoSchemaType {
 
   get name() {
     return this._type.fullName.slice(1);
+  }
+
+  get shortName() {
+    return this._type.name;
   }
 
   createFilter(opts?: any): TypeFilter<any> {
