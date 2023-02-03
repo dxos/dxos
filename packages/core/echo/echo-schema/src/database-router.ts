@@ -35,7 +35,7 @@ export class DatabaseRouter {
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);
-    database._db.update.on((changedEntities) => this._update.emit({ spaceKey, changedEntities }));
+    database._db.entityUpdate.on((entity) => this._update.emit({ spaceKey, changedEntities: [entity] }));
   }
 
   /**

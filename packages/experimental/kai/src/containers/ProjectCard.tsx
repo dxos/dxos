@@ -27,7 +27,7 @@ export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) =
     <div className='flex flex-col pb-2'>
       {/* Header */}
       <div className='flex p-2 pb-0 items-center'>
-        <div className='flex flex-shrink-0 justify-center w-8 mr-1'>
+        <div className='flex shrink-0 justify-center w-8 mr-1'>
           <Archive className={getSize(6)} />
         </div>
         <Input

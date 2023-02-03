@@ -126,7 +126,7 @@ message Sketch {
 
   // TODO(burdon): Should be sub-type but is compiled to top level.
   message Path {
-    int32 timestamp = 1;
+    int32 timestamp = 1; // TODO(burdon): Is this required.
     int32 width = 2;
     string color = 3;
     repeated SketchPoint points = 4;
@@ -147,15 +147,16 @@ message File {
 }
 
 message NoteBoard {
-  message NotePoint { // TODO(burdon): Name collision.
-    int32 x = 1;
-    int32 y = 2;
+  message Location { // TODO(burdon): Name collision.
+    string object_id = 1;
+    int32 x = 2;
+    int32 y = 3;
   }
 
   option (object) = true;
 
   string title = 1;
-  repeated NotePoint points = 2;
+  repeated Location locations = 2;
 }
 
 message Note {

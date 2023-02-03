@@ -184,28 +184,6 @@ export const createAdmissionCredentials = async (
         genesisFeedKey
       }
     })
-
-    // await signer.createCredential({
-    //   subject: controlFeedKey,
-    //   assertion: {
-    //     '@type': 'dxos.halo.credentials.AdmittedFeed',
-    //     spaceKey,
-    //     deviceKey,
-    //     identityKey,
-    //     designation: AdmittedFeed.Designation.CONTROL
-    //   }
-    // }),
-
-    // await signer.createCredential({
-    //   subject: dataFeedKey,
-    //   assertion: {
-    //     '@type': 'dxos.halo.credentials.AdmittedFeed',
-    //     spaceKey,
-    //     deviceKey,
-    //     identityKey,
-    //     designation: AdmittedFeed.Designation.DATA
-    //   }
-    // })
   ]);
 
   return credentials.map((credential) => ({

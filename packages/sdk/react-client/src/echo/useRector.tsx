@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ReactElement, createContext, useContext, useEffect, useReducer, useState } from 'react';
+import { FC, ReactElement, createContext, useContext, useEffect, useReducer, useState } from 'react';
 
 import { useClient } from '../client';
 
@@ -54,19 +54,29 @@ export const useReactor = (opts?: ReactorProps): UseRector => {
 
 const ReactorContext = createContext({});
 
+export type WithReactorOpts = {
+  componentName?: string;
+};
+
 /**
  * Reactive HOC.
  */
-export const withReactor = <P,>(component: FC<P>): FC<P> => {
-  return (props: P) => {
+export const withReactor = <P,>(component: FC<P>, opts: WithReactorOpts = {}): FC<P> => {
+  const Component = (props: P) => {
     const { render } = useReactor({
       onChange: () => {
         // console.log('UPDATED');
       }
     });
 
-    return <ReactorContext.Provider value={{}}>{render(component(props))}</ReactorContext.Provider>;
+    return render(component(props));
   };
+
+  if (opts.componentName) {
+    Component.displayName = opts.componentName;
+  }
+
+  return Component;
 };
 
 // TODO(burdon): Allow caller to subscribe to changes?

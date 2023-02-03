@@ -15,6 +15,8 @@ import { Button } from '../components';
 import { useFileDownload, useIpfsClient, useSpace } from '../hooks';
 import { File, Path, Sketch } from '../proto';
 
+const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
+
 const convertToProtoPath = ({ startTimestamp, strokeWidth, strokeColor, paths }: CanvasPath): Path => ({
   timestamp: startTimestamp,
   width: strokeWidth,
@@ -49,6 +51,7 @@ export const SketchFrame = withReactor(() => {
 
   const space = useSpace();
   const [sketch, setSketch] = useState<Sketch>();
+
   // TODO(burdon): Show list of sketch objects and auto-select/create one if missing.
   useEffect(() => {
     let sketch: Sketch;
@@ -149,9 +152,9 @@ export const SketchFrame = withReactor(() => {
       </div>
 
       {/* TODO(burdon): Vertical unless mobile. */}
-      <div className='flex flex-shrink-0 p-2 bg-gray-200'>
+      <div className='flex shrink-0 p-2 bg-gray-200'>
         <div className='flex items-center mr-4'>
-          <GithubPicker width={'100%'} triangle='hide' onChangeComplete={handleColorChange} />
+          <GithubPicker width={'100%'} triangle='hide' colors={colors} onChangeComplete={handleColorChange} />
         </div>
 
         <div className='flex items-center'>
