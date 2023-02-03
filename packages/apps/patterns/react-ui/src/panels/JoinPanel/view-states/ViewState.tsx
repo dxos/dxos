@@ -10,7 +10,7 @@ import { Invitation } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { mx, useTranslation, Trans, Avatar, useId, getSize, strongShimmer } from '@dxos/react-components';
 
-import { defaultSurface, subduedSurface } from '../../../styles';
+import { defaultSurface, subduedSurface, resolvedBgColor, activeBgColor, inactiveBgColor } from '../../../styles';
 import { invitationStatusValue } from '../../../util';
 import { JoinDispatch } from '../JoinPanelProps';
 
@@ -22,11 +22,6 @@ export interface ViewStateProps extends ComponentProps<'div'> {
 }
 
 const stripe = mx('rounded-full grow', getSize(3));
-const inactiveColor = 'bg-neutral-100 dark:bg-neutral-600';
-const activeColor = 'bg-primary-500 dark:bg-primary-400';
-const successColor = 'bg-success-500 dark:bg-success-400';
-const errorColor = 'bg-error-500 dark:bg-error-400';
-const cancelledColor = 'bg-warning-500 dark:bg-warning-400';
 
 export const ViewStateHeading = ({ children, className, ...props }: ComponentPropsWithoutRef<'h2'>) => {
   return (
@@ -56,7 +51,7 @@ const PureViewStateInvitation = ({
           className={mx(
             stripe,
             !halted && cursor === 1 && strongShimmer,
-            cursor === 2 ? (halted ? resolvedColor : activeColor) : cursor > 1 ? resolvedColor : inactiveColor
+            cursor === 2 ? (halted ? resolvedColor : activeBgColor) : cursor > 1 ? resolvedColor : inactiveBgColor
           )}
         />
         <div
@@ -64,12 +59,12 @@ const PureViewStateInvitation = ({
           className={mx(
             stripe,
             !halted && cursor === 3 && strongShimmer,
-            cursor === 3 ? (halted ? resolvedColor : activeColor) : cursor > 3 ? resolvedColor : inactiveColor
+            cursor === 3 ? (halted ? resolvedColor : activeBgColor) : cursor > 3 ? resolvedColor : inactiveBgColor
           )}
         />
         <div
           role='none'
-          className={mx(stripe, cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor)}
+          className={mx(stripe, cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveBgColor)}
         />
       </div>
       <ViewStateHeading id={labelId} className='mbs-2 flex justify-center items-center gap-2'>
@@ -88,12 +83,7 @@ const ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Aut
 
   const cursor = invitationStatusValue.get(halted ? haltedAt! : status)!;
 
-  const resolvedColor =
-    status === Invitation.State.ERROR
-      ? errorColor
-      : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
-      ? cancelledColor
-      : successColor;
+  const resolvedColor = resolvedBgColor(status);
 
   const statusLabelMap = useMemo(
     () =>
@@ -200,7 +190,7 @@ export const ViewState = ({
               status: Invitation.State.INIT,
               label: t('invitation input label'),
               cursor: 0,
-              resolvedColor: inactiveColor
+              resolvedColor: inactiveBgColor
             }}
           />
         ) : (
