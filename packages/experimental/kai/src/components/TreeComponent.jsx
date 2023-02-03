@@ -3,22 +3,25 @@
 //
 
 import * as d3 from 'd3';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore';
 
-export const TreeComponent = () => {
-  // const { database: db } = useSpace();
-  // const projects = useObjects(Project.filter());
+// export type TreeComponentProps = {
+//   object: any;
+// };
+
+export const TreeComponent = ({ data }) => {
+  const { ref, width, height } = useResizeDetector();
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
-  const data = {
-    name: 'x'
-  };
+  useEffect(() => {
+    const el = Tree(data, { width, height });
+    ref.current.append(el);
+  }, []);
 
-  // const el = Tree(data);
-
-  return <div>Tree</div>;
+  return <div ref={ref} className='flex flex-1' />;
 };
 
 // Copyright 2022 Observable, Inc.
@@ -42,8 +45,8 @@ const Tree = (
     title, // given a node d, returns its hover text
     link, // given a node d, its link (if any)
     linkTarget = '_blank', // the target attribute for links (if any)
-    width = 640, // outer width, in pixels
-    height = 400, // outer height, in pixels
+    width = 1640, // outer width, in pixels
+    height = 1400, // outer height, in pixels
     margin = 60, // shorthand for margins
     marginTop = margin, // top margin, in pixels
     marginRight = margin, // right margin, in pixels
@@ -63,6 +66,8 @@ const Tree = (
     haloWidth = 3 // padding around the labels
   } = {}
 ) => {
+  // console.log(width);
+
   // If id and parentId options are specified, or the path option, use d3.stratify
   // to convert tabular data to a hierarchy; otherwise we assume that the data is
   // specified as an object {children} with nested objects (a.k.a. the “flare.json”
@@ -93,7 +98,7 @@ const Tree = (
     .attr('viewBox', [-marginLeft - radius, -marginTop - radius, width, height])
     .attr('width', width)
     .attr('height', height)
-    .attr('style', 'max-width: 100%; height: auto; height: intrinsic;')
+    .attr('style', 'max-width: 100%; width: 100%; height: 100%; height: intrinsic;')
     .attr('font-family', 'sans-serif')
     .attr('font-size', 10);
 

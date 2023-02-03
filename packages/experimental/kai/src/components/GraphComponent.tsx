@@ -7,8 +7,6 @@ import React, { useMemo } from 'react';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { convertTreeToGraph, createTree, Graph as GemGraph, Markers, TestGraphModel } from '@dxos/gem-spore';
 
-import { TreeComponent } from './TreeComponent';
-
 // import { useObjects, useSpace } from '../hooks';
 // import { Project } from '../proto';
 
@@ -18,8 +16,6 @@ export const GraphComponent = () => {
   // const { database: db } = useSpace();
   // const projects = useObjects(Project.filter());
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
-
-  return <TreeComponent />;
 
   return (
     <SVGContextProvider>
