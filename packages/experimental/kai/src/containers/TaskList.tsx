@@ -241,4 +241,4 @@ export const TaskItem: FC<{
       )}
     </CardRow>
   );
-});
+}, { componentName: 'TaskItem' });
