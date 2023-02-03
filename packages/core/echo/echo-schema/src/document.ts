@@ -7,7 +7,6 @@ import { InspectOptionsStylized, inspect } from 'node:util';
 import { log } from '@dxos/log';
 import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
 
-import { TypeFilter } from './database';
 import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
