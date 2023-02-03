@@ -2,55 +2,64 @@
 // Copyright 2023 DXOS.org
 //
 
-import { HypercardLayout } from './Hypercard';
-import { Bounds, Item, Point } from './defs';
+import defaultsdeep from 'lodash.defaultsdeep';
 
-export type GridHypercardLayoutOption = {
+import { HypercardLayout } from './Hypercard';
+import { Bounds, Dimensions, Point } from './defs';
+
+export type GridHypercardLayoutOptions = {
   range: number;
   size: number;
   padding: number;
 };
 
-// TODO(burdon): Figure out coordinates: logical [x, y] to projected (based on center translation).
 export class GridHypercardLayout implements HypercardLayout {
-  private readonly _items = new Map<string, Item>();
-  private readonly _bounds = new Map<string, Bounds | undefined>();
-
   private _center: Point = { x: 0, y: 0 };
+  private readonly _placeholders: Point[] = [];
+  private readonly _options: GridHypercardLayoutOptions;
+  private readonly _dimensions: Dimensions;
 
   // prettier-ignore
   constructor(
-    private readonly _options: GridHypercardLayoutOption = { range: 3, size: 300, padding: 20 }
-  ) {}
+    options: Partial<GridHypercardLayoutOptions> = {}
+  ) {
+    this._options = defaultsdeep(options, { range: 1, size: 300, padding: 16 });
 
-  updateItems(items: Item[]) {
-    this._items.clear();
-    items.forEach((item) => {
-      this._items.set(item.id, item);
-    });
-  }
+    const s = (1 + this._options.range * 2);
+    this._dimensions = {
+      width: s * this._options.size + (s + 1) * this._options.padding,
+      height: s * this._options.size + (s + 1) * this._options.padding
+    };
 
-  updateBounds(bounds: Bounds): void {
-    this._center = { x: bounds.width / 2, y: bounds.height / 2 };
-    this._bounds.clear();
-    for (const [id, item] of this._items) {
-      this._bounds.set(id, this.mapBounds(item.point));
+    this._center = { x: this._dimensions.width / 2, y: this._dimensions.height / 2 };
+
+    const range = this._options.range;
+    for (let x = -range; x <= range; x++) {
+      for (let y = -range; y <= range; y++) {
+        this._placeholders.push({ x, y });
+      }
     }
   }
 
-  mapBounds(point: Point): Bounds {
+  get range() {
+    return this._options.range;
+  }
+
+  get dimensions() {
+    return this._dimensions;
+  }
+
+  get placeholders() {
+    return this._placeholders;
+  }
+
+  getBounds(point: Point): Bounds {
     const grid = this._options.size + this._options.padding;
     return {
-      point,
-      x: this._center.x - grid / 2 + point.x * grid,
-      y: this._center.y - grid / 2 + point.y * grid,
-      // NOTE: If no padding then +1 to make borders overlap.
+      x: this._center.x + point.x * grid - this._options.size / 2,
+      y: this._center.y + point.y * grid - this._options.size / 2,
       width: this._options.size,
       height: this._options.size
     };
-  }
-
-  getBounds(id: string) {
-    return this._bounds.get(id);
   }
 }

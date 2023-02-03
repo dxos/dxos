@@ -18,7 +18,7 @@ const Form: FC<{ object: Document }> = ({ object }) => {
   // TODO(burdon): Input/Textarea outline/border.
   const Row: FC<{ field: string; children: ReactNode }> = ({ field, children }) => (
     <div className='flex w-full mb-1'>
-      <div className='flex flex-shrink-0 flex-row-reverse pt-[7px] pr-2 w-[100px] text-sm text-gray-400'>{field}</div>
+      <div className='flex shrink-0 flex-row-reverse pt-[7px] pr-2 w-[100px] text-sm text-gray-400'>{field}</div>
       <div className='flex w-full'>{children}</div>
     </div>
   );

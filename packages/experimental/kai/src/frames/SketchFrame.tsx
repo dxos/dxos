@@ -149,7 +149,7 @@ export const SketchFrame = withReactor(() => {
       </div>
 
       {/* TODO(burdon): Vertical unless mobile. */}
-      <div className='flex flex-shrink-0 p-2 bg-gray-200'>
+      <div className='flex shrink-0 p-2 bg-gray-200'>
         <div className='flex items-center mr-4'>
           <GithubPicker width={'100%'} triangle='hide' onChangeComplete={handleColorChange} />
         </div>

@@ -56,7 +56,7 @@ export const Kanban: FC<{
                 </div>
 
                 {onCreate && (
-                  <div className='flex flex-shrink-0 items-center p-3'>
+                  <div className='flex shrink-0 items-center p-3'>
                     <div className='flex flex-1 text-sm'>
                       {filtered.length > 0 && (
                         <span>

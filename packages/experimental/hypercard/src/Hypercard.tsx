@@ -2,161 +2,197 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndContext } from '@dnd-kit/core';
-import React, { useEffect, useMemo, useState } from 'react';
+import { DndContext, DragEndEvent, MouseSensor, pointerWithin, useSensor } from '@dnd-kit/core';
+import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { Cell } from './Cell';
+import { mx } from '@dxos/react-components';
+
+import { Cell, CellSlots } from './Cell';
 import { Placeholder } from './Placeholder';
-import { Bounds, Item, Point } from './defs';
+import { Bounds, Item, Point, toString, fromString, Dimensions } from './defs';
 
 export interface HypercardLayout {
-  updateItems(items: Item[]): void;
-  updateBounds(bounds: Bounds): void;
-  getBounds(id: string): Bounds | undefined;
-  mapBounds(point: Point): Bounds;
+  range: number;
+  dimensions: Dimensions;
+  placeholders: Point[];
+  getBounds(point: Point): Bounds;
 }
 
 export type HypercardSlots = {
-  cell?: { root?: string };
+  cell?: CellSlots;
 };
 
 export type HypercardProps = {
+  layout: HypercardLayout;
   items?: Item[];
-  layout?: HypercardLayout;
   slots?: HypercardSlots;
   onSelect?: (item: Item) => void;
-  onCreate?: (point: Point) => void;
+  onCreate?: (point: Point) => Promise<Item | undefined>;
   onDelete?: (item: Item) => void;
 };
 
+const options = {
+  transitionDelay: 500,
+  zoomOut: 0.55,
+  zoomIn: 2
+};
+
+// TODO(burdon): Scrolling is relative to top-left.
+//  - Outer container should be max range (don't consider infinite scrolling).
+//  - Scroll center into view.
+
 export const Hypercard = ({ items = [], layout, slots = {}, onSelect, onCreate, onDelete }: HypercardProps) => {
-  // TODO(burdon): Options.
-  const options = {
-    transitionDelay: 500,
-    zoomOut: 0.55,
-    zoomIn: 2,
-    zoomDetail: 4
+  const getItem = (point: Point): Item | undefined => {
+    return items.find((item) => toString(item.point) === toString(point));
   };
 
-  useEffect(() => {
-    layout?.updateItems(items);
-  }, [items]);
+  // Container allows any selected item to scroll near to the center.
+  const containerDimensions: Dimensions = {
+    width: layout.dimensions.width * 1.5,
+    height: layout.dimensions.height * 1.5
+  };
 
-  const [center, setCenter] = useState<Point>();
-  const { ref: containerRef, width, height } = useResizeDetector();
-  useEffect(() => {
-    // https://www.quirksmode.org/dom/w3c_cssom.html#documentview
-    const bounds = containerRef.current.getBoundingClientRect();
-    setCenter({ x: bounds.width / 2, y: bounds.height / 2 });
-    layout?.updateBounds(bounds);
-  }, [containerRef, layout, width, height, items.length]);
+  // TODO(burdon): Move to layout. Offset from center.
+  const getCenter = (point: Point): Point => {
+    const bounds = layout.getBounds(point);
+    return {
+      x: bounds.x + bounds.width / 2 - layout.dimensions.width / 2,
+      y: bounds.y + bounds.height / 2 - layout.dimensions.height / 2
+    };
+  };
 
-  // TODO(burdon): Util to create grid.
-  const placeholders = useMemo<Bounds[]>(() => {
-    const range = 3;
-    const bounds: Bounds[] = [];
-    if (layout) {
-      for (let x = -range; x <= range; x++) {
-        for (let y = -range; y <= range; y++) {
-          bounds.push(layout.mapBounds({ x, y }));
-        }
-      }
+  /**
+   * Calculate offset of the container relative to the screen of the given point.
+   * The point is relative to the center of the layout.
+   */
+  const getOffset = (center: Point) => {
+    if (!width || !height) {
+      return { x: 0, y: 0 };
     }
 
-    return bounds;
-  }, [containerRef, layout, width, height]);
+    const offset = {
+      x: center.x - Math.round((width - containerDimensions.width) / 2),
+      y: center.y - Math.round((height - containerDimensions.height) / 2)
+    };
+
+    return offset;
+  };
+
+  const { ref: containerRef, width, height } = useResizeDetector();
+  const [, forceUpdate] = useState({});
+
+  //
+  // Pan (scroll) and zoom.
+  //
 
   // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
-  const [style, setStyle] = useState<any>({
+  const [containerStyles, setContainerStyles] = useState<any>({
     transition: `${options.transitionDelay}ms ease-in-out`,
-    transform: 'scale(1)',
-    opacity: 1
+    transform: 'scale(1)'
   });
 
-  // TODO(burdon): Reuse.
-  const handleZoom = (zoom = 1) => {
-    setSelected(undefined);
-    setStyle((style: any) => ({
-      ...style,
-      transform: `scale(${zoom})`,
-      opacity: 1
-    }));
-  };
-
-  // TODO(burdon): Editable mode on zoom.
-  const [selected, setSelected] = useState<Item>();
-  const handleSelect = (item: Item, level = 1) => {
-    if (item === selected && level === 1) {
-      handleZoom(1);
-      return;
+  const [zoom, setZoom] = useState<number>(1);
+  useEffect(() => {
+    if (zoom !== 1) {
+      scrollTo();
     }
 
-    const { x, y, width, height } = layout!.getBounds(item.id)!;
-
-    // Center on cell.
-    const dx = center!.x - x - width / 2;
-    const dy = center!.y - y - height / 2;
-
-    setSelected(item);
-    setStyle((style: any) => ({
+    setContainerStyles((style: any) => ({
       ...style,
-      transform: `scale(${level === 1 ? options.zoomIn : options.zoomDetail}) translate(${dx}px, ${dy}px)`
-      // opacity: level === 1 ? 1 : 0
+      transform: `scale(${zoom})`
     }));
+  }, [zoom]);
 
-    // TODO(burdon): Navigate to frame.
-    // TODO(burdon): Render different element if zoomed?
-    // TODO(burdon): Define states (zoom, selected, etc.)
+  /**
+   * Scroll to center point. Assumes scale is 1.
+   */
+  const scrollTo = (center: Point = { x: 0, y: 0 }, smooth = true) => {
+    const offset = getOffset(center);
+    // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo
+    containerRef.current.scrollTo({ left: offset.x, top: offset.y, behavior: smooth ? 'smooth' : 'instant' });
   };
 
-  const handleDragStart = () => {
-    console.log('start');
+  useEffect(() => {
+    if (width && height) {
+      scrollTo(getCenter(selected?.point ?? { x: 0, y: 0 }));
+    }
+  }, [width, height]);
+
+  //
+  // Create and select.
+  //
+
+  const [selected, setSelected] = useState<Item>();
+  const handleSelect = (item: Item | undefined, level = 1) => {
+    setSelected(item);
+    setZoom(1);
+    scrollTo(getCenter(item?.point ?? { x: 0, y: 0 }));
   };
 
-  const handleDragEnd = () => {
-    console.log('end');
+  const handleCreate = async (point: Point) => {
+    if (onCreate) {
+      const item = await onCreate(point);
+      handleSelect(item);
+    }
   };
 
-  // TODO(burdon): Scrolling is relative to top-left.
-  //  - Outer container should be max range (don't consider infinite scrolling).
-  //  - Scroll center into view.
+  //
+  // DND
+  //
+
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 10 // Move 10px before activating.
+    }
+  });
+
+  // TODO(burdon): Smoothly drop into place.
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    const item = items.find((item) => item.id === active.id)!;
+    if (over) {
+      item.point = fromString(over.id as string);
+      forceUpdate({});
+    }
+  };
+
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div ref={containerRef} className='flex flex-1 overflow-auto bg-gray-500'>
-        <div
-          className='flex flex-1 snap-x snap-y bg-gray-200'
-          style={style}
-          onClick={(event: any) => handleZoom(event.detail === 2 ? options.zoomOut : 1)}
-        >
-          <div>
-            {placeholders?.map((bounds, i) => (
-              <Placeholder key={i} bounds={bounds} onCreate={onCreate} />
-            ))}
-          </div>
+    <DndContext sensors={[mouseSensor]} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
+      {/* Full screen. */}
+      <div
+        ref={containerRef}
+        className={mx('absolute w-full h-full overflow-auto bg-gray-500', 'snap-mandatory snap-both md:snap-none')}
+      >
+        {/* Layout container. */}
+        <div className='flex justify-center items-center' style={{ ...containerDimensions, ...containerStyles }}>
+          {/* Layout box. */}
+          <div
+            className='relative flex bg-gray-200'
+            style={layout.dimensions}
+            onClick={(event: any) => setZoom(event.detail === 2 ? options.zoomOut : 1)}
+          >
+            {layout.placeholders.map((point, i) => {
+              const bounds = layout.getBounds(point);
+              const item = getItem(point);
 
-          <div>
-            {layout &&
-              // TODO(burdon): Recursive layout.
-              items.map((item) => {
-                const bounds = layout?.getBounds(item.id);
-                if (!bounds) {
-                  return null;
-                }
-
-                return (
-                  <Cell
-                    key={item.id}
-                    slots={slots?.cell}
-                    item={item}
-                    bounds={bounds}
-                    level={item === selected ? 1 : 0}
-                    onClick={() => handleSelect(item, 1)}
-                    onZoom={() => handleSelect(item, 2)}
-                    onDelete={onDelete}
-                  />
-                );
-              })}
+              return (
+                <Placeholder key={toString(point)} point={point} bounds={bounds} onCreate={handleCreate}>
+                  {item && (
+                    <div className='z-50'>
+                      <Cell
+                        slots={slots?.cell}
+                        item={item}
+                        bounds={bounds}
+                        selected={item === selected}
+                        onClick={() => handleSelect(item, 1)}
+                        onZoom={() => handleSelect(item, 2)}
+                        onDelete={onDelete}
+                      />
+                    </div>
+                  )}
+                </Placeholder>
+              );
+            })}
           </div>
         </div>
       </div>

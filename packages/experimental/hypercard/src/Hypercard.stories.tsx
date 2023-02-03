@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { range } from '@dxos/util';
@@ -12,7 +12,7 @@ import '@dxosTheme';
 
 import { GridHypercardLayout } from './GridHypercardLayout';
 import { Hypercard } from './Hypercard';
-import { Item } from './defs';
+import { Item, Point } from './defs';
 
 export default {
   component: Hypercard,
@@ -51,47 +51,62 @@ faker.seed(100);
 // TODO(burdon): Simple card stack on mobile.
 // TODO(burdon): Move to separate repo.
 
+const num = 8;
+
+const createItem = (point: Point) => ({
+  id: faker.datatype.uuid(),
+  point,
+  label: faker.lorem.words(3),
+  content: faker.lorem.sentences(faker.datatype.number(3))
+});
+
 const Test = () => {
   const { ref: containerRef } = useResizeDetector();
-  const layout = useMemo(() => new GridHypercardLayout(), []);
-
-  const num = 10;
-  const items: Item[] = useMemo(() => {
-    const dim = 3;
-
+  const layout = useMemo(() => new GridHypercardLayout({ range: 3 }), []);
+  const [items, setItems] = useState<Item[]>(() => {
+    const dim = layout.range;
     return range(num).map((i) => {
       const point = {
         x: faker.datatype.number({ min: -dim, max: dim }),
         y: faker.datatype.number({ min: -dim, max: dim })
       };
 
-      return {
-        id: String(i),
-        point,
-        label: faker.lorem.words(3),
-        content: faker.lorem.sentences(faker.datatype.number(3))
-      };
+      return createItem(point);
     });
-  }, [num]);
+  });
 
   const handleSelect = (item: Item) => {
     console.log(item);
   };
 
+  const handleCreate = async (point: Point) => {
+    const item = createItem(point);
+    setItems((items) => [...items, item]);
+    return item;
+  };
+
+  const handleDelete = (item: Item) => {
+    console.log(item);
+    setItems((items) => items.filter(({ id }) => id !== item.id));
+  };
+
   // TODO(burdon): Overdraw bounds so can click outside.
+  // TODO(burdon): Provide content renderer for cells.
   return (
     <div ref={containerRef} className='flex absolute left-0 right-0 top-0 bottom-0'>
-      <div className='flex flex-1 overflow-auto bg-gray-500'>
-        <Hypercard
-          items={items}
-          layout={layout}
-          onSelect={handleSelect}
-          // TODO(burdon): Provide content renderer for cells.
-          slots={{
-            cell: { root: 'bg-yellow-100 shadow select-none cursor-pointer text-black' }
-          }}
-        />
-      </div>
+      <Hypercard
+        items={items}
+        layout={layout}
+        onSelect={handleSelect}
+        onCreate={handleCreate}
+        onDelete={handleDelete}
+        slots={{
+          cell: {
+            root: 'bg-yellow-100 select-none cursor-pointer text-black shadow',
+            selected: 'shadow-lg ring-1 ring-orange-400'
+          }
+        }}
+      />
     </div>
   );
 };

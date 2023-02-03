@@ -7,7 +7,7 @@ runtime:
 
   services:
     signal:
-      server: wss://dev.kube.dxos.org/.well-known/dx/signal
+      server: ws://localhost/.well-known/dx/signal
     ice:
       - urls: stun:demo.kube.dxos.org:3478
         username: dxos
@@ -20,5 +20,5 @@ runtime:
         username: dxos
         credential: dxos
     ipfs:
-      server: https://dev.kube.dxos.org/ipfs/api
-      gateway: https://dev.kube.dxos.org/ipfs/gateway
+      server: http://localhost:5001/api/v0
+      gateway: http://localhost:8080/ipfs

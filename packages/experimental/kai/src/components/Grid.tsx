@@ -115,7 +115,7 @@ const Cell = ({ item, bounds, onClick, onDelete }: CellProps) => {
           <div className='flex flex-1 overflow-hidden'>
             <h2 className='overflow-hidden text-ellipsis whitespace-nowrap'>{item.label}</h2>
           </div>
-          <div className='flex flex-shrink-0 pl-2'>
+          <div className='flex shrink-0 pl-2'>
             <div className='invisible group-hover:visible text-gray-500'>
               <Button onClick={handleDelete}>
                 <XCircle className={getSize(6)} />
