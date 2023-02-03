@@ -5,7 +5,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { ShellLayout } from '@dxos/client';
+import { IFrameClientServicesProxy, ShellLayout } from '@dxos/client';
 import { useClient, useCurrentSpace } from '@dxos/react-client';
 
 const Placeholder = () => (
@@ -17,11 +17,17 @@ const Placeholder = () => (
 
 export const Layout = () => {
   const client = useClient();
-  const space = useCurrentSpace();
+  const [space] = useCurrentSpace();
+
+  const handleOpen = () => {
+    if (client.services instanceof IFrameClientServicesProxy) {
+      client.services.setLayout(ShellLayout.SPACE_LIST);
+    }
+  };
 
   return (
     <>
-      <button id='open' onClick={() => client.shell?.setLayout(ShellLayout.SPACE_LIST)} data-testid='open-button'>
+      <button id='open' onClick={handleOpen} data-testid='open-button'>
         ❯
       </button>
       <section className='todoapp'>{space ? <Outlet context={{ space }} /> : <Placeholder />}</section>

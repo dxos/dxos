@@ -4,7 +4,7 @@
 
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 
-import { Space } from '@dxos/client';
+import { IFrameClientServicesProxy, Space } from '@dxos/client';
 
 import { useClient } from '../client';
 import { useSpaces } from './useSpaces';
@@ -22,10 +22,12 @@ export const SpaceProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   const [space, setSpace] = useState<Space>();
 
   useEffect(() => {
-    return client.shell?.spaceUpdate.on((spaceKey) => {
-      const space = spaces.find((space) => space.key.equals(spaceKey));
-      setSpace(space);
-    });
+    if (client.services instanceof IFrameClientServicesProxy) {
+      return client.services.spaceUpdate?.on((spaceKey) => {
+        const space = spaces.find((space) => space.key.equals(spaceKey));
+        setSpace(space);
+      });
+    }
   }, [client]);
 
   return <SpaceContext.Provider value={{ space, setSpace }}>{children}</SpaceContext.Provider>;

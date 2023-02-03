@@ -3,7 +3,7 @@
 //
 
 import { schema } from '@dxos/protocols';
-import type { IframeService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
+import type { IframeService, OsAppService, OsShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ServiceBundle } from '@dxos/rpc';
 
@@ -23,4 +23,20 @@ export type WorkerServiceBundle = {
 
 export const workerServiceBundle: ServiceBundle<WorkerServiceBundle> = {
   WorkerService: schema.getService('dxos.iframe.WorkerService')
+};
+
+export type AppServiceBundle = {
+  AppService: OsAppService;
+};
+
+export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
+  AppService: schema.getService('dxos.iframe.OsAppService')
+};
+
+export type ShellServiceBundle = {
+  ShellService: OsShellService;
+};
+
+export const shellServiceBundle: ServiceBundle<ShellServiceBundle> = {
+  ShellService: schema.getService('dxos.iframe.OsShellService')
 };

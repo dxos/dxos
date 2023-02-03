@@ -14,19 +14,20 @@ import {
   NetworkManagerOptions
 } from '@dxos/network-manager';
 
-import { DEFAULT_CONFIG_CHANNEL } from './config';
 import { IFrameClientServicesProxy } from './iframe-service-proxy';
 
 /**
  * Create services provider proxy connected via iFrame to host.
  */
-export const fromIFrame = (config: Config = new Config(), channel = DEFAULT_CONFIG_CHANNEL): ClientServicesProvider => {
+export const fromIFrame = (config: Config = new Config(), shell?: boolean): ClientServicesProvider => {
   if (typeof window === 'undefined') {
     // TODO(burdon): Client-specific error class.
     throw new ApiError('Cannot configure IFrame bridge outside of browser environment.');
   }
 
-  return new IFrameClientServicesProxy({ config, channel });
+  const source = config.get('runtime.client.remoteSource');
+
+  return new IFrameClientServicesProxy({ source, shell });
 };
 
 /**
