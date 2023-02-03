@@ -24,7 +24,7 @@ export type IFrameClientServicesProxyOptions = {
  */
 // TODO(burdon): Move to client-services.
 export class IFrameClientServicesProxy implements ClientServicesProvider {
-  private readonly params;
+  private readonly _options;
   private _iframe?: HTMLIFrameElement;
   private _clientServicesProxy?: ClientServicesProxy;
   private _shellController?: ShellController;
@@ -35,7 +35,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     shell = DEFAULT_SHELL_CHANNEL,
     timeout = 1000
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
-    this.params = { source, channel, shell, timeout };
+    this._options = { source, channel, shell, timeout };
   }
 
   get proxy() {
@@ -68,11 +68,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
   async open() {
     if (!this._clientServicesProxy) {
-      this._clientServicesProxy = new ClientServicesProxy(await this._getIFramePort(this.params.channel));
+      this._clientServicesProxy = new ClientServicesProxy(await this._getIFramePort(this._options.channel));
     }
 
-    if (!this._shellController && typeof this.params.shell === 'string') {
-      this._shellController = new ShellController(await this._getIFramePort(this.params.shell));
+    if (!this._shellController && typeof this._options.shell === 'string') {
+      this._shellController = new ShellController(await this._getIFramePort(this._options.shell));
       this._iframe!.classList.add('__DXOS_SHELL');
       this._shellController.displayUpdate.on((display) => {
         this._iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
@@ -110,7 +110,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
   private async _getIFramePort(channel: string): Promise<RpcPort> {
     const source = new URL(
-      typeof this.params.shell === 'string' ? this.params.source : `${this.params.source}?shell=false`,
+      typeof this._options.shell === 'string' ? this._options.source : `${this._options.source}?shell=false`,
       window.location.origin
     );
 

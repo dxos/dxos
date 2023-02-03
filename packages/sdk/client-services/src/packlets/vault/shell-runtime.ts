@@ -9,6 +9,9 @@ import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { AppServiceBundle, appServiceBundle, shellServiceBundle } from './services';
 
+/**
+ * Endpoint that handles shell services.
+ */
 export class ShellRuntime {
   readonly layoutUpdate = new Event<ShellLayout>();
   private _appRpc?: ProtoRpcPeer<AppServiceBundle>;

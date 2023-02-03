@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import React, { Context, createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 
 import { IFrameClientServicesProxy, Space } from '@dxos/client';
 
@@ -14,7 +14,7 @@ export type SpaceContextProps = {
   setSpace: (space?: Space) => void;
 };
 
-export const SpaceContext: React.Context<SpaceContextProps> = createContext<SpaceContextProps>({ setSpace: () => {} });
+export const SpaceContext: Context<SpaceContextProps> = createContext<SpaceContextProps>({ setSpace: () => {} });
 
 export const SpaceProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   const client = useClient();
