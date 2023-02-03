@@ -46,11 +46,12 @@ describe('identity/identity-manager', () => {
       feedStore,
       networkManager
     });
-    const identityManager = new IdentityManager(metadataStore, keyring, spaceManager);
+    const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
 
     return {
       identityManager,
-      feedStore
+      feedStore,
+      keyring
     };
   };
 
@@ -90,24 +91,31 @@ describe('identity/identity-manager', () => {
 
     const peer2 = await setupPeer({ signalContext });
 
-    // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
-    const identity2 = await peer2.identityManager.acceptIdentity({
-      identityKey: identity1.identityKey,
-      haloSpaceKey: identity1.haloSpaceKey,
-      haloGenesisFeedKey: identity1.haloGenesisFeedKey
-    });
+    const deviceKey = await peer2.keyring.createKey();
+    const controlFeedKey = await peer2.keyring.createKey();
+    const dataFeedKey = await peer2.keyring.createKey();
 
     await identity1.controlPipeline.writer.write({
       credential: {
         credential: await identity1.getIdentityCredentialSigner().createCredential({
-          subject: identity2.deviceKey,
+          subject: deviceKey,
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            identityKey: identity2.identityKey,
-            deviceKey: identity2.deviceKey
+            identityKey: identity1.identityKey,
+            deviceKey
           }
         })
       }
+    });
+
+    // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
+    const identity2 = await peer2.identityManager.acceptIdentity({
+      identityKey: identity1.identityKey,
+      deviceKey,
+      haloSpaceKey: identity1.haloSpaceKey,
+      haloGenesisFeedKey: identity1.haloGenesisFeedKey,
+      controlFeedKey,
+      dataFeedKey
     });
 
     // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.

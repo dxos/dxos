@@ -28,7 +28,7 @@ const columns: Column<KeyRecord>[] = [
   }
 ];
 
-export const KeyringPanel = () => {
+const KeyringPanel = () => {
   const devtoolsHost = useDevtools();
   const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
   if (keys === undefined) {
@@ -37,3 +37,5 @@ export const KeyringPanel = () => {
 
   return <MasterTable columns={columns} data={keys} />;
 };
+
+export default KeyringPanel;

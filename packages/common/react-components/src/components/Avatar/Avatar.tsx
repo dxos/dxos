@@ -29,10 +29,12 @@ export interface AvatarSlots {
   labels?: Omit<ComponentProps<'div'>, 'children'>;
 }
 
-export interface AvatarProps {
+interface SharedAvatarProps {
   fallbackValue: string;
-  label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  label?: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   description?: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  labelId?: string;
+  descriptionId?: string;
   size?: Size;
   variant?: 'square' | 'circle';
   status?: 'active' | 'inactive';
@@ -42,6 +44,16 @@ export interface AvatarProps {
   slots?: AvatarSlots;
 }
 
+interface DirectlyLabeledAvatarProps extends Omit<SharedAvatarProps, 'label'> {
+  label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+}
+
+interface IdLabeledAvatarProps extends Omit<SharedAvatarProps, 'labelId'> {
+  labelId: string;
+}
+
+export type AvatarProps = DirectlyLabeledAvatarProps | IdLabeledAvatarProps;
+
 export const Avatar = forwardRef(
   (
     {
@@ -49,6 +61,8 @@ export const Avatar = forwardRef(
       mediaAlt,
       fallbackValue,
       label,
+      labelId: propsLabelId,
+      descriptionId: propsDescriptionId,
       description,
       variant = 'square',
       status,
@@ -57,12 +71,15 @@ export const Avatar = forwardRef(
     }: PropsWithChildren<AvatarProps>,
     ref: ForwardedRef<HTMLSpanElement>
   ) => {
-    const labelId = useId('avatarLabel');
-    const descriptionId = useId('avatarDescription');
+    const labelId = propsLabelId ?? useId('avatarLabel');
+    const descriptionId = propsDescriptionId ?? useId('avatarDescription');
     const maskId = useId('mask');
     const svgId = useId('mask');
     const fallbackSrc = useMemo(
-      () => `data:image/svg+xml;utf8,${encodeURIComponent(toSvg(fallbackValue, size === 'px' ? 1 : size * 4))}`,
+      () =>
+        `data:image/svg+xml;utf8,${encodeURIComponent(
+          toSvg(fallbackValue, size === 'px' ? 1 : size * 4, { padding: 0 })
+        )}`,
       [fallbackValue]
     );
 
@@ -77,7 +94,7 @@ export const Avatar = forwardRef(
           {...slots.root}
           className={mx('relative inline-flex', getSize(size), slots.root?.className)}
           aria-labelledby={labelId}
-          {...(description && { 'aria-describedby': descriptionId })}
+          {...((description || propsDescriptionId) && { 'aria-describedby': descriptionId })}
           ref={ref}
         >
           <svg
@@ -134,16 +151,19 @@ export const Avatar = forwardRef(
           )}
         </AvatarPrimitive.Root>
         <div role='none' {...slots.labels} className={mx('contents', slots?.labels?.className)}>
-          {typeof label === 'string' ? (
-            <PortalPrimitive.Root asChild>
-              <span id={labelId} className='sr-only'>
-                {label}
-              </span>
-            </PortalPrimitive.Root>
-          ) : (
-            cloneElement(label, { id: labelId })
-          )}
-          {description &&
+          {!propsLabelId &&
+            label &&
+            (typeof label === 'string' ? (
+              <PortalPrimitive.Root asChild>
+                <span id={labelId} className='sr-only'>
+                  {label}
+                </span>
+              </PortalPrimitive.Root>
+            ) : (
+              cloneElement(label, { id: labelId })
+            ))}
+          {!propsDescriptionId &&
+            description &&
             (typeof description === 'string' ? (
               <span id={descriptionId}>{description}</span>
             ) : (

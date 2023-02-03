@@ -23,6 +23,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/braneframe/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/composer-app/package.json",
           "jsonpath": "$.version"
         },
@@ -44,11 +49,6 @@
         {
           "type": "json",
           "path": "packages/apps/patterns/react-composer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/patterns/react-list/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -319,11 +319,6 @@
         {
           "type": "json",
           "path": "packages/devtools/devtools-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/devtools-mesh/package.json",
           "jsonpath": "$.version"
         },
         {

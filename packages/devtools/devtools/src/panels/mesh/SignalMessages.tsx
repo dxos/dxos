@@ -108,7 +108,7 @@ const types: ColumnType<SignalResponse>[] = [
 
 const getType = (id: string): ColumnType<SignalResponse> => types.find((type) => type.id === id)!;
 
-export const SignalMessages = () => {
+const SignalMessages = () => {
   const devtoolsHost = useDevtools();
   const [signalResponses, setSignalResponses] = useState<SignalResponse[]>([]);
 
@@ -166,3 +166,5 @@ export const SignalMessages = () => {
     </div>
   );
 };
+
+export default SignalMessages;

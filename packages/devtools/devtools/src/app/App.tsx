@@ -5,8 +5,9 @@
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { useTelemetry } from '@dxos/react-appkit';
+import { appkitTranslations, Fallback, useTelemetry } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
+import { ThemeProvider } from '@dxos/react-components';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { DevtoolsContextProvider, useRemoteClient, useRoutes } from '../hooks';
@@ -28,15 +29,21 @@ export const App = () => {
   }
 
   return (
-    <ErrorBoundary>
-      <ClientContext.Provider value={client}>
-        <DevtoolsContextProvider>
-          <HashRouter>
-            <Telemetry />
-            <Routes />
-          </HashRouter>
-        </DevtoolsContextProvider>
-      </ClientContext.Provider>
-    </ErrorBoundary>
+    <ThemeProvider
+      appNs='devtools'
+      resourceExtensions={[appkitTranslations]}
+      fallback={<Fallback message='Loading...' />}
+    >
+      <ErrorBoundary>
+        <ClientContext.Provider value={client}>
+          <DevtoolsContextProvider>
+            <HashRouter>
+              <Telemetry />
+              <Routes />
+            </HashRouter>
+          </DevtoolsContextProvider>
+        </ClientContext.Provider>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 };
