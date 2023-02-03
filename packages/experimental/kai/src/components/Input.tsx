@@ -16,9 +16,8 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 /**
  * Input element that updates when losing focus or after a delay.
  */
-// TODO(burdon): Constrain input.
-export const Input = forwardRef<HTMLInputElement>(
-  ({ value: initialValue, onKeyDown, onChange, onEnter, onBlur, delay = 1000, ...props }: InputProps, ref) => {
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ value: initialValue, onKeyDown, onChange, onEnter, onBlur, delay = 1000, ...props }, ref) => {
     const t = useRef<ReturnType<typeof setTimeout>>();
     const [value, setValue] = useState<string | undefined>(initialValue);
 

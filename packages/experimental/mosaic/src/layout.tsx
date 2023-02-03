@@ -28,11 +28,10 @@ export interface Layout {
 /**
  * Tile data item.
  */
-export type Item<T = {}> = {
+export type Item<T extends {} = {}> = {
   id: string;
   label: string;
   content?: string;
-  children?: Item[];
   location: Location;
   data?: T;
 };

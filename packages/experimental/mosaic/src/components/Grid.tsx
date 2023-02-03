@@ -16,15 +16,15 @@ export type GridSlots = {
   tile?: TileSlots;
 };
 
-export type GridProps = {
+export type GridProps<T extends {} = {}> = {
   layout: Layout;
-  items?: Item[];
+  items?: Item<T>[];
   slots?: GridSlots;
-  Content?: FC<TileContentProps>;
-  onSelect?: (item: Item) => void;
-  onChange?: (item: Item, location: Location) => void;
+  Content?: FC<TileContentProps<T>>;
+  onSelect?: (item: Item<T>) => void;
+  onChange?: (item: Item<T>, location: Location) => void;
   onCreate?: (location: Location) => Promise<string | undefined>;
-  onDelete?: (item: Item) => void;
+  onDelete?: (item: Item<T>) => void;
 };
 
 const options = {
@@ -34,7 +34,7 @@ const options = {
 };
 
 // TODO(burdon): Pass in selected (and store in app state).
-export const Grid = ({
+export const Grid = <T extends {} = {}>({
   items = [],
   layout,
   slots = {},
@@ -43,8 +43,8 @@ export const Grid = ({
   onChange,
   onCreate,
   onDelete
-}: GridProps) => {
-  const getItem = (location: Location): Item | undefined => {
+}: GridProps<T>) => {
+  const getItem = (location: Location): Item<T> | undefined => {
     return items.find((item) => serializeLocation(item.location) === serializeLocation(location));
   };
 
@@ -173,7 +173,7 @@ export const Grid = ({
                   <Cell key={serializeLocation(location)} location={location} bounds={bounds} onCreate={handleCreate}>
                     {item && (
                       <div className='z-50'>
-                        <Tile
+                        <Tile<T>
                           slots={slots?.tile}
                           item={item}
                           bounds={bounds}

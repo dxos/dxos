@@ -13,10 +13,12 @@ import { getSize } from '@dxos/react-components';
 
 import { Input } from '../components';
 import { useSpace } from '../hooks';
-import { Note, NoteBoard } from '../proto';
+import { Note, NoteBoard, Location as LocationProto } from '../proto';
 
-const getItemLocation = (board: NoteBoard, id: string) => board.locations.find((location) => location.objectId === id);
-const setItemLocation = (board: NoteBoard, id: string, location: Location) => {
+const getItemLocation = (board: NoteBoard, id: string): LocationProto | undefined =>
+  board.locations.find((location) => location.objectId === id);
+
+const setItemLocation = (board: NoteBoard, id: string, location: LocationProto) => {
   const idx = board.locations.findIndex((location) => location.objectId === id);
   if (idx === -1) {
     board.locations.push({ objectId: id, ...location });
@@ -26,7 +28,7 @@ const setItemLocation = (board: NoteBoard, id: string, location: Location) => {
 };
 
 export const TileContent = withReactor(({ item, selected, onDelete }: TileContentProps) => {
-  const inputRef = useRef<HTMLInputElement>();
+  const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (selected) {
       inputRef.current?.focus();
@@ -51,7 +53,8 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
             value={item.label}
             onChange={(value: string) => {
               // TODO(burdon): Breaks abstraction: bubble change event instead.
-              item.data.title = value;
+              const note = item.data! as Note;
+              note.title = value;
             }}
           />
         </div>
@@ -91,9 +94,9 @@ export const NotesFrame = () => {
   // Cells should be 366px wide (390px - 2 x 12px padding) with 24px margins.
   const layout = useMemo(() => new GridLayout({ range, dimensions: { width: 354, height: 354 }, padding: 24 }), []);
   const notes = useQuery(space, Note.filter());
-  const items: Item[] = useMemo(() => {
+  const items: Item<Note>[] = useMemo(() => {
     if (!board) {
-      return;
+      return [];
     }
 
     return notes.map((note) => {
@@ -102,19 +105,21 @@ export const NotesFrame = () => {
         // TODO(burdon): Assign in free location, not randomly.
         location = {
           x: faker.datatype.number({ min: -range.x, max: range.x }),
-          y: faker.datatype.number({ min: -range.y, max: range.y })
+          y: faker.datatype.number({ min: -range.y, max: range.y })!
         };
 
         setItemLocation(board, note[id], location);
       }
 
-      return {
+      const item: Item<Note> = {
         id: note[id],
         label: note.title,
         content: note.content?.model?.textContent, // TODO(burdon): Util.
-        location,
+        location: { x: location.x!, y: location.y! },
         data: note
       };
+
+      return item;
     });
   }, [board, notes]);
 

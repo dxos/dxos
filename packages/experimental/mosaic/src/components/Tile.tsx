@@ -11,9 +11,13 @@ import { getSize, mx } from '@dxos/react-components';
 
 import { Bounds, Item } from '../layout';
 
-export type TileContentProps = { item: Item; selected?: boolean; onDelete?: (item: Item) => void };
+export type TileContentProps<T extends {} = {}> = {
+  item: Item<T>;
+  selected?: boolean;
+  onDelete?: (item: Item<T>) => void;
+};
 
-export const DefaultTileContent = ({ item, onDelete }: TileContentProps) => {
+export const DefaultTileContent = <T extends {}>({ item, onDelete }: TileContentProps<T>) => {
   const handleDelete = (event: any) => {
     event.stopPropagation();
     onDelete?.(item);
@@ -48,20 +52,20 @@ export type TileSlots = {
   selected?: string;
 };
 
-export type TileProps = {
-  item: Item;
+export type TileProps<T extends {}> = {
+  item: Item<T>;
   bounds: Bounds;
   slots?: TileSlots;
   selected?: boolean;
-  Content?: FC<TileContentProps>;
-  onClick?: (item: Item) => void;
-  onDelete?: (item: Item) => void;
+  Content?: FC<TileContentProps<T>>;
+  onClick?: (item: Item<T>) => void;
+  onDelete?: (item: Item<T>) => void;
 };
 
 /**
  * Draggable tile element.
  */
-export const Tile = ({
+export const Tile = <T extends {} = {}>({
   item,
   bounds,
   slots = {},
@@ -69,7 +73,7 @@ export const Tile = ({
   Content = DefaultTileContent,
   onClick,
   onDelete
-}: TileProps) => {
+}: TileProps<T>) => {
   const { attributes, listeners, transform, isDragging, setNodeRef } = useDraggable({ id: item.id });
   const style = {
     transform: CSS.Transform.toString(transform),
