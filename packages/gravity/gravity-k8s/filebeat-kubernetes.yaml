@@ -20,16 +20,42 @@ data:
     #             logs_path: "/var/log/containers/"
 
     # To enable hints based autodiscover, remove `filebeat.inputs` configuration and uncomment this:
-    filebeat.autodiscover:
-     providers:
-       - type: kubernetes
-         node: ${NODE_NAME}
-         hints.enabled: true
-         hints.default_config:
-           type: container
-           paths:
-             - /var/log/containers/*${data.kubernetes.container.id}.log
+    # filebeat.autodiscover:
+    #  providers:
+    #    - type: kubernetes
+    #      node: ${NODE_NAME}
+    #      hints.enabled: true
+    #      hints.default_config:
+    #        type: container
+    #        paths:
+    #          - /var/log/containers/*${data.kubernetes.container.id}.log
 
+    filebeat.autodiscover:
+      providers:
+          - type: kubernetes
+            node: ${NODE_NAME}
+            templates:
+              - condition:
+                  contains:
+                    kubernetes.container.name: "dxos-agent-host"
+                config:
+                  - type: container
+                    paths:
+                      - "/var/log/containers/*-${data.kubernetes.container.id}.log"
+                    json.keys_under_root: true
+                    json.add_error_key: true
+                    json.message_key: message
+              - condition:
+                  contains:
+                    kubernetes.container.name: "dxos-agent-guest"
+                config:
+                  - type: container
+                    paths:
+                      - "/var/log/containers/*-${data.kubernetes.container.id}.log"
+                    json.keys_under_root: true
+                    json.add_error_key: true
+                    json.message_key: message
+                
     processors:
       - add_cloud_metadata:
       - add_host_metadata:

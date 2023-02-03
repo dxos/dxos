@@ -27,8 +27,8 @@ export const log = winston.createLogger({
   level: __loglevel__,
   format: ecsFormat(),
   transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: process!.env?.GRAVITY_LOG_FILE, level: __loglevel__ })
+    new winston.transports.Console({ level: __loglevel__ })
+    // new winston.transports.File({ filename: process!.env?.GRAVITY_LOG_FILE, level: __loglevel__ })
   ]
 });
 

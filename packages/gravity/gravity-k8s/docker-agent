@@ -11,7 +11,7 @@ ENV NODE_VER=${NODE_VER:-18.12.1}
 RUN n i ${NODE_VER}
 ARG GIT_TOKEN
 RUN git config --global url."https://${GIT_TOKEN}:@github.com/".insteadOf "https://github.com/"
-# ARG CACHEBUST=0
+ARG CACHEBUST=0
 RUN mkdir /dxos && cd /dxos && git clone https://github.com/dxos/dxos.git && cd dxos && git checkout a1ex-gravity-kibana 
 WORKDIR /dxos/dxos
 RUN pnpm install
