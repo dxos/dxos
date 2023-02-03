@@ -8,15 +8,17 @@ import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { MaybePromise } from '@dxos/util';
+import { getAsyncValue, Provider } from '@dxos/util';
 
 import { clientServiceBundle, ClientServices, ClientServicesHost } from '../services';
+import { ShellRuntime } from './shell-runtime';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 
 export type IFrameHostRuntimeParams = {
-  configProvider: () => MaybePromise<Config>;
+  configProvider: Config | Provider<Promise<Config>>;
   appPort: RpcPort;
+  shellPort?: RpcPort;
 };
 
 /**
@@ -26,7 +28,7 @@ export type IFrameHostRuntimeParams = {
  * This should only be used when SharedWorker is not available.
  */
 export class IFrameHostRuntime {
-  private readonly _configProvider: () => MaybePromise<Config>;
+  private readonly _configProvider: Config | Provider<Promise<Config>>;
   private readonly _transportFactory = createWebRTCTransportFactory();
   private readonly _ready = new Trigger<Error | undefined>();
   private readonly _getService: <Service>(
@@ -34,16 +36,20 @@ export class IFrameHostRuntime {
   ) => Promise<Service>;
 
   private readonly _appPort: RpcPort;
+  private readonly _shellPort?: RpcPort;
+  private _config!: Config;
   private _clientServices!: ClientServicesHost;
   private _clientRpc!: ProtoRpcPeer<ClientServices>;
-  private _config!: Config;
+  private _shellRuntime?: ShellRuntime;
 
   @logInfo
   public origin?: string;
 
-  constructor({ configProvider, appPort }: IFrameHostRuntimeParams) {
+  constructor({ configProvider, appPort, shellPort }: IFrameHostRuntimeParams) {
     this._configProvider = configProvider;
     this._appPort = appPort;
+    this._shellPort = shellPort;
+
     this._getService = async (find) => {
       const error = await this._ready.wait();
       if (error) {
@@ -57,12 +63,24 @@ export class IFrameHostRuntime {
 
       return service;
     };
+
+    if (this._shellPort) {
+      this._shellRuntime = new ShellRuntime(this._shellPort);
+    }
+  }
+
+  get services() {
+    return this._clientServices;
+  }
+
+  get shell() {
+    return this._shellRuntime;
   }
 
   async start() {
     log('starting...');
     try {
-      this._config = await this._configProvider();
+      this._config = await getAsyncValue(this._configProvider);
       const signalServer = this._config.get('runtime.services.signal.server');
       this._clientServices = new ClientServicesHost({
         lockKey: LOCK_KEY,
@@ -94,7 +112,7 @@ export class IFrameHostRuntime {
         port: this._appPort
       });
 
-      await Promise.all([this._clientServices.open(), this._clientRpc.open()]);
+      await Promise.all([this._clientServices.open(), this._clientRpc.open(), this._shellRuntime?.open()]);
       this._ready.wake(undefined);
       log('started');
     } catch (err: any) {
@@ -107,6 +125,7 @@ export class IFrameHostRuntime {
     log('stopping...');
     await this._clientRpc.close();
     await this._clientServices.close();
+    await this._shellRuntime?.close();
     log('stopped');
   }
 }

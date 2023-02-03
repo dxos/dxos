@@ -105,9 +105,6 @@ message Runtime {
 
     /// Location of the remote client host.
     optional string remote_source = 6;
-
-    /// Location of the OS shell interface.
-    optional string shell_source = 7;
   }
 
   message App {

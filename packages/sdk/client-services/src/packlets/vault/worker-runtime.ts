@@ -17,6 +17,7 @@ import { WorkerSession } from './worker-session';
 export type CreateSessionParams = {
   appPort: RpcPort;
   systemPort: RpcPort;
+  shellPort: RpcPort;
 };
 
 /**
@@ -70,7 +71,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort }: CreateSessionParams) {
+  async createSession({ appPort, systemPort, shellPort }: CreateSessionParams) {
     const session = new WorkerSession({
       getService: async (find) => {
         const error = await this._ready.wait();
@@ -87,6 +88,7 @@ export class WorkerRuntime {
       },
       appPort,
       systemPort,
+      shellPort,
       readySignal: this._ready
     });
 

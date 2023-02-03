@@ -33,11 +33,13 @@ export {
   type AuthenticatingInvitationObservable,
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
+  ClientServicesProxy,
   type ClientServicesProvider,
   IFrameHostRuntime,
   IFrameProxyRuntime,
   WorkerRuntime,
-  WorkerSession
+  WorkerSession,
+  ShellRuntime
 } from '@dxos/client-services';
 
 export { ApiError } from '@dxos/errors';
@@ -58,5 +60,3 @@ export * from './packlets/proxies';
 
 // TODO(burdon): Create separate export like testing?
 export * from './packlets/devtools';
-
-export * from './packlets/shell';
