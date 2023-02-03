@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
-
 import { useQuery } from '@dxos/react-client';
 
-import { TreeComponent } from '../components';
+// import { TreeComponent } from '../components';
 import { useSpace } from '../hooks';
 import { Organization } from '../proto';
 
@@ -15,12 +13,13 @@ export const ExplorerFrame = () => {
   const organizations = useQuery(space, Organization.filter());
   return null;
 
+  /*
   const data = {
     name: 'Projects',
     children: organizations.map((organization) => ({
       name: organization.name,
       children: organization.projects.map((project) => ({
-        name: project.name,
+        name: project.title,
         children: project.tasks.map((task) => ({
           name: task.title,
           children: task.assignee
@@ -34,8 +33,9 @@ export const ExplorerFrame = () => {
       }))
     }))
   };
+  */
 
-  return <TreeComponent data={data} />;
+  // return <TreeComponent data={data} />;
 };
 
 export default ExplorerFrame;
