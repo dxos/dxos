@@ -55,6 +55,19 @@ describe('Client', () => {
     expect(client.initialized).to.be.false;
   });
 
+  test
+    .only('create space before identity', async () => {
+      const testBuilder = new TestBuilder();
+
+      const client = new Client({ services: testBuilder.createClientServicesHost() });
+      await client.initialize();
+      afterTest(() => client.destroy());
+      await expect(client.echo.createSpace()).to.eventually.be.rejectedWith(
+        'This device has no HALO identity available.'
+      );
+    })
+    .timeout(1_000);
+
   // TODO(burdon): Memory store is reset on close (feed store is closed).
   test.skip('creates identity then resets the memory storage', async () => {
     const config = new Config();
