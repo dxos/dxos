@@ -1,0 +1,142 @@
+{
+  "sourceRoot": "packages/experimental/mosaic/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/mosaic/src/index.ts",
+        "outputPath": "packages/experimental/mosaic/dist/types",
+        "tsConfig": "packages/experimental/mosaic/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_VAULT"
+        },
+        {
+          "env": "VITE_DEBUG"
+        },
+        {
+          "env": "VITE_DEV"
+        },
+        {
+          "env": "VITE_PWA"
+        },
+        "^production",
+        "production"
+      ],
+      "options": {
+        "outputPath": "packages/experimental/mosaic/out/mosaic"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/mosaic/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/mosaic/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/experimental/mosaic",
+        "outputPath": "tmp/mocha/packages/experimental/mosaic",
+        "playwright": true,
+        "resultsPath": "test-results/packages/experimental/mosaic",
+        "serve": "mosaic:preview",
+        "testPatterns": [
+          "packages/experimental/mosaic/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/mosaic/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/experimental/mosaic/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "preview": {
+      "executor": "@nrwl/web:file-server",
+      "options": {
+        "buildTarget": "mosaic:bundle",
+        "staticFilePath": "packages/experimental/mosaic/out/mosaic"
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "mosaic:bundle"
+      }
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/experimental/mosaic/.storybook"
+        },
+        "uiFramework": "@storybook/react"
+      }
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/experimental/mosaic",
+        "outputPath": "tmp/mocha/packages/experimental/mosaic",
+        "resultsPath": "test-results/packages/experimental/mosaic",
+        "testPatterns": [
+          "packages/experimental/mosaic/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/mosaic/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "test"
+  ]
+}
