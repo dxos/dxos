@@ -87,8 +87,8 @@ const Test = () => {
           layout={layout}
           onSelect={handleSelect}
           // TODO(burdon): Provide content renderer for cells.
-          classes={{
-            cell: 'bg-yellow-100 shadow select-none cursor-pointer text-black'
+          slots={{
+            cell: { root: 'bg-yellow-100 shadow select-none cursor-pointer text-black' }
           }}
         />
       </div>

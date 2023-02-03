@@ -2970,9 +2970,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
-      '@dxos/framebox': workspace:*
-      '@dxos/gem-core': workspace:*
-      '@dxos/gem-spore': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -2982,66 +2979,29 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-composer': workspace:*
-      '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
-      '@dxos/sentry': workspace:*
       '@dxos/util': workspace:*
-      '@sentry/react': ^7.17.2
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
       '@types/faker': ^5.5.9
-      '@types/leaflet': ^1.9.0
       '@types/react': ^18.0.21
-      '@types/react-big-calendar': ^0.38.3
-      '@types/react-color': ^3.0.6
-      '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^18.0.6
-      '@types/react-syntax-highlighter': ^15.5.5
-      '@types/react-table': ^7.7.14
       '@vitejs/plugin-react': ^3.0.1
       assert: ^2.0.0
-      base-x: ~3.0.9
-      chess.js: ^1.0.0-alpha.0
-      clipboard-copy: ^4.0.1
-      date-fns: ^2.29.3
       faker: ^5.5.3
-      ipfs-http-client: ~56.0.1
-      leaflet: ^1.9.3
-      mobile-detect: ^1.4.5
-      node-fetch: ^2.6.0
-      openai: ^3.1.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
-      prosemirror-model: ^1.7.1
-      prosemirror-schema-basic: ^1.2.1
-      prosemirror-state: ^1.4.2
-      prosemirror-view: ^1.9.10
       react: ^18.2.0
-      react-big-calendar: ^1.5.2
-      react-color: ^2.19.3
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
-      react-drag-drop-files: ^2.3.8
-      react-is: ^18.2.0
-      react-leaflet: ^4.2.0
       react-resize-detector: ^7.1.2
-      react-router-dom: ^6.3.0
-      react-sketch-canvas: ^6.2.0
-      react-syntax-highlighter: ^15.5.0
-      react-table: ^7.8.0
       tailwindcss: ^3.1.8
       typescript: ^4.8.4
-      url-join: ^5.0.0
       vite: 4.0.4
       vite-plugin-fonts: ^0.7.0
       vite-plugin-inspect: ^0.7.15
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
-      y-prosemirror: ^1.2.0
-      y-protocols: ^1.0.5
-      yjs: ^13.5.44
     dependencies:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
@@ -3057,9 +3017,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@dxos/framebox': link:../framebox
-      '@dxos/gem-core': link:../gem-core
-      '@dxos/gem-spore': link:../gem-spore
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
@@ -3069,59 +3026,22 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-composer': link:../../apps/patterns/react-composer
-      '@dxos/react-list': link:../../apps/patterns/react-list
       '@dxos/react-ui': link:../../apps/patterns/react-ui
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
-      '@dxos/sentry': link:../../common/sentry
       '@dxos/util': link:../../common/util
-      '@sentry/react': 7.20.0_react@18.2.0
       assert: 2.0.0
-      base-x: 3.0.9
-      chess.js: 1.0.0-alpha.0
-      clipboard-copy: 4.0.1
-      date-fns: 2.29.3
-      ipfs-http-client: 56.0.3_node-fetch@2.6.7
-      leaflet: 1.9.3
-      mobile-detect: 1.4.5
-      node-fetch: 2.6.7
-      openai: 3.1.0
       phosphor-react: 1.4.1_react@18.2.0
-      prosemirror-model: 1.19.0
-      prosemirror-schema-basic: 1.2.1
-      prosemirror-state: 1.4.2
-      prosemirror-view: 1.29.0
       react: 18.2.0
-      react-big-calendar: 1.5.2_biqbaboplfbrettd7655fr4n2y
-      react-color: 2.19.3_react@18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
-      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
-      react-is: 18.2.0
-      react-leaflet: 4.2.0_yydtlhsdonbqao6vgvkwhv2zki
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-      react-sketch-canvas: 6.2.0_react@18.2.0
-      react-syntax-highlighter: 15.5.0_react@18.2.0
-      react-table: 7.8.0_react@18.2.0
-      url-join: 5.0.0
-      y-prosemirror: 1.2.0_bxerzyxcxwljqz6lzhld3qlf7u
-      y-protocols: 1.0.5
-      yjs: 13.5.44
     devDependencies:
       '@babel/core': 7.20.12
       '@dxos/client-testing': link:../client-testing
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21
       '@types/faker': 5.5.9
-      '@types/leaflet': 1.9.0
       '@types/react': 18.0.21
-      '@types/react-big-calendar': 0.38.3
-      '@types/react-color': 3.0.6
-      '@types/react-copy-to-clipboard': 5.0.4
       '@types/react-dom': 18.0.6
-      '@types/react-syntax-highlighter': 15.5.5
-      '@types/react-table': 7.7.14
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
       faker: 5.5.3
       postcss: 8.4.21

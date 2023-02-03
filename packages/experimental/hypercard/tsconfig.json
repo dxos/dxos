@@ -27,9 +27,6 @@
       "path": "../../apps/patterns/react-composer"
     },
     {
-      "path": "../../apps/patterns/react-list"
-    },
-    {
       "path": "../../apps/patterns/react-ui"
     },
     {
@@ -57,9 +54,6 @@
       "path": "../../common/react-components"
     },
     {
-      "path": "../../common/sentry"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -67,12 +61,6 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
     },
     {
       "path": "../../core/protocols"
@@ -94,15 +82,6 @@
     },
     {
       "path": "../client-testing"
-    },
-    {
-      "path": "../framebox"
-    },
-    {
-      "path": "../gem-core"
-    },
-    {
-      "path": "../gem-spore"
     }
   ],
   "ts-node": {

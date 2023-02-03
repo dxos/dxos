@@ -20,7 +20,7 @@ export class GridHypercardLayout implements HypercardLayout {
 
   // prettier-ignore
   constructor(
-    private readonly _options: GridHypercardLayoutOption = { range: 3, size: 200, padding: 20 }
+    private readonly _options: GridHypercardLayoutOption = { range: 3, size: 300, padding: 20 }
   ) {}
 
   updateItems(items: Item[]) {
@@ -44,8 +44,9 @@ export class GridHypercardLayout implements HypercardLayout {
       point,
       x: this._center.x - grid / 2 + point.x * grid,
       y: this._center.y - grid / 2 + point.y * grid,
-      width: this._options.size + 1,
-      height: this._options.size + 1
+      // NOTE: If no padding then +1 to make borders overlap.
+      width: this._options.size,
+      height: this._options.size
     };
   }
 

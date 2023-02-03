@@ -14,7 +14,8 @@ import { Note } from '../proto';
 
 export const NotesFrame = () => {
   const range = 2;
-  const layout = useMemo(() => new GridHypercardLayout({ range, size: 200, padding: 20 }), []);
+  // Cells should be 366px wide (390px - 2 x 12px padding) with 24px margins.
+  const layout = useMemo(() => new GridHypercardLayout({ range, size: 354, padding: 24 }), []);
   const space = useSpace();
   const notes = useQuery(space, Note.filter());
 
@@ -58,8 +59,8 @@ export const NotesFrame = () => {
     <Hypercard
       items={items}
       layout={layout}
-      classes={{
-        cell: 'bg-yellow-100 shadow select-none cursor-pointer text-black'
+      slots={{
+        cell: { root: 'bg-yellow-100 w-sidebar shadow select-none cursor-pointer text-black' }
       }}
       onCreate={handleCreate}
       onDelete={handleDelete}

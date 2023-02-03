@@ -156,8 +156,7 @@ export const FileFrame = () => {
         <div className='flex flex-1 p-8 bg-gray-300'>{selected && <Preview file={selected} />}</div>
       </div>
 
-      {/* TODO(burdon): Same width as side-bar. */}
-      <div className='flex flex-col w-full md:w-[272px] h-full overflow-hidden'>
+      <div className='flex flex-col w-full md:w-sidebar h-full overflow-hidden'>
         <Toolbar />
         <FileList />
         <FileUpload />

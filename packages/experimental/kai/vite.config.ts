@@ -10,6 +10,9 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+
+// @ts-ignore
+// NOTE: Vite requires uncompiled JS.
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 
 /**

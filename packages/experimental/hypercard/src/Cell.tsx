@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { ArrowsOut, XCircle } from 'phosphor-react';
 import React from 'react';
 
@@ -11,15 +13,24 @@ import { Bounds, Item } from './defs';
 
 export type CellProps = {
   item: Item;
-  bounds?: Bounds;
-  className?: string;
+  bounds: Bounds;
+  slots?: { root?: string };
   level?: number;
   onClick?: (item: Item) => void;
   onZoom?: (item: Item) => void;
   onDelete?: (item: Item) => void;
 };
 
-export const Cell = ({ item, bounds, className, level = 1, onClick, onZoom, onDelete }: CellProps) => {
+export const Cell = ({ item, bounds, slots = {}, level = 1, onClick, onZoom, onDelete }: CellProps) => {
+  const { transform, setNodeRef } = useDraggable({ id: item.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    left: bounds.x,
+    top: bounds.y,
+    width: bounds.width,
+    height: bounds.height
+  };
+
   const handleDelete = (event: any) => {
     event.stopPropagation();
     onDelete?.(item);
@@ -33,24 +44,28 @@ export const Cell = ({ item, bounds, className, level = 1, onClick, onZoom, onDe
   // prettier-ignore
   return (
     <div
+      ref={setNodeRef}
       className={mx(
         bounds && 'absolute',
         'group',
-        'flex flex-col overflow-hidden p-2',
-        className
+        'flex flex-col overflow-hidden snap-center p-3',
+        slots.root
       )}
-      style={bounds && { left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick?.(item);
-      }}
+      style={style}
+      // onClick={(event) => {
+      //   event.stopPropagation();
+      //   onClick?.(item);
+      // }}
     >
       <div className='flex flex-col overflow-hidden'>
-        <div className='flex w-full items-center text-sm mb-2'>
+        <div className='flex w-full items-center mb-3'>
+          {/* Title */}
           <div className='flex flex-1 overflow-hidden'>
-            <h2 className='overflow-hidden text-ellipsis whitespace-nowrap'>{item.label}</h2>
+            <h2 className='text-lg overflow-hidden text-ellipsis whitespace-nowrap'>{item.label}</h2>
           </div>
-          <div className='flex flex-shrink-0 pl-2'>
+
+          {/* Icons */}
+          <div className='flex flex-shrink-0 pl-3'>
             <div className='invisible group-hover:visible text-gray-500'>
               {level === 0 && (
                 <button onClick={handleDelete}>
@@ -66,7 +81,8 @@ export const Cell = ({ item, bounds, className, level = 1, onClick, onZoom, onDe
           </div>
         </div>
 
-        <div className='flex overflow-hidden text-xs text-gray-600'>
+        {/* Body */}
+        <div className='flex overflow-hidden text-gray-600'>
           {item.content}
         </div>
       </div>

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useDroppable } from '@dnd-kit/core';
 import { PlusCircle } from 'phosphor-react';
 import React from 'react';
 
@@ -10,6 +11,8 @@ import { getSize, mx } from '@dxos/react-components';
 import { Bounds, Point } from './defs';
 
 export const Placeholder = ({ bounds, onCreate }: { bounds: Bounds; onCreate?: (point: Point) => void }) => {
+  const { setNodeRef } = useDroppable({ id: `${bounds.point!.x}-${bounds.point!.y}` });
+
   const handleClick = (event: any) => {
     if (onCreate) {
       event.stopPropagation();
@@ -19,6 +22,7 @@ export const Placeholder = ({ bounds, onCreate }: { bounds: Bounds; onCreate?: (
 
   return (
     <div
+      ref={setNodeRef}
       className='group flex absolute cursor-pointer border border-gray-300 border-dashed rounded-lg'
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
     >

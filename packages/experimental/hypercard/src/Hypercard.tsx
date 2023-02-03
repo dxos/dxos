@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DndContext } from '@dnd-kit/core';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -17,19 +18,19 @@ export interface HypercardLayout {
 }
 
 export type HypercardSlots = {
-  cell?: string;
+  cell?: { root?: string };
 };
 
 export type HypercardProps = {
   items?: Item[];
   layout?: HypercardLayout;
-  classes?: HypercardSlots;
+  slots?: HypercardSlots;
   onSelect?: (item: Item) => void;
   onCreate?: (point: Point) => void;
   onDelete?: (item: Item) => void;
 };
 
-export const Hypercard = ({ items = [], layout, classes = {}, onSelect, onCreate, onDelete }: HypercardProps) => {
+export const Hypercard = ({ items = [], layout, slots = {}, onSelect, onCreate, onDelete }: HypercardProps) => {
   // TODO(burdon): Options.
   const options = {
     transitionDelay: 500,
@@ -109,46 +110,56 @@ export const Hypercard = ({ items = [], layout, classes = {}, onSelect, onCreate
     // TODO(burdon): Define states (zoom, selected, etc.)
   };
 
+  const handleDragStart = () => {
+    console.log('start');
+  };
+
+  const handleDragEnd = () => {
+    console.log('end');
+  };
+
   // TODO(burdon): Scrolling is relative to top-left.
   //  - Outer container should be max range (don't consider infinite scrolling).
   //  - Scroll center into view.
   return (
-    <div ref={containerRef} className='flex flex-1 overflow-auto bg-gray-500'>
-      <div
-        className='flex flex-1 bg-gray-200'
-        style={style}
-        onClick={(event: any) => handleZoom(event.detail === 2 ? options.zoomOut : 1)}
-      >
-        <div>
-          {placeholders?.map((bounds, i) => (
-            <Placeholder key={i} bounds={bounds} onCreate={onCreate} />
-          ))}
-        </div>
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div ref={containerRef} className='flex flex-1 overflow-auto bg-gray-500'>
+        <div
+          className='flex flex-1 snap-x snap-y bg-gray-200'
+          style={style}
+          onClick={(event: any) => handleZoom(event.detail === 2 ? options.zoomOut : 1)}
+        >
+          <div>
+            {placeholders?.map((bounds, i) => (
+              <Placeholder key={i} bounds={bounds} onCreate={onCreate} />
+            ))}
+          </div>
 
-        <div>
-          {layout &&
-            // TODO(burdon): Recursive layout.
-            items.map((item) => {
-              const bounds = layout?.getBounds(item.id);
-              if (!bounds) {
-                return null;
-              }
+          <div>
+            {layout &&
+              // TODO(burdon): Recursive layout.
+              items.map((item) => {
+                const bounds = layout?.getBounds(item.id);
+                if (!bounds) {
+                  return null;
+                }
 
-              return (
-                <Cell
-                  key={item.id}
-                  className={classes?.cell}
-                  item={item}
-                  bounds={bounds}
-                  level={item === selected ? 1 : 0}
-                  onClick={() => handleSelect(item, 1)}
-                  onZoom={() => handleSelect(item, 2)}
-                  onDelete={onDelete}
-                />
-              );
-            })}
+                return (
+                  <Cell
+                    key={item.id}
+                    slots={slots?.cell}
+                    item={item}
+                    bounds={bounds}
+                    level={item === selected ? 1 : 0}
+                    onClick={() => handleSelect(item, 1)}
+                    onZoom={() => handleSelect(item, 2)}
+                    onDelete={onDelete}
+                  />
+                );
+              })}
+          </div>
         </div>
       </div>
-    </div>
+    </DndContext>
   );
 };
