@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { Column } from 'react-table';
 
-import { Document, DocumentBase, id, TypeFilter } from '@dxos/echo-schema';
+import { Document, DocumentBase, EchoSchemaType, id, TypeFilter } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
 import { Searchbar, Selector, SelectorOption, Table } from '../components';
@@ -22,10 +22,11 @@ const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-const generateTypes = (documentTypes: typeof Document[]) => {
-  const generateColumns = (documentType: typeof Document) => {
+
+const generateTypes = (schemas: EchoSchemaType[]) => {
+  const generateColumns = (schema: EchoSchemaType) => {
     const columns: Column<Document>[] = [];
-    for (const field of documentType.type!.fields) {
+    for (const field of schema.fields) {
       if (field.type.basic) {
         columns.push({
           Header: capitalizeFirstLetter(field.name),
@@ -36,19 +37,19 @@ const generateTypes = (documentTypes: typeof Document[]) => {
     return columns;
   };
 
-  return documentTypes.map((documentType) => ({
-    id: documentType.type!.name,
-    title: documentType.type!.shortName,
-    filter: documentType.filter?.(),
+  return schemas.map((schema) => ({
+    id: schema.name,
+    title: schema.shortName,
+    filter: schema.createFilter(),
     subFilter:
       (match = '') =>
       (object: Document) =>
         JSON.stringify(object.toJSON()).includes(match),
-    columns: generateColumns(documentType)
+    columns: generateColumns(schema)
   }));
 };
 
-const types: ColumnType<any>[] = generateTypes([Organization, Project, Contact]);
+const types: ColumnType<any>[] = generateTypes([Organization.type, Project.type, Contact.type]);
 
 const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
