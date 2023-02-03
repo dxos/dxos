@@ -47,9 +47,6 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
   override _modelConstructor = ObjectModel;
 
-  static readonly type?: EchoSchemaType;
-  static filter?: (opts?: any) => TypeFilter<DocumentBase>;
-
   // prettier-ignore
   constructor(
     initialProps?: Record<keyof any, any>,
