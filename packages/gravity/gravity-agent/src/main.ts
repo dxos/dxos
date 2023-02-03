@@ -26,7 +26,7 @@ export const __loglevel__ = 'info';
 export const log = winston.createLogger({
   level: __loglevel__,
   format: ecsFormat(),
-  defaultMeta: { service: 'gravity-agent' },
+  defaultMeta: { service: 'gravity' },
   transports: [
     new winston.transports.Console(),
     new winston.transports.File({ filename: process!.env?.GRAVITY_LOG_FILE, level: __loglevel__ })
