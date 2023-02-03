@@ -5,9 +5,9 @@
 import { CaretLeft, CaretRight, Plus, QrCode, Textbox } from 'phosphor-react';
 import React from 'react';
 
+import type { Profile } from '@dxos/client';
 import { Button, CompoundButton, getSize, mx, useTranslation } from '@dxos/react-components';
 
-import { Profile } from '../JoinPanelProps';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface AdditionMethodSelectorProps extends ViewStateProps {

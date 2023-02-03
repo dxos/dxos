@@ -5,14 +5,13 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useClient, useCurrentSpace, useIdentity, useSpaces, useSpaceSetter } from '@dxos/react-client';
+import { useClient, useCurrentSpace, useIdentity, useSpaces } from '@dxos/react-client';
 
 export const Navigator = () => {
   const client = useClient();
   const identity = useIdentity();
   const spaces = useSpaces();
-  const space = useCurrentSpace();
-  const setSpace = useSpaceSetter();
+  const [space, setSpace] = useCurrentSpace();
   const { spaceKey } = useParams();
   const navigate = useNavigate();
 

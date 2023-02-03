@@ -93,12 +93,12 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
  * @param id DOM id of the iframe.
  * @returns The created iframe.
  */
-export const createIFrame = (source: string, id: string) => {
+export const createIFrame = (source: string, id: string, hidden = true) => {
   const create = () => {
     const iframe = document.createElement('iframe') as HTMLIFrameElement;
     iframe.id = id;
     iframe.src = source;
-    iframe.setAttribute('style', 'display: none;');
+    hidden && iframe.setAttribute('style', 'display: none;');
     document.body.appendChild(iframe);
     return iframe;
   };

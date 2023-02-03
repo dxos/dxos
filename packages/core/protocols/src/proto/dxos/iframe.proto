@@ -41,14 +41,15 @@ message SpaceRequest {
 /// OS App UI RPCs.
 service OsAppService {
   rpc SetDisplay(DisplayRequest) returns (google.protobuf.Empty);
+  // rpc SetIdentity(IdentityRequest) returns (google.protobuf.Empty);
   rpc SetSpace(SpaceRequest) returns (google.protobuf.Empty);
 }
 
 enum ShellLayout {
   DEFAULT = 0;
-  IDENTITY = 1;
-  DEVICES = 2;
-  SPACES = 3;
+  AUTH = 1;
+  CURRENT_SPACE = 2;
+  SPACE_LIST = 3;
 }
 
 message LayoutRequest {
