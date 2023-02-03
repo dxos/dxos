@@ -18,7 +18,7 @@ export const isTaskTile = (o: any): o is TaskTileProps => {
   return 'tile' in o && o.tile instanceof Task;
 };
 
-export const renderIfIsTaskTile = (o: any) => {
+export const renderIfTaskTile = (o: any) => {
   if (isTaskTile(o)) {
     return <TaskTile {...o} />;
   } else {
