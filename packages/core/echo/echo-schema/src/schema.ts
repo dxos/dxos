@@ -10,6 +10,7 @@ import { strip } from './util';
 export type EchoType =
   | {
       kind: 'number' | 'string' | 'boolean' | 'bytes';
+      basic: true;
     }
   | {
       /**
@@ -70,13 +71,13 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
         case 'sint64':
         case 'fixed64':
         case 'sfixed64':
-          return { kind: 'number' };
+          return { kind: 'number', basic: true };
         case 'string':
-          return { kind: 'string' };
+          return { kind: 'string', basic: true };
         case 'bytes':
-          return { kind: 'bytes' };
+          return { kind: 'bytes', basic: true };
         case 'bool':
-          return { kind: 'boolean' };
+          return { kind: 'boolean', basic: true };
         default:
           throw new Error(`Unknown type: ${type}`);
       }
