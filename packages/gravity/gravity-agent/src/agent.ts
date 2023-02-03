@@ -85,27 +85,31 @@ export class Agent implements AgentContext {
       await this.runSequence(this._spec.startSequence);
     }
 
-    log.info({
-      message: {
-        level: __loglevel__,
-        component: __component__,
-        operation: 'agent-start',
-        data: 'run'
-      }
-    });
+    log.info(
+      JSON.stringify({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'agent-start',
+          data: 'run'
+        }
+      })
+    );
 
     for (const sequence of this._spec.testSequences ?? []) {
       await this.runSequence(sequence);
       this.sequenceComplete.emit(sequence);
     }
-    log.info({
-      message: {
-        level: __loglevel__,
-        component: __component__,
-        operation: 'agent-start',
-        data: 'completed'
-      }
-    });
+    log.info(
+      JSON.stringify({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'agent-start',
+          data: 'completed'
+        }
+      })
+    );
 
     this._running = true;
   }
@@ -114,42 +118,53 @@ export class Agent implements AgentContext {
     if (!this._running) {
       return;
     }
-    log.info({
-      message: {
-        level: __loglevel__,
-        component: __component__,
-        operation: 'agent-stopping',
-        data: { id: this.id }
-      }
-    });
+    log.info(
+      JSON.stringify({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'agent-stopping',
+          data: { id: this.id }
+        }
+      })
+    );
 
-    log.info('stopping...', { id: this.id });
+    log.info(
+      JSON.stringify({
+        status: 'stopping',
+        id: this.id
+      })
+    );
     if (this._spec.stopSequence) {
       await this.runSequence(this._spec.stopSequence);
     }
 
-    log.info({
-      message: {
-        level: __loglevel__,
-        component: __component__,
-        operation: 'agent-stopped',
-        data: { id: this.id }
-      }
-    });
+    log.info(
+      JSON.stringify({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'agent-stopped',
+          data: { id: this.id }
+        }
+      })
+    );
 
     this._running = false;
   }
 
   async runSequence(sequence: CommandSequence) {
     for (const command of sequence.commands ?? []) {
-      log.info({
-        message: {
-          level: __loglevel__,
-          component: __component__,
-          operation: 'runSequence',
-          data: { command }
-        }
-      });
+      log.info(
+        JSON.stringify({
+          message: {
+            level: __loglevel__,
+            component: __component__,
+            operation: 'runSequence',
+            data: { command }
+          }
+        })
+      );
       await this._stateMachine.processCommand(command);
     }
   }
