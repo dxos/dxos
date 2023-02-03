@@ -16,7 +16,7 @@ export default {
 
 const props = {
   title: 'Example',
-  description: 'This is an example card.'
+  description: 'This is an example tile.'
 };
 
 export const Base = {
