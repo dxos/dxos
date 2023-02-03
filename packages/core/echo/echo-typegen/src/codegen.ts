@@ -150,7 +150,7 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
   // prettier-ignore
   builder
     .push(`export class ${name} extends DocumentBase {`)
-    .push(`static readonly type = schema.getType('${fullName}');`, 1).nl()
+    .push(`static override readonly type = schema.getType('${fullName}');`, 1).nl()
 
     .push(`static filter(opts?: { ${initializer} }): TypeFilter<${name}> {`, 1)
     .push(`return ${name}.type.createFilter(opts);`, 2)
