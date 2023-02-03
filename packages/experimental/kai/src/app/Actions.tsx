@@ -130,7 +130,7 @@ export const Actions = () => {
         onUpload={handleImportSpace}
       />
 
-      <div className='flex flex-shrink-0 p-3 mt-2'>
+      <div className='flex shrink-0 p-3 mt-2'>
         {actions.map((action, i) => {
           const { Icon, handler, title } = action;
           return (

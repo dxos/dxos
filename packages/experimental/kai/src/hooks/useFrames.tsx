@@ -32,6 +32,9 @@ const activeFrames = [
   FrameID.STACK,
   FrameID.TABLE,
   FrameID.TASKS
+  // FrameID.EXPLORER
+  // FrameID.KANBAN,
+  // FrameID.NOTES
 ];
 
 export type FrameDef = {

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { convertTreeToGraph, createTree, Graph as GemGraph, Markers, TestGraphModel } from '@dxos/gem-spore';
@@ -12,7 +12,11 @@ import { convertTreeToGraph, createTree, Graph as GemGraph, Markers, TestGraphMo
 
 // class Model implements GraphModel<> {}
 
-export const GraphComponent: FC = () => {
+export type GraphComponentParams = {
+  data?: any;
+};
+
+export const GraphComponent = ({ data }: GraphComponentParams) => {
   // const { database: db } = useSpace();
   // const projects = useObjects(Project.filter());
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
