@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ReactElement, createContext, useContext, useEffect, useReducer, useState } from 'react';
+import { FC, ReactElement, createContext, useContext, useEffect, useReducer, useState } from 'react';
 
 import { useClient } from '../client';
 
@@ -56,7 +56,7 @@ const ReactorContext = createContext({});
 
 export type WithReactorOpts = {
   componentName?: string;
-}
+};
 
 /**
  * Reactive HOC.
@@ -72,7 +72,7 @@ export const withReactor = <P,>(component: FC<P>, opts: WithReactorOpts = {}): F
     return render(component(props));
   };
 
-  if(opts.componentName) {
+  if (opts.componentName) {
     Component.displayName = opts.componentName;
   }
 
