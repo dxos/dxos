@@ -9,15 +9,15 @@
 
 # For more available modules and options, please see the filebeat.reference.yml sample
 # configuration file.
-# filebeat.autodiscover:
-#   providers:
-#     - type: kubernetes
-#       node: ${NODE_NAME}
-#       hints.enabled: true
-#       hints.default_config:
-#         type: container
-#         paths:
-#           - /var/log/containers/*.log
+filebeat.autodiscover:
+  providers:
+    - type: kubernetes
+      node: ${NODE_NAME}
+      hints.enabled: true
+      hints.default_config:
+        type: container
+        paths:
+          - /var/log/containers/*.log
 
 # ============================== Filebeat inputs ===============================
 
@@ -28,7 +28,7 @@ filebeat.inputs:
 # Below are the input specific configurations.
 
 # filestream is an input for collecting log messages from files.
-- type: filestream
+- type: container
   parsers:
       - ndjson:
         overwrite_keys: true 
@@ -42,7 +42,7 @@ filebeat.inputs:
 
   # Paths that should be crawled and fetched. Glob based paths.
   paths: 
-    - '/tmp/dxos/gravity-*.log'
+    - /tmp/dxos/gravity-*.log
     #- c:\programdata\elasticsearch\logs\*
 
   # Exclude lines. A list of regular expressions to match. It drops the lines that are

@@ -11,7 +11,7 @@ ENV NODE_VER=${NODE_VER:-18.12.1}
 RUN n i ${NODE_VER}
 ARG GIT_TOKEN
 RUN git config --global url."https://${GIT_TOKEN}:@github.com/".insteadOf "https://github.com/"
-ARG CACHEBUST=0
+# ARG CACHEBUST=0
 RUN mkdir /dxos && cd /dxos && git clone https://github.com/dxos/dxos.git && cd dxos && git checkout a1ex-gravity-kibana 
 WORKDIR /dxos/dxos
 RUN pnpm install
@@ -22,10 +22,10 @@ COPY ./*.yml ./config/
 COPY ./log-config.yml .
 COPY ./run_agent.sh ./
 RUN chmod a+x ./run_agent.sh
-WORKDIR /opt
-RUN curl -o filebeat-8.5.3-linux-arm64.tar.gz https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.5.3-linux-arm64.tar.gz && tar xfz ./filebeat-8.5.3-linux-arm64.tar.gz
-WORKDIR /opt/filebeat-8.5.3-linux-arm64
-COPY ./filebeat/filebeat.yml /opt/filebeat-8.5.3-linux-arm64/
+# WORKDIR /opt
+# RUN curl -o filebeat-8.5.3-linux-arm64.tar.gz https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.5.3-linux-arm64.tar.gz && tar xfz ./filebeat-8.5.3-linux-arm64.tar.gz
+# WORKDIR /opt/filebeat-8.5.3-linux-arm64
+# COPY ./filebeat/filebeat.yml /opt/filebeat-8.5.3-linux-arm64/
 WORKDIR /dxos/dxos/packages/gravity/gravity-agent
 ARG GRAVITY_TEST_SCENARIO
 ENV GRAVITY_TEST_SCENARIO=${GRAVITY_TEST_SCENARIO:-host}
