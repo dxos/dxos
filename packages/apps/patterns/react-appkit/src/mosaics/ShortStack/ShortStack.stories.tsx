@@ -26,7 +26,7 @@ const tasksAndLists = [
   new EchoTask({ title: 'step 5', description: '…profit?', completed: false })
 ];
 
-export const Task = {
+export const Default = {
   render: ShortStack,
   args: { type: 'shortStack', tiles: tasksAndLists.map((item) => ({ tile: item })) }
 };
