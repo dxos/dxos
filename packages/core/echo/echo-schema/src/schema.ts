@@ -33,7 +33,7 @@ export type EchoSchemaField = {
   type: EchoType;
 };
 
-const getFields = (type: pb.Type, typeStack: string[] = []): EchoSchemaField[] => {
+const getFields = (type: pb.Type): EchoSchemaField[] => {
   type.fieldsArray.forEach((field) => field.resolve());
 
   return type.fieldsArray.map((field) => {
