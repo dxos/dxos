@@ -7,11 +7,11 @@ import React from 'react';
 
 import { DocumentBase } from '@dxos/echo-schema';
 
-import { Task as EchoTask, TaskList as EchoTaskList } from '../../proto';
-import { BaseTile, DefaultTile, GenericTile, TaskTile, TaskListTile } from './Tile';
+import { Task as EchoTask, TaskList as EchoTaskList } from '../proto';
+import { FallbackTile, AnyTile, TaskTile, TaskListTile } from './';
 
 export default {
-  component: BaseTile
+  component: FallbackTile
 } as any;
 
 const props = {
@@ -29,15 +29,15 @@ export const Base = {
 const example = new DocumentBase(props);
 
 export const Default = {
-  render: DefaultTile.render,
-  args: { data: example }
+  render: FallbackTile,
+  args: { tile: example }
 };
 
 const step1 = new EchoTask({ title: 'step 1', description: 'Build component', completed: true });
 
 export const Task = {
-  render: TaskTile.render,
-  args: { data: step1 }
+  render: TaskTile,
+  args: { tile: step1 }
 };
 
 const taskList = new EchoTaskList({
@@ -46,19 +46,19 @@ const taskList = new EchoTaskList({
 });
 
 export const TaskList = {
-  render: TaskListTile.render,
-  args: { data: taskList }
+  render: TaskListTile,
+  args: { tile: taskList }
 };
 
 export const Generic = {
-  render: (args: { data: any[] }) => (
+  render: (args: { tiles: any[] }) => (
     <>
-      {args.data.map((data, index) => (
-        <GenericTile key={index} data={data} />
+      {args.tiles.map((tile, index) => (
+        <AnyTile key={index} tile={tile} />
       ))}
     </>
   ),
   args: {
-    data: [step1, taskList, example]
+    tiles: [step1, taskList, example]
   }
 };

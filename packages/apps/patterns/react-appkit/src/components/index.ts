@@ -19,4 +19,3 @@ export * from './SingleInputStep';
 export * from './SpaceList';
 export * from './SpacesPage';
 export * from './StatusIndicator';
-export * from './Tile';
