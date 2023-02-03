@@ -11,6 +11,7 @@ import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
+import { TypeFilter } from './database';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -47,6 +48,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
   override _modelConstructor = ObjectModel;
 
   static readonly type?: EchoSchemaType;
+  static filter?: (opts?: any) => TypeFilter<DocumentBase>;
 
   // prettier-ignore
   constructor(

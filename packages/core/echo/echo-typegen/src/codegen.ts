@@ -152,7 +152,7 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
     .push(`export class ${name} extends DocumentBase {`)
     .push(`static override readonly type = schema.getType('${fullName}');`, 1).nl()
 
-    .push(`static filter(opts?: { ${initializer} }): TypeFilter<${name}> {`, 1)
+    .push(`static override filter(opts?: { ${initializer} }): TypeFilter<${name}> {`, 1)
     .push(`return ${name}.type.createFilter(opts);`, 2)
     .push('}', 1).nl()
 
