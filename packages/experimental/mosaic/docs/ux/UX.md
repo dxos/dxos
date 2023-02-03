@@ -1,9 +1,10 @@
-# UX Guidelines
+# Mosaic
 
 ## Overview
 
-- Kai is a mobile-first application, that is responsive to work with phones, tablets, and larger format computers and screens (as well as AR).
-- The UX consists of the following concepts:
+- Mosaic is a UX framework for tiled data components.
+- It is responsive to work with phones, tablets, and larger format computers and screens (as well as AR).
+- The framework UX consists of the following concepts:
   - **The Shell**: A framework-wide container that provides access to global functions (Profile, Spaces, Sharing, Global options, etc.)
   - **Frames**: Modular panels that can be dynamically discovered and downloaded that represent data in use-case specific ways (Kanban, Calendar, Map, etc.)
   - **Tiles**: Atomic components that typically represent individual data objects.
@@ -44,3 +45,13 @@ The diagram below illustrates different kinds of containers, panels, and lists.
 - Draggable list rows may have an additional grip icon on the left hand side.
 - Icons are 1rem with 0.75rem padding (i.e., 40px x 40px in total).
 - List rows may have variable heights.
+
+
+## TODO
+
+- TODO(burdon): Tables.
+- TODO(burdon): Schema.
+- TODO(burdon): Input forms.
+- TODO(burdon): Navigation.
+
+
