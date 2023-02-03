@@ -78,7 +78,7 @@ const main = () => {
         try {
           const config: ConfigProto = yaml.load(fs.readFileSync(configFilepath).toString()) as ConfigProto;
           if (verbose) {
-            log.info('config', { config });
+            log.info(JSON.stringify({ config }));
           }
 
           const spec: AgentSpec = parseYamlWithSchema(
@@ -86,7 +86,7 @@ const main = () => {
             fs.readFileSync(specFilepath).toString()
           );
           if (verbose) {
-            log.info('spec', { spec });
+            log.info(JSON.stringify({ spec }));
           }
           const testBuilder = new TestBuilder(new Config(config));
           const services = testBuilder.createClientServicesHost();
@@ -95,7 +95,7 @@ const main = () => {
           await agent.initialize();
           await agent.start();
           await agent.stop();
-          log.info('Done');
+          log.info(JSON.stringify({ status: 'Done' }));
           process.exit(0);
         } catch (err: any) {
           log.error(err);
@@ -104,14 +104,16 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  log.info({
-    message: {
-      level: __loglevel__,
-      component: __component__,
-      operation: 'main',
-      data: Sprintf('Tests are running...')
-    }
-  });
+  log.info(
+    JSON.stringify({
+      message: {
+        level: __loglevel__,
+        component: __component__,
+        operation: 'main',
+        data: Sprintf('Tests are running...')
+      }
+    })
+  );
 };
 
 void main();
