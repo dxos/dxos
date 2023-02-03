@@ -15,8 +15,9 @@ export type EchoType =
       /**
        * Plain JS object.
        */
-      kind: 'record'; // TODO(mykola).
+      kind: 'record'; // TODO(mykola) Figure out a better name.
       objectType: string;
+      // TODO(mykola): Add ability to list fields.
     }
   | {
       kind: 'ref';
