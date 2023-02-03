@@ -24,13 +24,13 @@ export const TaskListTile = ({ tile, slots = {} }: TaskListTileProps) => {
   );
 };
 
-export const isTaskListTile = (o: any): o is TaskListTileProps => {
-  return 'tile' in o && o.tile instanceof TaskList;
+export const isTaskListTile = (props: any): props is TaskListTileProps => {
+  return 'tile' in props && props.tile instanceof TaskList;
 };
 
-export const renderIfTaskListTile = (o: any) => {
-  if (isTaskListTile(o)) {
-    return <TaskListTile {...o} />;
+export const renderIfTaskListTile = (props: any) => {
+  if (isTaskListTile(props)) {
+    return <TaskListTile {...props} />;
   } else {
     return null;
   }

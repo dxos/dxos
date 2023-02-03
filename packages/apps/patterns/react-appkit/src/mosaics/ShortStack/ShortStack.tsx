@@ -37,21 +37,21 @@ export const ShortStack = ({ tiles }: ShortStackProps) => {
   );
 };
 
-export const isShortStackProps = (o: any): o is ShortStackProps => {
-  return 'type' in o && o.type === 'shortStack';
+export const isShortStackProps = (props: any): props is ShortStackProps => {
+  return 'type' in props && props.type === 'shortStack';
 };
 
-export const renderContainerIfShortStack = (o: any) => {
-  if (isShortStackProps(o)) {
-    return <ShortStackContainer {...o} />;
+export const renderContainerIfShortStack = (props: any) => {
+  if (isShortStackProps(props)) {
+    return <ShortStackContainer {...props} />;
   } else {
     return null;
   }
 };
 
-export const renderIfShortStack = (o: any) => {
-  if (isShortStackProps(o)) {
-    return <ShortStack {...o} />;
+export const renderIfShortStack = (props: any) => {
+  if (isShortStackProps(props)) {
+    return <ShortStack {...props} />;
   } else {
     return null;
   }

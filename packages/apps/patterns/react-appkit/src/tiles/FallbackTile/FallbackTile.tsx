@@ -23,13 +23,13 @@ export const FallbackTile = ({ tile, slots = {} }: FallbackTile) => {
   );
 };
 
-export const isFallbackTIle = (o: any): o is FallbackTile => {
-  return 'tile' in o;
+export const isFallbackTIle = (props: any): props is FallbackTile => {
+  return 'tile' in props;
 };
 
-export const renderIfFallbackTile = (o: any) => {
-  if (isFallbackTIle(o)) {
-    return <FallbackTile {...o} />;
+export const renderIfFallbackTile = (props: any) => {
+  if (isFallbackTIle(props)) {
+    return <FallbackTile {...props} />;
   } else {
     return null;
   }

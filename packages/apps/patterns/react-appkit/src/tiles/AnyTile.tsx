@@ -6,4 +6,5 @@ import { renderIfFallbackTile } from './FallbackTile';
 import { renderIfTaskListTile } from './TaskListTile';
 import { renderIfTaskTile } from './TaskTile';
 
-export const AnyTile = (o: any) => renderIfTaskListTile(o) || renderIfTaskTile(o) || renderIfFallbackTile(o);
+export const AnyTile = (props: any) =>
+  renderIfTaskListTile(props) || renderIfTaskTile(props) || renderIfFallbackTile(props);
