@@ -116,10 +116,8 @@ export class StateManager<M extends Model> {
   }
 
   private _emitModelUpdate() {
-    scheduleTask(new Context(), () => {
-      assert(this._model);
-      this._model.update.emit(this._model);
-    });
+    assert(this._model);
+    this._model.update.emit(this._model);
   }
 
   /**
