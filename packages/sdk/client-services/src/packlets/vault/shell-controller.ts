@@ -9,6 +9,9 @@ import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { appServiceBundle, shellServiceBundle, ShellServiceBundle } from './services';
 
+/**
+ * Provide access to the shell via RPC connection.
+ */
 export class ShellController {
   readonly displayUpdate = new Event<ShellDisplay>();
   readonly spaceUpdate = new Event<PublicKey>();

@@ -38,8 +38,8 @@ message SpaceRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
-/// OS App UI RPCs.
-service OsAppService {
+/// App RPCs for the shell.
+service AppService {
   rpc SetDisplay(DisplayRequest) returns (google.protobuf.Empty);
   // rpc SetIdentity(IdentityRequest) returns (google.protobuf.Empty);
   rpc SetSpace(SpaceRequest) returns (google.protobuf.Empty);
@@ -56,7 +56,7 @@ message LayoutRequest {
   ShellLayout layout = 1;
 }
 
-/// OS Shell UI RPCs.
-service OsShellService {
+/// Shell UI RPCs.
+service ShellService {
   rpc SetLayout(LayoutRequest) returns (google.protobuf.Empty);
 }
