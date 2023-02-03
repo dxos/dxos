@@ -26,7 +26,6 @@ export const __loglevel__ = 'info';
 export const log = winston.createLogger({
   level: __loglevel__,
   format: ecsFormat(),
-  defaultMeta: { service: 'gravity' },
   transports: [
     new winston.transports.Console(),
     new winston.transports.File({ filename: process!.env?.GRAVITY_LOG_FILE, level: __loglevel__ })
@@ -105,11 +104,13 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  log.log({
-    level: __loglevel__,
-    component: __component__,
-    operation: 'main',
-    message: Sprintf('Tests are running...')
+  log.info({
+    message: {
+      level: __loglevel__,
+      component: __component__,
+      operation: 'main',
+      data: Sprintf('Tests are running...')
+    }
   });
 };
 

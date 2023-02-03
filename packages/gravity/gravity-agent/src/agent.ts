@@ -10,7 +10,7 @@ import { Client, ClientServicesProvider, fromHost, PublicKey } from '@dxos/clien
 import { Config, ConfigProto } from '@dxos/config';
 import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
 
-import { log } from './main';
+import { log, __component__, __loglevel__ } from './main';
 
 // import { log } from '@dxos/log';
 
@@ -85,12 +85,27 @@ export class Agent implements AgentContext {
       await this.runSequence(this._spec.startSequence);
     }
 
-    log.info('Starting test sequences...');
+    log.info({
+      message: {
+        level: __loglevel__,
+        component: __component__,
+        operation: 'agent-start',
+        data: 'run'
+      }
+    });
+
     for (const sequence of this._spec.testSequences ?? []) {
       await this.runSequence(sequence);
       this.sequenceComplete.emit(sequence);
     }
-    log.info('Test sequences complete.');
+    log.info({
+      message: {
+        level: __loglevel__,
+        component: __component__,
+        operation: 'agent-start',
+        data: 'completed'
+      }
+    });
 
     this._running = true;
   }
@@ -99,19 +114,42 @@ export class Agent implements AgentContext {
     if (!this._running) {
       return;
     }
+    log.info({
+      message: {
+        level: __loglevel__,
+        component: __component__,
+        operation: 'agent-stopping',
+        data: { id: this.id }
+      }
+    });
 
     log.info('stopping...', { id: this.id });
     if (this._spec.stopSequence) {
       await this.runSequence(this._spec.stopSequence);
     }
 
-    log.info('stopped', { id: this.id });
+    log.info({
+      message: {
+        level: __loglevel__,
+        component: __component__,
+        operation: 'agent-stopped',
+        data: { id: this.id }
+      }
+    });
+
     this._running = false;
   }
 
   async runSequence(sequence: CommandSequence) {
     for (const command of sequence.commands ?? []) {
-      log.info('processing: ', { command });
+      log.info({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'runSequence',
+          data: { command }
+        }
+      });
       await this._stateMachine.processCommand(command);
     }
   }

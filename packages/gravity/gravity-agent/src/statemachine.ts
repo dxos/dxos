@@ -73,11 +73,13 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
-      log.log({
-        level: __loglevel__,
-        component: __component__,
-        operation: 'createSpaceInvitatin',
-        message: Sprintf('swarm_id={0}', command.createSpaceInvitation.swarmKey)
+      log.info({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'createSpaceInvitatin',
+          data: Sprintf('swarm_id={0}', command.createSpaceInvitation.swarmKey)
+        }
       });
     }
     // --- ACCEPT SPACE INVITATIOON ---
@@ -86,43 +88,49 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
-      log.log({
-        level: __loglevel__,
-        component: __component__,
-        operation: 'acceptSpaceInvitatin',
-        message: Sprintf('swarm_id={0}', command.acceptSpaceInvitation.swarmKey)
+      log.info({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'acceptSpaceInvitatin',
+          data: Sprintf('swarm_id={0}', command.acceptSpaceInvitation.swarmKey)
+        }
       });
     }
     // --- SYNC CHANNEL: SRV ---
     else if (command.syncServer) {
       await processSyncServer(command); // <- process.ts
-      log.log({
-        level: __loglevel__,
-        component: __component__,
-        operation: 'processSyncServer',
-        message: ''
+      log.info({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'processSyncServer',
+          data: ''
+        }
       });
     }
     // --- SYNC CHANNEL: CLT ---
     else if (command.syncClient) {
       await processSyncClient(command); // <- process.ts
-      log.info('processSyncClient');
-      log.log({
-        level: __loglevel__,
-        component: __component__,
-        operation: 'processSyncClient',
-        message: ''
+      log.info({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'processSyncClient',
+          data: ''
+        }
       });
     }
     // --- TEAR DOWN ---
     else if (command.tearDown) {
       await this.agent.client.echo.close();
-      log.info('tearDown');
-      log.log({
-        level: __loglevel__,
-        component: __component__,
-        operation: 'tearDown',
-        message: ''
+      log.info({
+        message: {
+          level: __loglevel__,
+          component: __component__,
+          operation: 'tearDown',
+          data: ''
+        }
       });
     }
     //
