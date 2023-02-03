@@ -42,10 +42,11 @@ export enum State {
 
 /**
  * Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
+ * @deprecated
  */
 @trackLeaks('initialize', 'destroy')
 export class Database {
-  private readonly _itemManager: ItemManager;
+  public readonly _itemManager: ItemManager;
 
   private _state = State.NULL;
 
