@@ -13,34 +13,6 @@
         "{options.outputPath}"
       ]
     },
-    "bundle": {
-      "executor": "@nrwl/vite:build",
-      "inputs": [
-        {
-          "env": "CONFIG_DYNAMIC"
-        },
-        {
-          "env": "DX_VAULT"
-        },
-        {
-          "env": "VITE_DEBUG"
-        },
-        {
-          "env": "VITE_DEV"
-        },
-        {
-          "env": "VITE_PWA"
-        },
-        "^production",
-        "production"
-      ],
-      "options": {
-        "outputPath": "packages/experimental/hypercard/out/hypercard"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
@@ -51,27 +23,6 @@
       },
       "outputs": [
         "{options.outputPath}"
-      ]
-    },
-    "e2e": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/experimental/hypercard",
-        "outputPath": "tmp/mocha/packages/experimental/hypercard",
-        "playwright": true,
-        "resultsPath": "test-results/packages/experimental/hypercard",
-        "serve": "hypercard:preview",
-        "testPatterns": [
-          "packages/experimental/hypercard/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/experimental/hypercard/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
       ]
     },
     "lint": {
@@ -85,19 +36,6 @@
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "preview": {
-      "executor": "@nrwl/web:file-server",
-      "options": {
-        "buildTarget": "hypercard:bundle",
-        "staticFilePath": "packages/experimental/hypercard/out/hypercard"
-      }
-    },
-    "serve": {
-      "executor": "@nrwl/vite:dev-server",
-      "options": {
-        "buildTarget": "hypercard:bundle"
-      }
     },
     "storybook": {
       "configurations": {

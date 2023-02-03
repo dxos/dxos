@@ -4,7 +4,6 @@
 
 import assert from 'node:assert';
 
-import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -94,29 +93,29 @@ export class SpaceServiceImpl implements SpaceService {
   }
 
   subscribeSpaces() {
-    return new Stream<SubscribeSpacesResponse>(({ next }) => {
-      const subscriptions = new EventSubscriptions();
-
+    return new Stream<SubscribeSpacesResponse>(({ next, ctx }) => {
       const onUpdate = () => {
-        const spaces = Array.from(this.serviceContext.dataSpaceManager!.spaces.values()).map(
-          (space): Space => ({
-            publicKey: space.key,
-            isOpen: true,
-            isActive: true,
-            members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
-              identityKey: member.key,
-              profile: {
+        const spaces = Array.from(this.serviceContext.dataSpaceManager!.spaces.values())
+          .filter((space) => this.serviceContext.dataServiceSubscriptions.getDataService(space.key)) // Skip spaces without data service available.
+          .map(
+            (space): Space => ({
+              publicKey: space.key,
+              isOpen: true,
+              isActive: true,
+              members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
                 identityKey: member.key,
-                displayName: member.assertion.profile?.displayName ?? humanize(member.key)
-              },
-              presence:
-                this.serviceContext.identityManager.identity?.identityKey.equals(member.key) ||
-                space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
-                  ? SpaceMember.PresenceState.ONLINE
-                  : SpaceMember.PresenceState.OFFLINE
-            }))
-          })
-        );
+                profile: {
+                  identityKey: member.key,
+                  displayName: member.assertion.profile?.displayName ?? humanize(member.key)
+                },
+                presence:
+                  this.serviceContext.identityManager.identity?.identityKey.equals(member.key) ||
+                  space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+                    ? SpaceMember.PresenceState.ONLINE
+                    : SpaceMember.PresenceState.OFFLINE
+              }))
+            })
+          );
         log('update', { spaces });
         next({ spaces });
       };
@@ -128,25 +127,27 @@ export class SpaceServiceImpl implements SpaceService {
 
         await this.serviceContext.initialized.wait();
 
-        subscriptions.add(
-          this.serviceContext.dataSpaceManager!.updated.on(() => {
-            this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
-              subscriptions.add(space.stateUpdate.on(onUpdate));
-              subscriptions.add(space.presence.updated.on(onUpdate));
-            });
-            onUpdate();
-          })
-        );
+        // TODO(dmaretskyi): Create a pattern for subscribing to a set of objects.
+        const subscribeSpaces = () => {
+          for (const space of this.serviceContext.dataSpaceManager!.spaces.values()) {
+            if (!this.serviceContext.dataServiceSubscriptions.getDataService(space.key)) {
+              // Skip spaces without data service available.
+              continue;
+            }
 
-        this.serviceContext.dataSpaceManager!.spaces.forEach((space) => {
-          subscriptions.add(space.stateUpdate.on(onUpdate));
-          subscriptions.add(space.presence.updated.on(onUpdate));
+            space.stateUpdate.on(ctx, onUpdate);
+            space.presence.updated.on(ctx, onUpdate);
+          }
+        };
+
+        this.serviceContext.dataSpaceManager!.updated.on(ctx, () => {
+          subscribeSpaces();
+          onUpdate();
         });
 
+        subscribeSpaces();
         onUpdate();
       });
-
-      return () => subscriptions.clear();
     });
   }
 

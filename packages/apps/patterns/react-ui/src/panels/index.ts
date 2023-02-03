@@ -3,3 +3,4 @@
 //
 
 export * from './IdentityPanel';
+export * from './JoinPanel';

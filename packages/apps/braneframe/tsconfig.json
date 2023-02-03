@@ -1,0 +1,52 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/react-components"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../patterns/react-appkit"
+    },
+    {
+      "path": "../patterns/react-ui"
+    }
+  ]
+}

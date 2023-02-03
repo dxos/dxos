@@ -56,7 +56,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
     if (this._schemaType) {
       for (const field of this._schemaType.fields) {
-        if (field.isOrderedSet && !this._uninitialized![field.name]) {
+        if (field.type.kind === 'array' && !this._uninitialized![field.name]) {
           this._uninitialized![field.name] = new EchoArray();
         }
       }
@@ -192,7 +192,7 @@ export class DocumentBase extends EchoObject<ObjectModel> {
 
     if (!type && this._schemaType) {
       const field = this._schemaType.fields.find((field) => field.name === prop);
-      if (field?.isOrderedSet) {
+      if (field?.type.kind === 'array') {
         type = 'array';
       }
     }

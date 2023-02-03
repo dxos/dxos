@@ -24,6 +24,8 @@ export class FeedStore<T extends {}> {
   private readonly _feeds: ComplexMap<PublicKey, FeedWrapper<T>> = new ComplexMap(PublicKey.hash);
   private readonly _factory: FeedFactory<T>;
 
+  private _closed = false;
+
   readonly feedOpened = new Event<FeedWrapper<T>>();
 
   constructor({ factory }: FeedStoreOptions<T>) {
@@ -51,6 +53,8 @@ export class FeedStore<T extends {}> {
    */
   async openFeed(feedKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper<T>> {
     log('opening feed', { feedKey });
+    assert(feedKey);
+    assert(!this._closed, 'Feed store is closed');
 
     let feed = this.getFeed(feedKey);
     if (feed) {
@@ -80,6 +84,7 @@ export class FeedStore<T extends {}> {
    */
   async close() {
     log('closing...');
+    this._closed = true;
     await Promise.all(
       Array.from(this._feeds.values()).map(async (feed) => {
         await feed.close();

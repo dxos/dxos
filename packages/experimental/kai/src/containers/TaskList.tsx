@@ -142,43 +142,20 @@ export const TaskItem: FC<{
   onSave?: (task: Task) => void;
   isLast?: boolean;
   orderIndex: number;
-}> = withReactor(({ task, readonly, showAssigned, onEnter, onDelete, onSave, orderIndex, isLast }) => {
-  const { debug } = useAppState();
-  useReactorContext({
-    onChange: () => {
-      onSave?.(task);
-    }
-  });
-
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<Element>) => {
-      switch (event.key) {
-        case 'PageDown': {
-          event.preventDefault();
-          if (isLast) {
-            (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
-          } else {
-            (document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined)?.focus();
-          }
-          break;
-        }
-        case 'PageUp': {
-          event.preventDefault();
-          (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
-          break;
-        }
+}> = withReactor(
+  ({ task, readonly, showAssigned, onEnter, onDelete, onSave, orderIndex, isLast }) => {
+    const { debug } = useAppState();
+    useReactorContext({
+      onChange: () => {
+        onSave?.(task);
       }
-    },
-    [task, orderIndex, isLast]
-  );
+    });
 
-  const onKeyUp = useCallback(
-    (event: KeyboardEvent<Element>) => {
-      switch (event.key) {
-        case 'Enter': {
-          if (event.shiftKey) {
-            (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
-          } else {
+    const onKeyDown = useCallback(
+      (event: KeyboardEvent<Element>) => {
+        switch (event.key) {
+          case 'PageDown': {
+            event.preventDefault();
             if (isLast) {
               (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
             } else {
@@ -186,59 +163,89 @@ export const TaskItem: FC<{
                 document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
               )?.focus();
             }
+            break;
           }
-          onEnter?.(task);
-          break;
+          case 'PageUp': {
+            event.preventDefault();
+            (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
+            break;
+          }
         }
-      }
-    },
-    [task, orderIndex, isLast]
-  );
+      },
+      [task, orderIndex, isLast]
+    );
 
-  return (
-    <CardRow
-      sidebar={
-        <input
-          type='checkbox'
-          disabled={readonly}
-          checked={!!task.completed}
-          onChange={() => (task.completed = !task.completed)}
-        />
-      }
-      action={
-        onDelete && (
-          <Button className='text-gray-300' onClick={() => onDelete(task)}>
-            <XCircle className={mx(getSize(6), 'hover:text-red-400')} />
-          </Button>
-        )
-      }
-      header={
-        <Input
-          className={mx('w-full p-1', task[deleted] && 'text-red-300')}
-          spellCheck={false}
-          value={task.title}
-          placeholder='Enter text'
-          onKeyDown={onKeyDown}
-          onKeyUp={onKeyUp}
-          onChange={(value) => {
-            task.title = value;
-          }}
-          disabled={readonly}
-          data-orderindex={orderIndex}
-        />
-      }
-    >
-      {showAssigned && (
-        <div className='ml-8 pl-1 text-sm text-blue-800'>
-          <div>{task.assignee?.name}</div>
-          {debug && (
-            <div>
-              <div>{PublicKey.from(task[id]).truncate()}</div>
-              <div>{(task[base] as any)._schemaType?.name}</div>
-            </div>
-          )}
-        </div>
-      )}
-    </CardRow>
-  );
-});
+    const onKeyUp = useCallback(
+      (event: KeyboardEvent<Element>) => {
+        switch (event.key) {
+          case 'Enter': {
+            if (event.shiftKey) {
+              (
+                document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined
+              )?.focus();
+            } else {
+              if (isLast) {
+                (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
+              } else {
+                (
+                  document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
+                )?.focus();
+              }
+            }
+            onEnter?.(task);
+            break;
+          }
+        }
+      },
+      [task, orderIndex, isLast]
+    );
+
+    return (
+      <CardRow
+        sidebar={
+          <input
+            type='checkbox'
+            disabled={readonly}
+            checked={!!task.completed}
+            onChange={() => (task.completed = !task.completed)}
+          />
+        }
+        action={
+          onDelete && (
+            <Button className='text-gray-300' onClick={() => onDelete(task)}>
+              <XCircle className={mx(getSize(6), 'hover:text-red-400')} />
+            </Button>
+          )
+        }
+        header={
+          <Input
+            className={mx('w-full p-1', task[deleted] && 'text-red-300')}
+            spellCheck={false}
+            value={task.title}
+            placeholder='Enter text'
+            onKeyDown={onKeyDown}
+            onKeyUp={onKeyUp}
+            onChange={(value) => {
+              task.title = value;
+            }}
+            disabled={readonly}
+            data-orderindex={orderIndex}
+          />
+        }
+      >
+        {showAssigned && (
+          <div className='ml-8 pl-1 text-sm text-blue-800'>
+            <div>{task.assignee?.name}</div>
+            {debug && (
+              <div>
+                <div>{PublicKey.from(task[id]).truncate()}</div>
+                <div>{(task[base] as any)._schemaType?.name}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardRow>
+    );
+  },
+  { componentName: 'TaskItem' }
+);

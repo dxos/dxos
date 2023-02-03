@@ -80,7 +80,7 @@ export class TestBroker {
     while (waited < this._timeout) {
       try {
         const response = await fetch(`http://localhost:${this._port}/.well-known/dx/signal`);
-        log(`Fetching broker. Response=${JSON.stringify(response)}`);
+        console.log(`Fetching broker. Response=${JSON.stringify(response)}`);
         return;
       } catch (err) {
         await sleep(waitInc);

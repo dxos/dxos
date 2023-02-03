@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './NetworkPanel';
-export * from './RpcTracePanel';
-export * from './SignalMessages';
-export * from './SignalPanel';
-export * from './SignalStatus';
-export * from './SwarmPanel';
+import React from 'react';
+
+export const SignalMessages = React.lazy(() => import('./SignalMessages'));
+export const SignalPanel = React.lazy(() => import('./SignalPanel'));
+export const SignalStatus = React.lazy(() => import('./SignalStatus'));
+export const SwarmPanel = React.lazy(() => import('./SwarmPanel'));
