@@ -82,26 +82,30 @@ describe('schema', () => {
       {
         name: 'name',
         type: {
-          kind: 'string'
+          kind: 'string',
+          basic: true
         }
       },
       {
         name: 'username',
         type: {
-          kind: 'string'
+          kind: 'string',
+          basic: true
         }
       },
       {
         name: 'email',
         type: {
-          kind: 'string'
+          kind: 'string',
+          basic: true
         }
       },
       {
         name: 'address',
         type: {
           kind: 'record',
-          objectType: 'example.test.Address'
+          objectType: 'example.test.Address',
+          basic: false
         }
       },
       {
@@ -110,8 +114,10 @@ describe('schema', () => {
           kind: 'array',
           elementType: {
             kind: 'ref',
-            objectType: 'example.test.Task'
-          }
+            objectType: 'example.test.Task',
+            basic: false
+          },
+          basic: false
         }
       }
     ]);
