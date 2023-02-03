@@ -6,6 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { Config } from '@dxos/config';
+import { log } from '@dxos/log';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
@@ -54,6 +55,18 @@ describe('Client', () => {
     await client.destroy();
     expect(client.initialized).to.be.false;
   });
+
+  test('create space before identity', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    expect(() => {
+      void client.echo.createSpace();
+    }).to.throw('This device has no HALO identity available');
+  }).timeout(1_000);
 
   // TODO(burdon): Memory store is reset on close (feed store is closed).
   test.skip('creates identity then resets the memory storage', async () => {
