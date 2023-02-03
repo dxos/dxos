@@ -39,7 +39,7 @@ export const Cell = ({ children, location, bounds, debug = true, onCreate }: Cel
     >
       <div
         className={mx(
-          'group relative flex w-full h-full justify-center items-center __snap-center md:snap-align-none',
+          'group relative flex w-full h-full justify-center items-center snap-center',
           'rounded-lg cursor-pointer select-none',
           isOver ? 'transition ease-in-out duration-500 bg-gray-300' : 'border border-gray-300 border-dashed'
         )}

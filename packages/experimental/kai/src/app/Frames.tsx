@@ -220,9 +220,5 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
   }
 
   // TODO(burdon): Frame flicker on first display.
-  return (
-    <div className={'flex flex-1'}>
-      <Component />
-    </div>
-  );
+  return <Component />;
 };

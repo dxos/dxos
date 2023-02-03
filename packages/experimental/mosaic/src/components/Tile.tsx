@@ -85,7 +85,7 @@ export const Tile = ({
       ref={setNodeRef}
       className={mx(
         'group',
-        'flex flex-col overflow-hidden snap-center p-3',
+        'flex flex-col overflow-hidden p-3',
         isDragging && 'opacity-80',
         slots.root,
         selected && slots?.selected
