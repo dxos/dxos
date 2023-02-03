@@ -104,6 +104,7 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
+  log.info('THIS_IS_MARKER');
   log.info(
     JSON.stringify({
       message: {

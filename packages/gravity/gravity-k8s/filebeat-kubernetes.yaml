@@ -8,15 +8,18 @@ metadata:
     k8s-app: filebeat
 data:
   filebeat.yml: |-
+
+
     filebeat.autodiscover:
       providers:
       - type: kubernetes
         hints.enabled: true
-        hints.default_config:enabled: false
+        hints.default_config:enabled: true
         hints.default_config:
           type: container
           paths:
             - /var/log/containers/*${data.kubernetes.container.id}.log
+    ssl.verification_mode: none
 
     # filebeat.inputs:
     # - type: container
@@ -77,6 +80,8 @@ data:
       hosts: ['${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
       username: ${ELASTICSEARCH_USERNAME}
       password: ${ELASTICSEARCH_PASSWORD}
+      protocol: "https"
+      ssl.verification_mode: none
 ---
 apiVersion: apps/v1
 kind: DaemonSet
