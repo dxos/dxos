@@ -66,7 +66,7 @@ export const BraneFrame = () => {
 
   return (
     <div className='flex flex-1 flex-col'>
-      <div className='flex w-full p-2 px-3 bg-gray-200 text-gray-500'>
+      <div className='flVIex w-full p-2 px-3 bg-gray-200 text-gray-500'>
         <div className='flex-1' />
         {views.map(({ type, label, Icon }) => (
           <Button
