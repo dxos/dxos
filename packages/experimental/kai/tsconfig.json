@@ -105,7 +105,7 @@
       "path": "../gem-spore"
     },
     {
-      "path": "../hypercard"
+      "path": "../mosaic"
     }
   ],
   "ts-node": {

@@ -2952,111 +2952,6 @@ importers:
       '@types/lodash': 4.14.186
       faker: 5.5.3
 
-  packages/experimental/hypercard:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dnd-kit/core': ^6.0.5
-      '@dnd-kit/modifiers': ^6.0.0
-      '@dnd-kit/sortable': ^7.0.1
-      '@dnd-kit/utilities': ^3.2.0
-      '@dxos/assets': workspace:*
-      '@dxos/async': workspace:*
-      '@dxos/chess-app': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/node-std': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-composer': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/util': workspace:*
-      '@swc-node/register': ^1.5.4
-      '@swc/core': ^1.3.21
-      '@types/faker': ^5.5.9
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      assert: ^2.0.0
-      faker: ^5.5.3
-      lodash.defaultsdeep: ^4.6.1
-      phosphor-react: ^1.4.1
-      postcss: ^8.4.17
-      react: ^18.2.0
-      react-copy-to-clipboard: ^5.1.0
-      react-dom: ^18.2.0
-      react-resize-detector: ^7.1.2
-      tailwindcss: ^3.1.8
-      typescript: ^4.8.4
-      vite: 4.0.4
-      vite-plugin-fonts: ^0.7.0
-      vite-plugin-inspect: ^0.7.15
-      vite-plugin-pwa: ^0.14.1
-      workbox-window: ^6.5.4
-    dependencies:
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/assets': link:../../apps/patterns/assets
-      '@dxos/async': link:../../common/async
-      '@dxos/chess-app': link:../chess-app
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/config': link:../../sdk/config
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/node-std': link:../../common/node-std
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../common/react-components
-      '@dxos/react-composer': link:../../apps/patterns/react-composer
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      lodash.defaultsdeep: 4.6.1
-      phosphor-react: 1.4.1_react@18.2.0
-      react: 18.2.0
-      react-copy-to-clipboard: 5.1.0_react@18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@babel/core': 7.20.12
-      '@dxos/client-testing': link:../client-testing
-      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
-      '@swc/core': 1.3.21
-      '@types/faker': 5.5.9
-      '@types/lodash.defaultsdeep': 4.6.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.0.4
-      faker: 5.5.3
-      postcss: 8.4.21
-      tailwindcss: 3.1.8
-      typescript: 4.8.4
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
-      vite-plugin-fonts: 0.7.0_vite@4.0.4
-      vite-plugin-inspect: 0.7.15_vite@4.0.4
-      vite-plugin-pwa: 0.14.1_vite@4.0.4
-      workbox-window: 6.5.4
-
   packages/experimental/kai:
     specifiers:
       '@babel/core': ^7.18.13
@@ -3078,9 +2973,9 @@ importers:
       '@dxos/framebox': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
-      '@dxos/hypercard': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/mosaic': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -3166,9 +3061,9 @@ importers:
       '@dxos/framebox': link:../framebox
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
-      '@dxos/hypercard': link:../hypercard
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/mosaic': link:../mosaic
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../apps/patterns/react-appkit
@@ -3445,6 +3340,111 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       cross-fetch: 3.1.5
+
+  packages/experimental/mosaic:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
+      '@dxos/assets': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/chess-app': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-composer': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/util': workspace:*
+      '@swc-node/register': ^1.5.4
+      '@swc/core': ^1.3.21
+      '@types/faker': ^5.5.9
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^3.0.1
+      assert: ^2.0.0
+      faker: ^5.5.3
+      lodash.defaultsdeep: ^4.6.1
+      phosphor-react: ^1.4.1
+      postcss: ^8.4.17
+      react: ^18.2.0
+      react-copy-to-clipboard: ^5.1.0
+      react-dom: ^18.2.0
+      react-resize-detector: ^7.1.2
+      tailwindcss: ^3.1.8
+      typescript: ^4.8.4
+      vite: 4.0.4
+      vite-plugin-fonts: ^0.7.0
+      vite-plugin-inspect: ^0.7.15
+      vite-plugin-pwa: ^0.14.1
+      workbox-window: ^6.5.4
+    dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/assets': link:../../apps/patterns/assets
+      '@dxos/async': link:../../common/async
+      '@dxos/chess-app': link:../chess-app
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../common/react-components
+      '@dxos/react-composer': link:../../apps/patterns/react-composer
+      '@dxos/react-ui': link:../../apps/patterns/react-ui
+      '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      lodash.defaultsdeep: 4.6.1
+      phosphor-react: 1.4.1_react@18.2.0
+      react: 18.2.0
+      react-copy-to-clipboard: 5.1.0_react@18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@babel/core': 7.20.12
+      '@dxos/client-testing': link:../client-testing
+      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
+      '@swc/core': 1.3.21
+      '@types/faker': 5.5.9
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 3.0.1_vite@4.0.4
+      faker: 5.5.3
+      postcss: 8.4.21
+      tailwindcss: 3.1.8
+      typescript: 4.8.4
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite-plugin-fonts: 0.7.0_vite@4.0.4
+      vite-plugin-inspect: 0.7.15_vite@4.0.4
+      vite-plugin-pwa: 0.14.1_vite@4.0.4
+      workbox-window: 6.5.4
 
   packages/experimental/react-client-testing:
     specifiers:
@@ -6328,7 +6328,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.20.12
-      '@babel/helper-plugin-utils': 7.19.0
+      '@babel/helper-plugin-utils': 7.20.2
     dev: true
 
   /@babel/plugin-transform-react-jsx-source/7.19.6_@babel+core@7.20.12:
@@ -6338,7 +6338,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.20.12
-      '@babel/helper-plugin-utils': 7.19.0
+      '@babel/helper-plugin-utils': 7.20.2
     dev: true
 
   /@babel/plugin-transform-react-jsx/7.19.0_@babel+core@7.20.12:
@@ -34267,7 +34267,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
