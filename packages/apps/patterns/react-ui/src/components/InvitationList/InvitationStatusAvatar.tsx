@@ -2,10 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { ComponentPropsWithoutRef } from 'react';
 
 import { Invitation } from '@dxos/client';
-import { getSize, mx, Size } from '@dxos/react-components';
+import { getSize, Size } from '@dxos/react-components';
+
+import { inactiveStrokeColor, activeStrokeColor, resolvedStrokeColor } from '../../styles';
+import { invitationStatusValue } from '../../util';
 
 export interface InvitationStatusAvatarProps {
   size?: Size;
@@ -13,24 +16,60 @@ export interface InvitationStatusAvatarProps {
   haltedAt?: Invitation.State;
 }
 
-const colorMap: Record<Invitation.State, string> = {
-  [Invitation.State.ERROR]: 'text-error-400 dark:text-error-500',
-  [Invitation.State.TIMEOUT]: 'text-warn-400 dark:text-warn-500',
-  [Invitation.State.CANCELLED]: 'text-warn-400 dark:text-warn-500',
-  [Invitation.State.INIT]: 'text-primary-400 dark:text-primary-500',
-  [Invitation.State.CONNECTING]: 'text-primary-400 dark:text-primary-500',
-  [Invitation.State.CONNECTED]: 'text-primary-400 dark:text-primary-500',
-  [Invitation.State.AUTHENTICATING]: 'text-primary-400 dark:text-primary-500',
-  [Invitation.State.SUCCESS]: 'text-success-400 dark:text-success-500'
+const svgSize = 32;
+const strokeWidth = 4;
+const radius = (svgSize - strokeWidth) / 2;
+const circumference = Math.PI * 2 * radius;
+const gap = circumference / 12;
+const nSegments = 3;
+const segment = circumference / nSegments;
+const baseOffset = (2 * circumference) / 3 - (segment - gap) / 2;
+
+const circleProps: ComponentPropsWithoutRef<'circle'> = {
+  fill: 'none',
+  strokeLinecap: 'round',
+  cx: svgSize / 2,
+  cy: svgSize / 2,
+  r: radius,
+  strokeWidth: 4,
+  strokeDasharray: `${segment - gap} ${2 * segment + gap}`
 };
 
 export const InvitationStatusAvatar = ({ size = 10, status, haltedAt }: InvitationStatusAvatarProps) => {
+  const resolvedColor = resolvedStrokeColor(status);
+  const halted =
+    status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT || status === Invitation.State.ERROR;
+  const cursor = invitationStatusValue.get(halted ? haltedAt! : status)!;
   return (
-    <span
-      role='status'
-      className={mx('inline-flex items-center justify-center font-system-black', getSize(size), colorMap[status])}
-    >
-      {(haltedAt || status).toString()}
-    </span>
+    <svg viewBox={`0 0 ${svgSize} ${svgSize}`} className={getSize(size)}>
+      {[...Array(nSegments)].map((_, index) => (
+        <circle
+          key={index}
+          {...circleProps}
+          strokeDashoffset={index * segment + baseOffset}
+          className={
+            index === 0
+              ? cursor === 1
+                ? halted
+                  ? resolvedColor
+                  : activeStrokeColor
+                : cursor > 1
+                ? resolvedColor
+                : inactiveStrokeColor
+              : index === 1
+              ? cursor === 3
+                ? halted
+                  ? resolvedColor
+                  : activeStrokeColor
+                : cursor > 3
+                ? resolvedColor
+                : inactiveStrokeColor
+              : cursor > 3
+              ? resolvedColor
+              : inactiveStrokeColor
+          }
+        />
+      ))}
+    </svg>
   );
 };
