@@ -33,10 +33,7 @@ const options = {
   zoomIn: 2
 };
 
-// TODO(burdon): Scrolling is relative to top-left.
-//  - Outer container should be max range (don't consider infinite scrolling).
-//  - Scroll center into view.
-
+// TODO(burdon): Pass in selected (and store in app state).
 export const Grid = ({
   items = [],
   layout,
@@ -108,7 +105,8 @@ export const Grid = ({
 
   useEffect(() => {
     if (width && height) {
-      scrollTo(layout.getCenter(selected?.location ?? { x: 0, y: 0 }), false);
+      const item = selected ? items.find((item) => item.id === selected) : undefined;
+      scrollTo(layout.getCenter(item?.location ?? { x: 0, y: 0 }), false);
     }
   }, [width, height]);
 

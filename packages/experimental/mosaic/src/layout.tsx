@@ -34,5 +34,5 @@ export type Item<T = {}> = {
   content?: string;
   children?: Item[];
   location: Location;
-  data: T;
+  data?: T;
 };
