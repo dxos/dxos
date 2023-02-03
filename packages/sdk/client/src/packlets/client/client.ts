@@ -116,7 +116,10 @@ export class Client {
    * ECHO database.
    */
   get echo(): EchoProxy {
-    // assert(this._initialized, 'Client not initialized.');
+    assert(this._initialized, 'Client not initialized.');
+    if (!this.halo.profile) {
+      throw new ApiError('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
+    }
     return this._echo;
   }
 
