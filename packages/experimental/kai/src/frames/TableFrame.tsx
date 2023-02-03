@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { Column } from 'react-table';
 
-import { Document, DocumentBase, EchoSchemaType, id, TypeFilter } from '@dxos/echo-schema';
+import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
 
 import { Searchbar, Selector, SelectorOption, Table } from '../components';
@@ -21,7 +21,6 @@ type ColumnType<T extends DocumentBase> = SelectorOption & {
 const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
-
 
 const generateTypes = (schemas: EchoSchemaType[]) => {
   const generateColumns = (schema: EchoSchemaType) => {
