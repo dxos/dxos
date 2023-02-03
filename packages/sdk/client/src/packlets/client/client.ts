@@ -17,6 +17,7 @@ import { StatusResponse } from '@dxos/protocols/proto/dxos/client';
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
+import { ShellController } from '../shell/shell-controller';
 import { SpaceSerializer } from './serializer';
 import { fromIFrame } from './utils';
 
@@ -50,6 +51,8 @@ export class Client {
   private readonly _echo: EchoProxy;
   private readonly _mesh: MeshProxy;
 
+  readonly shell?: ShellController;
+
   private _initialized = false;
 
   // prettier-ignore
@@ -67,6 +70,11 @@ export class Client {
     this._halo = new HaloProxy(this._services);
     this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
     this._mesh = new MeshProxy(this._services);
+
+    const shellSrc = this._config.get('runtime.client.shellSource');
+    if (typeof window !== 'undefined' && shellSrc !== 'false') {
+      this.shell = new ShellController({ shellSrc });
+    }
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = this.config.get('runtime.client.log.filter');
@@ -149,9 +157,11 @@ export class Client {
     assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services.SystemService.initSession();
 
+    // TODO(wittjosiah): Promise.all?
     await this._halo.open();
     await this._echo.open();
     await this._mesh.open();
+    await this.shell?._open(Boolean(this._halo.profile));
 
     this._initialized = true;
   }
@@ -166,6 +176,7 @@ export class Client {
       return;
     }
 
+    await this.shell?._close();
     await this._halo.close();
     await this._echo.close();
     await this._mesh.close();

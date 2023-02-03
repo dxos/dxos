@@ -6,7 +6,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@dxosTheme';
-import { fromHost, fromIFrame } from '@dxos/client';
+import { fromHost, fromIFrame, ShellRuntime } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
@@ -23,12 +23,19 @@ const serviceProvider = (config?: Config) =>
 
 const root = createRoot(document.getElementById('root')!);
 
-root.render(
-  // <StrictMode>
-  <ThemeProvider themeVariant='os' resourceExtensions={[osTranslations]}>
-    <ClientProvider config={configProvider} services={serviceProvider} spaceProvider={false} shellProvider={false}>
-      <Shell />
-    </ClientProvider>
-  </ThemeProvider>
-  // </StrictMode>
-);
+const main = async () => {
+  const shellRuntime = new ShellRuntime();
+  await shellRuntime.open();
+
+  root.render(
+    // <StrictMode>
+    <ThemeProvider themeVariant='os' resourceExtensions={[osTranslations]}>
+      <ClientProvider config={configProvider} services={serviceProvider} spaceProvider={false}>
+        <Shell runtime={shellRuntime} />
+      </ClientProvider>
+    </ThemeProvider>
+    // </StrictMode>
+  );
+};
+
+void main();

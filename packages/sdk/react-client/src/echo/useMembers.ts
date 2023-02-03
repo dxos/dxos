@@ -6,7 +6,7 @@ import { useMemo, useSyncExternalStore } from 'react';
 
 import { PublicKey } from '@dxos/client';
 
-import { useSpace } from './SpaceContext';
+import { useSpace } from './useSpaces';
 
 export const useMembers = (spaceKey: PublicKey | undefined) => {
   const space = useSpace(spaceKey);

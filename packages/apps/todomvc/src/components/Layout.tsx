@@ -5,23 +5,26 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { ShellLayout, useCurrentSpace, useIdentity, useShell } from '@dxos/react-client';
+import { ShellLayout } from '@dxos/client';
+import { useClient, useCurrentSpace } from '@dxos/react-client';
+
+const Placeholder = () => (
+  <header className='header'>
+    <h1>todos</h1>
+    <input className='new-todo' placeholder='What needs to be done?' />
+  </header>
+);
 
 export const Layout = () => {
-  const { setLayout } = useShell();
-  const identity = useIdentity();
+  const client = useClient();
   const space = useCurrentSpace();
-
-  if (!identity) {
-    return null;
-  }
 
   return (
     <>
-      <button id='open' onClick={() => setLayout(ShellLayout.SPACES)} data-testid='open-button'>
+      <button id='open' onClick={() => client.shell?.setLayout(ShellLayout.SPACE_LIST)} data-testid='open-button'>
         ❯
       </button>
-      <section className='todoapp'>{space && <Outlet context={{ space }} />}</section>
+      <section className='todoapp'>{space ? <Outlet context={{ space }} /> : <Placeholder />}</section>
       <footer className='info'>
         <p>Double-click to edit a todo</p>
         <p>

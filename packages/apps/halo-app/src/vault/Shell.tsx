@@ -18,7 +18,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
 
   useEffect(() => {
     return runtime.layoutUpdate.on((layout) => setLayout(layout));
-  });
+  }, []);
 
   switch (layout) {
     case ShellLayout.AUTH:

@@ -3,7 +3,7 @@
 //
 
 import './main.css';
-import '@dxos/react-client/shell.css';
+import '@dxos/client/shell.css';
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
