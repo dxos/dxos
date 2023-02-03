@@ -9,12 +9,12 @@ import { useQuery } from '@dxos/react-client';
 
 import { Task, TaskList } from '../../proto';
 import { AnyTile, TaskListTileProps, TaskTileProps } from '../../tiles';
-import { FrameProps } from '../FrameProps';
+import { MosaicProps } from '../MosaicProps';
 
-export interface ShortStackContainerProps extends FrameProps {
+export interface ShortStackContainerProps extends MosaicProps {
   type: 'shortStack';
 }
-export interface ShortStackProps extends FrameProps {
+export interface ShortStackProps extends MosaicProps {
   type: 'shortStack';
   tiles: (TaskListTileProps | TaskTileProps)[];
 }

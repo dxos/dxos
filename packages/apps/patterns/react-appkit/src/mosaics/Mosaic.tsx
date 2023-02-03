@@ -4,4 +4,4 @@
 
 import { renderIfShortStack } from './ShortStack';
 
-export const Frame = (o: any) => renderIfShortStack(o);
+export const Mosaic = (o: any) => renderIfShortStack(o);
