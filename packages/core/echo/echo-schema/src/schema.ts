@@ -26,6 +26,11 @@ export type EchoType =
   | {
       kind: 'array';
       elementType: EchoType;
+    }
+  | {
+      kind: 'enum';
+      enumType: string;
+      // TODO(mykola): Add ability to list enum values.
     };
 
 export type EchoSchemaField = {
@@ -37,12 +42,18 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
   type.fieldsArray.forEach((field) => field.resolve());
 
   return type.fieldsArray.map((field) => {
-    const getComplexType = (type: pb.Type): EchoType => {
-      if (type.options && type.options['(object)']) {
-        return { kind: 'ref', objectType: type.fullName.replace('.', '') };
-      } else {
-        return { kind: 'record', objectType: type.fullName.replace('.', '') };
+    const getComplexType = (type: pb.Type | pb.Enum): EchoType => {
+      if (type instanceof pb.Enum) {
+        return { kind: 'enum', enumType: type.fullName.slice(1) };
+      } else if (type instanceof pb.Type) {
+        if (type.options && type.options['(object)']) {
+          return { kind: 'ref', objectType: type.fullName.slice(1) };
+        } else {
+          return { kind: 'record', objectType: type.fullName.slice(1) };
+        }
       }
+
+      throw new Error(`Unknown type: ${type}`);
     };
 
     const getBasicType = (type: string): EchoType => {
@@ -72,15 +83,12 @@ const getFields = (type: pb.Type): EchoSchemaField[] => {
     };
 
     const getEchoType = (field: pb.Field): EchoType => {
-      if (field.resolvedType instanceof pb.Type) {
+      if (field.resolvedType) {
         if (field.repeated) {
           return { kind: 'array', elementType: getComplexType(field.resolvedType) };
         } else {
           return getComplexType(field.resolvedType);
         }
-      } else if (field.resolvedType instanceof pb.Enum) {
-        // TODO(mykola): Add enums support.
-        throw new Error('Enums are not supported yet.');
       }
 
       if (field.repeated) {
