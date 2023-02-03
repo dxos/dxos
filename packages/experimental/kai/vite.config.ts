@@ -87,7 +87,7 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/hypercard/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),

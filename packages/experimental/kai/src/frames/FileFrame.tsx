@@ -85,7 +85,7 @@ export const FileFrame = () => {
   const Toolbar = () => {
     // TODO(burdon): Standardize toolbars.
     return (
-      <div className='flex flex-shrink-0 w-full items-center p-2 bg-gray-200'>
+      <div className='flex shrink-0 w-full items-center p-2 bg-gray-200'>
         <div>{files.length > 0 ? (files.length === 1 ? '1 File' : `${files.length} Files`) : ''}</div>
         <div className='flex-1' />
         <Button onClick={() => setSelected(undefined)}>
@@ -122,7 +122,7 @@ export const FileFrame = () => {
 
   const FileUpload = () => {
     return (
-      <div className='hidden md:flex flex-shrink-0 flex-col w-full h-[200px] p-2'>
+      <div className='hidden md:flex shrink-0 flex-col w-full h-[200px] p-2'>
         <FileUploader
           name='file'
           types={fileTypes}

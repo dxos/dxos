@@ -219,5 +219,6 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
     return null;
   }
 
+  // TODO(burdon): Frame flicker on first display.
   return <Component />;
 };
