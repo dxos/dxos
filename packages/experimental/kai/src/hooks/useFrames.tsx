@@ -16,7 +16,7 @@ export enum FrameID {
   NOTES = 'notes',
   FILES = 'files',
   SKETCH = 'sketch',
-  EXPLORER = 'explorer',
+  BRANE = 'explorer',
   MAPS = 'maps',
   PRESENTER = 'presenter', // TODO(burdon): MDX.
   CHESS = 'chess',

@@ -23,6 +23,7 @@ export const SpacePage = withReactor(() => {
   if (!taskList) {
     return <Loading label='loading' />;
   }
+
   return (
     <TaskListComponent
       title={taskList.title}
