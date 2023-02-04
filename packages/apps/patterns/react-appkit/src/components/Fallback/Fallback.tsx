@@ -33,6 +33,8 @@ export const ClientFallback = ({ client, status }: Partial<ClientContextProps>) 
   const { t } = useTranslation('appkit');
   const [pending, setPending] = useState(true);
 
+  console.log(':::::::::::::::::::');
+
   // Set timeout to prevent flickering.
   // TODO(burdon): Wait 200ms before showing then display for at least 500ms if it is then displayed.
   const resume = useCallback(async () => {
