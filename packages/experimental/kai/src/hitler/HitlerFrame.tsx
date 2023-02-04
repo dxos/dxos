@@ -12,7 +12,7 @@ import { useSpace } from '../hooks';
 import { Game, State, PolicyCard, Policy } from '../proto';
 import { GameInLobby } from './GameInLobby';
 import { GameInProgress } from './GameInProgress';
-import { useGame } from './useGame';
+import { useGame } from './hooks';
 
 export const HitlerFrame = withReactor(() => {
   const space = useSpace();
@@ -42,7 +42,8 @@ export const HitlerFrame = withReactor(() => {
           ],
           discard: [],
           rounds: [],
-          policies: []
+          policies: [],
+          anarchyCounter: 0
         })
       )
       .catch((err) => {
@@ -55,6 +56,8 @@ export const HitlerFrame = withReactor(() => {
       {!game && <Button onClick={createGame}>Create Game</Button>}
       {game?.state === State.LOBBY && <GameInLobby />}
       {game?.state === State.GAME && <GameInProgress />}
+      {game?.state === State.FASCISTS_WON && 'FASCISTS WON!!!'}
+      {game?.state === State.LIBERALS_WON && 'LIBERALS WON!!!'}
     </>
   );
 });

@@ -2,30 +2,51 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { useIdentity, withReactor } from '@dxos/react-client';
+import { withReactor } from '@dxos/react-client';
 
-import { Policy, State } from '../proto';
+import { Player, Policy, Round, RoundState, State } from '../proto';
 import { PlayerCard } from './PlayerCard';
 import { PlayersList } from './PlayersList';
 import { Policies } from './Policies';
-import { useGame } from './useGame';
+import { RoundCard } from './RoundCard';
+import { useGame, useUs } from './hooks';
 
 export const GameInProgress = withReactor(() => {
   const game = useGame()!;
+  const us = useUs()!;
 
-  const checkWin = () => {
-    if (game.policies.filter((policy) => policy.policy === Policy.FASCIST_POLICY).length === 6) {
-      game.state = State.FASCISTS_WON;
-    } else if (game.policies.filter((policy) => policy.policy === Policy.LIBERAL_POLICY)) {
-      game.state = State.LIBERALS_WON;
+  const selectNewPresident = (): Player => {
+    const lastPresident = game.rounds.at(-1)?.president;
+    if (lastPresident) {
+      // Return the next player in the list.
+      const index = game.players.findIndex((player) => player.memberKey === lastPresident.memberKey);
+      return game.players.at((index + 1) % game.players.length)!;
+    } else {
+      // Return a random player.
+      return game.players[Math.floor(Math.random() * game.players.length)];
     }
   };
 
-  const { identityKey } = useIdentity()!;
+  useEffect(() => {
+    if (game.rounds.length === 0 || game.rounds.at(-1)?.state === RoundState.END_ROUND) {
+      game.rounds.push(
+        new Round({
+          state: RoundState.NOMINATE_CHANCELLOR,
+          president: selectNewPresident(),
+          chancellor: undefined,
+          election: undefined,
+          policyCandidates: undefined,
+          presidentDiscard: undefined,
+          chancellorDiscard: undefined,
+          veto: undefined,
+          passedPolicy: undefined
+        })
+      );
+    }
+  }, [game.rounds.length]);
 
-  const us = game.players.find((player) => player.memberKey === identityKey.toHex())!;
   return (
     <div>
       <div>
@@ -34,6 +55,7 @@ export const GameInProgress = withReactor(() => {
       </div>
 
       <Policies />
+      <RoundCard />
     </div>
   );
 });

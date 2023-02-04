@@ -8,7 +8,7 @@ import { withReactor } from '@dxos/react-client';
 import { range } from '@dxos/util';
 
 import { Policy } from '../proto';
-import { useGame } from './useGame';
+import { useGame } from './hooks';
 
 export const Policies = withReactor(() => {
   const game = useGame();

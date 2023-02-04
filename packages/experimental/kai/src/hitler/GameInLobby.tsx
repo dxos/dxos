@@ -11,7 +11,7 @@ import { humanize } from '@dxos/util';
 import { State, Player, Character, Party } from '../proto';
 import { PlayerCard } from './PlayerCard';
 import { PlayersList } from './PlayersList';
-import { useGame, useUs } from './useGame';
+import { useGame, useUs } from './hooks';
 
 export const GameInLobby = withReactor(() => {
   const game = useGame()!;

@@ -219,17 +219,13 @@ message Game {
   repeated PolicyCard deck = 12;
   repeated PolicyCard discard = 13;
 
-  Player president = 6;
-  Player chancellor = 7;
+  /// Number of failed elections in a row. After 3 failed elections, the top card from the deck is the next policy.
+  int32 anarchy_counter = 21;
 }
 
 message Election {
   option (object) = true;
 
-  // Goes to next player on the left.
-  Player president = 1;
-  // President nominates chancellor.
-  Player chancellor = 2;
   repeated VoteByPlayer votes = 3;
 }
 
@@ -255,17 +251,38 @@ enum Veto {
 message Round {
   option (object) = true;
 
+  /// Goes to next player on the left.
+  Player president = 1;
+  /// President nominates chancellor.
+  Player chancellor = 2;
+
+  enum RoundState {
+    /// Init state.
+    NOMINATE_CHANCELLOR = 0;
+    ELECTION = 1;
+    POLICY_PEEK = 2;
+    /// Available after 5 fascist policies had been passed.
+    VETO = 3;
+    INVESTIGATE_LOYALTY = 4;
+    SPECIALL_ELLECTION = 5;
+    POICY_PEAK = 6;
+    EXECUTION = 7;
+    END_ROUND = 8;
+  }
+
+  RoundState state = 3;
+
   // Max 3 failed elections, after that the top card from the deck is the next policy.
-  repeated Election elections = 1;
+  Election election = 10;
 
   // 3 cards
-  repeated PolicyCard policy_candidates = 2;
+  repeated PolicyCard policy_candidates = 111;
 
-  PolicyCard president_discard = 3;
-  PolicyCard chancellor_discard = 4;
+  PolicyCard president_discard = 12;
+  PolicyCard chancellor_discard = 13;
   
   // Chancellor requests veto.
-  Veto veto = 5;
+  Veto veto = 14;
 
-  PolicyCard passed_policy = 6;
+  PolicyCard passed_policy = 15;
 }

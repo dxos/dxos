@@ -8,7 +8,7 @@ import { withReactor } from '@dxos/react-client';
 
 import { CardRow } from '../components';
 import { State, Player } from '../proto';
-import { useGame } from './useGame';
+import { useGame } from './hooks';
 
 export const PlayerCard = withReactor(({ player }: { player: Player }) => {
   const game = useGame();
