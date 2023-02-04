@@ -101,13 +101,13 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  log.info(
-    JSON.stringify({
+  log.info('Tests are running', {
+    message: {
       component: __component__,
       operation: 'main',
       data: Sprintf('Tests are running...')
-    })
-  );
+    }
+  });
 };
 
 void main();
