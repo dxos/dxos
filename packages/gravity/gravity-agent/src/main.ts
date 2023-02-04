@@ -31,18 +31,11 @@ export const __loglevel__ = 'info';
 export const log = createLogger({
   transports: [new transports.Console()],
   format: format.combine(
-    format.colorize(),
-    format.splat(),
     format.metadata(),
     format.timestamp(),
+    format.json(),
     format.printf(({ timestamp, level, message, metadata }) => {
-      return JSON.stringify({
-        level,
-        timestamp,
-        message,
-        data: JSON.stringify(metadata)
-      });
-      // return `log.level:${level} @timestamp:${timestamp}] ${message}. ${JSON.stringify(metadata)}`;
+      return `log.level:${level} @timestamp:${timestamp} message:${message} data:${JSON.stringify(metadata)}`;
     })
   ),
   defaultMeta: {
