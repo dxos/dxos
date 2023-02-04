@@ -207,6 +207,8 @@ message Game {
   enum State {
     LOBBY = 0;
     GAME = 1;
+    FASCISTS_WON = 2;
+    LIBERALS_WON = 3;
   }
 
   string host_member_key = 1;

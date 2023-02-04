@@ -44,10 +44,9 @@ import {
   TasksFrame,
   SandboxFrame
 } from '../frames';
+import { HitlerFrame } from '../hitler/HitlerFrame';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
-import { HitlerFrame } from '../hitler/HitlerPage';
-
 
 // prettier-ignore
 export const frames: FrameDef[] = [
