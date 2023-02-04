@@ -10,8 +10,6 @@ import { Client, ClientServicesProvider, fromHost, PublicKey } from '@dxos/clien
 import { Config, ConfigProto } from '@dxos/config';
 import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
 
-import { log, __component__, __loglevel__ } from './main';
-
 // import { log } from '@dxos/log';
 
 import { AgentStateMachine, AgentContext, DummyStateMachine } from './statemachine';
@@ -85,27 +83,10 @@ export class Agent implements AgentContext {
       await this.runSequence(this._spec.startSequence);
     }
 
-    log.info('start', {
-      message: {
-        level: __loglevel__,
-        component: __component__,
-        operation: 'agent-start',
-        data: 'running'
-      }
-    });
-
     for (const sequence of this._spec.testSequences ?? []) {
       await this.runSequence(sequence);
       this.sequenceComplete.emit(sequence);
     }
-    log.info('start', {
-      message: {
-        level: __loglevel__,
-        component: __component__,
-        operation: 'agent-start',
-        data: 'completed'
-      }
-    });
 
     this._running = true;
   }
@@ -117,8 +98,6 @@ export class Agent implements AgentContext {
     if (this._spec.stopSequence) {
       await this.runSequence(this._spec.stopSequence);
     }
-
-    log.info('agent stopped');
 
     this._running = false;
   }
