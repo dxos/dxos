@@ -1,12 +1,11 @@
 //
 // Copyright 2022 DXOS.org
 //
-import ecsFormat from '@elastic/ecs-winston-format';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import { join } from 'path';
 import process from 'process';
-import winston from 'winston';
+import { createLogger, transports, format } from 'winston';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
@@ -23,10 +22,26 @@ import { testStateMachineFactory } from './statemachine';
 export const __component__ = 'gravity-agent';
 export const __loglevel__ = 'info';
 
-export const log = winston.createLogger({
-  level: __loglevel__,
-  format: ecsFormat(),
-  transports: [new winston.transports.Console()]
+// export const log = winston.createLogger({
+//   level: __loglevel__,
+//   format: ecsFormat(),
+//   transports: [new winston.transports.Console()]
+// });
+
+export const log = createLogger({
+  transports: [new transports.Console()],
+  format: format.combine(
+    format.colorize(),
+    format.splat(),
+    format.metadata(),
+    format.timestamp(),
+    format.printf(({ timestamp, level, message, metadata }) => {
+      return `log.level:${level} @timestamp:${timestamp}] ${message}. ${JSON.stringify(metadata)}`;
+    })
+  ),
+  defaultMeta: {
+    service: 'gravity-agent'
+  }
 });
 
 export const Sprintf = (str: string, ...args: string[]) => {
@@ -92,7 +107,13 @@ const main = () => {
           await agent.initialize();
           await agent.start();
           await agent.stop();
-          log.info(JSON.stringify({ status: 'Done' }));
+          log.info('start', {
+            message: {
+              component: __component__,
+              operation: 'Done',
+              data: Sprintf('N/A')
+            }
+          });
           process.exit(0);
         } catch (err: any) {
           log.error(err);

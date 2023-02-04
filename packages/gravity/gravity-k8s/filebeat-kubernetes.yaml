@@ -20,6 +20,11 @@ data:
             - /var/log/containers/gravity*${data.kubernetes.container.id}.log
     ssl.verification_mode: none
 
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.add_error_key: true
+    json.expand_keys: true
+
     # filebeat.inputs:
     # - type: container
     #   paths:
@@ -71,6 +76,17 @@ data:
     # processors:
     #   - add_cloud_metadata:
     #   - add_host_metadata:
+    processors:
+    # - add_kubernetes_metadata: ~
+    # - add_host_metadata: ~
+    - decode_json_fields:
+      fields: ["json.message"]
+      process_array: false
+      max_depth: 1
+      target: ""
+      overwrite_keys: false
+      add_error_key: true
+
 
     # cloud.id: ${ELASTIC_CLOUD_ID}
     # cloud.auth: ${ELASTIC_CLOUD_AUTH}

@@ -85,31 +85,27 @@ export class Agent implements AgentContext {
       await this.runSequence(this._spec.startSequence);
     }
 
-    log.info(
-      JSON.stringify({
-        message: {
-          level: __loglevel__,
-          component: __component__,
-          operation: 'agent-start',
-          data: 'run'
-        }
-      })
-    );
+    log.info('start', {
+      message: {
+        level: __loglevel__,
+        component: __component__,
+        operation: 'agent-start',
+        data: 'running'
+      }
+    });
 
     for (const sequence of this._spec.testSequences ?? []) {
       await this.runSequence(sequence);
       this.sequenceComplete.emit(sequence);
     }
-    log.info(
-      JSON.stringify({
-        message: {
-          level: __loglevel__,
-          component: __component__,
-          operation: 'agent-start',
-          data: 'completed'
-        }
-      })
-    );
+    log.info('start', {
+      message: {
+        level: __loglevel__,
+        component: __component__,
+        operation: 'agent-start',
+        data: 'completed'
+      }
+    });
 
     this._running = true;
   }
@@ -118,8 +114,6 @@ export class Agent implements AgentContext {
     if (!this._running) {
       return;
     }
-    log.info('agent stopping...');
-
     if (this._spec.stopSequence) {
       await this.runSequence(this._spec.stopSequence);
     }
@@ -131,7 +125,6 @@ export class Agent implements AgentContext {
 
   async runSequence(sequence: CommandSequence) {
     for (const command of sequence.commands ?? []) {
-      log.info('runSequence...');
       await this._stateMachine.processCommand(command);
     }
   }
