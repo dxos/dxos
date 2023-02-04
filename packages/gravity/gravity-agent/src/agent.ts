@@ -118,53 +118,20 @@ export class Agent implements AgentContext {
     if (!this._running) {
       return;
     }
-    log.info(
-      JSON.stringify({
-        message: {
-          level: __loglevel__,
-          component: __component__,
-          operation: 'agent-stopping',
-          data: { id: this.id }
-        }
-      })
-    );
+    log.info('agent stopping...');
 
-    log.info(
-      JSON.stringify({
-        status: 'stopping',
-        id: this.id
-      })
-    );
     if (this._spec.stopSequence) {
       await this.runSequence(this._spec.stopSequence);
     }
 
-    log.info(
-      JSON.stringify({
-        message: {
-          level: __loglevel__,
-          component: __component__,
-          operation: 'agent-stopped',
-          data: { id: this.id }
-        }
-      })
-    );
+    log.info('agent stopped');
 
     this._running = false;
   }
 
   async runSequence(sequence: CommandSequence) {
     for (const command of sequence.commands ?? []) {
-      log.info(
-        JSON.stringify({
-          message: {
-            level: __loglevel__,
-            component: __component__,
-            operation: 'runSequence',
-            data: { command }
-          }
-        })
-      );
+      log.info('runSequence...');
       await this._stateMachine.processCommand(command);
     }
   }

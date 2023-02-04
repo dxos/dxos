@@ -9,7 +9,7 @@ import { Invitation, Space, Client, PublicKey } from '@dxos/client';
 // import { log } from '@dxos/log';
 import { Command } from '@dxos/protocols/proto/dxos/gravity';
 
-import { log, Sprintf, __component__, __loglevel__ } from './main';
+import { log, Sprintf } from './main';
 import { processSyncClient, processSyncServer } from './process';
 
 export type StateMachineFactory = (id: string) => AgentStateMachine;
@@ -55,10 +55,12 @@ export class GenericStateMachine extends AgentStateMachine {
   async processCommand(command: Command) {
     // --- CREATE PROFILE
     if (command.createProfile) {
+      log.info('createProfile');
       await this.agent.client.halo.createProfile();
     }
     // --- CREATE SPACE ---
     else if (command.createSpace) {
+      log.info('createSpace');
       const id = command.createSpace.id;
       const space = await this.agent.client.echo.createSpace();
       if (id) {
@@ -73,16 +75,7 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
-      log.info(
-        JSON.stringify({
-          message: {
-            level: __loglevel__,
-            component: __component__,
-            operation: 'createSpaceInvitatin',
-            data: Sprintf('swarm_id={0}', command.createSpaceInvitation.swarmKey)
-          }
-        })
-      );
+      log.info('createSpaceInvitatin' + Sprintf('swarm_id={0}', command.createSpaceInvitation.swarmKey));
     }
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
@@ -90,62 +83,26 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
-      log.info(
-        JSON.stringify({
-          message: {
-            level: __loglevel__,
-            component: __component__,
-            operation: 'acceptSpaceInvitatin',
-            data: Sprintf('swarm_id={0}', command.acceptSpaceInvitation.swarmKey)
-          }
-        })
-      );
+      log.info('acceptSpaceInvitatin' + Sprintf(' swarm_id={0}', command.acceptSpaceInvitation.swarmKey));
     }
     // --- SYNC CHANNEL: SRV ---
     else if (command.syncServer) {
       await processSyncServer(command); // <- process.ts
-      log.info(
-        JSON.stringify({
-          message: {
-            level: __loglevel__,
-            component: __component__,
-            operation: 'processSyncServer',
-            data: ''
-          }
-        })
-      );
+      log.info('processSyncServer');
     }
     // --- SYNC CHANNEL: CLT ---
     else if (command.syncClient) {
       await processSyncClient(command); // <- process.ts
-      log.info(
-        JSON.stringify({
-          message: {
-            level: __loglevel__,
-            component: __component__,
-            operation: 'processSyncClient',
-            data: ''
-          }
-        })
-      );
+      log.info('processSyncClient');
     }
     // --- TEAR DOWN ---
     else if (command.tearDown) {
       await this.agent.client.echo.close();
-      log.info(
-        JSON.stringify({
-          message: {
-            level: __loglevel__,
-            component: __component__,
-            operation: 'tearDown',
-            data: ''
-          }
-        })
-      );
+      log.info('tearDown');
     }
     //
     else {
-      log.error(JSON.stringify({ command }));
+      log.error('processCommand', { err: new Error('invalid command') });
       throw new Error('Invalid command');
     }
   }

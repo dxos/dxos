@@ -9,7 +9,6 @@ metadata:
 data:
   filebeat.yml: |-
 
-
     filebeat.autodiscover:
       providers:
       - type: kubernetes

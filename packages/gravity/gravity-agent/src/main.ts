@@ -26,10 +26,7 @@ export const __loglevel__ = 'info';
 export const log = winston.createLogger({
   level: __loglevel__,
   format: ecsFormat(),
-  transports: [
-    new winston.transports.Console({ level: __loglevel__ })
-    // new winston.transports.File({ filename: process!.env?.GRAVITY_LOG_FILE, level: __loglevel__ })
-  ]
+  transports: [new winston.transports.Console()]
 });
 
 export const Sprintf = (str: string, ...args: string[]) => {
@@ -104,15 +101,11 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  log.info(JSON.stringify({ status: 'THIS_IS_MARKER' }));
   log.info(
     JSON.stringify({
-      message: {
-        level: __loglevel__,
-        component: __component__,
-        operation: 'main',
-        data: Sprintf('Tests are running...')
-      }
+      component: __component__,
+      operation: 'main',
+      data: Sprintf('Tests are running...')
     })
   );
 };
