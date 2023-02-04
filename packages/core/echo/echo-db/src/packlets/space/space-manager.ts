@@ -11,26 +11,19 @@ import { log } from '@dxos/log';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
-// TODO(burdon): ???
-export interface AcceptSpaceOptions {
-  spaceKey: PublicKey;
-  genesisFeedKey: PublicKey;
-  controlFeedKey: PublicKey;
-  dataFeedKey: PublicKey;
-}
-
-// TODO(burdon): Factor out to CredentialGenerator?
+// TODO(burdon): Factor out to DataSpaceManager
 export interface SigningContext {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
+  recordCredential: (credential: Credential) => Promise<void>;
   profile?: ProfileDocument;
 }
 
@@ -76,9 +69,6 @@ export class SpaceManager {
   async constructSpace({ metadata, swarmIdentity, onNetworkConnection }: ConstructSpaceParams) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
-    const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
-    const dataFeed = await this._feedStore.openFeed(metadata.dataFeedKey ?? failUndefined(), { writable: true });
-
     // The genesis feed will be the same as the control feed if the space was created by the local agent.
     const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
@@ -94,8 +84,6 @@ export class SpaceManager {
       spaceKey,
       protocol,
       genesisFeed,
-      controlFeed,
-      dataFeed,
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey)
     });
     this._spaces.set(space.key, space);

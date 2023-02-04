@@ -14,7 +14,12 @@ export type ServiceWorkerToastContainerProps = {
 
 // TODO: merge this with ServiceWorkerToast a little better
 export const ServiceWorkerToastContainer = (props: ServiceWorkerToastContainerProps) => {
-  const { needRefresh, offlineReady, updateServiceWorker } = props;
+  const {
+    needRefresh: [needRefresh, _setNeedRefresh],
+    offlineReady: [offlineReady, _setOfflineReady],
+    updateServiceWorker
+  } = props;
+
   return needRefresh ? (
     <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
   ) : offlineReady ? (

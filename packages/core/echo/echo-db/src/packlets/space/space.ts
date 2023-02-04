@@ -26,8 +26,6 @@ export type SpaceParams = {
   spaceKey: PublicKey;
   protocol: SpaceProtocol;
   genesisFeed: FeedWrapper<FeedMessage>;
-  controlFeed: FeedWrapper<FeedMessage>;
-  dataFeed: FeedWrapper<FeedMessage>;
   feedProvider: FeedProvider;
 };
 
@@ -55,25 +53,22 @@ export class Space {
 
   private readonly _key: PublicKey;
   private readonly _genesisFeedKey: PublicKey;
-  private readonly _controlFeed: FeedWrapper<FeedMessage>;
-  private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _feedProvider: FeedProvider;
   private readonly _controlPipeline: ControlPipeline;
 
   private _isOpen = false;
+  private _controlFeed?: FeedWrapper<FeedMessage>;
+  private _dataFeed?: FeedWrapper<FeedMessage>;
   private _dataPipeline?: Pipeline;
   private _dataPipelineController?: DataPipelineController;
 
-  constructor({ spaceKey, protocol, genesisFeed, controlFeed, dataFeed, feedProvider }: SpaceParams) {
-    assert(spaceKey && dataFeed && feedProvider);
+  constructor({ spaceKey, protocol, genesisFeed, feedProvider }: SpaceParams) {
+    assert(spaceKey && feedProvider);
     this._key = spaceKey;
     this._genesisFeedKey = genesisFeed.key;
-    this._controlFeed = controlFeed;
-    this._dataFeed = dataFeed;
     this._feedProvider = feedProvider;
 
     this._controlPipeline = new ControlPipeline({ spaceKey, genesisFeed, feedProvider });
-    this._controlPipeline.setWriteFeed(controlFeed);
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
@@ -112,11 +107,11 @@ export class Space {
   }
 
   get controlFeedKey() {
-    return this._controlFeed.key;
+    return this._controlFeed?.key;
   }
 
   get dataFeedKey() {
-    return this._dataFeed.key;
+    return this._dataFeed?.key;
   }
 
   get spaceState() {
@@ -128,6 +123,20 @@ export class Space {
    */
   get controlPipeline(): PipelineAccessor {
     return this._controlPipeline.pipeline;
+  }
+
+  setControlFeed(feed: FeedWrapper<FeedMessage>) {
+    assert(!this._controlFeed, 'Control feed already set.');
+    this._controlFeed = feed;
+    this._controlPipeline.setWriteFeed(feed);
+    return this;
+  }
+
+  setDataFeed(feed: FeedWrapper<FeedMessage>) {
+    assert(!this._dataFeed, 'Data feed already set.');
+    this._dataFeed = feed;
+    this._dataPipeline?.setWriteFeed(feed);
+    return this;
   }
 
   /**
@@ -186,7 +195,9 @@ export class Space {
         assert(!this._dataPipeline, 'Data pipeline already initialized.'); // TODO(dmaretskyi): Allow concurrent pipelines.
         // Create pipeline.
         this._dataPipeline = new Pipeline(start);
-        this._dataPipeline.setWriteFeed(this._dataFeed);
+        if (this._dataFeed) {
+          this._dataPipeline.setWriteFeed(this._dataFeed);
+        }
         for (const feed of this._controlPipeline.spaceState.feeds.values()) {
           if (feed.assertion.designation === AdmittedFeed.Designation.DATA) {
             await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
