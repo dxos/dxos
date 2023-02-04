@@ -3418,7 +3418,6 @@ importers:
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
-      react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
       react-resize-detector: ^7.1.2
       tailwindcss: ^3.1.8
@@ -3439,7 +3438,6 @@ importers:
       lodash.defaultsdeep: 4.6.1
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
-      react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
