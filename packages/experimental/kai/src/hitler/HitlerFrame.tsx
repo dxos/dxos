@@ -52,12 +52,17 @@ export const HitlerFrame = withReactor(() => {
   };
 
   return (
-    <>
+    <div>
+      {game && (
+        <Button className='bg-red-500 w-full' onClick={() => space.experimental.db.delete(game)}>
+          Clear
+        </Button>
+      )}
       {!game && <Button onClick={createGame}>Create Game</Button>}
       {game?.state === State.LOBBY && <GameInLobby />}
       {game?.state === State.GAME && <GameInProgress />}
       {game?.state === State.FASCISTS_WON && 'FASCISTS WON!!!'}
       {game?.state === State.LIBERALS_WON && 'LIBERALS WON!!!'}
-    </>
+    </div>
   );
 });
