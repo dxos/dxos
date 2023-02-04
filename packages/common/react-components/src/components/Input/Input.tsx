@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, useCallback, useState, useTransition } from 'react';
+import React from 'react';
 
 import { useId, useThemeContext } from '../../hooks';
 import { defaultDescription, valenceColorText } from '../../styles';
@@ -10,7 +10,7 @@ import { mx } from '../../util';
 import { BarePinInput } from './BarePinInput';
 import { BareTextInput } from './BareTextInput';
 import { BareTextareaInput, BareTextareaInputProps } from './BareTextareaInput';
-import { InputProps as NaturalInputProps } from './InputProps';
+import { InputProps as NaturalInputProps, InputSize } from './InputProps';
 
 export type InputProps = NaturalInputProps;
 
@@ -19,7 +19,8 @@ export const Input = ({
   labelVisuallyHidden,
   description,
   descriptionVisuallyHidden,
-  initialValue,
+  value,
+  defaultValue,
   onChange,
   disabled,
   placeholder,
@@ -29,49 +30,32 @@ export const Input = ({
   validationValence,
   slots = {}
 }: InputProps) => {
-  const inputId = slots.input?.id ?? useId('input');
+  const internalInputId = useId('input');
   const descriptionId = useId('input-description');
   const validationId = useId('input-validation');
   const { hasIosKeyboard } = useThemeContext();
 
+  const inputId = slots.input?.id ?? internalInputId;
+
   const isInvalid = !!validationMessage && validationValence === 'error';
-
-  const [_isPending, startTransition] = useTransition();
-
-  const [internalValue, setInternalValue] = useState<string>(initialValue?.toString() || '');
-
-  const onInternalChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const nextValue = e.target?.value || '';
-      setInternalValue(nextValue);
-      onChange &&
-        startTransition(() => {
-          onChange(nextValue);
-        });
-    },
-    [onChange]
-  );
 
   const { autoFocus, ...inputSlot } = slots.input ?? {};
 
   const bareInputBaseProps = {
+    ...inputSlot,
     id: inputId,
     ...(slots.input?.required && { required: true }),
-    ...(disabled && { disabled: true }),
     ...(description && { 'aria-describedby': descriptionId }),
     ...(isInvalid && {
       'aria-invalid': 'true' as const,
       'aria-errormessage': validationId
     }),
+    ...(autoFocus && !hasIosKeyboard && { autoFocus: true }),
+    disabled,
     placeholder,
-    value: internalValue,
-    onChange: onInternalChange,
-    inputSlot: {
-      id: inputId,
-      disabled,
-      ...inputSlot,
-      ...(autoFocus && !hasIosKeyboard && { autoFocus: true })
-    },
+    value,
+    defaultValue,
+    onChange,
     validationMessage,
     validationValence
   };
@@ -82,7 +66,7 @@ export const Input = ({
     ) : size === 'textarea' ? (
       <BareTextareaInput {...(bareInputBaseProps as BareTextareaInputProps)} />
     ) : (
-      <BareTextInput {...bareInputBaseProps} size={size} />
+      <BareTextInput {...bareInputBaseProps} size={size as Exclude<InputSize, 'pin' | 'textarea'>} />
     );
 
   return (
