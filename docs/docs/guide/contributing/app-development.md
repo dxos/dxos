@@ -39,13 +39,9 @@ Given this, the recommended setup is to run `serve` from the repo root and keep 
 
 `srv.us` is easier to setup but will lead to longer loading times.
 
-```
-pnpm -w nx serve kai
-ssh srv.us -R 1:localhost:5173
+    pnpm -w nx serve kai
+    ssh srv.us -R 1:localhost:5173
 
-# The session-specific link will be printed.
-```
+    # The session-specific link will be printed.
 
 > NOTE: The amount of files that are needed to be loaded (more then 800 in dev mode) is causing srv.us to bottlenek. On the first time the app takes just under a minute to load, and it might seem like nothing is happening.
-
-

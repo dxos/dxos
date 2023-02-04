@@ -28,7 +28,7 @@ Learn more about [ECHO](echo).
 
 ## HALO
 
-Establishing user identity in a non authoritative internet is hard. Every peer has to learn how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements. 
+Establishing user identity in a non authoritative internet is hard. Every peer has to learn how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
 
 Learn more about [HALO](halo).
 

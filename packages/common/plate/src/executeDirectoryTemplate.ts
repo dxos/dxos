@@ -167,7 +167,7 @@ export const executeDirectoryTemplate = async <TInput>(
         return !flatOutput.find((existing) => existing.path === inheritedOut.path);
       })
     : [];
-  const results = [...flatOutput, ...inheritedOutputMinusFlatOutput];
+  const results = [...flatOutput, ...inheritedOutputMinusFlatOutput].filter(Boolean);
   if (printMessage) {
     const stack = [{ message, inherits }];
     while (stack[0].inherits) {

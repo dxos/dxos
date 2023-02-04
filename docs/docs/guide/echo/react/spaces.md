@@ -9,7 +9,7 @@ order: 3
 Get a specific Space via its key.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: <code>undefined | Space</code>
+Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 Arguments:
 

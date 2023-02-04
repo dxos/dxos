@@ -2,6 +2,7 @@
 title: Advanced scenarios
 order: 20
 ---
+
 # Advanced scenarios
 
 ### Custom signaling server
@@ -16,7 +17,7 @@ const client = new Client({
     runtime: {
       services: {
         signal: {
-          server: 'ws://localhost/.well-known/dx/signal'
+          server: 'wss://kube.dxos.org/.well-known/dx/signal'
         }
       }
     }
@@ -69,4 +70,5 @@ const client = new Client({
   config: new Config(Defaults(), await Dynamics())
 });
 ```
+
 To receive dynamic configuration synchronously, ensure there is a `let __DXOS_CONFIG__;` statement in a `<script>` in the `index.html` of your app somewhere before your code executes.

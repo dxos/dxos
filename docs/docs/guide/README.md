@@ -22,7 +22,7 @@ DXOS consists of a few technologies that work together:
 
 ## [Quick Start](quick-start.md)
 
-- Start a project with an [app template](quick-start#create-an-app)
-- Use [ECHO](quick-start#echo-state-consensus) for state consensus
-- Start up a [KUBE](quick-start#starting-a-kube) to host your app
-- [Deploy](quick-start#deploying-your-app-to-a-kube) your app to the KUBE
+*   Start a project with an [app template](quick-start#create-an-app)
+*   Use [ECHO](quick-start#echo-state-consensus) for state consensus
+*   Start up a [KUBE](quick-start#starting-a-kube) to host your app
+*   [Deploy](quick-start#deploying-your-app-to-a-kube) your app to the KUBE

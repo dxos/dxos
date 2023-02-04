@@ -2,6 +2,7 @@
 title: Example
 order: 10
 ---
+
 # React Example
 
 Here's how a task list app might handle rendering a list in React:

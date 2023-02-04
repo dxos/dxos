@@ -30,6 +30,7 @@ Units of data are referred to as `objects` (like documents or rows in other data
 See the [glossary](glossary) for definitions of other terms you'll find in this guide.
 
 ## How to use ECHO
+
 If using ECHO with React, install `@dxos/react-client` and follow the [React guide](react).
 
 Otherwise, ECHO is available from `@dxos/client` to any Node.js or Browser environment. See [Configuration](configuration).
@@ -46,9 +47,10 @@ In general:
 *   [Mutate items](mutations#mutating-data) (in [react](react/mutations))
 
 ## Local Vault Topology
-ECHO is uniquely organized to give control over information to the end-user and their devices. 
 
-Browsers isolate web apps running on different domains, and this property is used to isolate the main "vault" of storage to a specific domain. By default that's `halo.dxos.org` but developers are free to [operate their own](advanced#custom-halo-source) copies of HALO on their local machine (e.g. using KUBE), their local network, or any other domain. 
+ECHO is uniquely organized to give control over information to the end-user and their devices.
+
+Browsers isolate web apps running on different domains, and this property is used to isolate the main "vault" of storage to a specific domain. By default that's `halo.dxos.org` but developers are free to [operate their own](advanced#custom-halo-source) copies of HALO on their local machine (e.g. using KUBE), their local network, or any other domain.
 
 The vault domain is responsible for holding end-user identity (keys) and all ECHO data in persistent browser or disk storage. It exposes this data to applications via an API over [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
 
@@ -57,4 +59,3 @@ A service worker and the CRDT-based architecture of ECHO enable both offline and
 ![HALO Vault Topology Diagram](./diagrams/topology.drawio.svg)
 
 This means that when apps request the user's identity (ask to log in), they are in fact obtaining a secure identifier from the local HALO application directly, without making any network calls. Any reads and writes end up storing data in a database owned by the `halo.dxos.com` application, which serves as an identity wallet and data vault where specific devices or applications can be revoked from accessing user data at any time.
-
