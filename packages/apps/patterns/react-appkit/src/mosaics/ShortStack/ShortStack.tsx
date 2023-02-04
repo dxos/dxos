@@ -31,7 +31,7 @@ export const ShortStack = ({ tiles }: ShortStackProps) => {
   return (
     <section role='list'>
       {tiles.map(({ tile }) => {
-        return <AnyTile key={tile._id} tile={tile} slots={{ root: { role: 'listitem' } }} />;
+        return <AnyTile key={(tile as { _id?: string })._id} tile={tile} slots={{ root: { role: 'listitem' } }} />;
       })}
     </section>
   );

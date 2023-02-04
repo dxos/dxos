@@ -6,11 +6,10 @@ import React, { useState } from 'react';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/client';
-import { Menubar, Separator, SpaceMenu, SpacesLink } from '@dxos/react-appkit';
+import { Menubar, Separator, SpaceMenu, SpacesLink, MosaicType } from '@dxos/react-appkit';
 import { useIdentity, useSpace } from '@dxos/react-client';
 import { IdentityPopover } from '@dxos/react-ui';
 
-import { FrameType } from '../../../patterns/react-appkit/src/frames/FrameProps';
 import { Main } from '../components';
 
 export const SpaceLayout = () => {
@@ -20,7 +19,7 @@ export const SpaceLayout = () => {
   const identity = useIdentity();
   const navigate = useNavigate();
 
-  const [mosaic, _setMosaic] = useState<FrameType>('shortStack');
+  const [mosaic, _setMosaic] = useState<MosaicType>('shortStack');
 
   return (
     <>
