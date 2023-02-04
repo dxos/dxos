@@ -75,7 +75,7 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
-      log.info('createSpaceInvitatin', { swarm_id: command.createSpaceInvitation.swarmKey });
+      log.info('createSpaceInvitation', { swarm_id: command.createSpaceInvitation.swarmKey });
     }
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
@@ -83,7 +83,7 @@ export class GenericStateMachine extends AgentStateMachine {
         type: Invitation.Type.INTERACTIVE_TESTING,
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
-      log.info('acceptSpaceInvitatin', { swarm_id: command.acceptSpaceInvitation.swarmKey });
+      log.info('acceptSpaceInvitation', { swarm_id: command.acceptSpaceInvitation.swarmKey });
     }
     // --- SYNC CHANNEL: SRV ---
     else if (command.syncServer) {

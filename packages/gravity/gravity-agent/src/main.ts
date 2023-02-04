@@ -123,7 +123,7 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  log.info('Tests are running', {
+  log.info('gravity-agent is running', {
     message: {
       component: __component__,
       operation: 'main',
