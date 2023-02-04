@@ -272,7 +272,6 @@ message Round {
 
   RoundState state = 3;
 
-  // Max 3 failed elections, after that the top card from the deck is the next policy.
   Election election = 10;
 
   // 3 cards
