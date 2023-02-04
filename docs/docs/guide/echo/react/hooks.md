@@ -1,5 +1,6 @@
 ---
 title: Other Hooks
+order: 6
 ---
 ## React Hooks
 

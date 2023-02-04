@@ -1,5 +1,6 @@
 ---
 order: 5
+title: Queries
 ---
 
 # Queries

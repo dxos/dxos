@@ -18,7 +18,6 @@ Compare DXOS Applications to current Web2 Applications:
 
 *   [ECHO](#echo) Database for offline-first and real-time collaborative apps.
 *   [HALO](#halo) Identity for decentralized apps.
-*   [MESH](#mesh) Networking for peer to peer apps.
 *   [KUBE](#kube) Self-contained infrastructure for hosting and operating decentralized apps.
 
 ## ECHO

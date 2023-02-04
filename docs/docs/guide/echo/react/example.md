@@ -1,5 +1,6 @@
 ---
 title: Example
+order: 10
 ---
 # React Example
 

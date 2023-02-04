@@ -36,3 +36,6 @@ A value identifying a particular space
 
 ### Identity
 Represents an agent or actor in the system
+
+### Vault
+Data in ECHO and HALO identity is physically stored in browser storage on the HALO application's domain, not the consuming application's. Read more about [local vault topology](./#local-vault-topology).

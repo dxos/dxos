@@ -1,5 +1,6 @@
 ---
 title: Spaces
+order: 3
 ---
 
 :::apidoc[@dxos/react-client.useSpace]
