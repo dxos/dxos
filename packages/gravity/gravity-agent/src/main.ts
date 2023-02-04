@@ -35,7 +35,9 @@ export const log = createLogger({
     format.timestamp(),
     format.json(),
     format.printf(({ timestamp, level, message, metadata }) => {
-      return `log.level:${level} @timestamp:${timestamp} message:${message} data:${JSON.stringify(metadata)}`;
+      return `{"log.level": "${level}", "@timestamp": "${timestamp}", "message": "${message}" "data": "${JSON.stringify(
+        metadata
+      )}"}`;
     })
   ),
   defaultMeta: {
