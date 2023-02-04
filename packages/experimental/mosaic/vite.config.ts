@@ -38,23 +38,7 @@ export default defineConfig({
   // TODO(burdon): Document.
   optimizeDeps: {
     force: true,
-    include: [
-      '@dxos/config',
-      '@dxos/keys',
-      '@dxos/log',
-      '@dxos/protocols',
-      '@dxos/protocols/proto/dxos/client',
-      '@dxos/protocols/proto/dxos/client/services',
-      '@dxos/protocols/proto/dxos/config',
-      '@dxos/protocols/proto/dxos/echo/feed',
-      '@dxos/protocols/proto/dxos/echo/model/object',
-      '@dxos/protocols/proto/dxos/echo/object',
-      '@dxos/protocols/proto/dxos/halo/credentials',
-      '@dxos/protocols/proto/dxos/halo/invitations',
-      '@dxos/protocols/proto/dxos/halo/keys',
-      '@dxos/protocols/proto/dxos/mesh/bridge',
-      '@dxos/protocols/proto/dxos/rpc'
-    ]
+    include: []
   },
 
   // TODO(burdon): Document.

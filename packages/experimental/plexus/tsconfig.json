@@ -18,13 +18,13 @@
   ],
   "references": [
     {
+      "path": "../../common/node-std"
+    },
+    {
       "path": "../../common/react-components"
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../client-testing"
     },
     {
       "path": "../gem-core"
