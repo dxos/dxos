@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 
 import { withReactor } from '@dxos/react-client';
 
-import { Player, Round, RoundState } from '../proto';
+import { Election, Player, Round, RoundState } from '../proto';
 import { PlayerCard } from './PlayerCard';
 import { PlayersList } from './PlayersList';
 import { Policies } from './Policies';
@@ -35,13 +35,7 @@ export const GameInProgress = withReactor(() => {
         new Round({
           state: RoundState.NOMINATE_CHANCELLOR,
           president: selectNewPresident(),
-          chancellor: undefined,
-          election: undefined,
-          policyCandidates: undefined,
-          presidentDiscard: undefined,
-          chancellorDiscard: undefined,
-          veto: undefined,
-          passedPolicy: undefined
+          election: new Election()
         })
       );
     }
@@ -49,10 +43,14 @@ export const GameInProgress = withReactor(() => {
 
   return (
     <div>
+      <Policies />
       <div className='flex flex-row'>
-        <Policies />
-        <PlayerCard player={us} />
-        <PlayersList />
+        <div className='flex flex-shrink'>
+          <PlayerCard player={us} />
+        </div>
+        <div className='flex flex-1'>
+          <PlayersList />
+        </div>
       </div>
 
       <RoundCard />
