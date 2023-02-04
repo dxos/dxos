@@ -12,7 +12,7 @@ A HALO identity allows users to authenticate using asymmetric key cryptography w
 
 To create or join a [space](spaces) in ECHO, the user must first [establish their identity](halo/identity) in the [HALO](halo) app. 
 
-::: note
+:::note
 All data and identity information is stored in browser local storage on a domain separate from the application's. This enables end-user privacy and data sovereignty. Read more about the [vault topology](./#local-vault-topology).
 :::
 
@@ -30,5 +30,5 @@ const identity = client.halo.profile;
 
 The object returned is of type [`Profile`](/api/@dxos/client/interfaces/Profile).
 
-::: apidoc[@dxos/client.Halo]
+:::apidoc[@dxos/client.Halo]
 :::
