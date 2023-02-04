@@ -8,12 +8,21 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Grid, Point, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-core';
 import { Markers, convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore';
+import { mx } from '@dxos/react-components';
+import { range } from '@dxos/util';
 
 export type PlexusParam = {
   data?: object;
 };
 
-// TODO(burdon): Test click and transition.
+// TODO(burdon): Generate typed tree data.
+// TODO(burdon): Layout around focused element (up/down); hide distant items.
+//  - foucs, inner ring of separated typed-collections, collection children (evenly spaced like dendrogram).
+//  - large collections (scroll/zoom/lens?)
+//  - square off leaf nodes (HTML list blocks) with radial lines into circles
+//  - card on left; related cards on right
+//  - search
+// TODO(burdon): Standardize Layout, Renderer.
 
 export const Plexus = ({ data }: PlexusParam) => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
@@ -22,7 +31,7 @@ export const Plexus = ({ data }: PlexusParam) => {
     <SVGContextProvider>
       <SVG className='bg-slate-800'>
         <Markers />
-        <Grid axis className='bg-black [&>path]:stroke-slate-700' />
+        {/* <Grid axis className='bg-black [&>path]:stroke-slate-700' /> */}
         <Zoom extent={[1, 4]}>
           {/* <GemGraph model={model} drag arrows /> */}
           <Demo />
@@ -50,52 +59,77 @@ type Graph = {
   links: Link[];
 }
 
-// TODO(burdon): Generate from core.
-const data = {
-  nodes: [
-    { id: 'item-1' },
-    { id: 'item-2' },
-    { id: 'item-3' },
-    { id: 'item-4' },
-    { id: 'item-5' },
-    { id: 'item-6' },
-    { id: 'item-7' }
-  ],
-  links: [
-    { source: 'item-1', target: 'item-2' },
-    { source: 'item-1', target: 'item-3' },
-    { source: 'item-2', target: 'item-4' },
-    { source: 'item-2', target: 'item-5' },
-    { source: 'item-2', target: 'item-6' },
-    { source: 'item-3', target: 'item-7' }
-  ]
-};
+const generate = (): Graph => {
+  const graph = {
+    nodes: range(faker.datatype.number({ min: 10, max: 40 })).map(() => ({ id: faker.datatype.uuid() })),
+    links: []
+  };
 
-//
-// Geometry
-//
+  range(faker.datatype.number({ min: 8, max: 16 })).forEach(() => {
+    const [source, target] = faker.random.arrayElements(graph.nodes, 2);
+    if (source !== target) {
+      graph.links.push({ source: source.id, target: target.id });
+    }
+  });
+
+  return graph;
+};
 
 class Layout {
   private readonly points = new Map<string, Point>();
+  private r = 240;
+  private _selected?: Node;
 
-  update(graph: Graph) {
-    const r = 240;
-    graph.nodes.forEach(node => this.points.set(node.id, [
-      faker.datatype.number({ min: -r, max: r }),
-      faker.datatype.number({ min: -r, max: r })
-    ]))
+  get selected() {
+    return this._selected;
+  }
+
+  update(graph: Graph, selected?: Node) {
+    this._selected = selected;
+    if (selected) {
+      this.points.set(selected.id, [0, 0]);
+    }
+
+    graph.nodes
+      .filter(node => (node.id !== selected?.id))
+      .forEach(node => {
+        const a = faker.datatype.float({ min: -Math.PI * .3, max: Math.PI * .3 }) + (faker.datatype.boolean() ? 0 : Math.PI);
+        this.points.set(node.id, [Math.sin(a) * this.r * 1, -Math.cos(a) * this.r]);
+      });
   }
 }
 
 class Renderer {
-  // TODO(burdon): Tick or same transition time for lines.
-  // TODO(burdon): Update path during transition.
-  // https://github.com/d3/d3-transition/blob/main/README.md#transition_tween
-  render(el: SVGElement, layout: Layout, transition = false) {
-    const line = d3.line();
+  // TODO(burdon): Options.
+  private r = 16;
+  private delay = 600;
 
-    // TODO(burdon): Set initial positions; conditional transition.
-    const t = d3.transition().duration(500).ease(d3.easeSinOut);
+  update(el: SVGElement, data: Graph, onClick: (node: Node) => void) {
+    const handleClick = (event, node) => {
+      onClick(node);
+    }
+
+    d3.select(el)
+      .selectAll('path')
+      .data(data.links)
+      .join(
+              (enter) => enter.append('path'),
+              (update) => update,
+              (exit) => exit.remove()
+              );
+
+    d3.select(el)
+      .selectAll('circle')
+      .data(data.nodes)
+      .join(
+              (enter) => enter.append('circle').on('click', handleClick),
+              (update) => update,
+              (exit) => exit.remove()
+              );
+  }
+
+  render(el: SVGElement, layout: Layout, transition = false) {
+    const t = d3.transition().duration(this.delay).ease(d3.easeSinOut);
 
     const center = (d, i, nodes) => {
       let selection = d3.select(nodes[i]);
@@ -105,19 +139,20 @@ class Renderer {
 
       const [x, y] = layout.points.get(d.id);
       selection
+        .attr('r', d.id === layout.selected?.id ? 3 * this.r : this.r)
         .attr('cx', x)
         .attr('cy', y);
     }
 
+    const line = d3.line();
     const path = (d, i, nodes) => {
       let selection = d3.select(nodes[i]);
       if (transition) {
         selection = selection.transition(t)
       }
 
-      const points = line([layout.points.get(d.source), layout.points.get(d.target)]);
       selection
-        .attr('d', points);
+        .attr('d', line([layout.points.get(d.source), layout.points.get(d.target)]));
     }
 
     d3.select(el)
@@ -133,39 +168,28 @@ class Renderer {
 const layout = new Layout();
 const renderer = new Renderer();
 
+const data = generate();
+
 const Demo = () => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
 
-  // https://github.com/d3/d3-transition
-  const handleClick = (event, id) => {
-    doUpdate(true);
+  const handleSelect = (id) => {
+    layout.update(data, id);
+    renderer.render(graphRef.current, layout, true);
   }
 
-  const doUpdate = (transition = false) => {
-    layout.update(data);
-    renderer.render(graphRef.current, layout, transition);
-  };
-
   useEffect(() => {
-    const r = 20;
-
-    d3.select(graphRef.current)
-      .selectAll('circle')
-      .data(data.nodes)
-      .join((enter) => enter.append('circle').attr('r', r))
-      .on('click', handleClick);
-
-    d3.select(graphRef.current)
-      .selectAll('path')
-      .data(data.links)
-      .join((enter) => enter.append('path'))
-
-    doUpdate();
+    layout.update(data);
+    renderer.update(graphRef.current, data, handleSelect);
+    renderer.render(graphRef.current, layout);
   }, []);
 
   return <g
     ref={graphRef}
-    className='[&>circle]:fill-slate-300 [&>path]:stroke-[4px] [&>path]:stroke-slate-300'
+    className={mx(
+            '[&>circle]:fill-slate-800 [&>circle]:stroke-[2px] [&>circle]:stroke-slate-300',
+            '[&>path]:stroke-[3px] [&>path]:stroke-slate-500'
+            )}
   />;
 };
