@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 
 import { withReactor } from '@dxos/react-client';
 
-import { Player, Policy, Round, RoundState, State } from '../proto';
+import { Player, Round, RoundState } from '../proto';
 import { PlayerCard } from './PlayerCard';
 import { PlayersList } from './PlayersList';
 import { Policies } from './Policies';
@@ -49,12 +49,12 @@ export const GameInProgress = withReactor(() => {
 
   return (
     <div>
-      <div>
+      <div className='flex flex-row'>
+        <Policies />
         <PlayerCard player={us} />
         <PlayersList />
       </div>
 
-      <Policies />
       <RoundCard />
     </div>
   );

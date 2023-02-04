@@ -264,8 +264,8 @@ message Round {
     /// Available after 5 fascist policies had been passed.
     VETO = 3;
     INVESTIGATE_LOYALTY = 4;
-    SPECIALL_ELLECTION = 5;
-    POICY_PEAK = 6;
+    SPECIAL_ELECTION = 5;
+    POLICY_PEAK = 6;
     EXECUTION = 7;
     END_ROUND = 8;
   }

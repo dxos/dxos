@@ -6,9 +6,9 @@ import React from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { withReactor } from '@dxos/react-client';
+import { mx } from '@dxos/react-components';
 
 import { useGame } from './hooks';
-import { mx } from '@dxos/react-components';
 
 export const PlayersList = withReactor(({ selected, onClick }: { selected?: string; onClick?: () => void } = {}) => {
   const game = useGame();
