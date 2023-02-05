@@ -67,7 +67,7 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
     const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
     const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
-    model.update();
+    model.triggerUpdate();
 
     return () => {
       unsubscribeModel();
@@ -175,7 +175,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
     const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
     const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
-    model.update();
+    model.triggerUpdate();
 
     return () => {
       unsubscribeModel();

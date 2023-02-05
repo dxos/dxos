@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+// TODO(burdon): Convert to TS.
 // export type TreeComponentProps = {
 //   object: any;
 // };
@@ -30,7 +31,7 @@ export const TreeComponent = ({ data }) => {
     }
   }, [width, height]);
 
-  return <div ref={ref} className='flex flex-1' />;
+  return <div ref={ref} className='flex flex-1 scroll-auto' />;
 };
 
 // Copyright 2022 Observable, Inc.

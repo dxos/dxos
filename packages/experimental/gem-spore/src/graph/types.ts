@@ -7,17 +7,19 @@
 // Generic graph data type.
 //
 
-export interface GraphNode {
-  id: string;
-}
+import { Point } from '@dxos/gem-core';
 
-export interface GraphLink {
+export type GraphNode = {
+  id: string;
+};
+
+export type GraphLink = {
   id: string;
   source: string;
   target: string;
-}
+};
 
-export type GraphData<T extends GraphNode> = {
+export type GraphData<T extends GraphNode = GraphNode> = {
   nodes: T[];
   links: GraphLink[];
 };
@@ -40,6 +42,7 @@ export type GraphLayoutNode<N extends GraphNode> = {
   r?: number;
   children?: number;
   initialized?: boolean;
+  last?: Point;
 };
 
 export type GraphLayoutLink<N extends GraphNode> = {

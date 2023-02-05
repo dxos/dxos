@@ -7,18 +7,11 @@ import React, { useMemo } from 'react';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { convertTreeToGraph, createTree, Graph as GemGraph, Markers, TestGraphModel } from '@dxos/gem-spore';
 
-// import { useObjects, useSpace } from '../hooks';
-// import { Project } from '../proto';
-
-// class Model implements GraphModel<> {}
-
-export type GraphComponentParams = {
+export type GraphComponentProps = {
   data?: any;
 };
 
-export const GraphComponent = ({ data }: GraphComponentParams) => {
-  // const { database: db } = useSpace();
-  // const projects = useObjects(Project.filter());
+export const GraphComponent = ({ data }: GraphComponentProps) => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
   return (

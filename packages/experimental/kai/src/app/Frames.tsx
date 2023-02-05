@@ -33,7 +33,7 @@ import {
   ChessFrame,
   StackFrame,
   DocumentFrame,
-  ExplorerFrame,
+  BraneFrame,
   FileFrame,
   KanbanFrame,
   MapFrame,
@@ -129,9 +129,9 @@ export const frames: FrameDef[] = [
   {
     id: FrameID.EXPLORER,
     title: 'Explorer',
-    description: 'Graphical data navigator.',
+    description: 'Graphical User Interface and Data Explorer (GUIDE).',
     Icon: Graph,
-    Component: ExplorerFrame
+    Component: BraneFrame
   },
   {
     id: FrameID.MAPS,

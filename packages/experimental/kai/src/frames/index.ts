@@ -20,10 +20,10 @@ export const ChessFrame = React.lazy(() => import('./ChessFrame'));
 export const DocumentFrame = React.lazy(() => import('./DocumentFrame'));
 */
 
+export * from './BraneFrame';
 export * from './CalendarFrame';
 export * from './ChessFrame';
 export * from './DocumentFrame';
-export * from './ExplorerFrame';
 export * from './FileFrame';
 export * from './KanbanFrame';
 export * from './MapFrame';

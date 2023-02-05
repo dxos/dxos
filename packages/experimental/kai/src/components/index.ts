@@ -12,6 +12,7 @@ export * from './Kanban';
 export * from './List';
 export * from './TreeComponent';
 export * from './ScrollContainer';
+export * from './Plex';
 export * from './Searchbar';
 export * from './Selector';
 export * from './SpaceList';
