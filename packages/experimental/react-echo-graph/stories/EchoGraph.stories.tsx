@@ -57,7 +57,7 @@ const AppWithEditor = () => {
     const selected = new Set<ItemID>();
     result?.entities.forEach((item) => selected.add(item.id));
     setSelected(selected);
-    model.refresh();
+    model.triggerUpdate();
   };
 
   const handleGenerate = async () => {

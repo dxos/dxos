@@ -38,23 +38,7 @@ export default defineConfig({
   // TODO(burdon): Document.
   optimizeDeps: {
     force: true,
-    include: [
-      '@dxos/config',
-      '@dxos/keys',
-      '@dxos/log',
-      '@dxos/protocols',
-      '@dxos/protocols/proto/dxos/client',
-      '@dxos/protocols/proto/dxos/client/services',
-      '@dxos/protocols/proto/dxos/config',
-      '@dxos/protocols/proto/dxos/echo/feed',
-      '@dxos/protocols/proto/dxos/echo/model/object',
-      '@dxos/protocols/proto/dxos/echo/object',
-      '@dxos/protocols/proto/dxos/halo/credentials',
-      '@dxos/protocols/proto/dxos/halo/invitations',
-      '@dxos/protocols/proto/dxos/halo/keys',
-      '@dxos/protocols/proto/dxos/mesh/bridge',
-      '@dxos/protocols/proto/dxos/rpc'
-    ]
+    include: []
   },
 
   // TODO(burdon): Document.
@@ -78,16 +62,7 @@ export default defineConfig({
 
     // TODO(burdon): Document.
     ThemePlugin({
-      content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
-      ],
+      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
 

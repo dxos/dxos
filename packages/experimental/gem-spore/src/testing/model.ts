@@ -4,8 +4,6 @@
 
 import faker from 'faker';
 
-import { EventEmitter } from '@dxos/gem-core';
-
 import { emptyGraph, GraphData, GraphModel } from '../graph';
 import { createLink, createNode } from './data';
 import { TestNode } from './types';
@@ -13,13 +11,14 @@ import { TestNode } from './types';
 /**
  * Test graph.
  */
-export class TestGraphModel implements GraphModel<TestNode> {
-  public readonly updated = new EventEmitter<GraphData<TestNode>>();
-
+export class TestGraphModel extends GraphModel<TestNode> {
   // prettier-ignore
   constructor(
-    private readonly _graph: GraphData<TestNode> = emptyGraph
-  ) {}
+    private readonly _graph: GraphData<TestNode> = emptyGraph,
+    selected?: string
+  ) {
+    super(selected);
+  }
 
   get graph() {
     return this._graph;
@@ -33,14 +32,10 @@ export class TestGraphModel implements GraphModel<TestNode> {
     return faker.random.arrayElement(this._graph.nodes);
   }
 
-  subscribe(callback: (graph: GraphData<TestNode>) => void) {
-    return this.updated.on(callback);
-  }
-
   clear() {
     this._graph.nodes = [];
     this._graph.links = [];
-    this.update();
+    this.triggerUpdate();
   }
 
   createNodes(node: TestNode = undefined, n = 1, update = true) {
@@ -54,29 +49,22 @@ export class TestGraphModel implements GraphModel<TestNode> {
       }
     });
 
-    update && this.update();
+    update && this.triggerUpdate();
   }
 
   deleteNode(node: string, update = true) {
     this._graph.nodes = this._graph.nodes.filter(({ id }) => id !== node);
     this._graph.links = this._graph.links.filter(({ source, target }) => source !== node && target !== node);
-
-    update && this.update();
+    update && this.triggerUpdate();
   }
 
   createLink(source: TestNode, target: TestNode, update = true) {
     this._graph.links.push(createLink(source, target));
-
-    update && this.update();
+    update && this.triggerUpdate();
   }
 
   deleteLink(link: string, update = true) {
     this._graph.links = this._graph.links.filter(({ id }) => id !== link);
-
-    update && this.update();
-  }
-
-  update() {
-    this.updated.emit(this._graph);
+    update && this.triggerUpdate();
   }
 }

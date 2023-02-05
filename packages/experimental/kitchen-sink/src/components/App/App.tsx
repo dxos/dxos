@@ -45,7 +45,7 @@ export const App = ({ space, onInvite, onExport }: AppProps) => {
     }
 
     setSelected(selected);
-    model.refresh();
+    model.triggerUpdate();
     // TODO(burdon): Items.length hack (if just items, then recursion).
   }, [search, items.length]);
 
@@ -78,7 +78,7 @@ export const App = ({ space, onInvite, onExport }: AppProps) => {
     const selected = new Set<ItemID>();
     result?.entities.forEach((item) => selected.add(item.id));
     setSelected(selected);
-    model.refresh();
+    model.triggerUpdate();
   };
 
   return (
