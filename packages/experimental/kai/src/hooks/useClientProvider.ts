@@ -22,6 +22,7 @@ export const useClientProvider = () => {
     // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
     // chrome.windows.create({ '/join', incognito: true });
     if (dev && !client.halo.profile) {
+      // TODO(burdon): Causes race condition.
       await client.halo.createProfile();
     }
 

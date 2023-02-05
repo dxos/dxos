@@ -1,0 +1,43 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "outDir": "dist"
+  },
+  "exclude": [
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/react-components"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
+    }
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    },
+    "files": true,
+    "transpileOnly": true
+  }
+}

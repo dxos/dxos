@@ -3337,27 +3337,8 @@ importers:
       '@dnd-kit/modifiers': ^6.0.0
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
-      '@dxos/assets': workspace:*
-      '@dxos/async': workspace:*
-      '@dxos/chess-app': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/client-testing': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/node-std': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-composer': workspace:*
-      '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
       '@swc-node/register': ^1.5.4
       '@swc/core': ^1.3.21
@@ -3366,7 +3347,6 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
-      assert: ^2.0.0
       faker: ^5.5.3
       lodash.defaultsdeep: ^4.6.1
       phosphor-react: ^1.4.1
@@ -3387,28 +3367,8 @@ importers:
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/assets': link:../../apps/patterns/assets
-      '@dxos/async': link:../../common/async
-      '@dxos/chess-app': link:../chess-app
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/config': link:../../sdk/config
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/node-std': link:../../common/node-std
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
-      '@dxos/react-composer': link:../../apps/patterns/react-composer
-      '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
       lodash.defaultsdeep: 4.6.1
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
@@ -3427,6 +3387,75 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
       faker: 5.5.3
       postcss: 8.4.21
+      tailwindcss: 3.1.8
+      typescript: 4.8.4
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite-plugin-fonts: 0.7.0_vite@4.0.4
+      vite-plugin-inspect: 0.7.15_vite@4.0.4
+      vite-plugin-pwa: 0.14.1_vite@4.0.4
+      workbox-window: 6.5.4
+
+  packages/experimental/plexus:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/gem-core': workspace:*
+      '@dxos/gem-spore': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/util': workspace:*
+      '@swc-node/register': ^1.5.4
+      '@swc/core': ^1.3.21
+      '@types/d3': ^7.1.0
+      '@types/faker': ^5.5.9
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@types/string-hash': ^1.1.1
+      '@vitejs/plugin-react': ^3.0.1
+      assert: ^2.0.0
+      d3: ^7.4.4
+      faker: ^5.5.3
+      lodash.defaultsdeep: ^4.6.1
+      phosphor-react: ^1.4.1
+      postcss: ^8.4.17
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-resize-detector: ^7.1.2
+      string-hash: ~1.1.3
+      tailwindcss: ^3.1.8
+      typescript: ^4.8.4
+      vite: 4.0.4
+      vite-plugin-fonts: ^0.7.0
+      vite-plugin-inspect: ^0.7.15
+      vite-plugin-pwa: ^0.14.1
+      workbox-window: ^6.5.4
+    dependencies:
+      '@dxos/gem-core': link:../gem-core
+      '@dxos/gem-spore': link:../gem-spore
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/react-components': link:../../common/react-components
+      '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      d3: 7.6.1
+      lodash.defaultsdeep: 4.6.1
+      phosphor-react: 1.4.1_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@babel/core': 7.20.12
+      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
+      '@swc/core': 1.3.21
+      '@types/d3': 7.4.0
+      '@types/faker': 5.5.9
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@types/string-hash': 1.1.1
+      '@vitejs/plugin-react': 3.0.1_vite@4.0.4
+      faker: 5.5.3
+      postcss: 8.4.21
+      string-hash: 1.1.3
       tailwindcss: 3.1.8
       typescript: 4.8.4
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
@@ -6317,7 +6346,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.20.12
-      '@babel/helper-plugin-utils': 7.19.0
+      '@babel/helper-plugin-utils': 7.20.2
     dev: true
 
   /@babel/plugin-transform-react-jsx-source/7.19.6_@babel+core@7.20.12:
@@ -6327,7 +6356,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.20.12
-      '@babel/helper-plugin-utils': 7.19.0
+      '@babel/helper-plugin-utils': 7.20.2
     dev: true
 
   /@babel/plugin-transform-react-jsx/7.19.0_@babel+core@7.20.12:
@@ -12664,7 +12693,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       deepmerge: 4.2.2
@@ -12677,7 +12706,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@styled-system/color': 5.1.2
       '@styled-system/should-forward-prop': 5.1.5
       '@styled-system/space': 5.1.2
@@ -12692,7 +12721,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       '@theme-ui/parse-props': 0.14.7_gyryel6m34lsxtsejhafetjriq
       deepmerge: 4.2.2
@@ -12704,7 +12733,7 @@ packages:
     peerDependencies:
       '@emotion/react': ^11
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       csstype: 3.1.1
     dev: true
 
@@ -12715,7 +12744,7 @@ packages:
       '@mdx-js/react': ^1 || ^2
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -12728,7 +12757,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
       react: 18.2.0
     dev: true
@@ -12739,7 +12768,7 @@ packages:
       '@emotion/react': ^11
       react: '>16'
     dependencies:
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
       '@theme-ui/color-modes': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/core': 0.14.7_gyryel6m34lsxtsejhafetjriq
       '@theme-ui/css': 0.14.7_@emotion+react@11.10.4
@@ -34567,7 +34596,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

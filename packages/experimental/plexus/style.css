@@ -1,0 +1,19 @@
+/**
+ * Copyright 2022 DXOS.org
+ */
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  overscroll-behavior: none;
+  overflow: hidden;
+  @apply font-body font-normal text-base;
+}
+
+.circle {
+  stroke: 'red';
+  stroke-width: 2;
+  fill: 'none';
+}

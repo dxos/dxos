@@ -44,6 +44,8 @@ export default defineConfig({
       '@dxos/config',
       '@dxos/keys',
       '@dxos/log',
+      '@dxos/mosaic',
+      '@dxos/plex',
       '@dxos/protocols',
       '@dxos/protocols/proto/dxos/client',
       '@dxos/protocols/proto/dxos/client/services',
