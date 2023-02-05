@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { SVG, SVGContextProvider, useSvgContext, Zoom } from '@dxos/gem-core';
+import { Grid, SVG, SVGContextProvider, useSvgContext, Zoom } from '@dxos/gem-core';
 import { GraphLayoutNode, GraphModel, GraphNode, GraphRenderer, Markers } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-components';
 
@@ -22,16 +22,31 @@ import { TreeProjector } from './tree-projector';
 
 export type PlexusProps<N extends GraphNode> = {
   model: GraphModel<N>;
+  onSelect?: (node: N) => void;
 };
 
-export const Plexus = <N extends GraphNode>({ model }: PlexusProps<N>) => {
+export const Plexus = <N extends GraphNode>({ model, onSelect }: PlexusProps<N>) => {
+  const [visible, setVisible] = useState(true);
+  const handleSelect = (node: N) => {
+    onSelect?.(node);
+    setVisible(false);
+    setTimeout(() => {
+      setVisible(true);
+    }, 500);
+  };
+
   return (
     <SVGContextProvider>
       <SVG className={mx('bg-slate-800')}>
-        <Markers />
-        {/* <Grid axis className='bg-black [&>path]:stroke-slate-700' /> */}
+        <Markers
+          arrowSize={3}
+          className='[&>marker>path]:stroke-slate-600 [&>marker>path]:stroke-[0.5px] [&>marker>path]:fill-transparent'
+        />
+        <Grid axis className='bg-black [&>path]:stroke-[1px] [&>path]:stroke-slate-700 [&>path]:opacity-40' />
         <Zoom extent={[1, 4]}>
-          {/* <GemGraph model={model} drag arrows /> */}
+          <g className={mx('fill-slate-900 stroke-[3px] stroke-slate-700 visible', !visible && 'invisible')}>
+            <line x1={0} y1={0} x2={600} y2={0} />
+          </g>
           <PlexGraph
             className={mx(
               '[&>g>g>circle]:fill-slate-800 [&>g>g>circle]:stroke-[2px] [&>g>g>circle]:stroke-slate-300',
@@ -39,6 +54,7 @@ export const Plexus = <N extends GraphNode>({ model }: PlexusProps<N>) => {
               '[&>g>g>path]:stroke-[3px] [&>g>g>path]:stroke-slate-700'
             )}
             model={model}
+            onSelect={handleSelect}
           />
         </Zoom>
       </SVG>
@@ -49,31 +65,35 @@ export const Plexus = <N extends GraphNode>({ model }: PlexusProps<N>) => {
 export type PlexGraphProps<N extends GraphNode> = {
   model: GraphModel<N>;
   className?: string;
+  onSelect?: (node: N) => void;
 };
 
-export const PlexGraph = <N extends GraphNode>({ model, className }: PlexGraphProps<N>) => {
+export const PlexGraph = <N extends GraphNode>({ model, className, onSelect }: PlexGraphProps<N>) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
 
-  const renderer = useMemo(
-    () =>
-      new GraphRenderer(context, graphRef, {
-        transition: () => d3.transition().duration(500).ease(d3.easeLinear),
-        labels: {
-          text: (node) => node.id.slice(0, 8)
-        },
-        onNodeClick: (node: GraphLayoutNode<N>) => {
-          model.setSelected(node.id);
-        }
-      }),
-    []
-  );
-
+  // Layout projector.
   const projector = useMemo(
     () =>
       new TreeProjector<N>(context, {
         radius: 200,
         nodeRadius: 16
+      }),
+    []
+  );
+
+  // Graph renderer.
+  const renderer = useMemo(
+    () =>
+      new GraphRenderer(context, graphRef, {
+        transition: () => d3.transition().duration(300).ease(d3.easeLinear),
+        labels: {
+          text: (node) => node.id.slice(0, 8) // + `[${node.data.label}]`
+        },
+        arrows: { end: true },
+        onNodeClick: (node: GraphLayoutNode<N>) => {
+          onSelect?.(node.data!);
+        }
       }),
     []
   );

@@ -47,6 +47,14 @@ const line = d3.line();
  * @param options
  */
 const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+  // Label.
+  if (options.labels) {
+    group
+      .append('text')
+      .style('dominant-baseline', 'middle')
+      .text((d) => options.labels.text(d));
+  }
+
   // Circle.
   const circle = group.append('circle');
 
@@ -86,14 +94,6 @@ const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
         }
       });
   }
-
-  // Label.
-  if (options.labels) {
-    group
-      .append('text')
-      .style('dominant-baseline', 'middle')
-      .text((d) => options.labels.text(d));
-  }
 };
 
 /**
@@ -126,8 +126,8 @@ const updateNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
   if (options.labels) {
     groupOrTransition
       .select<SVGTextElement>('text')
-      .style('text-anchor', (d) => (d.x >= 0 ? 'start' : 'end'))
-      .attr('dx', (d) => (d.r + 6) * (d.x >= 0 ? 1 : -1))
+      .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
+      .attr('dx', (d) => (d.r + 6) * (d.x > 0 ? 1 : -1))
       .attr('x', (d) => d.x)
       .attr('y', (d) => d.y);
   }

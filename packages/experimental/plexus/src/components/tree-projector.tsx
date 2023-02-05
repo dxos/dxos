@@ -36,16 +36,17 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     return this._layout;
   }
 
-  private getOrCreateNode(id: string): GraphLayoutNode<N> {
-    const node = this._layout.graph.nodes.find((node) => node.id === id);
+  private getOrCreateNode(dataNode: N): GraphLayoutNode<N> {
+    const node = this._layout.graph.nodes.find((node) => node.id === dataNode.id);
     if (node) {
       return Object.assign(node, { last: [node.x, node.y] });
     }
 
     return {
-      id,
+      id: dataNode.id,
       initialized: true,
-      last: [0, 0]
+      last: [0, 0],
+      data: dataNode
     };
   }
 
@@ -60,18 +61,19 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     }
 
     const center = this.options.center ?? [0, 0];
-    const root = Object.assign(this.getOrCreateNode(selected), {
+
+    const getNode = (id: string) => data?.nodes.find((node) => node.id === id);
+    const rootNode = getNode(selected)!;
+    const root = Object.assign(this.getOrCreateNode(rootNode), {
       selected,
       x: center[0],
       y: center[1],
-      r: this.options.nodeRadius * 2
+      r: this.options.nodeRadius * 3,
+      data: rootNode
     });
 
     // Create or update nodes.
     const nodes: GraphLayoutNode<N>[] = [root];
-
-    const getNode = (id: string) => data?.nodes.find((node) => node.id === id);
-    const rootNode = getNode(selected)!;
 
     // TODO(burdon): Children not present on GraphNode (custom).
 
@@ -82,26 +84,35 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     const layer2 = rootNode.children?.flatMap((node) => node.children ?? []);
     nodes.push(...this.layoutArc(layer2 ?? [], center, Math.PI, Math.PI * 0.4, this.options.radius * 1.7));
 
-    // TODO(burdon): Set initial position from selected node.
-
-    // TODO(burdon): Parents.
+    // Parents and lateral.
+    // TODO(burdon): More efficient. Should children be links?
     const parents: GraphNode[] = [];
+    const lateral: GraphNode[] = [];
     data?.links.forEach((link) => {
-      if (link.source === selected) {
-        const target = getNode(link.target);
-        if (target?.children?.findIndex((node) => node.id === selected) !== -1) {
-          parents.push(target);
-        }
-      }
+      const source = getNode(link.source);
+      const target = getNode(link.target);
 
-      if (link.target === selected) {
-        const source = getNode(link.source);
-        if (source?.children?.findIndex((node) => node.id === selected) !== -1) {
+      if (link.source === selected) {
+        if (target?.children?.find((node) => node.id === selected)) {
+          parents.push(target);
+        } else {
+          if (!rootNode?.children?.find((node) => node.id === link.target)) {
+            lateral.push(target);
+          }
+        }
+      } else if (link.target === selected) {
+        if (source?.children?.find((node) => node.id === selected)) {
           parents.push(source);
+        } else {
+          if (!rootNode?.children?.find((node) => node.id === link.source)) {
+            lateral.push(source);
+          }
         }
       }
     });
-    nodes.push(...this.layoutArc(parents ?? [], center, 0 / 6, Math.PI / 6, this.options.radius * 1.7));
+
+    nodes.push(...this.layoutArc(parents, center, 0, Math.PI / 6, this.options.radius * 1.7));
+    nodes.push(...this.layoutArc(lateral, center, -Math.PI / 2, Math.PI / 6, this.options.radius * 1.7));
 
     // Create or update links.
     const links: GraphLayoutLink<N>[] =
@@ -136,7 +147,7 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     };
   }
 
-  layoutArc(nodes: GraphNode[], center: Point, start = 0, arc = 0, rx = 160, ry = rx): GraphLayoutNode<N>[] {
+  layoutArc(nodes: N[], center: Point, start = 0, arc = 0, rx = 160, ry = rx): GraphLayoutNode<N>[] {
     let a = start;
     const length = arc === 0 ? nodes.length : nodes.length - 1;
     const da = length > 0 ? arc / length : 0;
@@ -145,7 +156,7 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     }
 
     return nodes.map((node) => {
-      const n = Object.assign(this.getOrCreateNode(node.id), {
+      const n = Object.assign(this.getOrCreateNode(node), {
         x: center[0] + Math.sin(a) * rx,
         y: center[1] - Math.cos(a) * ry,
         r: this.options.nodeRadius
@@ -154,23 +165,5 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
       a += da;
       return n;
     });
-  }
-
-  layoutHorizontal(nodes: GraphNode[], center: Point, width: number) {
-    // let x = -width / 2;
-    // const dx = nodes.length === 1 ? 0 : width / (nodes.length - 1);
-    // nodes.forEach((node) => {
-    //   this._points.set(node.id, [x, center[1]]);
-    //   x += dx;
-    // });
-  }
-
-  layoutVertical(nodes: GraphNode[], center: Point, height: number) {
-    // let y = -height / 2;
-    // const dy = nodes.length === 1 ? 0 : height / (nodes.length - 1);
-    // nodes.forEach((node) => {
-    //   this._points.set(node.id, [center[0], y]);
-    //   y += dy;
-    // });
   }
 }
