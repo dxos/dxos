@@ -55,9 +55,8 @@ export const createTree = ({ depth = 2, chidren = 3 } = {}): TestNode => {
  */
 export const convertTreeToGraph = (root: TestNode): GraphData<TestNode> => {
   const traverse = (node: TestNode, graph: GraphData<TestNode>) => {
-    const { children, ...rest } = node;
-    graph.nodes.push(rest);
-    children?.forEach((child) => {
+    graph.nodes.push(node);
+    node.children?.forEach((child) => {
       graph.links.push(createLink(node, child));
       traverse(child, graph);
     });

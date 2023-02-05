@@ -38,7 +38,7 @@ export default defineConfig({
   // TODO(burdon): Document.
   optimizeDeps: {
     force: true,
-    include: []
+    include: ['@dxos/gem-core', '@dxos/gem-spore']
   },
 
   // TODO(burdon): Document.
