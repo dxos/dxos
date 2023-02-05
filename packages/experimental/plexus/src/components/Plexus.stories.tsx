@@ -13,7 +13,7 @@ import '@dxosTheme';
 
 import { Plexus } from './Plexus';
 
-faker.seed(100);
+faker.seed(1);
 
 export default {
   component: Plexus,
@@ -24,8 +24,9 @@ export default {
 
 const Test = () => {
   const model = useMemo(() => {
-    const root = createTree({ depth: 4 });
-    console.log(JSON.stringify(root, undefined, 2));
+    const root = createTree({ depth: 4, children: 6 });
+    console.log(root);
+    // console.log(JSON.stringify(root, undefined, 1));
     return new TestGraphModel(convertTreeToGraph(root), root.id);
   }, []);
 

@@ -72,18 +72,20 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
 
     const getNode = (id: string) => data?.nodes.find((node) => node.id === id);
     const rootNode = getNode(selected)!;
-    nodes.push(
-      ...this.layoutArc(rootNode.children ?? [], center, Math.PI / 2 + Math.PI / 4, Math.PI / 2, this.options.radius)
-    );
+
+    // TODO(burdon): Children not present on GraphNode (custom).
+
+    // Children.
+    const layer1 = rootNode.children;
+    nodes.push(...this.layoutArc(layer1 ?? [], center, Math.PI, Math.PI * 0.4, this.options.radius));
 
     const layer2 = rootNode.children?.flatMap((node) => node.children ?? []);
-    nodes.push(
-      ...this.layoutArc(layer2 ?? [], center, Math.PI / 2 + Math.PI / 4, Math.PI / 2, this.options.radius * 1.7)
-    );
+    nodes.push(...this.layoutArc(layer2 ?? [], center, Math.PI, Math.PI * 0.4, this.options.radius * 1.7));
+
+    // TODO(burdon): Set initial position from selected node.
 
     // TODO(burdon): Parents.
-    /*
-    const parents: GraphNode = [];
+    const parents: GraphNode[] = [];
     data?.links.forEach((link) => {
       if (link.source === selected) {
         const target = getNode(link.target);
@@ -99,8 +101,7 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
         }
       }
     });
-    nodes.push(...this.layoutArc(parents ?? [], center, 0 - Math.PI / 6, Math.PI / 6, this.options.radius * 1.7));
-    */
+    nodes.push(...this.layoutArc(parents ?? [], center, 0 / 6, Math.PI / 6, this.options.radius * 1.7));
 
     // Create or update links.
     const links: GraphLayoutLink<N>[] =
@@ -135,12 +136,14 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     };
   }
 
-  // TODO(burdon): Make start the center.
-  layoutArc(nodes: GraphNode[], center: Point, start = 0, arc = Math.PI * 2, rx = 100, ry = rx): GraphLayoutNode<N>[] {
-    const length = arc === Math.PI * 2 ? nodes.length : nodes.length - 1;
-    console.log(length);
-    let a = length <= 1 ? start + arc / 2 : start;
-    const da = length ? arc / length : 0;
+  layoutArc(nodes: GraphNode[], center: Point, start = 0, arc = 0, rx = 160, ry = rx): GraphLayoutNode<N>[] {
+    let a = start;
+    const length = arc === 0 ? nodes.length : nodes.length - 1;
+    const da = length > 0 ? arc / length : 0;
+    if (length > 0) {
+      a = start - arc / 2;
+    }
+
     return nodes.map((node) => {
       const n = Object.assign(this.getOrCreateNode(node.id), {
         x: center[0] + Math.sin(a) * rx,

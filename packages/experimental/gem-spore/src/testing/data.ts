@@ -31,12 +31,12 @@ export const createLink = (source: TestNode, target: TestNode): GraphLink => ({
 /**
  * Creates a random tree.
  * @param depth Depth of tree.
- * @param branching Branching factor.
+ * @param children Branching factor.
  */
-export const createTree = ({ depth = 2, chidren = 3 } = {}): TestNode => {
+export const createTree = ({ depth = 2, children = 3 } = {}): TestNode => {
   const createChildren = (root: TestNode, d = 0) => {
     if (d < depth) {
-      const max = Math.round(Math.log(depth + 1 - d) * chidren);
+      const max = Math.round(Math.log(depth + 1 - d) * children);
       const num = faker.datatype.number({ min: 1, max });
       root.children = [...new Array(num)].map(() => {
         return createChildren(createNode(), d + 1);

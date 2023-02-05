@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Graph, Tree } from 'phosphor-react';
+import { AsteriskSimple, Graph, Tree } from 'phosphor-react';
 import React, { useState } from 'react';
 
 import { useQuery } from '@dxos/react-client';
@@ -26,7 +26,7 @@ const views = [
     Component: GraphComponent
   },
   {
-    type: View.GRAPH,
+    type: View.TREE,
     label: 'Tree',
     Icon: Tree,
     Component: TreeComponent
@@ -34,7 +34,7 @@ const views = [
   {
     type: View.PLEX,
     label: 'Brane',
-    Icon: Graph,
+    Icon: AsteriskSimple,
     Component: Plex
   }
 ];
@@ -66,7 +66,8 @@ export const BraneFrame = () => {
 
   return (
     <div className='flex flex-1 flex-col'>
-      <div className='flVIex w-full p-2 px-3 bg-gray-200 text-gray-500'>
+      {/* Header */}
+      <div className='flex w-full p-2 px-3 bg-gray-200 text-gray-500'>
         <div className='flex-1' />
         {views.map(({ type, label, Icon }) => (
           <Button
@@ -80,9 +81,10 @@ export const BraneFrame = () => {
         ))}
       </div>
 
+      {/* Body */}
       <div className='flex flex-1 overflow-hidden'>
         {views.map(({ type, Component }) => (
-          <div key={type} className={mx(view === type ? 'flex flex-1' : 'hidden')}>
+          <div key={type} className={mx(view === type ? 'flex w-full' : 'hidden')}>
             <Component data={data} />
           </div>
         ))}
