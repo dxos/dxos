@@ -127,9 +127,9 @@ export const frames: FrameDef[] = [
     Component: SketchFrame
   },
   {
-    id: FrameID.BRANE,
-    title: 'Brane',
-    description: 'Immersive Data Explorer (IDE).',
+    id: FrameID.EXPLORER,
+    title: 'Explorer',
+    description: 'Graphical User Interface and Data Explorer (GUIDE).',
     Icon: Graph,
     Component: BraneFrame
   },

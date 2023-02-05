@@ -76,35 +76,36 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     const nodes: GraphLayoutNode<N>[] = [root];
 
     // TODO(burdon): Children not present on GraphNode (custom).
+    const getChildren = (node: N): N[] => (node as any).children ?? [];
 
     // Children.
-    const layer1 = rootNode.children;
-    nodes.push(...this.layoutArc(layer1 ?? [], center, Math.PI, Math.PI * 0.4, this.options.radius));
+    const layer1 = getChildren(rootNode);
+    nodes.push(...this.layoutArc(layer1, center, Math.PI, Math.PI * 0.4, this.options.radius));
 
-    const layer2 = rootNode.children?.flatMap((node) => node.children ?? []);
+    const layer2 = getChildren(rootNode).flatMap((node) => getChildren(node));
     nodes.push(...this.layoutArc(layer2 ?? [], center, Math.PI, Math.PI * 0.4, this.options.radius * 1.7));
 
     // Parents and lateral.
     // TODO(burdon): More efficient. Should children be links?
-    const parents: GraphNode[] = [];
-    const lateral: GraphNode[] = [];
+    const parents: N[] = [];
+    const lateral: N[] = [];
     data?.links.forEach((link) => {
-      const source = getNode(link.source);
-      const target = getNode(link.target);
+      const source = getNode(link.source)!;
+      const target = getNode(link.target)!;
 
       if (link.source === selected) {
-        if (target?.children?.find((node) => node.id === selected)) {
+        if (getChildren(target).find((node) => node.id === selected)) {
           parents.push(target);
         } else {
-          if (!rootNode?.children?.find((node) => node.id === link.target)) {
+          if (!getChildren(rootNode).find((node) => node.id === link.target)) {
             lateral.push(target);
           }
         }
       } else if (link.target === selected) {
-        if (source?.children?.find((node) => node.id === selected)) {
+        if (getChildren(source).find((node) => node.id === selected)) {
           parents.push(source);
         } else {
-          if (!rootNode?.children?.find((node) => node.id === link.source)) {
+          if (!getChildren(rootNode).find((node) => node.id === link.source)) {
             lateral.push(source);
           }
         }
