@@ -60,7 +60,7 @@ export class GenericStateMachine extends AgentStateMachine {
     }
     // --- CREATE SPACE ---
     else if (command.createSpace) {
-      log.info('createSpace', { id: command.createSpace.id });
+      log.info('createSpace', { spaceId: command.createSpace.id });
       const id = command.createSpace.id;
       const space = await this.agent.client.echo.createSpace();
       if (id) {
@@ -76,8 +76,8 @@ export class GenericStateMachine extends AgentStateMachine {
         swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
       });
       log.info('createSpaceInvitation', {
-        id: command.createSpaceInvitation.id,
-        swarm_id: command.createSpaceInvitation.swarmKey
+        spaceId: command.createSpaceInvitation.id,
+        swarmKey: command.createSpaceInvitation.swarmKey
       });
     }
     // --- ACCEPT SPACE INVITATIOON ---
@@ -87,28 +87,28 @@ export class GenericStateMachine extends AgentStateMachine {
         swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
       });
       log.info('acceptSpaceInvitation', {
-        swarm_id: command.acceptSpaceInvitation.swarmKey
+        swarmKey: command.acceptSpaceInvitation.swarmKey
       });
     }
     // --- SYNC CHANNEL: SRV ---
     else if (command.syncServer) {
       await processSyncServer(command); // <- process.ts
       log.info('processSyncServer', {
-        host: command.syncServer.host,
-        id: command.syncServer.id,
-        port: command.syncServer.port,
-        command: command.syncServer
+        srvHost: command.syncServer.host,
+        srvPort: command.syncServer.port,
+        srvId: command.syncServer.id,
+        syncCommand: command.syncServer
       });
     }
     // --- SYNC CHANNEL: CLT ---
     else if (command.syncClient) {
       await processSyncClient(command); // <- process.ts
       log.info('processSyncClient', {
-        host: command.syncClient.host,
-        id: command.syncClient.id,
-        port: command.syncClient.port,
-        srv_id: command.syncClient.srvId,
-        command: command.syncClient
+        cltHost: command.syncClient.host,
+        cltPort: command.syncClient.port,
+        cltId: command.syncClient.id,
+        srvId: command.syncClient.srvId,
+        syncCommand: command.syncClient
       });
     }
     // --- TEAR DOWN ---

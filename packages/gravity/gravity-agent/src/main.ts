@@ -99,20 +99,37 @@ const main = () => {
             fs.readFileSync(specFilepath).toString()
           );
           if (verbose) {
-            log.info(JSON.stringify({ spec }));
+            log.info('specs', { specs: spec });
           }
           const testBuilder = new TestBuilder(new Config(config));
           const services = testBuilder.createClientServicesHost();
           const stateMachine = testStateMachineFactory(spec.stateMachine!);
           const agent = new Agent({ config, services, spec, stateMachine });
           await agent.initialize();
-          await agent.start();
-          await agent.stop();
-          log.info('start', {
+          log.info('main', {
             message: {
               component: __component__,
-              operation: 'Done',
-              data: Sprintf('N/A')
+              operation: 'initialize',
+              state: 'done',
+              data: Sprintf('gravity-agent initialized')
+            }
+          });
+          await agent.start();
+          log.info('main', {
+            message: {
+              component: __component__,
+              operation: 'start',
+              state: 'done',
+              data: Sprintf('gravity-agent is running')
+            }
+          });
+          await agent.stop();
+          log.info('main', {
+            message: {
+              component: __component__,
+              operation: 'stop',
+              state: 'done',
+              data: Sprintf('gravity-agent has finished running')
             }
           });
           process.exit(0);
@@ -123,11 +140,12 @@ const main = () => {
       }
     }).argv;
   // parser.parse();
-  log.info('gravity-agent is running', {
+  log.info('gravity-agent', {
     message: {
       component: __component__,
       operation: 'main',
-      data: Sprintf('Tests are running...')
+      state: 'running',
+      data: Sprintf('gravity-agent is running')
     }
   });
 };

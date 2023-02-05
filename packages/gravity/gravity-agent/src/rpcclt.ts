@@ -4,6 +4,7 @@
 
 import ipc from 'node-ipc';
 
+import { log } from './main';
 import { Config } from './rpcsrv';
 
 enum On {
@@ -29,22 +30,23 @@ export class Client {
       ipc.connectToNet(ipc.config.id, ipc.config.networkHost, ipc.config.networkPort, () => {
         const server = ipc.of[serverName];
         server.on(On.CONNECT, () => {
+          log.info('rcpClt connect', { method, input });
           server.emit(method, input);
         });
 
         server.on(method, ({ error, response }) => {
-          // ipc.log(`${serverName}@${method}:response`, error, response);
+          log.info(`rcpClt ${serverName}@${method}:response (+srv disconnect)`, { response });
           ipc.disconnect(serverName);
           resolve(response);
         });
 
         server.on(On.ERROR, (err) => {
-          // ipc.log('Synchronization error:', { err });
+          log.error('rcpClt error', { err });
           reject(err);
         });
 
         server.on(On.DISCONNECT, (...args) => {
-          // ipc.log('Synchronization disconnect:', args);
+          log.info('rcpClt disconnect', { args });
         });
       });
     });

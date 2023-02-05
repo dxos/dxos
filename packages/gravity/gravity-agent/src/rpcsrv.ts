@@ -6,6 +6,8 @@ import ipc from 'node-ipc';
 
 import { Trigger } from '@dxos/async';
 
+import { log } from './main';
+
 export type MethodCallback = (err: any, output: any) => void;
 
 export type MethodCall = (input: any, cb?: MethodCallback) => void;
@@ -46,21 +48,21 @@ export class Server {
     this.trigger = new Trigger();
 
     ipc.serveNet(() => {
-      // ipc.log(`[rpc sync] sync srv ${Stage.STARTED}`);
+      log.info(`rpcSrv sync srv ${Stage.STARTED}`);
     });
 
     ipc.server.on(On.SYNC, (input, socket) => {
+      log.info('rpcSrv sync', { response: On.SYNC });
       ipc.server.emit(socket, On.SYNC, { response: On.SYNC });
       this.trigger.wake();
     });
 
     ipc.server.on(On.STOP, () => {
-      // ipc.log(On.STOP);
-      // ipc.log(`Synchronization ${Stage.STOPPED}`);
+      log.info(`rpcSrv stop ${Stage.STOPPED}`, { response: Stage.STOPPING });
     });
 
     ipc.server.on(On.DONE, (input, socket) => {
-      //      ipc.log(Stage.STOPPING);
+      log.info(`rpcSrv done ${Stage.DONE}`, { response: Stage.STOPPING });
       ipc.server.emit(socket, On.DONE, { response: Stage.DONE });
       ipc.server.stop();
       // ipc.log(Stage.STOPPED);
