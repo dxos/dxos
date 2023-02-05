@@ -4,10 +4,6 @@
 
 import React from 'react';
 
-import { useSpace } from '../hooks';
-
 export const Plex = () => {
-  const space = useSpace();
-
   return <div>Plex</div>;
 };
