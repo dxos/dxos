@@ -13,15 +13,6 @@ import { mx } from '@dxos/react-components';
 import { usePlexusState } from '../hooks';
 import { TreeProjector } from './tree-projector';
 
-// TODO(burdon): Factor out styles: 300, 500, 700, 800.
-export type PlexusSlots = {
-  root?: string;
-  markers?: string;
-  grid?: string;
-  plex?: string;
-  link?: string;
-};
-
 const transitionDuration = 300;
 
 export type PlexusProps<N extends GraphNode> = {
@@ -75,7 +66,7 @@ export const Plexus = <N extends GraphNode>({ model, onSelect }: PlexusProps<N>)
             className={mx(
               'visible',
               !visible && 'invisible',
-              visible && spin && 'animate-[spin_2s] __animate-[ping_2s]'
+              visible && spin && 'animate-[spin_2s] __animate-[ping_2s]' // TODO(burdon): Ping on start.
             )}
           >
             <Aperture x={-64} y={-64} width={128} height={128} className='[&>*]:stroke-1 [&>*]:opacity-50' />
@@ -85,7 +76,7 @@ export const Plexus = <N extends GraphNode>({ model, onSelect }: PlexusProps<N>)
     </SVGContextProvider>
   );
 };
-// : 'animate-[spin_3s_ease-in-out]'
+
 export type PlexGraphProps<N extends GraphNode> = {
   model: GraphModel<N>;
   className?: string;
@@ -103,6 +94,7 @@ export const PlexGraph = <N extends GraphNode>({ model, className, onSelect }: P
         radius: 192,
         nodeRadius: 16,
         slots: {
+          // TODO(burdon): Factor out styles/slots: 300, 500, 700, 800.
           root: '[&>circle]:fill-slate-800 [&>circle]:stroke-[3px] [&>circle]:stroke-slate-500 [&>text]:fill-slate-500',
           node: '[&>circle]:fill-slate-800 [&>circle]:stroke-[2px] [&>circle]:stroke-slate-300 [&>text]:fill-slate-500',
           link: '[&>path]:stroke-[2px] [&>path]:stroke-slate-700'
