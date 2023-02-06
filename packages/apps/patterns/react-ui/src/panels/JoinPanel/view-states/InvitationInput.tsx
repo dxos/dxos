@@ -37,7 +37,7 @@ export const InvitationInput = ({ invitationType, ...viewStateProps }: Invitatio
       <Input
         disabled={disabled}
         label={<ViewStateHeading>{t('invitation input label')}</ViewStateHeading>}
-        onChange={(value) => setInputValue(value)}
+        onChange={({ target: { value } }) => setInputValue(value)}
         slots={{
           root: { className: 'm-0' },
           label: { className: 'sr-only' },
