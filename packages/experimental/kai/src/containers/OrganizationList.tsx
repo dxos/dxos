@@ -34,7 +34,7 @@ export const OrganizationRow: FC<{ organization: Organization }> = withReactor((
   return (
     <CardRow
       sidebar={
-        <div className='flex flex-shrink-0 justify-center w-6'>
+        <div className='flex shrink-0 justify-center w-6'>
           <Buildings className={getSize(5)} />
         </div>
       }

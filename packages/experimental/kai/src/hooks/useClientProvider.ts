@@ -15,7 +15,6 @@ export const useClientProvider = () => {
       services: config.get('runtime.app.env.DX_VAULT') === 'true' ? fromIFrame(config) : fromHost(config)
     });
 
-    client.echo.dbRouter.setSchema(schema);
     await client.initialize();
 
     // Auto create if in demo mode.
@@ -23,7 +22,13 @@ export const useClientProvider = () => {
     // TODO(burdon): Manifest file to expose windows API to auto open invitee window.
     // chrome.windows.create({ '/join', incognito: true });
     if (dev && !client.halo.profile) {
+      // TODO(burdon): Causes race condition.
       await client.halo.createProfile();
+    }
+
+    // TODO(burdon): Document.
+    client.echo.dbRouter.setSchema(schema);
+    if (dev && !client.halo.profile) {
       const space = await client.echo.createSpace();
 
       // TODO(burdon): Create context.

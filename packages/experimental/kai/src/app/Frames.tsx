@@ -33,7 +33,7 @@ import {
   ChessFrame,
   StackFrame,
   DocumentFrame,
-  ExplorerFrame,
+  BraneFrame,
   FileFrame,
   KanbanFrame,
   MapFrame,
@@ -129,9 +129,9 @@ export const frames: FrameDef[] = [
   {
     id: FrameID.EXPLORER,
     title: 'Explorer',
-    description: 'Graphical data navigator.',
+    description: 'Graphical User Interface and Data Explorer (GUIDE).',
     Icon: Graph,
-    Component: ExplorerFrame
+    Component: BraneFrame
   },
   {
     id: FrameID.MAPS,
@@ -173,7 +173,7 @@ export const FrameSelector: FC = () => {
     <div
       className={mx(
         'flex flex-col-reverse bg-orange-500',
-        'fixed inline-end-0 block-start-appbar bs-framepicker transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
+        'fixed inline-end-0 block-start-appbar bs-toolbar transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
         isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
       )}
     >
@@ -219,5 +219,6 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
     return null;
   }
 
+  // TODO(burdon): Frame flicker on first display.
   return <Component />;
 };

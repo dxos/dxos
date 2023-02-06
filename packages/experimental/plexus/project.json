@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/hypercard/src",
+  "sourceRoot": "packages/experimental/plexus/src",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/experimental/hypercard/src/index.ts",
-        "outputPath": "packages/experimental/hypercard/dist/types",
-        "tsConfig": "packages/experimental/hypercard/tsconfig.json"
+        "main": "packages/experimental/plexus/src/index.ts",
+        "outputPath": "packages/experimental/plexus/dist/types",
+        "tsConfig": "packages/experimental/plexus/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/hypercard/src/index.ts"
+          "packages/experimental/plexus/src/index.ts"
         ],
-        "outputPath": "packages/experimental/hypercard/dist/lib"
+        "outputPath": "packages/experimental/plexus/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/hypercard/**/*.{ts,tsx,js,jsx}"
+          "packages/experimental/plexus/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
@@ -46,7 +46,7 @@
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "config": {
-          "configFolder": "packages/experimental/hypercard/.storybook"
+          "configFolder": "packages/experimental/plexus/.storybook"
         },
         "uiFramework": "@storybook/react"
       }
@@ -57,14 +57,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/hypercard",
-        "outputPath": "tmp/mocha/packages/experimental/hypercard",
-        "resultsPath": "test-results/packages/experimental/hypercard",
+        "coveragePath": "coverage/packages/experimental/plexus",
+        "outputPath": "tmp/mocha/packages/experimental/plexus",
+        "resultsPath": "test-results/packages/experimental/plexus",
         "testPatterns": [
-          "packages/experimental/hypercard/src/**/*.test.{ts,js}"
+          "packages/experimental/plexus/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/experimental/hypercard/src/**/*"
+          "packages/experimental/plexus/src/**/*"
         ]
       },
       "outputs": [

@@ -10,7 +10,13 @@ import { EventEmitter, SVGContext } from '@dxos/gem-core';
 export abstract class Projector<DATA, LAYOUT, OPTIONS> {
   public readonly updated = new EventEmitter<{ layout: LAYOUT }>();
 
-  constructor(private readonly _context: SVGContext, private readonly _options?: OPTIONS) {}
+  // prettier-ignore
+  constructor(
+    private readonly _context: SVGContext,
+    private readonly _options?: OPTIONS
+  ) {}
+
+  abstract get layout(): LAYOUT;
 
   get context(): SVGContext {
     return this._context;
@@ -20,8 +26,8 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS> {
     return this._options || ({} as OPTIONS);
   }
 
-  update(data?: DATA) {
-    this.onUpdate(data);
+  update(data?: DATA, selected?: string) {
+    this.onUpdate(data, selected);
   }
 
   async start() {
@@ -32,9 +38,7 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS> {
     await this.onStop();
   }
 
-  protected abstract onUpdate(data?: DATA);
-
-  protected async onStart() {}
-
-  protected async onStop() {}
+  protected onUpdate(data?: DATA, selected?: string): void {}
+  protected async onStart(): Promise<void> {}
+  protected async onStop(): Promise<void> {}
 }

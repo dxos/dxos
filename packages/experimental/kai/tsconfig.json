@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "allowJs": true,
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
@@ -102,7 +103,7 @@
       "path": "../gem-spore"
     },
     {
-      "path": "../hypercard"
+      "path": "../mosaic"
     }
   ],
   "ts-node": {
