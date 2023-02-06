@@ -41,7 +41,7 @@ export default {
 //  - square off leaf nodes (HTML list blocks) with radial lines into circles
 //  - search
 
-export const Panel: FC<{ node: TestNode; className?: string }> = ({ node, className }) => {
+const Panel: FC<{ node: TestNode; className?: string }> = ({ node, className }) => {
   const Icon = icons[hash(node.label ?? '') % icons.length];
 
   return (
