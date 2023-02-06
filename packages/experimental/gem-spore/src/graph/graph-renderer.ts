@@ -25,19 +25,20 @@ export type AttributesOptions<N> = {
   };
 };
 
-export type GraphRendererOptions<N> = RendererOptions & {
-  drag?: D3Callable;
-  arrows?: {
-    start?: boolean; // TODO(burdon): Replace with marker id.
-    end?: boolean;
-  };
-  highlight?: boolean;
-  labels?: LabelOptions<N>;
-  attributes?: AttributesOptions<N>;
-  onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
-  onLinkClick?: (node: GraphLayoutLink<N>, event: MouseEvent) => void;
-  transition?: () => any;
-};
+export type GraphRendererOptions<N> = RendererOptions &
+  Partial<{
+    drag?: D3Callable;
+    arrows?: {
+      start?: boolean; // TODO(burdon): Replace with marker id.
+      end?: boolean;
+    };
+    highlight?: boolean;
+    labels?: LabelOptions<N>;
+    attributes?: AttributesOptions<N>;
+    onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
+    onLinkClick?: (node: GraphLayoutLink<N>, event: MouseEvent) => void;
+    transition?: () => any;
+  }>;
 
 const line = d3.line();
 

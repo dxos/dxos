@@ -94,13 +94,14 @@ export const defaultForceOptions: ForceOptions = {
   manyBody: true
 };
 
-export type GraphForceProjectorOptions = ProjectorOptions & {
-  guides?: boolean;
-  forces?: ForceOptions;
-  attributes?: {
-    radius: number | ((node: GraphLayoutNode<any>, children: number) => number);
-  };
-};
+export type GraphForceProjectorOptions = ProjectorOptions &
+  Partial<{
+    guides?: boolean;
+    forces?: ForceOptions;
+    attributes?: {
+      radius: number | ((node: GraphLayoutNode<any>, children: number) => number);
+    };
+  }>;
 
 /**
  * D3 force layout.
@@ -111,7 +112,6 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
 
   // Current layout.
   _layout: GraphLayout<N> = {
-    guides: [],
     graph: {
       nodes: [],
       links: []

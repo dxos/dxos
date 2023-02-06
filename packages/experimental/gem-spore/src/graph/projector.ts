@@ -7,7 +7,7 @@ import { EventEmitter, SVGContext } from '@dxos/gem-core';
 import { defaultIdAccessor, IdAccessor } from '../graph';
 
 export type ProjectorOptions = {
-  idAccessor?: IdAccessor;
+  idAccessor: IdAccessor;
 };
 
 /**
@@ -16,19 +16,19 @@ export type ProjectorOptions = {
 export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> {
   public readonly updated = new EventEmitter<{ layout: LAYOUT }>();
 
-  private readonly _options?: OPTIONS;
+  private readonly _options: OPTIONS;
 
   // prettier-ignore
   constructor(
     private readonly _context: SVGContext,
-    options?: OPTIONS
+    options?: Partial<OPTIONS>
   ) {
     this._options = Object.assign(
       {
         idAccessor: defaultIdAccessor
       },
       options
-    );
+    ) as OPTIONS;
   }
 
   abstract get layout(): LAYOUT;
@@ -38,7 +38,7 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> 
   }
 
   get options(): OPTIONS {
-    return this._options || ({} as OPTIONS);
+    return this._options;
   }
 
   update(data?: DATA, selected?: string) {

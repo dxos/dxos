@@ -9,27 +9,23 @@ import {
   GraphLayoutLink,
   GraphLayoutNode,
   GraphLink,
-  GraphNode,
-  Projector
+  Projector,
+  ProjectorOptions
 } from '@dxos/gem-spore';
 
-// TODO(burdon): Merge defaults.
-export type TreeProjectorOptions = {
-  center?: Point;
-  radius: number;
-  nodeRadius: number;
-  slots?: {
-    root?: string;
-    node?: string;
-    link?: string;
-  };
-};
+export type TreeProjectorOptions = ProjectorOptions &
+  Partial<{
+    center?: Point;
+    radius?: number;
+    nodeRadius?: number;
+    slots?: {
+      root?: string;
+      node?: string;
+      link?: string;
+    };
+  }>;
 
-export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
-  GraphData<N>,
-  GraphLayout<N>,
-  TreeProjectorOptions
-> {
+export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, TreeProjectorOptions> {
   _layout: GraphLayout<N> = {
     graph: {
       nodes: [],
@@ -41,7 +37,7 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     return this._layout;
   }
 
-  protected override onUpdate(data?: GraphData<N>, selected?: string) {
+  override onUpdate(data?: GraphData<N>, selected?: string) {
     if (!selected) {
       return {
         graph: {
@@ -53,13 +49,13 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
 
     const center = this.options.center ?? [0, 0];
 
-    const getNode = (id: string) => data?.nodes.find((node) => node.id === id);
+    const getNode = (id: string) => data?.nodes.find((node) => this.options.idAccessor(node) === id);
     const rootNode = getNode(selected)!;
     const root = Object.assign(this.getOrCreateNode(rootNode), {
       selected,
       x: center[0],
       y: center[1],
-      r: this.options.nodeRadius * 3,
+      r: this.options.nodeRadius ?? 16 * 3, // TODO(burdon): Factor out default.
       data: rootNode,
       className: this.options.slots?.root
     });
@@ -70,8 +66,8 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
     // TODO(burdon): Children not present on GraphNode (custom).
     const getChildren = (node: N): N[] => (node as any).children ?? [];
 
-    const inner = this.options.radius;
-    const outer = this.options.radius * 2;
+    const inner = this.options.radius ?? 100;
+    const outer = inner * 2;
 
     // Children.
     const layer1 = getChildren(rootNode);
@@ -89,18 +85,18 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
       const target = getNode(link.target)!;
 
       if (link.source === selected) {
-        if (getChildren(target).find((node) => node.id === selected)) {
+        if (getChildren(target).find((node) => this.options.idAccessor(node) === selected)) {
           parents.push(target);
         } else {
-          if (!getChildren(rootNode).find((node) => node.id === link.target)) {
+          if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === link.target)) {
             lateral.push(target);
           }
         }
       } else if (link.target === selected) {
-        if (getChildren(source).find((node) => node.id === selected)) {
+        if (getChildren(source).find((node) => this.options.idAccessor(node) === selected)) {
           parents.push(source);
         } else {
-          if (!getChildren(rootNode).find((node) => node.id === link.source)) {
+          if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === link.source)) {
             lateral.push(source);
           }
         }
@@ -183,13 +179,13 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
   }
 
   private getOrCreateNode(dataNode: N): GraphLayoutNode<N> {
-    const node = this._layout.graph.nodes.find((node) => node.id === dataNode.id);
+    const node = this._layout.graph.nodes.find((node) => node.id === this.options.idAccessor(dataNode));
     if (node) {
       return Object.assign(node, { last: [node.x, node.y] });
     }
 
     return {
-      id: dataNode.id,
+      id: this.options.idAccessor(dataNode),
       initialized: true,
       last: [0, 0],
       data: dataNode,

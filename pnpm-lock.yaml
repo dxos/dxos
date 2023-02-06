@@ -2906,6 +2906,7 @@ importers:
       '@types/d3': ^7.1.0
       '@types/faker': ^5.5.9
       '@types/lodash': ^4.14.182
+      assert: ^2.0.0
       clsx: ^1.1.1
       d3: ^7.4.4
       d3-force: ~3.0.0
@@ -2917,6 +2918,7 @@ importers:
       '@dxos/gem-core': link:../gem-core
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      assert: 2.0.0
       clsx: 1.2.1
       d3: 7.6.1
       d3-force: 3.0.0

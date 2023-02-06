@@ -7,7 +7,7 @@ import { Aperture } from 'phosphor-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Grid, SVG, SVGContextProvider, useSvgContext, Zoom } from '@dxos/gem-core';
-import { GraphLayoutNode, GraphModel, GraphNode, GraphRenderer, Markers } from '@dxos/gem-spore';
+import { GraphLayoutNode, GraphModel, GraphRenderer, Markers } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-components';
 
 import { usePlexusState } from '../hooks';
@@ -15,12 +15,12 @@ import { TreeProjector } from './tree-projector';
 
 const transitionDuration = 300;
 
-export type PlexusProps<N extends GraphNode> = {
+export type PlexusProps<N> = {
   model: GraphModel<N>;
   onSelect?: (node: N) => void;
 };
 
-export const Plexus = <N extends GraphNode>({ model, onSelect }: PlexusProps<N>) => {
+export const Plexus = <N,>({ model, onSelect }: PlexusProps<N>) => {
   const { transition } = usePlexusState();
   const [visible, setVisible] = useState(true);
   const [spin, setSpin] = useState(true);
@@ -77,13 +77,13 @@ export const Plexus = <N extends GraphNode>({ model, onSelect }: PlexusProps<N>)
   );
 };
 
-export type PlexGraphProps<N extends GraphNode> = {
+export type PlexGraphProps<N> = {
   model: GraphModel<N>;
   className?: string;
   onSelect?: (node: N) => void;
 };
 
-export const PlexGraph = <N extends GraphNode>({ model, className, onSelect }: PlexGraphProps<N>) => {
+export const PlexGraph = <N,>({ model, className, onSelect }: PlexGraphProps<N>) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
 
