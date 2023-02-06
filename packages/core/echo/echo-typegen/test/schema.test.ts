@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { id, schema, type } from '@dxos/echo-schema';
+import { id, type } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
@@ -78,8 +78,7 @@ describe('schema', () => {
   });
 
   test('fields', () => {
-    const contact = new Contact({ name: 'user', address: { coordinates: { lat: -90, lng: 10 } } });
-    expect(contact[schema]?.fields).to.deep.eq([
+    expect(Contact.type.fields).to.deep.eq([
       {
         name: 'name',
         type: {

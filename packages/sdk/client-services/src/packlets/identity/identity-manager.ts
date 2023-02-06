@@ -161,6 +161,7 @@ export class IdentityManager {
     await this._metadataStore.setIdentityRecord(identityRecord);
     await this._identity.ready();
     this.stateUpdate.emit();
+    log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
     return identity;
   }
 

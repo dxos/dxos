@@ -48,7 +48,7 @@ export class TestBuilder<M extends Model<any>> {
       this._modelConstructor.meta.type,
       id,
       {
-        itemId: 'test'
+        objectId: 'test'
       },
       key,
       writer

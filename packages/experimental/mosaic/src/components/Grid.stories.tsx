@@ -10,8 +10,7 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { GridLayout } from '../grid-layout';
-import { Item, Location } from '../layout';
+import { GridLayout, Item, Location } from '../layout';
 import { Grid } from './Grid';
 
 export default {

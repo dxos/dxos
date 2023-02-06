@@ -9,7 +9,7 @@ import { Config } from '@dxos/config';
 import { ClientProvider, useClient } from './ClientContext';
 
 export default {
-  title: 'react-client/ClientContext'
+  component: ClientProvider
 };
 
 const JsonPanel = ({ value }: { value: any }) => (
@@ -73,6 +73,7 @@ class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean
 
 export const Failure = () => {
   const config = new Config({ runtime: { client: { remoteSource: 'bad-value' } } });
+
   return (
     <ErrorBoundary>
       <ClientProvider config={config}>

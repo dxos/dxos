@@ -205,13 +205,17 @@ export class StateManager<M extends Model> {
     // Apply the snapshot.
     if (this._initialState.snapshot) {
       assert(this._modelMeta.snapshotCodec);
-      const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot.value);
+      const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot.model.value);
       this._stateMachine.reset(decoded);
     }
 
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
-      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation.value);
+      if (!mutation.model) {
+        continue;
+      }
+
+      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.model.value);
       assert(mutation.meta);
       this._stateMachine.process(mutationDecoded, {
         author: PublicKey.from(mutation.meta.memberKey)
@@ -307,23 +311,32 @@ export class StateManager<M extends Model> {
   /**
    * Create a snapshot of the current state.
    */
+  // TODO(dmaretskyi): Lift to ObjectState class.
   createSnapshot(): EchoObject {
     if (this.initialized && this.modelMeta.snapshotCodec) {
       // Returned reduced snapshot if possible.
       return {
-        itemId: this._itemId,
+        objectId: this._itemId,
         snapshot: {
-          '@type': 'google.protobuf.Any',
-          typeUrl: 'todo', // TODO(mykola): use model type.
-          value: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
+          model: {
+            '@type': 'google.protobuf.Any',
+            typeUrl: 'todo', // TODO(mykola): use model type.
+            value: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
+          }
         }
       };
     }
 
     return {
-      itemId: this._itemId,
+      objectId: this._itemId,
       snapshot: this._initialState.snapshot,
-      mutations: [...(this._initialState.mutations ?? []), ...this._mutations]
+      mutations: [
+        ...(this._initialState.mutations ?? []),
+        ...this._mutations.map((mutation) => ({
+          model: mutation.mutation,
+          meta: mutation.meta
+        }))
+      ]
     };
   }
 

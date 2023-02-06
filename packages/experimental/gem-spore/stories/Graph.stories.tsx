@@ -120,7 +120,8 @@ export const Tertiary = ({ graph = true }) => {
                 } else {
                   selected.add(node.id);
                 }
-                model.update();
+
+                model.triggerUpdate();
               }}
             />
           </Zoom>

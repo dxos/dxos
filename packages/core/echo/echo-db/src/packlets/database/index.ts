@@ -9,7 +9,6 @@ export * from './database-backend';
 export * from './item-demuxer';
 export * from './item-manager';
 export * from './item';
-export * from './entity';
 export * from './selection';
 export * from './database';
 export * from './snapshot-store';

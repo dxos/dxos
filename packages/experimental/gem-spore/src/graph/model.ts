@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { EventEmitter } from '@dxos/gem-core';
 
 import { emptyGraph, GraphData, GraphNode, GraphLink } from './types';
@@ -10,16 +11,35 @@ import { emptyGraph, GraphData, GraphNode, GraphLink } from './types';
  * Graph accessor.
  */
 // TODO(burdon): Don't require base class for ID accessor.
-export interface GraphModel<T extends GraphNode> {
-  get graph(): GraphData<T>;
+export abstract class GraphModel<T extends GraphNode = GraphNode> {
+  readonly updated = new Event<GraphData<T>>();
 
-  subscribe(callback: (graph: GraphData<T>) => void): () => void;
+  constructor(private _selected?: string) {}
+
+  abstract get graph(): GraphData<T>;
+
+  get selected(): string | undefined {
+    return this._selected;
+  }
+
+  setSelected(id: string | undefined) {
+    this._selected = id;
+    this.triggerUpdate();
+  }
+
+  subscribe(callback: (graph: GraphData<T>) => void) {
+    return this.updated.on(callback);
+  }
+
+  triggerUpdate() {
+    this.updated.emit(this.graph);
+  }
 }
 
 /**
  * Utility to build GraphModel, which can be passed into the Graph component.
  */
-export class GraphBuilder<T extends GraphNode> {
+export class GraphBuilder<T extends GraphNode = GraphNode> {
   readonly updated = new EventEmitter<GraphData<T>>();
 
   constructor(private readonly _graph = emptyGraph) {}
