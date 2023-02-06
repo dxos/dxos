@@ -13,7 +13,6 @@ import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
-import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { RootFilter, Selection, createSelection } from './selection';
@@ -42,10 +41,11 @@ export enum State {
 
 /**
  * Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
+ * @deprecated
  */
 @trackLeaks('initialize', 'destroy')
 export class Database {
-  private readonly _itemManager: ItemManager;
+  public readonly _itemManager: ItemManager;
 
   private _state = State.NULL;
 
@@ -73,7 +73,7 @@ export class Database {
    * Fired when any item is updated.
    * Contains a list of all entities changed from the last update.
    */
-  get update(): Event<Entity<any>[]> {
+  get update(): Event<Item<any>[]> {
     return this._itemManager.debouncedUpdate;
   }
 
@@ -82,7 +82,7 @@ export class Database {
    * If the information about which entity got updated is not required prefer using `update`.
    */
   // TODO(burdon): Unused?
-  get entityUpdate(): Event<Entity<any>> {
+  get entityUpdate(): Event<Item<any>> {
     return this._itemManager.update;
   }
 

@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { Entity, Selection, SelectionResult } from '@dxos/client';
+import { Item, Selection, SelectionResult } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Falsy } from '@dxos/util';
 
@@ -18,7 +18,7 @@ import { Falsy } from '@dxos/util';
  * @param selection Selection from which to query data. Can be falsy - in that case the hook will return undefined.
  * @param deps Array of values that trigger the selector when changed.
  */
-export const useSelection = <T extends Entity<any>>(
+export const useSelection = <T extends Item<any>>(
   selection: Selection<T> | SelectionResult<T> | Falsy
 ): T[] | undefined => {
   const result = useMemo(() => {
@@ -54,6 +54,6 @@ export const useSelection = <T extends Entity<any>>(
 /**
  * @param value Selection or SelectionResult from hook.
  */
-const coerceSelection = <T extends Entity>(
+const coerceSelection = <T extends Item>(
   value: Selection<T> | SelectionResult<T> | Falsy
 ): SelectionResult<T> | undefined => (!value ? undefined : value instanceof Selection ? value.exec() : value);

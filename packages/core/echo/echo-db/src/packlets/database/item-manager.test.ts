@@ -11,7 +11,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
 
-import { ItemManager } from './item-manager';
+import { ItemConstructionOptions, ItemManager } from './item-manager';
 
 describe('ItemManager', () => {
   describe('basic', () => {
@@ -24,7 +24,7 @@ describe('ItemManager', () => {
         itemId,
         modelType: ObjectModel.meta.type,
         itemType: undefined,
-        snapshot: { itemId }
+        snapshot: { objectId: itemId }
       });
       expect(item.id).toEqual(itemId);
       expect(item.model).toBeInstanceOf(ObjectModel);
@@ -102,12 +102,12 @@ describe('ItemManager', () => {
   });
 });
 
-const defaultOpts = () => {
+const defaultOpts = (): ItemConstructionOptions => {
   const itemId = createId();
   return {
     itemId,
     modelType: ObjectModel.meta.type,
     itemType: undefined,
-    snapshot: { itemId }
+    snapshot: { objectId: itemId }
   };
 };
