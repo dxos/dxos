@@ -36,23 +36,23 @@ export class DataServiceHost {
   subscribe(): Stream<SubscribeResponse> {
     return new Stream(({ next, ctx }) => {
       // send current state
-      const objects: EchoObject[] = Array.from(this._itemManager.entities.values()).map((entity) => {
+      const objects = Array.from(this._itemManager.entities.values()).map((entity): EchoObject => {
         assert(entity instanceof Item);
 
-        // TODO(dmaretskyi): Extract this to a method on Entity.
+        // TODO(dmaretskyi): Extract this to a method on Item.
         const { snapshot, mutations } = entity._stateManager.createSnapshot();
 
         return {
-          itemId: entity.id,
+          objectId: entity.id,
           genesis: {
             itemType: entity.type,
             modelType: entity.modelType
           },
-          snapshot,
-          mutations,
-          itemMutation: {
+          snapshot: {
+            ...snapshot,
             parentId: entity.parent?.id
-          }
+          },
+          mutations
         };
       });
 
@@ -69,7 +69,7 @@ export class DataServiceHost {
             {
               ...mutation.data,
               mutations: mutation.data.mutations?.map((m) => ({
-                mutation: m.mutation,
+                ...m,
                 meta: {
                   feedKey: PublicKey.from(mutation.meta.feedKey),
                   memberKey: PublicKey.from(mutation.meta.memberKey),

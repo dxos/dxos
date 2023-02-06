@@ -54,7 +54,7 @@ describe('TextModel', () => {
     const model1 = modelFactory.createModel<TextModel>(
       TextModel.meta.type,
       'test',
-      { itemId: 'test' },
+      { objectId: 'test' },
       PublicKey.random(),
       new MockFeedWriter()
     );
