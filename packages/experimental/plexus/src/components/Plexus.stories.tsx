@@ -5,12 +5,13 @@
 import faker from 'faker';
 import {
   AirplaneTakeoff,
-  ArrowCounterClockwise,
   ArrowLeft,
   ArrowRight,
   Bank,
   Buildings,
+  HouseSimple,
   Notepad,
+  Plus,
   User,
   Users
 } from 'phosphor-react';
@@ -95,6 +96,10 @@ const Test = () => {
     setIndex((idx) => idx + 1);
   };
 
+  const handleHome = () => {
+    setIndex(0);
+  };
+
   const handleBack = () => {
     setIndex((idx) => (idx > 0 ? idx - 1 : idx));
   };
@@ -115,7 +120,10 @@ const Test = () => {
 
       <div className='flex p-1 items-center'>
         <button className='p-1' onClick={handleGenerate}>
-          <ArrowCounterClockwise className={getSize(6)} />
+          <Plus className={getSize(6)} />
+        </button>
+        <button className='p-1' onClick={handleHome}>
+          <HouseSimple className={getSize(6)} />
         </button>
         <button className='p-1' onClick={handleBack}>
           <ArrowLeft className={getSize(6)} />

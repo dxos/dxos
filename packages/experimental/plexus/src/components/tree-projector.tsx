@@ -18,6 +18,11 @@ export type TreeProjectorOptions = {
   center?: Point;
   radius: number;
   nodeRadius: number;
+  slots?: {
+    root?: string;
+    node?: string;
+    link?: string;
+  };
 };
 
 export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
@@ -55,7 +60,8 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
       x: center[0],
       y: center[1],
       r: this.options.nodeRadius * 3,
-      data: rootNode
+      data: rootNode,
+      className: this.options.slots?.root
     });
 
     // Create or update nodes.
@@ -69,10 +75,10 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
 
     // Children.
     const layer1 = getChildren(rootNode);
-    nodes.push(...this.layoutArc(layer1, center, Math.PI, Math.PI * 0.4, inner));
+    nodes.push(...this.layoutArc(layer1, center, Math.PI, Math.PI * 0.5, inner));
 
     const layer2 = getChildren(rootNode).flatMap((node) => getChildren(node));
-    nodes.push(...this.layoutArc(layer2 ?? [], center, Math.PI, Math.PI * 0.4, outer));
+    nodes.push(...this.layoutArc(layer2 ?? [], center, Math.PI, Math.PI * 0.5, outer));
 
     // Parents and lateral.
     // TODO(burdon): More efficient. Should children be links?
@@ -101,8 +107,11 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
       }
     });
 
+    // Parents.
     nodes.push(...this.layoutArc(parents, center, 0, Math.PI / 4, outer));
-    nodes.push(...this.layoutArc(lateral, center, -Math.PI / 2, Math.PI / 4, outer));
+
+    // Lateral.
+    nodes.push(...this.layoutArc(lateral, center, -Math.PI / 2, Math.PI / 5, outer));
 
     // Create or update links.
     const links: GraphLayoutLink<N>[] =
@@ -121,7 +130,8 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
               source,
               target,
               sourceStart: source.last,
-              targetStart: target.last
+              targetStart: target.last,
+              className: this.options.slots?.link
             };
           }
 
@@ -163,7 +173,8 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
       const n = Object.assign(this.getOrCreateNode(node), {
         x: center[0] + Math.sin(a) * rx,
         y: center[1] - Math.cos(a) * ry,
-        r: this.options.nodeRadius
+        r: this.options.nodeRadius,
+        className: this.options.slots?.node
       });
 
       a += da;
@@ -181,7 +192,8 @@ export class TreeProjector<N extends GraphNode = GraphNode> extends Projector<
       id: dataNode.id,
       initialized: true,
       last: [0, 0],
-      data: dataNode
+      data: dataNode,
+      className: this.options.slots?.node
     };
   }
 }

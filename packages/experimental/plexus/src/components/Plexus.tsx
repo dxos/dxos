@@ -65,10 +65,8 @@ export const Plexus = <N extends GraphNode>({ model, onSelect }: PlexusProps<N>)
           </g>
           <PlexGraph
             className={mx(
-              '[&>g>circle]:fill-transparent [&>g>circle]:stroke-slate-700 [&>g>circle]:stroke-[1px] [&>g>circle]:opacity-70',
-              '[&>g>g>circle]:fill-slate-800 [&>g>g>circle]:stroke-[2px] [&>g>g>circle]:stroke-slate-300',
-              '[&>g>g>path]:stroke-[2px] [&>g>g>path]:stroke-slate-700',
-              '[&>g>g>text]:fill-slate-500'
+              // TODO(burdon): Move to slots.
+              '[&>g>circle]:fill-transparent [&>g>circle]:stroke-slate-700 [&>g>circle]:stroke-[1px] [&>g>circle]:opacity-70'
             )}
             model={model}
             onSelect={onSelect}
@@ -103,7 +101,12 @@ export const PlexGraph = <N extends GraphNode>({ model, className, onSelect }: P
     () =>
       new TreeProjector<N>(context, {
         radius: 192,
-        nodeRadius: 16
+        nodeRadius: 16,
+        slots: {
+          root: '[&>circle]:fill-slate-800 [&>circle]:stroke-[3px] [&>circle]:stroke-slate-500 [&>text]:fill-slate-500',
+          node: '[&>circle]:fill-slate-800 [&>circle]:stroke-[2px] [&>circle]:stroke-slate-300 [&>text]:fill-slate-500',
+          link: '[&>path]:stroke-[2px] [&>path]:stroke-slate-700'
+        }
       }),
     []
   );

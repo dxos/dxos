@@ -40,6 +40,7 @@ export type GraphLayoutNode<N extends GraphNode> = {
   x?: number;
   y?: number;
   r?: number;
+  className?: string;
   children?: number;
   initialized?: boolean;
   last?: Point;
@@ -49,6 +50,7 @@ export type GraphLayoutLink<N extends GraphNode> = {
   id: string;
   source: GraphLayoutNode<N>;
   target: GraphLayoutNode<N>;
+  className?: string;
 };
 
 export type GraphLayout<N extends GraphNode> = {
@@ -62,5 +64,6 @@ export type GraphLayout<N extends GraphNode> = {
     cx: number;
     cy: number;
     r: number;
+    className?: string;
   }[];
 };

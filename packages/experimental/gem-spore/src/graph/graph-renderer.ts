@@ -47,6 +47,8 @@ const line = d3.line();
  * @param options
  */
 const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+  group.attr('class', (d) => d.className);
+
   // Label.
   if (options.labels) {
     group
@@ -102,6 +104,8 @@ const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * @param options
  */
 const updateNode: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+  group.attr('class', (d) => d.className);
+
   // Custom attributes.
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
@@ -139,6 +143,8 @@ const updateNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * @param options
  */
 const createLink: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
+  group.attr('class', (d) => d.className);
+
   // if (options.onLinkClick) {
   //   // Shadow path with wide stroke for click handler.
   //   group.append('path')
@@ -191,6 +197,8 @@ const createLink: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * @param options
  */
 const updateLink: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+  group.attr('class', (d) => d.className);
+
   // Custom attributes.
   if (options.attributes?.link) {
     group.each((d, i, nodes) => {
@@ -237,7 +245,7 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
         (update) => update,
         (exit) => exit.transition().duration(500).attr('r', 0).remove()
       )
-      .attr('class', 'guide')
+      .attr('class', (d) => d.className)
       .attr('cx', (d) => d.cx)
       .attr('cy', (d) => d.cy)
       .attr('r', (d) => d.r);
