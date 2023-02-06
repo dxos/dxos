@@ -37,10 +37,11 @@ Before we can manipulate data, we need a [user identity](identity) and a [space]
 
 :::details Using a fallback element during initial load
 A fallback element is displayed while the Client is initializing. Any component can be used, and it will be given an instance of the `client` as a prop directly. A reasonable default is available as `GenericFallback` from `@dxos/react-appkit`.
- 
+
 ```tsx file=./snippets/create-client-react-with-fallback.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 import { GenericFallback } from '@dxos/appkit';
 
@@ -48,7 +49,7 @@ const client = new Client();
 
 const App = () => {
   return (
-    <ClientProvider fallback={GenericFallback}>
+    <ClientProvider client={client} fallback={GenericFallback}>
       {/* ... */}
     </ClientProvider>
   );
@@ -69,15 +70,14 @@ import { ClientProvider } from '@dxos/react-client';
 const client = new Client();
 
 const App = () => {
-  return (
-    <ClientProvider client={client}>
-      {/* ... */}
-    </ClientProvider>
-  );
+  return <ClientProvider client={client}>
+    {/* ... */}
+  </ClientProvider>;
 };
 
 createRoot(document.body).render(<App />);
 ```
+
 :::
 
 :::details Supplying configuration without a Client
@@ -102,7 +102,9 @@ const App = () => {
 };
 
 createRoot(document.body).render(<App />);
+
 ```
+
 :::
 
 See [advanced scenarios](../advanced) for more configuration recipes.

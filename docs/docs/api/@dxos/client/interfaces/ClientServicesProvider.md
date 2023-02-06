@@ -6,4 +6,4 @@ Provide access to client services definitions and service handler.
 ### [descriptors]()
 Type: <code>ServiceBundle&lt;ClientServices&gt;</code>
 ### [services]()
-Type: <code>ClientServices</code>
+Type: <code>Partial&lt;ClientServices&gt;</code>

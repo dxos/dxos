@@ -15,6 +15,7 @@ import { Client } from '@dxos/client';
 // create a client
 const client = new Client();
 ```
+
 :::note
 If using React, `<ClientProvider/>` creates a `Client` for you. See usage with [React](react).
 :::
@@ -22,15 +23,13 @@ If using React, `<ClientProvider/>` creates a `Client` for you. See usage with [
 Optionally, the client can be given a custom configuration via the `config` property.
 
 :::details Custom configuration example
-```ts file=./snippets/create-client-with-options.ts#L5-
-import { Client, Config } from '@dxos/client';
 
-const client = new Client({
-  config: new Config({
+```ts file=./snippets/create-client-with-options.ts#L5-
     // ...
   })
 });
 ```
+
 :::
 
 For more configuration recipes see [advanced scenarios](advanced).
