@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataService, SubscribeResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { Entity } from './entity';
 import { ItemManager } from './item-manager';
+import { Item } from './item';
 
 // TODO(dmaretskyi): Subscription cleanup.
 
@@ -20,7 +20,7 @@ import { ItemManager } from './item-manager';
  * Maintains subscriptions via DataService to create a local copy of the entities (items and links) in the database.
  *
  * Entities are updated using snapshots and mutations sourced from the DataService.
- * Entity and model mutations are forwarded to the DataService.
+ * Item and model mutations are forwarded to the DataService.
  * This class is analogous to ItemDemuxer but for databases running in remote mode.
  */
 export class DataMirror {
@@ -43,7 +43,7 @@ export class DataMirror {
         for (const object of msg.objects ?? []) {
           assert(object.itemId);
 
-          let entity: Entity<any> | undefined;
+          let entity: Item<any> | undefined;
           if (object.genesis) {
             log('Construct', { object });
             assert(object.genesis.modelType);
@@ -58,7 +58,7 @@ export class DataMirror {
             entity = this._itemManager.entities.get(object.itemId);
           }
           if (!entity) {
-            log.warn('Entity not found', { itemId: object.itemId });
+            log.warn('Item not found', { itemId: object.itemId });
             return;
           }
 

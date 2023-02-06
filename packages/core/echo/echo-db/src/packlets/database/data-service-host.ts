@@ -39,7 +39,7 @@ export class DataServiceHost {
       const objects: EchoObject[] = Array.from(this._itemManager.entities.values()).map((entity) => {
         assert(entity instanceof Item);
 
-        // TODO(dmaretskyi): Extract this to a method on Entity.
+        // TODO(dmaretskyi): Extract this to a method on Item.
         const { snapshot, mutations } = entity._stateManager.createSnapshot();
 
         return {

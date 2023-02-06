@@ -11,13 +11,12 @@ import { ObjectModel } from '@dxos/object-model';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { describe, test } from '@dxos/test';
 
-import { Entity } from '../entity';
 import { Item } from '../item';
 import { RootFilter } from './queries';
 import { createSelection } from './selection';
 
 // Use to prevent ultra-long diffs.
-const ids = (entities: Entity[]) => entities.map((entity) => entity.id);
+const ids = (entities: Item[]) => entities.map((entity) => entity.id);
 
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
@@ -175,7 +174,7 @@ describe('Selection', () => {
 
   describe('events', () => {
     test('events get filtered correctly', async () => {
-      const update = new Event<Entity[]>();
+      const update = new Event<Item[]>();
 
       const query = createSelection<void>(
         () => items,
