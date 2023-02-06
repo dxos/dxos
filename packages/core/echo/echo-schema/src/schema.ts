@@ -122,6 +122,10 @@ export class EchoSchemaType {
     return this._type.fullName.slice(1);
   }
 
+  get shortName() {
+    return this._type.name;
+  }
+
   createFilter(opts?: any): TypeFilter<any> {
     return {
       ...strip(opts),
