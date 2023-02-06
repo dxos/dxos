@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { id, schema, type } from '@dxos/echo-schema';
+import { id, type } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
@@ -82,30 +82,26 @@ describe('schema', () => {
       {
         name: 'name',
         type: {
-          kind: 'string',
-          basic: true
+          kind: 'string'
         }
       },
       {
         name: 'username',
         type: {
-          kind: 'string',
-          basic: true
+          kind: 'string'
         }
       },
       {
         name: 'email',
         type: {
-          kind: 'string',
-          basic: true
+          kind: 'string'
         }
       },
       {
         name: 'address',
         type: {
           kind: 'record',
-          objectType: 'example.test.Address',
-          basic: false
+          objectType: 'example.test.Address'
         }
       },
       {
@@ -114,10 +110,8 @@ describe('schema', () => {
           kind: 'array',
           elementType: {
             kind: 'ref',
-            objectType: 'example.test.Task',
-            basic: false
-          },
-          basic: false
+            objectType: 'example.test.Task'
+          }
         }
       }
     ]);
