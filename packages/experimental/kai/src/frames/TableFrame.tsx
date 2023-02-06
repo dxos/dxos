@@ -22,11 +22,11 @@ const capitalizeFirstLetter = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-const generateTypes = (schemas: EchoSchemaType[]) => {
-  const generateColumns = (schema: EchoSchemaType) => {
+const generateTypes = (schemaTypes: EchoSchemaType[]) => {
+  const generateColumns = (type: EchoSchemaType) => {
     const basicTypes = ['string', 'number', 'boolean'];
     const columns: Column<Document>[] = [];
-    for (const field of schema.fields) {
+    for (const field of type.fields) {
       if (basicTypes.includes(field.type.kind)) {
         columns.push({
           Header: capitalizeFirstLetter(field.name),
@@ -37,7 +37,7 @@ const generateTypes = (schemas: EchoSchemaType[]) => {
     return columns;
   };
 
-  return schemas.map((schema) => ({
+  return schemaTypes.map((schema) => ({
     id: schema.name,
     title: schema.shortName,
     filter: schema.createFilter(),
