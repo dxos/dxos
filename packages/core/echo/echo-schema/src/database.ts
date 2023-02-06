@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Database, Item } from '@dxos/echo-db';
+import { Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
@@ -49,10 +49,11 @@ export class EchoDatabase {
     /**
      * @internal
      */
-    public readonly _db: Database,
+    public readonly _itemManager: ItemManager,
     private readonly _router: DatabaseRouter
   ) {
-    this._db.update.on(() => this._update());
+    // TODO(dmaretskyi): Don't debounce?
+    this._itemManager.debouncedUpdate.on(() => this._update());
     this._update();
   }
 
@@ -95,11 +96,13 @@ export class EchoDatabase {
     if (obj instanceof DocumentBase) {
       props = { '@type': obj[base]._uninitialized?.['@type'] };
     }
-    const item = (await this._db.createItem({
-      id: obj[base]._id,
-      model: obj[base]._modelConstructor,
+    const item = await this._itemManager.createItem(
+      obj[base]._modelConstructor.meta.type,
+      obj[base]._id,
+      undefined,
+      undefined,
       props
-    })) as Item<any>;
+    );
 
     await obj[base]._bind(item);
     return obj;
@@ -146,7 +149,8 @@ export class EchoDatabase {
 
       // TODO(burdon): Trigger callback on call (not just update).
       subscribe: (callback: (query: Query) => void) => {
-        return this._db.update.on((updatedObjects) => {
+        // TODO(dmaretskyi): Don't debounce?
+        return this._itemManager.debouncedUpdate.on((updatedObjects) => {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
               const match = matcher(this._objects.get(object.id)!);
@@ -176,7 +180,7 @@ export class EchoDatabase {
   }
 
   private _update() {
-    for (const object of this._db.select({}).exec().entities) {
+    for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
         const obj = this._createObjectInstance(object);
         if (!obj) {

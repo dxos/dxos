@@ -41,7 +41,7 @@ export class SpaceNotFoundError extends DBError {
 
 export class EntityNotFoundError extends DBError {
   constructor(entityId: ItemID) {
-    super('ENTITY_NOT_FOUND', 'Entity not found.', { entityId });
+    super('ITEM_NOT_FOUND', 'Item not found.', { entityId });
   }
 }
 

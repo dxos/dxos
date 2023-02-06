@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataService, SubscribeResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { Entity } from './entity';
+import { Item } from './item';
 import { ItemManager } from './item-manager';
 
 // TODO(dmaretskyi): Subscription cleanup.
@@ -20,7 +20,7 @@ import { ItemManager } from './item-manager';
  * Maintains subscriptions via DataService to create a local copy of the entities (items and links) in the database.
  *
  * Entities are updated using snapshots and mutations sourced from the DataService.
- * Entity and model mutations are forwarded to the DataService.
+ * Item and model mutations are forwarded to the DataService.
  * This class is analogous to ItemDemuxer but for databases running in remote mode.
  */
 export class DataMirror {
@@ -41,24 +41,24 @@ export class DataMirror {
     this._entities.subscribe(
       async (msg) => {
         for (const object of msg.objects ?? []) {
-          assert(object.itemId);
+          assert(object.objectId);
 
-          let entity: Entity<any> | undefined;
+          let entity: Item<any> | undefined;
           if (object.genesis) {
             log('Construct', { object });
             assert(object.genesis.modelType);
             entity = await this._itemManager.constructItem({
-              itemId: object.itemId,
+              itemId: object.objectId,
               itemType: object.genesis.itemType,
               modelType: object.genesis.modelType,
-              parentId: object.itemMutation?.parentId,
-              snapshot: { itemId: object.itemId } // TODO(dmaretskyi): Fix.
+              parentId: object.snapshot?.parentId,
+              snapshot: { objectId: object.objectId } // TODO(dmaretskyi): Fix.
             });
           } else {
-            entity = this._itemManager.entities.get(object.itemId);
+            entity = this._itemManager.entities.get(object.objectId);
           }
           if (!entity) {
-            log.warn('Entity not found', { itemId: object.itemId });
+            log.warn('Item not found', { objectId: object.objectId });
             return;
           }
 
@@ -67,10 +67,17 @@ export class DataMirror {
             entity._stateManager.resetToSnapshot(object);
           } else if (object.mutations) {
             for (const mutation of object.mutations) {
-              log('mutate', { id: object.itemId, mutation });
-              assert(mutation.meta);
-              assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-              await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
+              log('mutate', { id: object.objectId, mutation });
+
+              if (mutation.parentId || mutation.action) {
+                entity._processMutation(mutation, (id) => this._itemManager.getItem(id));
+              }
+
+              if (mutation.model) {
+                assert(mutation.meta);
+                assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+                await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);
+              }
             }
           }
         }

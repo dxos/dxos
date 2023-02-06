@@ -15,66 +15,60 @@ package dxos.echo.object;
  * Wrapper for all ECHO messages.
  */
 message EchoObject {
-  // TODO(dmaretskyi): Not optional.
-  optional string item_id = 1;
+  message Genesis {
+    // TODO(dmaretskyi): Remove.
+    optional string item_type = 1;
 
-  // TODO(dmaretskyi): Remove and use `genesis` fields.
-  optional string item_type = 2;
-  optional string model_type = 3;
-  optional string model_version = 4;
+    string model_type = 2;
 
-  // TODO(dmaretskyi): Move to snapshot.
-  optional string parent_id = 5;
+    optional string model_version = 3;
+  }
 
-  /// Create item.
-  optional ItemGenesis genesis = 10;
+  message Snapshot {
+    // TODO(dmaretskyi): Change to enum?
+    optional bool deleted = 1; 
 
-  /// Item system mutations.
-  optional ItemMutation item_mutation = 11;
+    optional string parent_id = 2;
 
-  /// Set the model to the provided snapshot.
-  optional google.protobuf.Any snapshot = 13 [preserve_any = true]; 
+    /// Set the model to the provided snapshot.
+    optional google.protobuf.Any model = 10 [preserve_any = true]; 
+  }
 
-  // Model-specific mutations.
-  repeated ModelMutation mutations = 14;
+  message Mutation {
+    // TODO(dmaretskyi): This can be removed if individual state-machines do not rely on mutation meta (feed key/seq, member key).
+    optional MutationMeta meta = 1;
+
+    enum Action {
+      NOOP = 0;
+      DELETE = 1;
+      RESTORE = 2;
+    }
+
+    /// Set parent id
+    optional string parent_id = 10;
+    
+    optional Action action = 11;
+
+    // Encoded model mutation, format is defined by model's codec.
+    optional google.protobuf.Any model = 12 [preserve_any = true];
+  }
+
+  string object_id = 1;
+
+  /// Present in mutations creating new items and snapshots. 
+  optional Genesis genesis = 10;
+
+  optional Snapshot snapshot = 13;
+  
+  /// May be present in snapshots. In that case the mutations must be applied on top of the snapshot.
+  repeated Mutation mutations = 14;
 }
 
-message ModelMutation {
-  // Encoded model mutation, format is defined by model's codec.
-  google.protobuf.Any mutation = 1 [preserve_any = true];
-  /// For snapshot messages.
-  optional ModelMutationMeta meta = 2;
-}
-
-message ModelMutationMeta {
+// TODO(dmaretskyi): client_tag.
+message MutationMeta {
   dxos.keys.PublicKey feed_key = 1;
   int32 seq = 2;
   dxos.keys.PublicKey member_key = 3;
+
   optional timeframe.TimeframeVector timeframe = 4;
-}
-
-/**
- * Item creation.
- */
-// TODO(burdon): ObjectGenesis
-message ItemGenesis {
-  optional string item_type = 1;
-  string model_type = 2;
-  optional string model_version = 3;
-}
-
-/**
- * Item mutation.
- */
-// TODO(dmaretskyi): ObjectMutation.
-message ItemMutation {
-  // TODO(dmaretskyi): Replace with `optional bool` field?
-  enum Action {
-    NOOP = 0;
-    DELETE = 1;
-    RESTORE = 2;
-  }
-
-  optional string parent_id = 1;  // TODO(burdon): Define Action type?
-  optional Action action = 2;
 }
