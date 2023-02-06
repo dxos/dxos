@@ -12,8 +12,7 @@ let didInit = false;
 /**
  * Automatically creates a random DXOS profile.
  */
-// TODO(burdon): Replace with useTestProfile?
-export const ProfileInitializer = ({ children }: { children: ReactNode }) => {
+export const useTestProfile = () => {
   const client = useClient();
   const profile = useIdentity();
 
@@ -25,6 +24,15 @@ export const ProfileInitializer = ({ children }: { children: ReactNode }) => {
     didInit = true;
     void client.halo.createProfile();
   }, []);
+
+  return profile;
+};
+
+/**
+ * Automatically creates a random DXOS profile and renders children.
+ */
+export const ProfileInitializer = ({ children }: { children: ReactNode }) => {
+  const profile = useTestProfile();
 
   if (!profile) {
     return null;
