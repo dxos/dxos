@@ -10,7 +10,7 @@ import { emptyGraph, GraphData, GraphNode, GraphLink } from './types';
 /**
  * Graph accessor.
  */
-// TODO(burdon): Don't require base class for ID accessor.
+// TODO(burdon): Don't require base class for ID accessor. Provide adapters.
 export abstract class GraphModel<T extends GraphNode = GraphNode> {
   readonly updated = new Event<GraphData<T>>();
 

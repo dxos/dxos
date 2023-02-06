@@ -9,6 +9,7 @@
 
 import { Point } from '@dxos/gem-core';
 
+// TODO(burdon): Extend or inject?
 export type GraphNode = {
   id: string;
 };

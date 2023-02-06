@@ -5,7 +5,7 @@
 import { Context, createContext, useContext } from 'react';
 
 export type PlexusState = {
-  transition: number;
+  transition?: number;
 };
 
 export const PlexusStateContext: Context<PlexusState> = createContext<PlexusState>({
