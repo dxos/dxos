@@ -3,22 +3,26 @@
 //
 
 import * as d3 from 'd3';
+import { Aperture } from 'phosphor-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Grid, SVG, SVGContextProvider, useSvgContext, Zoom } from '@dxos/gem-core';
 import { GraphLayoutNode, GraphModel, GraphNode, GraphRenderer, Markers } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-components';
 
+import { usePlexusState } from '../hooks';
 import { TreeProjector } from './tree-projector';
 
-// TODO(burdon): Factor testing out of gem-spore/testing
-// TODO(burdon): Generate typed tree data.
-// TODO(burdon): Layout around focused element (up/down); hide distant items.
-//  - foucs, inner ring of separated typed-collections, collection children (evenly spaced like dendrogram).
-//  - large collections (scroll/zoom/lens?)
-//  - square off leaf nodes (HTML list blocks) with radial lines into circles
-//  - card on left; related cards on right
-//  - search
+// TODO(burdon): Factor out styles: 300, 500, 700, 800.
+export type PlexusSlots = {
+  root?: string;
+  markers?: string;
+  grid?: string;
+  plex?: string;
+  link?: string;
+};
+
+const transitionDuration = 300;
 
 export type PlexusProps<N extends GraphNode> = {
   model: GraphModel<N>;
@@ -26,42 +30,64 @@ export type PlexusProps<N extends GraphNode> = {
 };
 
 export const Plexus = <N extends GraphNode>({ model, onSelect }: PlexusProps<N>) => {
+  const { transition } = usePlexusState();
   const [visible, setVisible] = useState(true);
-  const handleSelect = (node: N) => {
-    onSelect?.(node);
+  const [spin, setSpin] = useState(true);
+  const timeout = useRef<[any, any]>([0, 0]);
+  useEffect(() => {
     setVisible(false);
-    setTimeout(() => {
+    setSpin(true);
+
+    clearTimeout(timeout.current[0]);
+    const t1 = setTimeout(() => {
       setVisible(true);
-    }, 500);
-  };
+    }, transitionDuration);
+
+    clearTimeout(timeout.current[1]);
+    const t2 = setTimeout(() => {
+      setSpin(false);
+    }, 2500);
+
+    timeout.current = [t1, t2];
+  }, [transition]);
 
   return (
     <SVGContextProvider>
       <SVG className={mx('bg-slate-800')}>
         <Markers
-          arrowSize={3}
-          className='[&>marker>path]:stroke-slate-600 [&>marker>path]:stroke-[0.5px] [&>marker>path]:fill-transparent'
+          arrowSize={6}
+          className='[&>marker>path]:stroke-slate-700 [&>marker>path]:stroke-[1px] [&>marker>path]:fill-transparent'
         />
-        <Grid axis className='bg-black [&>path]:stroke-[1px] [&>path]:stroke-slate-700 [&>path]:opacity-40' />
+        <Grid className='[&>path]:stroke-slate-700 [&>path]:stroke-[1px] [&>path]:opacity-40' />
         <Zoom extent={[1, 4]}>
-          <g className={mx('fill-slate-900 stroke-[3px] stroke-slate-700 visible', !visible && 'invisible')}>
-            <line x1={0} y1={0} x2={600} y2={0} />
+          <g className={mx('visible', !visible && 'invisible')}>
+            <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={600} y2={0} />
           </g>
           <PlexGraph
             className={mx(
+              '[&>g>circle]:fill-transparent [&>g>circle]:stroke-slate-700 [&>g>circle]:stroke-[1px] [&>g>circle]:opacity-70',
               '[&>g>g>circle]:fill-slate-800 [&>g>g>circle]:stroke-[2px] [&>g>g>circle]:stroke-slate-300',
-              '[&>g>g>text]:fill-slate-500',
-              '[&>g>g>path]:stroke-[3px] [&>g>g>path]:stroke-slate-700'
+              '[&>g>g>path]:stroke-[2px] [&>g>g>path]:stroke-slate-700',
+              '[&>g>g>text]:fill-slate-500'
             )}
             model={model}
-            onSelect={handleSelect}
+            onSelect={onSelect}
           />
+          <g
+            className={mx(
+              'visible',
+              !visible && 'invisible',
+              visible && spin && 'animate-[spin_2s] __animate-[ping_2s]'
+            )}
+          >
+            <Aperture x={-64} y={-64} width={128} height={128} className='[&>*]:stroke-1 [&>*]:opacity-50' />
+          </g>
         </Zoom>
       </SVG>
     </SVGContextProvider>
   );
 };
-
+// : 'animate-[spin_3s_ease-in-out]'
 export type PlexGraphProps<N extends GraphNode> = {
   model: GraphModel<N>;
   className?: string;
@@ -76,7 +102,7 @@ export const PlexGraph = <N extends GraphNode>({ model, className, onSelect }: P
   const projector = useMemo(
     () =>
       new TreeProjector<N>(context, {
-        radius: 200,
+        radius: 192,
         nodeRadius: 16
       }),
     []
@@ -86,7 +112,7 @@ export const PlexGraph = <N extends GraphNode>({ model, className, onSelect }: P
   const renderer = useMemo(
     () =>
       new GraphRenderer(context, graphRef, {
-        transition: () => d3.transition().duration(300).ease(d3.easeLinear),
+        transition: () => d3.transition().duration(transitionDuration).ease(d3.easeLinear),
         labels: {
           text: (node) => node.id.slice(0, 8) // + `[${node.data.label}]`
         },
@@ -106,9 +132,6 @@ export const PlexGraph = <N extends GraphNode>({ model, className, onSelect }: P
   }, [model]);
 
   useEffect(() => {
-    // In devtools: Reveal in elements panel.
-    // console.log('ROOT', graphRef.current);
-
     if (graphRef.current) {
       projector.update(model.graph, model.selected);
       renderer.update(projector.layout);
