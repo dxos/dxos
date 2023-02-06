@@ -26,7 +26,6 @@ module.exports = {
         include: [
           // TODO(burdon): Missing exports?
           '@dxos/protocols',
-          '@dxos/protocols',
           '@dxos/protocols/proto/dxos/client',
           '@dxos/protocols/proto/dxos/client/services',
           '@dxos/protocols/proto/dxos/config',
