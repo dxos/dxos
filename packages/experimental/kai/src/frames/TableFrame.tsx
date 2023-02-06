@@ -12,6 +12,8 @@ import { Searchbar, Selector, SelectorOption, Table } from '../components';
 import { useSpace } from '../hooks';
 import { Contact, Organization, Project } from '../proto';
 
+const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
+
 type ColumnType<T extends DocumentBase> = SelectorOption & {
   filter?: TypeFilter<any>;
   subFilter?: (match?: string) => (object: T) => boolean;
@@ -24,10 +26,9 @@ const capitalizeFirstLetter = (str: string) => {
 
 const generateTypes = (schemaTypes: EchoSchemaType[]) => {
   const generateColumns = (type: EchoSchemaType) => {
-    const basicTypes = ['string', 'number', 'boolean'];
     const columns: Column<Document>[] = [];
     for (const field of type.fields) {
-      if (basicTypes.includes(field.type.kind)) {
+      if (SUPPORTED_TYPES.includes(field.type.kind)) {
         columns.push({
           Header: capitalizeFirstLetter(field.name),
           accessor: field.name
