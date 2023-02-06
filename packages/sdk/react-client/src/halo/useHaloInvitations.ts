@@ -2,22 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
-
-import { CancellableInvitationObservable } from '@dxos/client';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import { useClient } from '../client';
 import { useInvitationStatus } from '../invitations';
 
-export const useHaloInvitations = (): CancellableInvitationObservable[] => {
+export const useHaloInvitations = () => {
   const client = useClient();
-  const [invitations, setInvitations] = useState<CancellableInvitationObservable[]>(client.halo?.invitations ?? []);
-
-  useEffect(() => {
-    return client.halo.invitationsUpdate.on(() => {
-      setInvitations([...client.halo.invitations]);
-    });
-  }, [client.halo]);
+  const invitations =
+    useSyncExternalStore(
+      (listener) => client.halo.invitationsUpdate.on(() => listener()),
+      () => client.halo.invitations
+    ) ?? [];
 
   return invitations;
 };

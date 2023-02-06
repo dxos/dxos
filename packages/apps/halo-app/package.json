@@ -38,7 +38,6 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@dxos/react-client-testing": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",

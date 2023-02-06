@@ -4,7 +4,7 @@
 
 export * from './useMembers';
 export * from './useQuery';
-export * from './useRector';
+export * from './useReactor';
 export * from './useSelection';
 export * from './useSpaces';
 export * from './useSpaceInvitations';

@@ -135,6 +135,12 @@
         "prebuild"
       ]
     },
+    "storybook": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^compile"
+      ]
+    },
     "test": {
       "inputs": [
         "default",
