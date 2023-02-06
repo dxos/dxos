@@ -9,9 +9,10 @@ import { z } from 'zod';
 import {
   executeDirectoryTemplate,
   DirectoryTemplateOptions,
-  ExecuteDirectoryTemplateOptions
+  ExecuteDirectoryTemplateOptions,
+  DirectoryTemplateResult
 } from './executeDirectoryTemplate';
-import { TEMPLATE_FILE_IGNORE, TemplatingResult } from './executeFileTemplate';
+import { TEMPLATE_FILE_IGNORE, Files } from './executeFileTemplate';
 import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
 import { logger } from './util/logger';
 import { InquirableZodType, InquirableZodObject, InquirablePrimitive, QuestionOptions } from './util/zodInquire';
@@ -33,7 +34,7 @@ export type ConfigDeclaration<
   inputQuestions?: QuestionOptions<z.infer<TShape>>;
   message?: (
     context: Required<DirectoryTemplateOptions<z.infer<TShape>>> & {
-      results: TemplatingResult;
+      results: Files;
       inheritedMessage?: string;
     }
   ) => string;
@@ -44,7 +45,7 @@ export type ConfigDefinition<
   TInherited extends InquirableZodType = InquirableZodType
 > = ConfigDeclaration<TInput, TInherited> & {
   templateDirectory: string;
-  execute(options?: ExecuteSpecificDirectoryTemplateOptions<z.infer<TInput>>): Promise<TemplatingResult>;
+  execute(options?: ExecuteSpecificDirectoryTemplateOptions<z.infer<TInput>>): Promise<DirectoryTemplateResult>;
 };
 
 export type ExecuteSpecificDirectoryTemplateOptions<TInput> = Omit<

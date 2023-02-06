@@ -1,6 +1,7 @@
 //
 // Copyright 2022 DXOS.org
 //
+import chalk from 'chalk';
 import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
@@ -8,10 +9,10 @@ import readDir from 'recursive-readdir';
 import { loadConfig, QuestionOptions, unDefault, prettyConfig, ConfigDeclaration, forceFilter } from './config';
 import {
   executeFileTemplate,
-  TemplatingResult,
+  Files,
   isTemplateFile,
   LoadTemplateOptions,
-  TemplateResultMetadata
+  TemplateContext
 } from './executeFileTemplate';
 import { File } from './file';
 import { filterIncludeExclude } from './util/filterIncludeExclude';
@@ -36,9 +37,20 @@ export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions &
   ConfigDeclaration &
   DirectoryTemplateOptions<TInput>;
 
+export type DirectoryTemplateResult = {
+  files: Files;
+  message?: string;
+  save(options?: {
+    dry?: boolean;
+    printMessage?: boolean;
+    printFiles?: boolean;
+    overwrite?: boolean;
+  }): Promise<{ errors: Error[]; filesWritten: number }>;
+};
+
 export const executeDirectoryTemplate = async <TInput>(
   options: ExecuteDirectoryTemplateOptions<TInput>
-): Promise<TemplatingResult> => {
+): Promise<DirectoryTemplateResult> => {
   const { templateDirectory } = options;
   const mergedOptions = {
     parallel: true,
@@ -153,7 +165,7 @@ export const executeDirectoryTemplate = async <TInput>(
       ?.filter((f) => !isWithinTemplateOutput(f))
       .map(
         (r) =>
-          new File<string, TemplateResultMetadata>({
+          new File<string, TemplateContext>({
             path: path.join(outputDirectory, r.slice(templateDirectory.length).replace(/\/$/, '')),
             copyFrom: r,
             overwrite
@@ -163,12 +175,12 @@ export const executeDirectoryTemplate = async <TInput>(
   ].filter(Boolean);
   debug(`${flatOutput.length} templating results`);
   const inheritedOutputMinusFlatOutput = inherited
-    ? inherited.filter((inheritedOut) => {
+    ? inherited.files.filter((inheritedOut) => {
         return !flatOutput.find((existing) => existing.path === inheritedOut.path);
       })
     : [];
   const results = [...flatOutput, ...inheritedOutputMinusFlatOutput].filter(Boolean);
-  if (printMessage) {
+  const getMessage = () => {
     const stack = [{ message, inherits }];
     while (stack[0].inherits) {
       const { message, inherits } = stack[0].inherits;
@@ -184,11 +196,44 @@ export const executeDirectoryTemplate = async <TInput>(
       });
       msg = currentmsg ?? msg;
     });
-    if (msg) {
-      info(msg);
+    return msg;
+  };
+  const outputMessage = printMessage ? getMessage() : '';
+  return {
+    files: results,
+    message: outputMessage,
+    save: async (opts) => {
+      const { dry, printMessage, printFiles } = { printMessage: true, printFiles: true, dry: false, ...opts };
+      const errors: Error[] = [];
+      let filesWritten = 0;
+      await Promise.all(
+        results.map(async (f) => {
+          const description = f.shortDescription(process.cwd());
+          try {
+            const result = !dry ? await f.save() : null;
+            filesWritten += result ? 1 : 0;
+            if (printFiles) {
+              info(`${result ? 'saved  ' : chalk.gray('skipped')} ${result ? description : chalk.gray(description)}`);
+            }
+            return result;
+          } catch (err: any) {
+            info(`${chalk.red('error  ')} ${chalk.gray(description)}`);
+            info('\n');
+            info(err.toString());
+            info('\n');
+            errors.push(err);
+          }
+        })
+      );
+      if (errors.length) {
+        info(`${errors.length} errors`);
+      }
+      if (printMessage && outputMessage) {
+        info(outputMessage);
+      }
+      return { errors, filesWritten };
     }
-  }
-  return results;
+  };
 };
 
 const acquireInput = async <TInput>(

@@ -40,7 +40,7 @@ export type ExecuteFileTemplateOptions<TInput = {}> = LoadTemplateOptions & {
   outputDirectory?: string;
   input?: TInput;
   overwrite?: boolean;
-  inherited?: TemplatingResult;
+  inherited?: Files;
 };
 
 export type TemplateSlotContext<TInput = {}> = ExecuteFileTemplateOptions<TInput> & {
@@ -83,13 +83,13 @@ export type TemplateContext<TInput = {}, TSlots extends TemplateSlotMap = {}> = 
   slots?: { [key in keyof TSlots]: TemplateSlotContent };
 };
 
-export type TemplateResultMetadata = {
-  templateFile?: string;
-};
+// export type TemplateResultMetadata = {
+//   templateFile?: string;
+// };
 
-export type TemplatingResult<R = any> = File<R, TemplateResultMetadata>[];
+export type Files<R = any> = File<R, TemplateContext<any>>[];
 
-export type TemplateFunctionResult<R = any> = null | string | File<R, TemplateResultMetadata>[];
+export type TemplateFunctionResult<R = any> = null | string | Files<R>;
 
 export type ExtractInput<TConfig> = TConfig extends ConfigDeclaration<infer U, infer V>
   ? z.infer<U> & z.infer<V>
@@ -112,9 +112,7 @@ export type TemplateFunction<TInput = void, TSlots extends TemplateSlotMap = {}>
   TemplateFunctionResult
 >;
 
-export const executeFileTemplate = async <TInput>(
-  options: ExecuteFileTemplateOptions<TInput>
-): Promise<TemplatingResult> => {
+export const executeFileTemplate = async <TInput>(options: ExecuteFileTemplateOptions<TInput>): Promise<Files> => {
   const { templateFile, outputDirectory, templateRelativeTo, overwrite } = {
     outputDirectory: process.cwd(),
     ...options
