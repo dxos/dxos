@@ -30,19 +30,15 @@ enum ShellDisplay {
   FULLSCREEN = 1;
 }
 
-message DisplayRequest {
+message AppContextRequest {
   ShellDisplay display = 1;
-}
-
-message SpaceRequest {
-  dxos.keys.PublicKey space_key = 1;
+  optional dxos.keys.PublicKey space_key = 2;
+  optional string invitation_code = 3;
 }
 
 /// App RPCs for the shell.
 service AppService {
-  rpc SetDisplay(DisplayRequest) returns (google.protobuf.Empty);
-  // rpc SetIdentity(IdentityRequest) returns (google.protobuf.Empty);
-  rpc SetSpace(SpaceRequest) returns (google.protobuf.Empty);
+  rpc SetContext(AppContextRequest) returns (google.protobuf.Empty);
 }
 
 enum ShellLayout {
@@ -50,10 +46,13 @@ enum ShellLayout {
   AUTH = 1;
   CURRENT_SPACE = 2;
   SPACE_LIST = 3;
+  JOIN_SPACE = 4;
 }
 
 message LayoutRequest {
   ShellLayout layout = 1;
+  optional string invitation_code = 2;
+  optional dxos.keys.PublicKey space_key = 3;
 }
 
 /// Shell UI RPCs.

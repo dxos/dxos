@@ -19,12 +19,17 @@ export const SpaceContext: Context<SpaceContextProps> = createContext<SpaceConte
 export const SpaceProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   const client = useClient();
   const spaces = useSpaces();
-  const [space, setSpace] = useState<Space>();
+  const [space, setSpace] = useState<Space | undefined>(() => {
+    if (client.services instanceof IFrameClientServicesProxy) {
+      const spaceKey = client.services.spaceKey;
+      return spaces.find((space) => spaceKey && space.key.equals(spaceKey));
+    }
+  });
 
   useEffect(() => {
     if (client.services instanceof IFrameClientServicesProxy) {
-      return client.services.spaceUpdate?.on((spaceKey) => {
-        const space = spaces.find((space) => space.key.equals(spaceKey));
+      return client.services.contextUpdate?.on(({ spaceKey }) => {
+        const space = spaces.find((space) => spaceKey && space.key.equals(spaceKey));
         setSpace(space);
       });
     }
@@ -33,12 +38,20 @@ export const SpaceProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   return <SpaceContext.Provider value={{ space, setSpace }}>{children}</SpaceContext.Provider>;
 };
 
-export const useSpaceSetter = () => {
-  const { setSpace } = useContext(SpaceContext);
-  return setSpace;
-};
+/**
+ * Uses space state from the space context.
+ */
+export const useCurrentSpace = (): [Space | undefined, (space?: Space) => void] => {
+  const client = useClient();
+  const { space, setSpace: naturalSetSpace } = useContext(SpaceContext);
 
-export const useCurrentSpace = () => {
-  const { space } = useContext(SpaceContext);
-  return space;
+  const setSpace = (space?: Space) => {
+    if (client.services instanceof IFrameClientServicesProxy) {
+      client.services.setCurrentSpace(space?.key);
+    }
+
+    naturalSetSpace(space);
+  };
+
+  return [space, setSpace];
 };

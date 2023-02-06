@@ -24,7 +24,7 @@ import { Shell } from './Shell';
 
 void initializeAppTelemetry('halo-vault', new Config(Defaults()));
 
-const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider) => {
+const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement } = await import('react');
   const { createRoot } = await import('react-dom/client');
 
@@ -38,7 +38,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
       ThemeProvider,
       { themeVariant: 'os', resourceExtensions: [osTranslations] },
       // NOTE: Using context provider directly to avoid duplicate banners being logged.
-      createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime }))
+      createElement(ClientContext.Provider, { value: { client } }, createElement(Shell, { runtime, origin }))
     )
   );
 };
@@ -58,7 +58,7 @@ const main = async () => {
         onOrigin: async (origin) => {
           iframeRuntime.origin = origin;
           await iframeRuntime.start();
-          iframeRuntime.shell && (await startShell(config, iframeRuntime.shell, iframeRuntime.services));
+          iframeRuntime.shell && (await startShell(config, iframeRuntime.shell, iframeRuntime.services, origin));
         }
       }),
       shellPort: shellDisabled ? undefined : createIFramePort({ channel: 'dxos:shell' })
@@ -90,7 +90,7 @@ const main = async () => {
         onOrigin: async (origin) => {
           await iframeRuntime.open(origin);
           if (shellClientProxy && iframeRuntime.shell) {
-            await startShell(config, iframeRuntime.shell, shellClientProxy);
+            await startShell(config, iframeRuntime.shell, shellClientProxy, origin);
           }
         }
       }),

@@ -5,7 +5,7 @@
 import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
-import { Invitation, InvitationEncoder, Space } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { deleted, id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
@@ -49,20 +49,6 @@ export const Main = withReactor(() => {
       list.todos.push(new Todo({ title }));
       inputRef.current!.value = '';
     }
-  };
-
-  const handleShare = async () => {
-    space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING }).subscribe({
-      onConnecting: (invitation) => {
-        const invitationCode = InvitationEncoder.encode(invitation);
-        // TODO(wittjosiah): Playwright only supports reading clipboard in chromium.
-        //   https://github.com/microsoft/playwright/issues/13037
-        console.log(JSON.stringify({ invitationCode }));
-        void navigator.clipboard.writeText(invitationCode);
-      },
-      onError: (error) => console.error(error),
-      onSuccess: (invitation) => {}
-    });
   };
 
   const handleToggleAll = (event: ChangeEvent<HTMLInputElement>) => {
@@ -111,9 +97,6 @@ export const Main = withReactor(() => {
           <label htmlFor='toggle-all' data-testid='toggle-all'>
             Mark all as complete
           </label>
-          <button id='share' onClick={handleShare} data-testid='share-button'>
-            Share
-          </button>
           <ul className='todo-list'>
             {todos.map((todo) => (
               <TodoItem

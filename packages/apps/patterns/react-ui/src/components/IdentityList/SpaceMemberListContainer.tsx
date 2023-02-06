@@ -16,12 +16,12 @@ export interface SpaceMemberListContainerProps {
 export const SpaceMemberListContainer = ({ spaceKey, includeSelf }: SpaceMemberListContainerProps) => {
   const client = useClient();
   const allUnsortedMembers = useMembers(spaceKey);
-  const spaceMembers = useMemo(
+  const members = useMemo(
     () =>
       includeSelf
         ? allUnsortedMembers.sort((a) => (a.identityKey.equals(client.halo.profile!.identityKey) ? -1 : 1))
         : allUnsortedMembers.filter((member) => !member.identityKey.equals(client.halo.profile!.identityKey)),
     [allUnsortedMembers]
   );
-  return <SpaceMemberList spaceMembers={spaceMembers} />;
+  return <SpaceMemberList members={members} />;
 };

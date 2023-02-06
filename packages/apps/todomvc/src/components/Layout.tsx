@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import { IFrameClientServicesProxy, ShellLayout } from '@dxos/client';
-import { useClient, useCurrentSpace } from '@dxos/react-client';
+import { useClient, useCurrentSpace, useIdentity, useSpaces } from '@dxos/react-client';
 
 const Placeholder = () => (
   <header className='header'>
@@ -15,18 +15,51 @@ const Placeholder = () => (
   </header>
 );
 
+const useNavigator = () => {
+  const client = useClient();
+  const identity = useIdentity();
+  const spaces = useSpaces();
+  const [space, setSpace] = useCurrentSpace();
+  const { spaceKey } = useParams();
+  const navigate = useNavigate();
+
+  // Navigate to selected spaces.
+  useEffect(() => {
+    if (!identity) {
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      if (spaces.length === 0) {
+        const space = await client.echo.createSpace();
+        setSpace(space);
+        navigate(`/${space.key.toHex()}`);
+      } else if (!space) {
+        setSpace(spaces[0]);
+        navigate(`/${spaces[0].key.toHex()}`);
+      } else if (space && space.key.toHex() !== spaceKey) {
+        navigate(`/${space.key.toHex()}`);
+      }
+    });
+
+    return () => clearTimeout(timeout);
+  }, [identity, space]);
+};
+
 export const Layout = () => {
+  useNavigator();
   const client = useClient();
   const [space] = useCurrentSpace();
 
   const handleOpen = () => {
     if (client.services instanceof IFrameClientServicesProxy) {
-      client.services.setLayout(ShellLayout.SPACE_LIST);
+      void client.services.setLayout(ShellLayout.CURRENT_SPACE, { spaceKey: space?.key });
     }
   };
 
   return (
     <>
+      {/* TODO(wittjosiah): Make DXOS button. */}
       <button id='open' onClick={handleOpen} data-testid='open-button'>
         ❯
       </button>
