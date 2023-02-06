@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { Model, ModelMeta, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { ItemMutation } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { ItemManager } from './item-manager';
 import { createItemSelection, Selection } from './selection';
@@ -49,7 +49,7 @@ export class Item<M extends Model | null = Model> {
   /**
    * Items are constructed by the `Database` object.
    * @param itemManager
-   * @param itemId        Addressable ID.
+   * @param objectId        Addressable ID.
    * @param itemType      User defined type (DXN).
    * @param stateManager  Data model (provided by `ModelFactory`).
    * @param _writeStream  Write stream (if not read-only).
@@ -114,7 +114,7 @@ export class Item<M extends Model | null = Model> {
 
   toString() {
     return `Item(${JSON.stringify({
-      itemId: this.id,
+      objectId: this.id,
       parentId: this.parent?.id,
       itemType: this.type
     })})`;
@@ -162,10 +162,10 @@ export class Item<M extends Model | null = Model> {
     const onUpdate = this._onUpdate.waitFor(() => this.deleted);
     await this._writeStream.write({
       object: {
-        itemId: this.id,
-        itemMutation: {
-          action: ItemMutation.Action.DELETE
-        }
+        objectId: this.id,
+        mutations: [{
+          action: EchoObject.Mutation.Action.DELETE
+        }]
       }
     });
 
@@ -183,10 +183,10 @@ export class Item<M extends Model | null = Model> {
     const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
     await this._writeStream.write({
       object: {
-        itemId: this.id,
-        itemMutation: {
-          action: ItemMutation.Action.RESTORE
-        }
+        objectId: this.id,
+        mutations: [{
+          action: EchoObject.Mutation.Action.RESTORE
+        }]
       }
     });
 
@@ -205,10 +205,10 @@ export class Item<M extends Model | null = Model> {
 
     await this._writeStream.write({
       object: {
-        itemId: this.id,
-        itemMutation: {
+        objectId: this.id,
+        mutations: [{
           parentId
-        }
+        }]
       }
     });
 
@@ -219,18 +219,18 @@ export class Item<M extends Model | null = Model> {
    * Process a mutation from the stream.
    * @private (Package-private).
    */
-  _processMutation(mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
+  _processMutation(mutation: EchoObject.Mutation, getItem: (objectId: ItemID) => Item<any> | undefined) {
     log('_processMutation %s', { mutation });
 
     const { action, parentId } = mutation;
 
     switch (action) {
-      case ItemMutation.Action.DELETE: {
+      case EchoObject.Mutation.Action.DELETE: {
         this._deleted = true;
         break;
       }
 
-      case ItemMutation.Action.RESTORE: {
+      case EchoObject.Mutation.Action.RESTORE: {
         this._deleted = false;
         break;
       }
@@ -250,6 +250,7 @@ export class Item<M extends Model | null = Model> {
    * @param parent
    */
   private _updateParent(parent: Item<any> | null | undefined) {
+    log('_updateParent', { parent: parent?.id, prevParent: this._parent?.id })
     if (this._parent) {
       this._parent._children.delete(this);
     }

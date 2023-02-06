@@ -41,24 +41,24 @@ export class DataMirror {
     this._entities.subscribe(
       async (msg) => {
         for (const object of msg.objects ?? []) {
-          assert(object.itemId);
+          assert(object.objectId);
 
           let entity: Item<any> | undefined;
           if (object.genesis) {
             log('Construct', { object });
             assert(object.genesis.modelType);
             entity = await this._itemManager.constructItem({
-              itemId: object.itemId,
+              itemId: object.objectId,
               itemType: object.genesis.itemType,
               modelType: object.genesis.modelType,
-              parentId: object.itemMutation?.parentId,
-              snapshot: { itemId: object.itemId } // TODO(dmaretskyi): Fix.
+              parentId: object.snapshot?.parentId,
+              snapshot: { objectId: object.objectId } // TODO(dmaretskyi): Fix.
             });
           } else {
-            entity = this._itemManager.entities.get(object.itemId);
+            entity = this._itemManager.entities.get(object.objectId);
           }
           if (!entity) {
-            log.warn('Item not found', { itemId: object.itemId });
+            log.warn('Item not found', { objectId: object.objectId });
             return;
           }
 
@@ -67,10 +67,17 @@ export class DataMirror {
             entity._stateManager.resetToSnapshot(object);
           } else if (object.mutations) {
             for (const mutation of object.mutations) {
-              log('mutate', { id: object.itemId, mutation });
-              assert(mutation.meta);
-              assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-              await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.mutation);
+              log('mutate', { id: object.objectId, mutation });
+
+              if(mutation.parentId || mutation.action) {
+                entity._processMutation(mutation, id => this._itemManager.getItem(id))
+              }
+
+              if(mutation.model) {
+                assert(mutation.meta);
+                assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+                await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);
+              }
             }
           }
         }

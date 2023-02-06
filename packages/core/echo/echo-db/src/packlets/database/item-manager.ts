@@ -69,7 +69,7 @@ export class ItemManager {
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
     private readonly _writeStream?: FeedWriter<DataMessage>
-  ) {}
+  ) { }
 
   get entities() {
     return this._entities;
@@ -127,23 +127,23 @@ export class ItemManager {
     log('Item Genesis', { itemId });
     await this._writeStream.write({
       object: {
-        itemId,
+        objectId: itemId,
         genesis: {
           itemType,
           modelType
         },
-        itemMutation: parentId ? { parentId } : undefined,
-        mutations: !mutation
+        mutations: !mutation && !parentId
           ? []
           : [
-              {
-                mutation: {
-                  '@type': 'google.protobuf.Any',
-                  type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-                  value: mutation
-                }
+            {
+              parentId: parentId,
+              model: !mutation ? undefined : {
+                '@type': 'google.protobuf.Any',
+                type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+                value: mutation
               }
-            ]
+            }
+          ]
       }
     });
 
@@ -165,10 +165,10 @@ export class ItemManager {
       createMappedFeedWriter<Any, DataMessage>(
         (mutation: Any) => ({
           object: {
-            itemId,
+            objectId: itemId,
             mutations: [
               {
-                mutation
+                model: mutation
               }
             ]
           }

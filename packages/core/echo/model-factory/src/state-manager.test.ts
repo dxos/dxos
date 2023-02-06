@@ -24,8 +24,8 @@ const createId = () => PublicKey.random().toHex();
 
 describe('StateManager', () => {
   test('construct readonly and apply mutations', () => {
-    const itemId = createId();
-    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, itemId, { itemId }, feedA, null);
+    const objectId = createId();
+    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, objectId, { objectId }, feedA, null);
 
     expect(stateManager.model).toBeInstanceOf(TestListModel);
     expect(stateManager.model).toBeInstanceOf(Model);
@@ -47,8 +47,8 @@ describe('StateManager', () => {
 
   describe('snapshot and restore', () => {
     test('with model snapshots - TestListModel', () => {
-      const itemId = createId();
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, itemId, { itemId }, feedA, null);
+      const objectId = createId();
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, objectId, { objectId }, feedA, null);
       stateManager.processMessage(createMeta(feedA, 0), {
         type_url: 'example.testing.data.TestListMutation',
         value: TestListModel.meta.mutationCodec.encode({ data: 'message1' })
@@ -66,8 +66,8 @@ describe('StateManager', () => {
     });
 
     test('with framework snapshots - TestListModel', () => {
-      const itemId = createId();
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, itemId, { itemId }, feedA, null);
+      const objectId = createId();
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, objectId, { objectId }, feedA, null);
 
       stateManager.processMessage(createMeta(feedA, 0), {
         type_url: 'example.testing.data.TestListMutation',
@@ -88,13 +88,13 @@ describe('StateManager', () => {
 
   test('write loop', async () => {
     const feedWriter = new MockFeedWriter<Any>();
-    const itemId = createId();
+    const objectId = createId();
     const stateManager = new StateManager(
       TestListModel.meta.type,
       TestListModel,
-      itemId,
+      objectId,
       {
-        itemId
+        objectId
       },
       feedA,
       feedWriter
@@ -121,7 +121,7 @@ describe('StateManager', () => {
       TestListModel.meta.type,
       undefined,
       createId(),
-      { itemId: 'test' },
+      { objectId: 'test' },
       feedA,
       null
     );
@@ -145,13 +145,13 @@ describe('StateManager', () => {
   });
 
   test('update event gets triggered', async () => {
-    const itemId = createId();
+    const objectId = createId();
     const stateManager = new StateManager(
       TestListModel.meta.type,
       TestListModel,
-      itemId,
+      objectId,
       {
-        itemId
+        objectId
       },
       feedA,
       null
@@ -169,13 +169,13 @@ describe('StateManager', () => {
   describe('optimistic mutations', () => {
     test('single mutation gets applied synchronously', async () => {
       const feedWriter = new MockFeedWriter<Any>();
-      const itemId = createId();
+      const objectId = createId();
       const stateManager = new StateManager(
         TestListModel.meta.type,
         TestListModel,
-        itemId,
+        objectId,
         {
-          itemId
+          objectId
         },
         feedA,
         feedWriter
@@ -201,13 +201,13 @@ describe('StateManager', () => {
 
     test('two optimistic mutations queued together', async () => {
       const feedWriter = new MockFeedWriter<Any>();
-      const itemId = createId();
+      const objectId = createId();
       const stateManager = new StateManager(
         TestListModel.meta.type,
         TestListModel,
-        itemId,
+        objectId,
         {
-          itemId
+          objectId
         },
         feedA,
         feedWriter
@@ -237,13 +237,13 @@ describe('StateManager', () => {
 
     test('with reordering', async () => {
       const feedWriter = new MockFeedWriter<Any>(feedB);
-      const itemId = createId();
+      const objectId = createId();
       const stateManager = new StateManager(
         TestListModel.meta.type,
         TestListModel,
-        itemId,
+        objectId,
         {
-          itemId
+          objectId
         },
         feedA,
         feedWriter

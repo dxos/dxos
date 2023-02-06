@@ -211,7 +211,11 @@ export class StateManager<M extends Model> {
 
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
-      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation.value);
+      if(!mutation.model) {
+        continue;
+      }
+
+      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.model.value);
       assert(mutation.meta);
       this._stateMachine.process(mutationDecoded, {
         author: PublicKey.from(mutation.meta.memberKey)
@@ -312,7 +316,7 @@ export class StateManager<M extends Model> {
     if (this.initialized && this.modelMeta.snapshotCodec) {
       // Returned reduced snapshot if possible.
       return {
-        itemId: this._itemId,
+        objectId: this._itemId,
         snapshot: {
           model: {
             '@type': 'google.protobuf.Any',
@@ -324,9 +328,15 @@ export class StateManager<M extends Model> {
     }
 
     return {
-      itemId: this._itemId,
+      objectId: this._itemId,
       snapshot: this._initialState.snapshot,
-      mutations: [...(this._initialState.mutations ?? []), ...this._mutations]
+      mutations: [
+        ...(this._initialState.mutations ?? []),
+        ...this._mutations.map((mutation) => ({
+          model: mutation.mutation,
+          meta: mutation.meta
+        }))
+      ]
     };
   }
 

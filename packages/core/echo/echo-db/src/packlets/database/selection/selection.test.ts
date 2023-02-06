@@ -21,7 +21,7 @@ const ids = (entities: Item[]) => entities.map((entity) => entity.id);
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
 const createModel = (id: ItemID) =>
-  modelFactory.createModel(ObjectModel.meta.type, id, { itemId: id }, PublicKey.random());
+  modelFactory.createModel(ObjectModel.meta.type, id, { objectId: id }, PublicKey.random());
 
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
   new Item(null as any, id, type, createModel(id), undefined, parent);
