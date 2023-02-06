@@ -2,34 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Action, Cancel } from '@radix-ui/react-alert-dialog';
+import { Close } from '@radix-ui/react-dialog';
 import React from 'react';
 
 import { ThemeContext, useId } from '@dxos/react-components';
 
-import { PanelAlertDialog, PanelAlertDialogProps } from '../../layouts';
+import { PanelDialog, PanelDialogProps } from '../../layouts';
 import { SpacePanel, SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
-  extends Omit<PanelAlertDialogProps, 'titleId' | 'children'>,
+  extends Omit<PanelDialogProps, 'titleId' | 'children'>,
     Omit<SpacePanelProps, 'doneActionParent'> {}
 
 export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => {
   const titleId = useId('spaceDialog__title');
 
   return (
-    // TODO(wittjosiah): Use regular dialog.
-    <PanelAlertDialog {...{ slots, titleId }}>
+    <PanelDialog {...{ slots, titleId }}>
       <ThemeContext.Provider value={{ themeVariant: 'os' }}>
         <SpacePanel
           {...{
             ...spacePanelProps,
             titleId,
-            exitActionParent: <Cancel asChild />,
-            doneActionParent: <Action asChild />
+            exitActionParent: <Close asChild />,
+            doneActionParent: <Close asChild />
           }}
         />
       </ThemeContext.Provider>
-    </PanelAlertDialog>
+    </PanelDialog>
   );
 };
