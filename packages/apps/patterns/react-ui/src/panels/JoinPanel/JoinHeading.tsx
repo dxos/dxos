@@ -17,11 +17,12 @@ export interface JoinSpaceHeadingProps {
   invitation?: AuthenticatingInvitationObservable;
   onExit?: () => void;
   exitActionParent?: Parameters<typeof cloneElement>[0];
+  preventExit?: boolean;
 }
 
 export const JoinHeading = forwardRef(
   (
-    { mode, titleId, invitation, onExit, exitActionParent }: JoinSpaceHeadingProps,
+    { mode, titleId, invitation, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
     ref: ForwardedRef<HTMLDivElement>
   ) => {
     const { t } = useTranslation('os');
@@ -36,18 +37,21 @@ export const JoinHeading = forwardRef(
         ? invitation?.invitation?.identityKey?.toHex()
         : invitation?.invitation?.identityKey?.toHex();
 
-    const exitButton =
-      mode === 'halo-only' ? null : (
-        <Button compact variant='ghost' {...(onExit && { onClick: onExit })} className='grow-0 shrink-0'>
-          <ProhibitInset className={getSize(5)} />
-          <span className='sr-only'>{t('exit label')}</span>
-        </Button>
-      );
+    const exitButton = (
+      <Button compact variant='ghost' {...(onExit && { onClick: onExit })} className='grow-0 shrink-0'>
+        <ProhibitInset className={getSize(5)} />
+        <span className='sr-only'>{t('exit label')}</span>
+      </Button>
+    );
 
     return (
       <div role='none' className={mx(subduedSurface, 'p-2 rounded-bs-md')} ref={ref}>
         <div role='group' className='flex items-center gap-2'>
-          <Avatar fallbackValue={invitationKey ?? ''} labelId={nameId} />
+          {invitationKey ? (
+            <Avatar fallbackValue={invitationKey} labelId={nameId} />
+          ) : (
+            <span role='none' className={mx(getSize(10), 'bg-neutral-300 dark:bg-neutral-700 rounded-full')} />
+          )}
           <Heading level={1} className='font-body font-normal text-base grow' id={titleId}>
             {invitation ? (
               <Trans
@@ -61,12 +65,14 @@ export const JoinHeading = forwardRef(
                 }}
               />
             ) : (
-              <span className='block leading-none mbe-1 font-system-medium text-sm'>
+              <span className='block leading-none font-system-medium text-sm'>
                 {mode === 'halo-only' ? t('halo heading') : t('join space heading')}
               </span>
             )}
           </Heading>
-          {exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton}
+          {!preventExit &&
+            mode !== 'halo-only' &&
+            (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
         </div>
       </div>
     );

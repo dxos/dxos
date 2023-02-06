@@ -28,7 +28,8 @@ export const JoinPanel = ({
   exitActionParent,
   onExit,
   doneActionParent,
-  onDone
+  onDone,
+  preventExit
 }: JoinPanelProps) => {
   const client = useClient();
   const internalTitleId = useId('joinPanel__title');
@@ -178,7 +179,9 @@ export const JoinPanel = ({
 
   return (
     <>
-      <JoinHeading {...{ mode, titleId, invitation: joinState.spaceInvitation, onExit, exitActionParent }} />
+      <JoinHeading
+        {...{ mode, titleId, invitation: joinState.spaceInvitation, onExit, exitActionParent, preventExit }}
+      />
       <div role='none' className='is-full overflow-hidden'>
         <div role='none' className='flex is-[1300%]' aria-live='polite'>
           <IdentitySelector

@@ -48,5 +48,6 @@ export const os = {
   'done label': 'Done',
   'reset label': 'Start over',
   'pin input label': 'The PIN provided by the invitation sender',
-  'invitation input label': 'Paste an invitation code or URL'
+  'invitation input label': 'Paste an invitation code or URL',
+  'create space invitation label': 'Invite'
 };
