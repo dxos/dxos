@@ -4,7 +4,6 @@
 
 import { Event } from '@dxos/async';
 
-import { Entity } from '../entity';
 import { Item } from '../item';
 import {
   createQueryOptionsFilter,
@@ -29,7 +28,7 @@ export const createSelection = <R>(
   // Provider is called each time the query is executed.
   itemsProvider: () => Item[],
   // TODO(burdon): Replace with direct event handler.
-  updateEventProvider: () => Event<Entity[]>,
+  updateEventProvider: () => Event<Item[]>,
   root: SelectionRoot,
   filter: RootFilter | undefined,
   value: R
@@ -52,7 +51,7 @@ export const createSelection = <R>(
  * @param update
  * @param value Initial reducer value.
  */
-export const createItemSelection = <R>(root: Item<any>, update: Event<Entity[]>, value: R): Selection<Item<any>, R> =>
+export const createItemSelection = <R>(root: Item<any>, update: Event<Item[]>, value: R): Selection<Item<any>, R> =>
   new Selection(() => [[root], value], update, root, value !== undefined);
 
 /**
@@ -64,7 +63,7 @@ export const createItemSelection = <R>(root: Item<any>, update: Event<Entity[]>,
  * Implementation:
  * Each Selection contains a visitor
  */
-export class Selection<T extends Entity<any>, R = void> {
+export class Selection<T extends Item<any>, R = void> {
   /**
    * @param _visitor Executes the query.
    * @param _update The unfiltered update event.
@@ -73,7 +72,7 @@ export class Selection<T extends Entity<any>, R = void> {
    */
   constructor(
     private readonly _visitor: (options: QueryOptions) => SelectionContext<T, R>,
-    private readonly _update: Event<Entity[]>,
+    private readonly _update: Event<Item[]>,
     private readonly _root: SelectionRoot,
     private readonly _reducer = false
   ) {}
@@ -81,7 +80,7 @@ export class Selection<T extends Entity<any>, R = void> {
   /**
    * Creates a derrived selection by aplying a mapping function to the result of the current selection.
    */
-  private _createSubSelection<U extends Entity>(
+  private _createSubSelection<U extends Item>(
     map: (context: SelectionContext<T, R>, options: QueryOptions) => SelectionContext<U, R>
   ): Selection<U, R> {
     return new Selection((options) => map(this._visitor(options), options), this._update, this._root, this._reducer);
@@ -123,9 +122,9 @@ export class Selection<T extends Entity<any>, R = void> {
    */
   filter(this: Selection<Item<any>, R>, filter: ItemFilter): Selection<Item<any>, R>;
 
-  filter<U extends Entity>(this: Selection<U, R>, filter: Predicate<U>): Selection<U, R>;
+  filter<U extends Item>(this: Selection<U, R>, filter: Predicate<U>): Selection<U, R>;
 
-  filter<U extends Entity>(this: Selection<U, R>, filter: Predicate<T> | ItemFilter): Selection<U, R> {
+  filter<U extends Item>(this: Selection<U, R>, filter: Predicate<T> | ItemFilter): Selection<U, R> {
     const predicate = filterToPredicate(filter);
     return this._createSubSelection(([items, result]) => [items.filter(predicate), result]);
   }

@@ -35,7 +35,7 @@ describe('pipeline/Pipeline', () => {
               payload: {
                 data: {
                   object: {
-                    itemId: `${feedIdx}-${msgIdx}`
+                    objectId: `${feedIdx}-${msgIdx}`
                   }
                 }
               }
@@ -55,7 +55,7 @@ describe('pipeline/Pipeline', () => {
       await pipeline.writer!.write({
         data: {
           object: {
-            itemId: `local-${msgIdx}`
+            objectId: `local-${msgIdx}`
           }
         }
       });

@@ -7,24 +7,24 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 
 import { Database } from '../database';
-import { Entity } from '../entity';
+import { Item } from '../item';
 import { dedupe } from './util';
 
 /**
  * Represents where the selection has started.
  */
-export type SelectionRoot = Database | Entity;
+export type SelectionRoot = Database | Item;
 
 /**
  * Returned from each stage of the visitor.
  */
-export type SelectionContext<T extends Entity, R> = [entities: T[], result?: R];
+export type SelectionContext<T extends Item, R> = [entities: T[], result?: R];
 
 /**
  * Query subscription.
  * Represents a live-query (subscription) that can notify about future updates to the relevant subset of items.
  */
-export class SelectionResult<T extends Entity, R = any> {
+export class SelectionResult<T extends Item, R = any> {
   /**
    * Fired when there are updates in the selection.
    * Only update that are relevant to the selection cause the update.
@@ -35,7 +35,7 @@ export class SelectionResult<T extends Entity, R = any> {
 
   constructor(
     private readonly _execute: () => SelectionContext<T, R>,
-    private readonly _update: Event<Entity[]>,
+    private readonly _update: Event<Item[]>,
     private readonly _root: SelectionRoot,
     private readonly _reducer: boolean
   ) {
