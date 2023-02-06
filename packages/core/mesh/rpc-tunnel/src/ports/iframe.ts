@@ -86,6 +86,11 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
   };
 };
 
+export type CreateIFrameOptions = {
+  hidden?: boolean;
+  allow?: string;
+};
+
 /**
  * Create a hidden iframe and insert it into the DOM.
  * If an element with the same id already exists it will be returned instead.
@@ -93,12 +98,13 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
  * @param id DOM id of the iframe.
  * @returns The created iframe.
  */
-export const createIFrame = (source: string, id: string, hidden = true) => {
+export const createIFrame = (source: string, id: string, { hidden = true, allow }: CreateIFrameOptions = {}) => {
   const create = () => {
     const iframe = document.createElement('iframe') as HTMLIFrameElement;
     iframe.id = id;
     iframe.src = source;
     hidden && iframe.setAttribute('style', 'display: none;');
+    allow && iframe.setAttribute('allow', allow);
     document.body.appendChild(iframe);
     return iframe;
   };

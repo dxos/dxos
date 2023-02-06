@@ -4,7 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { log } from '@dxos/log';
+import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { appServiceBundle, shellServiceBundle, ShellServiceBundle } from './services';
@@ -13,11 +14,11 @@ import { appServiceBundle, shellServiceBundle, ShellServiceBundle } from './serv
  * Provide access to the shell via RPC connection.
  */
 export class ShellController {
-  readonly displayUpdate = new Event<ShellDisplay>();
-  readonly spaceUpdate = new Event<PublicKey>();
+  readonly contextUpdate = new Event<AppContextRequest>();
   private _shellRpc?: ProtoRpcPeer<ShellServiceBundle>;
   private _display = ShellDisplay.NONE;
   private _spaceKey?: PublicKey;
+  private _invitationCode?: string;
 
   constructor(private readonly _port: RpcPort) {}
 
@@ -29,10 +30,15 @@ export class ShellController {
     return this._spaceKey;
   }
 
-  async setLayout(layout: ShellLayout) {
+  setSpace(key?: PublicKey) {
+    this._spaceKey = key;
+    this._emitUpdate();
+  }
+
+  async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
     this._display = ShellDisplay.FULLSCREEN;
-    this.displayUpdate.emit(this._display);
-    await this._shellRpc?.rpc.ShellService.setLayout({ layout });
+    this._emitUpdate();
+    await this._shellRpc?.rpc.ShellService.setLayout({ layout, ...options });
   }
 
   async open() {
@@ -41,13 +47,12 @@ export class ShellController {
       exposed: appServiceBundle,
       handlers: {
         AppService: {
-          setDisplay: async ({ display }) => {
-            this._display = display;
-            this.displayUpdate.emit(this._display);
-          },
-          setSpace: async ({ spaceKey }) => {
-            this._spaceKey = spaceKey;
-            this.spaceUpdate.emit(this._spaceKey);
+          setContext: async (request) => {
+            log('set context', request);
+            this._display = request.display;
+            this._spaceKey = request.spaceKey;
+            this._invitationCode = request.invitationCode;
+            this.contextUpdate.emit(request);
           }
         }
       },
@@ -60,5 +65,13 @@ export class ShellController {
   async close() {
     await this._shellRpc?.close();
     this._shellRpc = undefined;
+  }
+
+  private _emitUpdate() {
+    this.contextUpdate.emit({
+      display: this._display,
+      spaceKey: this._spaceKey,
+      invitationCode: this._invitationCode
+    });
   }
 }

@@ -6,7 +6,7 @@ import { ClientServicesProvider, ClientServicesProxy, ShellController } from '@d
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { Profile } from '@dxos/protocols/proto/dxos/client';
-import { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -58,12 +58,16 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     return this._shellController?.spaceKey;
   }
 
-  get spaceUpdate() {
-    return this._shellController?.spaceUpdate;
+  get contextUpdate() {
+    return this._shellController?.contextUpdate;
   }
 
-  async setLayout(layout: ShellLayout) {
-    await this._shellController?.setLayout(layout);
+  async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
+    await this._shellController?.setLayout(layout, options);
+  }
+
+  setCurrentSpace(key?: PublicKey) {
+    this._shellController?.setSpace(key);
   }
 
   async open() {
@@ -74,26 +78,39 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     if (!this._shellController && typeof this._options.shell === 'string') {
       this._shellController = new ShellController(await this._getIFramePort(this._options.shell));
       this._iframe!.classList.add('__DXOS_SHELL');
-      this._shellController.displayUpdate.on((display) => {
+      this._shellController.contextUpdate.on(({ display }) => {
         this._iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
       });
     }
 
     await this._clientServicesProxy.open();
     await this._shellController?.open();
-    if (this._shellController) {
-      const identity = await new Promise<Profile | undefined>((resolve) => {
-        if (!this._clientServicesProxy) {
-          resolve(undefined);
-          return;
-        }
+    if (!this._shellController) {
+      return;
+    }
 
-        this._clientServicesProxy.services.ProfileService.subscribeProfile().subscribe(({ profile }) => {
-          resolve(profile);
-        });
+    // TODO(wittjosiah): Allow path/params for invitations to be customizable.
+    const searchParams = new URLSearchParams(window.location.search);
+    const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+    if (spaceInvitationCode) {
+      await this._shellController.setLayout(ShellLayout.JOIN_SPACE, { invitationCode: spaceInvitationCode });
+      return;
+    }
+
+    const identity = await new Promise<Profile | undefined>((resolve) => {
+      if (!this._clientServicesProxy) {
+        resolve(undefined);
+        return;
+      }
+
+      this._clientServicesProxy.services.ProfileService.subscribeProfile().subscribe(({ profile }) => {
+        resolve(profile);
       });
+    });
 
-      identity || this._shellController.setLayout(ShellLayout.AUTH);
+    const haloInvitationCode = searchParams.get('haloInvitationCode');
+    if (!identity) {
+      await this._shellController.setLayout(ShellLayout.AUTH, { invitationCode: haloInvitationCode ?? undefined });
     }
   }
 
@@ -116,7 +133,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     if (!this._iframe) {
       const iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
-      this._iframe = createIFrame(source.toString(), iframeId);
+      this._iframe = createIFrame(source.toString(), iframeId, { allow: 'clipboard-read; clipboard-write' });
       const res = await fetch(source);
       if (res.status >= 400) {
         throw new RemoteServiceConnectionTimeout();
