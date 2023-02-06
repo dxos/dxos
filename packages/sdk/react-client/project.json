@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/sdk/react-client/src/index.ts"
+          "packages/sdk/react-client/src/index.ts",
+          "packages/sdk/react-client/src/testing/index.ts"
         ],
         "outputPath": "packages/sdk/react-client/dist/lib"
       },

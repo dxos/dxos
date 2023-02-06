@@ -10,9 +10,9 @@ import { useSelection } from '@dxos/react-client';
 import { List } from '../util';
 
 // TODO(burdon): Move into react-client.
-const useTypes = (space?: Space, deps: any[] = []) => {
+const useTypes = (space?: Space) => {
   const [types, setTypes] = useState<Set<string>>(new Set());
-  const items = useSelection(space?.select(), deps) ?? [];
+  const items = useSelection(space?.select()) ?? [];
 
   useEffect(() => {
     const types = new Set<string>();
