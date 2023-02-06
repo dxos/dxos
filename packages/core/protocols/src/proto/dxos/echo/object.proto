@@ -18,11 +18,6 @@ message EchoObject {
   // TODO(dmaretskyi): Not optional.
   optional string item_id = 1;
 
-  // TODO(dmaretskyi): Remove and use `genesis` fields.
-  optional string item_type = 2;
-  optional string model_type = 3;
-  optional string model_version = 4;
-
   // TODO(dmaretskyi): Move to snapshot.
   optional string parent_id = 5;
 

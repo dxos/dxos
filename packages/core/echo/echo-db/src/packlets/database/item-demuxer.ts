@@ -121,8 +121,10 @@ export class ItemDemuxer {
     const model = item._stateManager.createSnapshot();
 
     return {
-      itemType: item.type,
-      modelType: item.modelType,
+      genesis: {
+        itemType: item.type,
+        modelType: item.modelType,
+      },
       parentId: item.parent?.id,
       ...model
     };
@@ -134,13 +136,13 @@ export class ItemDemuxer {
     log(`Restoring ${items.length} items from snapshot.`);
     for (const item of sortItemsTopologically(items)) {
       assert(item.itemId);
-      assert(item.modelType);
+      assert(item.genesis?.modelType);
       assert(item.snapshot);
 
       await this._itemManager.constructItem({
         itemId: item.itemId,
-        modelType: item.modelType,
-        itemType: item.itemType,
+        modelType: item.genesis.modelType,
+        itemType: item.genesis.itemType,
         parentId: item.parentId,
         snapshot: item // TODO(mykola): Refactor to pass just EchoObject.
       });
