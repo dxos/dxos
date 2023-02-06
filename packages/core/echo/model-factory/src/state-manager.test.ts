@@ -48,7 +48,14 @@ describe('StateManager', () => {
   describe('snapshot and restore', () => {
     test('with model snapshots - TestListModel', () => {
       const objectId = createId();
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, objectId, { objectId }, feedA, null);
+      const stateManager = new StateManager(
+        TestListModel.meta.type,
+        TestListModel,
+        objectId,
+        { objectId },
+        feedA,
+        null
+      );
       stateManager.processMessage(createMeta(feedA, 0), {
         type_url: 'example.testing.data.TestListMutation',
         value: TestListModel.meta.mutationCodec.encode({ data: 'message1' })
@@ -67,7 +74,14 @@ describe('StateManager', () => {
 
     test('with framework snapshots - TestListModel', () => {
       const objectId = createId();
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, objectId, { objectId }, feedA, null);
+      const stateManager = new StateManager(
+        TestListModel.meta.type,
+        TestListModel,
+        objectId,
+        { objectId },
+        feedA,
+        null
+      );
 
       stateManager.processMessage(createMeta(feedA, 0), {
         type_url: 'example.testing.data.TestListMutation',

@@ -7,8 +7,8 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 
 import { Database } from '../database';
-import { dedupe } from './util';
 import { Item } from '../item';
+import { dedupe } from './util';
 
 /**
  * Represents where the selection has started.

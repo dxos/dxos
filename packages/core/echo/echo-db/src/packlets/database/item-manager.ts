@@ -69,7 +69,7 @@ export class ItemManager {
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
     private readonly _writeStream?: FeedWriter<DataMessage>
-  ) { }
+  ) {}
 
   get entities() {
     return this._entities;
@@ -132,18 +132,21 @@ export class ItemManager {
           itemType,
           modelType
         },
-        mutations: !mutation && !parentId
-          ? []
-          : [
-            {
-              parentId: parentId,
-              model: !mutation ? undefined : {
-                '@type': 'google.protobuf.Any',
-                type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-                value: mutation
-              }
-            }
-          ]
+        mutations:
+          !mutation && !parentId
+            ? []
+            : [
+                {
+                  parentId,
+                  model: !mutation
+                    ? undefined
+                    : {
+                        '@type': 'google.protobuf.Any',
+                        type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+                        value: mutation
+                      }
+                }
+              ]
       }
     });
 
@@ -256,7 +259,7 @@ export class ItemManager {
    */
   getItem<M extends Model<any> = any>(itemId: ItemID): Item<M> | undefined {
     const item = this._entities.get(itemId);
-    return item as (Item<M> | undefined);
+    return item as Item<M> | undefined;
   }
 
   getUninitializedEntities(): Item<Model>[] {

@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Database, Item, ItemManager } from '@dxos/echo-db';
+import { Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';

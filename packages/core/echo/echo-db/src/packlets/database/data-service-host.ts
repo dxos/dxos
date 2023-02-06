@@ -52,7 +52,7 @@ export class DataServiceHost {
             ...snapshot,
             parentId: entity.parent?.id
           },
-          mutations,
+          mutations
         };
       });
 

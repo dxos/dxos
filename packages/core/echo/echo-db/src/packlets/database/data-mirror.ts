@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataService, SubscribeResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { ItemManager } from './item-manager';
 import { Item } from './item';
+import { ItemManager } from './item-manager';
 
 // TODO(dmaretskyi): Subscription cleanup.
 
@@ -69,11 +69,11 @@ export class DataMirror {
             for (const mutation of object.mutations) {
               log('mutate', { id: object.objectId, mutation });
 
-              if(mutation.parentId || mutation.action) {
-                entity._processMutation(mutation, id => this._itemManager.getItem(id))
+              if (mutation.parentId || mutation.action) {
+                entity._processMutation(mutation, (id) => this._itemManager.getItem(id));
               }
 
-              if(mutation.model) {
+              if (mutation.model) {
                 assert(mutation.meta);
                 assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
                 await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);

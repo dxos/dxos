@@ -211,7 +211,7 @@ export class StateManager<M extends Model> {
 
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
-      if(!mutation.model) {
+      if (!mutation.model) {
         continue;
       }
 

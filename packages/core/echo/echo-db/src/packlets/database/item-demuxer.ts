@@ -14,7 +14,7 @@ import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Item } from './item';
-import { ItemManager, ModelConstructionOptions } from './item-manager';
+import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo-db:item-demuxer');
 
@@ -35,7 +35,7 @@ export class ItemDemuxer {
     private readonly _itemManager: ItemManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _options: ItemDemuxerOptions = {}
-  ) { }
+  ) {}
 
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {
@@ -63,19 +63,19 @@ export class ItemDemuxer {
         const { itemType, modelType } = genesis;
         assert(modelType);
 
-
         const entity = await this._itemManager.constructItem({
           itemId: objectId,
           modelType,
           snapshot: {
             objectId,
-            mutations: mutations?.map(mutation => ({
-              ...mutation,
-              meta: meta
-            })) ?? [],
+            mutations:
+              mutations?.map((mutation) => ({
+                ...mutation,
+                meta
+              })) ?? []
           },
           itemType,
-          parentId: mutation?.parentId,
+          parentId: mutation?.parentId
         });
 
         assert(entity.id === objectId);
@@ -122,11 +122,11 @@ export class ItemDemuxer {
     return {
       genesis: {
         itemType: item.type,
-        modelType: item.modelType,
+        modelType: item.modelType
       },
       snapshot: {
         parentId: item.parent?.id,
-        ...snapshot,
+        ...snapshot
       },
       ...model
     };

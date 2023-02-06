@@ -63,7 +63,6 @@ export class Item<M extends Model | null = Model> {
     private readonly _writeStream?: FeedWriter<DataMessage>,
     parent?: Item<any> | null
   ) {
-
     this._stateManager = stateManager;
 
     if (this._stateManager.initialized) {
@@ -163,9 +162,11 @@ export class Item<M extends Model | null = Model> {
     await this._writeStream.write({
       object: {
         objectId: this.id,
-        mutations: [{
-          action: EchoObject.Mutation.Action.DELETE
-        }]
+        mutations: [
+          {
+            action: EchoObject.Mutation.Action.DELETE
+          }
+        ]
       }
     });
 
@@ -184,9 +185,11 @@ export class Item<M extends Model | null = Model> {
     await this._writeStream.write({
       object: {
         objectId: this.id,
-        mutations: [{
-          action: EchoObject.Mutation.Action.RESTORE
-        }]
+        mutations: [
+          {
+            action: EchoObject.Mutation.Action.RESTORE
+          }
+        ]
       }
     });
 
@@ -206,9 +209,11 @@ export class Item<M extends Model | null = Model> {
     await this._writeStream.write({
       object: {
         objectId: this.id,
-        mutations: [{
-          parentId
-        }]
+        mutations: [
+          {
+            parentId
+          }
+        ]
       }
     });
 
@@ -250,7 +255,7 @@ export class Item<M extends Model | null = Model> {
    * @param parent
    */
   private _updateParent(parent: Item<any> | null | undefined) {
-    log('_updateParent', { parent: parent?.id, prevParent: this._parent?.id })
+    log('_updateParent', { parent: parent?.id, prevParent: this._parent?.id });
     if (this._parent) {
       this._parent._children.delete(this);
     }
