@@ -4,8 +4,8 @@
 
 import * as d3 from 'd3';
 
-import { Projector } from '../scene';
-import { emptyGraph, GraphData, GraphLayout, GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
+import { Projector, ProjectorOptions } from './projector';
+import { emptyGraph, GraphData, GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
 
 /**
  * Return value or invoke function.
@@ -94,7 +94,7 @@ export const defaultForceOptions: ForceOptions = {
   manyBody: true
 };
 
-export type GraphForceProjectorOptions = {
+export type GraphForceProjectorOptions = ProjectorOptions & {
   guides?: boolean;
   forces?: ForceOptions;
   attributes?: {
@@ -105,24 +105,21 @@ export type GraphForceProjectorOptions = {
 /**
  * D3 force layout.
  */
-export class GraphForceProjector<N extends GraphNode> extends Projector<
-  GraphData<N>,
-  GraphLayout<N>,
-  GraphForceProjectorOptions
-> {
+export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
   _simulation = d3.forceSimulation<GraphLayoutNode<N>, GraphLayoutLink<N>>();
 
   // Current layout.
   _layout: GraphLayout<N> = {
+    guides: [],
     graph: {
       nodes: [],
       links: []
-    },
-    guides: []
+    }
   };
 
-  numChildren = (node) => this._layout.graph.links.filter((link) => link.source.id === node.id).length;
+  numChildren = (node) =>
+    this._layout.graph.links.filter((link) => link.source.id === this.options.idAccessor(node)).length;
 
   get layout() {
     return this._layout;
@@ -152,7 +149,7 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
     this._layout.graph.nodes.forEach((node) => {
       if (!node.initialized) {
         // Get starting point from linked element.
-        const link = this._layout.graph.links.find((link) => link.target.id === node.id);
+        const link = this._layout.graph.links.find((link) => link.target.id === this.options.idAccessor(node));
 
         // Initial positions.
         Object.assign(node, {
@@ -221,16 +218,16 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
    */
   private mergeData(data: GraphData<N> = emptyGraph): GraphLayout<N> {
     // Merge nodes.
-    const nodes = data.nodes.map((node) => {
-      let current: GraphLayoutNode<N> = this._layout.graph.nodes.find((n) => n.id === node.id);
-      if (!current) {
-        current = {
-          id: node.id
+    const nodes: GraphLayoutNode<N>[] = data.nodes.map((node) => {
+      let existing: GraphLayoutNode<N> = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
+      if (!existing) {
+        existing = {
+          id: this.options.idAccessor(node)
         };
       }
 
-      current.data = node;
-      return current;
+      existing.data = node;
+      return existing;
     });
 
     // Replace links.

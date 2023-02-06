@@ -25,7 +25,7 @@ export class TestGraphModel extends GraphModel<TestNode> {
   }
 
   getNode(id: string) {
-    return this._graph.nodes.find((item) => item.id === id);
+    return this._graph.nodes.find((node) => node.id === id);
   }
 
   getRandomNode() {

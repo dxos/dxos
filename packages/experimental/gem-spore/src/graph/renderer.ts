@@ -6,15 +6,30 @@ import { RefObject } from 'react';
 
 import { SVGContext } from '@dxos/gem-core';
 
+import { defaultIdAccessor, IdAccessor } from './types';
+
+export type RendererOptions = {
+  idAccessor?: IdAccessor;
+};
+
 /**
- * Base class for renderes that draw layouts.
+ * Base class for renderer that draw layouts.
  */
-export abstract class Renderer<LAYOUT, OPTIONS> {
+export abstract class Renderer<LAYOUT, OPTIONS extends RendererOptions> {
+  protected readonly _options?: OPTIONS;
+
   constructor(
     protected readonly _context: SVGContext,
     protected readonly _ref: RefObject<SVGGElement>,
-    protected readonly _options?: OPTIONS
-  ) {}
+    options?: OPTIONS
+  ) {
+    this._options = Object.assign(
+      {
+        idAccessor: defaultIdAccessor
+      },
+      options
+    );
+  }
 
   get context(): SVGContext {
     return this._context;

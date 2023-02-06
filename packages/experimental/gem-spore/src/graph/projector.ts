@@ -4,17 +4,32 @@
 
 import { EventEmitter, SVGContext } from '@dxos/gem-core';
 
+import { defaultIdAccessor, IdAccessor } from '../graph';
+
+export type ProjectorOptions = {
+  idAccessor?: IdAccessor;
+};
+
 /**
  * Generates a layout to be rendered.
  */
-export abstract class Projector<DATA, LAYOUT, OPTIONS> {
+export abstract class Projector<DATA, LAYOUT, OPTIONS extends ProjectorOptions> {
   public readonly updated = new EventEmitter<{ layout: LAYOUT }>();
+
+  private readonly _options?: OPTIONS;
 
   // prettier-ignore
   constructor(
     private readonly _context: SVGContext,
-    private readonly _options?: OPTIONS
-  ) {}
+    options?: OPTIONS
+  ) {
+    this._options = Object.assign(
+      {
+        idAccessor: defaultIdAccessor
+      },
+      options
+    );
+  }
 
   abstract get layout(): LAYOUT;
 

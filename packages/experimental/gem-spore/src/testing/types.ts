@@ -2,11 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { GraphNode } from '../graph';
-
-export interface TestNode extends GraphNode {
-  // id: string;
+export interface TestNode {
+  id: string;
   type?: string;
-  label: string;
+  label?: string;
   children?: TestNode[];
 }

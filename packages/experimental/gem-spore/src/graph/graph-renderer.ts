@@ -6,16 +6,16 @@ import * as d3 from 'd3';
 
 import { D3Callable, D3Selection, Point } from '@dxos/gem-core';
 
-import { Renderer } from '../scene';
 import { createBullets } from './bullets';
-import { GraphLayout, GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
+import { Renderer, RendererOptions } from './renderer';
+import { GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
-export type LabelOptions<N extends GraphNode> = {
+export type LabelOptions<N> = {
   text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined;
 };
 
-export type AttributesOptions<N extends GraphNode> = {
+export type AttributesOptions<N> = {
   node?: (node: GraphLayoutNode<N>) => {
     class?: string;
   };
@@ -25,7 +25,7 @@ export type AttributesOptions<N extends GraphNode> = {
   };
 };
 
-export type GraphRendererOptions<N extends GraphNode> = {
+export type GraphRendererOptions<N> = RendererOptions & {
   drag?: D3Callable;
   arrows?: {
     start?: boolean; // TODO(burdon): Replace with marker id.
@@ -46,7 +46,7 @@ const line = d3.line();
  * @param group
  * @param options
  */
-const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
   group.attr('class', (d) => d.className);
 
   // Label.
@@ -103,7 +103,7 @@ const createNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * @param group
  * @param options
  */
-const updateNode: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
   group.attr('class', (d) => d.className);
 
   // Custom attributes.
@@ -141,8 +141,9 @@ const updateNode: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * Create link elements.
  * @param group
  * @param options
+ * @param nodes
  */
-const createLink: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
+const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
   group.attr('class', (d) => d.className);
 
   // if (options.onLinkClick) {
@@ -172,10 +173,10 @@ const createLink: D3Callable = <N extends GraphNode>(group: D3Selection, options
       let initSource: Point;
       let initTarget: Point;
       nodes.selectAll('g').each(function (d) {
-        if (d.id === source.id) {
+        if (options.idAccessor(d) === source.id) {
           initSource = getPoint(d3.select(this).select('circle'));
         }
-        if (d.id === target.id) {
+        if (options.idAccessor(d) === target.id) {
           initTarget = getPoint(d3.select(this).select('circle'));
         }
       });
@@ -196,7 +197,7 @@ const createLink: D3Callable = <N extends GraphNode>(group: D3Selection, options
  * @param group
  * @param options
  */
-const updateLink: D3Callable = <N extends GraphNode>(group: D3Selection, options: GraphRendererOptions<N>) => {
+const updateLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
   group.attr('class', (d) => d.className);
 
   // Custom attributes.
@@ -225,7 +226,7 @@ const updateLink: D3Callable = <N extends GraphNode>(group: D3Selection, options
 /**
  * Renders the Graph layout.
  */
-export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
+export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
   update(layout: GraphLayout<N>) {
     const root = d3.select(this.root);
 
@@ -238,7 +239,7 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .data([{ id: 'guides' }])
       .join('g')
       .attr('class', 'guides')
-      .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle.guide')
+      .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle')
       .data(layout.guides ?? [])
       .join(
         (enter) => enter.append('circle').attr('r', 0),

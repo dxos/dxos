@@ -87,7 +87,7 @@ const ItemsPanel = () => {
               .map(getHierarchicalItem)
               .filter(textFilter(filter))}
             titleClassName={'text-black text-sm'}
-            onSelect={(item) => setSelectedItem(item.value)}
+            onSelect={(item: any) => setSelectedItem(item.value)}
             selected={selectedItem?.id}
           />
         </div>

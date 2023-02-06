@@ -7,11 +7,15 @@
 // Generic graph data type.
 //
 
+import assert from 'assert';
+
 import { Point } from '@dxos/gem-core';
 
-// TODO(burdon): Extend or inject?
-export type GraphNode = {
-  id: string;
+export type IdAccessor = <N>(node: N) => string;
+
+export const defaultIdAccessor = (node: any) => {
+  assert(node.id);
+  return node.id;
 };
 
 export type GraphLink = {
@@ -20,7 +24,7 @@ export type GraphLink = {
   target: string;
 };
 
-export type GraphData<T extends GraphNode = GraphNode> = {
+export type GraphData<T> = {
   nodes: T[];
   links: GraphLink[];
 };
@@ -35,7 +39,7 @@ export const emptyGraph: GraphData<any> = {
 // Graph layout used by graph renderers.
 //
 
-export type GraphLayoutNode<N extends GraphNode> = {
+export type GraphLayoutNode<N> = {
   id: string;
   data?: N;
   x?: number;
@@ -47,14 +51,14 @@ export type GraphLayoutNode<N extends GraphNode> = {
   last?: Point;
 };
 
-export type GraphLayoutLink<N extends GraphNode> = {
+export type GraphLayoutLink<N> = {
   id: string;
   source: GraphLayoutNode<N>;
   target: GraphLayoutNode<N>;
   className?: string;
 };
 
-export type GraphLayout<N extends GraphNode> = {
+export type GraphLayout<N> = {
   graph: {
     nodes: GraphLayoutNode<N>[];
     links: GraphLayoutLink<N>[];
