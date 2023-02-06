@@ -36,7 +36,7 @@ describe('Halo', () => {
     await client1.halo.createProfile({ displayName: 'test-user' });
     expect(client1.halo.profile).exist;
 
-    expect(await client1.halo.queryDevices()).to.have.lengthOf(1);
+    expect(await client1.halo.queryDevices().value).to.have.lengthOf(1);
 
     const client2 = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client2.destroy());
@@ -68,7 +68,7 @@ describe('Halo', () => {
     await done1.wait();
     await done2.wait();
 
-    expect(await client1.halo.queryDevices()).to.have.lengthOf(2);
-    expect(await client2.halo.queryDevices()).to.have.lengthOf(2);
+    expect(await client1.halo.queryDevices().value).to.have.lengthOf(2);
+    expect(await client2.halo.queryDevices().value).to.have.lengthOf(2);
   });
 });
