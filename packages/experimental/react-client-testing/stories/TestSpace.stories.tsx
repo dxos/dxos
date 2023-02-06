@@ -31,11 +31,7 @@ const ItemNode = ({ item }: { item: Item<ObjectModel> }) => {
 
 const Story = () => {
   const space = useTestSpace();
-  const items =
-    useSelection(
-      space?.select().filter((item) => !item.parent),
-      []
-    ) ?? [];
+  const items = useSelection(space?.select().filter((item) => !item.parent)) ?? [];
 
   return (
     <TreeView

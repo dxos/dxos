@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import { useClient } from '../client';
 
@@ -12,8 +12,10 @@ import { useClient } from '../client';
  */
 export const useIdentity = () => {
   const client = useClient();
-  const [identity, setIdentity] = useState(() => client.halo.profile);
+  const identity = useSyncExternalStore(
+    (listener) => client.halo.subscribeToProfile(() => listener()),
+    () => client.halo.profile
+  );
 
-  useEffect(() => client.halo.subscribeToProfile(() => setIdentity(client.halo.profile)), [client]);
   return identity;
 };
