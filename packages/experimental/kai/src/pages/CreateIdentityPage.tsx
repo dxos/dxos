@@ -62,7 +62,7 @@ const CreateIdentityPage = () => {
           pending,
           inputLabel: t('displayName label'),
           inputPlaceholder: t('displayName placeholder'),
-          onChange: setDisplayName,
+          onChange: ({ target: { value } }) => setDisplayName(value),
           onNext,
           onBack: () => history.back()
         }}

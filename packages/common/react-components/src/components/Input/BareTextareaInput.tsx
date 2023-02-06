@@ -2,38 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentProps } from 'react';
+import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { defaultInput } from '../../styles/input';
+import { useForwardedRef } from '../../hooks';
+import { defaultInput } from '../../styles';
 import { mx } from '../../util';
-import { TextareaProps, TextareaSlots } from './InputProps';
+import { TextareaProps } from './InputProps';
 
-export type BareTextareaInputProps = Omit<TextareaProps, 'label' | 'initialValue' | 'onChange' | 'slots'> &
-  Pick<ComponentProps<'textarea'>, 'onChange' | 'value'> & { inputSlot: TextareaSlots['input'] };
+export type BareTextareaInputProps = ComponentPropsWithRef<'textarea'> &
+  Pick<TextareaProps, 'validationMessage' | 'validationValence'>;
 
-export const BareTextareaInput = ({
-  validationValence,
-  validationMessage,
-  onChange,
-  value,
-  disabled,
-  placeholder,
-  inputSlot
-}: BareTextareaInputProps) => {
-  return (
-    <textarea
-      {...inputSlot}
-      placeholder={placeholder}
-      onChange={onChange}
-      value={value}
-      className={mx(
-        defaultInput({
-          disabled,
-          ...(validationMessage && { validationValence })
-        }),
-        'block w-full px-2.5 py-2',
-        inputSlot?.className
-      )}
-    />
-  );
-};
+export const BareTextareaInput = forwardRef<HTMLTextAreaElement, BareTextareaInputProps>(
+  ({ validationValence, validationMessage, ...inputSlot }, ref) => {
+    const textareaRef = useForwardedRef(ref);
+    return (
+      <textarea
+        ref={textareaRef}
+        {...inputSlot}
+        className={mx(
+          defaultInput({
+            disabled: inputSlot.disabled,
+            ...(validationMessage && { validationValence })
+          }),
+          'block w-full px-2.5 py-2',
+          inputSlot?.className
+        )}
+      />
+    );
+  }
+);

@@ -62,7 +62,7 @@ const RecoverIdentityPage = () => {
           pending,
           inputLabel: t('seed phrase label'),
           inputPlaceholder: t('seed phrase placeholder'),
-          onChange: setSeedphrase,
+          onChange: ({ target: { value } }) => setSeedphrase(value),
           onNext,
           onBack: () => history.back()
         }}
