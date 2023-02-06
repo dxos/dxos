@@ -24,9 +24,10 @@ const capitalizeFirstLetter = (str: string) => {
 
 const generateTypes = (schemas: EchoSchemaType[]) => {
   const generateColumns = (schema: EchoSchemaType) => {
+    const basicTypes = ['string', 'number', 'boolean'];
     const columns: Column<Document>[] = [];
     for (const field of schema.fields) {
-      if (field.type.basic) {
+      if (basicTypes.includes(field.type.kind)) {
         columns.push({
           Header: capitalizeFirstLetter(field.name),
           accessor: field.name
