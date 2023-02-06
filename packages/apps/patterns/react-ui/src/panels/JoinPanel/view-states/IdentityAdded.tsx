@@ -31,7 +31,7 @@ const Done = ({ onDone, doneActionParent, active }: DoneProps) => {
       {...(onDone && { onClick: () => onDone(null) })}
       disabled={disabled}
       className='grow flex items-center gap-2 pli-2'
-      data-autofocus='halo invitation acceptor; invitation accepted'
+      data-autofocus='identity added'
     >
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
       <span className='grow'>{t('done label')}</span>
