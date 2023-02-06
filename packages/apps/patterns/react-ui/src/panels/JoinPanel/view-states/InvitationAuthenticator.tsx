@@ -3,7 +3,7 @@
 //
 
 import { CaretLeft, CaretRight } from 'phosphor-react';
-import React, { ComponentProps, ComponentPropsWithoutRef, useCallback, useState } from 'react';
+import React, { ChangeEvent, ComponentProps, ComponentPropsWithoutRef, useCallback, useState } from 'react';
 
 import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
@@ -103,7 +103,7 @@ const InvitationAuthenticatorContent = ({
     void authenticate(pinValue);
   }, [dispatch, invitationType, authenticate, pinValue]);
   const onChange = useCallback(
-    (value: string) => {
+    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
       setPinValue(value);
       if (value.length === pinLength) {
         (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();

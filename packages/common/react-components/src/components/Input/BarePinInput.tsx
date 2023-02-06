@@ -3,12 +3,12 @@
 //
 
 import { CodeInput, getSegmentCssWidth } from 'rci';
-import React, { forwardRef, useCallback, ComponentProps } from 'react';
+import React, { forwardRef, useCallback, ComponentProps, ComponentPropsWithoutRef } from 'react';
 
 import { useForwardedRef, useIsFocused } from '../../hooks';
 import { staticInput } from '../../styles';
 import { mx } from '../../util';
-import { InputProps, InputSlots } from './InputProps';
+import { InputProps } from './InputProps';
 
 const bareInputStyleProps = {
   padding: '8px',
@@ -16,18 +16,19 @@ const bareInputStyleProps = {
   fontFamily: ''
 };
 
-export type BarePinInputProps = Omit<InputProps, 'ref' | 'label' | 'onChange' | 'slots'> &
-  Pick<ComponentProps<typeof CodeInput>, 'onChange' | 'value' | 'length'> & { inputSlot: InputSlots['input'] };
+export type BarePinInputProps = Omit<
+  ComponentPropsWithoutRef<typeof CodeInput>,
+  'inputRef' | 'renderSegment' | 'spellCheck'
+> &
+  Pick<InputProps, 'validationMessage' | 'validationValence'>;
 
 // TODO(thure): supplying a `value` prop to CodeInput does not yield correct controlled input interactivity; this may be an issue with RCI (filed as https://github.com/leonardodino/rci/issues/25).
 export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
-  (
-    { initialValue, size, validationMessage, validationValence, value, onChange, placeholder, disabled, inputSlot },
-    ref
-  ) => {
+  ({ validationMessage, validationValence, ...inputSlot }, ref) => {
     const width = getSegmentCssWidth('13px');
     const inputRef = useForwardedRef(ref);
     const inputFocused = useIsFocused(inputRef);
+    const { disabled } = inputSlot;
 
     const renderSegment = useCallback<ComponentProps<typeof CodeInput>['renderSegment']>(
       ({ state, index }) => (
@@ -51,8 +52,6 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
           spellCheck: false,
           ...bareInputStyleProps,
           ...inputSlot,
-          placeholder,
-          onChange,
           inputRef,
           renderSegment,
           className: mx(

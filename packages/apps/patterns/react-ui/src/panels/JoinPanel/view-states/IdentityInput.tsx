@@ -41,7 +41,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
             {t(isRecover ? 'recover identity input label' : 'new identity input label')}
           </ViewStateHeading>
         }
-        onChange={(value) => setInputValue(value)}
+        onChange={({ target: { value } }) => setInputValue(value)}
         slots={{
           root: { className: 'm-0' },
           input: {
