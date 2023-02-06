@@ -205,7 +205,7 @@ export class StateManager<M extends Model> {
     // Apply the snapshot.
     if (this._initialState.snapshot) {
       assert(this._modelMeta.snapshotCodec);
-      const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot.value);
+      const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot.model.value);
       this._stateMachine.reset(decoded);
     }
 
@@ -307,15 +307,18 @@ export class StateManager<M extends Model> {
   /**
    * Create a snapshot of the current state.
    */
+  // TODO(dmaretskyi): Lift to ObjectState class.
   createSnapshot(): EchoObject {
     if (this.initialized && this.modelMeta.snapshotCodec) {
       // Returned reduced snapshot if possible.
       return {
         itemId: this._itemId,
         snapshot: {
-          '@type': 'google.protobuf.Any',
-          typeUrl: 'todo', // TODO(mykola): use model type.
-          value: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
+          model: {
+            '@type': 'google.protobuf.Any',
+            typeUrl: 'todo', // TODO(mykola): use model type.
+            value: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
+          }
         }
       };
     }

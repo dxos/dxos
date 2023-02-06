@@ -101,9 +101,9 @@ export class ItemDemuxer {
         await this._itemManager.processModelMessage(itemId, modelMessage);
       }
 
-      if (snapshot) {
+      if (snapshot?.model) {
         const entity = this._itemManager.entities.get(itemId) ?? failUndefined();
-        entity._stateManager.resetToSnapshot(snapshot);
+        entity._stateManager.resetToSnapshot(snapshot.model);
       }
 
       this.mutation.emit(message);
@@ -118,14 +118,17 @@ export class ItemDemuxer {
   }
 
   createItemSnapshot(item: Item<Model<any>>): EchoObject {
-    const model = item._stateManager.createSnapshot();
+    const { snapshot, ...model } = item._stateManager.createSnapshot();
 
     return {
       genesis: {
         itemType: item.type,
         modelType: item.modelType,
       },
-      parentId: item.parent?.id,
+      snapshot: {
+        parentId: item.parent?.id,
+        ...snapshot,
+      },
       ...model
     };
   }
@@ -143,7 +146,7 @@ export class ItemDemuxer {
         itemId: item.itemId,
         modelType: item.genesis.modelType,
         itemType: item.genesis.itemType,
-        parentId: item.parentId,
+        parentId: item.snapshot?.parentId,
         snapshot: item // TODO(mykola): Refactor to pass just EchoObject.
       });
     }
@@ -162,7 +165,7 @@ export const sortItemsTopologically = (items: EchoObject[]): EchoObject[] => {
     const prevLength = snapshots.length;
     for (const item of items) {
       assert(item.itemId);
-      if (!seenIds.has(item.itemId) && (item.parentId == null || seenIds.has(item.parentId))) {
+      if (!seenIds.has(item.itemId) && (!item.snapshot?.parentId || seenIds.has(item.snapshot.parentId))) {
         snapshots.push(item);
         seenIds.add(item.itemId);
       }

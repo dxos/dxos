@@ -15,11 +15,18 @@ package dxos.echo.object;
  * Wrapper for all ECHO messages.
  */
 message EchoObject {
+  message Snapshot {
+    // TODO(dmaretskyi): Change to enum?
+    optional bool deleted = 1; 
+
+    optional string parent_id = 2;
+
+    /// Set the model to the provided snapshot.
+    optional google.protobuf.Any model = 10 [preserve_any = true]; 
+  }
+
   // TODO(dmaretskyi): Not optional.
   optional string item_id = 1;
-
-  // TODO(dmaretskyi): Move to snapshot.
-  optional string parent_id = 5;
 
   /// Create item.
   optional ItemGenesis genesis = 10;
@@ -27,25 +34,10 @@ message EchoObject {
   /// Item system mutations.
   optional ItemMutation item_mutation = 11;
 
-  /// Set the model to the provided snapshot.
-  optional google.protobuf.Any snapshot = 13 [preserve_any = true]; 
+  optional Snapshot snapshot = 13;
 
   // Model-specific mutations.
   repeated ModelMutation mutations = 14;
-}
-
-message ModelMutation {
-  // Encoded model mutation, format is defined by model's codec.
-  google.protobuf.Any mutation = 1 [preserve_any = true];
-  /// For snapshot messages.
-  optional ModelMutationMeta meta = 2;
-}
-
-message ModelMutationMeta {
-  dxos.keys.PublicKey feed_key = 1;
-  int32 seq = 2;
-  dxos.keys.PublicKey member_key = 3;
-  optional timeframe.TimeframeVector timeframe = 4;
 }
 
 /**
@@ -72,4 +64,19 @@ message ItemMutation {
 
   optional string parent_id = 1;  // TODO(burdon): Define Action type?
   optional Action action = 2;
+}
+
+
+message ModelMutation {
+  // Encoded model mutation, format is defined by model's codec.
+  google.protobuf.Any mutation = 1 [preserve_any = true];
+  /// For snapshot messages.
+  optional ModelMutationMeta meta = 2;
+}
+
+message ModelMutationMeta {
+  dxos.keys.PublicKey feed_key = 1;
+  int32 seq = 2;
+  dxos.keys.PublicKey member_key = 3;
+  optional timeframe.TimeframeVector timeframe = 4;
 }

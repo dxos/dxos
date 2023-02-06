@@ -46,7 +46,6 @@ export class Item<M extends Model | null = Model> {
    */
   public _stateManager!: StateManager<NonNullable<M>>;
 
-
   /**
    * Items are constructed by the `Database` object.
    * @param itemManager
