@@ -46,7 +46,7 @@ const Panel: FC<{ node: TestNode; className?: string }> = ({ node, className }) 
 
   return (
     <div className='absolute invisible md:visible right-[16px] flex flex-col h-full justify-center overflow-hidden'>
-      <div className={mx('flex overflow-hidden w-[300px] h-[360px] p-2 px-3 rounded-lg border-2', className)}>
+      <div className={mx('flex overflow-hidden w-[300px] h-[370px] p-2 px-3 rounded-lg border-2', className)}>
         <div className='flex flex-1 flex-col w-full text-sm'>
           <div className='flex w-full justify-center text-lg'>{node.label}</div>
           <div className='flex justify-center py-1'>
