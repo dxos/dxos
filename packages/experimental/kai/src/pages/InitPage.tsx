@@ -25,7 +25,8 @@ const InitPage = () => {
   if (profile) {
     // TODO(burdon): Better way to throw/display errors?
     if (!spaces.length) {
-      throw new Error('No spaces.');
+      console.log('No spaces found.');
+      return null;
     }
 
     return <Navigate to={createSpacePath(spaces[0].key)} />;
