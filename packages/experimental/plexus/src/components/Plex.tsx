@@ -6,8 +6,8 @@ import * as d3 from 'd3';
 import { Aperture } from 'phosphor-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Grid, SVG, SVGContextProvider, useSvgContext, Zoom } from '@dxos/gem-core';
-import { GraphLayoutNode, GraphModel, GraphRenderer, Markers } from '@dxos/gem-spore';
+import { useSvgContext } from '@dxos/gem-core';
+import { GraphLayoutNode, GraphModel, GraphRenderer } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-components';
 
 import { usePlexusState } from '../hooks';
@@ -15,13 +15,14 @@ import { TreeProjector } from './tree-projector';
 
 const transitionDuration = 300;
 
-export type PlexusProps<N> = {
+export type PlexProps<N> = {
   model: GraphModel<N>;
+  className?: string;
   onSelect?: (node: N) => void;
 };
 
-// TODO(burdon): Rename container.
-export const Plexus = <N,>({ model, onSelect }: PlexusProps<N>) => {
+export const Plex = <N,>({ model, className, onSelect }: PlexProps<N>) => {
+  // TODO(burdon): Pass in state and transition duration options. Callbacks.
   const { transition } = usePlexusState();
   const [visible, setVisible] = useState(true);
   const [spin, setSpin] = useState(true);
@@ -43,48 +44,6 @@ export const Plexus = <N,>({ model, onSelect }: PlexusProps<N>) => {
     timeout.current = [t1, t2];
   }, [transition]);
 
-  return (
-    <SVGContextProvider>
-      <SVG className={mx('bg-slate-800')}>
-        <Markers
-          arrowSize={6}
-          className='[&>marker>path]:stroke-slate-700 [&>marker>path]:stroke-[1px] [&>marker>path]:fill-transparent'
-        />
-        <Grid className='[&>path]:stroke-slate-700 [&>path]:stroke-[1px] [&>path]:opacity-40' />
-        <Zoom extent={[1, 4]}>
-          <g className={mx('visible', !visible && 'invisible')}>
-            <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={600} y2={0} />
-          </g>
-          <PlexGraph
-            className={mx(
-              // TODO(burdon): Move to classes.
-              '[&>g>circle]:fill-transparent [&>g>circle]:stroke-slate-700 [&>g>circle]:stroke-[1px] [&>g>circle]:opacity-70'
-            )}
-            model={model}
-            onSelect={onSelect}
-          />
-          <g
-            className={mx(
-              'visible',
-              !visible && 'invisible',
-              visible && spin && 'animate-[spin_2s] __animate-[ping_2s]' // TODO(burdon): Ping on start.
-            )}
-          >
-            <Aperture x={-64} y={-64} width={128} height={128} className='[&>*]:stroke-1 [&>*]:opacity-50' />
-          </g>
-        </Zoom>
-      </SVG>
-    </SVGContextProvider>
-  );
-};
-
-export type PlexGraphProps<N> = {
-  model: GraphModel<N>;
-  className?: string;
-  onSelect?: (node: N) => void;
-};
-
-export const PlexGraph = <N,>({ model, className, onSelect }: PlexGraphProps<N>) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
 
@@ -136,5 +95,18 @@ export const PlexGraph = <N,>({ model, className, onSelect }: PlexGraphProps<N>)
     }
   }, [graphRef, data]);
 
-  return <g ref={graphRef} className={className} />;
+  return (
+    <g>
+      <g ref={graphRef} className={className} />;
+      <g
+        className={mx(
+          'visible',
+          !visible && 'invisible',
+          visible && spin && 'animate-[spin_2s] __animate-[ping_2s]' // TODO(burdon): Ping on start.
+        )}
+      >
+        <Aperture x={-64} y={-64} width={128} height={128} className='[&>*]:stroke-1 [&>*]:opacity-50' />
+      </g>
+    </g>
+  );
 };

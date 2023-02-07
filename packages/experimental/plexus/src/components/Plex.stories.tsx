@@ -18,20 +18,21 @@ import {
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import hash from 'string-hash';
 
-import { convertTreeToGraph, createTree, TestNode, TestGraphModel } from '@dxos/gem-spore';
+import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
+import { convertTreeToGraph, createTree, TestNode, TestGraphModel, Markers } from '@dxos/gem-spore';
 import { getSize, mx } from '@dxos/react-components';
 
 import '@dxosTheme';
 
 import { PlexusStateContext } from '../hooks';
-import { Plexus } from './Plexus';
+import { Plex } from './Plex';
 
 faker.seed(1);
 
 const icons = [AirplaneTakeoff, Bank, Buildings, Notepad, User, Users];
 
 export default {
-  component: Plexus,
+  component: Plex,
   argTypes: {}
 };
 
@@ -66,6 +67,7 @@ const Test = () => {
   const [transition, setTransition] = useState(0);
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState<string[]>([]);
+
   const model = useMemo(() => {
     const root = createTree({ depth: 5, children: 3 });
     const model = new TestGraphModel(convertTreeToGraph(root));
@@ -74,8 +76,7 @@ const Test = () => {
     return model;
   }, []);
 
-  const node = history.length ? model.getNode(history[index]) : undefined;
-
+  // Create initial associations.
   useEffect(() => {
     const nodes = Array.from({ length: 32 }).map(() => model.getRandomNode());
     nodes.forEach((node) => {
@@ -83,6 +84,7 @@ const Test = () => {
     });
   }, []);
 
+  // Do transition on history change.
   useEffect(() => {
     model.setSelected(history[index]);
     setTransition(Date.now());
@@ -109,11 +111,38 @@ const Test = () => {
     setIndex((idx) => (idx < history.length - 1 ? idx + 1 : idx));
   };
 
+  // TODO(burdon): Pass down state to context (set nav, etc.)
+  const visible = true;
+
+  const node = history.length ? model.getNode(history[index]) : undefined;
+
   return (
     <div className='flex flex-col absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 relative'>
         <PlexusStateContext.Provider value={{ transition }}>
-          <Plexus<TestNode> model={model} onSelect={handleSelect} />
+          <SVGContextProvider>
+            <SVG className={mx('bg-slate-800')}>
+              {/* TODO(burdon): Classes for grid, markers, etc. */}
+              <Markers
+                arrowSize={6}
+                className='[&>marker>path]:stroke-slate-700 [&>marker>path]:stroke-[1px] [&>marker>path]:fill-transparent'
+              />
+              <Grid className='[&>path]:stroke-slate-700 [&>path]:stroke-[1px] [&>path]:opacity-40' />
+              <Zoom extent={[1, 4]}>
+                <Plex
+                  className={mx(
+                    // TODO(burdon): Move to classes.
+                    '[&>g>circle]:fill-transparent [&>g>circle]:stroke-slate-700 [&>g>circle]:stroke-[1px] [&>g>circle]:opacity-70'
+                  )}
+                  model={model}
+                  onSelect={handleSelect}
+                />
+                <g className={mx('visible', !visible && 'invisible')}>
+                  <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={600} y2={0} />
+                </g>
+              </Zoom>
+            </SVG>
+          </SVGContextProvider>
         </PlexusStateContext.Provider>
 
         {node && <Panel node={node} className='border-slate-500 bg-slate-800 text-slate-400' />}
