@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
-import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
@@ -33,7 +33,7 @@ export interface DatabaseBackend {
   close(): Promise<void>;
 
   getWriteStream(): FeedWriter<DataMessage> | undefined;
-  createSnapshot(): DatabaseSnapshot;
+  createSnapshot(): EchoSnapshot;
   createDataServiceHost(): DataServiceHost;
 }
 
@@ -49,7 +49,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
 
   constructor(
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
-    private readonly _snapshot?: DatabaseSnapshot,
+    private readonly _snapshot?: EchoSnapshot,
     private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
   ) {}
 
@@ -91,6 +91,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
  * Uses DataMirror to populate entities in ItemManager.
  */
 export class DatabaseBackendProxy implements DatabaseBackend {
+  private _dataMirror?: DataMirror;
   private readonly _subscriptions = new EventSubscriptions();
   private _itemManager!: ItemManager;
 
@@ -107,7 +108,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
 
-    const dataMirror = new DataMirror(this._itemManager, this._service, this._spaceKey);
+    this._dataMirror = new DataMirror(this._itemManager, this._service, this._spaceKey);
 
     this._subscriptions.add(
       modelFactory.registered.on(async (model) => {
@@ -119,11 +120,12 @@ export class DatabaseBackendProxy implements DatabaseBackend {
       })
     );
 
-    await dataMirror.open();
+    await this._dataMirror.open();
   }
 
   async close(): Promise<void> {
     this._subscriptions.clear();
+    await this._dataMirror?.close();
   }
 
   getWriteStream(): FeedWriter<DataMessage> | undefined {
@@ -144,7 +146,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     };
   }
 
-  createSnapshot(): DatabaseSnapshot {
+  createSnapshot(): EchoSnapshot {
     throw new Error('Method not supported.');
   }
 

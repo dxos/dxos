@@ -14,7 +14,7 @@ import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
-describe.skip('SignalRPCClient', () => {
+describe('SignalRPCClient', () => {
   let broker: TestBroker;
 
   beforeAll(async () => {

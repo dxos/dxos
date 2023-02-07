@@ -91,7 +91,7 @@ export const RegistryFrame = () => {
   return (
     <div className='flex flex-col flex-1'>
       <div className='flex justify-center'>
-        <div className='flex w-[400px] items-center m-10'>
+        <div className='flex w-column items-center m-10'>
           <Searchbar />
           <div className='ml-4'>
             <button className='ml-2' onClick={() => setType('app')} title='Apps'>
@@ -132,3 +132,5 @@ export const RegistryFrame = () => {
     </div>
   );
 };
+
+export default RegistryFrame;

@@ -13,14 +13,17 @@ export enum FrameID {
   TASKS = 'tasks',
   CALENDAR = 'events',
   DOCUMENTS = 'documents',
+  NOTES = 'notes',
   FILES = 'files',
   SKETCH = 'sketch',
   EXPLORER = 'explorer',
   MAPS = 'maps',
-  CHESS = 'chess'
+  PRESENTER = 'presenter', // TODO(burdon): MDX.
+  CHESS = 'chess',
+  SANDBOX = 'sandbox'
 }
 
-export const defaultFrameId = FrameID.STACK;
+export const defaultFrameId = FrameID.EXPLORER;
 
 // prettier-ignore
 const activeFrames = [
@@ -28,7 +31,10 @@ const activeFrames = [
   FrameID.REGISTRY,
   FrameID.STACK,
   FrameID.TABLE,
-  FrameID.TASKS
+  FrameID.TASKS,
+  FrameID.EXPLORER
+  // FrameID.KANBAN,
+  // FrameID.NOTES
 ];
 
 export type FrameDef = {

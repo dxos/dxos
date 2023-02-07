@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "apidoc": "apidoc",
-    "bundle": "true || vuepress build docs",
+    "bundle": "vuepress build docs",
     "clean:api": "rm -rf docs/api",
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts",
     "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",

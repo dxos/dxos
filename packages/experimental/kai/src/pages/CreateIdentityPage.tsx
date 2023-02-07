@@ -15,7 +15,7 @@ import { Generator } from '../proto';
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const CreateIdentityPage = () => {
+const CreateIdentityPage = () => {
   const { t } = useTranslation('appkit');
   const { dev } = useAppState();
   const client = useClient();
@@ -62,7 +62,7 @@ export const CreateIdentityPage = () => {
           pending,
           inputLabel: t('displayName label'),
           inputPlaceholder: t('displayName placeholder'),
-          onChange: setDisplayName,
+          onChange: ({ target: { value } }) => setDisplayName(value),
           onNext,
           onBack: () => history.back()
         }}
@@ -70,3 +70,5 @@ export const CreateIdentityPage = () => {
     </main>
   );
 };
+
+export default CreateIdentityPage;

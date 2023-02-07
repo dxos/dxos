@@ -2,19 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
-import { failUndefined } from '@dxos/debug';
+import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { Model } from '@dxos/model-factory';
-import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { log } from '@dxos/log';
+import { MutationMetaWithTimeframe } from '@dxos/protocols';
+import { DataService, SubscribeResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { Entity } from './entity';
+import { Item } from './item';
 import { ItemManager } from './item-manager';
-
-const log = debug('dxos:echo-db:data-mirror');
 
 // TODO(dmaretskyi): Subscription cleanup.
 
@@ -22,10 +20,12 @@ const log = debug('dxos:echo-db:data-mirror');
  * Maintains subscriptions via DataService to create a local copy of the entities (items and links) in the database.
  *
  * Entities are updated using snapshots and mutations sourced from the DataService.
- * Entity and model mutations are forwarded to the DataService.
+ * Item and model mutations are forwarded to the DataService.
  * This class is analogous to ItemDemuxer but for databases running in remote mode.
  */
 export class DataMirror {
+  private _entities?: Stream<SubscribeResponse>;
+
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _dataService: DataService,
@@ -35,43 +35,55 @@ export class DataMirror {
   async open() {
     const loaded = new Trigger();
 
-    const entities = this._dataService.subscribeEntitySet({
+    this._entities = this._dataService.subscribe({
       spaceKey: this._spaceKey
     });
-    entities.subscribe(
-      async (diff) => {
-        loaded.wake();
-        for (const addedEntity of diff.added ?? []) {
-          log(`Construct: ${JSON.stringify(addedEntity)}`);
-          assert(addedEntity.itemId);
-          assert(addedEntity.genesis);
-          assert(addedEntity.genesis.modelType);
+    this._entities.subscribe(
+      async (msg) => {
+        for (const object of msg.objects ?? []) {
+          assert(object.objectId);
 
-          let entity: Entity<Model<any>>;
-          if (addedEntity.genesis.link) {
-            assert(addedEntity.genesis.link.source);
-            assert(addedEntity.genesis.link.target);
-
-            entity = await this._itemManager.constructLink({
-              itemId: addedEntity.itemId,
-              itemType: addedEntity.genesis.itemType,
-              modelType: addedEntity.genesis.modelType,
-              source: addedEntity.genesis.link.source,
-              target: addedEntity.genesis.link.target,
-              snapshot: {}
+          let entity: Item<any> | undefined;
+          if (object.genesis) {
+            log('Construct', { object });
+            assert(object.genesis.modelType);
+            entity = await this._itemManager.constructItem({
+              itemId: object.objectId,
+              itemType: object.genesis.itemType,
+              modelType: object.genesis.modelType,
+              parentId: object.snapshot?.parentId,
+              snapshot: { objectId: object.objectId } // TODO(dmaretskyi): Fix.
             });
           } else {
-            entity = await this._itemManager.constructItem({
-              itemId: addedEntity.itemId,
-              itemType: addedEntity.genesis.itemType,
-              modelType: addedEntity.genesis.modelType,
-              parentId: addedEntity.itemMutation?.parentId,
-              snapshot: {}
-            });
+            entity = this._itemManager.entities.get(object.objectId);
+          }
+          if (!entity) {
+            log.warn('Item not found', { objectId: object.objectId });
+            return;
           }
 
-          this._subscribeToUpdates(entity);
+          if (object.snapshot) {
+            log('reset to snapshot', { object });
+            entity._stateManager.resetToSnapshot(object);
+          } else if (object.mutations) {
+            for (const mutation of object.mutations) {
+              log('mutate', { id: object.objectId, mutation });
+
+              if (mutation.parentId || mutation.action) {
+                entity._processMutation(mutation, (id) => this._itemManager.getItem(id));
+              }
+
+              if (mutation.model) {
+                assert(mutation.meta);
+                assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+                await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);
+              }
+            }
+          }
         }
+
+        // Notify that initial set of items has been loaded.
+        loaded.wake();
       },
       (err) => {
         log(`Connection closed: ${err}`);
@@ -82,35 +94,7 @@ export class DataMirror {
     await loaded.wait();
   }
 
-  private _subscribeToUpdates(entity: Entity<Model<any>>) {
-    const stream = this._dataService.subscribeEntityStream({
-      spaceKey: this._spaceKey,
-      itemId: entity.id
-    });
-    stream.subscribe(
-      async (update) => {
-        log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
-        if (update.snapshot) {
-          assert(update.snapshot.model);
-          entity._stateManager.resetToSnapshot(update.snapshot.model);
-        } else if (update.mutation) {
-          if (update.mutation.data?.mutation) {
-            assert(update.mutation.meta);
-            await entity._stateManager.processMessage(
-              {
-                feedKey: update.mutation.meta.feedKey ?? failUndefined(),
-                memberKey: update.mutation.meta.memberKey ?? failUndefined(),
-                seq: update.mutation.meta.seq ?? failUndefined(),
-                timeframe: update.mutation.meta.timeframe ?? failUndefined()
-              },
-              update.mutation.data.mutation ?? failUndefined()
-            );
-          }
-        }
-      },
-      (err) => {
-        log(`Connection closed: ${err}`);
-      }
-    );
+  async close() {
+    this._entities?.close();
   }
 }

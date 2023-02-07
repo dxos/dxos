@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, KeyboardEvent, useMemo } from 'react';
+import React, { useCallback, KeyboardEvent, useMemo, ChangeEvent } from 'react';
 
 import { Button, GroupProps, Input, InputProps, Loading, mx, useTranslation } from '@dxos/react-components';
 
 export interface SingleInputStepProps extends Omit<GroupProps, 'label' | 'onChange'> {
   inputLabel: string;
-  onChange: (value: string) => void;
+  onChange: (value: ChangeEvent<HTMLInputElement>) => void;
   pending?: boolean;
   onBack?: () => void;
   backLabel?: string;

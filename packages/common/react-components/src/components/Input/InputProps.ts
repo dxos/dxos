@@ -2,21 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ComponentProps, ReactNode } from 'react';
+import { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from 'react';
 
 import { MessageValence } from '../../props';
 
 export type InputSize = 'md' | 'lg' | 'pin' | 'textarea';
 
-interface SharedTextInputProps {
+interface SharedTextInputProps
+  extends Pick<ComponentPropsWithRef<'input'>, 'value' | 'defaultValue' | 'onChange' | 'disabled' | 'placeholder'> {
   label: ReactNode;
-  placeholder?: string;
   labelVisuallyHidden?: boolean;
   description?: ReactNode;
   descriptionVisuallyHidden?: boolean;
-  initialValue?: string;
-  onChange?: (value: string) => void;
-  disabled?: boolean;
   size?: InputSize;
   validationMessage?: ReactNode;
   validationValence?: MessageValence;
@@ -24,18 +21,24 @@ interface SharedTextInputProps {
 }
 
 interface SharedSlots {
-  root?: Omit<ComponentProps<'div'>, 'children'>;
-  label?: Omit<ComponentProps<'label'>, 'children'>;
-  description?: Pick<ComponentProps<'span'>, 'className'>;
-  validation?: Pick<ComponentProps<'span'>, 'className'>;
+  root?: Omit<ComponentPropsWithoutRef<'div'>, 'children'>;
+  label?: Omit<ComponentPropsWithoutRef<'label'>, 'children'>;
+  description?: Pick<ComponentPropsWithoutRef<'span'>, 'className'>;
+  validation?: Pick<ComponentPropsWithoutRef<'span'>, 'className'>;
 }
 
 export interface InputSlots extends SharedSlots {
-  input?: Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled' | 'placeholder'>;
+  input?: Omit<
+    ComponentPropsWithoutRef<'input'>,
+    'value' | 'defaultValue' | 'onChange' | 'size' | 'disabled' | 'placeholder'
+  >;
 }
 
 export interface TextareaSlots extends SharedSlots {
-  input?: Omit<ComponentProps<'textarea'>, 'value' | 'onChange' | 'size' | 'ref' | 'disabled' | 'placeholder'>;
+  input?: Omit<
+    ComponentPropsWithoutRef<'textarea'>,
+    'value' | 'defaultValue' | 'onChange' | 'size' | 'disabled' | 'placeholder'
+  >;
 }
 
 export interface InputProps extends SharedTextInputProps {

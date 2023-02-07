@@ -9,14 +9,12 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemType, ItemID } from '@dxos/protocols';
-import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
-import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
-import { Link } from './link';
 import { RootFilter, Selection, createSelection } from './selection';
 
 export interface CreateItemOption<M extends Model> {
@@ -43,10 +41,11 @@ export enum State {
 
 /**
  * Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
+ * @deprecated
  */
 @trackLeaks('initialize', 'destroy')
 export class Database {
-  private readonly _itemManager: ItemManager;
+  public readonly _itemManager: ItemManager;
 
   private _state = State.NULL;
 
@@ -74,7 +73,7 @@ export class Database {
    * Fired when any item is updated.
    * Contains a list of all entities changed from the last update.
    */
-  get update(): Event<Entity<any>[]> {
+  get update(): Event<Item<any>[]> {
     return this._itemManager.debouncedUpdate;
   }
 
@@ -83,7 +82,7 @@ export class Database {
    * If the information about which entity got updated is not required prefer using `update`.
    */
   // TODO(burdon): Unused?
-  get entityUpdate(): Event<Entity<any>> {
+  get entityUpdate(): Event<Item<any>> {
     return this._itemManager.update;
   }
 
@@ -103,8 +102,8 @@ export class Database {
       return;
     }
 
-    await this._itemManager.destroy();
     await this._backend.close();
+    await this._itemManager.destroy();
     this._state = State.DESTROYED;
   }
 
@@ -135,31 +134,6 @@ export class Database {
       options.parent,
       options.props
     )) as any;
-  }
-
-  async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>>(
-    options: CreateLinkOptions<M, S, T>
-  ): Promise<Link<M, S, T>> {
-    this._assertInitialized();
-
-    const model = options.model ?? ObjectModel;
-    if (!model) {
-      throw new TypeError('Missing model class.');
-    }
-
-    validateModelClass(model);
-
-    if (options.type && typeof options.type !== ('string' as ItemType)) {
-      throw new TypeError('Invalid type.');
-    }
-
-    return this._itemManager.createLink(
-      model.meta.type,
-      options.type,
-      options.source.id,
-      options.target.id,
-      options.props
-    );
   }
 
   /**
@@ -212,7 +186,7 @@ export class Database {
     );
   }
 
-  createSnapshot(): DatabaseSnapshot {
+  createSnapshot(): EchoSnapshot {
     this._assertInitialized();
     return this._backend.createSnapshot();
   }

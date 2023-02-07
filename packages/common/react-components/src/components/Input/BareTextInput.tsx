@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ComponentProps } from 'react';
+import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { defaultInput } from '../../styles/input';
+import { useForwardedRef, useThemeContext } from '../../hooks';
+import { defaultInput } from '../../styles';
 import { mx } from '../../util';
-import { InputProps, InputSize, InputSlots } from './InputProps';
+import { InputProps, InputSize } from './InputProps';
 
 const sizeMap: Record<InputSize, string> = {
   md: 'text-base',
@@ -15,34 +16,31 @@ const sizeMap: Record<InputSize, string> = {
   textarea: ''
 };
 
-export type BareTextInputProps = Omit<InputProps, 'label' | 'initialValue' | 'onChange' | 'slots'> &
-  Pick<ComponentProps<'input'>, 'onChange' | 'value'> & { inputSlot: InputSlots['input'] };
+export type BareTextInputProps = Omit<ComponentPropsWithRef<'input'>, 'size'> &
+  Pick<InputProps, 'validationMessage' | 'validationValence' | 'size'>;
 
-export const BareTextInput = ({
-  validationValence,
-  validationMessage,
-  size,
-  disabled,
-  placeholder,
-  onChange,
-  value,
-  inputSlot
-}: BareTextInputProps) => {
-  return (
-    <input
-      {...inputSlot}
-      placeholder={placeholder}
-      onChange={onChange}
-      value={value}
-      className={mx(
-        defaultInput({
-          disabled,
-          ...(validationMessage && { validationValence })
-        }),
-        sizeMap[size ?? 'md'],
-        'block w-full px-2.5 py-2',
-        inputSlot?.className
-      )}
-    />
-  );
-};
+export const BareTextInput = forwardRef<HTMLInputElement, BareTextInputProps>(
+  ({ validationValence, validationMessage, size, ...inputSlot }, ref) => {
+    const { themeVariant } = useThemeContext();
+    const inputRef = useForwardedRef(ref);
+    return (
+      <input
+        {...inputSlot}
+        ref={inputRef}
+        className={mx(
+          defaultInput(
+            {
+              disabled: inputSlot.disabled,
+              ...(validationMessage && { validationValence })
+            },
+            themeVariant
+          ),
+          sizeMap[size ?? 'md'],
+          'block w-full',
+          themeVariant === 'os' ? 'pli-1.5 plb-1' : 'pli-2.5 plb-2',
+          inputSlot?.className
+        )}
+      />
+    );
+  }
+);

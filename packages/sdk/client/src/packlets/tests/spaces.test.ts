@@ -6,6 +6,7 @@ import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { log } from '@dxos/log';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
@@ -51,12 +52,14 @@ describe('Spaces', () => {
       await item.model.set('title', 'testing');
       expect(item.model.get('title')).to.eq('testing');
       itemId = item.id;
-
       const result = await space.queryMembers().waitFor((items) => items.length === 1);
       expect(result).to.have.length(1);
     }
 
     await client.destroy();
+
+    log.break();
+
     await client.initialize();
 
     {

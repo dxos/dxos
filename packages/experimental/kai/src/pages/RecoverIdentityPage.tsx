@@ -15,7 +15,7 @@ import { Generator } from '../proto';
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const RecoverIdentityPage = () => {
+const RecoverIdentityPage = () => {
   const { t } = useTranslation('appkit');
   const { dev } = useAppState();
   const client = useClient();
@@ -62,7 +62,7 @@ export const RecoverIdentityPage = () => {
           pending,
           inputLabel: t('seed phrase label'),
           inputPlaceholder: t('seed phrase placeholder'),
-          onChange: setSeedphrase,
+          onChange: ({ target: { value } }) => setSeedphrase(value),
           onNext,
           onBack: () => history.back()
         }}
@@ -70,3 +70,5 @@ export const RecoverIdentityPage = () => {
     </main>
   );
 };
+
+export default RecoverIdentityPage;

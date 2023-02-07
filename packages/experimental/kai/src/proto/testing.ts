@@ -11,7 +11,7 @@ import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 import { EchoDatabase, TextObject } from '@dxos/echo-schema';
 
 import { cities } from './data';
-import { Contact, Document, Event, Organization, Project, Task } from './gen/schema';
+import { Contact, Document, Event, Organization, Note, Project, Task } from './gen/schema';
 
 // TODO(burdon): Factor out all testing deps (and separately testing protos).
 
@@ -26,6 +26,7 @@ export type GeneratorOptions = {
   contacts: MinMax;
   events: MinMax;
   documents: MinMax;
+  notes: MinMax;
 };
 
 export class Generator {
@@ -37,7 +38,8 @@ export class Generator {
       tasks: { min: 1, max: 8 },
       contacts: { min: 20, max: 30 },
       events: { min: 20, max: 40 },
-      documents: { min: 1, max: 3 }
+      documents: { min: 1, max: 3 },
+      notes: { min: 8, max: 16 }
     }
   ) {}
 
@@ -110,6 +112,9 @@ export class Generator {
 
     // Documents.
     await Promise.all(range(this._options.documents).map(async () => this.createDocument()));
+
+    // Notes.
+    await Promise.all(range(this._options.notes).map(async () => this.createNote()));
   }
 
   createOrganization = async () => {
@@ -146,27 +151,37 @@ export class Generator {
   createDocument = async () => {
     const document = createDocument();
     await this._db.save(document);
+    createTextObjectContent(document.content, 5);
+    return document;
+  };
 
-    // TODO(burdon): Factor out into TextModel.
-    // https://prosemirror.net/docs/guide/#doc
-    const doc = schema.node(
-      'doc',
-      null,
-      range({ min: 1, max: 5 }).flatMap(() => [
-        schema.node('paragraph', null, [schema.text(faker.lorem.sentences(5))]),
-        schema.node('paragraph')
-      ])
-    );
-
-    // TODO(burdon): Cannot update until saved.
-    // TODO(burdon): Configure 'content' field.
-    // https://docs.yjs.dev/api/shared-types/y.xmlfragment
-    const fragment = document.content.doc!.getXmlFragment('content');
-    prosemirrorToYXmlFragment(doc, fragment);
-
+  createNote = async () => {
+    const document = createNote();
+    await this._db.save(document);
+    createTextObjectContent(document.content, 1);
     return document;
   };
 }
+
+// TODO(burdon): TextObject initial state isn't replicated.
+// TODO(burdon): Factor out into TextModel.
+const createTextObjectContent = (content: TextObject, sentences = 5) => {
+  // https://prosemirror.net/docs/guide/#doc
+  const doc = schema.node(
+    'doc',
+    null,
+    range({ min: 1, max: 5 }).flatMap(() => [
+      schema.node('paragraph', null, [schema.text(faker.lorem.sentences(sentences))]),
+      schema.node('paragraph')
+    ])
+  );
+
+  // TODO(burdon): Cannot update until saved.
+  // TODO(burdon): Configure 'content' field.
+  // https://docs.yjs.dev/api/shared-types/y.xmlfragment
+  const fragment = content.doc!.getXmlFragment('content');
+  prosemirrorToYXmlFragment(doc, fragment);
+};
 
 //
 // Constructors.
@@ -230,4 +245,11 @@ export const createDocument = () => {
   document.title = faker.lorem.sentence(3);
   document.content = new TextObject();
   return document;
+};
+
+export const createNote = () => {
+  const note = new Note();
+  note.title = faker.lorem.words(2);
+  note.content = new TextObject();
+  return note;
 };

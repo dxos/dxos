@@ -9,9 +9,7 @@ export { generateSeedPhrase } from '@dxos/credentials';
 
 export {
   TYPE_SCHEMA,
-  Entity,
   Item,
-  Link,
   Database,
   Selection,
   SelectionResult,

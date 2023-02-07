@@ -100,7 +100,7 @@ jobs:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
-            NODE_OPTIONS: --max_old_space_size=8198
+            NODE_OPTIONS: --max_old_space_size=6144
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --tags=e2e --coverage --xmlReport
       - *codecov_upload
@@ -122,7 +122,7 @@ jobs:
           command: ./.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=8198
+            NODE_OPTIONS: --max_old_space_size=6144
       - run:
           command: ./.circleci/scripts/publish-extension.sh
           environment:

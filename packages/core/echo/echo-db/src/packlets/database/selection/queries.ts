@@ -4,9 +4,7 @@
 
 import { ItemID } from '@dxos/protocols';
 
-import { Entity } from '../entity';
 import { Item } from '../item';
-import { Link } from '../link';
 import { coerceToId, OneOrMultiple, testOneOrMultiple } from './util';
 
 //
@@ -22,11 +20,7 @@ export type ItemFilter = {
   parent?: ItemID | Item;
 };
 
-export type LinkFilter = {
-  type?: OneOrMultiple<string>;
-};
-
-export type Predicate<T extends Entity> = (entity: T) => boolean;
+export type Predicate<T extends Item> = (entity: T) => boolean;
 
 export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>;
 
@@ -35,7 +29,7 @@ export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>;
  * The visitor is passed the current entities and result (accumulator),
  * which may be modified and returned.
  */
-export type Callable<T extends Entity, R> = (entities: T[], result: R) => R;
+export type Callable<T extends Item, R> = (entities: T[], result: R) => R;
 
 /**
  * Controls how deleted items are filtered.
@@ -84,13 +78,8 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
   }
 };
 
-export const linkFilterToPredicate =
-  (filter: LinkFilter): Predicate<Link> =>
-  (link) =>
-    !filter.type || testOneOrMultiple(filter.type, link.type);
-
 export const createQueryOptionsFilter =
-  ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Entity> =>
+  ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Item> =>
   (entity) => {
     if (entity.model === null) {
       return false;

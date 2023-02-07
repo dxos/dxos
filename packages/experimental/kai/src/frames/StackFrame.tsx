@@ -7,7 +7,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { TileMenu, Tile, GraphComponent } from '../components';
+import { TileMenu, Tile } from '../components';
 import { ContactList, OrganizationList, ProjectHierarchy, TaskList } from '../containers';
 
 export const StackFrame: FC = () => {
@@ -18,7 +18,8 @@ export const StackFrame: FC = () => {
     <div
       ref={ref}
       className={mx(
-        'flex flex-col h-full p-0 gap-0 overflow-x-hidden overflow-y-scroll',
+        'flex flex-col h-full overflow-x-hidden overflow-y-scroll gap-0',
+        'p-0', // Full width for mobile.
         'md:p-2 md:gap-3 md:grid md:overflow-hidden md:grid-cols-2 md:grid-rows-2',
         'lg:p-2 lg:gap-3 lg:grid lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
       )}
@@ -29,15 +30,15 @@ export const StackFrame: FC = () => {
         </Tile>
       </div>
 
-      <div className={mx(cardStyles)}>
+      <div className={mx(cardStyles, 'row-span-2')}>
         <Tile scrollbar header={<TileMenu title='Contacts' />}>
           <ContactList />
         </Tile>
       </div>
 
-      <div className={mx(cardStyles)}>
+      <div className={mx(cardStyles, 'row-span-2')}>
         <Tile scrollbar header={<TileMenu title='Tasks' />}>
-          <TaskList />
+          <TaskList fullWidth />
         </Tile>
       </div>
 
@@ -47,11 +48,15 @@ export const StackFrame: FC = () => {
         </Tile>
       </div>
 
+      {/*
       <div className={mx(cardStyles, 'col-span-2 hidden lg:flex')}>
         <Tile header={<TileMenu title='Explorer' />}>
           <GraphComponent />
         </Tile>
       </div>
+      */}
     </div>
   );
 };
+
+export default StackFrame;

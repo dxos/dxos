@@ -130,3 +130,5 @@ export const CalendarFrame = () => {
     </div>
   );
 };
+
+export default CalendarFrame;

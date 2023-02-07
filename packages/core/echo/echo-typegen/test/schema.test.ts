@@ -76,4 +76,44 @@ describe('schema', () => {
     const { lat, lng } = contact.address.coordinates!;
     expect({ lat, lng }).to.deep.eq({ lat: -90, lng: 10 });
   });
+
+  test('fields', () => {
+    expect(Contact.type.fields).to.deep.eq([
+      {
+        name: 'name',
+        type: {
+          kind: 'string'
+        }
+      },
+      {
+        name: 'username',
+        type: {
+          kind: 'string'
+        }
+      },
+      {
+        name: 'email',
+        type: {
+          kind: 'string'
+        }
+      },
+      {
+        name: 'address',
+        type: {
+          kind: 'record',
+          objectType: 'example.test.Address'
+        }
+      },
+      {
+        name: 'tasks',
+        type: {
+          kind: 'array',
+          elementType: {
+            kind: 'ref',
+            objectType: 'example.test.Task'
+          }
+        }
+      }
+    ]);
+  });
 });

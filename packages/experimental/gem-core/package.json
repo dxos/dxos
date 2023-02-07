@@ -1,6 +1,7 @@
 {
   "name": "@dxos/gem-core",
   "version": "0.1.23",
+  "private": true,
   "description": "Gem core components and utils.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
@@ -43,8 +44,5 @@
   "peerDependencies": {
     "react": "*",
     "react-dom": "*"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

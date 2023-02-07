@@ -15,6 +15,9 @@
       "path": "../../apps/patterns/react-appkit"
     },
     {
+      "path": "../../apps/patterns/react-composer"
+    },
+    {
       "path": "../../apps/patterns/react-ui"
     },
     {
@@ -40,9 +43,6 @@
     },
     {
       "path": "../../common/react-components"
-    },
-    {
-      "path": "../../common/timeframe"
     },
     {
       "path": "../../common/util"
@@ -72,16 +72,13 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../deprecated/react-components-deprecated"
-    },
-    {
       "path": "../../deprecated/react-toolkit"
     },
     {
-      "path": "../../experimental/kai"
+      "path": "../../experimental/chess-app"
     },
     {
-      "path": "../../experimental/react-registry-client"
+      "path": "../../experimental/kai"
     },
     {
       "path": "../../experimental/registry-client"
@@ -97,9 +94,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../devtools-mesh"
     }
   ]
 }

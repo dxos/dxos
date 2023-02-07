@@ -21,13 +21,23 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
-          '@dxos/client',
+          '@dxos/client/testing',
           '@dxos/config',
           '@dxos/keys',
-          '@dxos/react-client',
-          '@dxos/react-client-testing',
-          '@dxos/react-components',
-          '@dxos/util',
+          '@dxos/log',
+          '@dxos/protocols',
+          '@dxos/protocols/proto/dxos/client',
+          '@dxos/protocols/proto/dxos/client/services',
+          '@dxos/protocols/proto/dxos/config',
+          '@dxos/protocols/proto/dxos/echo/feed',
+          '@dxos/protocols/proto/dxos/echo/model/object',
+          '@dxos/protocols/proto/dxos/echo/object',
+          '@dxos/protocols/proto/dxos/halo/credentials',
+          '@dxos/protocols/proto/dxos/halo/invitations',
+          '@dxos/protocols/proto/dxos/halo/keys',
+          '@dxos/protocols/proto/dxos/mesh/bridge',
+          '@dxos/protocols/proto/dxos/rpc',
+          '@dxos/react-client/testing',
           'storybook-dark-mode'
         ]
       },

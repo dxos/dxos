@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 import {
   AuthenticatingInvitationObservable,
@@ -78,7 +78,7 @@ const JoinStep1 = ({
             validationValence: 'error' as const
           })
         },
-        onChange: setInvitationCode,
+        onChange: ({ target: { value } }) => setInvitationCode(value),
         onNext: onConnectNext,
         onCancelPending: cancel
       }}
@@ -97,7 +97,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
   }, []);
 
   const onChange = useCallback(
-    (value: string) => {
+    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
       setInvitationSecret(value);
       value.length === pinLength && onAuthenticateNext(value);
     },

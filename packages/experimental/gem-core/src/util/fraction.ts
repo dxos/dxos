@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import assert from 'assert';
 
 // TODO(burdon): Protobuf mapping?
 export type Fraction = [num: number, denum: number];

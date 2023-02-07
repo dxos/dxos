@@ -14,31 +14,23 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { createMappedFeedWriter } from '../common';
 import { UnknownModelError } from '../errors';
-import { Entity } from './entity';
 import { Item } from './item';
-import { Link } from './link';
 
 const log = debug('dxos:echo-db:item-manager');
 
 export interface ModelConstructionOptions {
   itemId: ItemID;
   modelType: ModelType;
-  snapshot: ModelSnapshot;
+  snapshot: EchoObject;
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {
   itemType: ItemType | undefined;
   parentId?: ItemID;
-}
-
-export interface LinkConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined;
-  source: ItemID;
-  target: ItemID;
 }
 
 /**
@@ -48,27 +40,27 @@ export class ItemManager {
   /**
    * Fired immediately after any update in the entities.
    *
-   * If the information about which entity got updated is not required prefer using `debouncedItemUpdate`.
+   * If the information about which Item got updated is not required prefer using `debouncedItemUpdate`.
    */
-  readonly update = new Event<Entity<Model>>();
+  readonly update = new Event<Item<Model>>();
 
   /**
    * Update event.
    * Contains a list of all entities changed from the last update.
    */
-  readonly debouncedUpdate: Event<Entity[]> = debounceEntityUpdateEvent(this.update);
+  readonly debouncedUpdate: Event<Item[]> = debounceItemUpdateEvent(this.update);
 
   /**
    * Map of active items.
    * @private
    */
-  private readonly _entities = new Map<ItemID, Entity<Model>>();
+  private readonly _entities = new Map<ItemID, Item<Model>>();
 
   /**
    * Map of item promises (waiting for item construction after genesis message has been written).
    * @private
    */
-  private readonly _pendingItems = new Map<ItemID, (item: Entity<Model>) => void>();
+  private readonly _pendingItems = new Map<ItemID, (item: Item<Model>) => void>();
 
   /**
    * @param _writeStream Outbound `dxos.echo.IEchoObject` mutation stream.
@@ -84,17 +76,13 @@ export class ItemManager {
   }
 
   get items(): Item<any>[] {
-    return Array.from(this._entities.values()).filter((entity): entity is Item<Model> => entity instanceof Item);
-  }
-
-  get links(): Link<any>[] {
-    return Array.from(this._entities.values()).filter((entity): entity is Link<Model> => entity instanceof Link);
+    return Array.from(this._entities.values()).filter((item): item is Item<Model> => item instanceof Item);
   }
 
   async destroy() {
     log('destroying..');
-    for (const entity of this._entities.values()) {
-      await entity._destroy();
+    for (const item of this._entities.values()) {
+      await item._destroy();
     }
     this._entities.clear();
   }
@@ -131,7 +119,7 @@ export class ItemManager {
     }
 
     // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Entity<any>>();
+    const [waitForCreation, callback] = trigger<Item<any>>();
 
     this._pendingItems.set(itemId, callback);
 
@@ -139,19 +127,26 @@ export class ItemManager {
     log('Item Genesis', { itemId });
     await this._writeStream.write({
       object: {
-        itemId,
+        objectId: itemId,
         genesis: {
           itemType,
           modelType
         },
-        itemMutation: parentId ? { parentId } : undefined,
-        mutation: !mutation
-          ? undefined
-          : {
-              '@type': 'google.protobuf.Any',
-              type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-              value: mutation
-            }
+        mutations:
+          !mutation && !parentId
+            ? []
+            : [
+                {
+                  parentId,
+                  model: !mutation
+                    ? undefined
+                    : {
+                        '@type': 'google.protobuf.Any',
+                        type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+                        value: mutation
+                      }
+                }
+              ]
       }
     });
 
@@ -160,61 +155,6 @@ export class ItemManager {
     const item = await waitForCreation();
     assert(item instanceof Item);
     return item;
-  }
-
-  @timed(5_000)
-  async createLink(
-    modelType: ModelType,
-    itemType: ItemType | undefined,
-    source: ItemID,
-    target: ItemID,
-    initProps?: any
-  ): Promise<Link<any, any, any>> {
-    assert(this._writeStream);
-    assert(modelType);
-
-    if (!this._modelFactory.hasModel(modelType)) {
-      throw new UnknownModelError(modelType);
-    }
-
-    let mutation: Uint8Array | undefined;
-    if (initProps) {
-      const meta = this._modelFactory.getModelMeta(modelType);
-      if (!meta.getInitMutation) {
-        throw new Error('Tried to provide initialization params to a model with no initializer.');
-      }
-      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
-    }
-
-    // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Entity<Model>>();
-
-    const itemId = createId();
-    this._pendingItems.set(itemId, callback);
-
-    // Write Item Genesis block.
-    log('Item Genesis:', itemId);
-    await this._writeStream.write({
-      object: {
-        itemId,
-        genesis: {
-          itemType,
-          modelType,
-          link: { source, target }
-        },
-        mutation: {
-          '@type': 'google.protobuf.Any',
-          type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-          value: mutation
-        }
-      }
-    });
-
-    // Unlocked by construct.
-    log('Pending Item:', itemId);
-    const link = await waitForCreation();
-    assert(link instanceof Link);
-    return link;
   }
 
   private async _constructModel({
@@ -228,8 +168,12 @@ export class ItemManager {
       createMappedFeedWriter<Any, DataMessage>(
         (mutation: Any) => ({
           object: {
-            itemId,
-            mutation
+            objectId: itemId,
+            mutations: [
+              {
+                model: mutation
+              }
+            ]
           }
         }),
         this._writeStream
@@ -240,25 +184,25 @@ export class ItemManager {
   }
 
   /**
-   * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entity to be constructed.
+   * Adds new Item to the tracked set. Sets up events and notifies any listeners waiting for this Item to be constructed.
    */
   // TODO(burdon): Parent not used.
-  private _addEntity(entity: Entity<any>, parent?: Item<any> | null) {
-    assert(!this._entities.has(entity.id));
-    this._entities.set(entity.id, entity);
-    log('New entity:', String(entity));
+  private _addItem(item: Item<any>, parent?: Item<any> | null) {
+    assert(!this._entities.has(item.id));
+    this._entities.set(item.id, item);
+    log('New Item:', String(item));
 
     // Notify Item was udpated.
     // TODO(burdon): Update the item directly?
-    this.update.emit(entity);
+    this.update.emit(item);
 
     // TODO(telackey): Unsubscribe?
-    entity.subscribe(() => {
-      this.update.emit(entity);
+    item.subscribe(() => {
+      this.update.emit(item);
     });
 
     // Notify pending creates.
-    this._pendingItems.get(entity.id)?.(entity);
+    this._pendingItems.get(item.id)?.(item);
   }
 
   /**
@@ -291,54 +235,9 @@ export class ItemManager {
     if (parent) {
       this.update.emit(parent);
     }
-    this._addEntity(item);
+    this._addItem(item);
 
     return item;
-  }
-
-  /**
-   * Constructs an item with the appropriate model.
-   */
-  @timed(5_000)
-  async constructLink({
-    itemId, // TODO(burdon): link_id?
-    itemType,
-    modelType,
-    snapshot,
-    source,
-    target
-  }: LinkConstructionOptions): Promise<Link<any>> {
-    assert(itemId);
-    assert(modelType);
-
-    const model = await this._constructModel({
-      itemId,
-      modelType,
-      snapshot
-    });
-
-    const sourceItem = this.getItem(source);
-    const targetItem = this.getItem(target);
-
-    const link = new Link(this, itemId, itemType, model, {
-      sourceId: source,
-      targetId: target,
-      source: sourceItem,
-      target: targetItem
-    });
-
-    if (sourceItem) {
-      sourceItem._links.add(link);
-      this.update.emit(sourceItem);
-    }
-    if (targetItem) {
-      targetItem._refs.add(link);
-      this.update.emit(targetItem);
-    }
-
-    this._addEntity(link);
-
-    return link;
   }
 
   /**
@@ -359,15 +258,12 @@ export class ItemManager {
    * @param itemId
    */
   getItem<M extends Model<any> = any>(itemId: ItemID): Item<M> | undefined {
-    const entity = this._entities.get(itemId);
-    if (entity) {
-      assert(entity instanceof Item);
-    }
-    return entity;
+    const item = this._entities.get(itemId);
+    return item as Item<M> | undefined;
   }
 
-  getUninitializedEntities(): Entity<Model>[] {
-    return Array.from(this._entities.values()).filter((entity) => !entity._stateManager.initialized);
+  getUninitializedEntities(): Item<Model>[] {
+    return Array.from(this._entities.values()).filter((Item) => !Item._stateManager.initialized);
   }
 
   /**
@@ -387,14 +283,6 @@ export class ItemManager {
 
       for (const child of item.children) {
         this.deconstructItem(child.id);
-      }
-
-      for (const ref of item.refs) {
-        ref._link!.target = undefined;
-      }
-
-      for (const link of item.links) {
-        link._link!.source = undefined;
       }
     }
   }
@@ -419,12 +307,12 @@ export class ItemManager {
 /**
  * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
  */
-const debounceEntityUpdateEvent = (event: Event<Entity<any>>): Event<Entity<any>[]> => {
-  const debouncedEvent = new Event<Entity<any>[]>();
+const debounceItemUpdateEvent = (event: Event<Item<any>>): Event<Item<any>[]> => {
+  const debouncedEvent = new Event<Item<any>[]>();
 
   let firing = false;
 
-  const emittedSinceLastFired = new Set<Entity<any>>();
+  const emittedSinceLastFired = new Set<Item<any>>();
   debouncedEvent.addEffect(() =>
     event.on((arg) => {
       emittedSinceLastFired.add(arg);

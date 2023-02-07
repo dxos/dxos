@@ -45,9 +45,6 @@
       "path": "../patterns/react-appkit"
     },
     {
-      "path": "../patterns/react-list"
-    },
-    {
       "path": "../patterns/react-ui"
     }
   ]

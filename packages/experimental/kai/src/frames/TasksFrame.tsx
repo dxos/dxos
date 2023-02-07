@@ -9,3 +9,5 @@ import { TaskList } from '../containers';
 export const TasksFrame = () => {
   return <TaskList />;
 };
+
+export default TasksFrame;

@@ -3,7 +3,7 @@
 //
 
 import { Activity, Eraser } from 'phosphor-react';
-import React, { useCallback } from 'react';
+import React, { ChangeEvent, useCallback } from 'react';
 
 import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier, isTelemetryDisabled } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
@@ -24,10 +24,10 @@ const IdentityPage = () => {
   const confirmString = humanize(profile!.identityKey.toHex());
 
   const onChangeDisplayName = useCallback(
-    (nextValue: string) => {
+    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
       if (profile) {
         // TODO(thure): This doesn't appear to be a property with a setter, and I can't find a setter method for this, but it does persist at least in memory.
-        profile.displayName = nextValue;
+        profile.displayName = value;
       }
     },
     [profile]
@@ -46,7 +46,7 @@ const IdentityPage = () => {
       <Input
         label={t('displayName label', { ns: 'appkit' })}
         placeholder={humanize(profileHex)}
-        initialValue={profile?.displayName}
+        defaultValue={profile?.displayName}
         onChange={onChangeDisplayName}
         slots={{ root: { className: 'w-full' } }}
       />

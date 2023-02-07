@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { Entity } from '@dxos/echo-db';
+import { Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
@@ -20,7 +20,7 @@ import { EchoSchema } from './schema';
 export class DatabaseRouter {
   private readonly _accessObserverStack: AccessObserver[] = [];
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabase>(PublicKey.hash);
-  private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Entity<any>[] }>();
+  private readonly _update = new Event<{ spaceKey: PublicKey; changedEntities: Item<any>[] }>();
 
   private _schema?: EchoSchema;
 
@@ -35,7 +35,7 @@ export class DatabaseRouter {
 
   register(spaceKey: PublicKey, database: EchoDatabase) {
     this._databases.set(spaceKey, database);
-    database._db.update.on((changedEntities) => this._update.emit({ spaceKey, changedEntities }));
+    database._itemManager.update.on((entity) => this._update.emit({ spaceKey, changedEntities: [entity] }));
   }
 
   /**

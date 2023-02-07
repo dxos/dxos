@@ -7,7 +7,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 export const createSetPropertyMutation = (
-  itemId: ItemID,
+  objectId: ItemID,
   key: string,
   value: string,
   timeframe = new Timeframe()
@@ -16,11 +16,19 @@ export const createSetPropertyMutation = (
   payload: {
     data: {
       object: {
-        itemId,
-        mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({
-          key,
-          value
-        })
+        objectId,
+        mutations: [
+          {
+            model: {
+              '@type': 'google.protobuf.Any',
+              typeUrl: 'todo',
+              value: schema.getCodecForType('example.testing.data.TestItemMutation').encode({
+                key,
+                value
+              })
+            }
+          }
+        ]
       }
     }
   }

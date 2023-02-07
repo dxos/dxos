@@ -51,10 +51,10 @@ describe('Item demuxer', () => {
       onUpdateItem();
     });
 
-    const itemId = createId();
+    const objectId = createId();
     const message: DataMessage = {
       object: {
-        itemId,
+        objectId,
         genesis: {
           itemType: 'dxos:item/test',
           modelType: TestModel.meta.type
@@ -74,7 +74,7 @@ describe('Item demuxer', () => {
     // Update item (causes mutation to be propagated).
     //
 
-    const item = itemManager.getItem(itemId);
+    const item = itemManager.getItem(objectId);
     expect(item).toBeTruthy();
 
     const [updated, onUpdate] = latch();
@@ -125,7 +125,7 @@ describe('Item demuxer', () => {
     void processEchoMessage(
       checkType<DataMessage>({
         object: {
-          itemId: 'foo',
+          objectId: 'foo',
           genesis: {
             modelType: TestModel.meta.type
           }
@@ -136,7 +136,7 @@ describe('Item demuxer', () => {
     void processEchoMessage(
       checkType<DataMessage>({
         object: {
-          itemId: 'bar',
+          objectId: 'bar',
           genesis: {
             modelType: ObjectModel.meta.type
           }

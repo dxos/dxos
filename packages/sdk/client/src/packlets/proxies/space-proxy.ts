@@ -132,7 +132,7 @@ export class SpaceProxy implements Space {
     );
 
     this._experimental = {
-      db: new EchoDatabase(this._database, databaseRouter)
+      db: new EchoDatabase(this._database._itemManager, databaseRouter)
     };
 
     databaseRouter.register(this.key, this._experimental.db);

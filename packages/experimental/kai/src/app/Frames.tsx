@@ -7,6 +7,7 @@ import {
   Calendar,
   CaretLeft,
   CaretRight,
+  Cards,
   Compass,
   Files,
   Stack,
@@ -17,7 +18,8 @@ import {
   Kanban,
   ListChecks,
   Sword,
-  Table
+  Table,
+  Code
 } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -31,14 +33,16 @@ import {
   ChessFrame,
   StackFrame,
   DocumentFrame,
-  ExplorerFrame,
+  BraneFrame,
   FileFrame,
   KanbanFrame,
   MapFrame,
+  NotesFrame,
   RegistryFrame,
   SketchFrame,
   TableFrame,
-  TasksFrame
+  TasksFrame,
+  SandboxFrame
 } from '../frames';
 import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
 import { ManageSpacePage } from '../pages';
@@ -102,6 +106,13 @@ export const frames: FrameDef[] = [
     Component: DocumentFrame
   },
   {
+    id: FrameID.NOTES,
+    title: 'Notes',
+    description: 'Brainstorming notes.',
+    Icon: Cards,
+    Component: NotesFrame
+  },
+  {
     id: FrameID.FILES,
     title: 'Files',
     description: 'Distributed file sharing.',
@@ -118,9 +129,9 @@ export const frames: FrameDef[] = [
   {
     id: FrameID.EXPLORER,
     title: 'Explorer',
-    description: 'Graphical data navigator.',
+    description: 'Graphical User Interface and Data Explorer (GUIDE).',
     Icon: Graph,
-    Component: ExplorerFrame
+    Component: BraneFrame
   },
   {
     id: FrameID.MAPS,
@@ -135,6 +146,13 @@ export const frames: FrameDef[] = [
     description: 'Peer-to-peer and engine powered games.',
     Icon: Sword,
     Component: ChessFrame
+  },
+  {
+    id: FrameID.SANDBOX,
+    title: 'Sandbox',
+    description: 'Collaborative code sandbox.',
+    Icon: Code,
+    Component: SandboxFrame
   }
 ];
 
@@ -155,7 +173,7 @@ export const FrameSelector: FC = () => {
     <div
       className={mx(
         'flex flex-col-reverse bg-orange-500',
-        'fixed inline-end-0 block-start-appbar bs-framepicker transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
+        'fixed inline-end-0 block-start-appbar bs-toolbar transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
         isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
       )}
     >
@@ -201,5 +219,6 @@ export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
     return null;
   }
 
+  // TODO(burdon): Frame flicker on first display.
   return <Component />;
 };
