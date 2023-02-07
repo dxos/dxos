@@ -7,21 +7,21 @@ import assert from 'node:assert';
 
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
-import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { MutationUtil, ValueUtil } from './mutation';
 import { OrderedArray } from './ordered-array';
 import { validateKey } from './util';
 
-export type ObjectModelState = Record<string, any>;
+export type DocumentModelState = Record<string, any>;
 
 /**
  * Processes object mutations.
  */
-class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMutationSet, ObjectSnapshot> {
-  private _object: ObjectModelState = {};
+class DocumentModelStateMachine implements StateMachine<DocumentModelState, ObjectMutationSet, ObjectSnapshot> {
+  private _object: DocumentModelState = {};
 
-  getState(): ObjectModelState {
+  getState(): DocumentModelState {
     return this._object;
   }
 
@@ -51,7 +51,7 @@ export class MutationBuilder {
 
   // prettier-ignore
   constructor(
-    private readonly _model: ObjectModel
+    private readonly _model: DocumentModel
   ) { }
 
   set(key: string, value: any) {
@@ -116,11 +116,11 @@ export interface ObjectProperties {
  * Object mutation model.
  */
 // TODO(burdon): Make generic (separate model?) With read/write validation.
-export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> implements ObjectProperties {
+export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
-    type: 'dxos:model/object',
-    stateMachine: () => new ObjectModelStateMachine(),
-    mutationCodec: schema.getCodecForType('dxos.echo.model.object.ObjectMutationSet'),
+    type: 'dxos:model/document',
+    stateMachine: () => new DocumentModelStateMachine(),
+    mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
     async getInitMutation(obj: any): Promise<ObjectMutationSet> {
@@ -129,7 +129,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
       };
     },
 
-    snapshotCodec: schema.getCodecForType('dxos.echo.model.object.ObjectSnapshot')
+    snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot')
   };
 
   /**

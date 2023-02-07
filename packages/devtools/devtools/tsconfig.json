@@ -48,13 +48,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/document-model"
+    },
+    {
       "path": "../../core/echo/messenger-model"
     },
     {
       "path": "../../core/echo/model-factory"
-    },
-    {
-      "path": "../../core/echo/object-model"
     },
     {
       "path": "../../core/echo/text-model"

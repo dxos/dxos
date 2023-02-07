@@ -1,11 +1,11 @@
-# @dxos/object-model
+# @dxos/document-model
 
 ECHO object model.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/object-model
+pnpm i @dxos/document-model
 ```
 
 ## DXOS Resources

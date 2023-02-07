@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { describe, test } from '@dxos/test';
 
 import { Matcher } from './matcher';

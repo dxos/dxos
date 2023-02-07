@@ -5,9 +5,9 @@
 import expect from 'expect';
 
 import { Event, asyncTimeout } from '@dxos/async';
+import { DocumentModel } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { describe, test } from '@dxos/test';
 
@@ -18,10 +18,10 @@ import { createSelection } from './selection';
 // Use to prevent ultra-long diffs.
 const ids = (entities: Item[]) => entities.map((entity) => entity.id);
 
-const modelFactory = new ModelFactory().registerModel(ObjectModel);
+const modelFactory = new ModelFactory().registerModel(DocumentModel);
 
 const createModel = (id: ItemID) =>
-  modelFactory.createModel(ObjectModel.meta.type, id, { objectId: id }, PublicKey.random());
+  modelFactory.createModel(DocumentModel.meta.type, id, { objectId: id }, PublicKey.random());
 
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
   new Item(null as any, id, type, createModel(id), undefined, parent);

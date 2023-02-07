@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/object-model",
+  "name": "@dxos/document-model",
   "version": "0.1.23",
   "private": false,
-  "description": "ECHO object model.",
+  "description": "ECHO document model.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

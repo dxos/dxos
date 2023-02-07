@@ -1,5 +1,5 @@
-# Class `ObjectModel`
-<sub>Declared in [packages/core/echo/object-model/dist/types/src/object-model.d.ts:29]()</sub>
+# Class `DocumentModel`
+<sub>Declared in [packages/core/echo/document-model/dist/types/src/document-model.d.ts:29]()</sub>
 
 
 Object mutation model.
@@ -8,7 +8,7 @@ Object mutation model.
 ### [constructor(_meta, _itemId, _getState, \[_mutationWriter\])]()
 
 
-Returns: <code>[ObjectModel](/api/@dxos/client/classes/ObjectModel)</code>
+Returns: <code>[DocumentModel](/api/@dxos/client/classes/DocumentModel)</code>
 
 Arguments: 
 
