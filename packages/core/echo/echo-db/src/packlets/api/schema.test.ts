@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Database } from '../database';
@@ -15,7 +15,7 @@ import { Schema, TYPE_SCHEMA } from './schema';
 const SCHEMA = 'example:type/schema/organization';
 const createTestSchema = async (database: Database) => {
   const schemaItem = await database.createItem({
-    model: ObjectModel,
+    model: DocumentModel,
     type: TYPE_SCHEMA,
     props: {
       schema: SCHEMA
@@ -26,7 +26,7 @@ const createTestSchema = async (database: Database) => {
 
 describe('Schema', () => {
   const setupDatabase = async () => {
-    const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    const modelFactory = new ModelFactory().registerModel(DocumentModel);
     const backend = await createMemoryDatabase(modelFactory);
     afterTest(() => backend.destroy());
     return backend;
@@ -78,7 +78,7 @@ describe('Schema', () => {
     };
     await schema.addField(firstField);
     const item = await database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: schema.name
     });
     expect(schema.validate(item.model)).toBeFalsy();

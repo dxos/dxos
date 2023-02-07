@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 
 export const TYPE_SCHEMA = 'dxos:type/schema';
 
@@ -28,12 +28,12 @@ export type SchemaDef = {
 };
 
 /**
- * Wrapper for ECHO Item that represents an `ObjectModel` schema.
+ * Wrapper for ECHO Item that represents an `DocumentModel` schema.
  */
 export class Schema {
   // prettier-ignore
   constructor(
-    private readonly _schema: ObjectModel
+    private readonly _schema: DocumentModel
   ) {}
 
   get name(): string {
@@ -49,7 +49,7 @@ export class Schema {
   }
 
   // TODO(kaplanski): What happens if an item has extra properties?
-  validate(model: ObjectModel) {
+  validate(model: DocumentModel) {
     return this.fields.every((field) => {
       const value = model.get(field.key);
       if (!value) {

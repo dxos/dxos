@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 import { BoxContainer } from '@dxos/react-components-deprecated';
@@ -19,7 +19,7 @@ import { ViewType } from './ViewSelector';
 interface ViewContainerProps {
   value: string;
   model?: EchoGraphModel;
-  items?: Item<ObjectModel>[];
+  items?: Item<DocumentModel>[];
   itemAdapter: ItemAdapter;
   selected?: Set<ItemID>;
   onCreateItem?: (type: string, title: string, parent?: ItemID) => void;

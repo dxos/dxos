@@ -8,7 +8,7 @@ import { asyncTimeout } from '@dxos/async';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
@@ -23,7 +23,7 @@ import { ItemManager } from './item-manager';
 describe('DataMirror', () => {
   test('basic', async () => {
     // Setup
-    const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    const modelFactory = new ModelFactory().registerModel(DocumentModel);
     const feed = new MockFeedWriter<DataMessage>();
     const itemManager = new ItemManager(modelFactory, PublicKey.random(), feed);
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory, {
@@ -57,15 +57,15 @@ describe('DataMirror', () => {
     // Create item
     const promise = asyncTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));
 
-    const item = (await itemManager.createItem(ObjectModel.meta.type)) as Item<ObjectModel>;
+    const item = (await itemManager.createItem(DocumentModel.meta.type)) as Item<DocumentModel>;
 
     await promise;
 
-    const mirroredItem = (await mirrorItemManager.getItem(item.id)) as Item<ObjectModel> | undefined;
+    const mirroredItem = (await mirrorItemManager.getItem(item.id)) as Item<DocumentModel> | undefined;
 
     expect(mirroredItem).not.toBeUndefined();
     expect(mirroredItem!.id).toEqual(item.id);
-    expect(mirroredItem!.model).toBeInstanceOf(ObjectModel);
+    expect(mirroredItem!.model).toBeInstanceOf(DocumentModel);
 
     // Mutate model
     await Promise.all([

@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager, MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { Presence } from '@dxos/teleport-extension-presence';
@@ -142,7 +142,7 @@ export class TestAgent {
     const metadataStore = new MetadataStore(createStorage().createDirectory('metadata'));
     await metadataStore.addSpace({ key: spaceKey });
     const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl({
-      modelFactory: new ModelFactory().registerModel(ObjectModel),
+      modelFactory: new ModelFactory().registerModel(DocumentModel),
       metadataStore,
       snapshotManager,
       memberKey: identityKey,

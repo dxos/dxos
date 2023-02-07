@@ -19,7 +19,7 @@ import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel, ObjectProperties } from '@dxos/object-model';
+import { DocumentModel, ObjectProperties } from '@dxos/object-model';
 import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
@@ -99,7 +99,7 @@ export class SpaceProxy implements Space {
   public readonly stateUpdate = new Event();
 
   private _initialized = false;
-  private _item?: Item<ObjectModel>; // TODO(burdon): Rename.
+  private _item?: Item<DocumentModel>; // TODO(burdon): Rename.
 
   /**
    * @internal
@@ -201,7 +201,7 @@ export class SpaceProxy implements Space {
     log('database ready');
     this._databaseInitialized.wake();
 
-    this._item = await this.database.waitForItem<ObjectModel>({ type: SPACE_ITEM_TYPE });
+    this._item = await this.database.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
     log('initialized');

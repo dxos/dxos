@@ -11,7 +11,7 @@ import { DataGrid, GridCellParams, GridColDef, GridSelectionModel, GridValueGett
 
 import { truncateKey } from '@dxos/debug';
 import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
 const defaultStyles = css`
@@ -47,7 +47,7 @@ const useColumns = (itemAdapter: ItemAdapter): GridColDef[] =>
   );
 
 export interface EchoGridProps {
-  items?: Item<ObjectModel>[];
+  items?: Item<DocumentModel>[];
   itemAdapter: ItemAdapter;
   styles?: any;
 }

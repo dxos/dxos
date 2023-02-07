@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
-import { Item, ObjectModel, Space, Schema, SchemaField, TYPE_SCHEMA, Client, fromHost } from '@dxos/client';
+import { Item, DocumentModel, Space, Schema, SchemaField, TYPE_SCHEMA, Client, fromHost } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
@@ -111,7 +111,7 @@ describe('Schemas', () => {
  * @param items
  * @param [space]
  */
-const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], space?: Space) => {
+const renderSchemaItemsTable = (schema: Item<DocumentModel>, items: Item<DocumentModel>[], space?: Space) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 

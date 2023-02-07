@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 
 import { Matcher } from './matcher';
 
-// TODO(burdon): Adapt for ObjectModel.
+// TODO(burdon): Adapt for DocumentModel.
 // TODO(burdon): Nested properties?
 // TODO(burdon): Indexed properties? (schema?)
 const getter = (item: any, key: string) => item[key];

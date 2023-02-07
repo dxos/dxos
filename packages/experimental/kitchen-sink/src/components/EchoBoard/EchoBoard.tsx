@@ -7,7 +7,7 @@ import React from 'react';
 import { Box, Grid } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
@@ -15,7 +15,7 @@ import { EchoCard } from './EchoCard';
 import { EchoSubList } from './EchoSubList';
 
 export interface EchoBoardProps {
-  items?: Item<ObjectModel>[];
+  items?: Item<DocumentModel>[];
   itemAdapter: ItemAdapter;
   onCreateItem?: (type: string, title: string, parent?: ItemID) => void;
 }

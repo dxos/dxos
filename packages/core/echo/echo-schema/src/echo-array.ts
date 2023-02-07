@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
+import { DocumentModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, id } from './defs';
 import { Document } from './document';
@@ -303,7 +303,7 @@ export class EchoArray<T> implements Array<T> {
   // Impl.
   //
 
-  private _getBackingModel(): ObjectModel | undefined {
+  private _getBackingModel(): DocumentModel | undefined {
     return this._object?._item?.model;
   }
 

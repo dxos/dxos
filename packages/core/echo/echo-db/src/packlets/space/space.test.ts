@@ -6,7 +6,7 @@ import expect from 'expect';
 import assert from 'node:assert';
 
 import { CredentialGenerator } from '@dxos/credentials';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -46,10 +46,10 @@ describe('space/space', () => {
 
     {
       assert(db.database);
-      const item1 = await db.database.createItem<ObjectModel>({
+      const item1 = await db.database.createItem<DocumentModel>({
         type: 'dxos.example'
       });
-      const item2 = await db.database.createItem<ObjectModel>({
+      const item2 = await db.database.createItem<DocumentModel>({
         type: 'dxos.example'
       });
 

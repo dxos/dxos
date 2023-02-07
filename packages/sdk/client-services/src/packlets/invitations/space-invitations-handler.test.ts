@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { asyncChain, latch, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
@@ -37,7 +37,7 @@ describe('services/space-invitations-handler', () => {
     const space = await peer.dataSpaceManager!.createSpace();
 
     {
-      const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
+      const item = await space.database!.createItem<DocumentModel>({ type: 'test' });
       await item.model.set('name', 'test');
     }
 

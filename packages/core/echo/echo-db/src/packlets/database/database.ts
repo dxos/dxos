@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { ItemType, ItemID } from '@dxos/protocols';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
@@ -113,7 +113,7 @@ export class Database {
   async createItem<M extends Model<any>>(options: CreateItemOption<M> = {}): Promise<Item<M>> {
     this._assertInitialized();
     if (!options.model) {
-      options.model = ObjectModel as any as ModelConstructor<M>;
+      options.model = DocumentModel as any as ModelConstructor<M>;
     }
 
     validateModelClass(options.model);
@@ -126,7 +126,7 @@ export class Database {
       throw new TypeError('Optional parent item id must be a string id of an existing item.');
     }
 
-    // TODO(burdon): Get model_type from somewhere other than `ObjectModel.meta.type`.
+    // TODO(burdon): Get model_type from somewhere other than `DocumentModel.meta.type`.
     return (await this._itemManager.createItem(
       options.model.meta.type,
       options.id,

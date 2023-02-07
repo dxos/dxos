@@ -9,7 +9,7 @@ import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/object-model';
 import { test, describe } from '@dxos/test';
 
 import { createSigningContext, syncItems, TestBuilder } from '../testing';
@@ -27,7 +27,7 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer.keyring,
       identity,
-      new ModelFactory().registerModel(ObjectModel),
+      new ModelFactory().registerModel(DocumentModel),
       peer.feedStore,
       peer.snapshotStore
     );
@@ -53,7 +53,7 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer1.keyring,
       identity1,
-      new ModelFactory().registerModel(ObjectModel),
+      new ModelFactory().registerModel(DocumentModel),
       peer1.feedStore,
       peer1.snapshotStore
     );
@@ -66,7 +66,7 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer2.keyring,
       identity2,
-      new ModelFactory().registerModel(ObjectModel),
+      new ModelFactory().registerModel(DocumentModel),
       peer2.feedStore,
       peer1.snapshotStore
     );

@@ -24,7 +24,7 @@ export {
 export { PublicKey } from '@dxos/keys';
 
 // TODO(burdon): Export form `@dxos/echo-db`.
-export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
+export { ItemID, DocumentModel, OrderedList } from '@dxos/object-model';
 
 export {
   type InvitationEvents,

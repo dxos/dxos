@@ -5,7 +5,7 @@
 import { InspectOptionsStylized, inspect } from 'node:util';
 
 import { log } from '@dxos/log';
-import { ObjectModel, OrderedArray, Reference } from '@dxos/object-model';
+import { DocumentModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
@@ -37,14 +37,14 @@ export const DEFAULT_VISITORS: ConvertVisitors = {
  * Base class for generated document types and dynamic objects.
  */
 // TODO(burdon): Support immutable objects?
-export class DocumentBase extends EchoObject<ObjectModel> {
+export class DocumentBase extends EchoObject<DocumentModel> {
   /**
    * Pending values before committed to model.
    * @internal
    */
   _uninitialized?: Record<keyof any, any> = {};
 
-  override _modelConstructor = ObjectModel;
+  override _modelConstructor = DocumentModel;
 
   // prettier-ignore
   constructor(
