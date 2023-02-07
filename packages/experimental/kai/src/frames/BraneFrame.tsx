@@ -42,7 +42,7 @@ const views = [
 export const BraneFrame = () => {
   const space = useSpace();
   const organizations = useQuery(space, Organization.filter());
-  const [view, setView] = useState(View.PLEX);
+  const [view, setView] = useState(View.GRAPH);
 
   const data = {
     name: 'Projects',
