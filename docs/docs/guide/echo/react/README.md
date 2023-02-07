@@ -1,10 +1,15 @@
 ---
-title: Configuration
 order: 1
 dir:
-  text: React
-  order: 10
+  text: React Guide
+  order: 1
 ---
+
+# Installation
+
+```bash
+npm install --save @dxos/react-client
+```
 
 # Configuration
 

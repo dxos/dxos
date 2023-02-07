@@ -1,9 +1,8 @@
 ---
-title: Advanced scenarios
 order: 20
 ---
 
-# Advanced scenarios
+# Configuration examples
 
 ### Custom signaling server
 

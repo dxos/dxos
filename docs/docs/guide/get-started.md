@@ -1,21 +1,18 @@
 ---
-order: 1
+order: 2
 title: Get started
-next: overview
-prev: why
 ---
 
 # Get started
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. Learn about the [mission](why).
 
-The platform offers a set of essentials for building applications:
-
-*   Start a project with an [app template](#create-an-app)
-*   Use [ECHO](#echo-state-consensus) for real-time state consensus
-*   Start up a [KUBE](#starting-a-kube) to host your app
-*   [Deploy](#deploying-your-app-to-a-kube) your app to the KUBE
-
+::: note In this guide:
+*   Starting a project with an [app template](#create-an-app)
+*   Using [ECHO](#echo-state-consensus) for real-time state consensus
+*   Starting a [KUBE](#starting-a-kube) to host your app
+*   [Deploying](#deploying-your-app-to-a-kube) your app to the KUBE
+:::
 ## Create an app
 
 DXOS project templates are based on `vite`, `typescript`, `react`, `tailwind`, and other opinions to get you going quickly.

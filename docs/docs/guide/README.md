@@ -1,7 +1,5 @@
 ---
 order: 0
-next: ./quick-start
-prev: ./why
 ---
 
 # Introduction

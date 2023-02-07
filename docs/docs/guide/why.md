@@ -1,8 +1,6 @@
 ---
 order: 1
 title: "Why DXOS?"
-prev: README.md
-next: quick-start
 ---
 
 ## Mission
