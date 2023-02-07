@@ -1,11 +1,11 @@
 ---
 order: 1
-title: Quick start
+title: Get started
 next: overview
 prev: why
 ---
 
-# Quick start
+# Get started
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. Learn about the [mission](why).
 
