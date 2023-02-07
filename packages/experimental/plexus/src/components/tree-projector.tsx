@@ -55,7 +55,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       selected,
       x: center[0],
       y: center[1],
-      r: this.options.nodeRadius ?? 16 * 3, // TODO(burdon): Factor out default.
+      r: (this.options.nodeRadius ?? 16) * 3, // TODO(burdon): Factor out default.
       data: rootNode,
       className: this.options.classes?.root
     });

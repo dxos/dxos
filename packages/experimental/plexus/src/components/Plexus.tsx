@@ -10,42 +10,30 @@ import { useSvgContext } from '@dxos/gem-core';
 import { GraphLayoutNode, GraphModel, GraphRenderer } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-components';
 
-import { usePlexusState } from '../hooks';
 import { TreeProjector } from './tree-projector';
+import { useTimeout } from './util';
 
 const transitionDuration = 300;
 
-export type PlexProps<N> = {
+export type PlexusProps<N> = {
   model: GraphModel<N>;
   className?: string;
   onSelect?: (node: N) => void;
+  onSpin?: (spin: boolean) => void; // TODO(burdon): Generic state change.
 };
 
-export const Plex = <N,>({ model, className, onSelect }: PlexProps<N>) => {
-  // TODO(burdon): Pass in state and transition duration options. Callbacks.
-  const { transition } = usePlexusState();
-  const [visible, setVisible] = useState(true);
-  const [spin, setSpin] = useState(true);
-  const timeout = useRef<[any, any]>([0, 0]);
-  useEffect(() => {
-    setVisible(false);
-    setSpin(true);
-
-    clearTimeout(timeout.current[0]);
-    const t1 = setTimeout(() => {
-      setVisible(true);
-    }, transitionDuration);
-
-    clearTimeout(timeout.current[1]);
-    const t2 = setTimeout(() => {
-      setSpin(false);
-    }, 2500);
-
-    timeout.current = [t1, t2];
-  }, [transition]);
-
+export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N>) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
+
+  // Display state.
+  const [invisible, triggerInvisible] = useTimeout(transitionDuration);
+  const [spin, triggerSpin] = useTimeout(2500, onSpin);
+  const [selected, setSelected] = useState<string>();
+  useEffect(() => {
+    triggerInvisible();
+    triggerSpin();
+  }, [selected]);
 
   // Layout projector.
   const projector = useMemo(
@@ -81,13 +69,16 @@ export const Plex = <N,>({ model, className, onSelect }: PlexProps<N>) => {
     []
   );
 
+  // Subscribe to model.
   const [data, setData] = useState(model.graph);
   useEffect(() => {
     model.subscribe((graph) => {
       setData({ ...graph });
+      setSelected(model.selected);
     });
   }, [model]);
 
+  // Trigger layout.
   useEffect(() => {
     if (graphRef.current) {
       projector.update(model.graph, model.selected);
@@ -101,8 +92,8 @@ export const Plex = <N,>({ model, className, onSelect }: PlexProps<N>) => {
       <g
         className={mx(
           'visible',
-          !visible && 'invisible',
-          visible && spin && 'animate-[spin_2s] __animate-[ping_2s]' // TODO(burdon): Ping on start.
+          invisible && 'invisible',
+          spin && 'animate-[spin_2s] __animate-[ping_2s]' // TODO(burdon): Ping on start.
         )}
       >
         <Aperture x={-64} y={-64} width={128} height={128} className='[&>*]:stroke-1 [&>*]:opacity-50' />

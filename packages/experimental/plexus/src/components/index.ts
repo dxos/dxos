@@ -4,6 +4,6 @@
 
 export * from './defs';
 export * from './tree-projector';
+export * from './util';
 
-export * from './Plex';
-export * from './PlexContainer';
+export * from './Plexus';
