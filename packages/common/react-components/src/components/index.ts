@@ -5,6 +5,7 @@
 export * from './Alert';
 export * from './Avatar';
 export * from './Button';
+export * from './Checkbox';
 export * from './CompoundButton';
 export * from './Dialog';
 export * from './Group';

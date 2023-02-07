@@ -8,7 +8,10 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { DotsSixVertical } from 'phosphor-react';
 import React, { FC, forwardRef, ReactNode } from 'react';
 
-import { useForwardedRef } from '../../hooks';
+import { useForwardedRef, useId } from '../../hooks';
+import { getSize } from '../../styles';
+import { mx } from '../../util';
+import { Checkbox } from '../Checkbox';
 import { defaultListItemHeading, defaultListItemEndcap } from './listStyles';
 
 const LIST_NAME = 'List';
@@ -16,6 +19,7 @@ const LIST_NAME = 'List';
 type ListVariant = 'ordered' | 'unordered' | 'ordered-draggable';
 
 interface ListProps {
+  labelId: string;
   children?: ReactNode;
   selectable?: boolean;
   variant?: ListVariant;
@@ -62,6 +66,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
   const { __scopeSelect, before, after, children } = props;
   const ref = useForwardedRef(forwardedRef);
   const { variant, selectable } = useListContext(LIST_NAME, __scopeSelect);
+  const headingId = useId('listItem');
   return (
     <Primitive.li
       ref={ref}
@@ -71,14 +76,19 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
       }}
     >
       {variant === 'ordered-draggable' && (
-        <div role='none' className={defaultListItemEndcap}>
-          <DotsSixVertical />
+        <div role='none' className='bs-10 is-5'>
+          <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
         </div>
       )}
       <div role='none' className={defaultListItemEndcap}>
-        {before}
+        {selectable ? <Checkbox labelId={headingId} className='mbs-2.5' /> : before}
       </div>
-      <div role='none' className={defaultListItemHeading}>
+      {selectable && before && (
+        <div role='none' className={defaultListItemEndcap}>
+          {before}
+        </div>
+      )}
+      <div role='none' className={defaultListItemHeading} id={headingId}>
         {children}
       </div>
       <div role='none' className={defaultListItemEndcap}>
