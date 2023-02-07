@@ -37,6 +37,12 @@
         "{options.outputFile}"
       ]
     },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "options": {
+        "buildTarget": "quickstart:bundle"
+      }
+    },
     "serve-with-halo": {
       "dependsOn": [
         "^build"

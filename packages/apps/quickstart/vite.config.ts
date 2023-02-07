@@ -51,7 +51,7 @@ export default defineConfig({
       ],
     }),
     VitePWA({
-      registerType: 'prompt',
+      registerType: "prompt",
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
       },

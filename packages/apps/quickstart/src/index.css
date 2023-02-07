@@ -1,26 +1,34 @@
-h1,
-p,
-pre {
+.dxos h1,
+.dxos p,
+.dxos pre {
   @apply my-6;
 }
 
-h1 {
+.dxos h1 {
   @apply text-2xl text-emerald-500;
 }
 
-code {
+.dxos code {
   @apply bg-zinc-200;
 }
 
-pre {
+.dxos pre {
   @apply bg-zinc-800;
 }
 
-code,
-pre {
+.dxos code,
+.dxos pre {
   @apply dark:bg-zinc-900 py-1 px-2 rounded text-emerald-500 dark:text-emerald-300 shadow-sm dark:shadow-md;
 }
 
-a {
+.dxos a {
   @apply text-emerald-500 dark:hover:text-emerald-200 hover:text-emerald-400;
+}
+
+.dxos button {
+  @apply border dark:border-zinc-200 border-zinc-800 p-2 px-4 rounded;
+}
+
+.dxos .demo {
+  @apply rounded bg-zinc-200 dark:bg-zinc-900 p-6 text-center;
 }

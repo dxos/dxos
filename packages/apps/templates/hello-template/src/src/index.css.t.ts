@@ -59,6 +59,15 @@ export default defineTemplate(
     .dxos a {
       @apply text-emerald-500 dark:hover:text-emerald-200 hover:text-emerald-400;
     }
+
+    .dxos button {
+      @apply border dark:border-zinc-200 border-zinc-800 p-2 px-4 rounded;
+    }
+    
+    .dxos .demo {
+      @apply rounded bg-zinc-200 dark:bg-zinc-900 p-6 text-center;
+    }
+    
     `}
     ${!(dxosUi || tailwind) && text`
     * {

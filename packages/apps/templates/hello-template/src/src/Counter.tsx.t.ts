@@ -26,6 +26,7 @@ export default defineTemplate(
       }
       return (
         <div>
+          {identity && \`Hello \${identity?.displayName}!\`}
           {counter && (
             <button
               className='p-4 m-2 border'
