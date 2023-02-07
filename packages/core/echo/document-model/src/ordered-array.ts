@@ -4,7 +4,7 @@
 
 import * as Y from 'yjs';
 
-import { YJS } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { YJS } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { Reference } from './reference';
 

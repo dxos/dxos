@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
-import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { MutationUtil, ValueUtil } from './mutation';
 import { OrderedArray } from './ordered-array';
@@ -118,9 +118,9 @@ export interface ObjectProperties {
 // TODO(burdon): Make generic (separate model?) With read/write validation.
 export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
-    type: 'dxos:model/object',
+    type: 'dxos:model/document',
     stateMachine: () => new DocumentModelStateMachine(),
-    mutationCodec: schema.getCodecForType('dxos.echo.model.object.ObjectMutationSet'),
+    mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
     async getInitMutation(obj: any): Promise<ObjectMutationSet> {
@@ -129,7 +129,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
       };
     },
 
-    snapshotCodec: schema.getCodecForType('dxos.echo.model.object.ObjectSnapshot')
+    snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot')
   };
 
   /**

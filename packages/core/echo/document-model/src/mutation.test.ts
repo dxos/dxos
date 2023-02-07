@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { ObjectMutation } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { ObjectMutation } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { describe, test } from '@dxos/test';
 
 import { MutationUtil, ValueUtil } from './mutation';

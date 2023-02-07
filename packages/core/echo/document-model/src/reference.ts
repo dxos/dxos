@@ -3,7 +3,7 @@
 //
 
 import { ItemID } from '@dxos/protocols';
-import { Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 export class Reference {
   static fromValue(value: ReferenceValue): Reference {
