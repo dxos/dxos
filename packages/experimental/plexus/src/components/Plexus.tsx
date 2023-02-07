@@ -3,46 +3,49 @@
 //
 
 import * as d3 from 'd3';
+import defaulstDeep from 'lodash.defaultsdeep';
 import { Aperture } from 'phosphor-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';
-import { GraphLayoutNode, GraphModel, GraphRenderer } from '@dxos/gem-spore';
+import { GraphLayoutNode, GraphModel, GraphRenderer, GraphRendererOptions } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-components';
 
-import { TreeProjector } from './tree-projector';
+import { TreeProjector, TreeProjectorOptions } from './tree-projector';
 import { useTimeout } from './util';
 
 const transitionDuration = 300;
 
-export type PlexusClasses = {
-  root?: string;
-};
-
-export type PlexusSlots = {
+export type PlexusSlots<N> = {
   root?: {
-    className: string;
+    className?: string;
   };
+  thorax?: {
+    className?: string;
+  };
+  projector?: Partial<TreeProjectorOptions>;
+  renderer?: Partial<GraphRendererOptions<N>>;
 };
 
 export type PlexusProps<N> = {
   model: GraphModel<N>;
   className?: string;
+  slots?: PlexusSlots<N>;
   onSelect?: (node: N) => void;
-  onSpin?: (spin: boolean) => void; // TODO(burdon): Generic state change.
+  onTransition?: (transitioning: boolean) => void; // TODO(burdon): Generic state change.
 };
 
 /**
  * SVG graph layout.
  */
-export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N>) => {
+export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps<N>) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
 
   // Display state.
   // TODO(burdon): Spinning animation does not reset on trigger.
-  const [invisible, triggerInvisible] = useTimeout(transitionDuration);
-  const [spin, triggerSpin] = useTimeout(2000, onSpin);
+  const [invisible, triggerInvisible] = useTimeout(transitionDuration, onTransition);
+  const [spin, triggerSpin] = useTimeout(2000);
   const [selected, setSelected] = useState<string>();
   useEffect(() => {
     triggerInvisible();
@@ -53,39 +56,33 @@ export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N
   const projector = useMemo(
     () =>
       // TODO(burdon): Factor out options to story.
-      new TreeProjector<N>(context, {
-        idAccessor: model.idAccessor,
-        radius: 192,
-        nodeRadius: 16,
-        classes: {
-          // TODO(burdon): Base styles via: [&>*].
-          // TODO(burdon): Factor out styles/classes: 300, 500, 700, 800.
-          node: {
-            circle: 'fill-slate-800 stroke-[3px] stroke-slate-500',
-            text: 'fill-slate-500'
-          },
-          link: {
-            path: 'stroke-[2px] stroke-slate-700'
-          }
-        }
-      }),
+      new TreeProjector<N>(
+        context,
+        defaulstDeep({}, slots?.projector, {
+          idAccessor: model.idAccessor
+        })
+      ),
     []
   );
 
   // Graph renderer.
   const renderer = useMemo(
     () =>
-      new GraphRenderer(context, graphRef, {
-        idAccessor: model.idAccessor,
-        transition: () => d3.transition().duration(transitionDuration).ease(d3.easeLinear),
-        labels: {
-          text: (node) => node.id.slice(0, 8) // + `[${node.data.label}]`
-        },
-        arrows: { end: true },
-        onNodeClick: (node: GraphLayoutNode<N>) => {
-          onSelect?.(node.data!);
-        }
-      }),
+      new GraphRenderer(
+        context,
+        graphRef,
+        defaulstDeep({}, slots?.renderer, {
+          idAccessor: model.idAccessor,
+          transition: () => d3.transition().duration(transitionDuration).ease(d3.easeLinear),
+          labels: {
+            text: (node: GraphLayoutNode<N>) => node.id.slice(0, 8) // + `[${node.data.label}]`
+          },
+          arrows: { end: true },
+          onNodeClick: (node: GraphLayoutNode<N>) => {
+            onSelect?.(node.data!);
+          }
+        })
+      ),
     []
   );
 
@@ -108,7 +105,7 @@ export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N
 
   return (
     <g>
-      <g ref={graphRef} className={className} />;
+      <g ref={graphRef} className={slots?.root?.className} />;
       <g
         className={mx(
           'visible',
@@ -116,7 +113,13 @@ export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N
           spin ? 'animate-[spin_2s] __animate-[ping_2s]' : 'animate-none' // TODO(burdon): Ping on start.
         )}
       >
-        <Aperture x={-64} y={-64} width={128} height={128} className='[&>*]:stroke-1 [&>*]:opacity-50' />
+        <Aperture
+          x={-64}
+          y={-64}
+          width={128}
+          height={128}
+          className={mx('[&>rect]:stroke-0', slots?.thorax?.className)}
+        />
       </g>
     </g>
   );

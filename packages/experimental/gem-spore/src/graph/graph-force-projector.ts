@@ -137,6 +137,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
     this._layout.guides = this.options.guides
       ? [
           {
+            id: 'g-1',
             type: 'circle',
             cx: 0,
             cy: 0,

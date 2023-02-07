@@ -19,7 +19,7 @@ export const useTimeout = (delay: number, onChange?: (pending: boolean) => void)
   const trigger = useMemo(() => {
     return throttledTimeout(() => {
       setPending(false);
-      // onChange?.(false);
+      onChange?.(false);
     }, delay);
   }, []);
 
@@ -27,7 +27,7 @@ export const useTimeout = (delay: number, onChange?: (pending: boolean) => void)
     pending,
     () => {
       setPending(true);
-      // onChange?.(true);
+      onChange?.(true);
       trigger();
     }
   ];

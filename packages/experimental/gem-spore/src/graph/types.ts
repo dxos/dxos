@@ -63,17 +63,21 @@ export type GraphLayoutLink<N> = {
   };
 };
 
+export type GraphGuide = {
+  id: string;
+  type: string;
+  cx: number;
+  cy: number;
+  r: number;
+  classes?: {
+    circle?: string;
+  };
+};
+
 export type GraphLayout<N> = {
+  guides?: GraphGuide[];
   graph: {
     nodes: GraphLayoutNode<N>[];
     links: GraphLayoutLink<N>[];
   };
-
-  guides?: {
-    type: 'circle'; // TODO(burdon): Create typed guides.
-    cx: number;
-    cy: number;
-    r: number;
-    className?: string;
-  }[];
 };

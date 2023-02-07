@@ -19,6 +19,9 @@ export type TreeProjectorOptions = ProjectorOptions &
     radius?: number;
     nodeRadius?: number;
     classes?: {
+      guide?: {
+        circle?: string;
+      };
       node?: {
         circle?: string;
         text?: string;
@@ -60,7 +63,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       x: center[0],
       y: center[1],
       r: (this.options.nodeRadius ?? 16) * 3, // TODO(burdon): Factor out default.
-      data: rootNode
+      data: rootNode // TODO(burdon): Merge Deep defaults for root class..
     });
 
     // Create or update nodes.
@@ -141,16 +144,24 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
     this._layout = {
       guides: [
         {
+          id: 'g1',
           type: 'circle',
           cx: 0,
           cy: 0,
-          r: inner
+          r: inner,
+          classes: {
+            circle: this.options.classes?.guide?.circle
+          }
         },
         {
+          id: 'g2',
           type: 'circle',
           cx: 0,
           cy: 0,
-          r: outer
+          r: outer,
+          classes: {
+            circle: this.options.classes?.guide?.circle
+          }
         }
       ],
       graph: {

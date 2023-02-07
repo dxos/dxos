@@ -8,13 +8,16 @@ import { D3Callable, D3Selection, Point } from '@dxos/gem-core';
 
 import { createBullets } from './bullets';
 import { Renderer, RendererOptions } from './renderer';
-import { GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
+import { GraphGuide, GraphLayout, GraphLayoutLink, GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
 export type LabelOptions<N> = {
   text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined;
 };
 
+/**
+ * @deprecated
+ */
 export type AttributesOptions<N> = {
   node?: (node: GraphLayoutNode<N>) => {
     class?: string;
@@ -242,13 +245,13 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .join('g')
       .attr('class', 'guides')
       .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>('circle')
-      .data(layout.guides ?? [])
+      .data(layout.guides ?? [], (d: GraphGuide) => d.id)
       .join(
         (enter) => enter.append('circle').attr('r', 0),
         (update) => update,
         (exit) => exit.transition().duration(500).attr('r', 0).remove()
       )
-      .attr('class', (d) => d.className)
+      .attr('class', (d) => d.classes?.circle)
       .attr('cx', (d) => d.cx)
       .attr('cy', (d) => d.cy)
       .attr('r', (d) => d.r);

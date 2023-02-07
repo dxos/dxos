@@ -19,7 +19,7 @@ import React, { FC, useEffect, useMemo, useState } from 'react';
 import hash from 'string-hash';
 
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { convertTreeToGraph, createTree, TestNode, TestGraphModel, Markers } from '@dxos/gem-spore';
+import { convertTreeToGraph, createTree, TestNode, TestGraphModel, Markers, GraphLayoutNode } from '@dxos/gem-spore';
 import { getSize, mx } from '@dxos/react-components';
 
 import '@dxosTheme';
@@ -113,30 +113,51 @@ const Test = () => {
 
   const node = history.length ? model.getNode(history[index]) : undefined;
 
+  const slots = {
+    grid: {
+      className: '[&>*]:stroke-slate-700 [&>*]:stroke-[1px] [&>*]:opacity-40'
+    },
+    plexus: {
+      thorax: {
+        className: '[&>*]:stroke-2 [&>*]:stroke-slate-500'
+      },
+      renderer: {
+        labels: {
+          text: (node: GraphLayoutNode<TestNode>) => node.data!.label
+        }
+      },
+      projector: {
+        radius: 192,
+        nodeRadius: 16,
+        classes: {
+          guide: {
+            circle: 'fill-transparent stroke-[1px] stroke-slate-700'
+          },
+          node: {
+            circle: 'fill-slate-800 stroke-[1px] stroke-slate-500',
+            // TODO(burdon): Restructure slots to support other props (e.g., font-size).
+            text: 'fill-slate-400'
+          },
+          link: {
+            path: 'stroke-[2px] stroke-slate-700'
+          }
+        }
+      }
+    }
+  };
+
   return (
     <div className='flex flex-col absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 relative'>
         <SVGContextProvider>
           <SVG className={mx('bg-slate-800')}>
-            {/* TODO(burdon): Classes for grid, markers, etc. */}
-            <Markers
-              arrowSize={6}
-              className='[&>marker>path]:stroke-slate-700 [&>marker>path]:stroke-[1px] [&>marker>path]:fill-transparent'
-            />
-            <Grid className='[&>path]:stroke-slate-700 [&>path]:stroke-[1px] [&>path]:opacity-40' />
+            <Markers arrowSize={6} />
+            <Grid className={slots?.grid?.className} />
             <Zoom extent={[1, 4]}>
               <g className={mx('visible', spinning && 'invisible')}>
                 <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={600} y2={0} />
               </g>
-              <Plexus
-                className={mx(
-                  // TODO(burdon): Move to classes.
-                  '[&>g>circle]:fill-transparent [&>g>circle]:stroke-slate-700 [&>g>circle]:stroke-[1px] [&>g>circle]:opacity-70'
-                )}
-                model={model}
-                onSelect={handleSelect}
-                onSpin={setSpinning}
-              />
+              <Plexus model={model} slots={slots?.plexus} onSelect={handleSelect} onTransition={setSpinning} />
             </Zoom>
           </SVG>
         </SVGContextProvider>
