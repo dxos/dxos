@@ -32,6 +32,9 @@ export interface DatabaseBackend {
   open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>;
   close(): Promise<void>;
 
+  /**
+   * @deprecated
+   */
   getWriteStream(): FeedWriter<DataMessage> | undefined;
   createSnapshot(): EchoSnapshot;
   createDataServiceHost(): DataServiceHost;

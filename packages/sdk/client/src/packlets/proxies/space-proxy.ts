@@ -127,6 +127,7 @@ export class SpaceProxy implements Space {
 
     this._database = new Database(
       this._modelFactory,
+      // TODO(dmaretskyi): Preserve this when removing `Database`.
       new DatabaseBackendProxy(this._clientServices.services.DataService, this.key),
       memberKey
     );
