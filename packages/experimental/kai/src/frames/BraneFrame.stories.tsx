@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Document, id } from '@dxos/echo-schema';
 import { GraphData, GraphModel } from '@dxos/gem-spore';
-import { Plexus, PlexusContext } from '@dxos/plexus';
+import { Plexus } from '@dxos/plexus';
 
 import '@dxosTheme';
 
@@ -29,11 +29,7 @@ export class EchoGraphModel extends GraphModel<Document> {
 // TODO(burdon): Create profile, space, etc.
 const StoryContainer = () => {
   const model = useMemo(() => new EchoGraphModel(), []);
-  return (
-    <PlexusContext.Provider value={{}}>
-      <Plexus model={model} />
-    </PlexusContext.Provider>
-  );
+  return <Plexus model={model} />;
 };
 
 export default {
