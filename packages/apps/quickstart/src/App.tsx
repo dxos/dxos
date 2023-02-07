@@ -10,9 +10,8 @@ import { GenericFallback, ServiceWorkerToastContainer, appkitTranslations } from
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 
-import { Home } from './Home';
-
 import './index.css';
+import { Counter } from './Counter';
 
 // Dynamics allows configuration to be supplied by the hosting KUBE
 const config = async () => new Config(await Dynamics(), Defaults());
@@ -22,7 +21,7 @@ export const App = () => {
   return (
     <ThemeProvider appNs='quickstart' resourceExtensions={[appkitTranslations]} fallback={<GenericFallback />}>
       <ClientProvider config={config} fallback={GenericFallback}>
-        <Home />
+        <Counter />
         <ServiceWorkerToastContainer {...serviceWorker} />
       </ClientProvider>
     </ThemeProvider>

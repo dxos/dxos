@@ -1,6 +1,7 @@
 //
 // Copyright 2022 DXOS.org
 //
+import os from 'os';
 import chalk from 'chalk';
 import flatten from 'lodash.flatten';
 import * as path from 'path';
@@ -229,7 +230,7 @@ export const executeDirectoryTemplate = async <TInput>(
         info(`${errors.length} errors`);
       }
       if (printMessage && outputMessage) {
-        info(outputMessage);
+        info(os.EOL + outputMessage + os.EOL);
       }
       return { errors, filesWritten };
     }

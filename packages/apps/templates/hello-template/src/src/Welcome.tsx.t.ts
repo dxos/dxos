@@ -3,13 +3,13 @@ import config from '../config.t';
 
 export default defineTemplate(
   ({ input: { react } }) => {
-    return react ? text`
+    return react ? text /* javascript */`
     import React from 'react';
 
     export const Welcome = ({ name }: { name: string }) => {
       const isDark = document.documentElement.classList.contains('dark');
       return (
-        <div className='flex justify-center align-middle'>
+        <div className='dxos flex justify-center align-middle'>
           <div className='max-w-md bg-zinc-100 dark:bg-zinc-800 p-6 m-8 rounded-md shadow-lg'>
             <img src={isDark ? 'dxos-white.svg' : 'dxos.svg'} className='mb-10' />
             <h1>{name ?? 'hello'}</h1>

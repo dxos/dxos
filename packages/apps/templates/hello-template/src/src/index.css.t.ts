@@ -4,7 +4,7 @@ import config from '../config.t';
 export default defineTemplate(
   async ({ input }) => {
     const { dxosUi, react, tailwind } = input;
-    const content = (dxosUi: boolean, tailwind: boolean) => text`
+    return text`
     ${
       !dxosUi &&
       tailwind &&
@@ -36,27 +36,27 @@ export default defineTemplate(
     }
     `}
 
-    h1, p, pre {
+    .dxos h1, .dxos p, .dxos pre {
       @apply my-6;
     }
 
-    h1 {
+    .dxos h1 {
       @apply text-2xl text-emerald-500;
     }
 
-    code {
+    .dxos code {
       @apply bg-zinc-200;
     }
     
-    pre {
+    .dxos pre {
       @apply bg-zinc-800;
     }
 
-    code, pre {
+    .dxos code, .dxos pre {
       @apply dark:bg-zinc-900 py-1 px-2 rounded text-emerald-500 dark:text-emerald-300 shadow-sm dark:shadow-md;
     }
 
-    a {
+    .dxos a {
       @apply text-emerald-500 dark:hover:text-emerald-200 hover:text-emerald-400;
     }
     `}
@@ -75,56 +75,56 @@ export default defineTemplate(
       color: #E4E4E7;
     }
     
-    .max-w-md {
+    .dxos .max-w-md {
       max-width: 25rem;
     }
     
-    .flex {
+    .dxos .flex {
       display: flex;
       flex-direction: row;
     }
     
-    .justify-center {
+    .dxos .justify-center {
       justify-content: center;
     }
     
-    .bg-zinc-100 {
+    .dxos .bg-zinc-100 {
       background-color: #F4F4F5;
     }
     
-    .dark [class~="dark:bg-zinc-800"] {
+    .dxos .dark [class~="dark:bg-zinc-800"] {
       background-color: #27272A;
     }
     
-    .p-6 {
+    .dxos .p-6 {
       padding: 1.8em;
     }
     
-    .m-8 {
+    .dxos .m-8 {
       margin: 2.8em;
     }
     
-    .rounded-md {
+    .dxos .rounded-md {
       border-radius: 4px;
     }
     
-    .shadow-lg {
+    .dxos .shadow-lg {
       box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
     }
     
-    h1, p, pre {
+    .dxos h1, p, pre {
       margin: 1.2em 0;
     }
     
-    h1 {
+    .dxos h1 {
       color: #10B981;
     }
     
-    code {
+    .dxos code {
       display: inline-block;
     }
     
-    pre, code {
+    .dxos pre, code {
       font-family: monospace;
       padding: 0.3em 0.4em;
       border-radius: 3px;
@@ -133,35 +133,28 @@ export default defineTemplate(
       background-color: #71717A;
     }
     
-    pre {
+    .dxos pre {
       padding: 0.4em;
     }
     
-    .dark pre, .dark code {
+    .dxos .dark pre, .dark code {
       background-color: #18181B;
     }
     
-    a, a:visited {
+    .dxos a, a:visited {
       text-decoration: none;
       color: #10B981;
     }
     
-    a:hover {
+    .dxos a:hover {
       color: #34D399;
     }
     
-    .dark a:hover {
+    .dxos .dark a:hover {
       color: #A7F3D0;
-    }
-    
-    .dark a {
-    
     }
     `}
     `;
-
-    const output = content(dxosUi, tailwind);
-    return output.toString();
   },
   { config }
 );

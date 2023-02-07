@@ -2,6 +2,29 @@
   "sourceRoot": "packages/apps/quickstart/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/quickstart/src/index.ts",
+        "outputPath": "packages/apps/quickstart/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/apps/quickstart/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nrwl/vite:build",
+      "options": {
+        "outputPath": "packages/apps/quickstart/out/quickstart"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -13,6 +36,23 @@
       "outputs": [
         "{options.outputFile}"
       ]
+    },
+    "serve-with-halo": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx serve halo-app"
+          },
+          {
+            "command": "nx serve quickstart"
+          }
+        ],
+        "parallel": true
+      }
     },
     "storybook": {
       "configurations": {

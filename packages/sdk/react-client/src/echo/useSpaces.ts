@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useMemo, useSyncExternalStore } from 'react';
+import { useMemo, useEffect, useSyncExternalStore } from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
@@ -13,10 +13,16 @@ import { useClient } from '../client';
  * Get a specific Space via its key.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useSpace = (spaceKey?: PublicKeyLike) => {
+export const useSpace = (spaceKey?: PublicKeyLike | null, options?: { create?: boolean }) => {
+  const { create } = { create: false, ...options };
+  const client = useClient();
   const spaces = useSpaces();
-  const space = spaces.find((space) => spaceKey && space.key.equals(spaceKey));
-
+  const space = spaceKey ? spaces.find((space) => spaceKey && space.key.equals(spaceKey)) : spaces?.[0];
+  useEffect(() => {
+    if (!space && create) {
+      client.echo.createSpace().catch((err) => console.error(err));
+    }
+  }, [space]);
   return space;
 };
 
