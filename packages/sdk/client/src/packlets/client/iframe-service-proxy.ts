@@ -35,6 +35,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     shell = DEFAULT_SHELL_CHANNEL,
     timeout = 1000
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
+    this._handleKeyDown = this._handleKeyDown.bind(this);
     this._options = { source, channel, shell, timeout };
   }
 
@@ -81,6 +82,8 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       this._shellController.contextUpdate.on(({ display }) => {
         this._iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
       });
+
+      window.addEventListener('keydown', this._handleKeyDown);
     }
 
     await this._clientServicesProxy.open();
@@ -115,6 +118,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   }
 
   async close() {
+    window.removeEventListener('keydown', this._handleKeyDown);
     await this._shellController?.close();
     await this._clientServicesProxy?.close();
     this._shellController = undefined;
@@ -141,5 +145,20 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     }
 
     return createIFramePort({ origin: source.origin, iframe: this._iframe, channel });
+  }
+
+  private async _handleKeyDown(event: KeyboardEvent) {
+    if (!this._shellController) {
+      return;
+    }
+
+    const modifier = event.ctrlKey || event.metaKey;
+    if (event.key === '>' && event.shiftKey && modifier) {
+      await this._shellController.setLayout(ShellLayout.SPACE_LIST);
+    } else if (event.key === '.' && modifier) {
+      await this._shellController.setLayout(ShellLayout.CURRENT_SPACE, {
+        spaceKey: this._shellController.spaceKey
+      });
+    }
   }
 }
