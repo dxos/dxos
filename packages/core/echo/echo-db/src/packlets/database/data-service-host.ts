@@ -9,8 +9,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
-import { MutationReceipt, SubscribeResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { MutationReceipt, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
@@ -28,12 +28,12 @@ export class DataServiceHost {
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _writeStream?: FeedWriter<DataMessage>
-  ) {}
+  ) { }
 
   /**
    * Real-time subscription to data objects in a space.
    */
-  subscribe(): Stream<SubscribeResponse> {
+  subscribe(): Stream<EchoEvent> {
     return new Stream(({ next, ctx }) => {
       // send current state
       const objects = Array.from(this._itemManager.entities.values()).map((entity): EchoObject => {
@@ -57,7 +57,9 @@ export class DataServiceHost {
       });
 
       next({
-        objects
+        batch: {
+          objects
+        }
       });
 
       // subscribe to mutations
@@ -65,30 +67,33 @@ export class DataServiceHost {
       this._itemDemuxer.mutation.on(ctx, (mutation) => {
         log('Object update', { mutation });
         next({
-          objects: [
-            {
-              ...mutation.data,
-              mutations: mutation.data.mutations?.map((m) => ({
-                ...m,
-                meta: {
-                  feedKey: PublicKey.from(mutation.meta.feedKey),
-                  memberKey: PublicKey.from(mutation.meta.memberKey),
-                  seq: mutation.meta.seq,
-                  timeframe: mutation.meta.timeframe
-                }
-              }))
-            }
-          ]
+          batch: {
+            objects: [
+              {
+                ...mutation.data,
+                mutations: mutation.data.mutations?.map((m) => ({
+                  ...m,
+                  meta: {
+                    feedKey: PublicKey.from(mutation.meta.feedKey),
+                    memberKey: PublicKey.from(mutation.meta.memberKey),
+                    seq: mutation.meta.seq,
+                    timeframe: mutation.meta.timeframe
+                  }
+                }))
+              }
+            ]
+          }
         });
       });
     });
   }
 
-  async write(object: EchoObject): Promise<MutationReceipt> {
+  async write(batch: EchoObjectBatch): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
+    assert(batch.objects?.length === 1, 'Only single object mutations are supported');
 
     return this._writeStream.write({
-      object
+      object: batch.objects[0]
     });
   }
 }

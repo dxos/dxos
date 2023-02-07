@@ -64,11 +64,17 @@ message EchoObject {
   repeated Mutation mutations = 14;
 }
 
-// TODO(dmaretskyi): client_tag.
 message MutationMeta {
   dxos.keys.PublicKey feed_key = 1;
   int32 seq = 2;
   dxos.keys.PublicKey member_key = 3;
 
   optional timeframe.TimeframeVector timeframe = 4;
+
+  /// If this mutation was created by this client, this field will be set to the tag in the mutation.
+  optional string client_tag = 5;
+}
+
+message EchoObjectBatch {
+  repeated EchoObject objects = 1;
 }

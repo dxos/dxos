@@ -9,7 +9,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
-import { DataService, SubscribeResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Item } from './item';
 import { ItemManager } from './item-manager';
@@ -24,7 +24,7 @@ import { ItemManager } from './item-manager';
  * This class is analogous to ItemDemuxer but for databases running in remote mode.
  */
 export class DataMirror {
-  private _entities?: Stream<SubscribeResponse>;
+  private _entities?: Stream<EchoEvent>;
 
   constructor(
     private readonly _itemManager: ItemManager,
@@ -40,7 +40,7 @@ export class DataMirror {
     });
     this._entities.subscribe(
       async (msg) => {
-        for (const object of msg.objects ?? []) {
+        for (const object of msg.batch.objects ?? []) {
           assert(object.objectId);
 
           let entity: Item<any> | undefined;

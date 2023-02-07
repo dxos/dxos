@@ -133,7 +133,9 @@ export class DatabaseBackendProxy implements DatabaseBackend {
       write: async (mutation) => {
         log('write', mutation);
         const { feedKey, seq } = await this._service.write({
-          mutation: mutation.object,
+          batch: {
+            objects: [mutation.object],
+          },
           spaceKey: this._spaceKey
         });
         assert(feedKey);
