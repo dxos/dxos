@@ -7,10 +7,12 @@ prev: why
 
 # Quick start
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.<br/> Learn more about our [mission](why).
+DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. Learn about the [mission](why).
+
+The platform offers a set of essentials for building applications:
 
 *   Start a project with an [app template](#create-an-app)
-*   Use [ECHO](#echo-state-consensus) for state consensus
+*   Use [ECHO](#echo-state-consensus) for real-time state consensus
 *   Start up a [KUBE](#starting-a-kube) to host your app
 *   [Deploy](#deploying-your-app-to-a-kube) your app to the KUBE
 
@@ -31,17 +33,17 @@ pnpm install
 pnpm serve
 ```
 
-This will start the development server.
+This will start the development server 🚀.
 
-:::note
-Only [`pnpm`](https://pnpm.io/) is supported for now `npm i -g pnpm`.
+::: note
+Only [`pnpm`](https://pnpm.io/) is supported for now: `npm i -g pnpm`.
 :::
 
 ## ECHO State Consensus
 
 [ECHO](overview#echo) is a peer-to-peer graph database designed for offline-first and real-time collaboration. There is no central server, peers exchange data directly over p2p connections.
 
-Install:
+Installation:
 
 ```bash
 pnpm i @dxos/client

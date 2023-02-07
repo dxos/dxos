@@ -81,6 +81,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       ${
         pwa
           ? `${VitePWA()}({
+        registerType: 'prompt',
         workbox: {
           maximumFileSizeToCacheInBytes: 30000000
         },

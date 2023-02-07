@@ -65,6 +65,7 @@
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-test": "tools/protobuf-test",
     "protocols": "packages/core/protocols",
+    "quickstart": "packages/apps/quickstart",
     "random-access-storage": "packages/common/random-access-storage",
     "react-appkit": "packages/apps/patterns/react-appkit",
     "react-async": "packages/common/react-async",

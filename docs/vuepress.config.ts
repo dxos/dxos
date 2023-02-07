@@ -87,7 +87,8 @@ const config: UserConfig = defineUserConfig({
         sub: true,
         sup: true,
         attrs: true,
-        figure: true
+        figure: true,
+        imageMark: true
       }
     }
   }),
