@@ -20,6 +20,7 @@ export type PlexusProps<N> = {
   onSelect?: (node: N) => void;
 };
 
+// TODO(burdon): Rename container.
 export const Plexus = <N,>({ model, onSelect }: PlexusProps<N>) => {
   const { transition } = usePlexusState();
   const [visible, setVisible] = useState(true);
@@ -91,6 +92,7 @@ export const PlexGraph = <N,>({ model, className, onSelect }: PlexGraphProps<N>)
   const projector = useMemo(
     () =>
       new TreeProjector<N>(context, {
+        idAccessor: model.idAccessor,
         radius: 192,
         nodeRadius: 16,
         slots: {
@@ -107,6 +109,7 @@ export const PlexGraph = <N,>({ model, className, onSelect }: PlexGraphProps<N>)
   const renderer = useMemo(
     () =>
       new GraphRenderer(context, graphRef, {
+        idAccessor: model.idAccessor,
         transition: () => d3.transition().duration(transitionDuration).ease(d3.easeLinear),
         labels: {
           text: (node) => node.id.slice(0, 8) // + `[${node.data.label}]`

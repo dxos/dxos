@@ -4,14 +4,21 @@
 
 import React, { useMemo } from 'react';
 
-import { GraphData, GraphModel, GraphNode } from '@dxos/gem-spore';
+import { Document, id } from '@dxos/echo-schema';
+import { GraphData, GraphModel } from '@dxos/gem-spore';
 import { Plexus, PlexusStateContext } from '@dxos/plexus';
 
 import '@dxosTheme';
 
+import { FullScreen } from '../testing';
+
 // TODO(burdon): Create GraphNode to shadow Document? or use real objects with accessors.
-class EchoModel extends GraphModel<GraphNode> {
-  get graph(): GraphData<GraphNode> {
+export class EchoGraphModel extends GraphModel<Document> {
+  constructor() {
+    super((object: Document) => object[id]);
+  }
+
+  get graph(): GraphData<Document> {
     return {
       nodes: [],
       links: []
@@ -20,8 +27,8 @@ class EchoModel extends GraphModel<GraphNode> {
 }
 
 // TODO(burdon): Create profile, space, etc.
-const Test = () => {
-  const model = useMemo(() => new EchoModel(), []);
+const StoryContainer = () => {
+  const model = useMemo(() => new EchoGraphModel(), []);
   return (
     <PlexusStateContext.Provider value={{}}>
       <Plexus model={model} />
@@ -30,16 +37,11 @@ const Test = () => {
 };
 
 export default {
-  component: Test,
+  component: Plexus,
+  decorators: [FullScreen],
   parameters: {
     layout: 'fullscreen'
   }
 };
 
-export const Default = () => {
-  return (
-    <div className='flex flex-col'>
-      <Test />
-    </div>
-  );
-};
+export const Default = () => <StoryContainer />;

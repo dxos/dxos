@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { FolderHierarchy, FolderHierarchyItem, Searchbar } from '@dxos/kai';
+import { TreeView, TreeViewItem, Searchbar } from '@dxos/kai';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -25,7 +25,7 @@ const textFilter = (text?: string) => {
   }
 
   const matcher = new RegExp(text, 'i');
-  return (item: FolderHierarchyItem) => {
+  return (item: TreeViewItem) => {
     const match = item.title?.match(matcher);
     return match !== null;
   };
@@ -55,7 +55,7 @@ const getItemDetails = (item: Item<any>) => ({
   properties: <JsonView data={modelToObject(item.model)} />
 });
 
-const getHierarchicalItem = (item: Item<any>): FolderHierarchyItem => ({
+const getHierarchicalItem = (item: Item<any>): TreeViewItem => ({
   id: item.id,
   title: getItemType(item),
   items: item.children.map((child) => getHierarchicalItem(child)),
@@ -81,7 +81,7 @@ const ItemsPanel = () => {
       <div className='flex h-full overflow-hidden'>
         <div className='flex flex-col w-1/3 overflow-auto border-r'>
           {/* TODO(burdon): Convert to list with new API. */}
-          <FolderHierarchy
+          <TreeView
             items={items
               .filter((item) => !item.parent)
               .map(getHierarchicalItem)

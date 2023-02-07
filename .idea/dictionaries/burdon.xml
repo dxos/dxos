@@ -49,6 +49,7 @@
       <w>orgs</w>
       <w>packlets</w>
       <w>prefs</w>
+      <w>protos</w>
       <w>proxied</w>
       <w>rehype</w>
       <w>reopenable</w>
@@ -63,6 +64,7 @@
       <w>testutils</w>
       <w>truncatable</w>
       <w>typegen</w>
+      <w>uncompiled</w>
       <w>undownload</w>
       <w>unhave</w>
       <w>unproxy</w>

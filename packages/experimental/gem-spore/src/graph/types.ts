@@ -11,7 +11,7 @@ import assert from 'assert';
 
 import { Point } from '@dxos/gem-core';
 
-export type IdAccessor = <N>(node: N) => string;
+export type IdAccessor<N = any> = (node: N) => string;
 
 export const defaultIdAccessor = (node: any) => {
   assert(node.id);

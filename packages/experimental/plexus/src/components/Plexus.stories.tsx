@@ -68,7 +68,8 @@ const Test = () => {
   const [history, setHistory] = useState<string[]>([]);
   const model = useMemo(() => {
     const root = createTree({ depth: 5, children: 3 });
-    const model = new TestGraphModel(convertTreeToGraph(root), root.id);
+    const model = new TestGraphModel(convertTreeToGraph(root));
+    model.setSelected(root.id);
     setHistory([model.selected!]);
     return model;
   }, []);

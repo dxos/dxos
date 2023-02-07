@@ -14,10 +14,9 @@ import { TestNode } from './types';
 export class TestGraphModel extends GraphModel<TestNode> {
   // prettier-ignore
   constructor(
-    private readonly _graph: GraphData<TestNode> = emptyGraph,
-    selected?: string
+    private readonly _graph: GraphData<TestNode> = emptyGraph
   ) {
-    super(selected);
+    super();
   }
 
   get graph() {

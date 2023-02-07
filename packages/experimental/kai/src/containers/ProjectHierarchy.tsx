@@ -8,11 +8,11 @@ import React, { FC } from 'react';
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
-import { FolderHierarchy, FolderHierarchyItem } from '../components';
+import { TreeView, TreeViewItem } from '../components';
 import { useSpace } from '../hooks';
 import { Project } from '../proto';
 
-export const mapProjectToItem = (project: Project): FolderHierarchyItem => ({
+export const mapProjectToItem = (project: Project): TreeViewItem => ({
   id: project[id],
   title: project.title,
   Icon: Archive,
@@ -41,7 +41,7 @@ export const ProjectHierarchy: FC<{ header?: boolean }> = withReactor(({ header 
 
   return (
     <div className='mt-2'>
-      <FolderHierarchy items={items} highlightClassName='bg-slate-200' />
+      <TreeView items={items} highlightClassName='bg-slate-200' />
     </div>
   );
 });
