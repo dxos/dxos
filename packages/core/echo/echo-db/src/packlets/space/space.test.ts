@@ -6,7 +6,7 @@ import expect from 'expect';
 import assert from 'node:assert';
 
 import { CredentialGenerator } from '@dxos/credentials';
-import { DocumentModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test, afterTest } from '@dxos/test';
 

@@ -4,9 +4,9 @@
 
 import expect from 'expect';
 
+import { DocumentModel } from '@dxos/document-model';
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-db/testing';
 import { ModelFactory } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
 
 import { TextModel } from './text-model';

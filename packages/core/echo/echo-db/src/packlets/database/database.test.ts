@@ -5,8 +5,8 @@
 import expect from 'expect';
 
 import { asyncTimeout } from '@dxos/async';
+import { DocumentModel } from '@dxos/document-model';
 import { ModelFactory, TestListModel } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';

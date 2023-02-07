@@ -7,8 +7,8 @@ import assert from 'node:assert';
 
 import { asyncChain, latch, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
+import { DocumentModel } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
-import { DocumentModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';

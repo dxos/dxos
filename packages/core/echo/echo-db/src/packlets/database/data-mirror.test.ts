@@ -5,10 +5,10 @@
 import expect from 'expect';
 
 import { asyncTimeout } from '@dxos/async';
+import { DocumentModel } from '@dxos/document-model';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';

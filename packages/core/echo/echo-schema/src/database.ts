@@ -4,9 +4,9 @@
 
 import assert from 'node:assert';
 
+import { DocumentModel } from '@dxos/document-model';
 import { Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { DocumentModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';

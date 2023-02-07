@@ -4,8 +4,8 @@
 
 import { InspectOptionsStylized, inspect } from 'node:util';
 
+import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
-import { DocumentModel, OrderedArray, Reference } from '@dxos/object-model';
 
 import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';

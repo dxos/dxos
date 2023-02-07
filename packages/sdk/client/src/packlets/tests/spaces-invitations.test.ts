@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { DocumentModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';

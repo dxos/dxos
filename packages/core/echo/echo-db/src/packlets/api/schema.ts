@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DocumentModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 
 export const TYPE_SCHEMA = 'dxos:type/schema';
 

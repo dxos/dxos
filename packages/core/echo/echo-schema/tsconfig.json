@@ -32,13 +32,13 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../document-model"
+    },
+    {
       "path": "../echo-db"
     },
     {
       "path": "../model-factory"
-    },
-    {
-      "path": "../object-model"
     },
     {
       "path": "../text-model"

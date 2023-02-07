@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { DocumentModel } from '@dxos/document-model';
 import { Item } from '@dxos/echo-db';
-import { DocumentModel } from '@dxos/object-model';
 import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 import { BoxContainer } from '@dxos/react-components-deprecated';

@@ -5,11 +5,11 @@
 import { expect } from 'chai';
 
 import { createAdmissionCredentials } from '@dxos/credentials';
+import { DocumentModel } from '@dxos/document-model';
 import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { test, describe } from '@dxos/test';
 
 import { createSigningContext, syncItems, TestBuilder } from '../testing';

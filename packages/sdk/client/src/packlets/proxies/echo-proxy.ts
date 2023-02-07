@@ -14,13 +14,13 @@ import {
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { failUndefined, inspectObject } from '@dxos/debug';
+import { DocumentModel } from '@dxos/document-model';
 import { ResultSet } from '@dxos/echo-db';
 import { DatabaseRouter } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';

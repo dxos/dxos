@@ -5,10 +5,10 @@
 import expect from 'expect';
 
 import { createId } from '@dxos/crypto';
+import { DocumentModel } from '@dxos/document-model';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
 
 import { ItemConstructionOptions, ItemManager } from './item-manager';

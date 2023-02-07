@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Box, Grid } from '@mui/material';
 
+import { DocumentModel } from '@dxos/document-model';
 import { Item } from '@dxos/echo-db';
-import { DocumentModel } from '@dxos/object-model';
 import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 

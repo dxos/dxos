@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { DocumentModel, OrderedArray, Reference } from '@dxos/object-model';
+import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 
 import { base, id } from './defs';
 import { Document } from './document';

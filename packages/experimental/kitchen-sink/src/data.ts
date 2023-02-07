@@ -3,8 +3,8 @@
 //
 
 import { Space } from '@dxos/client';
+import { DocumentModel } from '@dxos/document-model';
 import { Item } from '@dxos/echo-db';
-import { DocumentModel } from '@dxos/object-model';
 import { useSelection } from '@dxos/react-client';
 import { itemAdapter } from '@dxos/react-client-testing';
 

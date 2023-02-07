@@ -4,8 +4,8 @@
 
 import expect from 'expect';
 
+import { DocumentModel } from '@dxos/document-model';
 import { ModelFactory } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Database } from '../database';

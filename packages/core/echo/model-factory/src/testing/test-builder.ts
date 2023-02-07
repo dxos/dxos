@@ -22,7 +22,7 @@ const log = debug('dxos:echo:model-test-rig');
  * Factory for peers to test model replication.
  * @deprecated
  */
-// TODO(burdon): Clean-up. This is exported to @dxos/object-model.
+// TODO(burdon): Clean-up. This is exported to @dxos/document-model.
 export class TestBuilder<M extends Model<any>> {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(PublicKey.hash);
   private readonly _replicationFinished = new Trigger();

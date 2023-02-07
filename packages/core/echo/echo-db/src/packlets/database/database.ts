@@ -5,9 +5,9 @@
 import assert from 'node:assert';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { DocumentModel } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { ItemType, ItemID } from '@dxos/protocols';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 

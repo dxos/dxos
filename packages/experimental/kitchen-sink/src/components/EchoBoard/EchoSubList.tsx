@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
 import { colors, Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
 
+import { DocumentModel } from '@dxos/document-model';
 import { Item } from '@dxos/echo-db';
-import { DocumentModel } from '@dxos/object-model';
 import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 

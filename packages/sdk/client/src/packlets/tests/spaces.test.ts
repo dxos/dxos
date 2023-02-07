@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { DocumentModel } from '@dxos/document-model';
 import { log } from '@dxos/log';
-import { DocumentModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 

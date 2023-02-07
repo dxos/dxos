@@ -5,9 +5,9 @@
 import expect from 'expect';
 
 import { Event, asyncTimeout } from '@dxos/async';
+import { DocumentModel } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { describe, test } from '@dxos/test';
 

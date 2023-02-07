@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { DocumentModel } from '@dxos/document-model';
 import { createMemoryDatabase } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoDatabase } from './database';

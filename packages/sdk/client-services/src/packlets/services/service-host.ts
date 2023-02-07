@@ -4,11 +4,11 @@
 
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
+import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { DocumentModel } from '@dxos/object-model';
 import { Status } from '@dxos/protocols/proto/dxos/client';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';

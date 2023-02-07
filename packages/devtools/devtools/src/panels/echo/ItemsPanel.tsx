@@ -9,7 +9,7 @@ import { truncateKey } from '@dxos/debug';
 import { FolderHierarchy, FolderHierarchyItem, Searchbar } from '@dxos/kai';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { useSelection } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
