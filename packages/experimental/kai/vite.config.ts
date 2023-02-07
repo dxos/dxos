@@ -41,6 +41,7 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
+      '@dxos/config',
       '@dxos/mosaic',
       '@dxos/plexus',
       '@dxos/protocols',
