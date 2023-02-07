@@ -94,7 +94,7 @@ export const Table = <T extends {}>({
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
-                <div {...column.getHeaderProps(headerProps)} className={mx('th px-4 py-1', classes?.header)}>
+                <div {...column.getHeaderProps(headerProps)} className={mx('th px-4 py-2', classes?.header)}>
                   {column.render('Header')}
 
                   {/* Use column.getResizerProps to hook up the events correctly. */}
@@ -126,7 +126,7 @@ export const Table = <T extends {}>({
                 {row.cells.map((cell) => {
                   return (
                     // eslint-disable-next-line react/jsx-key
-                    <div {...cell.getCellProps(cellProps)} className='td py-2 px-4'>
+                    <div {...cell.getCellProps(cellProps)} className='td px-4 py-2'>
                       <div className='overflow-hidden text-ellipsis whitespace-nowrap'>{cell.render('Cell')}</div>
                     </div>
                   );

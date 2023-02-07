@@ -19,9 +19,13 @@ export type TreeProjectorOptions = ProjectorOptions &
     radius?: number;
     nodeRadius?: number;
     classes?: {
-      root?: string;
-      node?: string;
-      link?: string;
+      node?: {
+        circle?: string;
+        text?: string;
+      };
+      link?: {
+        path?: string;
+      };
     };
   }>;
 
@@ -56,8 +60,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       x: center[0],
       y: center[1],
       r: (this.options.nodeRadius ?? 16) * 3, // TODO(burdon): Factor out default.
-      data: rootNode,
-      className: this.options.classes?.root
+      data: rootNode
     });
 
     // Create or update nodes.
@@ -127,7 +130,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
               target,
               sourceStart: source.last,
               targetStart: target.last,
-              className: this.options.classes?.link
+              classes: this.options.classes?.link
             };
           }
 
@@ -189,7 +192,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       initialized: true,
       last: [0, 0],
       data: dataNode,
-      className: this.options.classes?.node
+      classes: this.options.classes?.node
     };
   }
 }

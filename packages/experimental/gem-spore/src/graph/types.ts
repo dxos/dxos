@@ -45,7 +45,10 @@ export type GraphLayoutNode<N> = {
   x?: number;
   y?: number;
   r?: number;
-  className?: string;
+  classes?: {
+    circle?: string;
+    text?: string;
+  };
   children?: number;
   initialized?: boolean;
   last?: Point;
@@ -55,7 +58,9 @@ export type GraphLayoutLink<N> = {
   id: string;
   source: GraphLayoutNode<N>;
   target: GraphLayoutNode<N>;
-  className?: string;
+  classes?: {
+    path?: string;
+  };
 };
 
 export type GraphLayout<N> = {

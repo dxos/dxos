@@ -52,6 +52,7 @@ export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N
   // Layout projector.
   const projector = useMemo(
     () =>
+      // TODO(burdon): Factor out options to story.
       new TreeProjector<N>(context, {
         idAccessor: model.idAccessor,
         radius: 192,
@@ -59,9 +60,13 @@ export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N
         classes: {
           // TODO(burdon): Base styles via: [&>*].
           // TODO(burdon): Factor out styles/classes: 300, 500, 700, 800.
-          root: '[&>circle]:fill-slate-800 [&>circle]:stroke-[3px] [&>circle]:stroke-slate-500 [&>text]:fill-slate-500',
-          node: '[&>circle]:fill-slate-800 [&>circle]:stroke-[2px] [&>circle]:stroke-slate-300 [&>text]:fill-slate-500',
-          link: '[&>path]:stroke-[2px] [&>path]:stroke-slate-700'
+          node: {
+            circle: 'fill-slate-800 stroke-[3px] stroke-slate-500',
+            text: 'fill-slate-500'
+          },
+          link: {
+            path: 'stroke-[2px] stroke-slate-700'
+          }
         }
       }),
     []

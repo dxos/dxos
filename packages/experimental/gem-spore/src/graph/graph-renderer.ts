@@ -48,8 +48,6 @@ const line = d3.line();
  * @param options
  */
 const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
-  group.attr('class', (d) => d.className);
-
   // Label.
   if (options.labels) {
     group
@@ -105,8 +103,6 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  * @param options
  */
 const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
-  group.attr('class', (d) => d.className);
-
   // Custom attributes.
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
@@ -123,6 +119,9 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   // Update circles.
   groupOrTransition
     .select<SVGCircleElement>('circle')
+    .attr('class', function () {
+      return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.circle;
+    })
     .attr('cx', (d) => d.x)
     .attr('cy', (d) => d.y)
     .attr('r', (d) => d.r);
@@ -131,6 +130,9 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   if (options.labels) {
     groupOrTransition
       .select<SVGTextElement>('text')
+      .attr('class', function () {
+        return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
+      })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
       .attr('dx', (d) => (d.r + 6) * (d.x > 0 ? 1 : -1))
       .attr('x', (d) => d.x)
@@ -145,8 +147,6 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  * @param nodes
  */
 const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>, nodes) => {
-  group.attr('class', (d) => d.className);
-
   // if (options.onLinkClick) {
   //   // Shadow path with wide stroke for click handler.
   //   group.append('path')
@@ -163,6 +163,9 @@ const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     .attr('pointer-events', 'none')
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
     .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
+    .attr('class', function () {
+      return (d3.select(this.parentNode as any).datum() as GraphLayoutLink<N>).classes?.path;
+    })
     .attr('d', (d) => {
       const { source, target } = d;
 
@@ -199,8 +202,6 @@ const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  * @param options
  */
 const updateLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOptions<N>) => {
-  group.attr('class', (d) => d.className);
-
   // Custom attributes.
   if (options.attributes?.link) {
     group.each((d, i, nodes) => {
