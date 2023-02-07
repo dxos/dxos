@@ -93,11 +93,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/vanilla-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/bots/bender-bot/package.json",
           "jsonpath": "$.version"
         },

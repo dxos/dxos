@@ -950,29 +950,6 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
 
-  packages/apps/vanilla-app:
-    specifiers:
-      '@dxos/cli': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@types/node': ^18.11.9
-      autoprefixer: ^10.4.12
-      postcss: ^8.4.17
-      tailwindcss: ^3.1.8
-      typescript: ^4.8.4
-      vite: 4.0.4
-    dependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-    devDependencies:
-      '@dxos/cli': link:../../devtools/cli
-      '@types/node': 18.11.9
-      autoprefixer: 10.4.13_postcss@8.4.21
-      postcss: 8.4.21
-      tailwindcss: 3.1.8
-      typescript: 4.8.4
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
-
   packages/bots/bender-bot:
     specifiers:
       '@dxos/async': workspace:*
