@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Item, ObjectModel, SPACE_ITEM_TYPE } from '@dxos/client';
+import { Item, DocumentModel, SPACE_ITEM_TYPE } from '@dxos/client';
 import { GraphData, GraphModel } from '@dxos/gem-spore';
 
 /**
  * ECHO adapter for the Graph model.
  */
-export class EchoGraphModel extends GraphModel<Item<ObjectModel>> {
-  private readonly _graph: GraphData<Item<ObjectModel>> = {
+export class EchoGraphModel extends GraphModel<Item<DocumentModel>> {
+  private readonly _graph: GraphData<Item<DocumentModel>> = {
     nodes: [],
     links: []
   };
@@ -18,7 +18,7 @@ export class EchoGraphModel extends GraphModel<Item<ObjectModel>> {
     return this._graph;
   }
 
-  update(items: Item<ObjectModel>[]) {
+  update(items: Item<DocumentModel>[]) {
     const spaceItem = items.find((item) => item.type === SPACE_ITEM_TYPE);
     this._graph.nodes = items;
     this._graph.links = [];

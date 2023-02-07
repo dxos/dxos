@@ -9,7 +9,7 @@ import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
-import { Item, ObjectModel, OrderedList, Client } from '@dxos/client';
+import { Item, DocumentModel, OrderedList, Client } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 const createTestComponents = async () => {
@@ -22,7 +22,7 @@ const createTestComponents = async () => {
     Array.from({ length: 3 }).map(
       async () =>
         await space.database.createItem({
-          model: ObjectModel,
+          model: DocumentModel,
           type: 'example:type/list-item',
           props: {
             name: faker.name.firstName()
@@ -34,7 +34,7 @@ const createTestComponents = async () => {
   return { client, space, items };
 };
 
-const Test = ({ items, orderedList }: { items: Item<ObjectModel>[]; orderedList: OrderedList }) => {
+const Test = ({ items, orderedList }: { items: Item<DocumentModel>[]; orderedList: OrderedList }) => {
   const subscriptions = useMemo(() => new EventSubscriptions(), []);
   const [order, setOrder] = useState(orderedList.values);
 
@@ -65,7 +65,7 @@ describe.skip('OrderedList', () => {
   test('reorders', async () => {
     const { space, items } = await createTestComponents();
     const list = await space.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: 'example:type/list'
     });
     const orderedList = new OrderedList(list.model);

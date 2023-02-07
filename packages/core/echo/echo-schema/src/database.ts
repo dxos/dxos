@@ -4,9 +4,9 @@
 
 import assert from 'node:assert';
 
+import { DocumentModel } from '@dxos/document-model';
 import { Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
@@ -199,7 +199,7 @@ export class EchoDatabase {
    * Create object with a proper prototype representing the given item.
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
-    if (item.model instanceof ObjectModel) {
+    if (item.model instanceof DocumentModel) {
       const type = item.model.get('@type');
       if (!type) {
         return new Document();

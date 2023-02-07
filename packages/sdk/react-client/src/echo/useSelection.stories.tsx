@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Item, ObjectModel, PublicKey, Space } from '@dxos/client';
+import { Item, DocumentModel, PublicKey, Space } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-components';
 
@@ -54,7 +54,7 @@ const TaskList = ({ space }: { space?: Space }) => {
   );
 };
 
-const Task = ({ item }: { item: Item<ObjectModel> }) => <li>{item.model.get('title')}</li>;
+const Task = ({ item }: { item: Item<DocumentModel> }) => <li>{item.model.get('title')}</li>;
 
 export const Default = {
   render,

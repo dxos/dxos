@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { ValueUtil } from './mutation';
 import { TextIndex } from './text-index';

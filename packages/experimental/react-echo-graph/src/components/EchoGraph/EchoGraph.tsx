@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Item, ItemID, ObjectModel } from '@dxos/client';
+import { Item, ItemID, DocumentModel } from '@dxos/client';
 import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-core';
 import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
 import { useDynamicRef } from '@dxos/react-async';
@@ -41,7 +41,7 @@ export const EchoGraph = ({ model, selected, itemAdapter, styles, options = {} }
 
   // TODO(burdon): Hack for stale callback.
   const selectedRef = useDynamicRef<Set<ItemID> | undefined>(() => selected, [selected]);
-  const getAttributes = (node: GraphLayoutNode<Item<ObjectModel>>) => {
+  const getAttributes = (node: GraphLayoutNode<Item<DocumentModel>>) => {
     const selected = selectedRef.current;
     return {
       class: selected?.size
@@ -74,10 +74,10 @@ export const EchoGraph = ({ model, selected, itemAdapter, styles, options = {} }
               model={model}
               projector={projector}
               attributes={{
-                node: (node: GraphLayoutNode<Item<ObjectModel>>) => getAttributes(node)
+                node: (node: GraphLayoutNode<Item<DocumentModel>>) => getAttributes(node)
               }}
               labels={{
-                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) =>
+                text: (node: GraphLayoutNode<Item<DocumentModel>>, highlight) =>
                   highlight ? itemAdapter.title(node.data!) : undefined
               }}
             />

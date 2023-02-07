@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { DocumentModel } from '@dxos/document-model';
 import { log } from '@dxos/log';
-import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -26,7 +26,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.echo.createSpace();
-    const item = await space.database.createItem({ model: ObjectModel });
+    const item = await space.database.createItem({ model: DocumentModel });
     await item.model.set('title', 'testing');
     expect(item.model.get('title')).to.eq('testing');
 
@@ -48,7 +48,7 @@ describe('Spaces', () => {
     {
       // TODO(burdon): API (client.echo/client.halo).
       const space = await client.echo.createSpace();
-      const item = await space.database.createItem({ model: ObjectModel });
+      const item = await space.database.createItem({ model: DocumentModel });
       await item.model.set('title', 'testing');
       expect(item.model.get('title')).to.eq('testing');
       itemId = item.id;

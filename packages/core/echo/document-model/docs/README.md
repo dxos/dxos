@@ -1,4 +1,4 @@
-# @dxos/object-model
+# @dxos/document-model
 
 ECHO object model.
 
@@ -22,8 +22,8 @@ subgraph core [core]
 
   subgraph echo [echo]
     style echo fill:transparent
-    dxos/object-model("@dxos/object-model"):::root
-    click dxos/object-model "dxos/dxos/tree/main/packages/core/echo/object-model/docs"
+    dxos/document-model("@dxos/document-model"):::root
+    click dxos/document-model "dxos/dxos/tree/main/packages/core/echo/document-model/docs"
     dxos/model-factory("@dxos/model-factory"):::def
     click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
   end
@@ -63,7 +63,7 @@ end
 
 %% Links
 dxos/async --> dxos/context
-dxos/object-model --> dxos/model-factory
+dxos/document-model --> dxos/model-factory
 dxos/model-factory --> dxos/feed-store
 dxos/feed-store --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf

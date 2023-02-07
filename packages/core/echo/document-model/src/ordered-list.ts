@@ -7,10 +7,10 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/protocols';
 
-import { ObjectModel } from './object-model';
+import { DocumentModel } from './document-model';
 
 /**
- * Utility class that wraps an `ObjectModel` and implements a linked list via key-values on a given property.
+ * Utility class that wraps an `DocumentModel` and implements a linked list via key-values on a given property.
  */
 export class OrderedList {
   private _values: ItemID[] = [];
@@ -21,7 +21,7 @@ export class OrderedList {
 
   // prettier-ignore
   constructor(
-    private readonly _model: ObjectModel,
+    private readonly _model: DocumentModel,
     private readonly _property = 'order'
   ) {
     this.refresh();

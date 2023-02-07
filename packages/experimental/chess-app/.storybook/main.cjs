@@ -25,7 +25,7 @@ module.exports = {
         force: true,
         include: [
           '@dxos/protocols',
-          '@dxos/protocols/proto/dxos/echo/model/object',
+          '@dxos/protocols/proto/dxos/echo/model/document',
           'storybook-dark-mode'
         ]
       },

@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/core/echo/object-model/src",
+  "sourceRoot": "packages/core/echo/document-model/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/core/echo/object-model/src/index.ts",
-        "outputPath": "packages/core/echo/object-model/dist/types",
-        "tsConfig": "packages/core/echo/object-model/tsconfig.json"
+        "main": "packages/core/echo/document-model/src/index.ts",
+        "outputPath": "packages/core/echo/document-model/dist/types",
+        "tsConfig": "packages/core/echo/document-model/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/core/echo/object-model/src/index.ts"
+          "packages/core/echo/document-model/src/index.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/core/echo/object-model/dist/lib"
+        "outputPath": "packages/core/echo/document-model/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/core/echo/object-model/**/*.{ts,js}"
+          "packages/core/echo/document-model/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -41,14 +41,14 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/core/echo/object-model",
-        "outputPath": "tmp/mocha/packages/core/echo/object-model",
-        "resultsPath": "test-results/packages/core/echo/object-model",
+        "coveragePath": "coverage/packages/core/echo/document-model",
+        "outputPath": "tmp/mocha/packages/core/echo/document-model",
+        "resultsPath": "test-results/packages/core/echo/document-model",
         "testPatterns": [
-          "packages/core/echo/object-model/src/**/*.test.{ts,js}"
+          "packages/core/echo/document-model/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/core/echo/object-model/src/**/*"
+          "packages/core/echo/document-model/src/**/*"
         ]
       },
       "outputs": [

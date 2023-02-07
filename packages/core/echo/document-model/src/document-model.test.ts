@@ -7,12 +7,12 @@ import expect from 'expect';
 import { ModelFactory, TestBuilder } from '@dxos/model-factory';
 import { describe, test } from '@dxos/test';
 
-import { ObjectModel } from './object-model';
+import { DocumentModel } from './document-model';
 import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
 import { validateKey } from './util';
 
-describe('ObjectModel', () => {
+describe('DocumentModel', () => {
   test('checks valid keys', () => {
     const valid = ['x', 'foo', 'foo_bar', 'foo.bar', '@type', '$type', 'foo$bar'];
     for (const key of valid) {
@@ -26,7 +26,7 @@ describe('ObjectModel', () => {
   });
 
   test('can set a property', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const { model } = testBuilder.createPeer();
 
     await model.set('foo', 'bar');
@@ -37,7 +37,7 @@ describe('ObjectModel', () => {
   });
 
   test('can set a dot property', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const { model } = testBuilder.createPeer();
 
     await model.set('foo.bar', 100);
@@ -45,7 +45,7 @@ describe('ObjectModel', () => {
   });
 
   test('can remove a property', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const { model } = testBuilder.createPeer();
 
     await model.set('foo', 'bar');
@@ -56,7 +56,7 @@ describe('ObjectModel', () => {
   });
 
   test('can set multiple properties using the builder pattern', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const { model } = testBuilder.createPeer();
 
     await model.builder().set('foo', 100).set('bar', true).commit();
@@ -66,7 +66,7 @@ describe('ObjectModel', () => {
   });
 
   test('property updates are optimistically applied', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const { model } = testBuilder.createPeer();
 
     const promise = model.set('foo', 'bar');
@@ -76,7 +76,7 @@ describe('ObjectModel', () => {
   });
 
   test('timeframe is updated after a mutation', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const peer = testBuilder.createPeer();
 
     expect(peer.timeframe.get(peer.key)).toEqual(undefined);
@@ -86,7 +86,7 @@ describe('ObjectModel', () => {
   });
 
   test('two peers', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
 
@@ -96,7 +96,7 @@ describe('ObjectModel', () => {
   });
 
   test('consistency', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
 
@@ -113,7 +113,7 @@ describe('ObjectModel', () => {
   });
 
   test('reference', async () => {
-    const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
 
@@ -130,7 +130,7 @@ describe('ObjectModel', () => {
 
   describe('ordered array', () => {
     test('assign', async () => {
-      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
 
@@ -146,7 +146,7 @@ describe('ObjectModel', () => {
     });
 
     test('mutate', async () => {
-      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
 
@@ -165,7 +165,7 @@ describe('ObjectModel', () => {
     });
 
     test('references inside arrays', async () => {
-      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
 
@@ -188,7 +188,7 @@ describe('ObjectModel', () => {
     });
 
     test('arrays of objects', async () => {
-      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
 
@@ -206,7 +206,7 @@ describe('ObjectModel', () => {
     });
 
     test('conflicts resolution', async () => {
-      const testBuilder = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
       const peer1 = testBuilder.createPeer();
       const peer2 = testBuilder.createPeer();
 

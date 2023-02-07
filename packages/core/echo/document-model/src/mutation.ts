@@ -14,7 +14,7 @@ import {
   ObjectMutationSet,
   KeyValueObject,
   Value
-} from '@dxos/protocols/proto/dxos/echo/model/object';
+} from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
