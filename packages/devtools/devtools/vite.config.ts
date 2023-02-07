@@ -53,7 +53,8 @@ export default defineConfig({
           highlighter: ['react-syntax-highlighter'],
           kai: ['@dxos/kai'],
           monaco: ['monaco-editor', '@monaco-editor/react'],
-          vendor: ['react', 'react-router-dom', 'react-dom']
+          vendor: ['react', 'react-router-dom', 'react-dom'],
+          phosphor_react: ['phosphor-react']
         }
       }
     }
