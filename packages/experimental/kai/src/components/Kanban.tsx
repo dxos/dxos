@@ -18,7 +18,7 @@ export type KanbanColumnDef = {
   Content: FC<{ object: EchoObject }>;
 };
 
-// TODO(burdon): Slots.
+// TODO(burdon): Classes.
 // TODO(burdon): Drag.
 // TODO(burdon): Delete item.
 

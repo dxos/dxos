@@ -27,7 +27,7 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
-export type TableSlots = {
+export type TableClasses = {
   root?: string;
   header?: string;
   row?: string;
@@ -35,14 +35,14 @@ export type TableSlots = {
 };
 
 // TODO(burdon): Theme.
-export const defaultTableSlots: TableSlots = {
+export const defaultTableClasses: TableClasses = {
   header: 'text-sm',
   row: 'hover:bg-gray-200',
   selected: 'bg-slate-300'
 };
 
 export type TableProps<T extends {}> = {
-  classes?: TableSlots;
+  classes?: TableClasses;
   columns: Column<T>[];
   data?: T[];
   selected?: T;
@@ -57,7 +57,7 @@ export type TableProps<T extends {}> = {
 export const Table = <T extends {}>({
   columns,
   data = [],
-  classes = defaultTableSlots,
+  classes = defaultTableClasses,
   onSelect,
   selected
 }: TableProps<T>) => {

@@ -58,7 +58,7 @@ export type TreeViewItem = {
   items?: TreeViewItem[];
 };
 
-// TODO(burdon): Slots.
+// TODO(burdon): Classes.
 // TODO(burdon): Navigate up/down.
 // TODO(burdon): Unselect on Escape.
 

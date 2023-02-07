@@ -57,7 +57,7 @@ export const Plexus = <N,>({ model, onSelect }: PlexusProps<N>) => {
           </g>
           <PlexGraph
             className={mx(
-              // TODO(burdon): Move to slots.
+              // TODO(burdon): Move to classes.
               '[&>g>circle]:fill-transparent [&>g>circle]:stroke-slate-700 [&>g>circle]:stroke-[1px] [&>g>circle]:opacity-70'
             )}
             model={model}
@@ -95,8 +95,8 @@ export const PlexGraph = <N,>({ model, className, onSelect }: PlexGraphProps<N>)
         idAccessor: model.idAccessor,
         radius: 192,
         nodeRadius: 16,
-        slots: {
-          // TODO(burdon): Factor out styles/slots: 300, 500, 700, 800.
+        classes: {
+          // TODO(burdon): Factor out styles/classes: 300, 500, 700, 800.
           root: '[&>circle]:fill-slate-800 [&>circle]:stroke-[3px] [&>circle]:stroke-slate-500 [&>text]:fill-slate-500',
           node: '[&>circle]:fill-slate-800 [&>circle]:stroke-[2px] [&>circle]:stroke-slate-300 [&>text]:fill-slate-500',
           link: '[&>path]:stroke-[2px] [&>path]:stroke-slate-700'
