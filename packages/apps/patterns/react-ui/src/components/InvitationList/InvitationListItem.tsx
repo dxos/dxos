@@ -47,7 +47,7 @@ export const InvitationListItem = ({
 
   return (
     <AccordionPrimitive.Item value={value}>
-      <AccordionPrimitive.Header className='flex gap-2 items-center pli-2'>
+      <AccordionPrimitive.Header className='flex gap-2 items-center'>
         <InvitationStatusAvatar {...{ status, haltedAt, size: 8 }} />
         {showShare && invitationUrl ? (
           <>
@@ -82,7 +82,7 @@ export const InvitationListItem = ({
         )}
       </AccordionPrimitive.Header>
       {showShare && invitationUrl && (
-        <AccordionPrimitive.Content className='flex gap-2 is-full p-2 items-center'>
+        <AccordionPrimitive.Content className='flex gap-2 is-full radix-state-open:p-1 items-center'>
           <QRCodeSVG
             bgColor='transparent'
             fgColor='currentColor'

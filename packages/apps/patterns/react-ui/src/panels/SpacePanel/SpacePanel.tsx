@@ -49,7 +49,7 @@ const CurrentSpaceView = ({
             <CaretLeft className={getSize(4)} weight='bold' />
           </Button>
         </Tooltip>
-        <h2 id={titleId} className={mx('grow', !spaceTitle && 'font-mono')}>
+        <h2 id={titleId} className={mx('grow font-system-medium', !spaceTitle && 'font-mono')}>
           {spaceTitle ?? space.key.truncate()}
         </h2>
       </div>
@@ -59,7 +59,7 @@ const CurrentSpaceView = ({
           onClickRemove={({ invitation }) => invitation && space?.removeInvitation(invitation.invitationId!)}
           createInvitationUrl={createInvitationUrl}
         />
-        <Button className='is-full flex gap-2' compact onClick={() => space?.createInvitation()}>
+        <Button className='is-full flex gap-2 mbs-2' compact onClick={() => space?.createInvitation()}>
           <span>{t('create space invitation label')}</span>
           <UserPlus className={getSize(4)} weight='bold' />
         </Button>
@@ -88,20 +88,16 @@ const SpaceListView = ({
   return (
     <div role='none' className='flex flex-col'>
       <div role='none' className={mx(subduedSurface, 'rounded-bs-md flex items-center p-2 gap-2')}>
-        <h2 id={titleId} className='grow'>
+        <h2 id={titleId} className='grow font-system-medium'>
           {t('all spaces label')}
         </h2>
-        <Tooltip content={t('show all spaces label')} zIndex='z-50'>
+        <Tooltip content={t('show current space label')} zIndex='z-50'>
           <Button compact variant='ghost' onClick={onShowCurrent}>
             <CaretRight className={getSize(4)} weight='bold' />
           </Button>
         </Tooltip>
       </div>
       <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
-        <Button className='is-full flex gap-2 mbe-2' compact onClick={handleCreateSpace}>
-          <span>{t('create space label')}</span>
-          <PlusCircle className={getSize(4)} weight='bold' />
-        </Button>
         <ul className='flex flex-col gap-2'>
           {spaces.map((space) => {
             const key = space.key.toHex();
@@ -109,6 +105,10 @@ const SpaceListView = ({
             return doneActionParent ? cloneElement(doneActionParent, { key }, listItem) : listItem;
           })}
         </ul>
+        <Button className='is-full flex gap-2 mbs-2' compact onClick={handleCreateSpace}>
+          <span>{t('create space label')}</span>
+          <PlusCircle className={getSize(4)} weight='bold' />
+        </Button>
       </div>
     </div>
   );

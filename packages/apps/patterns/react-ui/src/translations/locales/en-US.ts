@@ -54,5 +54,6 @@ export const os = {
   'empty invitations message': 'No pending invitations',
   'show all spaces label': 'All spaces',
   'all spaces label': 'All spaces',
+  'show current space label': 'Current space',
   'create space label': 'Create a new space'
 };

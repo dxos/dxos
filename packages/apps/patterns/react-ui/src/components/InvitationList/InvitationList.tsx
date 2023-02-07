@@ -16,13 +16,13 @@ export interface InvitationListProps extends Omit<InvitationListItemProps, 'invi
 export const InvitationList = ({ invitations, ...invitationProps }: InvitationListProps) => {
   const { t } = useTranslation('os');
   return invitations.length ? (
-    <AccordionRoot type='single' collapsible>
+    <AccordionRoot type='single' collapsible className='flex flex-col gap-1'>
       {invitations.map((invitation, index) => {
         const value = invitation.invitation?.invitationId ?? `inv_${index}`;
         return <InvitationListItem key={value} value={value} invitation={invitation} {...invitationProps} />;
       })}
     </AccordionRoot>
   ) : (
-    <p className={mx(defaultDescription, 'text-center p-3')}>{t('empty invitations message')}</p>
+    <p className={mx(defaultDescription, 'text-center p-2')}>{t('empty invitations message')}</p>
   );
 };

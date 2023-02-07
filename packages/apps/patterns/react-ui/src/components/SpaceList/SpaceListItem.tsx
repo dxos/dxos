@@ -5,13 +5,17 @@
 import React, { ForwardedRef, forwardRef } from 'react';
 
 import type { Space } from '@dxos/client';
-import { Avatar } from '@dxos/react-components';
+import { Avatar, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 export const SpaceListItem = forwardRef(
   ({ space, onSelect }: { space: Space; onSelect?: () => void }, ref: ForwardedRef<HTMLLIElement>) => {
     return (
-      <li className='flex gap-2 items-center' onClick={() => onSelect?.()} ref={ref}>
+      <li
+        className={mx('flex gap-2 items-center', onSelect && 'cursor-pointer')}
+        onClick={() => onSelect?.()}
+        ref={ref}
+      >
         <Avatar
           {...{
             variant: 'circle',
