@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import { CaretLeft, UserPlus } from 'phosphor-react';
 import React, { cloneElement, useReducer } from 'react';
 
 import { Space } from '@dxos/client';
 import { useClient, useSpaceInvitations, useSpaces } from '@dxos/react-client';
-import { Button, useTranslation } from '@dxos/react-components';
+import { Button, getSize, mx, Tooltip, useTranslation } from '@dxos/react-components';
 
 import { InvitationList, PanelSeparator, SpaceListItem, SpaceMemberListContainer } from '../../components';
+import { defaultSurface, subduedSurface } from '../../styles';
 
 export type SpacePanelProps = {
   titleId?: string;
@@ -33,23 +35,38 @@ const CurrentSpaceView = ({
 }: { onShowAll: () => void } & SpacePanelProps) => {
   const { t } = useTranslation('os');
   const invitations = useSpaceInvitations(space?.key);
+  const spaceTitle = space?.getProperty('title');
 
   if (!space) {
     return null;
   }
 
   return (
-    <>
-      <InvitationList
-        invitations={invitations}
-        onClickRemove={({ invitation }) => invitation && space?.removeInvitation(invitation.invitationId!)}
-        createInvitationUrl={createInvitationUrl}
-      />
-      <Button onClick={() => space?.createInvitation()}>{t('create space invitation label')}</Button>
-      <PanelSeparator />
-      <SpaceMemberListContainer spaceKey={space.key} includeSelf />
-      <Button onClick={() => onShowAll()}>{t('show all spaces')}</Button>
-    </>
+    <div role='none' className='flex flex-col'>
+      <div role='none' className={mx(subduedSurface, 'rounded-bs-md flex items-center p-2 gap-2')}>
+        <Tooltip content={t('show all spaces label')} zIndex='z-50'>
+          <Button compact variant='ghost' onClick={onShowAll}>
+            <CaretLeft className={getSize(4)} weight='bold' />
+          </Button>
+        </Tooltip>
+        <h2 id={titleId} className={mx('grow', !spaceTitle && 'font-mono')}>
+          {spaceTitle ?? space.key.truncate()}
+        </h2>
+      </div>
+      <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
+        <InvitationList
+          invitations={invitations}
+          onClickRemove={({ invitation }) => invitation && space?.removeInvitation(invitation.invitationId!)}
+          createInvitationUrl={createInvitationUrl}
+        />
+        <Button className='is-full flex gap-2' compact onClick={() => space?.createInvitation()}>
+          <span>{t('create space invitation label')}</span>
+          <UserPlus className={getSize(4)} weight='bold' />
+        </Button>
+        <PanelSeparator />
+        <SpaceMemberListContainer spaceKey={space.key} includeSelf />
+      </div>
+    </div>
   );
 };
 
