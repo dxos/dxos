@@ -18,13 +18,17 @@ export const SpaceDialog = ({ slots, ...spacePanelProps }: SpaceDialogProps) => 
   const titleId = useId('spaceDialog__title');
 
   return (
-    <PanelDialog {...{ slots, titleId }}>
+    <PanelDialog
+      {...{
+        slots: { ...slots, root: { onOpenChange: (open) => open || spacePanelProps.onDone?.(null), ...slots?.root } },
+        titleId
+      }}
+    >
       <ThemeContext.Provider value={{ themeVariant: 'os' }}>
         <SpacePanel
           {...{
             ...spacePanelProps,
             titleId,
-            exitActionParent: <Close asChild />,
             doneActionParent: <Close asChild />
           }}
         />

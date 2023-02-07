@@ -17,7 +17,6 @@ export type SpacePanelProps = {
   space?: Space;
   createInvitationUrl: (invitationCode: string) => string;
   doneActionParent?: Parameters<typeof cloneElement>[0];
-  exitActionParent?: Parameters<typeof cloneElement>[0];
   onDone?: (result: Space | null) => void;
 };
 
