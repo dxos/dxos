@@ -107,6 +107,7 @@ message Query {
  */
 message ObjectSnapshot {
   Value root                          = 1;
+  optional string type                         = 2;
 }
 
 /**
