@@ -22,15 +22,12 @@ import {
   ModelType,
   MutationOf,
   MutationWriteReceipt,
-  MutationProcessMeta,
   StateOf,
   StateMachine
 } from './types';
 
 type OptimisticMutation = {
   mutation: Any;
-
-  meta: MutationProcessMeta;
 
   /**
    * Contains the receipt after this mutation has been written to the feed.
@@ -136,16 +133,13 @@ export class StateManager<M extends Model> {
     };
     const optimisticMutation: OptimisticMutation = {
       mutation: mutationEncoded,
-      meta: {
-        author: this._memberKey
-      }
     };
     this._optimisticMutations.push(optimisticMutation);
 
     // Process mutation if initialzied, otherwise deferred until state-machine is loaded.
     if (this.initialized) {
       log('Optimistic apply', mutation);
-      this._stateMachine!.process(mutation, optimisticMutation.meta);
+      this._stateMachine!.process(mutation);
       this._emitModelUpdate();
     }
 
@@ -216,22 +210,17 @@ export class StateManager<M extends Model> {
       }
 
       const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.model.value);
-      assert(mutation.meta);
-      this._stateMachine.process(mutationDecoded, {
-        author: PublicKey.from(mutation.meta.memberKey)
-      });
+      this._stateMachine.process(mutationDecoded);
     }
 
     // Apply mutations that were read from the inbound stream.
     for (const mutation of this._mutations) {
-      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value), {
-        author: PublicKey.from(mutation.meta.memberKey)
-      });
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value));
     }
 
     // Apply optimistic mutations.
     for (const mutation of this._optimisticMutations) {
-      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value), mutation.meta);
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value));
     }
   }
 
@@ -297,9 +286,7 @@ export class StateManager<M extends Model> {
         log(`Apply ${JSON.stringify(meta)}`);
         // Mutation can safely be append at the end preserving order.
         const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation.value);
-        this._stateMachine!.process(mutationDecoded, {
-          author: PublicKey.from(meta.memberKey)
-        });
+        this._stateMachine!.process(mutationDecoded);
         this._emitModelUpdate();
       }
     }

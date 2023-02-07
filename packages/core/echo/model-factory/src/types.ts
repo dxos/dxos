@@ -35,20 +35,12 @@ export interface MutationWriteReceipt extends WriteReceipt {
 export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>;
 
 /**
- *
- */
-// TODO(burdon): Rename and document.
-export interface MutationProcessMeta {
-  author: PublicKey;
-}
-
-/**
  * Manages state and state transitions vis mutations.
  */
 export interface StateMachine<TState, TMutation, TSnapshot> {
   getState(): TState;
   reset(snapshot: TSnapshot): void;
-  process(mutation: TMutation, meta: MutationProcessMeta): void;
+  process(mutation: TMutation): void;
   snapshot(): TSnapshot;
 }
 

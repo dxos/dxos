@@ -5,7 +5,7 @@
 import get from 'lodash.get';
 import assert from 'node:assert';
 
-import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
+import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/object';
 
@@ -32,7 +32,7 @@ class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMu
     this._object = object.root;
   }
 
-  process(mutation: ObjectMutationSet, meta: MutationProcessMeta): void {
+  process(mutation: ObjectMutationSet): void {
     MutationUtil.applyMutationSet(this._object, mutation);
   }
 
