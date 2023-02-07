@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, UserPlus } from 'phosphor-react';
+import { CaretLeft, CaretRight, PlusCircle, UserPlus } from 'phosphor-react';
 import React, { cloneElement, useReducer } from 'react';
 
 import { Space } from '@dxos/client';
@@ -15,6 +15,7 @@ import { defaultSurface, subduedSurface } from '../../styles';
 export type SpacePanelProps = {
   titleId?: string;
   space?: Space;
+  initialState?: SpaceView;
   createInvitationUrl: (invitationCode: string) => string;
   doneActionParent?: Parameters<typeof cloneElement>[0];
   onDone?: (result: Space | null) => void;
@@ -69,7 +70,12 @@ const CurrentSpaceView = ({
   );
 };
 
-const SpaceListView = ({ doneActionParent, onDone }: SpacePanelProps) => {
+const SpaceListView = ({
+  doneActionParent,
+  onDone,
+  onShowCurrent,
+  titleId
+}: { onShowCurrent: () => void } & SpacePanelProps) => {
   const { t } = useTranslation('os');
   const client = useClient();
   const spaces = useSpaces();
@@ -80,16 +86,31 @@ const SpaceListView = ({ doneActionParent, onDone }: SpacePanelProps) => {
   };
 
   return (
-    <>
-      <Button onClick={handleCreateSpace}>{t('create space')}</Button>
-      <ul>
-        {spaces.map((space) => {
-          const key = space.key.toHex();
-          const listItem = <SpaceListItem key={key} space={space} onSelect={() => onDone?.(space)} />;
-          return doneActionParent ? cloneElement(doneActionParent, { key }, listItem) : listItem;
-        })}
-      </ul>
-    </>
+    <div role='none' className='flex flex-col'>
+      <div role='none' className={mx(subduedSurface, 'rounded-bs-md flex items-center p-2 gap-2')}>
+        <h2 id={titleId} className='grow'>
+          {t('all spaces label')}
+        </h2>
+        <Tooltip content={t('show all spaces label')} zIndex='z-50'>
+          <Button compact variant='ghost' onClick={onShowCurrent}>
+            <CaretRight className={getSize(4)} weight='bold' />
+          </Button>
+        </Tooltip>
+      </div>
+      <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>
+        <Button className='is-full flex gap-2 mbe-2' compact onClick={handleCreateSpace}>
+          <span>{t('create space label')}</span>
+          <PlusCircle className={getSize(4)} weight='bold' />
+        </Button>
+        <ul className='flex flex-col gap-2'>
+          {spaces.map((space) => {
+            const key = space.key.toHex();
+            const listItem = <SpaceListItem key={key} space={space} onSelect={() => onDone?.(space)} />;
+            return doneActionParent ? cloneElement(doneActionParent, { key }, listItem) : listItem;
+          })}
+        </ul>
+      </div>
+    </div>
   );
 };
 
@@ -116,7 +137,7 @@ export const SpacePanel = (props: SpacePanelProps) => {
   };
 
   const [panelState, dispatch] = useReducer(reducer, {
-    activeView: props.space ? 'current space' : 'space list'
+    activeView: props.initialState ?? 'current space'
   });
 
   // TODO(wittjosiah): Use ViewState or similar.
@@ -125,7 +146,7 @@ export const SpacePanel = (props: SpacePanelProps) => {
       {panelState.activeView === 'current space' ? (
         <CurrentSpaceView {...props} onShowAll={() => dispatch({ type: 'deselect space' })} />
       ) : (
-        <SpaceListView {...props} />
+        <SpaceListView {...props} onShowCurrent={() => dispatch({ type: 'select space' })} />
       )}
     </>
   );

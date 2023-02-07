@@ -39,6 +39,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
       return (
         <SpaceDialog
           space={space}
+          initialState={ShellLayout.SPACE_LIST ? 'space list' : 'current space'}
           createInvitationUrl={(invitationCode) => `${origin}?spaceInvitationCode=${invitationCode}`}
           onDone={async (space) => {
             // TODO(wittjosiah): If space is newly created the app won't yet know about it.

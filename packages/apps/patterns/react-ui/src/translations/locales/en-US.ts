@@ -52,5 +52,7 @@ export const os = {
   'create space invitation label': 'Invite',
   'qr label': 'Scan to accept invitation',
   'empty invitations message': 'No pending invitations',
-  'show all spaces label': 'All spaces'
+  'show all spaces label': 'All spaces',
+  'all spaces label': 'All spaces',
+  'create space label': 'Create a new space'
 };

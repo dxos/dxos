@@ -154,7 +154,9 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     const modifier = event.ctrlKey || event.metaKey;
     if (event.key === '>' && event.shiftKey && modifier) {
-      await this._shellController.setLayout(ShellLayout.SPACE_LIST);
+      await this._shellController.setLayout(ShellLayout.SPACE_LIST, {
+        spaceKey: this._shellController.spaceKey
+      });
     } else if (event.key === '.' && modifier) {
       await this._shellController.setLayout(ShellLayout.CURRENT_SPACE, {
         spaceKey: this._shellController.spaceKey
