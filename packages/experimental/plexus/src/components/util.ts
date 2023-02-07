@@ -16,20 +16,18 @@ export const throttledTimeout = (cb: () => void, delay: number) => {
 
 export const useTimeout = (delay: number, onChange?: (pending: boolean) => void): [boolean, () => void] => {
   const [pending, setPending] = useState(false);
-  const trigger = useMemo(
-    () =>
-      throttledTimeout(() => {
-        setPending(false);
-        onChange?.(false);
-      }, delay),
-    []
-  );
+  const trigger = useMemo(() => {
+    return throttledTimeout(() => {
+      setPending(false);
+      // onChange?.(false);
+    }, delay);
+  }, []);
 
   return [
     pending,
     () => {
       setPending(true);
-      onChange?.(true);
+      // onChange?.(true);
       trigger();
     }
   ];

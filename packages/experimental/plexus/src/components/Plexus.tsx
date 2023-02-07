@@ -27,8 +27,9 @@ export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N
   const graphRef = useRef<SVGGElement>(null);
 
   // Display state.
+  // TODO(burdon): Spinning animation does not reset on trigger.
   const [invisible, triggerInvisible] = useTimeout(transitionDuration);
-  const [spin, triggerSpin] = useTimeout(2500, onSpin);
+  const [spin, triggerSpin] = useTimeout(2000, onSpin);
   const [selected, setSelected] = useState<string>();
   useEffect(() => {
     triggerInvisible();
@@ -93,7 +94,7 @@ export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N
         className={mx(
           'visible',
           invisible && 'invisible',
-          spin && 'animate-[spin_2s] __animate-[ping_2s]' // TODO(burdon): Ping on start.
+          spin ? 'animate-[spin_2s] __animate-[ping_2s]' : 'animate-none' // TODO(burdon): Ping on start.
         )}
       >
         <Aperture x={-64} y={-64} width={128} height={128} className='[&>*]:stroke-1 [&>*]:opacity-50' />
