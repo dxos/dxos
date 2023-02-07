@@ -7,11 +7,11 @@ title: Get started
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. Learn about the [mission](why).
 
-::: note In this guide:
+::: note In this guide
 *   Starting a project with an [app template](#create-an-app)
 *   Using [ECHO](#echo-state-consensus) for real-time state consensus
-*   Starting a [KUBE](#starting-a-kube) to host your app
-*   [Deploying](#deploying-your-app-to-a-kube) your app to the KUBE
+*   Starting a [KUBE](#starting-a-kube) to host the app
+*   [Deploying](#deploying-your-app-to-a-kube) the app to KUBE
 :::
 ## Create an app
 
@@ -38,17 +38,13 @@ Only [`pnpm`](https://pnpm.io/) is supported for now: `npm i -g pnpm`.
 
 ## ECHO State Consensus
 
-[ECHO](overview#echo) is a peer-to-peer graph database designed for offline-first and real-time collaboration. There is no central server, peers exchange data directly over p2p connections.
+[ECHO](./#echo) is a peer-to-peer graph database designed for offline-first and real-time collaboration. There is no central server, peers exchange data directly over p2p connections.
 
-Installation:
 
-```bash
-pnpm i @dxos/client
-```
 
-To use ECHO, start with an instance of the [`Client`](echo/configuration).
+In `react`, a [`<ClientProvider />`](echo/react) creates an instance of the [`Client`](echo/typescript) for you.
 
-Before storing data, your client needs to create or join a [space](echo/spaces).
+Before storing data, your client needs to [establish identity](halo/identity) and create or join a [space](echo/spaces).
 
 ```ts file=./echo/snippets/create-space.ts#L5-
 import { Client } from '@dxos/client';

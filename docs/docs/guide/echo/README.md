@@ -4,6 +4,7 @@ order: 0
 dir:
   text: ECHO Database
   order: 10
+next: react
 ---
 
 # Overview
@@ -31,17 +32,10 @@ See the [glossary](glossary) for definitions of other terms you'll find in this 
 
 ## How to use ECHO
 
-If using ECHO with React, install `@dxos/react-client` and follow the [React guide](react).
-
-Otherwise, ECHO is available from `@dxos/client` to any Node.js or Browser environment. See [Configuration](configuration).
-
-In general:
-
-*   [Install](installation) the appropriate npm package `@dxos/client` or `@dxos/react-client`
-*   Create a [Client](configuration) (or a [ClientProvider](react/cofiguration) in react)
+*   Install the appropriate npm package [`@dxos/client`](typescript) or [`@dxos/react-client`](react)
+*   Create a [Client](typescript#configuration) (or a [ClientProvider](react#cofiguration) in react)
 *   Set up an identity with [HALO](../halo)
 *   Create or Join a [Space](spaces)
-*   Choose between the [Typed and Untyped ECHO APIs](typed)
 *   [Query items](queries) (in [react](react/queries))
 *   [Create items](mutations#creating-items) (in [react](react/mutations))
 *   [Mutate items](mutations#mutating-data) (in [react](react/mutations))

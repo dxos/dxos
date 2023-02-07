@@ -1,5 +1,6 @@
 ---
 title: Installation
+order: 0
 dir:
   text: TypeScript Guide
   order: 2
@@ -14,8 +15,6 @@ npm install --save @dxos/client
 ```
 
 # Configuration
-
-Having [installed the client](./installation), create an instance:
 
 ```ts file=./snippets/create-client.ts#L5-
 import { Client } from '@dxos/client';
@@ -36,6 +35,6 @@ Optionally, the client can be given a custom configuration via the `config` prop
 
 :::
 
-For more configuration recipes see [advanced scenarios](advanced).
+For more configuration recipes see [configuration examples](config).
 
 To begin manipulating data, we must [create an identity](identity), and [join or create a space](spaces).

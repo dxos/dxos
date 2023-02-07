@@ -1,10 +1,10 @@
 ---
-title: Establishing identity
+
 ---
 
 # Establishing user identity
 
-There are three ways a user can establish their identity with HALO on any given [device](../glossary#device).
+There are three ways a user can establish their identity (login) with HALO on any given [device](../glossary#device).
 1. Create a new identity
 2. Use an identity from another device
 3. Recover an identity using a [seed phrase](../glossary#seed-phrase)

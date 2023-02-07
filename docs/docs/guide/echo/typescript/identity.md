@@ -1,7 +1,5 @@
 ---
-title: Identity
-description: HALO Identity
-order: 3
+order: 1
 ---
 
 # HALO Identity

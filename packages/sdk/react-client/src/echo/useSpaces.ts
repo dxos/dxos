@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useMemo, useEffect, useSyncExternalStore } from 'react';
+import { useMemo, useEffect, useSyncExternalStore, useRef } from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
@@ -18,9 +18,18 @@ export const useSpace = (spaceKey?: PublicKeyLike | null, options?: { create?: b
   const client = useClient();
   const spaces = useSpaces();
   const space = spaceKey ? spaces.find((space) => spaceKey && space.key.equals(spaceKey)) : spaces?.[0];
+  const creating = useRef(false);
   useEffect(() => {
-    if (!space && create) {
-      client.echo.createSpace().catch((err) => console.error(err));
+    console.log('use space effect', space, create, !creating.current);
+    if (!space && create && !creating.current) {
+      creating.current = true;
+      client.echo
+        .createSpace()
+        .then(() => (creating.current = false))
+        .catch((err) => {
+          console.error(err);
+          creating.current = false;
+        });
     }
   }, [space]);
   return space;
