@@ -7,7 +7,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Item, Space, ObjectModel, OrderedList } from '@dxos/client';
+import { Item, Space, DocumentModel, OrderedList } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
@@ -97,7 +97,7 @@ export const NonEchoList = () => {
 const ListStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [list, setList] = useState<Item<ObjectModel>>();
+  const [list, setList] = useState<Item<DocumentModel>>();
   const [orderedList, setOrderedList] = useState<OrderedList>();
   const [initialOrder, setInitialOrder] = useState<string[]>([]);
   const [currentOrder, setCurrentOrder] = useState<string[]>([]);
@@ -107,7 +107,7 @@ const ListStory = () => {
   useAsyncEffect(async () => {
     const newSpace = await client.echo.createSpace();
     const listItem = await newSpace.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: TYPE_LIST
     });
 
@@ -115,7 +115,7 @@ const ListStory = () => {
       Array.from({ length: faker.datatype.number({ min: 10, max: 30 }) }).map(
         async () =>
           await newSpace?.database.createItem({
-            model: ObjectModel,
+            model: DocumentModel,
             type: TYPE_LIST_ITEM,
             props: {
               title: faker.name.firstName()
@@ -217,7 +217,7 @@ export const List = () => (
 const MultipleListStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [lists, setLists] = useState<Item<ObjectModel>[]>([]);
+  const [lists, setLists] = useState<Item<DocumentModel>[]>([]);
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
   const [initialOrders, setInitialOrders] = useState<{ id: string; values: string[] }[]>([]);
   const [currentOrders, setCurrentOrders] = useState<{ id: string; values: string[] }[]>([]);
@@ -231,7 +231,7 @@ const MultipleListStory = () => {
       Array.from({ length: 3 }).map(
         async () =>
           await newSpace.database.createItem({
-            model: ObjectModel,
+            model: DocumentModel,
             type: TYPE_LIST
           })
       )
@@ -246,7 +246,7 @@ const MultipleListStory = () => {
           }).map(
             async () =>
               await newSpace?.database.createItem({
-                model: ObjectModel,
+                model: DocumentModel,
                 type: TYPE_LIST_ITEM,
                 props: {
                   title: faker.name.firstName()
@@ -500,7 +500,7 @@ const columns = [
 const TableStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [table, setTable] = useState<Item<ObjectModel>>();
+  const [table, setTable] = useState<Item<DocumentModel>>();
   const [initialRowOrder, setInitialRowOrder] = useState<string[]>([]);
   const [rowOrderedList, setRowOrderedList] = useState<OrderedList>();
   const [rowOrder, setRowOrder] = useState<string[]>([]);
@@ -514,7 +514,7 @@ const TableStory = () => {
   useAsyncEffect(async () => {
     const newSpace = await client.echo.createSpace();
     const tableItem = await newSpace.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: TYPE_TABLE_TABLE
     });
 
@@ -641,7 +641,7 @@ export const Table = () => (
 const MultipleContainersStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [containers, setContainers] = useState<Item<ObjectModel>[]>([]);
+  const [containers, setContainers] = useState<Item<DocumentModel>[]>([]);
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
   const [initialOrders, setInitialOrders] = useState<{ id: string; values: string[] }[]>([]);
   const [currentOrders, setCurrentOrders] = useState<{ id: string; values: string[] }[]>([]);
@@ -655,12 +655,12 @@ const MultipleContainersStory = () => {
     const newSpace = await client.echo.createSpace();
 
     const listItem = await newSpace.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: TYPE_LIST
     });
 
     const tableItem = await newSpace.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: TYPE_TABLE_TABLE
     });
 
@@ -675,7 +675,7 @@ const MultipleContainersStory = () => {
           }).map(
             async () =>
               await newSpace?.database.createItem({
-                model: ObjectModel,
+                model: DocumentModel,
                 type: TYPE_TEST_PERSON,
                 props: {
                   title: faker.name.firstName(),

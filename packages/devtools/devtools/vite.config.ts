@@ -31,7 +31,7 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/client/services',
       '@dxos/protocols/proto/dxos/config',
       '@dxos/protocols/proto/dxos/echo/feed',
-      '@dxos/protocols/proto/dxos/echo/model/object',
+      '@dxos/protocols/proto/dxos/echo/model/document',
       '@dxos/protocols/proto/dxos/echo/object',
       '@dxos/protocols/proto/dxos/halo/credentials',
       '@dxos/protocols/proto/dxos/halo/invitations',
@@ -48,10 +48,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          chess_app: ['@dxos/chess-app'],
           faker: ['faker'],
           highlighter: ['react-syntax-highlighter'],
+          kai: ['@dxos/kai'],
           monaco: ['monaco-editor', '@monaco-editor/react'],
-          vendor: ['react', 'react-router-dom', 'react-dom']
+          vendor: ['react', 'react-router-dom', 'react-dom'],
+          phosphor_react: ['phosphor-react']
         }
       }
     }

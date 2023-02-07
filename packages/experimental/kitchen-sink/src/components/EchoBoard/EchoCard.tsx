@@ -6,12 +6,12 @@ import React, { ReactNode } from 'react';
 
 import { Card, CardContent, CardHeader } from '@mui/material';
 
+import { DocumentModel } from '@dxos/document-model';
 import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
 export interface EchoCardProps {
-  item: Item<ObjectModel>;
+  item: Item<DocumentModel>;
   itemAdapter: ItemAdapter;
   children?: ReactNode;
 }

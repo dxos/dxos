@@ -3,12 +3,12 @@
 //
 
 import { Space } from '@dxos/client';
+import { DocumentModel } from '@dxos/document-model';
 import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 import { useSelection } from '@dxos/react-client';
 import { itemAdapter } from '@dxos/react-client-testing';
 
-export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
+export const sortItems = (a: Item<DocumentModel>, b: Item<DocumentModel>) => {
   if (a.type! < b.type!) {
     return -1;
   }
@@ -32,7 +32,7 @@ export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
 /**
  * Filter items.
  */
-export const useQuery = (space?: Space, query?: string): Item<ObjectModel>[] => {
+export const useQuery = (space?: Space, query?: string): Item<DocumentModel>[] => {
   const text = query?.toLowerCase();
   const items =
     useSelection(

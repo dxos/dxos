@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
@@ -21,7 +21,7 @@ describe('Spaces/invitations', () => {
 
     {
       const space = await client.echo.createSpace();
-      const item = await space.database.createItem({ model: ObjectModel });
+      const item = await space.database.createItem({ model: DocumentModel });
       await item.model.set('title', 'testing');
       expect(item.model.get('title')).to.eq('testing');
     }
