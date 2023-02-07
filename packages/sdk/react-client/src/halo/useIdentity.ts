@@ -18,7 +18,7 @@ export const useIdentity = (options?: { login?: boolean }) => {
     () => client.halo.profile
   );
   if (login && !identity) {
-    // TODO(wittjosiah): Separate config for HALO UI & vault so origin doesn't need to parsed out.
+    // TODO(wittjosiah): Replace with shell display command.
     // TODO(wittjosiah): Config defaults should be available from the config.
     const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
 
