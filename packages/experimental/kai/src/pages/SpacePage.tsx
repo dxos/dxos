@@ -52,7 +52,7 @@ const SpacePage = () => {
     <SpaceContext.Provider value={spaceContext}>
       <PanelSidebarProvider
         inlineStart
-        classes={{
+        slots={{
           content: { children: <Sidebar />, className: 'block-start-appbar' },
           main: { className: mx(frames.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
         }}

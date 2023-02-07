@@ -50,7 +50,7 @@ export const DocumentFrame = withReactor(() => {
               <div className='flex flex-1 m-2 overflow-y-auto'>
                 <Composer
                   fragment={fragment}
-                  classes={{
+                  slots={{
                     root: { className: 'grow' },
                     editor: {
                       className: 'z-0 bg-white text-black h-full w-full p-3 min-bs-[12em] text-xl md:text-base'
