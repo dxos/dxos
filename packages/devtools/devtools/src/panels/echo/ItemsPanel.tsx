@@ -9,7 +9,7 @@ import { truncateKey } from '@dxos/debug';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/kai';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { useSelection } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
@@ -32,7 +32,7 @@ const textFilter = (text?: string) => {
 };
 
 const modelToObject = (model: Model<any>) => {
-  if (model instanceof ObjectModel) {
+  if (model instanceof DocumentModel) {
     return model.toObject();
   } else if (model instanceof TextModel) {
     return model.textContent;

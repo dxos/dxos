@@ -10,8 +10,8 @@ import { Box } from '@mui/material';
 import { DataGrid, GridCellParams, GridColDef, GridSelectionModel, GridValueGetterParams } from '@mui/x-data-grid';
 
 import { truncateKey } from '@dxos/debug';
+import { DocumentModel } from '@dxos/document-model';
 import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
 const defaultStyles = css`
@@ -47,7 +47,7 @@ const useColumns = (itemAdapter: ItemAdapter): GridColDef[] =>
   );
 
 export interface EchoGridProps {
-  items?: Item<ObjectModel>[];
+  items?: Item<DocumentModel>[];
   itemAdapter: ItemAdapter;
   styles?: any;
 }

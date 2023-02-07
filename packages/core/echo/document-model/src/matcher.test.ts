@@ -4,12 +4,12 @@
 
 import expect from 'expect';
 
-import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { describe, test } from '@dxos/test';
 
 import { Matcher } from './matcher';
 
-// TODO(burdon): Adapt for ObjectModel.
+// TODO(burdon): Adapt for DocumentModel.
 // TODO(burdon): Nested properties?
 // TODO(burdon): Indexed properties? (schema?)
 const getter = (item: any, key: string) => item[key];

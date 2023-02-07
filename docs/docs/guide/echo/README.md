@@ -29,7 +29,7 @@ Units of data are referred to as `items` (like documents or rows in other databa
 
 Every item behaves according to a consistency model which describes the rules for conflict resolution. ECHO provides at least two specific model types and can be extended with custom models.
 
-*   [`ObjectModel`](../api/@dxos/client/classes/ObjectModel) is a document record with keys and values, where last write wins on any given key.
+*   [`DocumentModel`](../api/@dxos/client/classes/DocumentModel) is a document record with keys and values, where last write wins on any given key.
 *   [`TextModel`](../api/@dxos/text-model/classes/TextModel) is for collaborative rich text editing on a "large string" or rich text model.
 
 ## How to use ECHO

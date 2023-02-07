@@ -1,8 +1,8 @@
 # Class `OrderedList`
-<sub>Declared in [packages/core/echo/object-model/dist/types/src/ordered-list.d.ts:7]()</sub>
+<sub>Declared in [packages/core/echo/document-model/dist/types/src/ordered-list.d.ts:7]()</sub>
 
 
-Utility class that wraps an  `ObjectModel`  and implements a linked list via key-values on a given property.
+Utility class that wraps an  `DocumentModel`  and implements a linked list via key-values on a given property.
 
 ## Constructors
 ### [constructor(_model, \[_property\])]()
@@ -12,7 +12,7 @@ Returns: <code>[OrderedList](/api/@dxos/client/classes/OrderedList)</code>
 
 Arguments: 
 
-`_model`: <code>[ObjectModel](/api/@dxos/client/classes/ObjectModel)</code>
+`_model`: <code>[DocumentModel](/api/@dxos/client/classes/DocumentModel)</code>
 
 `_property`: <code>string</code>
 

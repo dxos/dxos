@@ -66,7 +66,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
     // TODO(burdon): Children not present on GraphNode (custom).
     const getChildren = (node: N): N[] => (node as any).children ?? [];
 
-    const inner = this.options.radius ?? 100;
+    const inner = this.options.radius ?? 160;
     const outer = inner * 2;
 
     // Children.

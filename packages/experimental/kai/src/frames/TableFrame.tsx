@@ -41,12 +41,12 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
   return schemaTypes.map((schema) => ({
     id: schema.name,
     title: schema.shortName,
+    columns: generateColumns(schema),
     filter: schema.createFilter(),
     subFilter:
       (match = '') =>
       (object: Document) =>
-        JSON.stringify(object.toJSON()).includes(match),
-    columns: generateColumns(schema)
+        JSON.stringify(object.toJSON()).includes(match)
   }));
 };
 

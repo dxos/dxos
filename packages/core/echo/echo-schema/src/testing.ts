@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { DocumentModel } from '@dxos/document-model';
 import { createMemoryDatabase } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoDatabase } from './database';
@@ -16,7 +16,7 @@ import { DatabaseRouter } from './database-router';
 export const createDatabase = async (router = new DatabaseRouter()) => {
   // prettier-ignore
   const modelFactory = new ModelFactory()
-    .registerModel(ObjectModel)
+    .registerModel(DocumentModel)
     .registerModel(TextModel);
 
   const database = await createMemoryDatabase(modelFactory);

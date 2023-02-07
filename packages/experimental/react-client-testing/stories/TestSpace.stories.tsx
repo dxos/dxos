@@ -7,7 +7,7 @@ import React from 'react';
 import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
 import { TreeItem, TreeView } from '@mui/lab';
 
-import { Item, ObjectModel } from '@dxos/client';
+import { Item, DocumentModel } from '@dxos/client';
 import { ClientProvider, useSelection } from '@dxos/react-client';
 
 import { ProfileInitializer, useTestSpace } from '../src';
@@ -17,7 +17,7 @@ export default {
 };
 
 // TODO(kaplanski): Factor out this component from devtools.
-const ItemNode = ({ item }: { item: Item<ObjectModel> }) => {
+const ItemNode = ({ item }: { item: Item<DocumentModel> }) => {
   const children = item.select().children().exec().entities;
 
   return (

@@ -5,10 +5,10 @@
 import expect from 'expect';
 
 import { createId } from '@dxos/crypto';
+import { DocumentModel } from '@dxos/document-model';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
 
 import { ItemConstructionOptions, ItemManager } from './item-manager';
@@ -16,18 +16,18 @@ import { ItemConstructionOptions, ItemManager } from './item-manager';
 describe('ItemManager', () => {
   describe('basic', () => {
     test('item construction', async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const modelFactory = new ModelFactory().registerModel(DocumentModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
       const itemId = createId();
       const item = await itemManager.constructItem({
         itemId,
-        modelType: ObjectModel.meta.type,
+        modelType: DocumentModel.meta.type,
         itemType: undefined,
         snapshot: { objectId: itemId }
       });
       expect(item.id).toEqual(itemId);
-      expect(item.model).toBeInstanceOf(ObjectModel);
+      expect(item.model).toBeInstanceOf(DocumentModel);
       expect(item.type).toBeUndefined();
       expect(item.readOnly).toBeFalsy();
 
@@ -36,7 +36,7 @@ describe('ItemManager', () => {
     });
 
     test('item deconstruction', async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const modelFactory = new ModelFactory().registerModel(DocumentModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
       const item = await itemManager.constructItem(defaultOpts());
@@ -49,7 +49,7 @@ describe('ItemManager', () => {
 
   describe('parent-child relationship', () => {
     test('can be constructed and will have correct references', async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const modelFactory = new ModelFactory().registerModel(DocumentModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
       const parent = await itemManager.constructItem(defaultOpts());
@@ -63,7 +63,7 @@ describe('ItemManager', () => {
     });
 
     test('when child is deleted parent no longer references it', async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const modelFactory = new ModelFactory().registerModel(DocumentModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
       const parent = await itemManager.constructItem(defaultOpts());
@@ -79,7 +79,7 @@ describe('ItemManager', () => {
     });
 
     test('when parent is deleted children are deleted as well', async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const modelFactory = new ModelFactory().registerModel(DocumentModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
       const parent = await itemManager.constructItem(defaultOpts());
@@ -106,7 +106,7 @@ const defaultOpts = (): ItemConstructionOptions => {
   const itemId = createId();
   return {
     itemId,
-    modelType: ObjectModel.meta.type,
+    modelType: DocumentModel.meta.type,
     itemType: undefined,
     snapshot: { objectId: itemId }
   };

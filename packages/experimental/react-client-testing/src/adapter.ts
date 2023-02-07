@@ -12,7 +12,7 @@ import {
 } from '@mui/icons-material';
 import { colors } from '@mui/material';
 
-import { Item, ObjectModel } from '@dxos/client';
+import { Item, DocumentModel } from '@dxos/client';
 import { TestType } from '@dxos/client-testing';
 
 export const typeMeta: { [i: string]: ItemMeta } = {
@@ -56,10 +56,10 @@ export type ItemMeta = {
 };
 
 export interface ItemAdapter {
-  title: (item: Item<ObjectModel>) => string | undefined;
-  description: (item: Item<ObjectModel>) => string | undefined;
-  linkedTypes?: (item: Item<ObjectModel>) => string[];
-  linkedItems?: (item: Item<ObjectModel>, kind: string) => Item<ObjectModel>[];
+  title: (item: Item<DocumentModel>) => string | undefined;
+  description: (item: Item<DocumentModel>) => string | undefined;
+  linkedTypes?: (item: Item<DocumentModel>) => string[];
+  linkedItems?: (item: Item<DocumentModel>, kind: string) => Item<DocumentModel>[];
   meta?: (type: string) => ItemMeta | undefined;
 }
 
@@ -68,17 +68,17 @@ export interface ItemAdapter {
  */
 // TODO(burdon): Is this general purpose?
 export const itemAdapter: ItemAdapter = {
-  title: (item: Item<ObjectModel>) => item.model.get('name'),
+  title: (item: Item<DocumentModel>) => item.model.get('name'),
 
-  description: (item: Item<ObjectModel>) => item.model.get('description'),
+  description: (item: Item<DocumentModel>) => item.model.get('description'),
 
-  linkedTypes: (item: Item<ObjectModel>) => {
+  linkedTypes: (item: Item<DocumentModel>) => {
     const types = new Set<string>();
     item.children.forEach((item) => item.type && types.add(item.type));
     return Array.from(types);
   },
 
-  linkedItems: (item: Item<ObjectModel>, kind: string) => item.children.filter((item) => item.type === kind),
+  linkedItems: (item: Item<DocumentModel>, kind: string) => item.children.filter((item) => item.type === kind),
 
   meta: (type: string) => typeMeta[type]
 };

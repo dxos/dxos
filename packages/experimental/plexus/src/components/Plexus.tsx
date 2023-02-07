@@ -15,6 +15,16 @@ import { useTimeout } from './util';
 
 const transitionDuration = 300;
 
+export type PlexusClasses = {
+  root?: string;
+};
+
+export type PlexusSlots = {
+  root?: {
+    className: string;
+  };
+};
+
 export type PlexusProps<N> = {
   model: GraphModel<N>;
   className?: string;
@@ -22,6 +32,9 @@ export type PlexusProps<N> = {
   onSpin?: (spin: boolean) => void; // TODO(burdon): Generic state change.
 };
 
+/**
+ * SVG graph layout.
+ */
 export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N>) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
@@ -44,6 +57,7 @@ export const Plexus = <N,>({ model, className, onSelect, onSpin }: PlexusProps<N
         radius: 192,
         nodeRadius: 16,
         classes: {
+          // TODO(burdon): Base styles via: [&>*].
           // TODO(burdon): Factor out styles/classes: 300, 500, 700, 800.
           root: '[&>circle]:fill-slate-800 [&>circle]:stroke-[3px] [&>circle]:stroke-slate-500 [&>text]:fill-slate-500',
           node: '[&>circle]:fill-slate-800 [&>circle]:stroke-[2px] [&>circle]:stroke-slate-300 [&>text]:fill-slate-500',

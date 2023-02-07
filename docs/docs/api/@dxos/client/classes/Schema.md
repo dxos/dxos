@@ -2,7 +2,7 @@
 <sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/api/schema.d.ts:21]()</sub>
 
 
-Wrapper for ECHO Item that represents an  `ObjectModel`  schema.
+Wrapper for ECHO Item that represents an  `DocumentModel`  schema.
 
 ## Constructors
 ### [constructor(_schema)]()
@@ -12,7 +12,7 @@ Returns: <code>[Schema](/api/@dxos/client/classes/Schema)</code>
 
 Arguments: 
 
-`_schema`: <code>[ObjectModel](/api/@dxos/client/classes/ObjectModel)</code>
+`_schema`: <code>[DocumentModel](/api/@dxos/client/classes/DocumentModel)</code>
 
 ## Properties
 ### [fields]()
@@ -62,4 +62,4 @@ Returns: <code>boolean</code>
 
 Arguments: 
 
-`model`: <code>[ObjectModel](/api/@dxos/client/classes/ObjectModel)</code>
+`model`: <code>[DocumentModel](/api/@dxos/client/classes/DocumentModel)</code>
