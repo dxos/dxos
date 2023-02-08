@@ -11,9 +11,3 @@ body {
   overflow: hidden;
   @apply font-body font-normal text-base;
 }
-
-.circle {
-  stroke: 'red';
-  stroke-width: 2;
-  fill: 'none';
-}

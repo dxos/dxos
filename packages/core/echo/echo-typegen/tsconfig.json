@@ -21,6 +21,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../document-model"
+    },
+    {
       "path": "../echo-db"
     },
     {
@@ -28,9 +31,6 @@
     },
     {
       "path": "../model-factory"
-    },
-    {
-      "path": "../object-model"
     }
   ]
 }

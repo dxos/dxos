@@ -13,13 +13,13 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
+import { DocumentModel, ObjectProperties } from '@dxos/document-model';
 import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
 import { DatabaseRouter, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
@@ -93,13 +93,13 @@ export class SpaceProxy implements Space {
   private readonly _database?: Database;
   private readonly _experimental?: Experimental;
   private readonly _invitationProxy: SpaceInvitationsProxy;
-  private readonly _invitations: CancellableInvitationObservable[] = [];
+  private _invitations: CancellableInvitationObservable[] = [];
 
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
 
   private _initialized = false;
-  private _item?: Item<ObjectModel>; // TODO(burdon): Rename.
+  private _item?: Item<DocumentModel>; // TODO(burdon): Rename.
 
   /**
    * @internal
@@ -125,14 +125,16 @@ export class SpaceProxy implements Space {
 
     assert(this._clientServices.services.DataService, 'DataService not available');
 
+    const backend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
     this._database = new Database(
       this._modelFactory,
-      new DatabaseBackendProxy(this._clientServices.services.DataService, this.key),
+      // TODO(dmaretskyi): Preserve this when removing `Database`.
+      backend,
       memberKey
     );
 
     this._experimental = {
-      db: new EchoDatabase(this._database._itemManager, databaseRouter)
+      db: new EchoDatabase(this._database._itemManager, backend, databaseRouter)
     };
 
     databaseRouter.register(this.key, this._experimental.db);
@@ -201,7 +203,7 @@ export class SpaceProxy implements Space {
     log('database ready');
     this._databaseInitialized.wake();
 
-    this._item = await this.database.waitForItem<ObjectModel>({ type: SPACE_ITEM_TYPE });
+    this._item = await this.database.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
     log('initialized');
@@ -300,7 +302,7 @@ export class SpaceProxy implements Space {
   createInvitation(options?: InvitationsOptions) {
     log('create invitation', options);
     const invitation = this._invitationProxy.createInvitation(this.key, options);
-    this._invitations.push(invitation);
+    this._invitations = [...this._invitations, invitation];
 
     const unsubscribe = invitation.subscribe({
       onConnecting: () => {
@@ -328,7 +330,7 @@ export class SpaceProxy implements Space {
     log('remove invitation', { id });
     const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
     void this._invitations[index]?.cancel();
-    this._invitations.splice(index, 1);
+    this._invitations = [...this._invitations.splice(index, 1)];
     this.invitationsUpdate.emit();
   }
 

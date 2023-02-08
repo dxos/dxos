@@ -4,7 +4,7 @@
 
 import faker from 'faker';
 
-import { Item, ObjectModel, Space } from '@dxos/client';
+import { Item, DocumentModel, Space } from '@dxos/client';
 
 import { NumberRange, capitalize, getNumber } from '../util';
 
@@ -44,15 +44,15 @@ const schemas = {
 export class ProjectBuilder {
   constructor(
     private readonly _builder: SpaceBuilder,
-    private readonly _org: Item<ObjectModel>,
-    private readonly _project: Item<ObjectModel>
+    private readonly _org: Item<DocumentModel>,
+    private readonly _project: Item<DocumentModel>
   ) {}
 
   get project() {
     return this._project;
   }
 
-  async createTasks(n: NumberRange = 1, people?: Item<ObjectModel>[]) {
+  async createTasks(n: NumberRange = 1, people?: Item<DocumentModel>[]) {
     return await Promise.all(
       Array.from({ length: getNumber(n) }).map(async () => {
         await this._builder.createTask(this._project);
@@ -65,7 +65,7 @@ export class ProjectBuilder {
  * Org
  */
 export class OrgBuilder {
-  constructor(private readonly _builder: SpaceBuilder, private readonly _org: Item<ObjectModel>) {}
+  constructor(private readonly _builder: SpaceBuilder, private readonly _org: Item<DocumentModel>) {}
 
   get org() {
     return this._org;
@@ -114,7 +114,7 @@ export class SpaceBuilder {
 
   async createOrg() {
     return this._space.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: TestType.Org,
       props: {
         name: faker.company.companyName(),
@@ -123,9 +123,9 @@ export class SpaceBuilder {
     });
   }
 
-  async createPerson(org: Item<ObjectModel>) {
+  async createPerson(org: Item<DocumentModel>) {
     return this._space.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: TestType.Person,
       parent: org.id,
       props: {
@@ -135,9 +135,9 @@ export class SpaceBuilder {
     });
   }
 
-  async createProject(org: Item<ObjectModel>) {
+  async createProject(org: Item<DocumentModel>) {
     return this._space.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: TestType.Project,
       parent: org.id,
       props: {
@@ -147,9 +147,9 @@ export class SpaceBuilder {
     });
   }
 
-  async createTask(project: Item<ObjectModel>) {
+  async createTask(project: Item<DocumentModel>) {
     return this._space.database.createItem({
-      model: ObjectModel,
+      model: DocumentModel,
       type: TestType.Task,
       parent: project.id,
       props: {
@@ -162,7 +162,7 @@ export class SpaceBuilder {
   // TODO(burdon): ???
   async createSpace() {}
 
-  async createRandomItem(parent?: Item<ObjectModel>) {
+  async createRandomItem(parent?: Item<DocumentModel>) {
     if (parent) {
       switch (parent.type) {
         case TestType.Org: {

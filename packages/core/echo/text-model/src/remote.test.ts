@@ -4,9 +4,9 @@
 
 import expect from 'expect';
 
+import { DocumentModel } from '@dxos/document-model';
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-db/testing';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { describe, test } from '@dxos/test';
 
 import { TextModel } from './text-model';
@@ -27,12 +27,12 @@ describe('With remote database', () => {
   });
 
   test('create with parent', async () => {
-    const modelFactory = new ModelFactory().registerModel(TextModel).registerModel(ObjectModel);
+    const modelFactory = new ModelFactory().registerModel(TextModel).registerModel(DocumentModel);
     const backend = await createMemoryDatabase(modelFactory);
     const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
 
     const parent = await frontend.createItem({
-      model: ObjectModel
+      model: DocumentModel
     });
 
     const text = await frontend.createItem({

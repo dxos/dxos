@@ -27,8 +27,8 @@
     "yjs": "^13.5.44"
   },
   "devDependencies": {
+    "@dxos/document-model": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@types/faker": "^5.5.9",
     "faker": "^5.5.3"

@@ -4,9 +4,10 @@
 
 import assert from 'node:assert';
 
-import { Item, ItemManager } from '@dxos/echo-db';
+import { Any } from '@dxos/codec-protobuf';
+import { DocumentModel } from '@dxos/document-model';
+import { DatabaseBackendProxy, Item, ItemManager, encodeModelMutation } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
@@ -50,6 +51,7 @@ export class EchoDatabase {
      * @internal
      */
     public readonly _itemManager: ItemManager,
+    public readonly _backend: DatabaseBackendProxy,
     private readonly _router: DatabaseRouter
   ) {
     // TODO(dmaretskyi): Don't debounce?
@@ -92,19 +94,34 @@ export class EchoDatabase {
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
 
-    let props;
+    let mutation: Any | undefined;
     if (obj instanceof DocumentBase) {
-      props = { '@type': obj[base]._uninitialized?.['@type'] };
+      const props = { '@type': obj[base]._uninitialized?.['@type'] };
+      const modelMeta = obj[base]._modelConstructor.meta;
+      mutation = encodeModelMutation(modelMeta, modelMeta.getInitMutation!(props));
     }
-    const item = await this._itemManager.createItem(
-      obj[base]._modelConstructor.meta.type,
-      obj[base]._id,
-      undefined,
-      undefined,
-      props
-    );
 
-    await obj[base]._bind(item);
+    const result = this._backend.mutate({
+      objects: [
+        {
+          objectId: obj[base]._id,
+          genesis: {
+            modelType: obj[base]._modelConstructor.meta.type
+          },
+          mutations: !mutation
+            ? []
+            : [
+                {
+                  model: mutation
+                }
+              ]
+        }
+      ]
+    });
+    assert(result.objectsCreated.length === 1);
+
+    await obj[base]._bind(result.objectsCreated[0]);
+    await result.getReceipt(); // wait to be saved to feed.
     return obj;
   }
 
@@ -150,7 +167,7 @@ export class EchoDatabase {
       // TODO(burdon): Trigger callback on call (not just update).
       subscribe: (callback: (query: Query) => void) => {
         // TODO(dmaretskyi): Don't debounce?
-        return this._itemManager.debouncedUpdate.on((updatedObjects) => {
+        return this._backend._itemManager.debouncedUpdate.on((updatedObjects) => {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
               const match = matcher(this._objects.get(object.id)!);
@@ -199,7 +216,7 @@ export class EchoDatabase {
    * Create object with a proper prototype representing the given item.
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
-    if (item.model instanceof ObjectModel) {
+    if (item.model instanceof DocumentModel) {
       const type = item.model.get('@type');
       if (!type) {
         return new Document();

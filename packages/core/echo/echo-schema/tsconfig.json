@@ -17,6 +17,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
       "path": "../../../common/debug"
     },
     {
@@ -32,13 +35,16 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../document-model"
+    },
+    {
       "path": "../echo-db"
     },
     {
       "path": "../model-factory"
-    },
-    {
-      "path": "../object-model"
     },
     {
       "path": "../text-model"

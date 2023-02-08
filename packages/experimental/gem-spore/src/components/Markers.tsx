@@ -8,10 +8,10 @@ import React, { useEffect, useRef } from 'react';
 import { createMarkers } from '../graph';
 import { defaultMarkerStyles } from './styles';
 
-export interface MarkersProps {
+export type MarkersProps = {
   arrowSize?: number;
   className?: string;
-}
+};
 
 /**
  * SVG markers wrapper.

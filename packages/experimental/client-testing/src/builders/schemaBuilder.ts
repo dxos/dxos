@@ -5,7 +5,7 @@
 import debug from 'debug';
 import faker from 'faker';
 
-import { Database, Item, ObjectModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/client';
+import { Database, Item, DocumentModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/client';
 import type { Model } from '@dxos/model-factory';
 
 import { TestType } from './spaceBuilder';
@@ -102,7 +102,7 @@ export class SchemaBuilder {
           .flat();
 
         return this._database.createItem({
-          model: ObjectModel,
+          model: DocumentModel,
           type: TYPE_SCHEMA,
           props: {
             schema,

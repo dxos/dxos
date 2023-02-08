@@ -203,6 +203,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/document-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-db/package.json",
           "jsonpath": "$.version"
         },
@@ -224,11 +229,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/model-factory/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/object-model/package.json",
           "jsonpath": "$.version"
         },
         {

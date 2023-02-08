@@ -6,11 +6,12 @@ formatter:
 filter:
   - warn
   - info
-  - test.ts:debug
-  - database:debug
-  - notarization:debug
-  - feed-store:debug
-  - control-pipeline:debug
+  # - test.ts:debug
+  # - database:debug
+  # - notarization:debug
+  # - feed-store:debug
+  # - control-pipeline:debug
+  - state-manager:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug

@@ -19,9 +19,17 @@ module.exports = {
       header: '88px', // Combined height of appbar and toolbar.
 
       // Standardize column width (based on iPhone Pro 12).
-      // TODO(burdon): Externalize numerical constant for computed layout geometry.
-      // TODO(burdon): Define as media breakpoint?
       column: '390px'
+    },
+
+    colors: {
+      // TODO(burdon): Naming scheme?
+      dark: {
+        selection: {
+          bg: 'orange', // dark:bg-dark-selection-bg bg-selection-bg
+          fg: 'black'
+        }
+      }
     }
   }
 };

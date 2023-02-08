@@ -22,15 +22,14 @@ import {
   ModelType,
   MutationOf,
   MutationWriteReceipt,
-  MutationProcessMeta,
   StateOf,
   StateMachine
 } from './types';
 
 type OptimisticMutation = {
-  mutation: Any;
+  tag?: string;
 
-  meta: MutationProcessMeta;
+  mutation: Any;
 
   /**
    * Contains the receipt after this mutation has been written to the feed.
@@ -58,7 +57,7 @@ export class StateManager<M extends Model> {
   private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
-  private _modelMeta: ModelMeta | null = null;
+  public _modelMeta: ModelMeta | null = null;
   private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
   private _model: M | null = null;
@@ -120,36 +119,70 @@ export class StateManager<M extends Model> {
     this._model.update.emit(this._model);
   }
 
-  /**
-   * Writes the mutation to the output stream.
-   */
-  private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
-    log('Write', mutation);
-    if (!this._feedWriter) {
-      throw new Error(`Read-only model: ${this._itemId}`);
-    }
-
+  processOptimisticMutation(mutation: MutationOf<M>, tag?: string) {
     // Construct and enqueue an optimistic mutation.
     const mutationEncoded = {
       type_url: 'todo', // TODO(mykola): this._modelMeta!.mutationCodec.typeUrl ???
       value: this._modelMeta!.mutationCodec.encode(mutation)
     };
     const optimisticMutation: OptimisticMutation = {
-      mutation: mutationEncoded,
-      meta: {
-        author: this._memberKey
-      }
+      tag,
+      mutation: mutationEncoded
     };
     this._optimisticMutations.push(optimisticMutation);
 
     // Process mutation if initialzied, otherwise deferred until state-machine is loaded.
     if (this.initialized) {
       log('Optimistic apply', mutation);
-      this._stateMachine!.process(mutation, optimisticMutation.meta);
+      this._stateMachine!.process(mutation);
       this._emitModelUpdate();
     }
 
-    const receiptPromise = this._feedWriter.write(mutationEncoded);
+    return optimisticMutation;
+  }
+
+  async confirm(mutation: OptimisticMutation, receipt: WriteReceipt): Promise<MutationWriteReceipt> {
+    log('Confirm', mutation);
+    mutation.receipt = receipt;
+
+    // Promise that resolves when this mutation has been processed.
+    const processed = this._mutationProcessed.waitFor(
+      (meta) => receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
+    );
+
+    // Sanity checks.
+    void processed.then(() => {
+      if (!mutation.receipt) {
+        log.error('Optimistic mutation was processed without being confirmed', {
+          itemId: this._itemId
+        });
+      }
+      if (this._optimisticMutations.includes(mutation)) {
+        log.error('Optimistic mutation was processed without being removed from the optimistic queue', {
+          itemId: this._itemId
+        });
+      }
+    });
+
+    return {
+      ...receipt,
+      waitToBeProcessed: async () => {
+        await processed;
+      }
+    };
+  }
+
+  /**
+   * Writes the mutation to the output stream.
+   */
+  private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
+    if (!this._feedWriter) {
+      throw new Error(`Read-only model: ${this._itemId}`);
+    }
+
+    const optimisticMutation = this.processOptimisticMutation(mutation);
+
+    const receiptPromise = this._feedWriter.write(optimisticMutation.mutation);
 
     // Track receipt promise.
     this._pendingWrites.add(receiptPromise);
@@ -161,36 +194,7 @@ export class StateManager<M extends Model> {
     // Confirms that the optimistic mutation has been written to the feed store.
     // NOTE: Possible race condition: What if processMessage gets called before write() resolves?
     const receipt = await receiptPromise;
-    log('Confirm', mutation);
-    optimisticMutation.receipt = receipt;
-
-    // Promise that resolves when this mutation has been processed.
-    const processed = this._mutationProcessed.waitFor(
-      (meta) => receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-    );
-
-    // Sanity checks.
-    void processed.then(() => {
-      if (!optimisticMutation.receipt) {
-        log.error('Optimistic mutation was processed without being confirmed', {
-          itemId: this._itemId,
-          mutationType: mutation.type
-        });
-      }
-      if (this._optimisticMutations.includes(optimisticMutation)) {
-        log.error('Optimistic mutation was processed without being removed from the optimistic queue', {
-          itemId: this._itemId,
-          mutationType: mutation.type
-        });
-      }
-    });
-
-    return {
-      ...receipt,
-      waitToBeProcessed: async () => {
-        await processed;
-      }
-    };
+    return await this.confirm(optimisticMutation, receipt);
   }
 
   /**
@@ -216,22 +220,17 @@ export class StateManager<M extends Model> {
       }
 
       const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.model.value);
-      assert(mutation.meta);
-      this._stateMachine.process(mutationDecoded, {
-        author: PublicKey.from(mutation.meta.memberKey)
-      });
+      this._stateMachine.process(mutationDecoded);
     }
 
     // Apply mutations that were read from the inbound stream.
     for (const mutation of this._mutations) {
-      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value), {
-        author: PublicKey.from(mutation.meta.memberKey)
-      });
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value));
     }
 
     // Apply optimistic mutations.
     for (const mutation of this._optimisticMutations) {
-      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value), mutation.meta);
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value));
     }
   }
 
@@ -259,11 +258,12 @@ export class StateManager<M extends Model> {
   /**
    * Processes mutations from the inbound stream.
    */
-  processMessage(meta: MutationMetaWithTimeframe, mutation: Any) {
+  processMessage(meta: MutationMetaWithTimeframe, mutation: Any, clientTag?: string) {
     // Remove optimistic mutation from the queue.
     const optimisticIndex = this._optimisticMutations.findIndex(
       (message) =>
-        message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq
+        (message.tag && message.tag === clientTag) ||
+        (message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq)
     );
     if (optimisticIndex !== -1) {
       this._optimisticMutations.splice(optimisticIndex, 1);
@@ -297,9 +297,7 @@ export class StateManager<M extends Model> {
         log(`Apply ${JSON.stringify(meta)}`);
         // Mutation can safely be append at the end preserving order.
         const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation.value);
-        this._stateMachine!.process(mutationDecoded, {
-          author: PublicKey.from(meta.memberKey)
-        });
+        this._stateMachine!.process(mutationDecoded);
         this._emitModelUpdate();
       }
     }

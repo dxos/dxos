@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import columnify from 'columnify';
 
-import { Item, ObjectModel, Space, SchemaField } from '@dxos/client';
+import { Item, DocumentModel, Space, SchemaField } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 
 // TODO(burdon): Protobuf definitions.
@@ -16,7 +16,7 @@ import { truncate, truncateKey } from '@dxos/debug';
  * @param item
  * @param [space] Optionally test reference exists.
  */
-export const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>, space?: Space) => {
+export const validateItem = (schema: Item<DocumentModel>, item: Item<DocumentModel>, space?: Space) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   return fields.every(({ key, type, required, ref }) => {
     const value = item.model.get(key);
@@ -51,7 +51,7 @@ export const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>,
  * @param items
  * @param [space]
  */
-export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], space?: Space) => {
+export const renderItems = (schema: Item<DocumentModel>, items: Item<DocumentModel>[], space?: Space) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 

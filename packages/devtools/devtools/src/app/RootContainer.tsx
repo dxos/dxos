@@ -5,7 +5,7 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
-import { FolderHierarchy, FolderHierarchyItem } from '@dxos/kai';
+import { TreeView, TreeViewItem } from '@dxos/kai';
 import { useClientServices } from '@dxos/react-client';
 
 import { useSections } from '../hooks';
@@ -18,7 +18,7 @@ export const RootContainer = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const handleSelect = (item: FolderHierarchyItem) => {
+  const handleSelect = (item: TreeViewItem) => {
     navigate(item.id);
   };
 
@@ -30,7 +30,7 @@ export const RootContainer = () => {
   return (
     <div className='flex w-full h-screen overflow-hidden'>
       <div className={'flex flex-col w-[180px] overflow-hidden overflow-y-auto bg-gray-200 border-gray-400 border-r'}>
-        <FolderHierarchy
+        <TreeView
           items={sections}
           selected={pathname}
           onSelect={handleSelect}
