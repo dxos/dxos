@@ -5,8 +5,8 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
-import { TreeView, TreeViewItem } from '@dxos/kai';
 import { useClientServices } from '@dxos/react-client';
+import { TreeView, TreeViewItem } from '@dxos/react-components';
 
 import { useSections } from '../hooks';
 

@@ -30,7 +30,6 @@ export const Searchbar: FC<{
           placeholder='Search...'
           slots={{
             input: {
-              className: 'w-full outline-0',
               spellCheck: false
             }
           }}

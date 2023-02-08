@@ -5,9 +5,9 @@
 import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
-import { Searchbar, Selector, SelectorOption } from '@dxos/kai';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools } from '@dxos/react-client';
+import { Searchbar, Selector, SelectorOption } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 import { MasterTable } from '../../components';

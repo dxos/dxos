@@ -88,7 +88,6 @@ export const Selector: FC<{
           placeholder={placeholder ?? 'Select...'}
           slots={{
             input: {
-              className: 'w-full outline-0',
               onKeyDown: handleKeyDown,
               onBlur: () => setOpen(false)
             }

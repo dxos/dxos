@@ -10,6 +10,8 @@ import { DocumentModel } from '@dxos/document-model';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/kai';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
+import { useSelection } from '@dxos/react-client';
+import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
 import { useQuery } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
