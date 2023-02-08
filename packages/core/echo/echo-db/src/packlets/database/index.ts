@@ -12,3 +12,4 @@ export * from './selection';
 export * from './database';
 export * from './snapshot-store';
 export * from './snapshot-manager';
+export * from './builder';

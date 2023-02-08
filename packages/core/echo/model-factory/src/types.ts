@@ -69,7 +69,7 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
    * @returns A mutation to be included in the same message as item creation, or null if no initialization is required.
    */
   // TODO(burdon): Remove from meta? Make generic.
-  getInitMutation?(props: any): Promise<any | null>;
+  getInitMutation?(props: any): any | null;
 };
 
 /**

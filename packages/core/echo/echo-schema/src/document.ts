@@ -11,6 +11,7 @@ import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
+import { createModelMutation, encodeModelMutation } from '@dxos/echo-db/src/packlets/database/builder';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -223,17 +224,23 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
   private async _setModelProp(prop: string, value: any) {
     if (value instanceof EchoObject) {
-      void this._item!.model.set(prop, new Reference(value[id]));
+      this._database?._backend.mutate(createModelMutation(this[id], encodeModelMutation(this._item!.modelMeta,
+        this._item!.model.builder().set(prop, new Reference(value[id])).build()
+      )));
       await this._database!.save(value);
     } else if (value instanceof EchoArray) {
       value._bind(this[base], prop);
     } else if (Array.isArray(value)) {
-      void this._item!.model.set(prop, OrderedArray.fromValues([]));
+      this._database?._backend.mutate(createModelMutation(this[id], encodeModelMutation(this._item!.modelMeta,
+        this._item!.model.builder().set(prop, OrderedArray.fromValues([])).build()
+      )));
       this._getModelProp(prop).push(...value);
     } else if (typeof value === 'object' && value !== null) {
       if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
         // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-        void this._item!.model.set(prop, new Reference(value['@id']));
+        this._database?._backend.mutate(createModelMutation(this[id], encodeModelMutation(this._item!.modelMeta,
+          this._item!.model.builder().set(prop, new Reference(value['@id'])).build()
+        )));
       } else {
         const sub = this._createProxy({}, prop);
         for (const [subKey, subValue] of Object.entries(value)) {
@@ -241,7 +248,9 @@ export class DocumentBase extends EchoObject<DocumentModel> {
         }
       }
     } else {
-      void this._item!.model.set(prop, value);
+      this._database?._backend.mutate(createModelMutation(this[id], encodeModelMutation(this._item!.modelMeta,
+        this._item!.model.builder().set(prop, value).build()
+      )));
     }
   }
 

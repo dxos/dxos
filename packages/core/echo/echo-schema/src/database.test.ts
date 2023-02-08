@@ -30,6 +30,20 @@ describe('EchoDatabase', () => {
     expect(obj.description).toEqual('Test description');
   });
 
+  test.only('get/set properties after save', async () => {
+    const db = await createDatabase();
+
+    const obj = new Document();
+    await db.save(obj);
+
+    obj.title = 'Test title';
+    obj.description = 'Test description';
+
+    expect(obj.title).toEqual('Test title');
+    expect(obj.description).toEqual('Test description');
+  });
+
+
   test('initializer', async () => {
     const db = await createDatabase();
 

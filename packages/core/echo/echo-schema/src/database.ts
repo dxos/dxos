@@ -14,6 +14,8 @@ import { base, db, deleted, id, type } from './defs';
 import { DELETED, Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
+import { encodeModelMutation } from '@dxos/echo-db';
+import { Any } from '@dxos/codec-protobuf'
 
 export type PropertiesFilter = Record<string, any>;
 export type OperatorFilter<T extends DocumentBase> = (document: T) => boolean;
@@ -93,14 +95,14 @@ export class EchoDatabase {
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
 
-    let mutation: Uint8Array | undefined;
+    let mutation: Any | undefined;
     if (obj instanceof DocumentBase) {
       const props = { '@type': obj[base]._uninitialized?.['@type'] };
       const modelMeta = obj[base]._modelConstructor.meta
-      mutation = modelMeta.mutationCodec.encode(await modelMeta.getInitMutation!(props));
+      mutation = encodeModelMutation(modelMeta, modelMeta.getInitMutation!(props));
     }
 
-    const result = await this._backend.mutate({
+    const result = this._backend.mutate({
       objects: [{
         objectId: obj[base]._id,
         genesis: {
@@ -108,11 +110,7 @@ export class EchoDatabase {
         },
         mutations: !mutation ? [] : [
           {
-            model: {
-              '@type': 'google.protobuf.Any',
-              type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-              value: mutation
-            }
+            model: mutation
           }
         ]
       }]
@@ -120,6 +118,7 @@ export class EchoDatabase {
     assert(result.objectsCreated.length === 1);
 
     await obj[base]._bind(result.objectsCreated[0]);
+    await result.getReceipt(); // wait to be saved to feed.
     return obj;
   }
 

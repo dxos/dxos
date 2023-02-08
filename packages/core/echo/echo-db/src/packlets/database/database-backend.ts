@@ -13,7 +13,7 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService, EchoEvent, MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { DataServiceHost, tagMutationsInBatch } from './data-service-host';
+import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
@@ -22,6 +22,7 @@ import { Item } from './item';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { Stream } from '@dxos/codec-protobuf';
 import { inspect } from 'node:util';
+import { tagMutationsInBatch } from './builder';
 
 /**
  * Generic interface to represent a backend for the database.
@@ -141,7 +142,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     });
     this._entities.subscribe(
       async (msg) => {
-        console.log(inspect(msg, false, null, true))
+        // console.log(inspect(msg, false, null, true))
         this._process(msg.batch, false);
 
         // Notify that initial set of items has been loaded.

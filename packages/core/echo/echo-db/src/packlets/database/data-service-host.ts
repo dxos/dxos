@@ -16,6 +16,7 @@ import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { ComplexMap } from '@dxos/util';
+import { tagMutationsInBatch } from './builder';
 
 const log = debug('dxos:echo-db:data-service-host');
 
@@ -116,16 +117,4 @@ export class DataServiceHost {
 
     return receipt;
   }
-}
-
-/**
- * Assigns a unique tag to each mutation in a batch with proper indexing.
- */
-export const tagMutationsInBatch = (batch: EchoObjectBatch, tag: string) => {
-  batch.objects?.forEach((object, objectIndex) => {
-    object.mutations?.forEach((mutation, mutationIndex) => {
-      mutation.meta ??= {};
-      mutation.meta.clientTag = `${tag}:${objectIndex}:${mutationIndex}`;
-    });
-  });
 }

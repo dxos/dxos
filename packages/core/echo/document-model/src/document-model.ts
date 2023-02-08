@@ -102,6 +102,13 @@ export class MutationBuilder {
   async commit() {
     return this._model._makeMutation({ mutations: this._mutations });
   }
+
+  /**
+   * Returns a mutation object without applying it.
+   */
+  build(): ObjectMutationSet {
+    return { mutations: this._mutations };
+  }
 }
 
 /**
@@ -123,7 +130,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
-    async getInitMutation(obj: any): Promise<ObjectMutationSet> {
+    getInitMutation(obj: any): ObjectMutationSet {
       return {
         mutations: MutationUtil.createMultiFieldMutation(obj)
       };
