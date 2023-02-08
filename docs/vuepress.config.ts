@@ -25,7 +25,7 @@ const OPTIMIZE_DEPS = [
   '@dxos/protocols/proto/dxos/client/services',
   '@dxos/protocols/proto/dxos/config',
   '@dxos/protocols/proto/dxos/echo/feed',
-  '@dxos/protocols/proto/dxos/echo/model/object',
+  '@dxos/protocols/proto/dxos/echo/model/document',
   '@dxos/protocols/proto/dxos/echo/object',
   '@dxos/protocols/proto/dxos/halo/credentials',
   '@dxos/protocols/proto/dxos/halo/invitations',

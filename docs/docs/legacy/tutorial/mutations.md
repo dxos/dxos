@@ -9,7 +9,7 @@ description:
 Let's add the possibility to check/uncheck our tasks to mark which ones are already completed. Pay attention to `handleToggleComplete` and you will see how we update a property of an item:
 
 ```jsx:title=src/components/TaskList.js
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { usespace, useSelection } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';
@@ -57,7 +57,7 @@ If you go back to your app, you should now be able to check and uncheck them.
 To complete the famous CRUD operations, we just need to add a deletion option. Let's add a button to each task to make it happen. As are making a soft-delete of the items, we just need to update it's `deleted` property:
 
 ```jsx:title=src/components/TaskList.js
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { usespace, useSelection } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';

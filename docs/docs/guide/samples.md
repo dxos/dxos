@@ -7,7 +7,7 @@ order: 30
 
 ## Tasks
 
-The canonical TODO list app built with [`vite`](https://vitejs.dev/), `react`, and `dxos` exercising the `ObjectModel`. Collaborative, offline-first.
+The canonical TODO list app built with [`vite`](https://vitejs.dev/), `react`, and `dxos` exercising the `DocumentModel`. Collaborative, offline-first.
 
 *   Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/tasks-app)
 *   Run [Tasks](http://tasks.dxos.org) on `dxos.org`
