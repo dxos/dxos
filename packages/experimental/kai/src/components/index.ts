@@ -13,5 +13,4 @@ export * from './MemberList';
 export * from './Searchbar';
 export * from './Selector';
 export * from './SpaceList';
-export * from './Table';
-export * from './TreeView';
+export * from './Tile';
