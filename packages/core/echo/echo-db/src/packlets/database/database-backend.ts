@@ -2,27 +2,25 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { EventSubscriptions, Trigger } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent, MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { tagMutationsInBatch } from './builder';
 import { DataServiceHost } from './data-service-host';
+import { Item } from './item';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
-import { log } from '@dxos/log';
-import { Item } from './item';
-import { MutationMetaWithTimeframe } from '@dxos/protocols';
-import { Stream } from '@dxos/codec-protobuf';
-import { inspect } from 'node:util';
-import { tagMutationsInBatch } from './builder';
 
 /**
  * Generic interface to represent a backend for the database.
@@ -59,7 +57,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
     private readonly _snapshot?: EchoSnapshot,
     private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
-  ) { }
+  ) {}
 
   get isReadOnly(): boolean {
     return !!this._outboundStream;
@@ -79,7 +77,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
     }
   }
 
-  async close() { }
+  async close() {}
 
   getWriteStream(): FeedWriter<DataMessage> | undefined {
     return this._outboundStream;
@@ -95,10 +93,10 @@ export class DatabaseBackendHost implements DatabaseBackend {
 }
 
 export type MutateResult = {
-  objectsCreated: Item<any>[]
-  getReceipt(): Promise<MutationReceipt>
+  objectsCreated: Item<any>[];
+  getReceipt(): Promise<MutationReceipt>;
   // TODO(dmaretskyi): .
-}
+};
 
 /**
  * Database backend that is backed by the DataService instance.
@@ -205,20 +203,23 @@ export class DatabaseBackendProxy implements DatabaseBackend {
               // console.log('process event', mutation)
               assert(mutation.meta);
               assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-              entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model, mutation.meta.clientTag);
+              entity._stateManager.processMessage(
+                mutation.meta as MutationMetaWithTimeframe,
+                mutation.model,
+                mutation.meta.clientTag
+              );
             }
           }
         }
       }
     }
-
   }
 
   mutate(batch: EchoObjectBatch): MutateResult {
     const objectsCreated: Item<any>[] = [];
-    
+
     const clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
-    tagMutationsInBatch(batch, clientTag)
+    tagMutationsInBatch(batch, clientTag);
 
     // Optimistic apply.
     this._process(batch, true, objectsCreated);
@@ -227,14 +228,14 @@ export class DatabaseBackendProxy implements DatabaseBackend {
       batch,
       spaceKey: this._spaceKey,
       clientTag
-    })
+    });
 
     return {
       objectsCreated,
       getReceipt: async () => {
         return writePromise;
       }
-    }
+    };
   }
 
   async close(): Promise<void> {
@@ -248,7 +249,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
         log('write', mutation);
         const { feedKey, seq } = await this._service.write({
           batch: {
-            objects: [mutation.object],
+            objects: [mutation.object]
           },
           spaceKey: this._spaceKey
         });

@@ -9,14 +9,14 @@ import { Stream } from '@dxos/codec-protobuf';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { MutationReceipt, EchoEvent, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { ComplexMap } from '@dxos/util';
 
+import { tagMutationsInBatch } from './builder';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { ComplexMap } from '@dxos/util';
-import { tagMutationsInBatch } from './builder';
 
 const log = debug('dxos:echo-db:data-service-host');
 
@@ -26,13 +26,15 @@ const log = debug('dxos:echo-db:data-service-host');
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
-  private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(([feedKey, seq]) => `${feedKey.toHex()}:${seq}`);
+  private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(
+    ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`
+  );
 
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _writeStream?: FeedWriter<DataMessage>
-  ) { }
+  ) {}
 
   /**
    * Real-time subscription to data objects in a space.
@@ -70,7 +72,7 @@ export class DataServiceHost {
 
       this._itemDemuxer.mutation.on(ctx, (mutation) => {
         log('Object update', { mutation });
-      
+
         const clientTag = this._clientTagMap.get([mutation.meta.feedKey, mutation.meta.seq]);
         // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
 
@@ -84,18 +86,18 @@ export class DataServiceHost {
                   feedKey: PublicKey.from(mutation.meta.feedKey),
                   memberKey: PublicKey.from(mutation.meta.memberKey),
                   seq: mutation.meta.seq,
-                  timeframe: mutation.meta.timeframe,
+                  timeframe: mutation.meta.timeframe
                 }
               }))
             }
           ]
         };
-        if(clientTag) {
+        if (clientTag) {
           tagMutationsInBatch(batch, clientTag);
         }
 
         next({
-          clientTag: clientTag,
+          clientTag,
           feedKey: mutation.meta.feedKey,
           seq: mutation.meta.seq,
           batch
@@ -111,7 +113,7 @@ export class DataServiceHost {
     const receipt = await this._writeStream.write({
       object: request.batch.objects[0]
     });
-    if(request.clientTag) {
+    if (request.clientTag) {
       this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
     }
 

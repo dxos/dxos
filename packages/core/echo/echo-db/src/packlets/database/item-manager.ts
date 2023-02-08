@@ -158,11 +158,7 @@ export class ItemManager {
     return item;
   }
 
-  private _constructModel({
-    modelType,
-    itemId,
-    snapshot
-  }: ModelConstructionOptions): StateManager<Model> {
+  private _constructModel({ modelType, itemId, snapshot }: ModelConstructionOptions): StateManager<Model> {
     // Convert model-specific outbound mutation to outbound envelope message.
     const outboundTransform =
       this._writeStream &&
@@ -209,13 +205,7 @@ export class ItemManager {
   /**
    * Constructs an item with the appropriate model.
    */
-  constructItem({
-    itemId,
-    itemType,
-    modelType,
-    parentId,
-    snapshot
-  }: ItemConstructionOptions): Item<any> {
+  constructItem({ itemId, itemType, modelType, parentId, snapshot }: ItemConstructionOptions): Item<any> {
     assert(itemId);
     assert(modelType);
 

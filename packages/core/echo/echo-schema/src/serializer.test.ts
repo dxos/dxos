@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { id, data } from './defs';
+import { id } from './defs';
 import { Document } from './document';
 import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
@@ -64,7 +64,6 @@ describe('Serializer', () => {
         ]
       });
       await db.save(obj);
-
 
       await sleep(100);
 

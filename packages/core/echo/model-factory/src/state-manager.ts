@@ -127,7 +127,7 @@ export class StateManager<M extends Model> {
     };
     const optimisticMutation: OptimisticMutation = {
       tag,
-      mutation: mutationEncoded,
+      mutation: mutationEncoded
     };
     this._optimisticMutations.push(optimisticMutation);
 
@@ -138,13 +138,12 @@ export class StateManager<M extends Model> {
       this._emitModelUpdate();
     }
 
-    return optimisticMutation
+    return optimisticMutation;
   }
 
   async confirm(mutation: OptimisticMutation, receipt: WriteReceipt): Promise<MutationWriteReceipt> {
     log('Confirm', mutation);
     mutation.receipt = receipt;
-
 
     // Promise that resolves when this mutation has been processed.
     const processed = this._mutationProcessed.waitFor(
@@ -155,12 +154,12 @@ export class StateManager<M extends Model> {
     void processed.then(() => {
       if (!mutation.receipt) {
         log.error('Optimistic mutation was processed without being confirmed', {
-          itemId: this._itemId,
+          itemId: this._itemId
         });
       }
       if (this._optimisticMutations.includes(mutation)) {
         log.error('Optimistic mutation was processed without being removed from the optimistic queue', {
-          itemId: this._itemId,
+          itemId: this._itemId
         });
       }
     });
@@ -195,7 +194,7 @@ export class StateManager<M extends Model> {
     // Confirms that the optimistic mutation has been written to the feed store.
     // NOTE: Possible race condition: What if processMessage gets called before write() resolves?
     const receipt = await receiptPromise;
-    return await this.confirm(optimisticMutation, receipt);    
+    return await this.confirm(optimisticMutation, receipt);
   }
 
   /**
@@ -262,8 +261,9 @@ export class StateManager<M extends Model> {
   processMessage(meta: MutationMetaWithTimeframe, mutation: Any, clientTag?: string) {
     // Remove optimistic mutation from the queue.
     const optimisticIndex = this._optimisticMutations.findIndex(
-      (message) => message.tag === clientTag ||
-        message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq
+      (message) =>
+        message.tag === clientTag ||
+        (message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq)
     );
     if (optimisticIndex !== -1) {
       this._optimisticMutations.splice(optimisticIndex, 1);

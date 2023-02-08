@@ -43,7 +43,6 @@ describe('EchoDatabase', () => {
     expect(obj.description).toEqual('Test description');
   });
 
-
   test('initializer', async () => {
     const db = await createDatabase();
 

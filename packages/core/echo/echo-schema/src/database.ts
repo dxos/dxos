@@ -4,8 +4,9 @@
 
 import assert from 'node:assert';
 
+import { Any } from '@dxos/codec-protobuf';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseBackendProxy, Item, ItemManager } from '@dxos/echo-db';
+import { DatabaseBackendProxy, Item, ItemManager, encodeModelMutation } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
@@ -14,8 +15,6 @@ import { base, db, deleted, id, type } from './defs';
 import { DELETED, Document, DocumentBase } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
-import { encodeModelMutation } from '@dxos/echo-db';
-import { Any } from '@dxos/codec-protobuf'
 
 export type PropertiesFilter = Record<string, any>;
 export type OperatorFilter<T extends DocumentBase> = (document: T) => boolean;
@@ -98,23 +97,27 @@ export class EchoDatabase {
     let mutation: Any | undefined;
     if (obj instanceof DocumentBase) {
       const props = { '@type': obj[base]._uninitialized?.['@type'] };
-      const modelMeta = obj[base]._modelConstructor.meta
+      const modelMeta = obj[base]._modelConstructor.meta;
       mutation = encodeModelMutation(modelMeta, modelMeta.getInitMutation!(props));
     }
 
     const result = this._backend.mutate({
-      objects: [{
-        objectId: obj[base]._id,
-        genesis: {
-          modelType: obj[base]._modelConstructor.meta.type,
-        },
-        mutations: !mutation ? [] : [
-          {
-            model: mutation
-          }
-        ]
-      }]
-    })
+      objects: [
+        {
+          objectId: obj[base]._id,
+          genesis: {
+            modelType: obj[base]._modelConstructor.meta.type
+          },
+          mutations: !mutation
+            ? []
+            : [
+                {
+                  model: mutation
+                }
+              ]
+        }
+      ]
+    });
     assert(result.objectsCreated.length === 1);
 
     await obj[base]._bind(result.objectsCreated[0]);
