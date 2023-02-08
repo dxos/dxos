@@ -53,16 +53,16 @@ export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
 
   const mutator = () => {
     const parent = data.nodes.length ? faker.random.arrayElement(data.nodes) : undefined;
-    const item = createNode();
+    const node = createNode();
 
     updateData({
       nodes: {
-        $push: [item]
+        $push: [node]
       },
       links: Object.assign(
         {},
         parent && {
-          $push: [createLink(parent as TestNode, item)]
+          $push: [createLink(parent as TestNode, node)]
         }
       )
     });

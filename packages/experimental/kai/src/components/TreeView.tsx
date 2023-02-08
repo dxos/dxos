@@ -10,11 +10,11 @@ import { getSize, mx } from '@dxos/react-components';
 const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
 const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);
 
-export const mapJsonToHierarchy = (data: any, prefix?: string): FolderHierarchyItem[] => {
+export const mapJsonToHierarchy = (data: any, prefix?: string): TreeViewItem[] => {
   if (Array.isArray(data)) {
     return Object.values(data).map((value, i) => {
       const key = String(i);
-      const item: FolderHierarchyItem = {
+      const item: TreeViewItem = {
         id: createKey(key, prefix)
       };
 
@@ -30,7 +30,7 @@ export const mapJsonToHierarchy = (data: any, prefix?: string): FolderHierarchyI
   }
 
   return Object.entries(data).map(([key, value]) => {
-    const item: FolderHierarchyItem = {
+    const item: TreeViewItem = {
       id: createKey(key, prefix),
       title: key,
       items: isScalar(value) ? undefined : mapJsonToHierarchy(value, key)
@@ -49,24 +49,24 @@ export const mapJsonToHierarchy = (data: any, prefix?: string): FolderHierarchyI
   });
 };
 
-export type FolderHierarchyItem = {
+export type TreeViewItem = {
   id: string;
   title?: string; // TODO(burdon): Rename label; optional component.
   value?: any;
   Element?: ReactNode;
   Icon?: FC;
-  items?: FolderHierarchyItem[];
+  items?: TreeViewItem[];
 };
 
-// TODO(burdon): Slots.
+// TODO(burdon): Classes.
 // TODO(burdon): Navigate up/down.
 // TODO(burdon): Unselect on Escape.
 
-export const FolderHierarchy: FC<{
-  items: FolderHierarchyItem[];
+export const TreeView: FC<{
+  items: TreeViewItem[];
   highlightClassName?: string;
   titleClassName?: string;
-  onSelect?: (item: FolderHierarchyItem) => void;
+  onSelect?: (item: TreeViewItem) => void;
   selected?: string;
   expanded?: string[];
 }> = ({
@@ -81,7 +81,7 @@ export const FolderHierarchy: FC<{
     expanded?.reduce((map, id) => ({ ...map, [id]: true }), {})
   );
 
-  const handleToggle = (item: FolderHierarchyItem) => {
+  const handleToggle = (item: TreeViewItem) => {
     setOpenMap((map) => {
       if (map[item.id]) {
         delete map[item.id];
@@ -93,11 +93,11 @@ export const FolderHierarchy: FC<{
     });
   };
 
-  const handleSelection = (item: FolderHierarchyItem) => {
+  const handleSelection = (item: TreeViewItem) => {
     onSelect?.(item);
   };
 
-  const Item = ({ item, depth = 0 }: { item: FolderHierarchyItem; depth?: number }) => {
+  const Item = ({ item, depth = 0 }: { item: TreeViewItem; depth?: number }) => {
     const open = openMap[item.id];
     const sub = item.items && item.items.length > 0;
     const { Element, Icon } = item;

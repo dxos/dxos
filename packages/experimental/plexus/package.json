@@ -37,6 +37,7 @@
     "@types/react-dom": "^18.0.6",
     "@types/string-hash": "^1.1.1",
     "@vitejs/plugin-react": "^3.0.1",
+    "chromatic": "^6.17.0",
     "faker": "^5.5.3",
     "postcss": "^8.4.17",
     "string-hash": "~1.1.3",
