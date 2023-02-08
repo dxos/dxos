@@ -40,6 +40,7 @@ interface ListProps {
   selectable?: boolean;
   variant?: ListVariant;
   onDragEnd?: ComponentPropsWithoutRef<typeof DndContext>['onDragEnd'];
+  listItemIds?: string[];
 }
 
 interface ListItemData {
@@ -95,18 +96,18 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
   );
 };
 
-const ListContent: FC<ListProps> = ({ onDragEnd, ...props }: ScopedProps<ListProps>) => {
+const ListContent: FC<ListProps> = ({ onDragEnd, listItemIds, ...props }: ScopedProps<ListProps>) => {
   const { variant } = useListContext('ListContent', props.__scopeSelect);
   const getItems = useCollection(props.__scopeSelect);
-  const [itemIds, setItemIds] = useState<string[]>([]);
+  const [itemIds, setItemIds] = useState<string[]>(listItemIds ?? []);
 
   useEffect(() => {
-    setItemIds(getItems().map((item) => item?.ref.current?.id ?? ''));
+    !listItemIds && setItemIds(getItems().map((item) => item?.ref.current?.id ?? ''));
   }, [getItems]);
 
   return variant === 'ordered-draggable' ? (
     <DndContext onDragEnd={onDragEnd} modifiers={[restrictToVerticalAxis]}>
-      <SortableContext items={itemIds}>{props.children}</SortableContext>
+      <SortableContext items={listItemIds ?? itemIds}>{props.children}</SortableContext>
     </DndContext>
   ) : (
     <>{props.children}</>

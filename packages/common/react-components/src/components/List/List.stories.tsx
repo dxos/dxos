@@ -4,28 +4,13 @@
 
 import '@dxosTheme';
 import { arrayMove } from '@dnd-kit/sortable';
-import { Trash, UsersThree } from 'phosphor-react';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 
-import { getSize } from '../../styles';
-import { mx } from '../../util';
 import { List, ListItem } from './List';
 
 export default {
   component: List
 };
-
-const items = [...Array(12)].map((_, index) => (
-  <ListItem
-    key={index}
-    id={`listItem-${index}`}
-    {...{
-      before: <UsersThree className={mx(getSize(6), 'mbs-2')} />,
-      after: <Trash className={mx(getSize(6), 'mbs-2')} />,
-      children: <p className='mbs-2'>{`List item ${index + 1}`}</p>
-    }}
-  />
-));
 
 export const Default = {
   render: ({ ...args }) => {
@@ -50,7 +35,7 @@ export const Default = {
       }
     };
     return (
-      <List {...args} labelId='excluded' onDragEnd={handleDragEnd}>
+      <List {...args} labelId='excluded' onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
           <ListItem key={id} id={id}>
             <p className='mbs-2'>{text}</p>
