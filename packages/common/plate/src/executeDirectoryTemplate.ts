@@ -1,9 +1,9 @@
 //
 // Copyright 2022 DXOS.org
 //
-import os from 'os';
 import chalk from 'chalk';
 import flatten from 'lodash.flatten';
+import os from 'os';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 

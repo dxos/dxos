@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import os from 'os';
 import { Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
+import os from 'os';
 import { cwd } from 'process';
 
 import bare, { isDxosMonorepoSync } from '@dxos/bare-template';

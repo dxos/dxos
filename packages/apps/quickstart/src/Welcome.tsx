@@ -1,6 +1,11 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import React, { useEffect, useState } from 'react';
 
 import { useIdentity } from '@dxos/react-client';
+
 import { Counter } from './Counter';
 
 export const Welcome = ({ name }: { name: string }) => {

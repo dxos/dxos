@@ -22,10 +22,12 @@ export const useQuery: UseQuery = <T extends DocumentBase>(space?: Space, filter
   );
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
-  return useSyncExternalStore<T[]>(
-    (cb) => query?.subscribe?.(cb) ?? cb,
-    () => (query?.getObjects()) as T[]
-  ) ?? [];
+  return (
+    useSyncExternalStore<T[]>(
+      (cb) => query?.subscribe?.(cb) ?? cb,
+      () => query?.getObjects() as T[]
+    ) ?? []
+  );
 };
 
 const filterToDepsArray = (filter?: Filter<any>) => Object.entries(filter ?? {}).flat();

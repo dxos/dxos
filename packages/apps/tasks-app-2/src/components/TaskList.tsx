@@ -11,7 +11,6 @@ import { Button, getSize, Loading } from '@dxos/react-components';
 import { CheckboxItem } from './CheckboxItem';
 import { Input } from './Input';
 import { List } from './List';
-import { withReactor } from '@dxos/react-client';
 
 export type TaskListProps<T extends Task = Task> = {
   title: string;

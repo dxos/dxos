@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import minimatch from 'minimatch';
 import path from 'path';
 import readDir from 'recursive-readdir';
