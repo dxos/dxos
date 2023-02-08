@@ -31,8 +31,8 @@ const activeFrames = [
   FrameID.REGISTRY,
   FrameID.STACK,
   FrameID.TABLE,
-  FrameID.TASKS,
-  FrameID.EXPLORER
+  FrameID.TASKS
+  // FrameID.EXPLORER
   // FrameID.KANBAN,
   // FrameID.NOTES
 ];
