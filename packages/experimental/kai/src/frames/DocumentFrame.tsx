@@ -6,9 +6,10 @@ import React, { useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
+import { Selector } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { Input, Selector } from '../components';
+import { Input } from '../components';
 import { useSpace } from '../hooks';
 import { Document } from '../proto';
 
