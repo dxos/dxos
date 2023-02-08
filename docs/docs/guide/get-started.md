@@ -8,11 +8,13 @@ title: Get started
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. Learn about the [mission](why).
 
 ::: note In this guide
-*   Starting a project with an [app template](#create-an-app)
-*   Using [ECHO](#echo-state-consensus) for real-time state consensus
-*   Starting a [KUBE](#starting-a-kube) to host the app
-*   [Deploying](#deploying-your-app-to-a-kube) the app to KUBE
-:::
+
+- Starting a project with an [app template](#create-an-app)
+- Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`
+- Starting a [KUBE](#starting-a-kube) to host the app
+- [Deploying](#deploying-your-app-to-a-kube) the app to KUBE
+  :::
+
 ## Create an app
 
 DXOS project templates are based on `vite`, `typescript`, `react`, `tailwind`, and other opinions to get you going quickly.
@@ -30,28 +32,30 @@ pnpm install
 pnpm serve
 ```
 
-This will start the development server 🚀.
-
 ::: note
 Only [`pnpm`](https://pnpm.io/) is supported for now: `npm i -g pnpm`.
 :::
+
+This will start the development server 🚀.
+
+You should be able to open two windows and see reactive updates like in the video below.
+
+<video controls loop autoplay style="width:100%" src="/images/quickstart.mp4"></video>
 
 ## ECHO State Consensus
 
 [ECHO](./#echo) is a peer-to-peer graph database designed for offline-first and real-time collaboration. There is no central server, peers exchange data directly over p2p connections.
 
+To use ECHO:
+
+1. Create a [Client](echo/typescript/) using [`<ClientProvider />`](echo/react) in `react`
+2. Establish [identity](halo)
+3. Create or join a [space](echo/react/spaces)
+
+```ts
+import { ClientProvider } from '@dxos/react-client';
 
 
-In `react`, a [`<ClientProvider />`](echo/react) creates an instance of the [`Client`](echo/typescript) for you.
-
-Before storing data, your client needs to [establish identity](halo/identity) and create or join a [space](echo/spaces).
-
-```ts file=./echo/snippets/create-space.ts#L5-
-import { Client } from '@dxos/client';
-
-const client = new Client();
-
-const space = await client.echo.createSpace();
 ```
 
 Now you can manipulate items in the space and they will replicate with all members of the space in a peer-to-peer fashion.
@@ -105,9 +109,9 @@ createRoot(document.body).render(<App />);
 
 Read more:
 
-*   [ECHO configuration](echo/configuration)
-*   [ECHO with React](echo/react)
-*   [Client](../api/@dxos/client/classes/Client.md) API Documentation
+- [ECHO configuration](echo/configuration)
+- [ECHO with React](echo/react)
+- [Client](../api/@dxos/client/classes/Client.md) API Documentation
 
 ## Starting a KUBE
 
@@ -132,9 +136,9 @@ kube status # verify it's running
 
 To deploy to your local KUBE:
 
-*   Ensure a [KUBE](#starting-a-kube) is running
-*   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
-*   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
+- Ensure a [KUBE](#starting-a-kube) is running
+- Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
+- Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
 
 If you're using the DXOS application template (from `dx app create`):
 
@@ -157,11 +161,11 @@ If you started with `dx app create hello`, the app will be on [`hello.localhost`
 :::note
 Coming soon:
 
-*   `tunnelling`: ability to expose apps on your KUBE to the public internet
-*   `console`: a management console for the apps running on your KUBE
-:::
+- `tunnelling`: ability to expose apps on your KUBE to the public internet
+- `console`: a management console for the apps running on your KUBE
+  :::
 
 Read more:
 
-*   [`dx.yml` file schema](kube/dx-yml-file)
-*   DXOS [templates](cli/templates) and [sample](samples).
+- [`dx.yml` file schema](kube/dx-yml-file)
+- DXOS [templates](cli/templates) and [sample](samples).
