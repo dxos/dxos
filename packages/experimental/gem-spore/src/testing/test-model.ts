@@ -14,10 +14,9 @@ import { TestNode } from './types';
 export class TestGraphModel extends GraphModel<TestNode> {
   // prettier-ignore
   constructor(
-    private readonly _graph: GraphData<TestNode> = emptyGraph,
-    selected?: string
+    private readonly _graph: GraphData<TestNode> = emptyGraph
   ) {
-    super(selected);
+    super();
   }
 
   get graph() {
@@ -25,7 +24,7 @@ export class TestGraphModel extends GraphModel<TestNode> {
   }
 
   getNode(id: string) {
-    return this._graph.nodes.find((item) => item.id === id);
+    return this._graph.nodes.find((node) => node.id === id);
   }
 
   getRandomNode() {

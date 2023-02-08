@@ -19,6 +19,8 @@ import {
   TestNode
 } from '../src';
 
+// TODO(burdon): Replace with storybook.
+
 export default {
   title: 'gem-spore/Graph'
 };

@@ -52,8 +52,7 @@ const Form: FC<{ object: Document }> = ({ object }) => {
 };
 
 export default {
-  component: Form,
-  argTypes: {}
+  component: Form
 };
 
 export const Default = () => {

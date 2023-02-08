@@ -78,7 +78,7 @@ const Test = () => {
         onSelect={handleSelect}
         onCreate={handleCreate}
         onDelete={handleDelete}
-        slots={{
+        classes={{
           tile: {
             root: 'bg-yellow-100 select-none cursor-pointer text-black shadow',
             selected: 'shadow-lg ring-1 ring-orange-400'

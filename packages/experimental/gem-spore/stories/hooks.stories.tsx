@@ -25,7 +25,9 @@ import {
   defaultMarkerStyles,
   linkerRenderer
 } from '../src';
-import { styles } from './helpers';
+import { styles } from './styles';
+
+// TODO(burdon): Replace with storybook.
 
 export default {
   title: 'gem-spore/hooks'

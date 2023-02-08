@@ -37,15 +37,13 @@ export default defineConfig({
     // hmr: false
   },
 
-  // TODO(burdon): Document.
+  // TODO(burdon): Document why protos are necessary.
   optimizeDeps: {
     force: true,
     include: [
       '@dxos/config',
-      '@dxos/keys',
-      '@dxos/log',
       '@dxos/mosaic',
-      '@dxos/plex',
+      '@dxos/plexus',
       '@dxos/protocols',
       '@dxos/protocols/proto/dxos/client',
       '@dxos/protocols/proto/dxos/client/services',
@@ -73,7 +71,7 @@ export default defineConfig({
           faker: ['faker'],
           highlighter: ['react-syntax-highlighter'],
           monaco: ['monaco-editor', '@monaco-editor/react'],
-          vendor: ['react', 'react-router-dom', 'react-dom']
+          vendor: ['react', 'react-dom', 'react-router-dom']
         }
       }
     }
@@ -83,13 +81,14 @@ export default defineConfig({
     // TODO(burdon): Document.
     ConfigPlugin({ env: ['DX_VAULT'] }),
 
-    // TODO(burdon): Document.
+    // Directories to scan for Tailwind classes.
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
@@ -99,10 +98,8 @@ export default defineConfig({
       extensions: [osThemeExtension, kaiThemeExtension]
     }),
 
-    // TODO(burdon): Document.
     ReactPlugin(),
 
-    // TODO(burdon): Document.
     // To reset, unregister service worker using devtools.
     VitePWA({
       selfDestroying: true,

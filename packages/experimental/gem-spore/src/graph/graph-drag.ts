@@ -7,9 +7,9 @@ import { Simulation } from 'd3-force';
 
 import { D3DragEvent, Point, SVGContext } from '@dxos/gem-core';
 
-import { GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
+import { GraphLayoutLink, GraphLayoutNode } from './types';
 
-export interface DragOptions<N extends GraphNode> {
+export interface DragOptions<N> {
   dragMod?: string;
   linkMod?: string;
   freezeMod?: string;
@@ -32,7 +32,7 @@ enum Mode {
  * @param simulation
  * @param options
  */
-export const createSimulationDrag = <N extends GraphNode>(
+export const createSimulationDrag = <N>(
   context: SVGContext,
   simulation: Simulation<GraphLayoutNode<N>, GraphLayoutLink<N>>,
   options: DragOptions<N> = defaultOptions
