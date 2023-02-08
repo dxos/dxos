@@ -82,7 +82,7 @@ export const Selector: FC<{
     <div className='flex flex-1 flex-col bg-white'>
       <div className={mx('flex flex-1 items-center p-2 border', open ? 'rounded-t' : 'rounded')}>
         <Input
-          label={value}
+          label={undefined}
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder={placeholder ?? 'Select...'}
