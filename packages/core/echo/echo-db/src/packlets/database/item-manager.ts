@@ -107,7 +107,7 @@ export class ItemManager {
     modelType: ModelType,
     itemId: ItemID = createId(),
     parentId?: ItemID,
-    initProps?: { type: string; obj: any } // TODO(burdon): Remove/change to array of mutations.
+    initProps?: { type?: string; obj?: Record<string, any> } // TODO(burdon): Remove/change to array of mutations.
   ): Promise<Item<Model<unknown>>> {
     assert(this._writeStream); // TODO(burdon): Throw ReadOnlyError();
     assert(modelType);
