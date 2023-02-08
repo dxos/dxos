@@ -131,7 +131,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
-    getInitMutation({ obj, type }: { obj: any; type: string }): ObjectMutationSet {
+    getInitMutation({ obj, type }: { obj: Record<string, any>; type: string }): ObjectMutationSet {
       return {
         mutations: obj ? MutationUtil.createMultiFieldMutation(obj) : [],
         type
