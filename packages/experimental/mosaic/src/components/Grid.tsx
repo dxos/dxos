@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndContext, DragEndEvent, MouseSensor, pointerWithin, useSensor } from '@dnd-kit/core';
+import { DragEndEvent } from '@dnd-kit/core';
 import React, { FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -10,6 +10,7 @@ import { mx } from '@dxos/react-components';
 
 import { Dimensions, Layout, Item, Point, Location, serializeLocation, parseLocation } from '../layout';
 import { Cell } from './Cell';
+import { Container } from './Container';
 import { Tile, TileContentProps, TileClasses } from './Tile';
 
 export type GridClasses = {
@@ -45,7 +46,7 @@ export const Grid = <T extends {} = {}>({
   onDelete
 }: GridProps<T>) => {
   const getItem = (location: Location): Item<T> | undefined => {
-    return items.find((item) => serializeLocation(item.location) === serializeLocation(location));
+    return items.find((item) => item.location && serializeLocation(item.location) === serializeLocation(location));
   };
 
   // Container allows any selected item to scroll near to the center.
@@ -132,12 +133,6 @@ export const Grid = <T extends {} = {}>({
   // DND
   //
 
-  const mouseSensor = useSensor(MouseSensor, {
-    activationConstraint: {
-      distance: 10 // Move 10px before activating.
-    }
-  });
-
   // TODO(burdon): Dragging broken when scaled (disable until fixed).
   // TODO(burdon): Smoothly drop into place.
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
@@ -149,8 +144,9 @@ export const Grid = <T extends {} = {}>({
     }
   };
 
+  // TODO(burdon): Externalize Container.
   return (
-    <DndContext sensors={[mouseSensor]} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
+    <Container onDragEnd={handleDragEnd}>
       {/* Full screen. */}
       <div className='relative flex flex-1'>
         <div
@@ -191,6 +187,6 @@ export const Grid = <T extends {} = {}>({
           </div>
         </div>
       </div>
-    </DndContext>
+    </Container>
   );
 };

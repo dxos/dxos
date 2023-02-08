@@ -31,8 +31,7 @@ faker.seed(1);
 const icons = [AirplaneTakeoff, Bank, Buildings, Notepad, User, Users];
 
 export default {
-  component: Plexus,
-  argTypes: {}
+  component: Plexus
 };
 
 // TODO(burdon): Factor testing out of gem-spore/testing
