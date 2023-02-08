@@ -1234,6 +1234,10 @@ importers:
 
   packages/common/react-components:
     specifiers:
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
       '@dxos/node-std': workspace:*
       '@fontsource/fira-code': ^4.5.12
       '@fontsource/roboto-flex': ^4.5.2
@@ -1243,6 +1247,7 @@ importers:
       '@radix-ui/react-avatar': ^1.0.1
       '@radix-ui/react-checkbox': ^1.0.1
       '@radix-ui/react-collection': ^1.0.1
+      '@radix-ui/react-compose-refs': ^1.0.0
       '@radix-ui/react-context': ^1.0.0
       '@radix-ui/react-dialog': ^1.0.0
       '@radix-ui/react-navigation-menu': ^1.1.1
@@ -1252,6 +1257,7 @@ importers:
       '@radix-ui/react-toast': ^1.1.1
       '@radix-ui/react-toolbar': ^1.0.1
       '@radix-ui/react-tooltip': ^1.0.2
+      '@radix-ui/react-use-controllable-state': ^1.0.0
       '@tailwindcss/forms': ^0.5.3
       '@types/lodash.merge': ^4.6.6
       '@types/react': ^18.0.21
@@ -1278,6 +1284,10 @@ importers:
       tailwindcss-radix: ^2.6.0
       vite: 4.0.4
     dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@fontsource/fira-code': 4.5.12
       '@fontsource/roboto-flex': 4.5.2
       '@fontsource/space-grotesk': 4.5.10
@@ -1286,6 +1296,7 @@ importers:
       '@radix-ui/react-avatar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-checkbox': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-collection': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
       '@radix-ui/react-context': 1.0.0_react@18.2.0
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
@@ -1295,6 +1306,7 @@ importers:
       '@radix-ui/react-toast': 1.1.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tooltip': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
       alea: 1.0.1
       autoprefixer: 10.4.12_postcss@8.4.18
