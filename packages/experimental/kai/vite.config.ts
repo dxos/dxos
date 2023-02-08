@@ -3,7 +3,7 @@
 //
 
 import ReactPlugin from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
@@ -14,6 +14,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 // @ts-ignore
 // NOTE: Vite requires uncompiled JS.
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 /**
  * https://vitejs.dev/config
@@ -156,6 +157,27 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // https://www.bundle-buddy.com/rollup
+    {
+      name: 'bundle-buddy',
+      buildEnd() {
+        const deps: { source: string; target: string }[] = [];
+        for (const id of this.getModuleIds()) {
+          const m = this.getModuleInfo(id);
+          if (m != null && !m.isExternal) {
+            for (const target of m.importedIds) {
+              deps.push({ source: m.id, target });
+            }
+          }
+        }
+
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+      }
+    }
   ]
 });
