@@ -62,6 +62,6 @@ export class DataServiceImpl implements DataService {
     assert(request.batch);
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
-    return host.write(request.batch);
+    return host.write(request);
   }
 }

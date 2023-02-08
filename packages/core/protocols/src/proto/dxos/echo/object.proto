@@ -35,7 +35,6 @@ message EchoObject {
   }
 
   message Mutation {
-    // TODO(dmaretskyi): This can be removed if individual state-machines do not rely on mutation meta (feed key/seq, member key).
     optional MutationMeta meta = 1;
 
     enum Action {
@@ -65,9 +64,9 @@ message EchoObject {
 }
 
 message MutationMeta {
-  dxos.keys.PublicKey feed_key = 1;
-  int32 seq = 2;
-  dxos.keys.PublicKey member_key = 3;
+  optional dxos.keys.PublicKey feed_key = 1;
+  optional int32 seq = 2;
+  optional dxos.keys.PublicKey member_key = 3;
 
   optional timeframe.TimeframeVector timeframe = 4;
 

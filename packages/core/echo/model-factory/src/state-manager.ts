@@ -55,7 +55,7 @@ export class StateManager<M extends Model> {
   private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
-  private _modelMeta: ModelMeta | null = null;
+  public _modelMeta: ModelMeta | null = null;
   private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
   private _model: M | null = null;

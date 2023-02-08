@@ -10,11 +10,12 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
-import { MutationReceipt, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
+import { MutationReceipt, EchoEvent, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
+import { ComplexMap } from '@dxos/util';
 
 const log = debug('dxos:echo-db:data-service-host');
 
@@ -24,6 +25,8 @@ const log = debug('dxos:echo-db:data-service-host');
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
+  private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(([feedKey, seq]) => `${feedKey.toHex()}:${seq}`);
+
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
@@ -66,34 +69,63 @@ export class DataServiceHost {
 
       this._itemDemuxer.mutation.on(ctx, (mutation) => {
         log('Object update', { mutation });
+      
+        const clientTag = this._clientTagMap.get([mutation.meta.feedKey, mutation.meta.seq]);
+        // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
+
+        const batch = {
+          objects: [
+            {
+              ...mutation.data,
+              mutations: mutation.data.mutations?.map((m, mutationIdx) => ({
+                ...m,
+                meta: {
+                  feedKey: PublicKey.from(mutation.meta.feedKey),
+                  memberKey: PublicKey.from(mutation.meta.memberKey),
+                  seq: mutation.meta.seq,
+                  timeframe: mutation.meta.timeframe,
+                }
+              }))
+            }
+          ]
+        };
+        if(clientTag) {
+          tagMutationsInBatch(batch, clientTag);
+        }
+
         next({
-          batch: {
-            objects: [
-              {
-                ...mutation.data,
-                mutations: mutation.data.mutations?.map((m) => ({
-                  ...m,
-                  meta: {
-                    feedKey: PublicKey.from(mutation.meta.feedKey),
-                    memberKey: PublicKey.from(mutation.meta.memberKey),
-                    seq: mutation.meta.seq,
-                    timeframe: mutation.meta.timeframe
-                  }
-                }))
-              }
-            ]
-          }
+          clientTag: clientTag,
+          feedKey: mutation.meta.feedKey,
+          seq: mutation.meta.seq,
+          batch
         });
       });
     });
   }
 
-  async write(batch: EchoObjectBatch): Promise<MutationReceipt> {
+  async write(request: WriteRequest): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
-    assert(batch.objects?.length === 1, 'Only single object mutations are supported');
+    assert(request.batch.objects?.length === 1, 'Only single object mutations are supported');
 
-    return this._writeStream.write({
-      object: batch.objects[0]
+    const receipt = await this._writeStream.write({
+      object: request.batch.objects[0]
     });
+    if(request.clientTag) {
+      this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
+    }
+
+    return receipt;
   }
+}
+
+/**
+ * Assigns a unique tag to each mutation in a batch with proper indexing.
+ */
+export const tagMutationsInBatch = (batch: EchoObjectBatch, tag: string) => {
+  batch.objects?.forEach((object, objectIndex) => {
+    object.mutations?.forEach((mutation, mutationIndex) => {
+      mutation.meta ??= {};
+      mutation.meta.clientTag = `${tag}:${objectIndex}:${mutationIndex}`;
+    });
+  });
 }

@@ -13,7 +13,7 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService, EchoEvent, MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { DataServiceHost } from './data-service-host';
+import { DataServiceHost, tagMutationsInBatch } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
@@ -21,6 +21,7 @@ import { log } from '@dxos/log';
 import { Item } from './item';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { Stream } from '@dxos/codec-protobuf';
+import { inspect } from 'node:util';
 
 /**
  * Generic interface to represent a backend for the database.
@@ -140,6 +141,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     });
     this._entities.subscribe(
       async (msg) => {
+        console.log(inspect(msg, false, null, true))
         this._process(msg.batch, false);
 
         // Notify that initial set of items has been loaded.
@@ -195,8 +197,11 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
           if (mutation.model) {
             if (optimistic) {
-              entity._stateManager.processOptimisticMutation(mutation.model);
+              // console.log('process optimistic', mutation)
+              const decoded = entity._stateManager._modelMeta?.mutationCodec.decode(mutation.model.value);
+              entity._stateManager.processOptimisticMutation(decoded);
             } else {
+              // console.log('process event', mutation)
               assert(mutation.meta);
               assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
               entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);
@@ -210,7 +215,9 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
   mutate(batch: EchoObjectBatch): MutateResult {
     const objectsCreated: Item<any>[] = [];
-    const clientTag = `${this._clientTagPrefix}-${this._clientTagCounter++}`;
+    
+    const clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
+    tagMutationsInBatch(batch, clientTag)
 
     // Optimistic apply.
     this._process(batch, true, objectsCreated);
