@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+import { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Play, PushPin } from 'phosphor-react';
 import React, { ComponentPropsWithoutRef, KeyboardEvent, useState } from 'react';
@@ -12,8 +13,6 @@ import { getSize } from '../../styles';
 import { mx } from '../../util';
 import { Input } from '../Input';
 import { List, ListItem } from './List';
-
-type DragEndEvent = Parameters<Exclude<ComponentPropsWithoutRef<typeof List>['onDragEnd'], undefined>>[0];
 
 export default {
   component: List
