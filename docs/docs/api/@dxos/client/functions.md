@@ -42,3 +42,13 @@ Generate bip39 seed phrase (aka mnemonic).
 Returns: <code>string</code>
 
 Arguments: none
+### [strip(obj)]()
+
+
+Remove keys with undefined values.
+
+Returns: <code>any</code>
+
+Arguments: 
+
+`obj`: <code>any</code>

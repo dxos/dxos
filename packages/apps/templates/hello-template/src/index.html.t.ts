@@ -5,7 +5,7 @@ import config from './config.t';
 
 export default defineTemplate(
   (context) => {
-    const { input: { dxosUi, tailwind, react, name } } = context;
+    const { input: { tailwind, react, name } } = context;
     const darkModeScript = text`
     <script>
       // On page load or when changing themes, best to add inline in 'head' to avoid FOUC
@@ -29,7 +29,7 @@ export default defineTemplate(
     </script>
     `;
     const plainHtmlWelcome = text`
-    <div class='flex justify-center align-middle'>
+    <div class='dxos flex justify-center align-middle'>
       <div class='max-w-md bg-zinc-100 dark:bg-zinc-800 p-6 m-8 rounded-md shadow-lg'>
         <img src='dxos-white.svg' class='mb-10 dark' />
         <img src='dxos.svg' class='mb-10 no-dark' />

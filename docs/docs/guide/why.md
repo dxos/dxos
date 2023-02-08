@@ -1,13 +1,11 @@
 ---
 order: 1
 title: "Why DXOS?"
-prev: README.md
-next: quick-start
 ---
 
 ## Mission
 
-Our mission is to create a fully decentralized alternative to the existing Cloud, that enables independent software developers to create scalable privacy preserving applications.
+Our mission is to create a fully decentralized alternative to the existing Cloud, that enables independent software developers to create scalable, privacy preserving applications.
 
 ## Vision
 

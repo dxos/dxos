@@ -17,8 +17,8 @@ export default defineConfig({
     .object({
       name: z.string().describe('Name the new package'),
       react: z.boolean().describe('Include react').default(true),
+      dxosUi: z.boolean().describe('Include the DXOS UI system for react').default(true),
       tailwind: z.boolean().describe('Include tailwind (https://tailwindcss.com)').default(true),
-      dxosUi: z.boolean().describe('Include DXOS UI packages for react').default(true),
       storybook: z.boolean().describe('Include a Storybook component sandbox (https://storybook.js.org)').default(true),
       pwa: z.boolean().describe('Enable PWA support').default(true),
       monorepo: z
@@ -28,12 +28,16 @@ export default defineConfig({
     })
     .refine((val) => !(val.dxosUi && !(val.react && val.tailwind)), { message: 'dxosUi requires react and tailwind' })
     .refine((val) => !(val.storybook && !val.react), { message: 'storybook requires react' }),
+  inputQuestions: {
+    dxosUi: { when: ({ react }) => react, default: ({ react }) => react },
+    tailwind: { when: ({ react, dxosUi }) => !react || !dxosUi },
+    storybook: { when: ({ react }) => react, default: ({ react }) => react }
+  },
   message: ({ outputDirectory, input: { name } }) => {
     const cwd = process.cwd();
     const relative = path.relative(cwd, outputDirectory);
     return text`
-    
-    Application ${chalk.bold(name)} created.
+    Application ${chalk.green(chalk.bold(name))} created.
 
     Run the app:
     ${relative ? `$ cd ${relative}` : null}
@@ -43,7 +47,6 @@ export default defineConfig({
     See also:
     - ${path.join(relative, 'README.md')}
     - https://docs.dxos.org/guide/cli/app-templates
-    
     `;
   }
 });

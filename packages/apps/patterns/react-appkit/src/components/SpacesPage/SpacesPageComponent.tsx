@@ -3,10 +3,10 @@
 //
 
 import { Plus, Rocket } from 'phosphor-react';
-import React, { useCallback } from 'react';
-import { generatePath, useNavigate, useSearchParams } from 'react-router-dom';
+import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { Invitation, Space } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { InvitationResult, useClient, useSpaces } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-components';
 
@@ -26,30 +26,18 @@ const invitationCodeFromUrl = (url: string) => {
 };
 
 export type SpacesPageComponentProps = {
-  onSpaceCreate?: () => any;
-  onSpaceJoined?: (space: Space) => any;
-  spacePath?: string;
+  onSpaceCreated?: (space: Space) => any;
+  onSpaceJoined?: (result: InvitationResult) => any;
 };
 
 export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
-  const { onSpaceCreate, spacePath } = {
-    spacePath: '/spaces/:space',
-    ...props
-  };
+  const { onSpaceCreated, onSpaceJoined } = props;
   const { t } = useTranslation('appkit');
   const client = useClient();
   const spaces = useSpaces();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const invitationParam = searchParams.get('invitation');
-
-  const acceptInvitation = useCallback((invitation: Invitation) => client.echo.acceptInvitation(invitation), [client]);
-
-  const handleJoin = useCallback(
-    ({ spaceKey }: InvitationResult) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() })),
-    [spacePath]
-  );
 
   return (
     <>
@@ -60,8 +48,8 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
             <JoinDialog
               initialInvitationCode={invitationParam ?? undefined}
               parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-              onJoin={handleJoin}
-              acceptInvitation={acceptInvitation}
+              onJoin={(result) => onSpaceJoined?.(result)}
+              acceptInvitation={(invitation) => client.echo.acceptInvitation(invitation)}
               dialogProps={{
                 initiallyOpen: Boolean(invitationParam),
                 openTrigger: (
@@ -72,7 +60,14 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
                 )
               }}
             />
-            <Button variant='primary' onClick={() => onSpaceCreate?.()} className='grow flex gap-1'>
+            <Button
+              variant='primary'
+              onClick={async () => {
+                const space = await client.echo.createSpace();
+                onSpaceCreated?.(space);
+              }}
+              className='grow flex gap-1'
+            >
               <Plus className={getSize(5)} />
               {t('create space label', { ns: 'appkit' })}
             </Button>
