@@ -34,7 +34,7 @@ const LIST_NAME = 'List';
 
 type ListVariant = 'ordered' | 'unordered' | 'ordered-draggable';
 
-interface ListProps {
+interface SharedListProps {
   labelId: string;
   children?: ReactNode;
   selectable?: boolean;
@@ -42,6 +42,14 @@ interface ListProps {
   onDragEnd?: ComponentPropsWithoutRef<typeof DndContext>['onDragEnd'];
   listItemIds?: string[];
 }
+
+interface DraggableListProps extends Omit<SharedListProps, 'onDragEnd' | 'listItemIds' | 'variant'> {
+  onDragEnd: Exclude<SharedListProps['onDragEnd'], undefined>;
+  listItemIds: Exclude<SharedListProps['listItemIds'], undefined>;
+  variant: 'ordered-draggable';
+}
+
+type ListProps = SharedListProps | DraggableListProps;
 
 interface ListItemData {
   id: string;
