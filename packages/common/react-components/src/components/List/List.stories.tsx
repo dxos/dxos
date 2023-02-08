@@ -9,7 +9,7 @@ import React, { ComponentPropsWithoutRef, useState } from 'react';
 
 import { getSize } from '../../styles';
 import { mx } from '../../util';
-import { List, ListItem } from './List';
+import { List, Item, Endcap, Heading } from './List';
 
 export default {
   component: List
@@ -40,14 +40,15 @@ export const Default = {
     return (
       <List {...args} labelId='excluded' onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
-          <ListItem
-            key={id}
-            id={id}
-            before={<Play className={mx(getSize(5), 'mbs-2.5')} />}
-            after={<PushPin className={mx(getSize(5), 'mbs-2.5')} />}
-          >
-            <p className='mbs-2'>{text}</p>
-          </ListItem>
+          <Item key={id} id={id}>
+            <Endcap>
+              <Play className={mx(getSize(5), 'mbs-2.5')} />
+            </Endcap>
+            <Heading className='mbs-2'>{text}</Heading>
+            <Endcap>
+              <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+            </Endcap>
+          </Item>
         ))}
       </List>
     );
