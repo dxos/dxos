@@ -262,7 +262,7 @@ export class StateManager<M extends Model> {
     // Remove optimistic mutation from the queue.
     const optimisticIndex = this._optimisticMutations.findIndex(
       (message) =>
-      message.tag && message.tag === clientTag ||
+        (message.tag && message.tag === clientTag) ||
         (message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq)
     );
     if (optimisticIndex !== -1) {
