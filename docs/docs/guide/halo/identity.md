@@ -1,22 +1,15 @@
-# Obtaining a user identity
+---
 
-```tsx
-import { useClient, useProfile } from '@dxos/react-client';
+---
 
-export const App = () => {
-  const client = useClient();
-  const profile = useProfile();
+# Establishing user identity
 
-  useEffect(() => {
-    void client.halo.createProfile({ username: 'Alice' });
-  }, []);
-  
-  if (!profile) {
-    return null;
-  }
+There are three ways a user can establish their identity (login) with HALO on any given [device](../glossary#device).
+1. Create a new identity
+2. Use an identity from another device
+3. Recover an identity using a [seed phrase](../glossary#seed-phrase)
 
-  return (
-    <div>Hello {profile.username}</div>
-  );
-};
-```
+Open [https://halo.dxos.org](https://halo.dxos.org) and you will be guided through the options.
+
+![HALO application](./images/halo-dark.png#dark)
+![HALO application](./images/halo-light.png#light)

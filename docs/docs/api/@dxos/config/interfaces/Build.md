@@ -9,6 +9,11 @@ Type: <code>string</code>
 
 Options:
   - proto3_optional = true
+### [env]()
+Type: <code>Struct</code>
+
+Options:
+  - proto3_optional = true
 ### [outdir]()
 Type: <code>string</code>
 
