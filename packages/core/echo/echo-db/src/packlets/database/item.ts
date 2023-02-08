@@ -3,6 +3,7 @@
 //
 
 import { Event, EventSubscriptions } from '@dxos/async';
+import { DocumentModel } from '@dxos/document-model';
 import { FeedWriter } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Model, ModelMeta, StateManager } from '@dxos/model-factory';
@@ -71,7 +72,7 @@ export class Item<M extends Model | null = Model> {
   }
 
   get type(): ItemType | undefined {
-    if (this.modelType === 'dxos:model/document') {
+    if (this.modelType === DocumentModel.meta.type) {
       return (this._stateManager as any)._stateMachine._object.type;
     }
   }
