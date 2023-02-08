@@ -10,6 +10,7 @@ export * from './Input';
 export * from './Kanban';
 export * from './List';
 export * from './MemberList';
-export * from './Searchbar';
+export * from './Plex';
+export * from './ScrollContainer';
 export * from './SpaceList';
 export * from './Tile';
