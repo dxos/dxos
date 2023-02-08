@@ -50,13 +50,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          chess_app: ['@dxos/chess-app'],
-          faker: ['faker'],
           highlighter: ['react-syntax-highlighter'],
-          kai: ['@dxos/kai'],
-          monaco: ['monaco-editor', '@monaco-editor/react'],
           vendor: ['react', 'react-router-dom', 'react-dom'],
-          phosphor_react: ['phosphor-react']
         }
       }
     }
