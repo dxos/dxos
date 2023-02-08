@@ -111,7 +111,13 @@ export class DataServiceHost {
     assert(request.batch.objects?.length === 1, 'Only single object mutations are supported');
 
     const receipt = await this._writeStream.write({
-      object: request.batch.objects[0]
+      object: {
+        ...request.batch.objects[0],
+        mutations: request.batch.objects[0].mutations?.map((m) => ({
+          ...m,
+          meta: undefined
+        }))
+      }
     });
     if (request.clientTag) {
       this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
