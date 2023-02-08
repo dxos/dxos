@@ -19,7 +19,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       force: true,
       include: [
         '@dxos/client',
-        ${react ? "'@dxos/react-client'," : ''}
+        ${react ? "'@dxos/react-client', '@dxos/react-appkit', '@dxos/react-components'," : ''}
         '@dxos/config'
       ],
       esbuildOptions: {
@@ -81,6 +81,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       ${
         pwa
           ? `${VitePWA()}({
+        registerType: 'prompt',
         workbox: {
           maximumFileSizeToCacheInBytes: 30000000
         },

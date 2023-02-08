@@ -58,7 +58,17 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/quickstart/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/tasks-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/tasks-app-2/package.json",
           "jsonpath": "$.version"
         },
         {

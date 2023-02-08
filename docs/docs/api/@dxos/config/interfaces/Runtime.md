@@ -19,6 +19,8 @@ Type: <code>[Client](/api/@dxos/config/interfaces/Client)</code>
 
 Options:
   - proto3_optional = true
+### [keys]()
+Type: <code>[Keys](/api/@dxos/config/interfaces/Keys)[]</code>
 ### [kube]()
 Type: <code>[Kube](/api/@dxos/config/interfaces/Kube)</code>
 
