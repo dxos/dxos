@@ -12,7 +12,7 @@ import {
   DataService,
   MutationReceipt,
   SubscribeRequest,
-  SubscribeResponse,
+  EchoEvent,
   WriteRequest
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
@@ -50,7 +50,7 @@ export class DataServiceSubscriptions {
 export class DataServiceImpl implements DataService {
   constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
 
-  subscribe(request: SubscribeRequest): Stream<SubscribeResponse> {
+  subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     assert(request.spaceKey);
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
@@ -59,9 +59,9 @@ export class DataServiceImpl implements DataService {
 
   write(request: WriteRequest): Promise<MutationReceipt> {
     assert(request.spaceKey);
-    assert(request.mutation);
+    assert(request.batch);
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
-    return host.write(request.mutation);
+    return host.write(request);
   }
 }

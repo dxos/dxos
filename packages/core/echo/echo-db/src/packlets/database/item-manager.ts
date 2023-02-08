@@ -93,6 +93,7 @@ export class ItemManager {
    * @param {ItemType} [itemType]
    * @param {ItemID} [parentId]
    * @param initProps
+   * @deprecated
    */
   @timed(5_000)
   async createItem(
@@ -157,11 +158,7 @@ export class ItemManager {
     return item;
   }
 
-  private async _constructModel({
-    modelType,
-    itemId,
-    snapshot
-  }: ModelConstructionOptions): Promise<StateManager<Model>> {
+  private _constructModel({ modelType, itemId, snapshot }: ModelConstructionOptions): StateManager<Model> {
     // Convert model-specific outbound mutation to outbound envelope message.
     const outboundTransform =
       this._writeStream &&
@@ -208,14 +205,7 @@ export class ItemManager {
   /**
    * Constructs an item with the appropriate model.
    */
-  @timed(5_000)
-  async constructItem({
-    itemId,
-    itemType,
-    modelType,
-    parentId,
-    snapshot
-  }: ItemConstructionOptions): Promise<Item<any>> {
+  constructItem({ itemId, itemType, modelType, parentId, snapshot }: ItemConstructionOptions): Item<any> {
     assert(itemId);
     assert(modelType);
 
@@ -225,7 +215,7 @@ export class ItemManager {
     }
     assert(!parent || parent instanceof Item);
 
-    const modelStateManager = await this._constructModel({
+    const modelStateManager = this._constructModel({
       itemId,
       modelType,
       snapshot

@@ -15,15 +15,24 @@ message SubscribeRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
-message SubscribeResponse {
-  // TODO(dmaretskyi): Use batch message.
-  repeated dxos.echo.object.EchoObject objects = 1;
+message EchoEvent {
+  /// If this event comes as a response to this client wirting the mutation, this field will be set to the tag in the mutation.
+  optional string client_tag = 1;
+
+  /// For mutations read from the feed store those fields will be set to the position of the mutation in the feed.
+  optional dxos.keys.PublicKey feed_key = 2;
+  optional int32 seq = 3;
+
+  dxos.echo.object.EchoObjectBatch batch = 10;
 }
 
 message WriteRequest {
   dxos.keys.PublicKey space_key = 1;
-  // TODO(dmaretskyi): Mutation batch.
-  dxos.echo.object.EchoObject mutation = 2;
+  
+  /// Ephermal tag to correlate events in the subscription.
+  optional string client_tag = 2;
+
+  dxos.echo.object.EchoObjectBatch batch = 10;
 }
 
 message MutationReceipt {
@@ -32,6 +41,6 @@ message MutationReceipt {
 }
 
 service DataService {
-  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse);
+  rpc Subscribe(SubscribeRequest) returns (stream EchoEvent);
   rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
 }
