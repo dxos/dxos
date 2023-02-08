@@ -81,26 +81,25 @@ export const TaskListItems = {
       };
 
       const onKeyDown = (event: KeyboardEvent<Element>) => {
-        const siblings = Array.from(
+        const inputsInScope = Array.from(
           document.querySelectorAll<HTMLInputElement>(
             `ol[aria-labelledby="${titleId}"] input[data-focus-series="list"]`
           )
         );
-        const targetIndex = siblings.findIndex((sibling) => sibling === event.target);
-        console.log(targetIndex, siblings);
+        const targetIndex = inputsInScope.findIndex((sibling) => sibling === event.target);
         switch (event.key) {
           case 'Enter':
           case 'PageDown': {
-            if (targetIndex < siblings.length - 1) {
+            if (targetIndex < inputsInScope.length - 1) {
               event.preventDefault();
-              siblings[targetIndex + 1].focus();
+              inputsInScope[targetIndex + 1].focus();
             }
             break;
           }
           case 'PageUp': {
             if (targetIndex > 0) {
               event.preventDefault();
-              siblings[targetIndex - 1].focus();
+              inputsInScope[targetIndex - 1].focus();
             }
             break;
           }
@@ -138,6 +137,7 @@ export const TaskListItems = {
         </>
       );
     };
+
     return (
       <>
         <ListInstance />
