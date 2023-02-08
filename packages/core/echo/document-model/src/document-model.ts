@@ -25,9 +25,10 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 
   reset(snapshot: ObjectSnapshot): void {
     assert(snapshot.root);
-    const object: any = {};
-    ValueUtil.applyValue(object, 'root', snapshot.root);
-    this._object = object.root;
+    const object: DocumentModelState = { data: {} };
+    ValueUtil.applyValue(object, 'data', snapshot.root);
+    this._object = object;
+    this._object.type = snapshot.type;
   }
 
   process(mutation: ObjectMutationSet): void {
@@ -130,9 +131,10 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
-    getInitMutation(obj: any): ObjectMutationSet {
+    getInitMutation({ obj, type }: { obj: any; type: string }): ObjectMutationSet {
       return {
-        mutations: MutationUtil.createMultiFieldMutation(obj)
+        mutations: obj ? MutationUtil.createMultiFieldMutation(obj) : [],
+        type
       };
     },
 
