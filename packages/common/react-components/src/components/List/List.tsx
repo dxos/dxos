@@ -210,17 +210,9 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
   const listItemId = useId('listItem');
 
   if (variant === 'ordered-draggable') {
-    return (
-      <Collection.Slot scope={props.__scopeSelect}>
-        <DraggableListItem ref={forwardedRef} {...props} id={props.id ?? listItemId} />
-      </Collection.Slot>
-    );
+    return <DraggableListItem ref={forwardedRef} {...props} id={props.id ?? listItemId} />;
   } else {
-    return (
-      <Collection.Slot scope={props.__scopeSelect}>
-        <PureListItem ref={forwardedRef} {...props} id={props.id ?? listItemId} />
-      </Collection.Slot>
-    );
+    return <PureListItem ref={forwardedRef} {...props} id={props.id ?? listItemId} />;
   }
 });
 
