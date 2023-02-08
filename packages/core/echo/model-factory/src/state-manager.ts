@@ -27,6 +27,8 @@ import {
 } from './types';
 
 type OptimisticMutation = {
+  tag?: string;
+
   mutation: Any;
 
   /**
@@ -117,13 +119,14 @@ export class StateManager<M extends Model> {
     this._model.update.emit(this._model);
   }
 
-  processOptimisticMutation(mutation: MutationOf<M>) {
+  processOptimisticMutation(mutation: MutationOf<M>, tag?: string) {
     // Construct and enqueue an optimistic mutation.
     const mutationEncoded = {
       type_url: 'todo', // TODO(mykola): this._modelMeta!.mutationCodec.typeUrl ???
       value: this._modelMeta!.mutationCodec.encode(mutation)
     };
     const optimisticMutation: OptimisticMutation = {
+      tag,
       mutation: mutationEncoded,
     };
     this._optimisticMutations.push(optimisticMutation);
@@ -174,7 +177,6 @@ export class StateManager<M extends Model> {
    * Writes the mutation to the output stream.
    */
   private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
-    log('Write', mutation);
     if (!this._feedWriter) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
@@ -257,10 +259,10 @@ export class StateManager<M extends Model> {
   /**
    * Processes mutations from the inbound stream.
    */
-  processMessage(meta: MutationMetaWithTimeframe, mutation: Any) {
+  processMessage(meta: MutationMetaWithTimeframe, mutation: Any, clientTag?: string) {
     // Remove optimistic mutation from the queue.
     const optimisticIndex = this._optimisticMutations.findIndex(
-      (message) =>
+      (message) => message.tag === clientTag ||
         message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq
     );
     if (optimisticIndex !== -1) {

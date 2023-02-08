@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { id } from './defs';
+import { id, data } from './defs';
 import { Document } from './document';
 import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
@@ -48,7 +48,7 @@ describe('Serializer', () => {
   test('Array of nested objects', async () => {
     const serializer = new Serializer();
 
-    let data: SerializedSpace;
+    let serialized: SerializedSpace;
 
     {
       const db = await createDatabase();
@@ -64,16 +64,19 @@ describe('Serializer', () => {
         ]
       });
       await db.save(obj);
-      await sleep(100); // Workaround until https://github.com/dxos/dxos/pull/2280 is merged.
+
+
+      await sleep(100);
+
       expect(db.objects).to.have.length(3);
 
-      data = await serializer.export(db);
-      expect(data.objects).to.have.length(3);
+      serialized = await serializer.export(db);
+      expect(serialized.objects).to.have.length(3);
     }
 
     {
       const db = await createDatabase();
-      await serializer.import(db, data);
+      await serializer.import(db, serialized);
 
       const query = db.query();
       const objects = query.getObjects();

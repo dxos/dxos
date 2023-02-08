@@ -200,12 +200,12 @@ export class DatabaseBackendProxy implements DatabaseBackend {
             if (optimistic) {
               // console.log('process optimistic', mutation)
               const decoded = entity._stateManager._modelMeta?.mutationCodec.decode(mutation.model.value);
-              entity._stateManager.processOptimisticMutation(decoded);
+              entity._stateManager.processOptimisticMutation(decoded, mutation.meta?.clientTag);
             } else {
               // console.log('process event', mutation)
               assert(mutation.meta);
               assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-              entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);
+              entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model, mutation.meta.clientTag);
             }
           }
         }
