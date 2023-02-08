@@ -22,8 +22,8 @@ import React, {
   useState
 } from 'react';
 
-import { useId } from '../../hooks';
-import { getSize } from '../../styles';
+import { useId, useThemeContext } from '../../hooks';
+import { getSize, themeVariantFocus } from '../../styles';
 import { mx } from '../../util';
 import { Checkbox, CheckboxProps } from '../Checkbox';
 import { defaultListItemHeading, defaultListItemEndcap } from './listStyles';
@@ -135,6 +135,7 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedPr
     slots = {}
   } = props;
   const { variant, selectable } = useListContext(LIST_NAME, __scopeSelect);
+  const { themeVariant } = useThemeContext();
 
   const [selected = false, setSelected] = useControllableState({
     prop: propsSelected,
@@ -157,7 +158,11 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedPr
         }}
       >
         {variant === 'ordered-draggable' && (
-          <div role='none' {...slots.dragHandle} className={mx('bs-10 is-5', slots.dragHandle?.className)}>
+          <div
+            role='none'
+            {...slots.dragHandle}
+            className={mx('bs-10 is-5 rounded', themeVariantFocus(themeVariant), slots.dragHandle?.className)}
+          >
             <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
           </div>
         )}
@@ -172,11 +177,6 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedPr
             before
           )}
         </div>
-        {selectable && before && (
-          <div role='none' className={defaultListItemEndcap}>
-            {before}
-          </div>
-        )}
         <div
           role='none'
           {...slots.heading}

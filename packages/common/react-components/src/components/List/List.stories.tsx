@@ -4,8 +4,11 @@
 
 import '@dxosTheme';
 import { arrayMove } from '@dnd-kit/sortable';
+import { Play, PushPin } from 'phosphor-react';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 
+import { getSize } from '../../styles';
+import { mx } from '../../util';
 import { List, ListItem } from './List';
 
 export default {
@@ -37,7 +40,12 @@ export const Default = {
     return (
       <List {...args} labelId='excluded' onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
-          <ListItem key={id} id={id}>
+          <ListItem
+            key={id}
+            id={id}
+            before={<Play className={mx(getSize(5), 'mbs-2.5')} />}
+            after={<PushPin className={mx(getSize(5), 'mbs-2.5')} />}
+          >
             <p className='mbs-2'>{text}</p>
           </ListItem>
         ))}
@@ -45,7 +53,7 @@ export const Default = {
     );
   },
   args: {
-    selectable: false,
+    selectable: true,
     variant: 'ordered-draggable'
   }
 };
