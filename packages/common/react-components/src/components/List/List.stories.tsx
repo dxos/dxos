@@ -12,7 +12,7 @@ import { useId } from '../../hooks';
 import { getSize } from '../../styles';
 import { mx } from '../../util';
 import { Input } from '../Input';
-import { List, ListItem } from './List';
+import { List, Item, Endcap, Heading } from './List';
 
 export default {
   component: List
@@ -39,14 +39,15 @@ export const Default = {
     return (
       <List {...args} labelId='excluded' onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
-          <ListItem
-            key={id}
-            id={id}
-            before={<Play className={mx(getSize(5), 'mbs-2.5')} />}
-            after={<PushPin className={mx(getSize(5), 'mbs-2.5')} />}
-          >
-            <p className='mbs-2'>{text}</p>
-          </ListItem>
+          <Item key={id} id={id}>
+            <Endcap>
+              <Play className={mx(getSize(5), 'mbs-2.5')} />
+            </Endcap>
+            <Heading className='mbs-2'>{text}</Heading>
+            <Endcap>
+              <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+            </Endcap>
+          </Item>
         ))}
       </List>
     );
@@ -110,27 +111,30 @@ export const TaskListItems = {
           <h2 id={titleId}>{listId}</h2>
           <List {...args} labelId={titleId} onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
             {items.map(({ id, text }) => (
-              <ListItem
-                key={id}
-                id={id}
-                before={<Play className={mx(getSize(5), 'mbs-2.5')} />}
-                after={<PushPin className={mx(getSize(5), 'mbs-2.5')} />}
-              >
-                <Input
-                  variant='subdued'
-                  label={id}
-                  defaultValue={text}
-                  slots={{
-                    label: { className: 'sr-only' },
-                    root: { className: 'm-0' },
-                    input: {
-                      className: 'p-1 mbs-1',
-                      'data-focus-series': 'list',
-                      onKeyDown
-                    } as ComponentPropsWithoutRef<'input'>
-                  }}
-                />
-              </ListItem>
+              <Item key={id} id={id}>
+                <Endcap>
+                  <Play className={mx(getSize(5), 'mbs-2.5')} />
+                </Endcap>
+                <Heading>
+                  <Input
+                    variant='subdued'
+                    label={id}
+                    defaultValue={text}
+                    slots={{
+                      label: { className: 'sr-only' },
+                      root: { className: 'm-0' },
+                      input: {
+                        className: 'p-1 mbs-1',
+                        'data-focus-series': 'list',
+                        onKeyDown
+                      } as ComponentPropsWithoutRef<'input'>
+                    }}
+                  />
+                </Heading>
+                <Endcap>
+                  <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+                </Endcap>
+              </Item>
             ))}
           </List>
         </>
