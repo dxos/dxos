@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './data-mirror';
 export * from './data-service-host';
 export * from './data-service';
 export * from './database-backend';

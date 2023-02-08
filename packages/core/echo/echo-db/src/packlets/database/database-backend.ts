@@ -5,15 +5,14 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { EventSubscriptions } from '@dxos/async';
+import { EventSubscriptions, Trigger } from '@dxos/async';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { DataService, MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
+import { DataService, EchoEvent, MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
@@ -21,6 +20,7 @@ import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { log } from '@dxos/log';
 import { Item } from './item';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
+import { Stream } from '@dxos/codec-protobuf';
 
 /**
  * Generic interface to represent a backend for the database.
@@ -57,7 +57,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
     private readonly _snapshot?: EchoSnapshot,
     private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
-  ) {}
+  ) { }
 
   get isReadOnly(): boolean {
     return !!this._outboundStream;
@@ -77,7 +77,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
     }
   }
 
-  async close() {}
+  async close() { }
 
   getWriteStream(): FeedWriter<DataMessage> | undefined {
     return this._outboundStream;
@@ -103,7 +103,8 @@ export type MutateResult = {
  * Uses DataMirror to populate entities in ItemManager.
  */
 export class DatabaseBackendProxy implements DatabaseBackend {
-  private _dataMirror?: DataMirror;
+  private _entities?: Stream<EchoEvent>;
+
   private readonly _subscriptions = new EventSubscriptions();
   public _itemManager!: ItemManager;
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
@@ -113,7 +114,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   constructor(
     private readonly _service: DataService,
     private readonly _spaceKey: PublicKey
-  ) {}
+  ) { }
 
   get isReadOnly(): boolean {
     return false;
@@ -121,8 +122,6 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
-
-    this._dataMirror = new DataMirror(this._itemManager, this._service, this._spaceKey);
 
     this._subscriptions.add(
       modelFactory.registered.on(async (model) => {
@@ -134,28 +133,39 @@ export class DatabaseBackendProxy implements DatabaseBackend {
       })
     );
 
-    await this._dataMirror.open();
+    const loaded = new Trigger();
+
+    this._entities = this._service.subscribe({
+      spaceKey: this._spaceKey
+    });
+    this._entities.subscribe(
+      async (msg) => {
+        this._process(msg.batch, false);
+
+        // Notify that initial set of items has been loaded.
+        loaded.wake();
+      },
+      (err) => {
+        log(`Connection closed: ${err}`);
+      }
+    );
+
+    // Wait for initial set of items.
+    await loaded.wait();
   }
 
-  mutate(batch: EchoObjectBatch): MutateResult {
-    const itemsCreated: Item<any>[] = [];
-    const clientTag = `${this._clientTagPrefix}-${this._clientTagCounter++}`;
-
-    // Optimistic apply.
-    // TODO(dmaretskyi): Extract and generalize for events.
-    for(const object of batch.objects ?? []) {
+  // TODO(dmaretskyi): Remove optimistic flag.
+  private _process(batch: EchoObjectBatch, optimistic: boolean, objectsCreated: Item<any>[] = []) {
+    for (const object of batch.objects ?? []) {
       assert(object.objectId);
 
       let entity: Item<any> | undefined;
       if (object.genesis) {
         log('Construct', { object });
         assert(object.genesis.modelType);
-
-        if(this._itemManager.entities.has(object.objectId)) {
-          continue; 
+        if (this._itemManager.entities.has(object.objectId)) {
+          continue;
         }
-
-
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
           itemType: object.genesis.itemType,
@@ -163,13 +173,13 @@ export class DatabaseBackendProxy implements DatabaseBackend {
           parentId: object.snapshot?.parentId,
           snapshot: { objectId: object.objectId } // TODO(dmaretskyi): Fix.
         });
-        itemsCreated.push(entity);
+        objectsCreated.push(entity);
       } else {
         entity = this._itemManager.entities.get(object.objectId);
       }
       if (!entity) {
         log.warn('Item not found', { objectId: object.objectId });
-        continue;
+        return;
       }
 
       if (object.snapshot) {
@@ -184,20 +194,35 @@ export class DatabaseBackendProxy implements DatabaseBackend {
           }
 
           if (mutation.model) {
-            entity._stateManager.processOptimisticMutation(mutation.model);
+            if (optimistic) {
+              entity._stateManager.processOptimisticMutation(mutation.model);
+            } else {
+              assert(mutation.meta);
+              assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
+              entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);
+            }
           }
         }
       }
     }
 
+  }
+
+  mutate(batch: EchoObjectBatch): MutateResult {
+    const objectsCreated: Item<any>[] = [];
+    const clientTag = `${this._clientTagPrefix}-${this._clientTagCounter++}`;
+
+    // Optimistic apply.
+    this._process(batch, true, objectsCreated);
+
     const writePromise = this._service.write({
       batch,
       spaceKey: this._spaceKey,
-      clientTag 
+      clientTag
     })
 
     return {
-      objectsCreated: itemsCreated,
+      objectsCreated,
       getReceipt: async () => {
         return writePromise;
       }
@@ -206,7 +231,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
   async close(): Promise<void> {
     this._subscriptions.clear();
-    await this._dataMirror?.close();
+    await this._entities?.close();
   }
 
   getWriteStream(): FeedWriter<DataMessage> | undefined {
