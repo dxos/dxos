@@ -10,15 +10,17 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { DataService, MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
-
-const log = debug('dxos:echo-db:database-backend');
+import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
+import { log } from '@dxos/log';
+import { Item } from './item';
+import { MutationMetaWithTimeframe } from '@dxos/protocols';
 
 /**
  * Generic interface to represent a backend for the database.
@@ -90,6 +92,12 @@ export class DatabaseBackendHost implements DatabaseBackend {
   }
 }
 
+export type MutateResult = {
+  objectsCreated: Item<any>[]
+  getReceipt(): Promise<MutationReceipt>
+  // TODO(dmaretskyi): .
+}
+
 /**
  * Database backend that is backed by the DataService instance.
  * Uses DataMirror to populate entities in ItemManager.
@@ -98,6 +106,8 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   private _dataMirror?: DataMirror;
   private readonly _subscriptions = new EventSubscriptions();
   public _itemManager!: ItemManager;
+  private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
+  private _clientTagCounter = 0;
 
   // prettier-ignore
   constructor(
@@ -125,6 +135,73 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     );
 
     await this._dataMirror.open();
+  }
+
+  mutate(batch: EchoObjectBatch): MutateResult {
+    const itemsCreated: Item<any>[] = [];
+    const clientTag = `${this._clientTagPrefix}-${this._clientTagCounter++}`;
+
+    // Optimistic apply.
+    // TODO(dmaretskyi): Extract and generalize for events.
+    for(const object of batch.objects ?? []) {
+      assert(object.objectId);
+
+      let entity: Item<any> | undefined;
+      if (object.genesis) {
+        log('Construct', { object });
+        assert(object.genesis.modelType);
+
+        if(this._itemManager.entities.has(object.objectId)) {
+          continue; 
+        }
+
+
+        entity = this._itemManager.constructItem({
+          itemId: object.objectId,
+          itemType: object.genesis.itemType,
+          modelType: object.genesis.modelType,
+          parentId: object.snapshot?.parentId,
+          snapshot: { objectId: object.objectId } // TODO(dmaretskyi): Fix.
+        });
+        itemsCreated.push(entity);
+      } else {
+        entity = this._itemManager.entities.get(object.objectId);
+      }
+      if (!entity) {
+        log.warn('Item not found', { objectId: object.objectId });
+        continue;
+      }
+
+      if (object.snapshot) {
+        log('reset to snapshot', { object });
+        entity._stateManager.resetToSnapshot(object);
+      } else if (object.mutations) {
+        for (const mutation of object.mutations) {
+          log('mutate', { id: object.objectId, mutation });
+
+          if (mutation.parentId || mutation.action) {
+            entity._processMutation(mutation, (id) => this._itemManager.getItem(id));
+          }
+
+          if (mutation.model) {
+            entity._stateManager.processOptimisticMutation(mutation.model);
+          }
+        }
+      }
+    }
+
+    const writePromise = this._service.write({
+      batch,
+      spaceKey: this._spaceKey,
+      clientTag 
+    })
+
+    return {
+      objectsCreated: itemsCreated,
+      getReceipt: async () => {
+        return writePromise;
+      }
+    }
   }
 
   async close(): Promise<void> {

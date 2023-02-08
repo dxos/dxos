@@ -117,15 +117,7 @@ export class StateManager<M extends Model> {
     this._model.update.emit(this._model);
   }
 
-  /**
-   * Writes the mutation to the output stream.
-   */
-  private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
-    log('Write', mutation);
-    if (!this._feedWriter) {
-      throw new Error(`Read-only model: ${this._itemId}`);
-    }
-
+  processOptimisticMutation(mutation: MutationOf<M>) {
     // Construct and enqueue an optimistic mutation.
     const mutationEncoded = {
       type_url: 'todo', // TODO(mykola): this._modelMeta!.mutationCodec.typeUrl ???
@@ -143,7 +135,53 @@ export class StateManager<M extends Model> {
       this._emitModelUpdate();
     }
 
-    const receiptPromise = this._feedWriter.write(mutationEncoded);
+    return optimisticMutation
+  }
+
+  async confirm(mutation: OptimisticMutation, receipt: WriteReceipt): Promise<MutationWriteReceipt> {
+    log('Confirm', mutation);
+    mutation.receipt = receipt;
+
+
+    // Promise that resolves when this mutation has been processed.
+    const processed = this._mutationProcessed.waitFor(
+      (meta) => receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
+    );
+
+    // Sanity checks.
+    void processed.then(() => {
+      if (!mutation.receipt) {
+        log.error('Optimistic mutation was processed without being confirmed', {
+          itemId: this._itemId,
+        });
+      }
+      if (this._optimisticMutations.includes(mutation)) {
+        log.error('Optimistic mutation was processed without being removed from the optimistic queue', {
+          itemId: this._itemId,
+        });
+      }
+    });
+
+    return {
+      ...receipt,
+      waitToBeProcessed: async () => {
+        await processed;
+      }
+    };
+  }
+
+  /**
+   * Writes the mutation to the output stream.
+   */
+  private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
+    log('Write', mutation);
+    if (!this._feedWriter) {
+      throw new Error(`Read-only model: ${this._itemId}`);
+    }
+
+    const optimisticMutation = this.processOptimisticMutation(mutation);
+
+    const receiptPromise = this._feedWriter.write(optimisticMutation.mutation);
 
     // Track receipt promise.
     this._pendingWrites.add(receiptPromise);
@@ -155,36 +193,7 @@ export class StateManager<M extends Model> {
     // Confirms that the optimistic mutation has been written to the feed store.
     // NOTE: Possible race condition: What if processMessage gets called before write() resolves?
     const receipt = await receiptPromise;
-    log('Confirm', mutation);
-    optimisticMutation.receipt = receipt;
-
-    // Promise that resolves when this mutation has been processed.
-    const processed = this._mutationProcessed.waitFor(
-      (meta) => receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-    );
-
-    // Sanity checks.
-    void processed.then(() => {
-      if (!optimisticMutation.receipt) {
-        log.error('Optimistic mutation was processed without being confirmed', {
-          itemId: this._itemId,
-          mutationType: mutation.type
-        });
-      }
-      if (this._optimisticMutations.includes(optimisticMutation)) {
-        log.error('Optimistic mutation was processed without being removed from the optimistic queue', {
-          itemId: this._itemId,
-          mutationType: mutation.type
-        });
-      }
-    });
-
-    return {
-      ...receipt,
-      waitToBeProcessed: async () => {
-        await processed;
-      }
-    };
+    return await this.confirm(optimisticMutation, receipt);    
   }
 
   /**

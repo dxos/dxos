@@ -47,7 +47,10 @@ export class DataMirror {
           if (object.genesis) {
             log('Construct', { object });
             assert(object.genesis.modelType);
-            entity = await this._itemManager.constructItem({
+            if(this._itemManager.entities.has(object.objectId)) {
+              continue;
+            }
+            entity = this._itemManager.constructItem({
               itemId: object.objectId,
               itemType: object.genesis.itemType,
               modelType: object.genesis.modelType,
@@ -76,7 +79,7 @@ export class DataMirror {
               if (mutation.model) {
                 assert(mutation.meta);
                 assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-                await entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);
+                entity._stateManager.processMessage(mutation.meta as MutationMetaWithTimeframe, mutation.model);
               }
             }
           }

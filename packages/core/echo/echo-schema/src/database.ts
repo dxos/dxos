@@ -93,19 +93,33 @@ export class EchoDatabase {
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
 
-    let props;
+    let mutation: Uint8Array | undefined;
     if (obj instanceof DocumentBase) {
-      props = { '@type': obj[base]._uninitialized?.['@type'] };
+      const props = { '@type': obj[base]._uninitialized?.['@type'] };
+      const modelMeta = obj[base]._modelConstructor.meta
+      mutation = modelMeta.mutationCodec.encode(await modelMeta.getInitMutation!(props));
     }
-    const item = await this._itemManager.createItem(
-      obj[base]._modelConstructor.meta.type,
-      obj[base]._id,
-      undefined,
-      undefined,
-      props
-    );
 
-    await obj[base]._bind(item);
+    const result = await this._backend.mutate({
+      objects: [{
+        objectId: obj[base]._id,
+        genesis: {
+          modelType: obj[base]._modelConstructor.meta.type,
+        },
+        mutations: !mutation ? [] : [
+          {
+            model: {
+              '@type': 'google.protobuf.Any',
+              type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
+              value: mutation
+            }
+          }
+        ]
+      }]
+    })
+    assert(result.objectsCreated.length === 1);
+
+    await obj[base]._bind(result.objectsCreated[0]);
     return obj;
   }
 
