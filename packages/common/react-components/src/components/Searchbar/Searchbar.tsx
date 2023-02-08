@@ -29,7 +29,11 @@ export const Searchbar: FC<{
           onChange={(event) => handleChange(event.target.value)}
           placeholder='Search...'
           slots={{
+            root: {
+              className: 'flex flex-1 mlb-0'
+            },
             input: {
+              className: 'flex flex-1',
               spellCheck: false
             }
           }}

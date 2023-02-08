@@ -83,11 +83,15 @@ export const Selector: FC<{
       <div className={mx('flex flex-1 items-center p-2 border', open ? 'rounded-t' : 'rounded')}>
         <Input
           label={undefined}
-          value={text}
+          value={value ? getText(value) : text}
           onChange={(event) => setText(event.target.value)}
           placeholder={placeholder ?? 'Select...'}
           slots={{
+            root: {
+              className: 'flex flex-1 mlb-0'
+            },
             input: {
+              className: 'flex flex-1',
               onKeyDown: handleKeyDown,
               onBlur: () => setOpen(false)
             }
