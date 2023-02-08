@@ -88,7 +88,7 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
   const Root = variant === 'ordered' || variant === 'ordered-draggable' ? Primitive.ol : Primitive.ul;
 
   return (
-    <Root {...(selectable && { role: 'listbox', 'aria-multiselectable': true })}>
+    <Root {...(selectable && { role: 'listbox', 'aria-multiselectable': true })} aria-labelledby={props.labelId}>
       <ListProvider
         {...{
           scope: __scopeSelect,
