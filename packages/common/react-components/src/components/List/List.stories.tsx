@@ -3,8 +3,9 @@
 //
 
 import '@dxosTheme';
+import { arrayMove } from '@dnd-kit/sortable';
 import { Trash, UsersThree } from 'phosphor-react';
-import React from 'react';
+import React, { ComponentPropsWithoutRef, useState } from 'react';
 
 import { getSize } from '../../styles';
 import { mx } from '../../util';
@@ -14,19 +15,52 @@ export default {
   component: List
 };
 
+const items = [...Array(12)].map((_, index) => (
+  <ListItem
+    key={index}
+    id={`listItem-${index}`}
+    {...{
+      before: <UsersThree className={mx(getSize(6), 'mbs-2')} />,
+      after: <Trash className={mx(getSize(6), 'mbs-2')} />,
+      children: <p className='mbs-2'>{`List item ${index + 1}`}</p>
+    }}
+  />
+));
+
 export const Default = {
+  render: ({ ...args }) => {
+    const [items, setItems] = useState(
+      [...Array(12)].map((_, index) => ({
+        id: `listItem-${index}`,
+        text: `List item ${index + 1}`
+      }))
+    );
+    const handleDragEnd = (
+      event: Parameters<Exclude<ComponentPropsWithoutRef<typeof List>['onDragEnd'], undefined>>[0]
+    ) => {
+      const { active, over } = event;
+
+      if (active.id !== over?.id) {
+        setItems((items) => {
+          const oldIndex = items.findIndex((item) => item.id === active.id);
+          const newIndex = items.findIndex((item) => item.id === over?.id);
+
+          return arrayMove(items, oldIndex, newIndex);
+        });
+      }
+    };
+    return (
+      <List {...args} labelId='excluded' onDragEnd={handleDragEnd}>
+        {items.map(({ id, text }) => (
+          <ListItem key={id} id={id}>
+            <p className='mbs-2'>{text}</p>
+          </ListItem>
+        ))}
+      </List>
+    );
+  },
   args: {
     selectable: false,
-    variant: 'ordered',
-    children: [...Array(12)].map((i) => (
-      <ListItem
-        key={i}
-        {...{
-          before: <UsersThree className={mx(getSize(6), 'mbs-2')} />,
-          after: <Trash className={mx(getSize(6), 'mbs-2')} />,
-          children: <p className='mbs-2'>List item</p>
-        }}
-      />
-    ))
+    variant: 'ordered-draggable'
   }
 };

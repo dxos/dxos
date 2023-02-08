@@ -39,6 +39,7 @@ interface ListProps {
   children?: ReactNode;
   selectable?: boolean;
   variant?: ListVariant;
+  onDragEnd?: ComponentPropsWithoutRef<typeof DndContext>['onDragEnd'];
 }
 
 interface ListItemData {
@@ -94,7 +95,7 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
   );
 };
 
-const ListContent: FC<ListProps> = (props: ScopedProps<ListProps>) => {
+const ListContent: FC<ListProps> = ({ onDragEnd, ...props }: ScopedProps<ListProps>) => {
   const { variant } = useListContext('ListContent', props.__scopeSelect);
   const getItems = useCollection(props.__scopeSelect);
   const [itemIds, setItemIds] = useState<string[]>([]);
@@ -104,7 +105,7 @@ const ListContent: FC<ListProps> = (props: ScopedProps<ListProps>) => {
   }, [getItems]);
 
   return variant === 'ordered-draggable' ? (
-    <DndContext modifiers={[restrictToVerticalAxis]}>
+    <DndContext onDragEnd={onDragEnd} modifiers={[restrictToVerticalAxis]}>
       <SortableContext items={itemIds}>{props.children}</SortableContext>
     </DndContext>
   ) : (
@@ -210,9 +211,9 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
   const listItemId = useId('listItem');
 
   if (variant === 'ordered-draggable') {
-    return <DraggableListItem ref={forwardedRef} {...props} id={props.id ?? listItemId} />;
+    return <DraggableListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
   } else {
-    return <PureListItem ref={forwardedRef} {...props} id={props.id ?? listItemId} />;
+    return <PureListItem {...props} ref={forwardedRef} id={props.id ?? listItemId} />;
   }
 });
 
