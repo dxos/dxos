@@ -93,6 +93,7 @@ export class ItemManager {
    * @param {ItemType} [itemType]
    * @param {ItemID} [parentId]
    * @param initProps
+   * @deprecated
    */
   @timed(5_000)
   async createItem(

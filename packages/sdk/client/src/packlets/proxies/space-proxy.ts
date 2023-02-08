@@ -125,15 +125,16 @@ export class SpaceProxy implements Space {
 
     assert(this._clientServices.services.DataService, 'DataService not available');
 
+    const backend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
     this._database = new Database(
       this._modelFactory,
       // TODO(dmaretskyi): Preserve this when removing `Database`.
-      new DatabaseBackendProxy(this._clientServices.services.DataService, this.key),
+      backend,
       memberKey
     );
 
     this._experimental = {
-      db: new EchoDatabase(this._database._itemManager, databaseRouter)
+      db: new EchoDatabase(this._database._itemManager, backend, databaseRouter)
     };
 
     databaseRouter.register(this.key, this._experimental.db);

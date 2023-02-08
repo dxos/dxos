@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { DocumentModel } from '@dxos/document-model';
-import { Item, ItemManager } from '@dxos/echo-db';
+import { DatabaseBackendProxy, Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
@@ -50,6 +50,7 @@ export class EchoDatabase {
      * @internal
      */
     public readonly _itemManager: ItemManager,
+    public readonly _backend: DatabaseBackendProxy,
     private readonly _router: DatabaseRouter
   ) {
     // TODO(dmaretskyi): Don't debounce?
@@ -150,7 +151,7 @@ export class EchoDatabase {
       // TODO(burdon): Trigger callback on call (not just update).
       subscribe: (callback: (query: Query) => void) => {
         // TODO(dmaretskyi): Don't debounce?
-        return this._itemManager.debouncedUpdate.on((updatedObjects) => {
+        return this._backend._itemManager.debouncedUpdate.on((updatedObjects) => {
           const changed = updatedObjects.some((object) => {
             if (this._objects.has(object.id)) {
               const match = matcher(this._objects.get(object.id)!);

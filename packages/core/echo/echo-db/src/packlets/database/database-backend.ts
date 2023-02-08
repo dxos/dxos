@@ -25,6 +25,7 @@ const log = debug('dxos:echo-db:database-backend');
  * Interfaces with ItemManager to maintain the collection of entities up-to-date.
  * Provides a way to query for the write stream to make mutations.
  * Creates data snapshots.
+ * @deprecated
  */
 export interface DatabaseBackend {
   isReadOnly: boolean;
@@ -96,7 +97,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
 export class DatabaseBackendProxy implements DatabaseBackend {
   private _dataMirror?: DataMirror;
   private readonly _subscriptions = new EventSubscriptions();
-  private _itemManager!: ItemManager;
+  public _itemManager!: ItemManager;
 
   // prettier-ignore
   constructor(
