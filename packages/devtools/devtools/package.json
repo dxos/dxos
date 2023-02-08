@@ -52,7 +52,6 @@
     "@dxos/plexus": "workspace:*",
     "@dxos/react-composer": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@monaco-editor/react": "^4.4.6",
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
