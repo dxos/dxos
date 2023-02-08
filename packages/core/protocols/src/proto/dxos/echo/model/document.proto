@@ -138,5 +138,6 @@ message YJS {
  * Set of mutations.
  */
 message ObjectMutationSet {
-  repeated ObjectMutation mutations   = 1;
+  optional string type = 1;
+  repeated ObjectMutation mutations   = 2;
 }

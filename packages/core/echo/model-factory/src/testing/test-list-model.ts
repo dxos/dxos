@@ -6,7 +6,7 @@ import { schema } from '@dxos/protocols';
 import type { TestListMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { Model } from '../model';
-import { ModelMeta, MutationProcessMeta, StateMachine } from '../types';
+import { ModelMeta, StateMachine } from '../types';
 
 class TestListModelStateMachine implements StateMachine<TestListMutation[], TestListMutation, any> {
   private _messages: TestListMutation[] = [];
@@ -15,7 +15,7 @@ class TestListModelStateMachine implements StateMachine<TestListMutation[], Test
     return this._messages;
   }
 
-  process(mutation: TestListMutation, meta: MutationProcessMeta): void {
+  process(mutation: TestListMutation): void {
     this._messages.push(mutation);
   }
 

@@ -5,7 +5,7 @@
 import get from 'lodash.get';
 import assert from 'node:assert';
 
-import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
+import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
@@ -32,7 +32,7 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
     this._object = object.root;
   }
 
-  process(mutation: ObjectMutationSet, meta: MutationProcessMeta): void {
+  process(mutation: ObjectMutationSet): void {
     MutationUtil.applyMutationSet(this._object, mutation);
   }
 
@@ -102,6 +102,13 @@ export class MutationBuilder {
   async commit() {
     return this._model._makeMutation({ mutations: this._mutations });
   }
+
+  /**
+   * Returns a mutation object without applying it.
+   */
+  build(): ObjectMutationSet {
+    return { mutations: this._mutations };
+  }
 }
 
 /**
@@ -123,7 +130,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
-    async getInitMutation(obj: any): Promise<ObjectMutationSet> {
+    getInitMutation(obj: any): ObjectMutationSet {
       return {
         mutations: MutationUtil.createMultiFieldMutation(obj)
       };
