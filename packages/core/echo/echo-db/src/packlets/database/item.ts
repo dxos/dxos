@@ -54,7 +54,6 @@ export class Item<M extends Model | null = Model> {
   constructor(
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
-    private readonly _type: ItemType | undefined,
     stateManager: StateManager<NonNullable<M>>,
     private readonly _writeStream?: FeedWriter<DataMessage>,
     parent?: Item<any> | null
@@ -72,7 +71,9 @@ export class Item<M extends Model | null = Model> {
   }
 
   get type(): ItemType | undefined {
-    return this._type;
+    if (this.modelType === 'dxos:model/document') {
+      return (this._stateManager as any)._stateMachine._object.type;
+    }
   }
 
   get modelType(): string {
