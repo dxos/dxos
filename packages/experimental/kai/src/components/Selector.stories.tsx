@@ -8,8 +8,7 @@ import { Selector, SelectorOption } from './Selector';
 import '@dxosTheme';
 
 export default {
-  component: Selector,
-  argTypes: {}
+  component: Selector
 };
 
 const options: SelectorOption[] = [
@@ -35,8 +34,4 @@ const Test = () => {
   );
 };
 
-export const Default = {
-  render: () => {
-    return <Test />;
-  }
-};
+export const Default = () => <Test />;

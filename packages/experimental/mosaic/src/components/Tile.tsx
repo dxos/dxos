@@ -47,7 +47,7 @@ export const DefaultTileContent = <T extends {}>({ item, onDelete }: TileContent
   );
 };
 
-export type TileSlots = {
+export type TileClasses = {
   root?: string;
   selected?: string;
 };
@@ -55,7 +55,7 @@ export type TileSlots = {
 export type TileProps<T extends {}> = {
   item: Item<T>;
   bounds: Bounds;
-  slots?: TileSlots;
+  classes?: TileClasses;
   selected?: boolean;
   Content?: FC<TileContentProps<T>>;
   onClick?: (item: Item<T>) => void;
@@ -68,7 +68,7 @@ export type TileProps<T extends {}> = {
 export const Tile = <T extends {} = {}>({
   item,
   bounds,
-  slots = {},
+  classes = {},
   selected,
   Content = DefaultTileContent,
   onClick,
@@ -91,8 +91,8 @@ export const Tile = <T extends {} = {}>({
         'group',
         'flex flex-col overflow-hidden p-3',
         isDragging && 'opacity-80',
-        slots.root,
-        selected && slots?.selected
+        classes.root,
+        selected && classes?.selected
       )}
       style={style}
       onClick={(event) => {

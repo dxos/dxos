@@ -37,7 +37,7 @@ export const TreeComponent = ({ data }) => {
 // Copyright 2022 Observable, Inc.
 // Released under the ISC license.
 // https://observablehq.com/@d3/radial-tree
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out (to plexus?)
 const Tree = (
   data,
   {

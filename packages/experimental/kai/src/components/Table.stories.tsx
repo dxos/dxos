@@ -13,21 +13,11 @@ import { Contact } from '../proto';
 import { Table } from './Table';
 
 export default {
-  component: Table,
-  argTypes: {}
+  component: Table
 };
 
 const columns: Column<EchoObject>[] = [];
 
 const data: EchoObject[] = [new Contact()];
 
-// TODO(burdon): Implement actual test.
-export const Default = {
-  render: () => {
-    return (
-      <div>
-        <Table<EchoObject> columns={columns} data={data} />
-      </div>
-    );
-  }
-};
+export const Default = () => <Table<EchoObject> columns={columns} data={data} />;

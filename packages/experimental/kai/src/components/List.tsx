@@ -6,24 +6,29 @@ import React, { FC, ReactNode } from 'react';
 
 import { mx } from '@dxos/react-components';
 
-export type ListSlots = {
+export type ListClasses = {
   root?: string;
 };
 
-export type ListProps = { classes?: ListSlots; children?: ReactNode };
+export type ListProps = { classes?: ListClasses; children?: ReactNode };
 
 export const List: FC<ListProps> = ({ classes, children }) => {
   return <ul className={mx('flex flex-col w-full overflow-hidden', classes?.root)}>{children}</ul>;
 };
 
 // TODO(burdon): Inherit from parent.
-export type ListItemSlots = {
+export type ListItemClasses = {
   root?: string;
   hover?: string;
   selected?: string;
 };
 
-export type ListItemProps = { selected?: boolean; classes?: ListItemSlots; children?: ReactNode; onClick?: () => void };
+export type ListItemProps = {
+  selected?: boolean;
+  classes?: ListItemClasses;
+  children?: ReactNode;
+  onClick?: () => void;
+};
 
 export const ListItemButton: FC<ListItemProps> = ({ selected, classes, children, onClick }) => {
   return (
