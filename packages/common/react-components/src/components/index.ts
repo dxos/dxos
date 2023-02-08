@@ -17,6 +17,7 @@ export * from './Input';
 export * from './NavMenu';
 export * from './Popover';
 export * from './QrCode';
+export * from './Table';
 export * from './Tag';
 export * from './Toast';
 export * from './Tooltip';

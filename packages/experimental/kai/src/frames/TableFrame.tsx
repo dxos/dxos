@@ -7,9 +7,9 @@ import { Column } from 'react-table';
 
 import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
-import { Selector, SelectorOption } from '@dxos/react-components';
+import { Table, Selector, SelectorOption } from '@dxos/react-components';
 
-import { Searchbar, Table } from '../components';
+import { Searchbar } from '../components';
 import { useSpace } from '../hooks';
 import { Contact, Organization, Project } from '../proto';
 
