@@ -30,7 +30,6 @@ export interface ModelConstructionOptions {
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined;
   parentId?: ItemID;
 }
 
@@ -107,9 +106,8 @@ export class ItemManager {
   async createItem(
     modelType: ModelType,
     itemId: ItemID = createId(),
-    itemType?: ItemType,
     parentId?: ItemID,
-    initProps?: any // TODO(burdon): Remove/change to array of mutations.
+    initProps?: { type: string; obj: any } // TODO(burdon): Remove/change to array of mutations.
   ): Promise<Item<Model<unknown>>> {
     assert(this._writeStream); // TODO(burdon): Throw ReadOnlyError();
     assert(modelType);
@@ -138,7 +136,6 @@ export class ItemManager {
       object: {
         objectId: itemId,
         genesis: {
-          itemType,
           modelType
         },
         mutations:
@@ -221,7 +218,8 @@ export class ItemManager {
   /**
    * Constructs an item with the appropriate model.
    */
-  constructItem({ itemId, itemType, modelType, parentId, snapshot }: ItemConstructionOptions): Item<any> {
+  @timed(5_000)
+  async constructItem({ itemId, modelType, parentId, snapshot }: ItemConstructionOptions): Promise<Item<any>> {
     assert(itemId);
     assert(modelType);
 
@@ -237,7 +235,7 @@ export class ItemManager {
       snapshot
     });
 
-    const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
+    const item = new Item(this, itemId, modelStateManager, this._writeStream, parent);
     if (parent) {
       this.update.emit(parent);
     }
