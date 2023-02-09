@@ -531,6 +531,7 @@ importers:
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@radix-ui/react-toolbar': ^1.0.1
+      '@radix-ui/react-use-controllable-state': ^1.0.0
       '@types/lodash.throttle': ^4.1.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -557,6 +558,7 @@ importers:
       '@dxos/telemetry': link:../../../common/telemetry
       '@dxos/util': link:../../../common/util
       '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       lodash.throttle: 4.1.1
       url-join: 5.0.0
     devDependencies:
