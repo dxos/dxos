@@ -28,8 +28,6 @@ export interface GraphProps {
   onSelect?: (node: GraphLayoutNode<any>) => void;
 }
 
-console.log('::', defaultGraphStyles);
-
 /**
  * SVG Graph controller.
  * @constructor
