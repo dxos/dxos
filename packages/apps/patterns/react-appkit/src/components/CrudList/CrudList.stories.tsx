@@ -37,22 +37,26 @@ export const Default = {
 
       const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useCrudListKeyboardInteractions(listId);
 
+      const addItem = useCallback(() => {
+        const addedItem = {
+          id: `${listId}--listItem-${itemOrder.length}`,
+          title: nextItemTitle,
+          completed: false
+        };
+        setItems({ ...items, [addedItem.id]: addedItem });
+        setItemOrder([...itemOrder, addedItem.id]);
+        setNextItemTitle('');
+      }, [items, itemOrder, nextItemTitle]);
+
       const onAddItemKeyDown = useCallback(
         (event: KeyboardEvent<HTMLInputElement>) => {
           if (event.key === 'Enter') {
-            const addedItem = {
-              id: `${listId}--listItem-${itemOrder.length}`,
-              title: (event.target as HTMLInputElement).value,
-              completed: false
-            };
-            setItems({ ...items, [addedItem.id]: addedItem });
-            setItemOrder([...itemOrder, addedItem.id]);
-            setNextItemTitle('');
+            addItem();
           } else {
             onListItemInputKeyDown(event);
           }
         },
-        [onListItemInputKeyDown, items, itemOrder]
+        [onListItemInputKeyDown, addItem]
       );
 
       return (
@@ -61,6 +65,7 @@ export const Default = {
           id={listId}
           labelId='excluded'
           completable
+          onClickAdd={addItem}
           itemIdOrder={itemOrder}
           onItemIdOrderChange={(nextOrder: string[]) => {
             setItemOrder(nextOrder);

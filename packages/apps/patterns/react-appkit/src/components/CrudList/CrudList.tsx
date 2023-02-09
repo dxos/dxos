@@ -3,6 +3,7 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import { Plus } from 'phosphor-react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
 import {
@@ -17,7 +18,10 @@ import {
   ListProps,
   InputProps,
   ListItemProps,
-  mx
+  mx,
+  Button,
+  getSize,
+  useTranslation
 } from '@dxos/react-components';
 
 export interface CrudListItemSlots {
@@ -47,6 +51,7 @@ export interface CrudListProps {
   id: string;
   labelId: string;
   completable?: boolean;
+  onClickAdd?: () => void;
   defaultNextItemTitle?: string;
   nextItemTitle?: string;
   onNextItemTitleChange?: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -56,6 +61,16 @@ export interface CrudListProps {
   children?: ReactNode;
   slots?: CrudListSlots;
 }
+
+const focusAndSetCaretPosition = (prevEl: HTMLInputElement, nextEl: HTMLInputElement) => {
+  const pos = prevEl.selectionStart ?? 0;
+  if ('selectionStart' in nextEl) {
+    nextEl.focus();
+    nextEl.setSelectionRange(pos, pos);
+  } else {
+    nextEl.focus();
+  }
+};
 
 export const useCrudListKeyboardInteractions = (hostId: string) => {
   const hostAttrs = { 'data-focus-series-host': hostId };
@@ -73,14 +88,14 @@ export const useCrudListKeyboardInteractions = (hostId: string) => {
         case 'PageDown': {
           if (targetIndex < inputsInScope.length - 1) {
             event.preventDefault();
-            inputsInScope[targetIndex + 1].focus();
+            focusAndSetCaretPosition(event.target as HTMLInputElement, inputsInScope[targetIndex + 1]);
           }
           break;
         }
         case 'PageUp': {
           if (targetIndex > 0) {
             event.preventDefault();
-            inputsInScope[targetIndex - 1].focus();
+            focusAndSetCaretPosition(event.target as HTMLInputElement, inputsInScope[targetIndex - 1]);
           }
           break;
         }
@@ -95,6 +110,7 @@ export const CrudList = ({
   children,
   labelId,
   completable,
+  onClickAdd,
   nextItemTitle,
   defaultNextItemTitle,
   onNextItemTitleChange,
@@ -108,6 +124,7 @@ export const CrudList = ({
     defaultProp: defaultItemIdOrder,
     onChange: onItemIdOrderChange
   });
+  const { t } = useTranslation('appkit');
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -150,7 +167,7 @@ export const CrudList = ({
           slots={{
             input: {
               ...slots.addItem?.input,
-              className: mx('p-1 mbs-1', slots.addItem?.input?.className)
+              className: mx('p-2', slots.addItem?.input?.className)
             },
             root: {
               ...slots.addItem?.root,
@@ -162,7 +179,12 @@ export const CrudList = ({
             }
           }}
         />
-        <ListItemEndcap className='invisible' />
+        <ListItemEndcap>
+          <Button variant='ghost' compact className={getSize(10)} onClick={onClickAdd}>
+            <Plus weight='bold' className={getSize(4)} />
+            <span className='sr-only'>{t('add list item label')}</span>
+          </Button>
+        </ListItemEndcap>
       </div>
     </div>
   );
@@ -206,7 +228,7 @@ export const CrudListItem = forwardRef<HTMLLIElement, CrudListItemProps>(
                 },
                 input: {
                   ...slots.input?.input,
-                  className: mx('p-1 mbs-1', slots.input?.input?.className)
+                  className: mx('p-2', slots.input?.input?.className)
                 },
                 label: {
                   ...slots.input?.label,
