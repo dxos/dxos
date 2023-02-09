@@ -256,6 +256,15 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
   }
 });
 
-export { List, createListScope, useListCollection, ListItem, ListItemHeading, ListItemEndcap, createListItemScope };
+export {
+  List,
+  createListScope,
+  useListCollection,
+  ListItem,
+  ListItemHeading,
+  ListItemEndcap,
+  ListItemDragHandle,
+  createListItemScope
+};
 
 export type { ListProps, ListVariant, ListItemProps };

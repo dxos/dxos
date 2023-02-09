@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useCallback, useState, KeyboardEvent, ComponentPropsWithoutRef } from 'react';
 
 import { useId } from '@dxos/react-components';
 
-import { CrudList, CrudListItem } from './CrudList';
+import { CrudList, CrudListItem, useCrudListKeyboardInteractions } from './CrudList';
 
 export default {
   component: CrudList
@@ -18,7 +18,7 @@ export const Default = {
   render: ({ ...args }) => {
     const CrudListInstance = () => {
       const listId = useId('L');
-      const [title, setTitle] = useState(listId);
+      const [nextItemTitle, setNextItemTitle] = useState('');
       const [items, setItems] = useState<Record<string, CrudListItemData>>(
         [...Array(6)].reduce((acc, _, index) => {
           const item = {
@@ -35,17 +35,42 @@ export const Default = {
         setItems({ ...items, [id]: Object.assign({}, items[id], props) });
       };
 
+      const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useCrudListKeyboardInteractions(listId);
+
+      const onAddItemKeyDown = useCallback(
+        (event: KeyboardEvent<HTMLInputElement>) => {
+          if (event.key === 'Enter') {
+            const addedItem = {
+              id: `${listId}--listItem-${itemOrder.length}`,
+              title: (event.target as HTMLInputElement).value,
+              completed: false
+            };
+            setItems({ ...items, [addedItem.id]: addedItem });
+            setItemOrder([...itemOrder, addedItem.id]);
+            setNextItemTitle('');
+          } else {
+            onListItemInputKeyDown(event);
+          }
+        },
+        [onListItemInputKeyDown, items, itemOrder]
+      );
+
+      console.log('[things]', items, itemOrder);
+
       return (
         <CrudList
           {...args}
           id={listId}
-          title={title}
-          onTitleChange={({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
-            setTitle(value);
-          }}
+          labelId='excluded'
           itemIdOrder={itemOrder}
           onItemIdOrderChange={(nextOrder: string[]) => {
             setItemOrder(nextOrder);
+          }}
+          nextItemTitle={nextItemTitle}
+          onNextItemTitleChange={({ target: { value } }) => setNextItemTitle(value)}
+          slots={{
+            root: hostAttrs as ComponentPropsWithoutRef<'div'>,
+            addItem: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } }
           }}
         >
           {itemOrder.map((id) => {
@@ -53,6 +78,7 @@ export const Default = {
             return (
               <CrudListItem
                 key={id}
+                slots={{ input: { input: { ...itemAttrs, onKeyDown: onListItemInputKeyDown } } }}
                 {...{
                   id,
                   title,
