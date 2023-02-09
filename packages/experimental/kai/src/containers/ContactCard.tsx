@@ -5,11 +5,10 @@ import { Buildings, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { useQuery } from '@dxos/react-client';
+import { useCurrentSpace, useQuery } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
 import { Input } from '../components';
-import { useSpace } from '../hooks';
 import { Contact, Organization } from '../proto';
 
 // TODO(burdon): Custom views:
@@ -19,7 +18,7 @@ import { Contact, Organization } from '../proto';
 
 // TODO(burdon): List events, orgs.
 export const ContactCard: FC<{ contact: Contact }> = ({ contact }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
+  const [space] = useCurrentSpace();
   const organizations = useQuery(space, Organization.filter()).filter((organization) =>
     organization.people.find((member) => member[id] === contact[id])
   );
@@ -27,7 +26,7 @@ export const ContactCard: FC<{ contact: Contact }> = ({ contact }) => {
   const handleEnter = async (text: string) => {
     const organization = new Organization({ name: text });
     organization.people.push(contact);
-    await space.experimental.db.save(organization);
+    await space?.experimental.db.save(organization);
   };
 
   return (

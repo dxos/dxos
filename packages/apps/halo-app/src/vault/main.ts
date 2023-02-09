@@ -16,11 +16,10 @@ import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
-import { osTranslations } from '@dxos/react-ui';
+import { osTranslations, Shell } from '@dxos/react-ui';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 
 import { mobileAndTabletCheck } from '../util';
-import { Shell } from './Shell';
 
 void initializeAppTelemetry('halo-vault', new Config(Defaults()));
 

@@ -8,11 +8,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
-import { withReactor } from '@dxos/react-client';
+import { useCurrentSpace, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { Button } from '../components';
-import { useFileDownload, useIpfsClient, useSpace } from '../hooks';
+import { useFileDownload, useIpfsClient } from '../hooks';
 import { File, Path, Sketch } from '../proto';
 
 const colors = ['#000000', '#B80000', '#DB3E00', '#FCCB00', '#008B02', '#006B76', '#1273DE', '#004DCF', '#5300EB'];
@@ -49,28 +49,28 @@ export const SketchFrame = withReactor(() => {
   const active = useRef(false); // TODO(burdon): Review ref pattern.
   const ipfsClient = useIpfsClient();
 
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const [sketch, setSketch] = useState<Sketch>();
 
   // TODO(burdon): Show list of sketch objects and auto-select/create one if missing.
   useEffect(() => {
     let sketch: Sketch;
-    const result = space.experimental.db.query(Sketch.filter());
-    const objects = result.getObjects();
-    if (objects.length) {
+    const result = space?.experimental.db.query(Sketch.filter());
+    const objects = result?.getObjects();
+    if (objects?.length) {
       sketch = objects[0];
       setSketch(sketch);
     } else {
       sketch = new Sketch();
       setTimeout(async () => {
-        await space.experimental.db.save(sketch);
+        await space?.experimental.db.save(sketch);
         setSketch(sketch);
       });
     }
 
     void handleUpdate(sketch);
 
-    return result.subscribe(() => {
+    return result?.subscribe(() => {
       if (sketch && !active.current) {
         void handleUpdate(sketch);
       }
@@ -127,7 +127,7 @@ export const SketchFrame = withReactor(() => {
     const { cid, path } = await ipfsClient.add(new Blob([svg]));
     await ipfsClient.pin.add(cid);
     const file = new File({ name, cid: path });
-    await space.experimental.db.save(file);
+    await space?.experimental.db.save(file);
   };
 
   // TODO(burdon): Erase mode: eraseMode.

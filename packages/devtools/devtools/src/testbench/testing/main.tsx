@@ -4,13 +4,13 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
 
 import { sleep } from '@dxos/async';
-import { App } from '@dxos/kai';
+import { createRouter } from '@dxos/kai';
 import { log } from '@dxos/log';
 
 import '@dxosTheme';
-
 import '@dxos/kai/style.css';
 
 // TODO(burdon): Document bootstrap sequence.
@@ -56,4 +56,6 @@ waitForDXOS()
     throw err;
   });
 
-createRoot(document.getElementById('root')!).render(<App />);
+const router = createRouter();
+const root = createRoot(document.getElementById('root')!);
+root.render(<RouterProvider router={router} />);

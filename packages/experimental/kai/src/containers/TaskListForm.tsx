@@ -5,9 +5,9 @@
 import React, { FC, useEffect, useState } from 'react';
 
 import { EchoDatabase } from '@dxos/echo-schema';
+import { useCurrentSpace } from '@dxos/react-client';
 
 import { Button } from '../components';
-import { useSpace } from '../hooks';
 import { Task } from '../proto';
 
 /**
@@ -29,25 +29,25 @@ class Transaction {
  * Creates implicit branch (cloned objects) to isolate changes to deps until tx is closed (via save/cancel).
  * Async changes to objects outside of scope are not visible.
  */
-const useTransaction = (db: EchoDatabase): Transaction => {
-  const [tx, setTx] = useState<Transaction>(new Transaction(db));
+const useTransaction = (db?: EchoDatabase): Transaction | undefined => {
+  const [tx, setTx] = useState(db && new Transaction(db));
   useEffect(() => {
-    setTx(new Transaction(db));
-  }, []);
+    setTx(db && new Transaction(db));
+  }, [db]);
 
   return tx;
 };
 
 export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task: currentTask, onClose }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
-  const tx = useTransaction(space.experimental.db);
-  const task = tx.wrap(currentTask); // Projection.
+  const [space] = useCurrentSpace();
+  const tx = useTransaction(space?.experimental.db);
+  const task = tx?.wrap(currentTask); // Projection.
 
   const handleClose = (commit: boolean) => {
     if (commit) {
-      tx.commit();
+      tx?.commit();
     } else {
-      tx.cancel();
+      tx?.cancel();
     }
 
     onClose();

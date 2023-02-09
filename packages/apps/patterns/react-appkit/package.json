@@ -42,7 +42,7 @@
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^6.4.0",
     "storybook-dark-mode": "^1.1.2",
     "vite": "4.0.4"
   },
@@ -50,7 +50,7 @@
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0"
+    "react-router-dom": "^6.4.0"
   },
   "publishConfig": {
     "access": "public"

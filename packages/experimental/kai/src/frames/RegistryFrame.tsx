@@ -6,20 +6,20 @@ import { AppStoreLogo, Robot } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useCurrentSpace } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
+import { createSpacePath } from '../app';
 import { Searchbar } from '../components';
 import {
   BotID,
   FrameID,
-  createSpacePath,
   useActiveBots,
   useActiveFrames,
   useBotDispatch,
   useBots,
   useFrameDispatch,
-  useFrames,
-  useSpace
+  useFrames
 } from '../hooks';
 
 type ExtensionType = 'app' | 'bot';
@@ -57,7 +57,7 @@ const Tile: FC<{
  * https://ifttt.com/explore
  */
 export const RegistryFrame = () => {
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>('app');
 
@@ -75,7 +75,7 @@ export const RegistryFrame = () => {
         const active = !activeFrames.find((frame) => frame.id === id);
         setActiveFrame(id as FrameID, active);
         if (active) {
-          navigate(createSpacePath(space.key, id));
+          navigate(createSpacePath(space?.key, id));
         }
         break;
       }

@@ -42,6 +42,7 @@ export default defineConfig({
     force: true,
     include: [
       '@dxos/config',
+      '@dxos/keys',
       '@dxos/mosaic',
       '@dxos/plexus',
       '@dxos/protocols',

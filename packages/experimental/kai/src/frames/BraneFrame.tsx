@@ -5,11 +5,10 @@
 import { AsteriskSimple, Graph, Tree } from 'phosphor-react';
 import React, { useState } from 'react';
 
-import { useQuery } from '@dxos/react-client';
+import { useCurrentSpace, useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { Button, GraphComponent, PlexusComponent, TreeComponent } from '../components';
-import { useSpace } from '../hooks';
 import { Organization } from '../proto';
 
 enum View {
@@ -40,7 +39,7 @@ const views = [
 ];
 
 export const BraneFrame = () => {
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const organizations = useQuery(space, Organization.filter());
   const [view, setView] = useState(View.PLEX);
 

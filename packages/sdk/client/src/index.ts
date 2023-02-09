@@ -39,7 +39,7 @@ export {
   IFrameProxyRuntime,
   WorkerRuntime,
   WorkerSession,
-  ShellRuntime
+  type ShellRuntime
 } from '@dxos/client-services';
 
 export { ApiError } from '@dxos/errors';

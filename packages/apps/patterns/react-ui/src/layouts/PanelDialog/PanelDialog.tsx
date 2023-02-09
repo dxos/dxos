@@ -25,7 +25,7 @@ export const PanelDialog = ({ titleId, slots = {}, children }: PanelDialogProps)
   return (
     <Dialog.Root defaultOpen {...slots.root}>
       {slots.trigger && <Dialog.Trigger {...slots.trigger} />}
-      <Dialog.Overlay {...slots.overlay} className={mx(defaultOverlay, slots.overlay?.className)}>
+      <Dialog.Overlay {...slots.overlay} className={mx(defaultOverlay, 'z-40', slots.overlay?.className)}>
         <Dialog.Content
           {...slots.content}
           aria-labelledby={titleId}

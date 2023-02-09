@@ -2,47 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect } from 'react';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import React, { PropsWithChildren } from 'react';
 
 import { IFrameClientServicesProxy, ShellLayout } from '@dxos/client';
-import { useClient, useCurrentSpace, useIdentity, useSpaces } from '@dxos/react-client';
+import { useClient, useCurrentSpace } from '@dxos/react-client';
 
-import { Header } from './Header';
-
-const useNavigator = () => {
-  const client = useClient();
-  const identity = useIdentity();
-  const spaces = useSpaces();
-  const [space, setSpace] = useCurrentSpace();
-  const { spaceKey } = useParams();
-  const navigate = useNavigate();
-
-  // Navigate to selected spaces.
-  useEffect(() => {
-    if (!identity) {
-      return;
-    }
-
-    const timeout = setTimeout(async () => {
-      if (spaces.length === 0) {
-        const space = await client.echo.createSpace();
-        setSpace(space);
-        navigate(`/${space.key.toHex()}`);
-      } else if (!space) {
-        setSpace(spaces[0]);
-        navigate(`/${spaces[0].key.toHex()}`);
-      } else if (space && space.key.toHex() !== spaceKey) {
-        navigate(`/${space.key.toHex()}`);
-      }
-    });
-
-    return () => clearTimeout(timeout);
-  }, [identity, space]);
-};
-
-export const Layout = () => {
-  useNavigator();
+export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const client = useClient();
   const [space] = useCurrentSpace();
 
@@ -59,7 +24,7 @@ export const Layout = () => {
         ❯
       </button>
       {/* TODO(wittjosiah): Remove this condition once useQuery supports undefined spaces. */}
-      <section className='todoapp'>{space ? <Outlet context={{ space }} /> : <Header />}</section>
+      <section className='todoapp'>{children}</section>
       <footer className='info'>
         <p>Double-click to edit a todo</p>
         <p>

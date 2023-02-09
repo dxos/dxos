@@ -7,15 +7,14 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { TextObject } from '@dxos/echo-schema';
 import { compile, Editor, Frame } from '@dxos/framebox';
-import { useQuery, withReactor } from '@dxos/react-client';
+import { useCurrentSpace, useQuery, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
 import { Button } from '../components';
 import { EmbeddedFrame } from '../frame-container';
-import { useSpace } from '../hooks';
 
 export const SandboxFrame = withReactor(() => {
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
 
@@ -30,7 +29,7 @@ export const SandboxFrame = withReactor(() => {
           content: new TextObject()
         });
 
-        await space.experimental.db.save(frame);
+        await space?.experimental.db.save(frame);
         frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
         setSelected(frame);
       });

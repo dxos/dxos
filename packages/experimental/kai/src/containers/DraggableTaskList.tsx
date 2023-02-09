@@ -10,10 +10,9 @@ import { DotsSixVertical } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { withReactor } from '@dxos/react-client';
+import { useCurrentSpace, withReactor } from '@dxos/react-client';
 
 import { Button } from '../components';
-import { useSpace } from '../hooks';
 import { Task } from '../proto';
 import { TaskItem, NewTaskItem } from './TaskList';
 
@@ -26,7 +25,7 @@ export const DraggableTaskList: FC<{
   onCreate?: (task: Task) => void;
   onDrag?: (active: number, over: number) => void;
 }> = withReactor(({ tasks, onCreate, onDrag }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
+  const [space] = useCurrentSpace();
   const [newTask, setNewTask] = useState<Task>();
   useEffect(() => {
     setNewTask(new Task());
@@ -34,7 +33,7 @@ export const DraggableTaskList: FC<{
 
   const handleCreateTask = async (task: Task) => {
     if (task.title?.length) {
-      await space.experimental.db.save(task);
+      await space?.experimental.db.save(task);
       onCreate?.(task);
       setNewTask(new Task());
     }

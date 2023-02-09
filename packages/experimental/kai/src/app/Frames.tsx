@@ -11,7 +11,6 @@ import {
   Compass,
   Files,
   Stack,
-  Gear,
   Globe,
   Graph,
   HighlighterCircle,
@@ -24,6 +23,7 @@ import {
 import React, { FC, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useCurrentSpace } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
@@ -44,18 +44,11 @@ import {
   TasksFrame,
   SandboxFrame
 } from '../frames';
-import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
-import { ManageSpacePage } from '../pages';
+import { FrameID, FrameDef, useActiveFrames } from '../hooks';
+import { createSpacePath } from './router';
 
 // prettier-ignore
 export const frames: FrameDef[] = [
-  {
-    id: FrameID.SETTINGS,
-    title: 'Settings',
-    Icon: Gear,
-    Component: ManageSpacePage,
-    system: true
-  },
   {
     id: FrameID.REGISTRY,
     title: 'Registry',
@@ -161,7 +154,7 @@ export const frames: FrameDef[] = [
  */
 export const FrameSelector: FC = () => {
   const navigate = useNavigate();
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const frames = useActiveFrames();
   const { frame: currentFrame } = useParams();
   const { displayState } = useContext(PanelSidebarContext);
@@ -192,7 +185,7 @@ export const FrameSelector: FC = () => {
                   'flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black',
                   id === currentFrame && 'bg-white'
                 )}
-                onClick={() => navigate(createSpacePath(space.key, id))}
+                onClick={() => navigate(createSpacePath(space?.key, id))}
               >
                 <div className='px-2 md:px-0'>
                   <Icon weight='light' className={getSize(6)} />

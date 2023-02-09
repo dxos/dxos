@@ -3,6 +3,7 @@
 //
 
 export * from './Layout';
-export * from './Main';
+export * from './Root';
 export * from './TodoFooter';
 export * from './TodoItem';
+export * from './Todos';

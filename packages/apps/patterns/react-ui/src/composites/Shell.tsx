@@ -4,12 +4,17 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ShellRuntime } from '@dxos/client';
-import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
-import { useSpace } from '@dxos/react-client';
-import { JoinDialog, SpaceDialog } from '@dxos/react-ui';
+import { ShellRuntime, ShellDisplay, ShellLayout } from '@dxos/client';
+import { LayoutRequest } from '@dxos/protocols/proto/dxos/iframe';
+import { useClient, useSpace, useSpaces } from '@dxos/react-client';
+
+import { JoinDialog } from './JoinDialog';
+import { SpaceDialog } from './SpaceDialog';
 
 export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: string }) => {
+  const client = useClient();
+  const spaces = useSpaces();
+
   const [{ layout, invitationCode, spaceKey }, setLayout] = useState<LayoutRequest>({
     layout: runtime.layout,
     invitationCode: runtime.invitationCode,
@@ -28,7 +33,9 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           mode='halo-only'
           initialInvitationCode={invitationCode}
           onDone={async () => {
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
+            // TODO(wittjosiah): Is this app-specific?
+            const space = spaces[0] ?? (await client.echo.createSpace());
+            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: space.key });
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
         />
@@ -45,7 +52,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           onDone={async (space) => {
             // TODO(wittjosiah): If space is newly created the app won't yet know about it.
             //   This is a bug that needs to be fixed when upgrading the space service.
-            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: space?.key });
+            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: space ? space.key : spaceKey });
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
         />
@@ -60,7 +67,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
           onExit={async () => {
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
+            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: runtime.spaceKey });
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
         />

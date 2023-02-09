@@ -9,11 +9,11 @@ import urlJoin from 'url-join';
 
 import { id } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { useConfig, useQuery } from '@dxos/react-client';
+import { useConfig, useCurrentSpace, useQuery } from '@dxos/react-client';
 import { getSize, useMediaQuery } from '@dxos/react-components';
 
 import { Button, List, ListItemButton } from '../components';
-import { useFileDownload, useIpfsClient, useSpace } from '../hooks';
+import { useFileDownload, useIpfsClient } from '../hooks';
 import { File } from '../proto';
 
 const images = ['JPG', 'PNG', 'GIF'];
@@ -51,7 +51,7 @@ const Preview: FC<{ file: File }> = ({ file }) => {
 
 export const FileFrame = () => {
   const config = useConfig();
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const files = useQuery(space, File.filter());
   const ipfsClient = useIpfsClient();
   const [selected, setSelected] = useState<File>();
@@ -68,7 +68,7 @@ export const FileFrame = () => {
     log('uploaded', { cid: path, size });
     await ipfsClient.pin.add(cid); // TODO(burdon): Option.
     const file = new File({ name: uploadedFile.name, cid: path });
-    await space.experimental.db.save(file);
+    await space?.experimental.db.save(file);
     setSelected(file);
   };
 

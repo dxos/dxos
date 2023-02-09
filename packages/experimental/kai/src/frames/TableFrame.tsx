@@ -6,10 +6,9 @@ import React, { useState } from 'react';
 import { Column } from 'react-table';
 
 import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
-import { useQuery } from '@dxos/react-client';
+import { useCurrentSpace, useQuery } from '@dxos/react-client';
 
 import { Searchbar, Selector, SelectorOption, Table } from '../components';
-import { useSpace } from '../hooks';
 import { Contact, Organization, Project } from '../proto';
 
 const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
@@ -51,7 +50,7 @@ const types: ColumnType<any>[] = generateTypes([Organization.type, Project.type,
 const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
 export const TableFrame = () => {
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const [type, setType] = useState<ColumnType<any>>(types[2]);
   const [text, setText] = useState<string>();
   const objects = useQuery(space, type.filter).filter(type.subFilter?.(text) ?? Boolean);

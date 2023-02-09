@@ -5,11 +5,10 @@
 import React, { FC, useState } from 'react';
 
 import { EchoObject } from '@dxos/echo-schema';
-import { useQuery } from '@dxos/react-client';
+import { useCurrentSpace, useQuery } from '@dxos/react-client';
 
 import { Kanban, KanbanColumnDef, Searchbar } from '../components';
 import { ProjectCard } from '../containers';
-import { useSpace } from '../hooks';
 import { Project, tags } from '../proto';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
@@ -18,7 +17,7 @@ const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
 
 // TODO(burdon): Generalize type and field.
 export const KanbanFrame: FC = () => {
-  const space = useSpace();
+  const [space] = useCurrentSpace();
 
   const [text, setText] = useState<string>();
   const handleSearch = (text: string) => {
@@ -42,7 +41,7 @@ export const KanbanFrame: FC = () => {
 
   const handleCreate = async (column: KanbanColumnDef) => {
     const project = new Project({ tag: column.id });
-    await space.experimental.db.save(project);
+    await space?.experimental.db.save(project);
   };
 
   // TODO(burdon): Type and column/field selectors.

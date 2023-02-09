@@ -6,9 +6,9 @@ import { Binoculars, Sword } from 'phosphor-react';
 import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 import { EchoDatabase } from '@dxos/echo-schema';
+import { useCurrentSpace } from '@dxos/react-client';
 
 import { ResearchBot, Bot, ChessBot } from '../bots';
-import { useSpace } from './useSpace';
 
 export enum BotID {
   RESEARCH = 'research-bot',
@@ -78,9 +78,13 @@ export const useActiveBots = (): BotDef[] => {
 };
 
 export const useBotDispatch = () => {
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const [, dispatch] = useContext(BotsContext)!;
   return (id: BotID, state: boolean) => {
+    if (!space) {
+      return;
+    }
+
     dispatch((context: BotsContextType) => {
       const { bots, active } = context;
       if (active.findIndex((active) => active === id) !== -1) {

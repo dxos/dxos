@@ -7,11 +7,11 @@ import React, { FC, KeyboardEvent, useCallback, useEffect, useState } from 'reac
 
 import { base, deleted, id } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
+import { useCurrentSpace, useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
 import { Button, Input, CardRow } from '../components';
-import { useAppState, useSpace } from '../hooks';
+import { useAppState } from '../hooks';
 import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
@@ -21,7 +21,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; fullWidth?:
   readonly = false,
   fullWidth = false
 }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
+  const [space] = useCurrentSpace();
   const tasks = useQuery(space, Task.filter({ completed }));
   const [newTask, setNewTask] = useState<Task>();
   const [saving, setSaving] = useState(false);
@@ -48,13 +48,13 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; fullWidth?:
 
   const handleCreateTask = async (task: Task) => {
     if (task.title.length) {
-      await space.experimental.db.save(task);
+      await space?.experimental.db.save(task);
       setNewTask(new Task());
     }
   };
 
   const handleDeleteTask = async (task: Task) => {
-    await space.experimental.db.delete(task);
+    await space?.experimental.db.delete(task);
   };
 
   const handleSave = () => {

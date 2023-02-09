@@ -4,4 +4,5 @@
 
 export * from './IdentityPopover';
 export * from './JoinDialog';
+export * from './Shell';
 export * from './SpaceDialog';

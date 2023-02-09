@@ -25,7 +25,7 @@ export const PanelAlertDialog = ({ titleId, slots = {}, children }: PanelAlertDi
   return (
     <AlertDialog.Root defaultOpen {...slots.root}>
       {slots.trigger && <AlertDialog.Trigger {...slots.trigger} />}
-      <AlertDialog.Overlay {...slots.overlay} className={mx(defaultOverlay, slots.overlay?.className)}>
+      <AlertDialog.Overlay {...slots.overlay} className={mx(defaultOverlay, 'z-40', slots.overlay?.className)}>
         <AlertDialog.Content
           onEscapeKeyDown={(event) => event.preventDefault()}
           {...slots.content}

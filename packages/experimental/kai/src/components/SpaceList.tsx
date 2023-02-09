@@ -11,7 +11,7 @@ import { getSize, mx } from '@dxos/react-components';
 
 // TODO(burdon): Generic List control.
 export const SpaceList: FC<{
-  value: PublicKey;
+  value?: PublicKey;
   spaces: Space[];
   onSelect: (spaceKey: PublicKey) => void;
   onShare: (spaceKey: PublicKey) => void;
@@ -23,10 +23,10 @@ export const SpaceList: FC<{
           key={space.key.toHex()}
           className={mx(
             'flex p-2 pl-3 pr-4 items-center hover:bg-orange-100',
-            space.key.equals(value) && 'hover:bg-orange-200 bg-orange-200'
+            value && space.key.equals(value) && 'hover:bg-orange-200 bg-orange-200'
           )}
         >
-          <div className={mx('flex mr-3', space.key.equals(value) && 'text-orange-500')}>
+          <div className={mx('flex mr-3', value && space.key.equals(value) && 'text-orange-500')}>
             <Planet className={getSize(6)} />
           </div>
 
@@ -34,7 +34,7 @@ export const SpaceList: FC<{
             {space.key.truncate()}
           </div>
 
-          {space.key.equals(value) && (
+          {value && space.key.equals(value) && (
             <div className='flex cursor-pointer' onClick={() => onShare(space.key)} data-testid='space-settings'>
               <ShareNetwork className={getSize(6)} />
             </div>

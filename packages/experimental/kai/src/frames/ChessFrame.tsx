@@ -9,10 +9,8 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { id } from '@dxos/echo-schema';
-import { useQuery, withReactor } from '@dxos/react-client';
+import { useCurrentSpace, useQuery, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
-
-import { useSpace } from '../hooks';
 
 const smallSize = 300;
 const panelWidth = 160;
@@ -31,11 +29,11 @@ const createChess = (game: Game) => {
 export const ChessFrame: FC = () => {
   const [style] = useState(ChessPieces.RIOHACHA);
   const [game, setGame] = useState<Game | undefined>();
-  const space = useSpace();
+  const [space] = useCurrentSpace();
 
   const handleCreate = async () => {
     const game = new Game();
-    await space.experimental.db.save(game);
+    await space?.experimental.db.save(game);
     handleSelect(game);
   };
 
@@ -118,7 +116,7 @@ const Grid: FC<{ style: ChessPieces; onSelect: (game: Game) => void; onCreate: (
   onSelect,
   onCreate
 }) => {
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (

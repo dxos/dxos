@@ -2,56 +2,62 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Context, createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 
-import { IFrameClientServicesProxy, Space } from '@dxos/client';
+import { IFrameClientServicesProxy, PublicKey, Space } from '@dxos/client';
+import { raise } from '@dxos/debug';
 
 import { useClient } from '../client';
 import { useSpaces } from './useSpaces';
 
 export type SpaceContextProps = {
-  space?: Space;
-  setSpace: (space?: Space) => void;
+  spaceKey?: PublicKey;
+  setSpaceKey: (spaceKey?: PublicKey) => void;
 };
 
-export const SpaceContext: Context<SpaceContextProps> = createContext<SpaceContextProps>({ setSpace: () => {} });
+export const SpaceContext: Context<SpaceContextProps> = createContext<SpaceContextProps>({ setSpaceKey: () => {} });
 
-export const SpaceProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
+export type SpaceProviderProps = PropsWithChildren<{
+  initialSpaceKey?: PublicKey | ((spaces: Space[]) => PublicKey);
+  onSpaceChange?: (spaceKey?: PublicKey) => void;
+}>;
+
+export const SpaceProvider = ({ initialSpaceKey, onSpaceChange, children }: SpaceProviderProps) => {
   const client = useClient();
   const spaces = useSpaces();
-  const [space, setSpace] = useState<Space | undefined>(() => {
-    if (client.services instanceof IFrameClientServicesProxy) {
-      const spaceKey = client.services.spaceKey;
-      return spaces.find((space) => spaceKey && space.key.equals(spaceKey));
+  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(() => {
+    if (typeof initialSpaceKey === 'function') {
+      return initialSpaceKey(spaces);
     }
+
+    return initialSpaceKey ?? spaces[0]?.key;
   });
+
+  useEffect(() => {
+    onSpaceChange?.(spaceKey);
+
+    if (client.services instanceof IFrameClientServicesProxy) {
+      void client.services.setCurrentSpace(spaceKey);
+    }
+  }, [spaceKey]);
 
   useEffect(() => {
     if (client.services instanceof IFrameClientServicesProxy) {
       return client.services.contextUpdate?.on(({ spaceKey }) => {
-        const space = spaces.find((space) => spaceKey && space.key.equals(spaceKey));
-        setSpace(space);
+        setSpaceKey(spaceKey);
       });
     }
   }, [client]);
 
-  return <SpaceContext.Provider value={{ space, setSpace }}>{children}</SpaceContext.Provider>;
+  return <SpaceContext.Provider value={{ spaceKey, setSpaceKey }}>{children}</SpaceContext.Provider>;
 };
 
 /**
  * Uses space state from the space context.
  */
-export const useCurrentSpace = (): [Space | undefined, (space?: Space) => void] => {
-  const client = useClient();
-  const { space, setSpace: naturalSetSpace } = useContext(SpaceContext);
-
-  const setSpace = (space?: Space) => {
-    if (client.services instanceof IFrameClientServicesProxy) {
-      client.services.setCurrentSpace(space?.key);
-    }
-
-    naturalSetSpace(space);
-  };
-
-  return [space, setSpace];
+export const useCurrentSpace = (): [Space | undefined, (spaceKey?: PublicKey) => void] => {
+  const { spaceKey, setSpaceKey } = useContext(SpaceContext) ?? raise(new Error('No space context'));
+  const spaces = useSpaces();
+  const space = useMemo(() => spaces.find((space) => spaceKey?.equals(space.key)), [spaceKey]);
+  return [space, setSpaceKey];
 };

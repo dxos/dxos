@@ -6,10 +6,9 @@ import { Archive, CheckSquare, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { useQuery, withReactor } from '@dxos/react-client';
+import { useCurrentSpace, useQuery, withReactor } from '@dxos/react-client';
 
 import { TreeView, TreeViewItem } from '../components';
-import { useSpace } from '../hooks';
 import { Project } from '../proto';
 
 export const mapProjectToItem = (project: Project): TreeViewItem => ({
@@ -33,7 +32,7 @@ export const mapProjectToItem = (project: Project): TreeViewItem => ({
 });
 
 export const ProjectHierarchy: FC<{ header?: boolean }> = withReactor(({ header = false }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
+  const [space] = useCurrentSpace();
   // TODO(burdon): useQuery should not return undefined.
   // TODO(burdon): Need subscription for children.
   const projects = useQuery(space, Project.filter()) ?? [];

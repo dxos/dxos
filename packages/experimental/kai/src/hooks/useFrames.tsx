@@ -6,7 +6,6 @@ import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction,
 
 export enum FrameID {
   REGISTRY = 'registry',
-  SETTINGS = 'settings',
   STACK = 'stack',
   TABLE = 'tables',
   KANBAN = 'kanban',
@@ -27,7 +26,6 @@ export const defaultFrameId = FrameID.STACK;
 
 // prettier-ignore
 const activeFrames = [
-  FrameID.SETTINGS,
   FrameID.REGISTRY,
   FrameID.STACK,
   FrameID.TABLE,

@@ -11,7 +11,7 @@ import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { getAsyncValue, Provider } from '@dxos/util';
 
 import { clientServiceBundle, ClientServices, ClientServicesHost } from '../services';
-import { ShellRuntime } from './shell-runtime';
+import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 
@@ -40,7 +40,7 @@ export class IFrameHostRuntime {
   private _config!: Config;
   private _clientServices!: ClientServicesHost;
   private _clientRpc!: ProtoRpcPeer<ClientServices>;
-  private _shellRuntime?: ShellRuntime;
+  private _shellRuntime?: ShellRuntimeImpl;
 
   @logInfo
   public origin?: string;
@@ -65,7 +65,7 @@ export class IFrameHostRuntime {
     };
 
     if (this._shellPort) {
-      this._shellRuntime = new ShellRuntime(this._shellPort);
+      this._shellRuntime = new ShellRuntimeImpl(this._shellPort);
     }
   }
 
@@ -73,7 +73,7 @@ export class IFrameHostRuntime {
     return this._clientServices;
   }
 
-  get shell() {
+  get shell(): ShellRuntime | undefined {
     return this._shellRuntime;
   }
 

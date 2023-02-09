@@ -19,7 +19,7 @@ export namespace Features {
       '@dxos/react-client': depVersion,
       react: '^18.2.0',
       'react-dom': '^18.2.0',
-      // 'react-router-dom': '^6.3.0'
+      // 'react-router-dom': '^6.4.0'
     },
     devDependencies: {
       '@types/react': '^18.0.21',

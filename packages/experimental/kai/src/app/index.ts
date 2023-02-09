@@ -3,7 +3,9 @@
 //
 
 export * from './Actions';
-export * from './App';
 export * from './AppBar';
 export * from './Frames';
+export * from './Root';
+export * from './router';
+export * from './ShellProvider';
 export * from './Sidebar';
