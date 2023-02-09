@@ -14,8 +14,6 @@ import {
 } from '@dxos/react-client';
 
 const Component = () => {
-  // get a client instance
-  const client = useClient();
   // get the user to log in before a space can be obtained
   const identity = useIdentity({ login: true });
   // create or use the first space

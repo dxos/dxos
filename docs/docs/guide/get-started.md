@@ -51,51 +51,29 @@ To use ECHO:
 1. Create a [Client](echo/typescript/) using [`<ClientProvider />`](echo/react) in `react`
 2. Establish [identity](halo)
 3. Create or join a [space](echo/react/spaces)
+4. Perform reads and writes
 
-```ts
-import { ClientProvider } from '@dxos/react-client';
-
-
-```
-
-Now you can manipulate items in the space and they will replicate with all members of the space in a peer-to-peer fashion.
-
-```ts file=./echo/snippets/write-items.ts#L5-
-import { Client, DocumentModel } from '@dxos/client';
-
-const client = new Client();
-
-// decide on a type for your items
-const type = 'yourdomain:type/some-type-identifier';
-
-// get a list of all spaces
-const { value: spaces } = client.echo.querySpaces();
-
-// create a regular DocumentModel item
-const item = await spaces[0].database.createItem({
-  type,
-  model: DocumentModel
-});
-
-// set a property value
-item.model.set('someKey', 'someValue');
-
-// query items
-const items = spaces[0].database.select({ type });
-```
-
-### React usage
-
-Use `ClientProvider` and `useClient` with React:
-
-```tsx file=./echo/snippets/create-client-react.tsx#L5-
+```tsx file=./echo/react/snippets/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClientProvider, useClient } from '@dxos/react-client';
+import {
+  ClientProvider,
+  useClient,
+  useIdentity,
+  useOrCreateFirstSpace,
+  useQuery,
+  id
+} from '@dxos/react-client';
 
 const Component = () => {
-  const client = useClient();
-  return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
+  // get the user to log in before a space can be obtained
+  const identity = useIdentity({ login: true });
+  // create or use the first space
+  const space = useOrCreateFirstSpace();
+  // grab everything in the space
+  const objects = useQuery(space, {});
+  // show the id of the first object returned
+  return <>{objects?.[0]?.[id]}</>;
 };
 
 const App = () => (
@@ -105,9 +83,16 @@ const App = () => (
 );
 
 createRoot(document.body).render(<App />);
+
 ```
 
-Read more:
+Now you can manipulate [objects](./glossary#object) in the space and they will replicate with all members of the space in a peer-to-peer fashion.
+
+Reading objects is as simple as `space.query()` or `useQuery()` in `react`.
+
+The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
+
+Next steps:
 
 - [ECHO configuration](echo/configuration)
 - [ECHO with React](echo/react)
@@ -130,7 +115,7 @@ sudo kube start # start the service in the background
 kube status # verify it's running
 ```
 
-**Once KUBE is running, you're ready to deploy to it.**
+Once KUBE is running, you're ready to deploy to it. 🚀
 
 ## Deploying your app to a KUBE
 
@@ -156,16 +141,17 @@ Your app will now be accessible in a browser `http://<app-name>.localhost`.
 
 If you started with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost).
 
-**Your app will now always be available on your machine until it or KUBE is stopped.**
+::: warning
+Your app will now always be available on your machine until it or KUBE is stopped.
+:::
 
-:::note
-Coming soon:
+You can also ask KUBE to expose the app to the world wide web so you can share the URL with friends. Simply set `tunnel: true` in `dx.yml` and redeploy. Read more about KUBE [`tunneling`](./kube/tunneling).
 
-- `tunnelling`: ability to expose apps on your KUBE to the public internet
-- `console`: a management console for the apps running on your KUBE
+:::note Coming soon
+- `console` - a management console for the apps running on your KUBE
   :::
 
 Read more:
 
 - [`dx.yml` file schema](kube/dx-yml-file)
-- DXOS [templates](cli/templates) and [sample](samples).
+- DXOS [templates](cli/templates) and [samples](samples).
