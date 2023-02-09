@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { DocumentModel } from '@dxos/document-model';
 import { ModelFactory } from '@dxos/model-factory';
-import { describe, test, afterTest } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { createMemoryDatabase } from '../testing';
 import { Schema, TYPE_SCHEMA } from './schema';
@@ -76,20 +76,20 @@ describe.skip('Schema', () => {
       required: true
     };
     await schema.addField(firstField);
-  //   const item = await database.createItem({
-  //     model: DocumentModel,
-  //     type: schema.name
-  //   });
-  //   expect(schema.validate(ite
-  // m.model)).toBeFalsy();
+    //   const item = await database.createItem({
+    //     model: DocumentModel,
+    //     type: schema.name
+    //   });
+    //   expect(schema.validate(ite
+    // m.model)).toBeFalsy();
 
-  //   firstField.required = false;
-  //   await schema.editField(key, firstField);
-  //   expect(schema.validate(item.model)).toBeTruthy();
+    //   firstField.required = false;
+    //   await schema.editField(key, firstField);
+    //   expect(schema.validate(item.model)).toBeTruthy();
 
-  //   firstField.required = true;
-  //   await schema.editField(key, firstField);
-  //   await item.model.set(key, 'Test');
-  //   expect(schema.validate(item.model)).toBeTruthy();
+    //   firstField.required = true;
+    //   await schema.editField(key, firstField);
+    //   await item.model.set(key, 'Test');
+    //   expect(schema.validate(item.model)).toBeTruthy();
   });
 });

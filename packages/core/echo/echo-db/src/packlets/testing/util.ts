@@ -53,13 +53,13 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   const spaceKey = PublicKey.random();
   dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
-  const backend = new DatabaseBackendProxy(dataService, spaceKey)
+  const backend = new DatabaseBackendProxy(dataService, spaceKey);
   const itemManager = new ItemManager(modelFactory, PublicKey.random(), backend.getWriteStream());
   await backend.open(itemManager, new ModelFactory().registerModel(DocumentModel));
   return {
     itemManager,
     backend
-  }
+  };
 };
 
 export const testLocalDatabase = async (
