@@ -1376,6 +1376,10 @@ importers:
 
   packages/common/react-components:
     specifiers:
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
       '@dxos/node-std': workspace:*
       '@fontsource/fira-code': ^4.5.12
       '@fontsource/roboto-flex': ^4.5.2
@@ -1383,13 +1387,19 @@ importers:
       '@headlessui/react': ^1.7.3
       '@radix-ui/react-alert-dialog': ^1.0.2
       '@radix-ui/react-avatar': ^1.0.1
+      '@radix-ui/react-checkbox': ^1.0.1
+      '@radix-ui/react-collection': ^1.0.1
+      '@radix-ui/react-compose-refs': ^1.0.0
+      '@radix-ui/react-context': ^1.0.0
       '@radix-ui/react-dialog': ^1.0.0
       '@radix-ui/react-navigation-menu': ^1.1.1
       '@radix-ui/react-popover': ^1.0.2
       '@radix-ui/react-portal': ^1.0.1
+      '@radix-ui/react-primitive': ^1.0.1
       '@radix-ui/react-toast': ^1.1.1
       '@radix-ui/react-toolbar': ^1.0.1
       '@radix-ui/react-tooltip': ^1.0.2
+      '@radix-ui/react-use-controllable-state': ^1.0.0
       '@tailwindcss/forms': ^0.5.3
       '@types/lodash.merge': ^4.6.6
       '@types/react': ^18.0.21
@@ -1416,19 +1426,29 @@ importers:
       tailwindcss-radix: ^2.6.0
       vite: 4.0.4
     dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@fontsource/fira-code': 4.5.12
       '@fontsource/roboto-flex': 4.5.2
       '@fontsource/space-grotesk': 4.5.10
       '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-alert-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-avatar': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-checkbox': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-collection': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-popover': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-portal': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-toast': 1.1.2_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tooltip': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
       alea: 1.0.1
       autoprefixer: 10.4.12_postcss@8.4.18
@@ -10096,6 +10116,25 @@ packages:
       '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-use-callback-ref': 1.0.0_react@18.2.0
       '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@radix-ui/react-checkbox/1.0.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-TisH0B8hWmYP3ONRduYCyN04rR9yLPIw/Rwyn1RoC1suSoGCa8Wn+YPdSSSarSszeIbcg3p2lBkDp2XXit4sZw==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.19.4
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-presence': 1.0.0_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      '@radix-ui/react-use-previous': 1.0.0_react@18.2.0
+      '@radix-ui/react-use-size': 1.0.0_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     dev: false
@@ -27967,9 +28006,9 @@ packages:
     resolution: {integrity: sha512-4sITrrzEbPcr0aNV28QyOmgn6C9yKiF8k92jn4buYAK8wmA5xo1qL3II5/gT1r7wxbXBflSduZ2K3FbtOrtGkA==}
     engines: {node: '>=10.0'}
     dependencies:
+      JSONStream: 1.3.5
       clone-deep: 4.0.1
       download-stats: 0.3.4
-      JSONStream: 1.3.5
       moment: 2.29.4
       node-fetch: 2.6.7
       paged-request: 2.0.2
