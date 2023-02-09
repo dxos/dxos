@@ -87,6 +87,9 @@ export class Item<M extends Model | null = Model> {
     return this._stateManager.model.modelMeta;
   }
 
+  /**
+   * @deprecated
+   */
   get model(): M {
     if (!this._stateManager.initialized) {
       return null as any;
