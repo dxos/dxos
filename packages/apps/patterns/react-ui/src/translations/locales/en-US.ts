@@ -18,6 +18,7 @@ export const os = {
   'continue label': 'Continue',
   'back label': 'Back',
   'next label': 'Next',
+  'close label': 'Close',
   'auth choices label': 'Choose an identity',
   'create identity label': 'Create an identity',
   'create identity description': 'Create a new identity.',

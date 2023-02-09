@@ -5,7 +5,7 @@
 import { CaretLeft, CaretRight, Intersect, PlusCircle, UserPlus } from 'phosphor-react';
 import React, { cloneElement, useReducer } from 'react';
 
-import { Space } from '@dxos/client';
+import { Space, SpaceMember } from '@dxos/client';
 import { useClient, useSpaceInvitations, useSpaces } from '@dxos/react-client';
 import { Button, getSize, mx, Tooltip, useTranslation } from '@dxos/react-components';
 
@@ -18,6 +18,7 @@ export type SpacePanelProps = {
   initialState?: SpaceView;
   createInvitationUrl: (invitationCode: string) => string;
   onClickJoinSpace?: () => void;
+  onClickMember?: (member: SpaceMember) => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
   onDone?: (result: Space | null) => void;
 };
@@ -31,6 +32,7 @@ export type SpaceState = {
 const CurrentSpaceView = ({
   space,
   createInvitationUrl,
+  onClickMember,
   onShowAll,
   titleId
 }: { onShowAll: () => void } & SpacePanelProps) => {
@@ -50,6 +52,7 @@ const CurrentSpaceView = ({
             <CaretLeft className={getSize(4)} weight='bold' />
           </Button>
         </Tooltip>
+        {/* TODO(wittjosiah): Label this as the space panel. */}
         <h2 id={titleId} className={mx('grow font-system-medium', !name && 'font-mono')}>
           {name ?? space.key.truncate()}
         </h2>
@@ -70,7 +73,7 @@ const CurrentSpaceView = ({
           <UserPlus className={getSize(4)} weight='bold' />
         </Button>
         <PanelSeparator />
-        <SpaceMemberListContainer spaceKey={space.key} includeSelf />
+        <SpaceMemberListContainer spaceKey={space.key} includeSelf onSelect={onClickMember} />
       </div>
     </div>
   );
@@ -108,7 +111,7 @@ const SpaceListView = ({
         <ul className='flex flex-col gap-2'>
           {spaces.map((space) => {
             const key = space.key.toHex();
-            const listItem = <SpaceListItem key={key} space={space} onSelect={() => onDone?.(space)} />;
+            const listItem = <SpaceListItem key={key} space={space} onClick={() => onDone?.(space)} />;
             return doneActionParent ? cloneElement(doneActionParent, { key }, listItem) : listItem;
           })}
         </ul>
