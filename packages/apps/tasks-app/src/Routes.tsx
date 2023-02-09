@@ -18,7 +18,7 @@ export const Routes = () => {
   const identity = useIdentity();
   const DX_VAULT = client.config.get('runtime.app.env.DX_VAULT');
 
-  // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
+  // TODO(wittjosiah): Settings to disable telemetry, sync from HALO ?
   useTelemetry({ namespace });
 
   const routes = useRoutes([

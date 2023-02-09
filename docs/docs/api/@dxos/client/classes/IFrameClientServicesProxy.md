@@ -1,11 +1,11 @@
 # Class `IFrameClientServicesProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/client/iframe-service-proxy.ts:23](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L23)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/client/iframe-service-proxy.ts:24](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L24)</sub>
 
 
 Proxy to host client service via iframe.
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L28)
+### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L29)
 
 
 Returns: <code>[IFrameClientServicesProxy](/api/@dxos/client/classes/IFrameClientServicesProxy)</code>

@@ -62,12 +62,16 @@ export class File<D = string, Meta extends Record<string, any> = {}> {
     this.allowOverwrite = typeof overwrite !== 'undefined' ? !!overwrite : true;
   }
 
+  contentSize(): string {
+    return typeof this.content === 'string' ? ' [' + kib(this.content?.length ?? 0) + ']' : '';
+  }
+
   shortDescription(cwd?: string) {
     const formattedDir = cwd ? path.relative(cwd, this.dir) : this.dir;
     const formattedFrom = this.isCopy() ? (cwd ? path.relative(cwd, this.copyFrom!) : this.copyFrom) : '';
-    return `${path.join(ellipsis(formattedDir), `${this.name}${this.ext}`)}${
-      typeof this.content === 'string' ? ' [' + kib(this.content?.length ?? 0) + ']' : ''
-    }${this.isCopy() ? ` copy from ${formattedFrom}` : ''}`;
+    return `${path.join(ellipsis(formattedDir), `${this.name}${this.ext}`)}${this.contentSize()}${
+      this.isCopy() ? ` copy from ${formattedFrom}` : ''
+    }`;
   }
 
   clone() {
@@ -138,8 +142,6 @@ export class File<D = string, Meta extends Record<string, any> = {}> {
           }
         }
         await mkdirp(path.dirname(this.path));
-        // console.log(this.path);
-        // console.log(chalk.gray(serialized));
         await fs.writeFile(this.path, serialized);
         return this;
       }

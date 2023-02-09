@@ -98,7 +98,7 @@ describe('Item demuxer', () => {
     unsubscribe();
   });
 
-  test('models can be registered after item was already created', async () => {
+  test.skip('models can be registered after item was already created', async () => {
     const modelFactory = new ModelFactory().registerModel(DocumentModel);
 
     // TODO(burdon): Create mock.

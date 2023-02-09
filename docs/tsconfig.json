@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../packages/apps/patterns/react-appkit"
+    },
+    {
       "path": "../packages/common/async"
     },
     {

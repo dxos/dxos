@@ -55,7 +55,7 @@ export class Database {
   // prettier-ignore
   constructor(
     private readonly _modelFactory: ModelFactory,
-    private readonly _backend: DatabaseBackend,
+    public readonly _backend: DatabaseBackend,
     memberKey: PublicKey
   ) {
     this._itemManager = new ItemManager(this._modelFactory, memberKey, this._backend.getWriteStream());

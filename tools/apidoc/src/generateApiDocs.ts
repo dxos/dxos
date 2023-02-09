@@ -24,5 +24,5 @@ export const generateApiDocs = async (config: Config) => {
     },
     moduleLoaderFunction: (p: string) => import(p)
   });
-  (await Promise.all(files.map((f) => f.save()))).map((f) => console.log('wrote', f?.shortDescription()));
+  void files.save();
 };
