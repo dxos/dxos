@@ -21,7 +21,7 @@ describe('Spaces/invitations', () => {
 
     {
       const space = await client.echo.createSpace();
-      const item = await space.database.createItem({ model: DocumentModel });
+      const item = await space.internal.db._itemManager.createItem(DocumentModel.meta.type, 'test');
       await item.model.set('title', 'testing');
       expect(item.model.get('title')).to.eq('testing');
     }
