@@ -17,7 +17,10 @@
   ],
   "references": [
     {
-      "path": "../../common/esbuild-plugins"
+      "path": "../../common/react-components"
+    },
+    {
+      "path": "../client-testing"
     },
     {
       "path": "../gem-core"

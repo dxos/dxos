@@ -10,16 +10,16 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing/index.cjs": "./dist/lib/browser/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
+    "testing.d.ts",
+    "testing.js",
     "dist",
     "src"
   ],
-  "scripts": {
-    "book": "esbuild-server book"
-  },
   "dependencies": {
     "@dxos/gem-core": "workspace:*",
     "@emotion/css": "^11.7.1",
@@ -34,12 +34,13 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/esbuild-book-knobs": "~2.28.3",
-    "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~2.29.0",
+    "@dxos/client-testing": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@types/d3": "^7.1.0",
     "@types/faker": "^5.5.9",
-    "@types/lodash": "^4.14.182",
-    "faker": "^5.5.3"
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "faker": "^5.5.3",
+    "postcss": "^8.4.17"
   }
 }
