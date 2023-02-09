@@ -4,7 +4,6 @@
 
 import faker from 'faker';
 import React, { useMemo, useState } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
 
 import { range } from '@dxos/util';
 
@@ -34,7 +33,6 @@ faker.seed(100);
 const num = 8;
 
 const Test = () => {
-  const { ref: containerRef } = useResizeDetector();
   const layout = useMemo(() => new GridLayout({ range: { x: 3, y: 2 } }), []);
   const [items, setItems] = useState<Item[]>(() => {
     return range(num).map(() => {

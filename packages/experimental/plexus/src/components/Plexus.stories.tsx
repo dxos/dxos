@@ -114,9 +114,9 @@ const Test = () => {
 
   const node = history.length ? model.getNode(history[index]) : undefined;
 
-  const slots = 0
-    ? {}
-    : {
+  const dark = true;
+  const slots = dark
+    ? {
         grid: {
           className: '[&>*]:stroke-slate-700 [&>*]:stroke-[1px] [&>*]:opacity-40'
         },
@@ -150,7 +150,8 @@ const Test = () => {
         },
         panel: 'border-slate-500 bg-slate-800 text-slate-400',
         root: 'bg-slate-800'
-      };
+      }
+    : {};
 
   // https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
   useEffect(() => {

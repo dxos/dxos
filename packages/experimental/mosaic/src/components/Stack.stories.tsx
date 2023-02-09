@@ -16,7 +16,7 @@ faker.seed(100);
 const num = 4;
 
 const Test = () => {
-  const [items, setItems] = useState<Item[]>(() => {
+  const [items] = useState<Item[]>(() => {
     return range(num).map(() => {
       return createItem();
     });
