@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC } from 'react';
 
-import { SPACE_ITEM_TYPE, Space } from '@dxos/client';
+import { Space } from '@dxos/client';
+import { todo } from '@dxos/debug';
 
 import { List } from '../util';
-import { todo } from '@dxos/debug';
 
 // TODO(burdon): Move into react-client.
 const useTypes = (space?: Space) => {
@@ -21,7 +21,7 @@ const useTypes = (space?: Space) => {
   // }, [items]);
 
   // return Array.from(types);
-  return todo() as any
+  return todo() as any;
 };
 
 export const ItemTypeList: FC<{

@@ -22,7 +22,7 @@ export const DragAndDropDebugPanel = ({ order, space }: DragAndDropDebugPanelPro
     }
     // const [item] = space?.select({ id: key }).exec().entities ?? [];
     // return truncateKey(key, 5) + ' - ' + item?.model.get('title').substring(0, 5);
-    return todo() as any
+    return todo() as any;
   };
 
   const reduceKeyLength = (order: { [key: string]: string }) =>

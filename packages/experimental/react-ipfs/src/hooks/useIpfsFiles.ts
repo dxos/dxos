@@ -22,7 +22,7 @@ export type IPFSFile = {
 export const useIpfsFiles = (space: Space | undefined, type: string) => {
   // TODO(burdon): Schema definitions for types?
   // TODO(burdon): Use reducer to do mapping?
-  const items = [] as any //useSelection(space?.select().filter({ type }));
+  const items = [] as any; // useSelection(space?.select().filter({ type }));
 
   const files: IPFSFile[] =
     useMemo(

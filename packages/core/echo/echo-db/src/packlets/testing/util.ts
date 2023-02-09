@@ -55,16 +55,22 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   return database;
 };
 
-export const testLocalDatabase = async (create: DataPipelineControllerImpl, check: DataPipelineControllerImpl = create) => {
+export const testLocalDatabase = async (
+  create: DataPipelineControllerImpl,
+  check: DataPipelineControllerImpl = create
+) => {
   const objectId = PublicKey.random().toHex();
   await create.databaseBackend!.getWriteStream()?.write({
     object: {
       objectId,
       genesis: {
-        modelType: DocumentModel.meta.type,
+        modelType: DocumentModel.meta.type
       }
     }
-  })
+  });
 
-  await asyncTimeout(check._itemManager.update.waitForCondition(() => check._itemManager.entities.has(objectId)), 500);
-}
+  await asyncTimeout(
+    check._itemManager.update.waitForCondition(() => check._itemManager.entities.has(objectId)),
+    500
+  );
+};

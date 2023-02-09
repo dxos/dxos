@@ -146,7 +146,7 @@ export class SpaceProxy implements Space {
 
     this._internal = {
       db: backend
-    }
+    };
 
     databaseRouter.register(this.key, this._experimental.db);
   }

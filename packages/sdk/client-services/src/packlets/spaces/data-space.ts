@@ -2,16 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
-  Database,
   DataPipelineControllerImpl,
-  ISpace,
   MetadataStore,
   Space,
   SnapshotManager,

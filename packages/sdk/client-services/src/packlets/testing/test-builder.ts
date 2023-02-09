@@ -2,18 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
-import { DatabaseBackendHost, DataPipelineControllerImpl, ISpace, MetadataStore, SigningContext, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-db';
+import {
+  DataPipelineControllerImpl,
+  MetadataStore,
+  SigningContext,
+  SnapshotStore,
+  SpaceManager,
+  valueEncoding
+} from '@dxos/echo-db';
+import { testLocalDatabase } from '@dxos/echo-db/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
-import { testLocalDatabase } from '@dxos/echo-db/testing';
 
 import { createDefaultModelFactory, ClientServicesHost, ServiceContext } from '../services';
 
@@ -69,8 +73,8 @@ export const createIdentity = async (peer: ServiceContext) => {
 // TODO(burdon): Remove @dxos/client-testing.
 // TODO(burdon): Create builder and make configurable.
 export const syncItems = async (db1: DataPipelineControllerImpl, db2: DataPipelineControllerImpl) => {
-  await testLocalDatabase(db1, db2)
-  await testLocalDatabase(db2, db1)
+  await testLocalDatabase(db1, db2);
+  await testLocalDatabase(db2, db1);
 };
 
 export class TestBuilder {

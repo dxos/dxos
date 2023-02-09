@@ -56,7 +56,6 @@ export const App = ({ space, onInvite, onExport }: AppProps) => {
   const handleCreateItem = (type?: string, title?: string, parentId?: ItemID) => {
     if (!type) {
       void builder?.createRandomItem();
-      return;
     }
 
     // void space.database.createItem({

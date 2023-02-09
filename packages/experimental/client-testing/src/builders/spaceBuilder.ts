@@ -5,9 +5,9 @@
 import faker from 'faker';
 
 import { Item, DocumentModel, Space } from '@dxos/client';
-
-import { NumberRange, capitalize, getNumber } from '../util';
 import { todo } from '@dxos/debug';
+
+import { NumberRange, getNumber } from '../util';
 
 export enum TestType {
   Org = 'example:type/org',
@@ -105,7 +105,7 @@ export class SpaceBuilder {
   }
 
   async createOrgs(n: NumberRange = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
-    todo()
+    todo();
     // return await Promise.all(
     //   Array.from({ length: getNumber(n) }).map(async () => {
     //     const org = await this.createOrg();
@@ -116,7 +116,7 @@ export class SpaceBuilder {
   }
 
   async createOrg() {
-    todo()
+    todo();
     // return this._space.database.createItem({
     //   model: DocumentModel,
     //   type: TestType.Org,
@@ -128,7 +128,7 @@ export class SpaceBuilder {
   }
 
   async createPerson(org: Item<DocumentModel>) {
-    todo()
+    todo();
     // return this._space.database.createItem({
     //   model: DocumentModel,
     //   type: TestType.Person,
@@ -141,7 +141,7 @@ export class SpaceBuilder {
   }
 
   async createProject(org: Item<DocumentModel>): Promise<any> {
-    todo()
+    todo();
     // return this._space.database.createItem({
     //   model: DocumentModel,
     //   type: TestType.Project,
@@ -154,7 +154,7 @@ export class SpaceBuilder {
   }
 
   async createTask(project: Item<DocumentModel>) {
-    todo()
+    todo();
     // return this._space.database.createItem({
     //   model: DocumentModel,
     //   type: TestType.Task,
@@ -195,8 +195,6 @@ export class SpaceBuilder {
           break;
         }
       }
-
-      return;
     }
 
     // if (Math.random() < 0.4) {

@@ -32,7 +32,7 @@ export const sortItems = (a: Item<DocumentModel>, b: Item<DocumentModel>) => {
  * Filter items.
  */
 export const useQuery = (space?: Space, query?: string): Item<DocumentModel>[] => {
-  const text = query?.toLowerCase();
+  // const text = query?.toLowerCase();
   // const items =
   //   useSelection(
   //     space?.select().filter((item) => {

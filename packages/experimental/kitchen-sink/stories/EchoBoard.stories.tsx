@@ -5,12 +5,8 @@
 import faker from 'faker';
 import React from 'react';
 
-import { ItemID } from '@dxos/protocols';
 import { ClientProvider } from '@dxos/react-client';
-import { ProfileInitializer, itemAdapter, useTestSpace } from '@dxos/react-client-testing';
-import { FullScreen } from '@dxos/react-components-deprecated';
-
-import { EchoBoard } from '../src';
+import { ProfileInitializer } from '@dxos/react-client-testing';
 
 export default {
   title: 'KitchenSink/EchoBoard'

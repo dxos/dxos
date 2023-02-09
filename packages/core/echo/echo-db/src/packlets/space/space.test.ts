@@ -6,7 +6,6 @@ import expect from 'expect';
 import assert from 'node:assert';
 
 import { CredentialGenerator } from '@dxos/credentials';
-import { DocumentModel } from '@dxos/document-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -45,7 +44,7 @@ describe('space/space', () => {
     }
 
     assert(db.databaseBackend);
-    await testLocalDatabase(db)
+    await testLocalDatabase(db);
 
     await builder.close();
     expect(space.isOpen).toBeFalsy();
@@ -135,9 +134,8 @@ describe('space/space', () => {
 
     // TODO(burdon): Write multiple items (extract for all tests).
 
-
-    await testLocalDatabase(db1, db2)
-    await testLocalDatabase(db2, db1)
+    await testLocalDatabase(db1, db2);
+    await testLocalDatabase(db2, db1);
 
     await builder.close();
     expect(space1.isOpen).toBeFalsy();

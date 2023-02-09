@@ -7,15 +7,13 @@ import type { StoryFn } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { Client, Invitation, Item, PublicKey } from '@dxos/client';
+import { Client, Invitation, PublicKey } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useSpace } from '@dxos/react-client';
 import { Loading, mx } from '@dxos/react-components';
-import { TextModel } from '@dxos/text-model';
 
-import { DOCUMENT_TYPE } from '../../model';
 import { Composer, ComposerProps } from './Composer';
 
 // TODO(wittjosiah): @dxos/log.
@@ -29,7 +27,7 @@ export default {
 export const Default = {
   render: ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
     const space = useSpace(spaceKey);
-    const [item] = null as any; //useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
+    const [item] = null as any; // useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
 
     useAsyncEffect(async () => {
       if (id === 0) {

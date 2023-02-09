@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { asyncChain, latch, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
+import { testLocalDatabase } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
@@ -16,7 +16,6 @@ import { range } from '@dxos/util';
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItems } from '../testing';
 import { performInvitation } from '../testing/invitation-utils';
-import { testLocalDatabase } from '@dxos/echo-db/testing';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
@@ -37,7 +36,7 @@ describe('services/space-invitations-handler', () => {
     const space = await peer.dataSpaceManager!.createSpace();
     afterTest(() => space.close());
 
-    await testLocalDatabase(space.dataPipelineController)
+    await testLocalDatabase(space.dataPipelineController);
   });
 
   test('invitation with no auth', async () => {

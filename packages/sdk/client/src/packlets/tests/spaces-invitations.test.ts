@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'chai';
-
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';

@@ -2,17 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box } from 'ink';
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { Space } from '@dxos/client';
-// import { useSelection } from '@dxos/react-client';
-
-import { List } from '../util';
 import { todo } from '@dxos/debug';
 
 // TODO(burdon): To make compatable with kitchen-sink/client-test.
-const LABEL_PROPERTY = 'name';
+// const LABEL_PROPERTY = 'name';
 const TYPE_ITEM = 'dxos:type/item';
 
 export const ItemList: FC<{
@@ -57,5 +53,5 @@ export const ItemList: FC<{
   //     />
   //   </Box>
   // );
-  return todo()
+  return todo();
 };

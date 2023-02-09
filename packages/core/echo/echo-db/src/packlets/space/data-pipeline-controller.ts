@@ -16,7 +16,7 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
-import { Database, DatabaseBackendHost, ItemManager } from '../database';
+import { DatabaseBackendHost, ItemManager } from '../database';
 import { SnapshotManager } from '../database/snapshot-manager';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
@@ -116,7 +116,11 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database, {
       snapshots: true // TODO(burdon): Config.
     });
-    this._itemManager =  new ItemManager(this._params.modelFactory, this._params.memberKey, this.databaseBackend.getWriteStream());
+    this._itemManager = new ItemManager(
+      this._params.modelFactory,
+      this._params.memberKey,
+      this.databaseBackend.getWriteStream()
+    );
 
     // Connect pipeline to the database.
     await this.databaseBackend.open(this._itemManager, this._params.modelFactory);

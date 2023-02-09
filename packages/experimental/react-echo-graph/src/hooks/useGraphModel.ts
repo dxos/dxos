@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { Item, Space } from '@dxos/client';
 
