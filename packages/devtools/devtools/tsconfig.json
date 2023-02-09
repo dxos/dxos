@@ -81,6 +81,12 @@
       "path": "../../experimental/kai"
     },
     {
+      "path": "../../experimental/mosaic"
+    },
+    {
+      "path": "../../experimental/plexus"
+    },
+    {
       "path": "../../experimental/registry-client"
     },
     {

@@ -3,6 +3,4 @@
 //
 
 export * from './queries';
-export * from './result';
-export * from './selection';
 export * from './util';

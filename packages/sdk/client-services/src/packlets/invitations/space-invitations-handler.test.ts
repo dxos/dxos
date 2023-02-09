@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { asyncChain, latch, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
+import { testLocalDatabase } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
@@ -27,7 +27,6 @@ describe('services/space-invitations-handler', () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
     const space = await peer.dataSpaceManager!.createSpace();
-    expect(space.database).not.to.be.undefined;
     expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
     await space.close();
   });
@@ -35,18 +34,9 @@ describe('services/space-invitations-handler', () => {
   test('genesis with database mutations', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
     const space = await peer.dataSpaceManager!.createSpace();
+    afterTest(() => space.close());
 
-    {
-      const item = await space.database!.createItem<DocumentModel>({ type: 'test' });
-      await item.model.set('name', 'test');
-    }
-
-    {
-      const [item] = space.database!.select({ type: 'test' }).exec().entities;
-      expect(item.model.get('name')).to.eq('test');
-    }
-
-    await space.close();
+    await testLocalDatabase(space.dataPipelineController);
   });
 
   test('invitation with no auth', async () => {
@@ -63,7 +53,7 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await syncItems(space1, space2);
+      await syncItems(space1.dataPipelineController, space2.dataPipelineController);
 
       await space1.close();
       await space2.close();
@@ -126,7 +116,7 @@ describe('services/space-invitations-handler', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await syncItems(space1, space2);
+      await syncItems(space1.dataPipelineController, space2.dataPipelineController);
 
       await space1.close();
       await space2.close();

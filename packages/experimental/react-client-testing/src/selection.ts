@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Space, Selection } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { TestType } from '@dxos/client-testing';
 
 /**
@@ -12,7 +12,7 @@ import { TestType } from '@dxos/client-testing';
  * @param text
  */
 // TODO(burdon): Create utility class.
-export const execSelection = (space: Space, text: string): Selection<any> | undefined => {
+export const execSelection = (space: Space, text: string): any | undefined => {
   try {
     // eslint-disable-next-line no-new-func
     const exec = new Function(`"use strict"; return function(space) { return space.${text} }`)();
