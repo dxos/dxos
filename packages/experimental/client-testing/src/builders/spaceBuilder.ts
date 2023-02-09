@@ -241,9 +241,9 @@ export const buildTestSpace = async (builder: SpaceBuilder, options: Options = d
   await builder.createOrgs(options.numOrgs, async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople(options.numPeople);
     await orgBuilder.createProjects(options.numProjects, async (projectBuilder: ProjectBuilder) => {
-      const result = await orgBuilder.org.select().children().filter({ type: TestType.Person }).exec();
+      // const result = await orgBuilder.org.select().children().filter({ type: TestType.Person }).exec();
 
-      await projectBuilder.createTasks(options.numTasks, result.entities);
+      // await projectBuilder.createTasks(options.numTasks, result.entities);
     });
   });
 };

@@ -14,7 +14,7 @@ import {
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { DocumentModel, ObjectProperties } from '@dxos/document-model';
-import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
+import { Item, ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';

@@ -11,12 +11,12 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 import {
-  Database,
   DatabaseBackendHost,
   DatabaseBackendProxy,
   DataServiceHost,
   DataServiceImpl,
-  DataServiceSubscriptions
+  DataServiceSubscriptions,
+  ItemManager
 } from '../database';
 import { DataPipelineControllerImpl } from '../space';
 
@@ -35,9 +35,12 @@ export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
     })
   );
 
-  const database = new Database(modelFactory, backend, PublicKey.random());
-  await database.initialize();
-  return database;
+  const itemManager = new ItemManager(modelFactory, PublicKey.random(), backend.getWriteStream());
+  await backend.open(itemManager, new ModelFactory().registerModel(DocumentModel));
+  return {
+    backend,
+    itemManager
+  };
 };
 
 export const createRemoteDatabaseFromDataServiceHost = async (
@@ -50,9 +53,13 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   const spaceKey = PublicKey.random();
   dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
-  const database = new Database(modelFactory, new DatabaseBackendProxy(dataService, spaceKey), PublicKey.random());
-  await database.initialize();
-  return database;
+  const backend = new DatabaseBackendProxy(dataService, spaceKey)
+  const itemManager = new ItemManager(modelFactory, PublicKey.random(), backend.getWriteStream());
+  await backend.open(itemManager, new ModelFactory().registerModel(DocumentModel));
+  return {
+    itemManager,
+    backend
+  }
 };
 
 export const testLocalDatabase = async (

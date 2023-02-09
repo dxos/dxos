@@ -11,7 +11,6 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { ItemManager } from './item-manager';
-import { createItemSelection, Selection } from './selection';
 
 /**
  * A globally addressable data item.
@@ -136,13 +135,6 @@ export class Item<M extends Model | null = Model> {
 
   get children(): Item<any>[] {
     return Array.from(this._children.values()).filter((item) => !item.deleted);
-  }
-
-  /**
-   * Returns a selection context, which can be used to traverse the object graph starting from this item.
-   */
-  select(): Selection<Item<any>> {
-    return createItemSelection(this as Item, this._itemManager.debouncedUpdate, undefined);
   }
 
   /**

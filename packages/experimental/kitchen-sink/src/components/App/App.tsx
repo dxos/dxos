@@ -75,7 +75,7 @@ export const App = ({ space, onInvite, onExport }: AppProps) => {
     const selection = execSelection(space, text);
     const result = selection?.exec();
     const selected = new Set<ItemID>();
-    result?.entities.forEach((item) => selected.add(item.id));
+    result?.entities.forEach((item: any) => selected.add(item.id));
     setSelected(selected);
     model.triggerUpdate();
   };

@@ -22,8 +22,8 @@ export const createDatabase = async (router = new DatabaseRouter()) => {
 
   // TODO(dmaretskyi): Fix.
   const database = await createMemoryDatabase(modelFactory);
-  const database2 = await createRemoteDatabaseFromDataServiceHost(modelFactory, database.createDataServiceHost());
-  const db = new EchoDatabase(database2._itemManager, database2._backend as DatabaseBackendProxy, router);
+  const database2 = await createRemoteDatabaseFromDataServiceHost(modelFactory, database.backend.createDataServiceHost());
+  const db = new EchoDatabase(database2.itemManager, database2.backend as DatabaseBackendProxy, router);
   router.register(PublicKey.random(), db); // TODO(burdon): Database should have random id?
   return db;
 };
