@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useMemo, useEffect, useSyncExternalStore, useRef } from 'react';
+import { useMemo, useState, useEffect, useSyncExternalStore, useRef } from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
@@ -10,28 +10,44 @@ import { PublicKeyLike } from '@dxos/keys';
 import { useClient } from '../client';
 
 /**
- * Get a specific Space via its key.
- * Requires ClientContext to be set via ClientProvider.
+ * Get a specific Space via its key. Returns undefined when no spaceKey is
+ * available. Requires a ClientProvider somewhere in the parent tree.
+ * @returns a Space
+ * @param spaceKey the key to look for
  */
-export const useSpace = (spaceKey?: PublicKeyLike | null, options?: { create?: boolean }) => {
-  const { create } = { create: false, ...options };
+export const useSpace = (spaceKey?: PublicKeyLike) => {
+  const spaces = useSpaces();
+  return spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined;
+};
+
+/**
+ * Returns the first space in the current spaces array. If none exists, null
+ * will be returned at first, then the hook will re-run and return a space once
+ * it has been created. Requires a ClientProvider somewhere in the parent tree.
+ * @returns a Space
+*/
+export const useOrCreateFirstSpace = () => {
   const client = useClient();
   const spaces = useSpaces();
-  const space = spaceKey ? spaces.find((space) => spaceKey && space.key.equals(spaceKey)) : spaces?.[0];
-  const creating = useRef(false);
+  const [space, setSpace] = useState(spaces?.[0]);
+  const isCreatingSpace = useRef(false);
   useEffect(() => {
-    if (!space && create && !creating.current) {
-      creating.current = true;
-      client.echo
-        .createSpace()
-        .then(() => (creating.current = false))
-        .catch((err) => {
+    const timeout = setTimeout(async () => {
+      if (!space && !isCreatingSpace.current) {
+        isCreatingSpace.current = true;
+        try {
+          const newSpace = await client.echo.createSpace();
+          setSpace(newSpace);
+        } catch (err) {
+          console.error('Failed to create space');
           console.error(err);
-          creating.current = false;
-        });
-    }
+        } finally {
+          isCreatingSpace.current = false;
+        }
+      }
+    });
+    return () => clearTimeout(timeout);
   }, [space]);
-
   return space;
 };
 
@@ -46,6 +62,5 @@ export const useSpaces = () => {
     (listener) => result.subscribe(listener),
     () => result.value
   );
-
   return spaces;
 };
