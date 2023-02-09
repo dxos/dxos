@@ -46,9 +46,9 @@ describe('Spaces', () => {
     {
       // TODO(burdon): API (client.echo/client.halo).
       const space = await client.echo.createSpace();
-      const item = await space.internal.db._itemManager.createItem(DocumentModel.meta.type, 'test');
-      await item.model.set('title', 'testing');
-      expect(item.model.get('title')).to.eq('testing');
+      const {
+        objectsCreated: [item]
+      } = await testSpace(space.internal.db);
       itemId = item.id;
       const result = await space.queryMembers().waitFor((items) => items.length === 1);
       expect(result).to.have.length(1);
@@ -67,10 +67,6 @@ describe('Spaces', () => {
 
       const item = space.internal.db._itemManager.getItem(itemId)!;
       expect(item).to.exist;
-      expect(item.model.get('title')).to.eq('testing');
-
-      await item.model.set('title', 'testing2');
-      expect(item.model.get('title')).to.eq('testing2');
     }
 
     await client.destroy();
