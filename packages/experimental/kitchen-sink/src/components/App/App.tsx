@@ -59,13 +59,13 @@ export const App = ({ space, onInvite, onExport }: AppProps) => {
       return;
     }
 
-    void space.database.createItem({
-      type,
-      parent: parentId,
-      props: {
-        name: title // TODO(burdon): Use adapter.
-      }
-    });
+    // void space.database.createItem({
+    //   type,
+    //   parent: parentId,
+    //   props: {
+    //     name: title // TODO(burdon): Use adapter.
+    //   }
+    // });
   };
 
   const handleSearch = (text: string) => {

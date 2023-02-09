@@ -11,7 +11,7 @@ import { Client, Invitation, Item, PublicKey } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientProvider, useSelection, useSpace } from '@dxos/react-client';
+import { ClientProvider, useSpace } from '@dxos/react-client';
 import { Loading, mx } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
@@ -29,14 +29,14 @@ export default {
 export const Default = {
   render: ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
     const space = useSpace(spaceKey);
-    const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
+    const [item] = null as any; //useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
 
     useAsyncEffect(async () => {
       if (id === 0) {
-        await space?.database.createItem({
-          model: TextModel,
-          type: DOCUMENT_TYPE
-        });
+        // await space?.database.createItem({
+        //   model: TextModel,
+        //   type: DOCUMENT_TYPE
+        // });
       }
     }, [space]);
 

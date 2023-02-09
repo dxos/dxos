@@ -10,7 +10,6 @@ import { TreeView, TreeViewItem, Searchbar } from '@dxos/kai';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { DocumentModel } from '@dxos/document-model';
-import { useSelection } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
 import { DetailsTable, JsonView } from '../../components';
@@ -66,7 +65,7 @@ const ItemsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
-  const items = useSelection(space?.select()) ?? [];
+  const items = [] as any //useSelection(space?.select()) ?? [];
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
   const [filter, setFilter] = useState('');
 
@@ -83,7 +82,7 @@ const ItemsPanel = () => {
           {/* TODO(burdon): Convert to list with new API. */}
           <TreeView
             items={items
-              .filter((item) => !item.parent)
+              .filter((item: any) => !item.parent)
               .map(getHierarchicalItem)
               .filter(textFilter(filter))}
             titleClassName={'text-black text-sm'}

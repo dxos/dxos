@@ -5,22 +5,23 @@
 import React, { FC, useEffect, useState } from 'react';
 
 import { SPACE_ITEM_TYPE, Space } from '@dxos/client';
-import { useSelection } from '@dxos/react-client';
 
 import { List } from '../util';
+import { todo } from '@dxos/debug';
 
 // TODO(burdon): Move into react-client.
 const useTypes = (space?: Space) => {
-  const [types, setTypes] = useState<Set<string>>(new Set());
-  const items = useSelection(space?.select()) ?? [];
+  // const [types, setTypes] = useState<Set<string>>(new Set());
+  // const items = useSelection(space?.select()) ?? [];
 
-  useEffect(() => {
-    const types = new Set<string>();
-    items.forEach((item) => item.type && item.type !== SPACE_ITEM_TYPE && types.add(item.type));
-    setTypes(types);
-  }, [items]);
+  // useEffect(() => {
+  //   const types = new Set<string>();
+  //   items.forEach((item) => item.type && item.type !== SPACE_ITEM_TYPE && types.add(item.type));
+  //   setTypes(types);
+  // }, [items]);
 
-  return Array.from(types);
+  // return Array.from(types);
+  return todo() as any
 };
 
 export const ItemTypeList: FC<{
@@ -32,7 +33,7 @@ export const ItemTypeList: FC<{
   return (
     <List
       id={'item-type-list'}
-      items={types.map((type) => ({ id: type, text: type }))}
+      items={types.map((type: any) => ({ id: type, text: type }))}
       onSelect={(id) => onChange(id)}
     />
   );

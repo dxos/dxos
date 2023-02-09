@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Space } from '@dxos/client';
-import { truncateKey } from '@dxos/debug';
+import { todo, truncateKey } from '@dxos/debug';
 
 type Order = { [key: string]: string };
 
@@ -20,8 +20,9 @@ export const DragAndDropDebugPanel = ({ order, space }: DragAndDropDebugPanelPro
     if (!space) {
       return truncateKey(key, 5);
     }
-    const [item] = space?.select({ id: key }).exec().entities ?? [];
-    return truncateKey(key, 5) + ' - ' + item?.model.get('title').substring(0, 5);
+    // const [item] = space?.select({ id: key }).exec().entities ?? [];
+    // return truncateKey(key, 5) + ' - ' + item?.model.get('title').substring(0, 5);
+    return todo() as any
   };
 
   const reduceKeyLength = (order: { [key: string]: string }) =>
