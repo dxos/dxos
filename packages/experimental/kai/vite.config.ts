@@ -37,11 +37,12 @@ export default defineConfig({
     // hmr: false
   },
 
-  // TODO(burdon): Document why protos are necessary.
+  // NOTE: Required to import non ESM modules.
   optimizeDeps: {
     force: true,
     include: [
       '@dxos/config',
+      '@dxos/gem-spore/testing',
       '@dxos/mosaic',
       '@dxos/plexus',
       '@dxos/protocols',
@@ -60,7 +61,6 @@ export default defineConfig({
     ]
   },
 
-  // TODO(burdon): Document.
   build: {
     sourcemap: true,
     commonjsOptions: {

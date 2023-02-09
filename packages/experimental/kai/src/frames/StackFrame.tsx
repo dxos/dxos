@@ -47,14 +47,6 @@ export const StackFrame: FC = () => {
           <ProjectHierarchy />
         </Tile>
       </div>
-
-      {/*
-      <div className={mx(cardStyles, 'col-span-2 hidden lg:flex')}>
-        <Tile header={<TileMenu title='Explorer' />}>
-          <GraphComponent />
-        </Tile>
-      </div>
-      */}
     </div>
   );
 };

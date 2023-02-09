@@ -3,45 +3,12 @@
 //
 
 import * as d3 from 'd3';
-import React, { useEffect } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
-
-// TODO(burdon): Convert to TS.
-// export type TreeComponentProps = {
-//   object: any;
-// };
-
-export const TreeComponent = ({ data }) => {
-  const { ref, width, height } = useResizeDetector();
-
-  const size = Math.min(width, height);
-  const radius = size / 2;
-  const options = {
-    width,
-    height,
-    radius,
-    marginLeft: (width - radius * 2) / 2,
-    marginRight: (width - radius * 2) / 2,
-    label: (d) => d.name
-  };
-
-  useEffect(() => {
-    if (width && height) {
-      if (!ref.current.children.length) {
-        const el = Tree(data, options);
-        ref.current.append(el);
-      }
-    }
-  }, [width, height]);
-
-  return <div ref={ref} className='flex flex-1 scroll-auto' />;
-};
 
 // Copyright 2022 Observable, Inc.
 // Released under the ISC license.
 // https://observablehq.com/@d3/radial-tree
 // TODO(burdon): Factor out (to plexus?)
-const Tree = (
+export const Tree = (
   data,
   {
     // data is either tabular (array of objects) or hierarchy (nested objects)

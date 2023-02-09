@@ -6,20 +6,10 @@ import React, { useMemo } from 'react';
 
 import { createSvgContext, FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 
-import {
-  convertTreeToGraph,
-  createGraph,
-  createTree,
-  seed,
-  Graph,
-  GraphForceProjector,
-  GraphLayoutNode,
-  Markers,
-  TestGraphModel,
-  TestNode
-} from '../src';
-
-// TODO(burdon): Replace with storybook.
+import { GraphForceProjector, GraphLayoutNode } from '../graph';
+import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, TestNode } from '../testing';
+import { Graph } from './Graph';
+import { Markers } from './Markers';
 
 export default {
   title: 'gem-spore/Graph'
