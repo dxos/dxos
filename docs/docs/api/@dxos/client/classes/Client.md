@@ -45,13 +45,13 @@ Type: <code>[MeshProxy](/api/@dxos/client/classes/MeshProxy)</code>
 Returns: <code>string</code>
 
 Arguments: none
-### [createSerializer()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L195)
+### [createSerializer()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L208)
 
 
 Returns: <code>[SpaceSerializer](/api/@dxos/client/classes/SpaceSerializer)</code>
 
 Arguments: none
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L159)
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L160)
 
 
 Cleanup, release resources.
@@ -60,12 +60,12 @@ Open/close is re-entrant.
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [getStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L176)
+### [getStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L177)
 
 
 Get system status.
 
-Returns: <code>Promise&lt;Status&gt;</code>
+Returns: <code>Promise&lt;StatusResponse&gt;</code>
 
 Arguments: none
 ### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L133)
@@ -77,11 +77,21 @@ Required before using the Client instance.
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L184)
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L196)
 
 
 Resets and destroys client storage.
 Warning: Inconsistent state after reset, do not continue to use this client instance.
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: none
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L187)
+
+
+Reinitialized the client session with the remote service host.
+This is useful when connecting to a host running behind a resource lock
+(e.g., HALO when SharedWorker is unavailable).
 
 Returns: <code>Promise&lt;void&gt;</code>
 

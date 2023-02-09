@@ -10,8 +10,10 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
-import { MutationReceipt, SubscribeResponse } from '@dxos/protocols/proto/dxos/echo/service';
+import { MutationReceipt, EchoEvent, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { ComplexMap } from '@dxos/util';
 
+import { tagMutationsInBatch } from './builder';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
@@ -24,6 +26,10 @@ const log = debug('dxos:echo-db:data-service-host');
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
+  private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(
+    ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`
+  );
+
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
@@ -33,7 +39,7 @@ export class DataServiceHost {
   /**
    * Real-time subscription to data objects in a space.
    */
-  subscribe(): Stream<SubscribeResponse> {
+  subscribe(): Stream<EchoEvent> {
     return new Stream(({ next, ctx }) => {
       // send current state
       const objects = Array.from(this._itemManager.entities.values()).map((entity): EchoObject => {
@@ -57,18 +63,24 @@ export class DataServiceHost {
       });
 
       next({
-        objects
+        batch: {
+          objects
+        }
       });
 
       // subscribe to mutations
 
       this._itemDemuxer.mutation.on(ctx, (mutation) => {
         log('Object update', { mutation });
-        next({
+
+        const clientTag = this._clientTagMap.get([mutation.meta.feedKey, mutation.meta.seq]);
+        // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
+
+        const batch = {
           objects: [
             {
               ...mutation.data,
-              mutations: mutation.data.mutations?.map((m) => ({
+              mutations: mutation.data.mutations?.map((m, mutationIdx) => ({
                 ...m,
                 meta: {
                   feedKey: PublicKey.from(mutation.meta.feedKey),
@@ -79,16 +91,38 @@ export class DataServiceHost {
               }))
             }
           ]
+        };
+        if (clientTag) {
+          tagMutationsInBatch(batch, clientTag);
+        }
+
+        next({
+          clientTag,
+          feedKey: mutation.meta.feedKey,
+          seq: mutation.meta.seq,
+          batch
         });
       });
     });
   }
 
-  async write(object: EchoObject): Promise<MutationReceipt> {
+  async write(request: WriteRequest): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
+    assert(request.batch.objects?.length === 1, 'Only single object mutations are supported');
 
-    return this._writeStream.write({
-      object
+    const receipt = await this._writeStream.write({
+      object: {
+        ...request.batch.objects[0],
+        mutations: request.batch.objects[0].mutations?.map((m) => ({
+          ...m,
+          meta: undefined
+        }))
+      }
     });
+    if (request.clientTag) {
+      this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
+    }
+
+    return receipt;
   }
 }

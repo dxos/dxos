@@ -38,6 +38,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/mosaic": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/plexus": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",

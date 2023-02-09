@@ -8,8 +8,7 @@ import { Input } from './Input';
 import '@dxosTheme';
 
 export default {
-  component: Input,
-  argTypes: {}
+  component: Input
 };
 
 const Test = () => {
@@ -51,8 +50,4 @@ const Test = () => {
   );
 };
 
-export const Default = {
-  render: () => {
-    return <Test />;
-  }
-};
+export const Default = () => <Test />;

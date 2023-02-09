@@ -46,19 +46,21 @@ export namespace Remark {
         const directiveLabelNode = node?.children?.find((c: any) => !!c?.data?.directiveLabel);
         const label = directiveLabelNode?.children?.find((c: any) => c.type === 'text')?.value;
         if (!label) {
-          console.warn(`invalid apidoc directive, no [label] found in ${vfile.path}`);
+          console.warn(`problem in in ${vfile.path}: invalid apidoc directive, no [label] found`);
           return tree;
         }
         const [packageName, symbolName] = label.split('.');
         const pkage = packagesInProject(api)?.find((p) => p.name === packageName);
         if (!pkage) {
-          console.warn(`package ${packageName} not found while processing directive in ${vfile.path}`);
+          console.warn(
+            `problem in file ${vfile.path}: package ${packageName} not found while processing apidoc directive.`
+          );
           return tree;
         }
         const symbol = findReflection(pkage, (node) => node.name === symbolName);
         if (!symbol) {
           console.warn(
-            `symbol ${symbol} of package ${packageName} not found while processing directive in ${vfile.path}`
+            `problem in file ${vfile.path}: symbol ${symbol} of package ${packageName} not found while processing apidoc directive`
           );
           return tree;
         }

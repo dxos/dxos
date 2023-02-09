@@ -4,12 +4,6 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [debug]()
-Type: <code>string</code>
-
-Options:
-  - (env) = "DEBUG"
-  - proto3_optional = true
 ### [enableSnapshots]()
 Type: <code>boolean</code>
 
@@ -19,6 +13,11 @@ Options:
 Type: <code>number</code>
 
 Milliseconds
+
+Options:
+  - proto3_optional = true
+### [log]()
+Type: <code>[Log](/api/@dxos/config/interfaces/Log)</code>
 
 Options:
   - proto3_optional = true

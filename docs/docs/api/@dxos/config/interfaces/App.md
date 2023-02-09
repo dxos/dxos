@@ -4,6 +4,16 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
+### [build]()
+Type: <code>[BuildInfo](/api/@dxos/config/interfaces/BuildInfo)</code>
+
+Options:
+  - proto3_optional = true
+### [env]()
+Type: <code>Struct</code>
+
+Options:
+  - proto3_optional = true
 ### [org]()
 Type: <code>string</code>
 

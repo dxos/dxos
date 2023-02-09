@@ -16,8 +16,7 @@ const Frame: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 export default {
-  component: Frame,
-  argTypes: {}
+  component: Frame
 };
 
 type Item = { id: string; label: string; expanded: boolean; selected: boolean };

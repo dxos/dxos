@@ -10,16 +10,16 @@ import { mx } from '@dxos/react-components';
 
 import { Dimensions, Layout, Item, Point, Location, serializeLocation, parseLocation } from '../layout';
 import { Cell } from './Cell';
-import { Tile, TileContentProps, TileSlots } from './Tile';
+import { Tile, TileContentProps, TileClasses } from './Tile';
 
-export type GridSlots = {
-  tile?: TileSlots;
+export type GridClasses = {
+  tile?: TileClasses;
 };
 
 export type GridProps<T extends {} = {}> = {
   layout: Layout;
   items?: Item<T>[];
-  slots?: GridSlots;
+  classes?: GridClasses;
   Content?: FC<TileContentProps<T>>;
   onSelect?: (item: Item<T>) => void;
   onChange?: (item: Item<T>, location: Location) => void;
@@ -37,7 +37,7 @@ const options = {
 export const Grid = <T extends {} = {}>({
   items = [],
   layout,
-  slots = {},
+  classes = {},
   Content,
   onSelect,
   onChange,
@@ -174,7 +174,7 @@ export const Grid = <T extends {} = {}>({
                     {item && (
                       <div className='z-50'>
                         <Tile<T>
-                          slots={slots?.tile}
+                          classes={classes?.tile}
                           item={item}
                           bounds={bounds}
                           Content={Content}

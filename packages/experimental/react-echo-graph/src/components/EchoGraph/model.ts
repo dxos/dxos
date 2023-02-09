@@ -7,6 +7,7 @@ import { GraphData, GraphModel } from '@dxos/gem-spore';
 
 /**
  * ECHO adapter for the Graph model.
+ * @deprecated
  */
 export class EchoGraphModel extends GraphModel<Item<DocumentModel>> {
   private readonly _graph: GraphData<Item<DocumentModel>> = {

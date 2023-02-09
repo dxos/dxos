@@ -4,6 +4,7 @@
 
 import { Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
+import os from 'os';
 import { cwd } from 'process';
 
 import bare, { isDxosMonorepoSync } from '@dxos/bare-template';
@@ -77,6 +78,14 @@ export default class Create extends BaseCommand {
     } catch {
       this.error('pnpm not found. Please run "npm i -g pnpm" first.', { exit: 1 });
     }
+    // TODO:: make sure this exists in the @dxos/create packages too
+    if (os.platform() === 'darwin') {
+      try {
+        await exec('which xcrun');
+      } catch {
+        this.error('XCode Command Line Tools not found. Please run "xcode-select --install" first.', { exit: 1 });
+      }
+    }
     try {
       this.log('Creating app...');
 
@@ -97,14 +106,7 @@ export default class Create extends BaseCommand {
           name
         }
       });
-      await Promise.all(
-        result.map(async (file) => {
-          const saved = await file.save();
-          if (verbose) {
-            console.log(saved ? 'wrote' : 'skip', file.shortDescription());
-          }
-        })
-      );
+      void result.save({ printFiles: verbose });
     } catch (err: any) {
       this.error(err, { exit: 1 });
     }
