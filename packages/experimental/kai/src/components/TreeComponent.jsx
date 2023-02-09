@@ -15,11 +15,14 @@ export const TreeComponent = ({ data }) => {
   const { ref, width, height } = useResizeDetector();
 
   const size = Math.min(width, height);
+  const radius = size / 2;
   const options = {
-    width: size,
-    height: size,
-    label: (d) => d.name,
-    margin: 20
+    width,
+    height,
+    radius,
+    marginLeft: (width - radius * 2) / 2,
+    marginRight: (width - radius * 2) / 2,
+    label: (d) => d.name
   };
 
   useEffect(() => {
@@ -55,14 +58,14 @@ const Tree = (
     title, // given a node d, returns its hover text
     link, // given a node d, its link (if any)
     linkTarget = '_blank', // the target attribute for links (if any)
-    width = 1640, // outer width, in pixels
-    height = 1400, // outer height, in pixels
-    margin = 60, // shorthand for margins
+    width = 0, // outer width, in pixels
+    height = 0, // outer height, in pixels
+    margin = 0, // shorthand for margins
     marginTop = margin, // top margin, in pixels
     marginRight = margin, // right margin, in pixels
     marginBottom = margin, // bottom margin, in pixels
     marginLeft = margin, // left margin, in pixels
-    radius = Math.min(width - marginLeft - marginRight, height - marginTop - marginBottom) / 2, // outer radius
+    radius = Math.min(width - marginLeft - marginRight, height - marginTop - marginBottom) / 3, // outer radius
     r = 3, // radius of nodes
     padding = 1, // horizontal padding for first and last column
     fill = '#999', // fill for nodes
@@ -76,8 +79,6 @@ const Tree = (
     haloWidth = 3 // padding around the labels
   } = {}
 ) => {
-  console.log(width, margin);
-
   // If id and parentId options are specified, or the path option, use d3.stratify
   // to convert tabular data to a hierarchy; otherwise we assume that the data is
   // specified as an object {children} with nested objects (a.k.a. the “flare.json”

@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button, GraphComponent, Plex, TreeComponent } from '../components';
+import { Button, GraphComponent, PlexusComponent, TreeComponent } from '../components';
 import { useSpace } from '../hooks';
 import { Organization } from '../proto';
 
@@ -26,23 +26,23 @@ const views = [
     Component: GraphComponent
   },
   {
+    type: View.PLEX,
+    label: 'Brane',
+    Icon: AsteriskSimple,
+    Component: PlexusComponent
+  },
+  {
     type: View.TREE,
     label: 'Tree',
     Icon: Tree,
     Component: TreeComponent
-  },
-  {
-    type: View.PLEX,
-    label: 'Brane',
-    Icon: AsteriskSimple,
-    Component: Plex
   }
 ];
 
 export const BraneFrame = () => {
   const space = useSpace();
   const organizations = useQuery(space, Organization.filter());
-  const [view, setView] = useState(View.GRAPH);
+  const [view, setView] = useState(View.PLEX);
 
   const data = {
     name: 'Projects',

@@ -45,7 +45,7 @@ export const Grid = <T extends {} = {}>({
   onDelete
 }: GridProps<T>) => {
   const getItem = (location: Location): Item<T> | undefined => {
-    return items.find((item) => serializeLocation(item.location) === serializeLocation(location));
+    return items.find((item) => item.location && serializeLocation(item.location) === serializeLocation(location));
   };
 
   // Container allows any selected item to scroll near to the center.
@@ -133,6 +133,7 @@ export const Grid = <T extends {} = {}>({
   //
 
   const mouseSensor = useSensor(MouseSensor, {
+    // TODO(burdon): Factor out.
     activationConstraint: {
       distance: 10 // Move 10px before activating.
     }
@@ -149,6 +150,7 @@ export const Grid = <T extends {} = {}>({
     }
   };
 
+  // TODO(burdon): Externalize Container.
   return (
     <DndContext sensors={[mouseSensor]} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
       {/* Full screen. */}
