@@ -67,7 +67,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [space]);
 
   useEffect(() => {
     if (vaultEnabled) {
