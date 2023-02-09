@@ -14,7 +14,7 @@ import {
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { DocumentModel, ObjectProperties } from '@dxos/document-model';
-import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
+import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -96,9 +96,10 @@ export interface Space extends ISpace {
 }
 
 export class SpaceProxy implements Space {
-  private readonly _database?: Database;
+  private readonly _itemManager?: ItemManager;
   private readonly _experimental?: Experimental;
   private readonly _internal!: Internal;
+  private readonly _dbBackend?: DatabaseBackendProxy;
   private readonly _invitationProxy: SpaceInvitationsProxy;
   private _invitations: CancellableInvitationObservable[] = [];
 
@@ -132,20 +133,15 @@ export class SpaceProxy implements Space {
 
     assert(this._clientServices.services.DataService, 'DataService not available');
 
-    const backend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
-    this._database = new Database(
-      this._modelFactory,
-      // TODO(dmaretskyi): Preserve this when removing `Database`.
-      backend,
-      memberKey
-    );
+    this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
+    this._itemManager = new ItemManager(this._modelFactory, memberKey, this._dbBackend.getWriteStream());
 
     this._experimental = {
-      db: new EchoDatabase(this._database._itemManager, backend, databaseRouter)
+      db: new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter)
     };
 
     this._internal = {
-      db: backend
+      db: this._dbBackend
     };
 
     databaseRouter.register(this.key, this._experimental.db);
@@ -214,7 +210,7 @@ export class SpaceProxy implements Space {
     // TODO(burdon): Does this need to be set before method completes?
     this._initialized = true;
 
-    await this._database!.initialize();
+    await this._dbBackend!.open(this._itemManager!, this._modelFactory);
     log('database ready');
     this._databaseInitialized.wake();
 
@@ -230,7 +226,8 @@ export class SpaceProxy implements Space {
   @synchronized
   async destroy() {
     log('destroying...');
-    await this._database!.destroy();
+    await this._dbBackend?.close();
+    await this._itemManager?.destroy();
 
     log('destroyed');
   }
