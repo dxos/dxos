@@ -176,7 +176,14 @@ export class EchoProxy implements Echo {
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
     await spaceProxy.initialize(); // Idempotent.
-    await spaceProxy.internal.db._itemManager.createItem(DocumentModel.meta.type, SPACE_ITEM_TYPE);
+    spaceProxy.internal.db.mutate({
+      objects: [
+        {
+          objectId: PublicKey.random().toHex(),
+          genesis: { modelType: DocumentModel.meta.type, itemType: SPACE_ITEM_TYPE }
+        }
+      ]
+    });
 
     return spaceProxy;
   }
