@@ -6,9 +6,10 @@ import { expect } from 'chai';
 import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { ISpace } from '@dxos/echo-db';
+import { DocumentModel } from '@dxos/document-model';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -18,21 +19,34 @@ import { describe, test, afterTest } from '@dxos/test';
 import { Space } from '../proxies';
 import { TestBuilder } from '../testing';
 
-// TODO(wittjosiah): Copied from @dxos/client-services. Factor out.
-const syncItems = async (space1: ISpace, space2: ISpace) => {
-  {
-    // Check item replicated from 1 => 2.
-    const item1 = await space1.database!.createItem({ type: 'type-1' });
-    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
-    expect(item1.id).to.eq(item2.id);
-  }
+const testSpaceReplication = async (create: Space, check: Space = create) => {
+  // Check item replicated from 1 => 2.
+  const objectId = PublicKey.random().toHex();
 
-  {
-    // Check item replicated from 2 => 1.
-    const item1 = await space2.database!.createItem({ type: 'type-2' });
-    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
-    expect(item1.id).to.eq(item2.id);
-  }
+  const replication = check.internal.db._itemManager.update.waitForCondition(() =>
+    check.internal.db._itemManager.entities.has(objectId)
+  );
+
+  create.internal.db.mutate({
+    objects: [
+      {
+        objectId,
+        genesis: {
+          modelType: DocumentModel.meta.type
+        }
+      }
+    ]
+  });
+  await asyncTimeout(replication, 1000);
+};
+
+// TODO(wittjosiah): Copied from @dxos/client-services. Factor out.
+const syncItems = async (space1: Space, space2: Space) => {
+  // Check item replicated from 1 => 2.
+  await testSpaceReplication(space1, space2);
+
+  // Check item replicated from 2 => 1.
+  await testSpaceReplication(space2, space1);
 };
 
 // TODO(burdon): Use as set-up for test suite.
@@ -193,7 +207,8 @@ describe('Client services', () => {
     });
   });
 
-  test('synchronizes data between two spaces after completing invitation', async () => {
+  test.only('synchronizes data between two spaces after completing invitation', async () => {
+    debugger;
     const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();

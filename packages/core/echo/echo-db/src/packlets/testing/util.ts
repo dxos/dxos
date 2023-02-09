@@ -18,7 +18,7 @@ import {
   DataServiceImpl,
   DataServiceSubscriptions
 } from '../database';
-import { DataPipelineController, DataPipelineControllerImpl } from '../space';
+import { DataPipelineController, DataPipelineControllerImpl, Space } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();
