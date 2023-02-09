@@ -20,7 +20,6 @@ export const useSpace = (spaceKey?: PublicKeyLike | null, options?: { create?: b
   const space = spaceKey ? spaces.find((space) => spaceKey && space.key.equals(spaceKey)) : spaces?.[0];
   const creating = useRef(false);
   useEffect(() => {
-    console.log('use space effect', space, create, !creating.current);
     if (!space && create && !creating.current) {
       creating.current = true;
       client.echo
@@ -32,6 +31,7 @@ export const useSpace = (spaceKey?: PublicKeyLike | null, options?: { create?: b
         });
     }
   }, [space]);
+
   return space;
 };
 
