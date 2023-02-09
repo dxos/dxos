@@ -23,8 +23,6 @@ export const Todos = withReactor(() => {
   // TODO(wittjosiah): Support multiple lists in a single space.
   const [list] = useQuery(space, TodoList.filter());
 
-  console.log({ space, list });
-
   useEffect(() => {
     if (space && !list) {
       console.log('init');

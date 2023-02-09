@@ -82,6 +82,9 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       this._iframe!.setAttribute('data-testid', 'dxos-shell');
       this._shellController.contextUpdate.on(({ display }) => {
         this._iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
+        if (display === ShellDisplay.NONE) {
+          this._iframe!.blur();
+        }
       });
 
       window.addEventListener('keydown', this._handleKeyDown);

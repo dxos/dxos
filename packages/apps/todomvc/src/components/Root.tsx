@@ -25,13 +25,7 @@ export const Root = () => {
       services={servicesProvider}
       spaceProvider={{
         initialSpaceKey: PublicKey.safeFrom(spaceKey),
-        onSpaceChange: (spaceKey) => {
-          console.log({ spaceKey });
-          if (!spaceKey) {
-            return;
-          }
-          navigate(generatePath('/:spaceKey', { spaceKey: spaceKey.toHex() }));
-        }
+        onSpaceChange: (spaceKey) => spaceKey && navigate(generatePath('/:spaceKey', { spaceKey: spaceKey.toHex() }))
       }}
     >
       <Layout>
