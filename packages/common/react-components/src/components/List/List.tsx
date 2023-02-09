@@ -130,8 +130,6 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
 
 List.displayName = LIST_NAME;
 
-const Root = List;
-
 // LIST ITEM
 
 const [createListItemContext, createListItemScope] = createContextScope(LIST_ITEM_NAME, []);
@@ -258,22 +256,6 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
   }
 });
 
-const Item = ListItem;
-const Endcap = ListItemEndcap;
-const Heading = ListItemHeading;
-
-export {
-  List,
-  Root,
-  createListScope,
-  useListCollection,
-  ListItem,
-  Item,
-  ListItemHeading,
-  Heading,
-  ListItemEndcap,
-  Endcap,
-  createListItemScope
-};
+export { List, createListScope, useListCollection, ListItem, ListItemHeading, ListItemEndcap, createListItemScope };
 
 export type { ListProps, ListVariant, ListItemProps };
