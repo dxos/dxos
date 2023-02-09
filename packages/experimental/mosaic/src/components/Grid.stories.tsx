@@ -4,19 +4,14 @@
 
 import faker from 'faker';
 import React, { useMemo, useState } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
 
 import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
 import { GridLayout, Item, Location } from '../layout';
+import { createItem } from '../testing';
 import { Grid } from './Grid';
-
-export default {
-  component: Grid,
-  argTypes: {}
-};
 
 faker.seed(100);
 
@@ -37,15 +32,7 @@ faker.seed(100);
 
 const num = 8;
 
-const createItem = (location: Location): Item => ({
-  id: faker.datatype.uuid(),
-  label: faker.lorem.words(3),
-  content: faker.lorem.sentences(faker.datatype.number(3)),
-  location
-});
-
 const Test = () => {
-  const { ref: containerRef } = useResizeDetector();
   const layout = useMemo(() => new GridLayout({ range: { x: 3, y: 2 } }), []);
   const [items, setItems] = useState<Item[]>(() => {
     return range(num).map(() => {
@@ -71,22 +58,34 @@ const Test = () => {
   };
 
   return (
-    <div ref={containerRef} className='flex absolute left-0 right-0 top-0 bottom-0'>
-      <Grid
-        items={items}
-        layout={layout}
-        onSelect={handleSelect}
-        onCreate={handleCreate}
-        onDelete={handleDelete}
-        classes={{
-          tile: {
-            root: 'bg-yellow-100 select-none cursor-pointer text-black shadow',
-            selected: 'shadow-lg ring-1 ring-orange-400'
-          }
-        }}
-      />
-    </div>
+    <Grid
+      items={items}
+      layout={layout}
+      onSelect={handleSelect}
+      onCreate={handleCreate}
+      onDelete={handleDelete}
+      classes={{
+        tile: {
+          root: 'bg-yellow-100 select-none cursor-pointer text-black shadow',
+          selected: 'shadow-lg ring-1 ring-orange-400'
+        }
+      }}
+    />
   );
+};
+
+export default {
+  component: Grid,
+  decorators: [
+    (Story: any) => (
+      <div className='flex flex-col h-screen w-full'>
+        <Story />
+      </div>
+    )
+  ],
+  parameters: {
+    layout: 'fullscreen'
+  }
 };
 
 export const Default = {

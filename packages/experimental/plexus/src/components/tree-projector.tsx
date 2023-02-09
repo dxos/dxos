@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Point } from '@dxos/gem-core';
+import defaulstDeep from 'lodash.defaultsdeep';
+
+import { Point, SVGContext } from '@dxos/gem-core';
 import {
   GraphData,
   GraphLayout,
@@ -15,6 +17,10 @@ import {
 
 export type TreeProjectorOptions = ProjectorOptions &
   Partial<{
+    show?: {
+      parents?: boolean;
+      lateral?: boolean;
+    };
     center?: Point;
     radius?: number;
     nodeRadius?: number;
@@ -32,6 +38,18 @@ export type TreeProjectorOptions = ProjectorOptions &
     };
   }>;
 
+const defaultOptions: Partial<TreeProjectorOptions> = {
+  show: {
+    parents: true,
+    lateral: true
+  },
+  classes: {
+    node: {
+      circle: 'fill-gray-100'
+    }
+  }
+};
+
 export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, TreeProjectorOptions> {
   _layout: GraphLayout<N> = {
     graph: {
@@ -39,6 +57,10 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       links: []
     }
   };
+
+  constructor(context: SVGContext, options?: Partial<TreeProjectorOptions>) {
+    super(context, defaulstDeep({}, options, defaultOptions));
+  }
 
   get layout() {
     return this._layout;
@@ -75,45 +97,54 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
     const inner = this.options.radius ?? 160;
     const outer = inner * 2;
 
+    const arc = this.options.show?.lateral ? Math.PI / 2 : this.options.show?.parents ? Math.PI : 0;
+
     // Children.
+    // TODO(burdon): Place children in center of grandchildren.
     const layer1 = getChildren(rootNode);
-    nodes.push(...this.layoutArc(layer1, center, Math.PI, Math.PI * 0.5, inner));
+    nodes.push(...this.layoutArc(layer1, center, Math.PI, arc, inner));
 
     const layer2 = getChildren(rootNode).flatMap((node) => getChildren(node));
-    nodes.push(...this.layoutArc(layer2 ?? [], center, Math.PI, Math.PI * 0.5, outer));
+    nodes.push(...this.layoutArc(layer2 ?? [], center, Math.PI, arc, outer));
 
     // Parents and lateral.
     // TODO(burdon): More efficient. Should children be links?
     const parents: N[] = [];
     const lateral: N[] = [];
-    data?.links.forEach((link) => {
-      const source = getNode(link.source)!;
-      const target = getNode(link.target)!;
+    if (this.options.show?.parents || this.options.show?.lateral) {
+      data?.links.forEach((link) => {
+        const source = getNode(link.source)!;
+        const target = getNode(link.target)!;
 
-      if (link.source === selected) {
-        if (getChildren(target).find((node) => this.options.idAccessor(node) === selected)) {
-          parents.push(target);
-        } else {
-          if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === link.target)) {
-            lateral.push(target);
+        if (link.source === selected) {
+          if (getChildren(target).find((node) => this.options.idAccessor(node) === selected)) {
+            parents.push(target);
+          } else {
+            if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === link.target)) {
+              lateral.push(target);
+            }
+          }
+        } else if (link.target === selected) {
+          if (getChildren(source).find((node) => this.options.idAccessor(node) === selected)) {
+            parents.push(source);
+          } else {
+            if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === link.source)) {
+              lateral.push(source);
+            }
           }
         }
-      } else if (link.target === selected) {
-        if (getChildren(source).find((node) => this.options.idAccessor(node) === selected)) {
-          parents.push(source);
-        } else {
-          if (!getChildren(rootNode).find((node) => this.options.idAccessor(node) === link.source)) {
-            lateral.push(source);
-          }
-        }
-      }
-    });
+      });
+    }
 
     // Parents.
-    nodes.push(...this.layoutArc(parents, center, 0, Math.PI / 4, outer));
+    if (this.options.show?.parents) {
+      nodes.push(...this.layoutArc(parents, center, 0, Math.PI / 4, outer));
+    }
 
     // Lateral.
-    nodes.push(...this.layoutArc(lateral, center, -Math.PI / 2, Math.PI / 5, outer));
+    if (this.options.show?.lateral) {
+      nodes.push(...this.layoutArc(lateral, center, -Math.PI / 2, Math.PI / 5, outer));
+    }
 
     // Create or update links.
     const links: GraphLayoutLink<N>[] =
@@ -144,21 +175,21 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
     this._layout = {
       guides: [
         {
-          id: 'g1',
-          type: 'circle',
-          cx: 0,
-          cy: 0,
-          r: inner,
-          classes: {
-            circle: this.options.classes?.guide?.circle
-          }
-        },
-        {
           id: 'g2',
           type: 'circle',
           cx: 0,
           cy: 0,
           r: outer,
+          classes: {
+            circle: this.options.classes?.guide?.circle
+          }
+        },
+        {
+          id: 'g1',
+          type: 'circle',
+          cx: 0,
+          cy: 0,
+          r: inner,
           classes: {
             circle: this.options.classes?.guide?.circle
           }
@@ -174,7 +205,7 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
   private layoutArc(nodes: N[], center: Point, start = 0, arc = 0, rx = 160, ry = rx): GraphLayoutNode<N>[] {
     let a = start;
     const length = arc === 0 ? nodes.length : nodes.length - 1;
-    const da = length > 0 ? arc / length : 0;
+    const da = length > 0 ? (arc || Math.PI * 2) / length : 0;
     if (length > 0) {
       a = start - arc / 2;
     }
