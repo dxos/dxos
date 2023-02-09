@@ -4,12 +4,13 @@
 
 import React, { useState } from 'react';
 
-import { Item } from '@dxos/client';
+import { deleted, Document, DocumentBase, id, Item, schema, type } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
+import { DocumentModel } from '@dxos/document-model';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/kai';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
-import { DocumentModel } from '@dxos/document-model';
+import { useQuery } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
 import { DetailsTable, JsonView } from '../../components';
@@ -43,21 +44,17 @@ const modelToObject = (model: Model<any>) => {
 };
 
 // TODO(burdon): Rationalize with new API.
-const getItemType = (item: Item<any>) =>
-  (modelToObject(item.model) as any)?.['@type'] ?? item.type ?? item.modelType ?? 'undefined';
-
-const getItemDetails = (item: Item<any>) => ({
-  id: truncateKey(item.id, 4),
-  model: item.model.modelMeta.type,
-  type: (modelToObject(item.model) as any)?.['@type'],
-  deleted: String(Boolean(item.deleted)),
-  properties: <JsonView data={modelToObject(item.model)} />
+const getItemType = (doc: DocumentBase) => doc[type];
+const getItemDetails = (item: DocumentBase) => ({
+  id: truncateKey(item[id], 4),
+  type: item[type],
+  deleted: String(Boolean(item[deleted])),
+  properties: <JsonView data={item.toJSON()} />
 });
 
-const getHierarchicalItem = (item: Item<any>): TreeViewItem => ({
+const getHierarchicalItem = (item: Document): TreeViewItem => ({
   id: item.id,
-  title: getItemType(item),
-  items: item.children.map((child) => getHierarchicalItem(child)),
+  title: getItemType(item) || 'Unknown type',
   value: item
 });
 
@@ -65,7 +62,7 @@ const ItemsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
-  const items = [] as any //useSelection(space?.select()) ?? [];
+  const items = useQuery(space);
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
   const [filter, setFilter] = useState('');
 
@@ -81,10 +78,7 @@ const ItemsPanel = () => {
         <div className='flex flex-col w-1/3 overflow-auto border-r'>
           {/* TODO(burdon): Convert to list with new API. */}
           <TreeView
-            items={items
-              .filter((item: any) => !item.parent)
-              .map(getHierarchicalItem)
-              .filter(textFilter(filter))}
+            items={items.map(getHierarchicalItem).filter(textFilter(filter))}
             titleClassName={'text-black text-sm'}
             onSelect={(item: any) => setSelectedItem(item.value)}
             selected={selectedItem?.id}
