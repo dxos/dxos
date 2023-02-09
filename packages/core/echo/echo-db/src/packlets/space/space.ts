@@ -36,7 +36,7 @@ export type SpaceParams = {
 export interface ISpace {
   key: PublicKey;
   isOpen: boolean;
-  database: Database;
+  // database: Database;
   open(): Promise<void>;
   close(): Promise<void>;
 }

@@ -29,6 +29,10 @@ interface Experimental {
   get db(): EchoDatabase;
 }
 
+interface Internal {
+  get db(): DatabaseBackendProxy;
+}
+
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space extends ISpace {
   get key(): PublicKey;
@@ -36,16 +40,18 @@ export interface Space extends ISpace {
   get isActive(): boolean;
   get invitations(): CancellableInvitationObservable[];
 
-  // TODO(burdon): Remove and move accessors to proxy.
-  get database(): Database;
+  // // TODO(burdon): Remove and move accessors to proxy.
+  // get database(): Database;
 
   /**
    * Next-gen database.
    */
   get experimental(): Experimental;
 
-  get select(): Database['select'];
-  get reduce(): Database['reduce'];
+  get internal(): Internal;
+
+  // get select(): Database['select'];
+  // get reduce(): Database['reduce'];
 
   open(): Promise<void>;
   close(): Promise<void>;
@@ -92,6 +98,7 @@ export interface Space extends ISpace {
 export class SpaceProxy implements Space {
   private readonly _database?: Database;
   private readonly _experimental?: Experimental;
+  private readonly _internal!: Internal;
   private readonly _invitationProxy: SpaceInvitationsProxy;
   private _invitations: CancellableInvitationObservable[] = [];
 
@@ -137,6 +144,10 @@ export class SpaceProxy implements Space {
       db: new EchoDatabase(this._database._itemManager, backend, databaseRouter)
     };
 
+    this._internal = {
+      db: backend
+    }
+
     databaseRouter.register(this.key, this._experimental.db);
   }
 
@@ -153,13 +164,13 @@ export class SpaceProxy implements Space {
     return this._state.isActive;
   }
 
-  get database(): Database {
-    if (!this._database) {
-      throw new ApiError('Space not open.');
-    }
+  // get database(): Database {
+  //   if (!this._database) {
+  //     throw new ApiError('Space not open.');
+  //   }
 
-    return this._database;
-  }
+  //   return this._database;
+  // }
 
   // TODO(burdon): Add deprecated property.
   get experimental(): Experimental {
@@ -170,21 +181,25 @@ export class SpaceProxy implements Space {
     return this._experimental;
   }
 
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   * @deprecated Use database accessor.
-   */
-  get select(): Database['select'] {
-    return this.database.select.bind(this.database);
+  get internal(): Internal {
+    return this._internal;  
   }
 
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   * @deprecated Use database accessor.
-   */
-  get reduce(): Database['reduce'] {
-    return this.database.reduce.bind(this.database);
-  }
+  // /**
+  //  * Returns a selection context, which can be used to traverse the object graph.
+  //  * @deprecated Use database accessor.
+  //  */
+  // get select(): Database['select'] {
+  //   return this.database.select.bind(this.database);
+  // }
+
+  // /**
+  //  * Returns a selection context, which can be used to traverse the object graph.
+  //  * @deprecated Use database accessor.
+  //  */
+  // get reduce(): Database['reduce'] {
+  //   return this.database.reduce.bind(this.database);
+  // }
 
   /**
    * Called by EchoProxy open.
@@ -199,11 +214,11 @@ export class SpaceProxy implements Space {
     // TODO(burdon): Does this need to be set before method completes?
     this._initialized = true;
 
-    await this.database.initialize();
+    await this._database!.initialize();
     log('database ready');
     this._databaseInitialized.wake();
 
-    this._item = await this.database.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
+    this._item = await this._database!.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
     log('initialized');
@@ -215,7 +230,7 @@ export class SpaceProxy implements Space {
   @synchronized
   async destroy() {
     log('destroying...');
-    await this.database.destroy();
+    await this._database!.destroy();
 
     log('destroyed');
   }

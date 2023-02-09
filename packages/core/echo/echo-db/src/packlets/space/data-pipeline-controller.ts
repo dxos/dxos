@@ -16,7 +16,7 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
-import { Database, DatabaseBackendHost } from '../database';
+import { Database, DatabaseBackendHost, ItemManager } from '../database';
 import { SnapshotManager } from '../database/snapshot-manager';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
@@ -83,8 +83,8 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
   constructor(private readonly _params: DataPipelineControllerImplParams) {}
 
+  public _itemManager!: ItemManager;
   public databaseBackend?: DatabaseBackendHost;
-  public database?: Database;
 
   get pipelineState() {
     return this._pipeline?.state;
@@ -116,10 +116,10 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database, {
       snapshots: true // TODO(burdon): Config.
     });
+    this._itemManager =  new ItemManager(this._params.modelFactory, this._params.memberKey, this.databaseBackend.getWriteStream());
 
     // Connect pipeline to the database.
-    this.database = new Database(this._params.modelFactory, this.databaseBackend, this._params.memberKey);
-    await this.database.initialize();
+    await this.databaseBackend.open(this._itemManager, this._params.modelFactory);
 
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
@@ -177,7 +177,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     await this._ctx.dispose();
     await this._pipeline?.stop();
     await this.databaseBackend?.close();
-    await this.database?.destroy();
+    await this._itemManager?.destroy();
     await this._params.snapshotManager.close();
   }
 

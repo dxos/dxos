@@ -115,7 +115,7 @@ export class DataSpaceManager {
     await this._signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline();
-    this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
+    this._dataServiceSubscriptions.registerSpace(space.key, space.dataPipelineController.databaseBackend!.createDataServiceHost());
 
     this.updated.emit();
     return space;
@@ -134,7 +134,7 @@ export class DataSpaceManager {
     const space = await this._constructSpace(metadata);
     await this._metadataStore.addSpace(metadata);
     await space.initializeDataPipeline();
-    this._dataServiceSubscriptions.registerSpace(space.key, space.database.createDataServiceHost());
+    this._dataServiceSubscriptions.registerSpace(space.key, space.dataPipelineController.databaseBackend!.createDataServiceHost());
 
     this.updated.emit();
     return space;
