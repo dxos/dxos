@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { asyncTimeout } from '@dxos/async';
 import {
   ClientServices,
@@ -104,21 +106,27 @@ export class TestBuilder {
   }
 }
 
-export const testDatabaseReplication = async (create: DatabaseBackendProxy, check: DatabaseBackendProxy = create) => {
+export const testSpace = async (create: DatabaseBackendProxy, check: DatabaseBackendProxy = create) => {
   const objectId = PublicKey.random().toHex();
 
-  create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
+  const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
+
+  await result.getReceipt();
+  // TODO(dmaretskiy): await result.waitToBeProcessed()
+  assert(create._itemManager.entities.has(result.objectsCreated[0].id));
 
   await asyncTimeout(
     check._itemManager.update.waitForCondition(() => check._itemManager.entities.has(objectId)),
     1000
   );
+
+  return result;
 };
 
 export const syncItems = async (db1: DatabaseBackendProxy, db2: DatabaseBackendProxy) => {
   // Check item replicated from 1 => 2.
-  await testDatabaseReplication(db1, db2);
+  await testSpace(db1, db2);
 
   // Check item replicated from 2 => 1.
-  await testDatabaseReplication(db2, db1);
+  await testSpace(db2, db1);
 };

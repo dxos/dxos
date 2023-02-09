@@ -12,7 +12,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
-import { TestBuilder } from '../testing';
+import { TestBuilder, testSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -26,9 +26,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.echo.createSpace();
-    const item = await space.internal.db._itemManager.createItem(DocumentModel.meta.type, 'test');
-    await item.model.set('title', 'testing');
-    expect(item.model.get('title')).to.eq('testing');
+    await testSpace(space.internal.db);
 
     await asyncTimeout(
       space.queryMembers().waitFor((items) => items.length === 1),
