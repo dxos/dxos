@@ -46,6 +46,7 @@ export interface CrudListSlots {
 export interface CrudListProps {
   id: string;
   labelId: string;
+  completable?: boolean;
   defaultNextItemTitle?: string;
   nextItemTitle?: string;
   onNextItemTitleChange?: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -93,6 +94,7 @@ export const useCrudListKeyboardInteractions = (hostId: string) => {
 export const CrudList = ({
   children,
   labelId,
+  completable,
   nextItemTitle,
   defaultNextItemTitle,
   onNextItemTitleChange,
@@ -126,7 +128,7 @@ export const CrudList = ({
         // ref={forwardedRef}
         labelId={labelId}
         variant='ordered-draggable'
-        selectable
+        selectable={completable}
         onDragEnd={handleDragEnd}
         listItemIds={listItemIds ?? []}
         slots={slots.list}

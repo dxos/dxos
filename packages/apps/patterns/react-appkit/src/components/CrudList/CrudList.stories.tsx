@@ -55,13 +55,12 @@ export const Default = {
         [onListItemInputKeyDown, items, itemOrder]
       );
 
-      console.log('[things]', items, itemOrder);
-
       return (
         <CrudList
           {...args}
           id={listId}
           labelId='excluded'
+          completable
           itemIdOrder={itemOrder}
           onItemIdOrderChange={(nextOrder: string[]) => {
             setItemOrder(nextOrder);
