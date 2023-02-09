@@ -137,7 +137,7 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
         return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
       })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
-      .attr('dx', (d) => (d.r + 6) * (d.x > 0 ? 1 : -1))
+      // .attr('dx', (d) => ((d.r ?? 0) + 6) * (d.x > 0 ? 1 : -1))
       .attr('x', (d) => d.x)
       .attr('y', (d) => d.y);
   }

@@ -186,7 +186,7 @@ const Test = () => {
         )}
       </div>
 
-      <div className='flex p-1 items-center bg-slate-300'>
+      <div className='flex p-1 items-center bg-slate-700'>
         <button className='p-1' onClick={handleGenerate}>
           <Plus className={getSize(6)} />
         </button>
