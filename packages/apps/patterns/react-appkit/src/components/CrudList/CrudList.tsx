@@ -7,7 +7,7 @@ import React, { ChangeEvent, forwardRef, KeyboardEvent, ReactNode, useCallback }
 
 import { List, ListItem, useId, DragEndEvent, arrayMove, ListItemHeading, Input } from '@dxos/react-components';
 
-export interface TaskListItemProps {
+export interface CrudListItemProps {
   [key: string]: any;
   id: string;
   defaultCompleted?: boolean;
@@ -15,27 +15,30 @@ export interface TaskListItemProps {
   onCompletedChange?: (completed: boolean) => void;
   defaultTitle?: string;
   title?: string;
-  onTitleChange?: (event: ChangeEvent<HTMLParagraphElement>) => void;
+  onTitleChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  defaultItemIdOrder?: string[];
+  itemIdOrder?: string[];
+  onItemIdOrderChange?: (itemIdOrder: string[]) => void;
 }
 
-export interface TaskListProps {
+export interface CrudListProps {
   [key: string]: any;
   id: string;
   defaultTitle?: string;
   title?: string;
-  onTitleChange?: (event: ChangeEvent<HTMLHeadingElement>) => void;
+  onTitleChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   defaultItemIdOrder?: string[];
   itemIdOrder?: string[];
   onItemIdOrderChange?: () => void;
   children?: ReactNode;
 }
 
-export const useTaskListKeyboardInteractions = (hostId: string) => {
+export const useCrudListKeyboardInteractions = (hostId: string) => {
   const onListItemInputKeyDown = useCallback(
     (event: KeyboardEvent<Element>) => {
       const inputsInScope = Array.from(
         document.querySelectorAll<HTMLInputElement>(
-          `ol[data-focus-series-host="${hostId}"] input[data-focus-series="taskList"]`
+          `ol[data-focus-series-host="${hostId}"] input[data-focus-series="crudList"]`
         )
       );
       const targetIndex = inputsInScope.findIndex((sibling) => sibling === event.target);
@@ -62,7 +65,7 @@ export const useTaskListKeyboardInteractions = (hostId: string) => {
   return { onListItemInputKeyDown };
 };
 
-export const TaskList = forwardRef<HTMLOListElement, TaskListProps>(
+export const CrudList = forwardRef<HTMLOListElement, CrudListProps>(
   (
     {
       id,
@@ -73,10 +76,10 @@ export const TaskList = forwardRef<HTMLOListElement, TaskListProps>(
       defaultItemIdOrder,
       itemIdOrder,
       onItemIdOrderChange
-    }: TaskListProps,
+    }: CrudListProps,
     forwardedRef
   ) => {
-    const headingId = useId(`taskList-${id}__heading`);
+    const headingId = useId(`crudList-${id}__heading`);
     const [listItemIds, setListItemIds] = useControllableState({
       prop: itemIdOrder,
       defaultProp: defaultItemIdOrder,
@@ -101,8 +104,8 @@ export const TaskList = forwardRef<HTMLOListElement, TaskListProps>(
         <Input
           {...{
             variant: 'subdued',
-            label: 'Task list heading',
-            placeholder: 'Task list heading',
+            label: 'Crud list heading',
+            placeholder: 'Crud list heading',
             slots: { root: { className: 'm-0' }, label: { className: 'sr-only' } },
             size: 'lg',
             value: title,
@@ -133,9 +136,9 @@ export const TaskList = forwardRef<HTMLOListElement, TaskListProps>(
   }
 );
 
-export const TaskListItem = forwardRef<HTMLLIElement, TaskListItemProps>(
+export const CrudListItem = forwardRef<HTMLLIElement, CrudListItemProps>(
   (
-    { id, defaultCompleted, completed, onCompletedChange, defaultTitle, title, onTitleChange }: TaskListItemProps,
+    { id, defaultCompleted, completed, onCompletedChange, defaultTitle, title, onTitleChange }: CrudListItemProps,
     forwardedRef
   ) => {
     return (
@@ -152,8 +155,8 @@ export const TaskListItem = forwardRef<HTMLLIElement, TaskListItemProps>(
           <Input
             {...{
               variant: 'subdued',
-              label: 'Task heading',
-              placeholder: 'Task heading',
+              label: 'Crud heading',
+              placeholder: 'Crud heading',
               slots: { root: { className: 'm-0' }, label: { className: 'sr-only' } },
               value: title,
               defaultValue: defaultTitle,
