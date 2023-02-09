@@ -8,7 +8,14 @@ import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { convertTreeToGraph, createTree, Markers, TestGraphModel, TestNode } from '@dxos/gem-spore';
 import { Plexus } from '@dxos/plexus';
 
-const slots = {};
+// TODO(burdon): Type.
+const slots = {
+  root: undefined,
+  grid: {
+    className: undefined
+  },
+  plexus: undefined
+};
 
 // TODO(burdon): Merge with Graph (shared SVG).
 export const PlexusComponent = () => {
