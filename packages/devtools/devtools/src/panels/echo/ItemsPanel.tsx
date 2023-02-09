@@ -63,7 +63,7 @@ const ItemsPanel = () => {
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
   const items = useQuery(space);
-  const [selectedItem, setSelectedItem] = useState<Item<any>>();
+  const [selectedItem, setSelectedItem] = useState<DocumentBase>();
   const [filter, setFilter] = useState('');
 
   return (
@@ -81,7 +81,7 @@ const ItemsPanel = () => {
             items={items.map(getHierarchicalItem).filter(textFilter(filter))}
             titleClassName={'text-black text-sm'}
             onSelect={(item: any) => setSelectedItem(item.value)}
-            selected={selectedItem?.id}
+            selected={selectedItem?.[id]}
           />
         </div>
 

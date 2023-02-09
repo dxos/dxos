@@ -5,7 +5,7 @@
 import faker from 'faker';
 import React from 'react';
 
-import { ClientProvider, useSelection } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, itemAdapter, useTestSpace } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components-deprecated';
 
@@ -18,16 +18,17 @@ export default {
 faker.seed(100);
 
 const App = () => {
-  const space = useTestSpace();
+  // const space = useTestSpace();
 
-  // TODO(burdon): Filter out space item.
-  const items = useSelection(space?.select()) ?? [];
+  // // TODO(burdon): Filter out space item.
+  // const items = useSelection(space?.select()) ?? [];
 
-  return (
-    <FullScreen>
-      <EchoList items={items.filter((item) => item.type !== '')} itemAdapter={itemAdapter} />
-    </FullScreen>
-  );
+  // return (
+  //   <FullScreen>
+  //     <EchoList items={items.filter((item) => item.type !== '')} itemAdapter={itemAdapter} />
+  //   </FullScreen>
+  // );
+  return null;
 };
 
 export const Primary = () => (
