@@ -5,7 +5,7 @@
 import debug from 'debug';
 import faker from 'faker';
 
-import { Database, Item, DocumentModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/client';
+import { Item, DocumentModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/client';
 import type { Model } from '@dxos/model-factory';
 
 import { TestType } from './spaceBuilder';
@@ -81,7 +81,7 @@ export const DefaultSchemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
 };
 
 export class SchemaBuilder {
-  constructor(private readonly _database: Database) {}
+  constructor(private readonly _database: any) {}
 
   get defaultSchemas() {
     return DefaultSchemaDefs;
@@ -131,7 +131,7 @@ export class SchemaBuilder {
               const { entities: items } = this._database.select().filter({ type: field.ref.schema }).exec();
               if (items.length) {
                 return {
-                  [field.key]: faker.random.arrayElement(items).id
+                  [field.key]: (faker.random.arrayElement(items) as any).id
                 };
               }
             } else {

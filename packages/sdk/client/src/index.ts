@@ -10,9 +10,6 @@ export { generateSeedPhrase } from '@dxos/credentials';
 export {
   TYPE_SCHEMA,
   Item,
-  Database,
-  Selection,
-  SelectionResult,
   ItemFilterDeleted,
   ResultSet,
   Schema,

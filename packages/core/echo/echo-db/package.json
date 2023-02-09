@@ -62,9 +62,6 @@
         "root": "src/packlets/space/space.ts"
       },
       {
-        "root": "src/packlets/database/database.ts"
-      },
-      {
         "root": "src/packlets/database/database-backend.ts"
       }
     ]

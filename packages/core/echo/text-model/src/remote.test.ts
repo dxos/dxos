@@ -2,46 +2,39 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from 'expect';
+// describe('With remote database', () => {
+//   test('create and write text', async () => {
+//     const modelFactory = new ModelFactory().registerModel(TextModel);
+//     const backend = await createMemoryDatabase(modelFactory);
+//     const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
 
-import { DocumentModel } from '@dxos/document-model';
-import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-db/testing';
-import { ModelFactory } from '@dxos/model-factory';
-import { describe, test } from '@dxos/test';
+//     const text = await frontend.createItem({
+//       model: TextModel,
+//       type: 'example:type/text'
+//     });
+//     await text.model.insert('Hello world', 0);
 
-import { TextModel } from './text-model';
+//     expect(text.model.textContent).toEqual('Hello world');
+//   });
 
-describe('With remote database', () => {
-  test('create and write text', async () => {
-    const modelFactory = new ModelFactory().registerModel(TextModel);
-    const backend = await createMemoryDatabase(modelFactory);
-    const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
+//   test('create with parent', async () => {
+//     const modelFactory = new ModelFactory().registerModel(TextModel).registerModel(DocumentModel);
+//     const backend = await createMemoryDatabase(modelFactory);
+//     const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
 
-    const text = await frontend.createItem({
-      model: TextModel,
-      type: 'example:type/text'
-    });
-    await text.model.insert('Hello world', 0);
+//     const parent = await frontend.createItem({
+//       model: DocumentModel
+//     });
 
-    expect(text.model.textContent).toEqual('Hello world');
-  });
+//     const text = await frontend.createItem({
+//       model: TextModel,
+//       type: 'example:type/text',
+//       parent: parent.id
+//     });
+//     await text.model.insert('Hello world', 0);
 
-  test('create with parent', async () => {
-    const modelFactory = new ModelFactory().registerModel(TextModel).registerModel(DocumentModel);
-    const backend = await createMemoryDatabase(modelFactory);
-    const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
+//     expect(text.model.textContent).toEqual('Hello world');
+//   });
+// });
 
-    const parent = await frontend.createItem({
-      model: DocumentModel
-    });
-
-    const text = await frontend.createItem({
-      model: TextModel,
-      type: 'example:type/text',
-      parent: parent.id
-    });
-    await text.model.insert('Hello world', 0);
-
-    expect(text.model.textContent).toEqual('Hello world');
-  });
-});
+export {};

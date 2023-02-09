@@ -5,8 +5,9 @@
 import faker from 'faker';
 
 import { Item, DocumentModel, Space } from '@dxos/client';
+import { todo } from '@dxos/debug';
 
-import { NumberRange, capitalize, getNumber } from '../util';
+import { NumberRange, getNumber } from '../util';
 
 export enum TestType {
   Org = 'example:type/org',
@@ -92,6 +93,7 @@ export class OrgBuilder {
 
 /**
  * Space builder.
+ * @deprecated
  */
 // TODO(burdon): Rename generator.
 // TODO(burdon): Configure generator to treat all references as links (e.g., for table).
@@ -103,60 +105,65 @@ export class SpaceBuilder {
   }
 
   async createOrgs(n: NumberRange = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
-    return await Promise.all(
-      Array.from({ length: getNumber(n) }).map(async () => {
-        const org = await this.createOrg();
-        await callback?.(new OrgBuilder(this, org));
-        return org;
-      })
-    );
+    todo();
+    // return await Promise.all(
+    //   Array.from({ length: getNumber(n) }).map(async () => {
+    //     const org = await this.createOrg();
+    //     await callback?.(new OrgBuilder(this, org));
+    //     return org;
+    //   })
+    // );
   }
 
   async createOrg() {
-    return this._space.database.createItem({
-      model: DocumentModel,
-      type: TestType.Org,
-      props: {
-        name: faker.company.companyName(),
-        description: faker.internet.url()
-      }
-    });
+    todo();
+    // return this._space.database.createItem({
+    //   model: DocumentModel,
+    //   type: TestType.Org,
+    //   props: {
+    //     name: faker.company.companyName(),
+    //     description: faker.internet.url()
+    //   }
+    // });
   }
 
   async createPerson(org: Item<DocumentModel>) {
-    return this._space.database.createItem({
-      model: DocumentModel,
-      type: TestType.Person,
-      parent: org.id,
-      props: {
-        name: faker.name.findName(),
-        description: faker.name.jobDescriptor()
-      }
-    });
+    todo();
+    // return this._space.database.createItem({
+    //   model: DocumentModel,
+    //   type: TestType.Person,
+    //   parent: org.id,
+    //   props: {
+    //     name: faker.name.findName(),
+    //     description: faker.name.jobDescriptor()
+    //   }
+    // });
   }
 
-  async createProject(org: Item<DocumentModel>) {
-    return this._space.database.createItem({
-      model: DocumentModel,
-      type: TestType.Project,
-      parent: org.id,
-      props: {
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription() + '.'
-      }
-    });
+  async createProject(org: Item<DocumentModel>): Promise<any> {
+    todo();
+    // return this._space.database.createItem({
+    //   model: DocumentModel,
+    //   type: TestType.Project,
+    //   parent: org.id,
+    //   props: {
+    //     name: faker.commerce.productName(),
+    //     description: faker.commerce.productDescription() + '.'
+    //   }
+    // });
   }
 
   async createTask(project: Item<DocumentModel>) {
-    return this._space.database.createItem({
-      model: DocumentModel,
-      type: TestType.Task,
-      parent: project.id,
-      props: {
-        name: capitalize(faker.git.commitMessage()) + '.',
-        description: faker.hacker.phrase()
-      }
-    });
+    todo();
+    // return this._space.database.createItem({
+    //   model: DocumentModel,
+    //   type: TestType.Task,
+    //   parent: project.id,
+    //   props: {
+    //     name: capitalize(faker.git.commitMessage()) + '.',
+    //     description: faker.hacker.phrase()
+    //   }
+    // });
   }
 
   // TODO(burdon): ???
@@ -188,28 +195,26 @@ export class SpaceBuilder {
           break;
         }
       }
-
-      return;
     }
 
-    if (Math.random() < 0.4) {
-      // New org.
-      const org = await this.createOrg();
-      const orgBuilder = new OrgBuilder(this, org);
-      await orgBuilder.createProjects([2, 3]);
-      await orgBuilder.createPeople([2, 4]);
-    } else {
-      // Random parent.
-      const result = this.space
-        .select()
-        .filter((item) => item.type === TestType.Org || item.type === TestType.Project)
-        .exec();
+    // if (Math.random() < 0.4) {
+    //   // New org.
+    //   const org = await this.createOrg();
+    //   const orgBuilder = new OrgBuilder(this, org);
+    //   await orgBuilder.createProjects([2, 3]);
+    //   await orgBuilder.createPeople([2, 4]);
+    // } else {
+    //   // Random parent.
+    //   const result = this.space
+    //     .select()
+    //     .filter((item) => item.type === TestType.Org || item.type === TestType.Project)
+    //     .exec();
 
-      parent = faker.random.arrayElement(result.entities);
-      if (parent) {
-        await this.createRandomItem(parent);
-      }
-    }
+    //   parent = faker.random.arrayElement(result.entities);
+    //   if (parent) {
+    //     await this.createRandomItem(parent);
+    //   }
+    // }
   }
 }
 
@@ -236,9 +241,8 @@ export const buildTestSpace = async (builder: SpaceBuilder, options: Options = d
   await builder.createOrgs(options.numOrgs, async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople(options.numPeople);
     await orgBuilder.createProjects(options.numProjects, async (projectBuilder: ProjectBuilder) => {
-      const result = await orgBuilder.org.select().children().filter({ type: TestType.Person }).exec();
-
-      await projectBuilder.createTasks(options.numTasks, result.entities);
+      // const result = await orgBuilder.org.select().children().filter({ type: TestType.Person }).exec();
+      // await projectBuilder.createTasks(options.numTasks, result.entities);
     });
   });
 };
