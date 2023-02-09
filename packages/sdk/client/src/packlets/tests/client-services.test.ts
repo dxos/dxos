@@ -8,7 +8,6 @@ import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { ISpace } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -16,24 +15,7 @@ import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Space } from '../proxies';
-import { TestBuilder } from '../testing';
-
-// TODO(wittjosiah): Copied from @dxos/client-services. Factor out.
-const syncItems = async (space1: ISpace, space2: ISpace) => {
-  {
-    // Check item replicated from 1 => 2.
-    const item1 = await space1.database!.createItem({ type: 'type-1' });
-    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
-    expect(item1.id).to.eq(item2.id);
-  }
-
-  {
-    // Check item replicated from 2 => 1.
-    const item1 = await space2.database!.createItem({ type: 'type-2' });
-    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
-    expect(item1.id).to.eq(item2.id);
-  }
-};
+import { syncItems, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -285,6 +267,6 @@ describe('Client services', () => {
       }, 3_000);
     }
 
-    await syncItems(space1, space2);
+    await syncItems(space1.internal.db, space2.internal.db);
   });
 });

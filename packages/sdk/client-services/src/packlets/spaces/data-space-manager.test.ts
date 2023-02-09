@@ -121,7 +121,7 @@ describe('DataSpaceManager', () => {
     });
     log.break();
 
-    await syncItems(space1, space2);
+    await syncItems(space1.dataPipelineController, space2.dataPipelineController);
 
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);

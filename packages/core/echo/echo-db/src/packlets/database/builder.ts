@@ -36,3 +36,7 @@ export const encodeModelMutation = (meta: ModelMeta, mutation: any): WithTypeUrl
   type_url: (meta.mutationCodec as ProtoCodec).protoType.fullName.slice(1),
   value: meta.mutationCodec.encode(mutation)
 });
+
+export const genesisMutation = (objectId: string, modelType: string) => ({
+  objects: [{ objectId, genesis: { modelType } }]
+});

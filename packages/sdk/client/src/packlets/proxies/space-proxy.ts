@@ -14,7 +14,7 @@ import {
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { DocumentModel, ObjectProperties } from '@dxos/document-model';
-import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
+import { Item, ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, EchoDatabase } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -29,6 +29,10 @@ interface Experimental {
   get db(): EchoDatabase;
 }
 
+interface Internal {
+  get db(): DatabaseBackendProxy;
+}
+
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space extends ISpace {
   get key(): PublicKey;
@@ -36,16 +40,18 @@ export interface Space extends ISpace {
   get isActive(): boolean;
   get invitations(): CancellableInvitationObservable[];
 
-  // TODO(burdon): Remove and move accessors to proxy.
-  get database(): Database;
+  // // TODO(burdon): Remove and move accessors to proxy.
+  // get database(): Database;
 
   /**
    * Next-gen database.
    */
   get experimental(): Experimental;
 
-  get select(): Database['select'];
-  get reduce(): Database['reduce'];
+  get internal(): Internal;
+
+  // get select(): Database['select'];
+  // get reduce(): Database['reduce'];
 
   open(): Promise<void>;
   close(): Promise<void>;
@@ -90,8 +96,10 @@ export interface Space extends ISpace {
 }
 
 export class SpaceProxy implements Space {
-  private readonly _database?: Database;
+  private readonly _itemManager?: ItemManager;
   private readonly _experimental?: Experimental;
+  private readonly _internal!: Internal;
+  private readonly _dbBackend?: DatabaseBackendProxy;
   private readonly _invitationProxy: SpaceInvitationsProxy;
   private _invitations: CancellableInvitationObservable[] = [];
 
@@ -125,16 +133,15 @@ export class SpaceProxy implements Space {
 
     assert(this._clientServices.services.DataService, 'DataService not available');
 
-    const backend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
-    this._database = new Database(
-      this._modelFactory,
-      // TODO(dmaretskyi): Preserve this when removing `Database`.
-      backend,
-      memberKey
-    );
+    this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
+    this._itemManager = new ItemManager(this._modelFactory, memberKey, this._dbBackend.getWriteStream());
 
     this._experimental = {
-      db: new EchoDatabase(this._database._itemManager, backend, databaseRouter)
+      db: new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter)
+    };
+
+    this._internal = {
+      db: this._dbBackend
     };
 
     databaseRouter.register(this.key, this._experimental.db);
@@ -153,13 +160,13 @@ export class SpaceProxy implements Space {
     return this._state.isActive;
   }
 
-  get database(): Database {
-    if (!this._database) {
-      throw new ApiError('Space not open.');
-    }
+  // get database(): Database {
+  //   if (!this._database) {
+  //     throw new ApiError('Space not open.');
+  //   }
 
-    return this._database;
-  }
+  //   return this._database;
+  // }
 
   // TODO(burdon): Add deprecated property.
   get experimental(): Experimental {
@@ -170,21 +177,25 @@ export class SpaceProxy implements Space {
     return this._experimental;
   }
 
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   * @deprecated Use database accessor.
-   */
-  get select(): Database['select'] {
-    return this.database.select.bind(this.database);
+  get internal(): Internal {
+    return this._internal;
   }
 
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   * @deprecated Use database accessor.
-   */
-  get reduce(): Database['reduce'] {
-    return this.database.reduce.bind(this.database);
-  }
+  // /**
+  //  * Returns a selection context, which can be used to traverse the object graph.
+  //  * @deprecated Use database accessor.
+  //  */
+  // get select(): Database['select'] {
+  //   return this.database.select.bind(this.database);
+  // }
+
+  // /**
+  //  * Returns a selection context, which can be used to traverse the object graph.
+  //  * @deprecated Use database accessor.
+  //  */
+  // get reduce(): Database['reduce'] {
+  //   return this.database.reduce.bind(this.database);
+  // }
 
   /**
    * Called by EchoProxy open.
@@ -199,11 +210,11 @@ export class SpaceProxy implements Space {
     // TODO(burdon): Does this need to be set before method completes?
     this._initialized = true;
 
-    await this.database.initialize();
+    await this._dbBackend!.open(this._itemManager!, this._modelFactory);
     log('database ready');
     this._databaseInitialized.wake();
 
-    this._item = await this.database.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
+    // this._item = await this._database!.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
     log('initialized');
@@ -215,7 +226,8 @@ export class SpaceProxy implements Space {
   @synchronized
   async destroy() {
     log('destroying...');
-    await this.database.destroy();
+    await this._dbBackend?.close();
+    await this._itemManager?.destroy();
 
     log('destroyed');
   }

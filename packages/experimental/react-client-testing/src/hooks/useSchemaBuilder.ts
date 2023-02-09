@@ -11,4 +11,4 @@ import { SchemaBuilder } from '@dxos/client-testing';
  * @param space
  */
 export const useSchemaBuilder = (space?: Space) =>
-  useMemo(() => (space ? new SchemaBuilder(space.database) : undefined), [space?.key.toHex()]);
+  useMemo(() => (space ? new SchemaBuilder(space.experimental.db as any) : undefined), [space?.key.toHex()]);

@@ -56,16 +56,15 @@ export const App = ({ space, onInvite, onExport }: AppProps) => {
   const handleCreateItem = (type?: string, title?: string, parentId?: ItemID) => {
     if (!type) {
       void builder?.createRandomItem();
-      return;
     }
 
-    void space.database.createItem({
-      type,
-      parent: parentId,
-      props: {
-        name: title // TODO(burdon): Use adapter.
-      }
-    });
+    // void space.database.createItem({
+    //   type,
+    //   parent: parentId,
+    //   props: {
+    //     name: title // TODO(burdon): Use adapter.
+    //   }
+    // });
   };
 
   const handleSearch = (text: string) => {
@@ -76,7 +75,7 @@ export const App = ({ space, onInvite, onExport }: AppProps) => {
     const selection = execSelection(space, text);
     const result = selection?.exec();
     const selected = new Set<ItemID>();
-    result?.entities.forEach((item) => selected.add(item.id));
+    result?.entities.forEach((item: any) => selected.add(item.id));
     setSelected(selected);
     model.triggerUpdate();
   };

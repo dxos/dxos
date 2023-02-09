@@ -175,8 +175,15 @@ export class EchoProxy implements Echo {
     const spaceProxy = this._spaces.get(space.publicKey) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
-    await spaceProxy.database.createItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
     await spaceProxy.initialize(); // Idempotent.
+    spaceProxy.internal.db.mutate({
+      objects: [
+        {
+          objectId: PublicKey.random().toHex(),
+          genesis: { modelType: DocumentModel.meta.type, itemType: SPACE_ITEM_TYPE }
+        }
+      ]
+    });
 
     return spaceProxy;
   }

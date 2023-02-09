@@ -2585,7 +2585,9 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/mosaic': workspace:*
       '@dxos/network-manager': workspace:*
+      '@dxos/plexus': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -2658,6 +2660,8 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/chess-app': link:../../experimental/chess-app
+      '@dxos/mosaic': link:../../experimental/mosaic
+      '@dxos/plexus': link:../../experimental/plexus
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-ui': link:../../apps/patterns/react-ui
       '@monaco-editor/react': 4.4.6_mxtbfgz57rpc6pjn6jsomqlbdm
