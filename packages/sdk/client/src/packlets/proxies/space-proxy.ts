@@ -182,7 +182,7 @@ export class SpaceProxy implements Space {
   }
 
   get internal(): Internal {
-    return this._internal;  
+    return this._internal;
   }
 
   // /**
@@ -218,7 +218,7 @@ export class SpaceProxy implements Space {
     log('database ready');
     this._databaseInitialized.wake();
 
-    this._item = await this._database!.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
+    // this._item = await this._database!.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
     log('initialized');

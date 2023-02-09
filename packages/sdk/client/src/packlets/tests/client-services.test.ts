@@ -207,8 +207,7 @@ describe('Client services', () => {
     });
   });
 
-  test.only('synchronizes data between two spaces after completing invitation', async () => {
-    debugger;
+  test('synchronizes data between two spaces after completing invitation', async () => {
     const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
