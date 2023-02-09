@@ -2,16 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
-  Database,
   DataPipelineControllerImpl,
-  ISpace,
   MetadataStore,
   Space,
   SnapshotManager,
@@ -47,7 +43,7 @@ export type DataSpaceParams = {
 
 const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
 @trackLeaks('open', 'close')
-export class DataSpace implements ISpace {
+export class DataSpace {
   private readonly _ctx = new Context();
   private readonly _dataPipelineController: DataPipelineControllerImpl;
   private readonly _inner: Space;
@@ -101,11 +97,6 @@ export class DataSpace implements ISpace {
 
   get dataPipelineController(): DataPipelineControllerImpl {
     return this._dataPipelineController;
-  }
-
-  get database(): Database {
-    assert(this._dataPipelineController.database);
-    return this._dataPipelineController.database;
   }
 
   get stateUpdate() {
