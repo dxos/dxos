@@ -67,11 +67,11 @@ export const Default = {
           completable
           onClickAdd={addItem}
           itemIdOrder={itemOrder}
-          onItemIdOrderChange={(nextOrder: string[]) => {
+          onChangeItemIdOrder={(nextOrder: string[]) => {
             setItemOrder(nextOrder);
           }}
           nextItemTitle={nextItemTitle}
-          onNextItemTitleChange={({ target: { value } }) => setNextItemTitle(value)}
+          onChangeNextItemTitle={({ target: { value } }) => setNextItemTitle(value)}
           slots={{
             root: hostAttrs as ComponentPropsWithoutRef<'div'>,
             addItem: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } }
@@ -86,10 +86,10 @@ export const Default = {
                 {...{
                   id,
                   title,
-                  onTitleChange: ({ target: { value } }: ChangeEvent<HTMLInputElement>) =>
+                  onChangeTitle: ({ target: { value } }: ChangeEvent<HTMLInputElement>) =>
                     updateItem(id, { title: value }),
                   completed,
-                  onCompletedChange: (nextCompleted: boolean) => updateItem(id, { completed: nextCompleted })
+                  onChangeCompleted: (nextCompleted: boolean) => updateItem(id, { completed: nextCompleted })
                 }}
               />
             );

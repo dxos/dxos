@@ -33,10 +33,10 @@ export interface CrudListItemProps {
   id: string;
   defaultCompleted?: boolean;
   completed?: boolean;
-  onCompletedChange?: (completed: boolean) => void;
+  onChangeCompleted?: (completed: boolean) => void;
   defaultTitle?: string;
   title?: string;
-  onTitleChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChangeTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
   slots?: CrudListItemSlots;
 }
 
@@ -54,10 +54,10 @@ export interface CrudListProps {
   onClickAdd?: () => void;
   defaultNextItemTitle?: string;
   nextItemTitle?: string;
-  onNextItemTitleChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChangeNextItemTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
   defaultItemIdOrder?: string[];
   itemIdOrder?: string[];
-  onItemIdOrderChange?: (itemIdOrder: string[]) => void;
+  onChangeItemIdOrder?: (itemIdOrder: string[]) => void;
   children?: ReactNode;
   slots?: CrudListSlots;
 }
@@ -113,16 +113,16 @@ export const CrudList = ({
   onClickAdd,
   nextItemTitle,
   defaultNextItemTitle,
-  onNextItemTitleChange,
+  onChangeNextItemTitle,
   defaultItemIdOrder,
   itemIdOrder,
-  onItemIdOrderChange,
+  onChangeItemIdOrder,
   slots = {}
 }: CrudListProps) => {
   const [listItemIds, setListItemIds] = useControllableState({
     prop: itemIdOrder,
     defaultProp: defaultItemIdOrder,
-    onChange: onItemIdOrderChange
+    onChange: onChangeItemIdOrder
   });
   const { t } = useTranslation('appkit');
   const handleDragEnd = (event: DragEndEvent) => {
@@ -162,7 +162,7 @@ export const CrudList = ({
           {...{
             value: nextItemTitle,
             defaultValue: defaultNextItemTitle,
-            onChange: onNextItemTitleChange
+            onChange: onChangeNextItemTitle
           }}
           slots={{
             input: {
@@ -196,10 +196,10 @@ export const CrudListItem = forwardRef<HTMLLIElement, CrudListItemProps>(
       id,
       defaultCompleted,
       completed,
-      onCompletedChange,
+      onChangeCompleted,
       defaultTitle,
       title,
-      onTitleChange,
+      onChangeTitle,
       slots = {}
     }: CrudListItemProps,
     forwardedRef
@@ -211,7 +211,7 @@ export const CrudListItem = forwardRef<HTMLLIElement, CrudListItemProps>(
           id,
           defaultSelected: defaultCompleted,
           selected: completed,
-          onSelectedChange: onCompletedChange,
+          onSelectedChange: onChangeCompleted,
           slots
         }}
       >
@@ -237,7 +237,7 @@ export const CrudListItem = forwardRef<HTMLLIElement, CrudListItemProps>(
               },
               value: title,
               defaultValue: defaultTitle,
-              onChange: onTitleChange
+              onChange: onChangeTitle
             }}
           >
             {title ?? defaultTitle}
