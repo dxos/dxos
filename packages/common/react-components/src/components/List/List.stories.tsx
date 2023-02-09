@@ -3,13 +3,14 @@
 //
 
 import '@dxosTheme';
+import { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Play, PushPin } from 'phosphor-react';
-import React, { ComponentPropsWithoutRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import { getSize } from '../../styles';
 import { mx } from '../../util';
-import { List, Item, Endcap, Heading } from './List';
+import { List, ListItem, ListItemEndcap, ListItemHeading } from './List';
 
 export default {
   component: List
@@ -23,9 +24,7 @@ export const Default = {
         text: `List item ${index + 1}`
       }))
     );
-    const handleDragEnd = (
-      event: Parameters<Exclude<ComponentPropsWithoutRef<typeof List>['onDragEnd'], undefined>>[0]
-    ) => {
+    const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
 
       if (active.id !== over?.id) {
@@ -40,15 +39,15 @@ export const Default = {
     return (
       <List {...args} labelId='excluded' onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
-          <Item key={id} id={id}>
-            <Endcap>
+          <ListItem key={id} id={id}>
+            <ListItemEndcap>
               <Play className={mx(getSize(5), 'mbs-2.5')} />
-            </Endcap>
-            <Heading className='mbs-2'>{text}</Heading>
-            <Endcap>
+            </ListItemEndcap>
+            <ListItemHeading className='mbs-2'>{text}</ListItemHeading>
+            <ListItemEndcap>
               <PushPin className={mx(getSize(5), 'mbs-2.5')} />
-            </Endcap>
-          </Item>
+            </ListItemEndcap>
+          </ListItem>
         ))}
       </List>
     );
