@@ -24,7 +24,8 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
-          '@dxos/gem-spore/testing',
+          // TODO(burdon): Missing exports?
+          '@dxos/protocols',
           '@dxos/protocols',
           '@dxos/protocols/proto/dxos/client',
           '@dxos/protocols/proto/dxos/client/services',

@@ -4,30 +4,21 @@
 
 import clsx from 'clsx';
 import * as d3 from 'd3';
-import faker from 'faker';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
 import { FullScreen, SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '@dxos/gem-core';
 
 import {
   GraphForceProjector,
-  TestGraphModel,
-  GraphLayoutLink,
   GraphLayoutNode,
+  GraphLayoutLink,
   GraphRenderer,
-  TestNode,
-  convertTreeToGraph,
   createMarkers,
   createSimulationDrag,
-  createTree,
-  defaultGraphStyles,
-  defaultMarkerStyles,
   linkerRenderer
-} from '../src';
-import { styles } from './styles';
-
-// TODO(burdon): Replace with storybook.
+} from '../graph';
+import { convertTreeToGraph, createTree, styles, TestGraphModel, TestNode } from '../testing';
+import { defaultGraphStyles, defaultMarkerStyles } from './styles';
 
 export default {
   title: 'gem-spore/hooks'
@@ -107,16 +98,17 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   const zoom = useZoom({ extent: [1, 2] });
   const markersRef = useRef<SVGGElement>();
 
-  useButton('Clear', () => {
-    model.clear();
-  });
-  useButton('Reset', () => {
-    model.clear();
-    model.createNodes(undefined, faker.datatype.number({ min: 6, max: 36 }));
-  });
-  useButton('Create', () => {
-    model.createNodes(undefined, 1);
-  });
+  // TODO(burdon): Storybook addons.
+  // useButton('Clear', () => {
+  //   model.clear();
+  // });
+  // useButton('Reset', () => {
+  //   model.clear();
+  //   model.createNodes(undefined, faker.datatype.number({ min: 6, max: 36 }));
+  // });
+  // useButton('Create', () => {
+  //   model.createNodes(undefined, 1);
+  // });
 
   const { projector, renderer } = useMemo(() => {
     const projector = new GraphForceProjector<TestNode>(context, {
@@ -232,13 +224,10 @@ export const Secondary = () => {
 
   return (
     <FullScreen>
-      <KnobsProvider>
-        <SVGContextProvider>
-          <SecondaryComponent model={model} />
-        </SVGContextProvider>
-        <Info />
-        <Knobs className={styles.knobs} />
-      </KnobsProvider>
+      <SVGContextProvider>
+        <SecondaryComponent model={model} />
+      </SVGContextProvider>
+      <Info />
     </FullScreen>
   );
 };
