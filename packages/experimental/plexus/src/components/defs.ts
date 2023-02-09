@@ -3,17 +3,17 @@
 //
 
 import { Point } from '@dxos/gem-core';
-import { GraphData, GraphNode } from '@dxos/gem-spore';
+import { GraphData } from '@dxos/gem-spore';
 
 // TODO(burdon): Conform to gem-spore;
 
-export interface Layout {
+export interface Layout<N> {
   center: Point;
   points: Map<string, Point>;
-  update(graph: GraphData, selected?: GraphNode): void;
+  update(graph: GraphData<N>, selected?: N): void;
 }
 
-export interface Renderer {
-  update(el: SVGElement, layout: Layout, data: GraphData, onClick: (node: GraphNode) => void): void; // TODO(burdon): Callbacks.
-  render(el: SVGElement, layout: Layout, transition?: boolean): void;
+export interface Renderer<N> {
+  update(el: SVGElement, layout: Layout<N>, data: GraphData<N>, onClick: (node: N) => void): void; // TODO(burdon): Callbacks.
+  render(el: SVGElement, layout: Layout<N>, transition?: boolean): void;
 }

@@ -134,3 +134,17 @@ html[data-theme=dark] .custom-container.note {
   background-color: darken($zinc-800, 3%);
 }
 
+.peer-a {
+  color: $orange-500;
+}
+
+.peer-b {
+  color: $violet-500;
+}
+
+.theme-hope-content figure img {
+  border-radius: 0;
+  &[tabindex]:hover {
+    box-shadow: none;
+  }
+}

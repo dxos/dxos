@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import path from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -38,7 +37,7 @@ const main = async () => {
         );
         const names = outputDirectory.split('/');
         const name = names[names.length - 1];
-        const promises = await executeDirectoryTemplate({
+        const result = await executeDirectoryTemplate({
           outputDirectory,
           overwrite: overwrite ? !!overwrite : false,
           templateDirectory: path.resolve(__dirname, 'templates', thing),
@@ -46,13 +45,7 @@ const main = async () => {
             name: `@dxos/${name}`
           }
         });
-        const results = await Promise.all(promises);
-        const savePromises = results.flat().map(async (file) => {
-          const result = await file.save();
-          const msg = file.shortDescription(process.cwd());
-          console.log(result ? 'wrote' : 'skipped', result ? msg : chalk.gray(msg));
-        });
-        await Promise.all(savePromises);
+        void result.save();
         console.log('done');
       }
     })

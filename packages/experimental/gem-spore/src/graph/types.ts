@@ -7,10 +7,15 @@
 // Generic graph data type.
 //
 
+import assert from 'assert';
+
 import { Point } from '@dxos/gem-core';
 
-export type GraphNode = {
-  id: string;
+export type IdAccessor<N = any> = (node: N) => string;
+
+export const defaultIdAccessor = (node: any) => {
+  assert(node.id);
+  return node.id;
 };
 
 export type GraphLink = {
@@ -19,7 +24,7 @@ export type GraphLink = {
   target: string;
 };
 
-export type GraphData<T extends GraphNode = GraphNode> = {
+export type GraphData<T> = {
   nodes: T[];
   links: GraphLink[];
 };
@@ -34,33 +39,45 @@ export const emptyGraph: GraphData<any> = {
 // Graph layout used by graph renderers.
 //
 
-export type GraphLayoutNode<N extends GraphNode> = {
+export type GraphLayoutNode<N> = {
   id: string;
   data?: N;
   x?: number;
   y?: number;
   r?: number;
+  classes?: {
+    circle?: string;
+    text?: string;
+  };
   children?: number;
   initialized?: boolean;
   last?: Point;
 };
 
-export type GraphLayoutLink<N extends GraphNode> = {
+export type GraphLayoutLink<N> = {
   id: string;
   source: GraphLayoutNode<N>;
   target: GraphLayoutNode<N>;
+  classes?: {
+    path?: string;
+  };
 };
 
-export type GraphLayout<N extends GraphNode> = {
+export type GraphGuide = {
+  id: string;
+  type: string;
+  cx: number;
+  cy: number;
+  r: number;
+  classes?: {
+    circle?: string;
+  };
+};
+
+export type GraphLayout<N> = {
+  guides?: GraphGuide[];
   graph: {
     nodes: GraphLayoutNode<N>[];
     links: GraphLayoutLink<N>[];
   };
-
-  guides?: {
-    type: 'circle'; // TODO(burdon): Create typed guides.
-    cx: number;
-    cy: number;
-    r: number;
-  }[];
 };

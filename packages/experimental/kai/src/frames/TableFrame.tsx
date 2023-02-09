@@ -20,17 +20,13 @@ type ColumnType<T extends DocumentBase> = SelectorOption & {
   columns: Column<Document>[];
 };
 
-const capitalizeFirstLetter = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
 const generateTypes = (schemaTypes: EchoSchemaType[]) => {
   const generateColumns = (type: EchoSchemaType) => {
     const columns: Column<Document>[] = [];
     for (const field of type.fields) {
       if (SUPPORTED_TYPES.includes(field.type.kind)) {
         columns.push({
-          Header: capitalizeFirstLetter(field.name),
+          Header: field.name,
           accessor: field.name
         });
       }
@@ -41,12 +37,12 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
   return schemaTypes.map((schema) => ({
     id: schema.name,
     title: schema.shortName,
+    columns: generateColumns(schema),
     filter: schema.createFilter(),
     subFilter:
       (match = '') =>
       (object: Document) =>
-        JSON.stringify(object.toJSON()).includes(match),
-    columns: generateColumns(schema)
+        JSON.stringify(object.toJSON()).includes(match)
   }));
 };
 
@@ -82,6 +78,7 @@ export const TableFrame = () => {
           </div>
         </div>
       </div>
+
       {/* <div className='flex flex-1 overflow-hidden'> */}
       <Table<Document> columns={type.columns} data={objects} />
       {/* </div> */}

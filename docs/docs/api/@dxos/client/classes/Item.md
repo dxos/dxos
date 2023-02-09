@@ -1,5 +1,5 @@
 # Class `Item`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:14]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:15]()</sub>
 
 
 A globally addressable data item.
@@ -24,7 +24,7 @@ Arguments:
 
 `stateManager`: <code>StateManager&lt;NonNullable&lt;M&gt;&gt;</code>
 
-`_writeStream`: <code>FeedWriter&lt;EchoEnvelope&gt;</code>
+`_writeStream`: <code>FeedWriter&lt;DataMessage&gt;</code>
 
 `parent`: <code>"null" | [Item](/api/@dxos/client/classes/Item)&lt;any&gt;</code>
 
