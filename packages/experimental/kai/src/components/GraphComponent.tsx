@@ -5,7 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { convertTreeToGraph, createTree, Graph as GemGraph, Markers, TestGraphModel } from '@dxos/gem-spore';
+import { Graph as GemGraph, Markers } from '@dxos/gem-spore';
+import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore/testing';
 
 export type GraphComponentProps = {
   data?: any;

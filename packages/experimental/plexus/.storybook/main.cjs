@@ -25,6 +25,7 @@ module.exports = {
         force: true,
         include: [
           // TODO(burdon): Missing exports?
+          '@dxos/gem-spore/testing',
           '@dxos/protocols',
           '@dxos/protocols/proto/dxos/client',
           '@dxos/protocols/proto/dxos/client/services',

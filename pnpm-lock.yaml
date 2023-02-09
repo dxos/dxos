@@ -3602,7 +3602,6 @@ importers:
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/node-std': link:../../common/node-std
-      '@dxos/react-components': link:../../common/react-components
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       d3: 7.6.1
@@ -3613,6 +3612,7 @@ importers:
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.20.12
+      '@dxos/react-components': link:../../common/react-components
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
       '@swc/core': 1.3.21
       '@types/d3': 7.4.0

@@ -5,7 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { convertTreeToGraph, createTree, Markers, TestGraphModel, TestNode } from '@dxos/gem-spore';
+import { Markers } from '@dxos/gem-spore';
+import { convertTreeToGraph, createTree, TestGraphModel, TestNode } from '@dxos/gem-spore/testing';
 import { Plexus } from '@dxos/plexus';
 
 // TODO(burdon): Type.
