@@ -15,7 +15,8 @@ import {
   User,
   Users
 } from 'phosphor-react';
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 import hash from 'string-hash';
 
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
@@ -45,17 +46,15 @@ const Panel: FC<{ node: TestNode; className?: string }> = ({ node, className }) 
   const Icon = icons[hash(node.label ?? '') % icons.length];
 
   return (
-    <div className='absolute invisible md:visible right-[16px] flex flex-col h-full justify-center overflow-hidden'>
-      <div className={mx('flex overflow-hidden w-[300px] h-[370px] p-2 px-3 rounded-lg border-2', className)}>
-        <div className='flex flex-1 flex-col w-full text-sm'>
-          <div className='flex w-full justify-center text-lg'>{node.label}</div>
-          <div className='flex justify-center py-1'>
-            <Icon weight='duotone' className={getSize(40)} />
-          </div>
-          <div className='py-2'>{faker.lorem.sentences(3)}</div>
-          <div className='flex-1' />
-          <div className='text-xs pb-2'>{node.id}</div>
+    <div className={mx('flex overflow-hidden w-[300px] h-[370px] p-2 px-3 rounded-lg border-2', className)}>
+      <div className='flex flex-1 flex-col w-full text-sm'>
+        <div className='flex w-full justify-center text-lg'>{node.label}</div>
+        <div className='flex justify-center py-1'>
+          <Icon weight='duotone' className={getSize(40)} />
         </div>
+        <div className='py-2'>{faker.lorem.sentences(3)}</div>
+        <div className='flex-1' />
+        <div className='text-xs pb-2'>{node.id}</div>
       </div>
     </div>
   );
@@ -64,6 +63,9 @@ const Panel: FC<{ node: TestNode; className?: string }> = ({ node, className }) 
 const Test = () => {
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState<string[]>([]);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const { ref: containerRef, width, height } = useResizeDetector();
+  const [lineLength, setLineLength] = useState(0);
 
   // TODO(burdon): Pass down state to context (set nav, etc.)
   const [spinning, setSpinning] = useState(true);
@@ -112,59 +114,79 @@ const Test = () => {
 
   const node = history.length ? model.getNode(history[index]) : undefined;
 
-  const slots = {
-    grid: {
-      className: '[&>*]:stroke-slate-700 [&>*]:stroke-[1px] [&>*]:opacity-40'
-    },
-    plexus: {
-      thorax: {
-        className: '[&>*]:stroke-2 [&>*]:stroke-slate-500'
-      },
-      renderer: {
-        labels: {
-          text: (node: GraphLayoutNode<TestNode>) => node.data!.label
-        }
-      },
-      projector: {
-        radius: 192,
-        nodeRadius: 16,
-        classes: {
-          guide: {
-            circle: 'fill-transparent stroke-[1px] stroke-slate-700'
+  const slots = 0
+    ? {}
+    : {
+        grid: {
+          className: '[&>*]:stroke-slate-700 [&>*]:stroke-[1px] [&>*]:opacity-40'
+        },
+        plexus: {
+          thorax: {
+            // TODO(burdon): Reconcile classes vs. slots/className.
+            className: '[&>*]:stroke-slate-500'
           },
-          node: {
-            circle: 'fill-slate-800 stroke-[1px] stroke-slate-500',
-            // TODO(burdon): Restructure slots to support other props (e.g., font-size).
-            text: 'fill-slate-400'
+          renderer: {
+            labels: {
+              text: (node: GraphLayoutNode<TestNode>) => node.data!.label
+            }
           },
-          link: {
-            path: 'stroke-[2px] stroke-slate-700'
+          projector: {
+            radius: 192,
+            nodeRadius: 16,
+            classes: {
+              guide: {
+                circle: 'fill-transparent stroke-[1px] stroke-slate-700'
+              },
+              node: {
+                circle: 'fill-slate-800 stroke-[1px] stroke-slate-500',
+                // TODO(burdon): Restructure slots to support other props (e.g., font-size).
+                text: 'fill-slate-400'
+              },
+              link: {
+                path: 'stroke-[2px] stroke-slate-700'
+              }
+            }
           }
-        }
-      }
+        },
+        panel: 'border-slate-500 bg-slate-800 text-slate-400',
+        root: 'bg-slate-800'
+      };
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
+  useEffect(() => {
+    if (width) {
+      const { left } = panelRef.current!.getBoundingClientRect();
+      setLineLength(left - width / 2);
     }
-  };
+  }, [panelRef, width, height]);
 
   return (
-    <div className='flex flex-col absolute left-0 right-0 top-0 bottom-0'>
+    <div ref={containerRef} className='flex flex-col absolute left-0 right-0 top-0 bottom-0'>
       <div className='flex flex-1 relative'>
         <SVGContextProvider>
-          <SVG className={mx('bg-slate-800')}>
+          <SVG className={slots?.root}>
             <Markers arrowSize={6} />
             <Grid className={slots?.grid?.className} />
             <Zoom extent={[1, 4]}>
               <g className={mx('visible', spinning && 'invisible')}>
-                <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={600} y2={0} />
+                <line className='stroke-slate-700 stroke-[3px]' x1={0} y1={0} x2={lineLength} y2={0} />
               </g>
               <Plexus model={model} slots={slots?.plexus} onSelect={handleSelect} onTransition={setSpinning} />
             </Zoom>
           </SVG>
         </SVGContextProvider>
 
-        {node && <Panel node={node} className='border-slate-500 bg-slate-800 text-slate-400' />}
+        {node && (
+          <div
+            ref={panelRef}
+            className='absolute invisible md:visible right-[16px] flex flex-col h-full justify-center overflow-hidden'
+          >
+            <Panel node={node} className={mx('bg-white', slots?.panel)} />
+          </div>
+        )}
       </div>
 
-      <div className='flex p-1 items-center'>
+      <div className='flex p-1 items-center bg-slate-300'>
         <button className='p-1' onClick={handleGenerate}>
           <Plus className={getSize(6)} />
         </button>

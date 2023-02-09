@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Point } from '@dxos/gem-core';
+import defaulstDeep from 'lodash.defaultsdeep';
+
+import { Point, SVGContext } from '@dxos/gem-core';
 import {
   GraphData,
   GraphLayout,
@@ -32,6 +34,14 @@ export type TreeProjectorOptions = ProjectorOptions &
     };
   }>;
 
+const defaultOptions: Partial<TreeProjectorOptions> = {
+  classes: {
+    node: {
+      circle: 'fill-gray-100'
+    }
+  }
+};
+
 export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, TreeProjectorOptions> {
   _layout: GraphLayout<N> = {
     graph: {
@@ -39,6 +49,10 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
       links: []
     }
   };
+
+  constructor(context: SVGContext, options?: Partial<TreeProjectorOptions>) {
+    super(context, defaulstDeep({}, options, defaultOptions));
+  }
 
   get layout() {
     return this._layout;
@@ -144,21 +158,21 @@ export class TreeProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, Tr
     this._layout = {
       guides: [
         {
-          id: 'g1',
-          type: 'circle',
-          cx: 0,
-          cy: 0,
-          r: inner,
-          classes: {
-            circle: this.options.classes?.guide?.circle
-          }
-        },
-        {
           id: 'g2',
           type: 'circle',
           cx: 0,
           cy: 0,
           r: outer,
+          classes: {
+            circle: this.options.classes?.guide?.circle
+          }
+        },
+        {
+          id: 'g1',
+          type: 'circle',
+          cx: 0,
+          cy: 0,
+          r: inner,
           classes: {
             circle: this.options.classes?.guide?.circle
           }
