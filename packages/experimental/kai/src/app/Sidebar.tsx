@@ -3,14 +3,15 @@
 //
 
 import clipboardCopy from 'clipboard-copy';
-import { PlusCircle, ArrowCircleDownLeft } from 'phosphor-react';
-import React, { useEffect, useState } from 'react';
+import { PlusCircle, ArrowCircleDownLeft, CaretLeft } from 'phosphor-react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useHref, useNavigate, useParams } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Invitation, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
+import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button, MemberList, SpaceList } from '../components';
 import { useSpace, createSpacePath, FrameID, useAppState, createInvitationPath } from '../hooks';
@@ -25,6 +26,9 @@ export const Sidebar = () => {
   const members = useMembers(space.key);
   const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);
+  const toggleSidebar = useTogglePanelSidebar();
+  const { displayState } = useContext(PanelSidebarContext);
+  const isOpen = displayState === 'show';
   const { dev } = useAppState();
 
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
@@ -100,9 +104,9 @@ export const Sidebar = () => {
     >
       {/* Match Frame selector. */}
       <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
-        <div className='flex justify-between items-center p-1 pl-4'>
-          <div>Spaces</div>
-          <div className='flex pr-3'>
+        <div className='flex justify-between p-1 pl-4'>
+          <div className='flex items-center pr-3'>
+            {/* TODO(burdon): Remove initial focus */}
             <Button />
             <Button className='flex ml-2' title='Create new space' onClick={handleCreateSpace}>
               <span className='sr-only'>Create new space</span>
@@ -113,13 +117,18 @@ export const Sidebar = () => {
               <ArrowCircleDownLeft className={getSize(6)} />
             </Button>
           </div>
+          <div className='flex items-center'>
+            <Button className='mr-2' onClick={toggleSidebar}>
+              {isOpen && <CaretLeft className={getSize(6)} />}
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className='flex flex-col flex-1'>
         {/* Spaces */}
         <div className='flex shrink-0 flex-col overflow-y-auto'>
-          <SpaceList value={space.key} spaces={spaces} onSelect={handleSelectSpace} onShare={handleShareSpace} />
+          <SpaceList spaces={spaces} selected={space.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
         </div>
 
         <div className='flex-1' />

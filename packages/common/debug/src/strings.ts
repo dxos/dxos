@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export const truncate = (str = '', length: number, pad: boolean | string = false) => {
+export const truncate = (str = '', length = 8, pad: boolean | string = false) => {
   if (str.length >= length - 1) {
     return str.substring(0, length - 1) + '…';
   } else {
