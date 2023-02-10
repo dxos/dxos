@@ -7,7 +7,7 @@ import React, { FC, useEffect, useRef } from 'react';
 /**
  * Standard file upload dialog.
  */
-export const FileUploadDialog: FC<{
+export const FileUpload: FC<{
   open?: boolean;
   onClose: () => void;
   onUpload: (files: File[]) => void;

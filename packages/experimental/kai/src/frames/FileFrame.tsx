@@ -85,7 +85,7 @@ export const FileFrame = () => {
   const Toolbar = () => {
     // TODO(burdon): Standardize toolbars.
     return (
-      <div className='flex shrink-0 w-full items-center p-2 bg-gray-200'>
+      <div className='flex shrink-0 w-full items-center p-2 bg-toolbar-bg'>
         <div>{files.length > 0 ? (files.length === 1 ? '1 File' : `${files.length} Files`) : ''}</div>
         <div className='flex-1' />
         <Button onClick={() => setSelected(undefined)}>
@@ -102,7 +102,7 @@ export const FileFrame = () => {
           {files.map((file) => (
             <ListItemButton
               key={file[id]}
-              classes={{ hover: 'bg-orange-100', selected: 'bg-orange-200' }}
+              classes={{ hover: 'bg-selection-hover', selected: 'bg-selection-bg' }}
               selected={file.cid === selected?.cid}
               onClick={() => setSelected(file)}
             >
@@ -153,7 +153,7 @@ export const FileFrame = () => {
   return (
     <div className='flex flex-1'>
       <div className='hidden md:flex flex-1 flex-col'>
-        <div className='flex flex-1 p-8 bg-gray-300'>{selected && <Preview file={selected} />}</div>
+        <div className='flex flex-1 p-8 bg-panel-bg'>{selected && <Preview file={selected} />}</div>
       </div>
 
       <div className='flex flex-col w-full md:w-sidebar h-full overflow-hidden'>

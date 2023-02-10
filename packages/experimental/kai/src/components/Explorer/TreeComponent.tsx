@@ -7,7 +7,13 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { GraphModel } from '@dxos/gem-spore';
 
-import { Tree } from './Tree';
+import { RadialTree } from './RadialTree';
+import { TidyTree } from './TidyTree';
+
+export enum TreeType {
+  DENDROGRAM = 0,
+  RADIAL = 1
+}
 
 // TODO(burdon): Define EchoNode.
 export type TreeNode = {
@@ -16,18 +22,20 @@ export type TreeNode = {
   children?: TreeNode[];
 };
 
-export const mapGraphToTreeData = <N,>(model: GraphModel<N>): TreeNode | undefined => {
+export const mapGraphToTreeData = <N,>(model: GraphModel<N>, maxDepth = 5): TreeNode | undefined => {
   // TODO(burdon): Handle recursion/depth.
-  const mapNode = (node: N): TreeNode => {
+  const mapNode = (node: N, depth = 0): TreeNode => {
     const treeNode: TreeNode = {
       id: model.idAccessor(node),
       label: model.idAccessor(node).slice(0, 8) // TODO(burdon): ???
     };
 
     const links = model.graph.links.filter((link) => link.source === treeNode.id);
-    treeNode.children = links.map((link) =>
-      mapNode(model.graph.nodes.find((node) => model.idAccessor(node) === link.target)!)
-    );
+    if (depth < maxDepth) {
+      treeNode.children = links.map((link) =>
+        mapNode(model.graph.nodes.find((node) => model.idAccessor(node) === link.target)!, depth + 1)
+      );
+    }
 
     return treeNode;
   };
@@ -45,9 +53,10 @@ export const mapGraphToTreeData = <N,>(model: GraphModel<N>): TreeNode | undefin
 
 export type TreeComponentProps<N> = {
   model: GraphModel<N>;
+  type: TreeType;
 };
 
-export const TreeComponent = <N,>({ model }: TreeComponentProps<N>) => {
+export const TreeComponent = <N,>({ model, type = TreeType.RADIAL }: TreeComponentProps<N>) => {
   const { ref, width = 0, height = 0 } = useResizeDetector();
   const [data, setData] = useState<TreeNode>();
 
@@ -58,13 +67,15 @@ export const TreeComponent = <N,>({ model }: TreeComponentProps<N>) => {
   }, [model]);
 
   const size = Math.min(width, height);
-  const radius = size / 2;
+  const radius = size * 0.4;
   const options = {
     width,
     height,
     radius,
     marginLeft: (width - radius * 2) / 2,
     marginRight: (width - radius * 2) / 2,
+    marginTop: (height - radius * 2) / 2,
+    marginBottom: (height - radius * 2) / 2,
     label: (d: any) => d.label
   };
 
@@ -72,8 +83,22 @@ export const TreeComponent = <N,>({ model }: TreeComponentProps<N>) => {
   useEffect(() => {
     if (width && height) {
       if (!ref.current.children.length) {
-        const el = Tree(data ?? {}, options as any);
-        ref.current.append(el);
+        let el;
+        // TODO(burdon): Map.
+        switch (type) {
+          case TreeType.DENDROGRAM: {
+            el = TidyTree(data ?? {}, options as any);
+            break;
+          }
+          case TreeType.RADIAL: {
+            el = RadialTree(data ?? {}, options as any);
+            break;
+          }
+        }
+
+        if (el) {
+          ref.current.append(el);
+        }
       }
     }
   }, [width, height]);

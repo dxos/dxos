@@ -12,7 +12,7 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { FileUploadDialog } from '../components';
+import { FileUpload } from '../components';
 import { useFileDownload, useGenerator, useSpace, createSpacePath } from '../hooks';
 
 // TODO(burdon): Factor out.
@@ -113,7 +113,7 @@ export const Actions = () => {
         connectionState === ConnectionState.ONLINE ? (
           <WifiHigh className={getSize(6)} />
         ) : (
-          <WifiSlash className={mx(getSize(6), 'text-orange-500')} />
+          <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
         ),
       title: 'Toggle connection',
       handler: () => handleToggleConnection()
@@ -124,11 +124,7 @@ export const Actions = () => {
 
   return (
     <>
-      <FileUploadDialog
-        open={uploadDialogOpen}
-        onClose={() => setUploadDialogOpen(false)}
-        onUpload={handleImportSpace}
-      />
+      <FileUpload open={uploadDialogOpen} onClose={() => setUploadDialogOpen(false)} onUpload={handleImportSpace} />
 
       <div className='flex shrink-0 p-3 mt-2'>
         {actions.map((action, i) => {

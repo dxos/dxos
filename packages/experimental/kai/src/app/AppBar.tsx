@@ -26,7 +26,7 @@ export const Menu = () => {
 // TODO(burdon): Show Space name in title.
 export const AppBar = () => {
   return (
-    <div className='flex items-center justify-between fixed px-3 inline-start-0 inline-end-0 block-start-0 bs-appbar bg-orange-400 z-[1]'>
+    <div className='flex items-center justify-between fixed px-3 inline-start-0 inline-end-0 block-start-0 bs-appbar bg-appbar-header z-[1]'>
       <div className='flex items-center'>
         <Bug className={mx('logo', getSize(8))} />
       </div>
