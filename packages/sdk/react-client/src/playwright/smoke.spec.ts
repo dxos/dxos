@@ -21,7 +21,7 @@ describe('Smoke test', function () {
     }
 
     const result = await setupPage(this, {
-      url: storybookUrl('react-client-clientcontext--primary'),
+      url: storybookUrl('client-clientcontext--primary'),
       waitFor: (page) => page.isVisible(':has-text("initialized")')
     });
 
