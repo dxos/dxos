@@ -180,7 +180,7 @@ export class EchoProxy implements Echo {
       objects: [
         {
           objectId: PublicKey.random().toHex(),
-          genesis: { modelType: DocumentModel.meta.type, itemType: SPACE_ITEM_TYPE }
+          genesis: { modelType: DocumentModel.meta.type }
         }
       ]
     });

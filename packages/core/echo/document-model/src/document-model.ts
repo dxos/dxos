@@ -145,7 +145,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
    * Returns an immutable object.
    */
   toObject() {
-    return this._getState();
+    return this._getState().data;
   }
 
   builder() {
