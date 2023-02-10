@@ -113,7 +113,7 @@ export const Actions = () => {
         connectionState === ConnectionState.ONLINE ? (
           <WifiHigh className={getSize(6)} />
         ) : (
-          <WifiSlash className={mx(getSize(6), 'text-orange-500')} />
+          <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
         ),
       title: 'Toggle connection',
       handler: () => handleToggleConnection()

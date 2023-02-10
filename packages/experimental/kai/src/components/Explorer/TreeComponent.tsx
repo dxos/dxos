@@ -8,6 +8,12 @@ import { useResizeDetector } from 'react-resize-detector';
 import { GraphModel } from '@dxos/gem-spore';
 
 import { RadialTree } from './RadialTree';
+import { TidyTree } from './TidyTree';
+
+export enum TreeType {
+  DENDROGRAM = 0,
+  RADIAL = 1
+}
 
 // TODO(burdon): Define EchoNode.
 export type TreeNode = {
@@ -47,9 +53,10 @@ export const mapGraphToTreeData = <N,>(model: GraphModel<N>, maxDepth = 5): Tree
 
 export type TreeComponentProps<N> = {
   model: GraphModel<N>;
+  type: TreeType;
 };
 
-export const TreeComponent = <N,>({ model }: TreeComponentProps<N>) => {
+export const TreeComponent = <N,>({ model, type = TreeType.RADIAL }: TreeComponentProps<N>) => {
   const { ref, width = 0, height = 0 } = useResizeDetector();
   const [data, setData] = useState<TreeNode>();
 
@@ -76,8 +83,22 @@ export const TreeComponent = <N,>({ model }: TreeComponentProps<N>) => {
   useEffect(() => {
     if (width && height) {
       if (!ref.current.children.length) {
-        const el = RadialTree(data ?? {}, options as any);
-        ref.current.append(el);
+        let el;
+        // TODO(burdon): Map.
+        switch (type) {
+          case TreeType.DENDROGRAM: {
+            el = TidyTree(data ?? {}, options as any);
+            break;
+          }
+          case TreeType.RADIAL: {
+            el = RadialTree(data ?? {}, options as any);
+            break;
+          }
+        }
+
+        if (el) {
+          ref.current.append(el);
+        }
       }
     }
   }, [width, height]);

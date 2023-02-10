@@ -2,7 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+const colors = require('tailwindcss/colors');
+
 const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
+
+// https://tailwindcss.com/docs/customizing-colors#aliasing-color-names
+const primary = colors.orange; // teal
+const secondary = colors.stone;
 
 module.exports = {
   osThemeExtension: {
@@ -22,13 +28,29 @@ module.exports = {
       column: '390px'
     },
 
+    // TODO(burdon): Themes: light/dark.
+    // TODO(burdon): Naming scheme?
     colors: {
-      // TODO(burdon): Naming scheme?
-      dark: {
-        selection: {
-          bg: 'orange', // dark:bg-dark-selection-bg bg-selection-bg
-          fg: 'black'
-        }
+      appbar: {
+        header: primary[400],
+        toolbar: primary[500]
+      },
+      toolbar: {
+        bg: colors.slate[200]
+      },
+      sidebar: {
+        bg: colors.neutral[100]
+      },
+      // TODO(burdon): Mui Paper?
+      panel: {
+        bg: colors.slate[300],
+        border: colors.slate[300]
+      },
+      selection: {
+        hover: secondary[100],
+        bg: secondary[200],
+        text: secondary[500],
+        border: secondary[400]
       }
     }
   }

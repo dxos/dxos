@@ -23,11 +23,11 @@ export const SpaceList = ({ value, spaces, onSelect, onShare }: SpaceListProps) 
         <div
           key={space.key.toHex()}
           className={mx(
-            'flex p-2 pl-3 pr-4 items-center hover:bg-orange-100',
-            space.key.equals(value) && 'hover:bg-orange-200 bg-orange-200'
+            'flex p-2 pl-3 pr-4 items-center hover:bg-selection-hover',
+            space.key.equals(value) && 'hover:bg-selection-bg bg-selection-bg'
           )}
         >
-          <div className={mx('flex mr-3', space.key.equals(value) && 'text-orange-500')}>
+          <div className={mx('flex mr-3', space.key.equals(value) && 'text-selection-text')}>
             <Planet className={getSize(6)} />
           </div>
 
