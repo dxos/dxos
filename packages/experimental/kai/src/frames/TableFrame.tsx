@@ -10,7 +10,7 @@ import { useQuery } from '@dxos/react-client';
 
 import { Searchbar, Selector, SelectorOption, Table } from '../components';
 import { useSpace } from '../hooks';
-import { Contact, Organization, Project } from '../proto';
+import { Contact, Organization, Project, schema } from '../proto';
 
 // UX field types.
 const COLUMN_TYPES = ['string', 'number', 'boolean'];
@@ -47,7 +47,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
   }));
 };
 
-const types: ColumnType<any>[] = generateTypes([Organization.type, Project.type, Contact.type]);
+const types: ColumnType<any>[] = generateTypes(schema.types);
 
 const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
