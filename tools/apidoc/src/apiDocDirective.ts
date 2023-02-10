@@ -71,9 +71,9 @@ export namespace Remark {
         }
         if (!symbol) {
           console.warn(
-            `problem in file ${vfile.path}: member ${restMembers.join(
+            `problem in file ${vfile.path}: member '${restMembers.join(
               '.'
-            )} of ${symbol} of package ${packageName} not found while processing apidoc directive`
+            )}' of ${symbolName} of package ${packageName} not found while processing apidoc directive`
           );
           return tree;
         }
