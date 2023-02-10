@@ -36,6 +36,24 @@ export const defaultInput = (
   );
 };
 
+export const subduedInput = (
+  {
+    disabled,
+    validationValence
+  }: {
+    disabled?: boolean;
+    validationValence?: MessageValence;
+  } = {},
+  themeVariant: ThemeContextValue['themeVariant'] = 'app'
+) => {
+  return mx(
+    'bg-transparent text-current',
+    themeVariant === 'os' ? 'rounded-sm' : 'rounded',
+    themeVariantFocus(themeVariant),
+    defaultPlaceholder
+  );
+};
+
 export const staticInput = ({
   disabled,
   focused,

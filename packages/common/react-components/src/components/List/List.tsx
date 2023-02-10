@@ -102,7 +102,11 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
   const ListRoot = variant === 'ordered' || variant === 'ordered-draggable' ? Primitive.ol : Primitive.ul;
 
   return (
-    <ListRoot {...(selectable && { role: 'listbox', 'aria-multiselectable': true })} {...slots.root}>
+    <ListRoot
+      {...(selectable && { role: 'listbox', 'aria-multiselectable': true })}
+      {...slots.root}
+      aria-labelledby={props.labelId}
+    >
       <ListProvider
         {...{
           scope: __scopeSelect,
@@ -252,6 +256,15 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
   }
 });
 
-export { List, createListScope, useListCollection, ListItem, ListItemHeading, ListItemEndcap, createListItemScope };
+export {
+  List,
+  createListScope,
+  useListCollection,
+  ListItem,
+  ListItemHeading,
+  ListItemEndcap,
+  ListItemDragHandle,
+  createListItemScope
+};
 
 export type { ListProps, ListVariant, ListItemProps };
