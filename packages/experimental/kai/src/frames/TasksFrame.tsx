@@ -4,12 +4,16 @@
 
 import React from 'react';
 
-import { TaskList } from '../containers';
+import { mx } from '@dxos/react-components';
+
+import { TaskListQuery } from '../containers';
 
 export const TasksFrame = () => {
   return (
-    <div className='min-bs-full flex flex-1 justify-center bg-panel-bg'>
-      <TaskList />
+    <div className='bs-full overflow-y-auto bg-panel-bg'>
+      <div className={mx('min-bs-full bg-white is-full md:is-column mli-auto p-2')}>
+        <TaskListQuery id='tasksFrame' />
+      </div>
     </div>
   );
 };

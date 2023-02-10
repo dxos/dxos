@@ -10,18 +10,13 @@ import { withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
 import { Input, CardRow, Button } from '../components';
-import { Project, Task } from '../proto';
-import { DraggableTaskList } from './DraggableTaskList';
+import { Project } from '../proto';
+import { TaskList } from './TaskList';
 
 export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) => {
   const handleExpand = () => {};
 
   // TODO(burdon): Pass in Task1, Task2.
-  const handleDrag = (active: number, over: number) => {
-    const task = project.tasks[active];
-    project.tasks.splice(active, 1);
-    project.tasks.splice(over, 0, task);
-  };
 
   return (
     <div className='flex flex-col pb-2'>
@@ -43,15 +38,7 @@ export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) =
       </div>
 
       {/* Tasks */}
-      <div>
-        <DraggableTaskList
-          tasks={project.tasks}
-          onCreate={(task: Task) => {
-            project.tasks.push(task);
-          }}
-          onDrag={handleDrag}
-        />
-      </div>
+      <TaskList id={project[id]} tasks={project.tasks} />
 
       {/* Contacts */}
       {project.team?.length > 0 && (

@@ -66,6 +66,7 @@ export interface EditableListProps {
   defaultItemIdOrder?: string[];
   itemIdOrder?: string[];
   onChangeItemIdOrder?: (itemIdOrder: string[]) => void;
+  onItemIdOrderMove?: (oldIndex: number, newIndex: number) => void;
   children?: ReactNode;
   slots?: EditableListSlots;
 }
@@ -126,6 +127,7 @@ export const EditableList = ({
   defaultItemIdOrder,
   itemIdOrder,
   onChangeItemIdOrder,
+  onItemIdOrderMove,
   slots = {}
 }: EditableListProps) => {
   const [listItemIds, setListItemIds] = useControllableState({
@@ -142,6 +144,7 @@ export const EditableList = ({
         if (itemIds && over?.id) {
           const oldIndex = itemIds.findIndex((id) => id === active.id);
           const newIndex = itemIds.findIndex((id) => id === over.id);
+          onItemIdOrderMove?.(oldIndex, newIndex);
           return arrayMove(itemIds, oldIndex, newIndex);
         } else {
           return itemIds;
@@ -168,8 +171,8 @@ export const EditableList = ({
         <ListItemEndcap className='invisible' />
         <Input
           variant='subdued'
-          label='Add new item'
-          placeholder='Add new item'
+          label={t('new list item input label')}
+          placeholder={t('new list item input placeholder')}
           {...{
             value: nextItemTitle,
             defaultValue: defaultNextItemTitle,
