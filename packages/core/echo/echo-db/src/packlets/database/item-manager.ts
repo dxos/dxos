@@ -218,8 +218,7 @@ export class ItemManager {
   /**
    * Constructs an item with the appropriate model.
    */
-  @timed(5_000)
-  async constructItem({ itemId, modelType, parentId, snapshot }: ItemConstructionOptions): Promise<Item<any>> {
+  constructItem({ itemId, modelType, parentId, snapshot }: ItemConstructionOptions): Item<any> {
     assert(itemId);
     assert(modelType);
 

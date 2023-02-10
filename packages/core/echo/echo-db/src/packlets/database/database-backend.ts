@@ -181,7 +181,6 @@ export class DatabaseBackendProxy implements DatabaseBackend {
         assert(object.genesis.modelType);
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
-          itemType: object.genesis.itemType,
           modelType: object.genesis.modelType,
           parentId: object.snapshot?.parentId,
           snapshot: { objectId: object.objectId } // TODO(dmaretskyi): Fix.
