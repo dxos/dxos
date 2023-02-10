@@ -9,7 +9,7 @@ import { InvitationEncoder, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useSpace } from '@dxos/react-client';
 
-import { ActionStatus, SpaceInfo, StatusState, TextInput } from '../../components';
+import { ActionStatus, SpaceInfo, StatusState, TextInput } from '..';
 import { Panel } from '../util';
 
 export const Join: FC<{

@@ -8,7 +8,7 @@ import React, { FC, useState } from 'react';
 import { generateSeedPhrase, Profile } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
-import { TextInput } from '../../components';
+import { TextInput } from '..';
 import { copyToClipboard } from '../../util';
 import { Panel } from '../util';
 
