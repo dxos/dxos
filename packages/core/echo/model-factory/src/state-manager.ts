@@ -19,7 +19,6 @@ import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, State
 
 type OptimisticMutation = {
   tag?: string;
-
   mutation: Any;
 };
 
@@ -108,7 +107,8 @@ export class StateManager<M extends Model> {
   }
 
   processOptimisticMutation(mutation: MutationOf<M>, clientTag?: string) {
-    log.info('process optimistic mutation', { clientTag, mutation });
+    log('process optimistic mutation', { clientTag, mutation });
+
     // Construct and enqueue an optimistic mutation.
     const mutationEncoded = {
       type_url: 'todo', // TODO(mykola): this._modelMeta!.mutationCodec.typeUrl ???
@@ -228,7 +228,7 @@ export class StateManager<M extends Model> {
     });
     const lengthBefore = this._mutations.length;
     this._mutations.splice(insertionIndex, 0, { meta, mutation });
-    log.info('process message', {
+    log('process message', {
       feed: PublicKey.from(meta.feedKey),
       seq: meta.seq,
       clientTag,
