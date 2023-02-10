@@ -98,7 +98,9 @@ export class EchoDatabase {
 
     let mutation: Any | undefined;
     if (obj instanceof DocumentBase) {
-      const props = { '@type': obj[base]._uninitialized?.['@type'] };
+      const props = {
+        type: obj[type]
+      };
       const modelMeta = obj[base]._modelConstructor.meta;
       mutation = encodeModelMutation(modelMeta, modelMeta.getInitMutation!(props));
     }

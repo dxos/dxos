@@ -50,7 +50,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   // prettier-ignore
   constructor(
     initialProps?: Record<keyof any, any>,
-    private readonly _schemaType?: EchoSchemaType
+    private readonly _schemaType?: EchoSchemaType,
   ) {
     super();
     Object.assign(this._uninitialized!, initialProps);
@@ -71,7 +71,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 
   get [type](): string | null {
-    return this[base]?._schemaType?.name ?? this[base]._get('@type') ?? null;
+    return this[base]?._schemaType?.name ?? null;
   }
 
   // TODO(burdon): Method on Document vs EchoObject?
@@ -96,7 +96,6 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   get [data]() {
     return {
       '@id': this[id],
-      '@type': this[type],
       ...this[base]._convert({
         onRef: (id, obj?) => obj ?? { '@id': id }
       })
