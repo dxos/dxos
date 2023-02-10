@@ -50,7 +50,6 @@
     "kai": "packages/experimental/kai",
     "keyring": "packages/core/halo/keyring",
     "keys": "packages/common/keys",
-    "kitchen-sink": "packages/experimental/kitchen-sink",
     "kodama": "packages/experimental/kodama",
     "log": "packages/common/log",
     "log-hook": "tools/log-hook",
