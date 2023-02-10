@@ -585,13 +585,11 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
-      '@dxos/react-async': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/text-model': workspace:*
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
       '@tiptap/extension-placeholder': 2.0.0-beta.199
@@ -606,13 +604,7 @@ importers:
       y-protocols: ^1.0.5
       yjs: ^13.5.44
     dependencies:
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-components': link:../../../common/react-components
-      '@dxos/text-model': link:../../../core/echo/text-model
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_nnszoayjhdoucvdi5heuc7vndi
       '@tiptap/extension-placeholder': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
@@ -620,15 +612,19 @@ importers:
       '@tiptap/starter-kit': 2.0.0-beta.199
       prosemirror-model: 1.18.1
       prosemirror-view: 1.29.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
       y-protocols: 1.0.5
       yjs: 13.5.44
     devDependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../../core/echo/echo-typegen
+      '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-client': link:../../../sdk/react-client
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
 
   packages/apps/patterns/react-ui:
     specifiers:
