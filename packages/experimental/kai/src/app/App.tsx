@@ -12,7 +12,7 @@ import { ThemeProvider } from '@dxos/react-components';
 
 import { AppState, AppStateProvider, BotsProvider, FramesProvider, useAppRoutes, useClientProvider } from '../hooks';
 import kaiTranslations from '../translations';
-import { frames } from './Frames';
+import { frameSelector } from './FrameSelector';
 
 const Routes = () => {
   return useAppRoutes();
@@ -36,7 +36,7 @@ export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initia
           <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>
             <AppStateProvider value={initialState}>
               <BotsProvider>
-                <FramesProvider frames={frames}>
+                <FramesProvider frames={frameSelector}>
                   <HashRouter>
                     <Routes />
                     {children}

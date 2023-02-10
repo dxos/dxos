@@ -5,16 +5,16 @@
 import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 export enum FrameID {
-  REGISTRY = 'registry',
   SETTINGS = 'settings',
+  REGISTRY = 'registry',
   STACK = 'stack',
-  TABLE = 'tables',
+  TABLE = 'table',
   KANBAN = 'kanban',
-  TASKS = 'tasks',
+  TASK = 'task',
   CALENDAR = 'events',
-  DOCUMENTS = 'documents',
-  NOTES = 'notes',
-  FILES = 'files',
+  DOCUMENT = 'document',
+  NOTE = 'note',
+  FILE = 'file',
   SKETCH = 'sketch',
   EXPLORER = 'explorer',
   MAPS = 'maps',
@@ -23,7 +23,7 @@ export enum FrameID {
   SANDBOX = 'sandbox'
 }
 
-export const defaultFrameId = FrameID.STACK;
+export const defaultFrameId = FrameID.KANBAN;
 
 // prettier-ignore
 const activeFrames = [
@@ -31,12 +31,13 @@ const activeFrames = [
   FrameID.REGISTRY,
   FrameID.STACK,
   FrameID.TABLE,
-  FrameID.TASKS
+  FrameID.TASK,
+  FrameID.KANBAN
   // FrameID.EXPLORER
-  // FrameID.KANBAN,
   // FrameID.NOTES
 ];
 
+// TODO(burdon): Compact view (e.g., within Space).
 export type FrameDef = {
   id: FrameID;
   system?: boolean;
@@ -44,6 +45,7 @@ export type FrameDef = {
   description?: string;
   Icon: FC<any>;
   Component: FC<any>;
+  Compact?: FC<any>;
 };
 
 export type FrameMap = { [index: string]: FrameDef };

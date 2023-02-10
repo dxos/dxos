@@ -139,7 +139,8 @@ export class TestPeer<M extends Model> {
   ) {}
 
   get model(): M {
-    return this.stateManager.model;
+    return null as any;
+    // return this.stateManager.model;
   }
 
   processMutation(message: ModelMessage<Any>) {

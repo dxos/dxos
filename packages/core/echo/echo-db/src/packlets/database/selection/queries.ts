@@ -81,9 +81,9 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
 export const createQueryOptionsFilter =
   ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Item> =>
   (entity) => {
-    if (entity.model === null) {
-      return false;
-    }
+    // if (entity.model === null) {
+    //   return false;
+    // }
 
     switch (deleted) {
       case ItemFilterDeleted.HIDE_DELETED:
