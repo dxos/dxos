@@ -20,7 +20,7 @@
       "path": "../../common/react-components"
     },
     {
-      "path": "../client-testing"
+      "path": "../../deprecated/client-testing"
     },
     {
       "path": "../gem-core"

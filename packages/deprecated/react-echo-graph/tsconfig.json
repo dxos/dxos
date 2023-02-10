@@ -32,13 +32,13 @@
       "path": "../../experimental/gem-spore"
     },
     {
-      "path": "../../experimental/react-client-testing"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../react-client-testing"
     },
     {
       "path": "../react-components-deprecated"

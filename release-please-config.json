@@ -298,7 +298,17 @@
         },
         {
           "type": "json",
+          "path": "packages/deprecated/client-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/deprecated/kodama/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/deprecated/react-client-testing/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -368,11 +378,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/client-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/framebox/package.json",
           "jsonpath": "$.version"
         },
@@ -404,11 +409,6 @@
         {
           "type": "json",
           "path": "packages/experimental/plexus/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/react-client-testing/package.json",
           "jsonpath": "$.version"
         },
         {

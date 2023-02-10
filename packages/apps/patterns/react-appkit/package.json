@@ -35,7 +35,6 @@
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/react-client-testing": "workspace:*",
     "@types/lodash.throttle": "^4.1.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

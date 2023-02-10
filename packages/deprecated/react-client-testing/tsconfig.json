@@ -32,9 +32,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../deprecated/react-components-deprecated"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -42,6 +39,9 @@
     },
     {
       "path": "../client-testing"
+    },
+    {
+      "path": "../react-components-deprecated"
     }
   ]
 }

@@ -24,7 +24,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../client-testing"
+      "path": "../../deprecated/client-testing"
     }
   ],
   "ts-node": {

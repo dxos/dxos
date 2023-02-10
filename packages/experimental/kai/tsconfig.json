@@ -76,6 +76,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../deprecated/client-testing"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -89,9 +92,6 @@
     },
     {
       "path": "../chess-app"
-    },
-    {
-      "path": "../client-testing"
     },
     {
       "path": "../framebox"
