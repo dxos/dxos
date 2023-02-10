@@ -15,10 +15,9 @@ import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
 
-export interface TaskListProps<K = { tasks: never }> {
+export interface TaskListProps {
   id: string;
-  collection: { [Property in keyof K]: Task[] };
-  tasksKey?: keyof K;
+  tasks: Task[];
   readonly?: boolean;
 }
 
@@ -30,102 +29,104 @@ export const TaskListQuery: FC<TaskListQueryProps> = (props) => {
   const space = useSpace();
   const tasks = useQuery(space, Task.filter(props.filter));
 
-  return <TaskList {...props} collection={{ tasks }} />;
+  return <TaskList {...props} tasks={tasks} />;
 };
 
-export const TaskList: FC<TaskListProps> = ({ id, collection, tasksKey = 'tasks', readonly }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
-  const [saving, setSaving] = useState(false);
-  const { t } = useTranslation('kai');
-  const listId = id;
-  const labelId = `${listId}__label`;
+export const TaskList: FC<TaskListProps> = withReactor(
+  ({ id, tasks, readonly }) => {
+    const space = useSpace(); // TODO(burdon): Factor out.
+    const [saving, setSaving] = useState(false);
+    const { t } = useTranslation('kai');
+    const listId = id;
+    const labelId = `${listId}__label`;
 
-  const [nextItemTitle, setNextItemTitle] = useState('');
+    const [nextItemTitle, setNextItemTitle] = useState('');
 
-  const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(listId);
+    const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(listId);
 
-  console.log('Tasks', collection[tasksKey]);
+    console.log('Tasks', tasks);
 
-  const addItem = useCallback(() => {
-    if (nextItemTitle.length > 0) {
-      setSaving(true);
-      return space.experimental.db
-        .save(
-          new Task({
-            title: nextItemTitle,
-            completed: false
+    const addItem = useCallback(() => {
+      if (nextItemTitle.length > 0) {
+        setSaving(true);
+        return space.experimental.db
+          .save(
+            new Task({
+              title: nextItemTitle,
+              completed: false
+            })
+          )
+          .then((task) => {
+            tasks.push(task);
+            setNextItemTitle('');
           })
-        )
-        .then((task) => {
-          collection[tasksKey].push(task);
-          setNextItemTitle('');
-        })
-        .finally(() => setSaving(false));
-    }
-  }, [space, nextItemTitle]);
-
-  const deleteItem = useCallback(
-    (taskToDelete: Task) => {
-      setSaving(true);
-      return space.experimental.db
-        .delete(taskToDelete)
-        .then(() => setNextItemTitle(''))
-        .finally(() => setSaving(false));
-    },
-    [space]
-  );
-
-  const onAddItemKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter') {
-        void addItem();
-      } else {
-        onListItemInputKeyDown(event);
+          .finally(() => setSaving(false));
       }
-    },
-    [onListItemInputKeyDown, addItem]
-  );
+    }, [space, nextItemTitle]);
 
-  const taskItemAttrs = { ...itemAttrs, onKeyDown: onListItemInputKeyDown };
+    const deleteItem = useCallback(
+      (taskToDelete: Task) => {
+        setSaving(true);
+        tasks.splice(tasks.indexOf(taskToDelete), 1);
+        return space.experimental.db
+          .delete(taskToDelete)
+          .then(() => setNextItemTitle(''))
+          .finally(() => setSaving(false));
+      },
+      [space]
+    );
 
-  const handleMoveItem = (oldIndex: number, newIndex: number) => {
-    const [task] = collection[tasksKey].splice(oldIndex, 1);
-    collection[tasksKey].splice(newIndex, 0, task);
-  };
+    const onAddItemKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+          void addItem();
+        } else {
+          onListItemInputKeyDown(event);
+        }
+      },
+      [onListItemInputKeyDown, addItem]
+    );
 
-  return (
-    <>
-      <span className='sr-only' id={labelId}>
-        {t('tasks list label')}
-      </span>
-      <EditableList
-        completable
-        id={listId}
-        labelId={labelId}
-        onClickAdd={addItem}
-        nextItemTitle={nextItemTitle}
-        itemIdOrder={collection[tasksKey].map((task) => task[idKey])}
-        // todo (thure): let’s try without onChangeItemIdOrder here
-        onMoveItem={handleMoveItem}
-        onChangeNextItemTitle={({ target: { value } }) => setNextItemTitle(value)}
-        slots={{
-          root: hostAttrs as ComponentPropsWithoutRef<'div'>,
-          addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } },
-          addItemButton: { disabled: nextItemTitle.length < 1 }
-        }}
-      >
-        {collection[tasksKey]?.map((task) => (
-          <TaskListItem key={task[idKey]} task={task} taskItemAttrs={taskItemAttrs} deleteTask={deleteItem} />
-        ))}
-      </EditableList>
-      {saving && (
-        <div className='absolute bottom-0 right-0 z-50 p-3 animate-spin text-red-600'>
-          <Spinner />
-        </div>
-      )}
-    </>
-  );
-};
+    const taskItemAttrs = { ...itemAttrs, onKeyDown: onListItemInputKeyDown };
+
+    const handleMoveItem = (oldIndex: number, newIndex: number) => {
+      tasks.splice(newIndex, 0, tasks.splice(oldIndex, 1)[0]);
+    };
+
+    return (
+      <>
+        <span className='sr-only' id={labelId}>
+          {t('tasks list label')}
+        </span>
+        <EditableList
+          completable
+          id={listId}
+          labelId={labelId}
+          onClickAdd={addItem}
+          nextItemTitle={nextItemTitle}
+          itemIdOrder={tasks.map((task) => task[idKey])}
+          onMoveItem={handleMoveItem}
+          onChangeNextItemTitle={({ target: { value } }) => setNextItemTitle(value)}
+          slots={{
+            root: hostAttrs as ComponentPropsWithoutRef<'div'>,
+            addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } },
+            addItemButton: { disabled: nextItemTitle.length < 1 }
+          }}
+        >
+          {tasks.map((task) => (
+            <TaskListItem key={task[idKey]} task={task} taskItemAttrs={taskItemAttrs} deleteTask={deleteItem} />
+          ))}
+        </EditableList>
+        {saving && (
+          <div className='absolute bottom-0 right-0 z-50 p-3 animate-spin text-red-600'>
+            <Spinner />
+          </div>
+        )}
+      </>
+    );
+  },
+  { componentName: 'TaskList' }
+);
 
 export const TaskListItem = withReactor(
   ({
