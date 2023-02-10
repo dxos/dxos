@@ -17,15 +17,21 @@ ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a p
 
 ## Spaces
 
-Spaces are units of sharing and access control in ECHO. Roughly equivalent to a "collection" in a document store, A `space` is an instance of an ECHO database which can be replicated by a number of peers. A given peer is typically a part of many spaces at any given time.
+Spaces are units of sharing and access control in ECHO. They are equivalent to "collections" in a document store.
+
+**A `space` is an instance of an ECHO database which can be replicated by a number of peers.**
+
+A given peer is typically a part of many spaces at any given time.
 
 There are several steps to establishing a space between peers:
 
-1.  <span class="peer-a">**Peer A**</span> listens on the peer network for peers intereseted in a specific [invite code](glossary#invitation-code) it generated
-2.  <span class="peer-b">**Peer B**</span> obtains the [invite code](glossary#invitation-code) and locates the listening <span class="peer-a">**Peer A**</span> via the [signaling network](glossary#signaling-service)
-3.  <span class="peer-a">**Peer A**</span> and B establish a secure connection via [Diffie Hellmann](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) key exchange
-4.  <span class="peer-a">**Peer A**</span> generates an [authorization code](glossary#authorization-code)
-5.  Finally, <span class="peer-b">**Peer B**</span> must provide the [authorization code](glossary#authorization-code) to <span class="peer-a">**Peer A**</span> over the connection just established to verify the security of the channel
+1.  <span class="peer-a">**Peer A**</span> listens on the peer network for peers intereseted in a specific [invite code](glossary#invitation-code) it generated.
+2.  <span class="peer-b">**Peer B**</span> obtains the [invite code](glossary#invitation-code) and locates the listening <span class="peer-a">**Peer A**</span> via the [signaling network](glossary#signaling-service).
+3.  <span class="peer-a">**Peer A**</span> and <span class="peer-b">**Peer B**</span> establish a secure connection via [Diffie Hellmann](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) key exchange.
+4.  <span class="peer-a">**Peer A**</span> generates an [authorization code](glossary#authorization-code) and sends it to <span class="peer-b">**Peer B**</span> via another safe channel (i.e.: shows a QR code).
+5.  Finally, <span class="peer-b">**Peer B**</span> provides the [authorization code](glossary#authorization-code) back to <span class="peer-a">**Peer A**</span> over the new connection.
+
+This verifies that the connection is secure, and the identities of peers are mutually confirmed.
 
 :::tip
 If you're using `react`, DXOS provides a simple [UI flow](react) that implements generating and accepting invitations to spaces.
@@ -65,4 +71,4 @@ This means that when apps request the user's identity (ask to log in), they are 
 
 ## Next steps
 - If using `react` see the [React guide](../react/)
-- For everything else follow the [TypeScript guide](../typescript/)
+- Otherwise, follow the [TypeScript guide](../typescript/)
