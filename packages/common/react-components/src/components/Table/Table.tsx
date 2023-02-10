@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 import { Column, useFlexLayout, useResizeColumns, useTable } from 'react-table';
 
-import { mx } from '@dxos/react-components';
+import { mx } from '../../util';
 
 // https://github.com/TanStack/table/blob/v7/examples/full-width-resizable-table/src/App.js
 
@@ -37,8 +37,8 @@ export type TableClasses = {
 // TODO(burdon): Theme.
 export const defaultTableClasses: TableClasses = {
   header: 'text-sm',
-  row: 'hover:bg-selection-hover',
-  selected: 'bg-selection-bg'
+  row: 'hover:bg-gray-200',
+  selected: 'bg-slate-300'
 };
 
 export type TableProps<T extends {}> = {
@@ -89,7 +89,7 @@ export const Table = <T extends {}>({
               {...headerGroup.getHeaderGroupProps({
                 // style: { paddingRight: '15px' },
               })}
-              className='tr bg-toolbar-bg h-[40px]'
+              className='tr bg-gray-200'
             >
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
@@ -116,7 +116,7 @@ export const Table = <T extends {}>({
               // eslint-disable-next-line react/jsx-key
               <div
                 className={mx(
-                  'tr border-b border-solid border-panel-border cursor-pointer',
+                  'tr border-b border-solid border-slate-100 cursor-pointer',
                   row.original === selected && classes?.selected,
                   classes?.row
                 )}

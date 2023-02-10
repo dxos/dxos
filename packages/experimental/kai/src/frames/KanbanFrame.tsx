@@ -6,8 +6,9 @@ import React, { FC, useState } from 'react';
 
 import { EchoObject } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
+import { Searchbar } from '@dxos/react-components';
 
-import { Kanban, KanbanColumnDef, Searchbar } from '../components';
+import { Kanban, KanbanColumnDef } from '../components';
 import { ProjectCard } from '../containers';
 import { useSpace } from '../hooks';
 import { Project, tags } from '../proto';

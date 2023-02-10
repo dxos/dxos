@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Selector } from '@dxos/kai';
 import { PublicKey } from '@dxos/keys';
+import { Selector } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 // TODO(burdon): Factor out.

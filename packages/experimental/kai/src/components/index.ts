@@ -10,8 +10,4 @@ export * from './Input';
 export * from './Kanban';
 export * from './List';
 export * from './MemberList';
-export * from './Searchbar';
-export * from './Selector';
 export * from './SpaceList';
-export * from './Table';
-export * from './TreeView';
