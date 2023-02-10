@@ -21,10 +21,8 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
-          '@dxos/client/testing',
           '@dxos/config',
           '@dxos/keys',
-          '@dxos/log',
           '@dxos/protocols',
           '@dxos/protocols/proto/dxos/client',
           '@dxos/protocols/proto/dxos/client/services',
@@ -35,23 +33,17 @@ module.exports = {
           '@dxos/protocols/proto/dxos/halo/credentials',
           '@dxos/protocols/proto/dxos/halo/invitations',
           '@dxos/protocols/proto/dxos/halo/keys',
+          '@dxos/protocols/proto/dxos/iframe',
           '@dxos/protocols/proto/dxos/mesh/bridge',
-          '@dxos/protocols/proto/dxos/rpc',
-          '@dxos/react-client/testing',
-          'storybook-dark-mode'
+          '@dxos/protocols/proto/dxos/rpc'
         ]
-      },
-      build: {
-        commonjsOptions: {
-          include: [/packages/, /node_modules/]
-        }
       },
       plugins: [
         ConfigPlugin(),
         ThemePlugin({
           content: [
             resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-            resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.js')
+            resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs')
           ]
         })
       ]

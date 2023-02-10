@@ -6,6 +6,7 @@ const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
 const { ThemePlugin } = require('@dxos/react-components/plugin');
+const { default: viteConfig } = require('../vite.config');
 
 module.exports = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
@@ -23,27 +24,7 @@ module.exports = {
     mergeConfig(config, {
       optimizeDeps: {
         force: true,
-        include: [
-          '@dxos/gem-spore/testing',
-          '@dxos/protocols',
-          '@dxos/protocols/proto/dxos/client',
-          '@dxos/protocols/proto/dxos/client/services',
-          '@dxos/protocols/proto/dxos/config',
-          '@dxos/protocols/proto/dxos/echo/feed',
-          '@dxos/protocols/proto/dxos/echo/model/document',
-          '@dxos/protocols/proto/dxos/echo/object',
-          '@dxos/protocols/proto/dxos/halo/credentials',
-          '@dxos/protocols/proto/dxos/halo/invitations',
-          '@dxos/protocols/proto/dxos/halo/keys',
-          '@dxos/protocols/proto/dxos/mesh/bridge',
-          '@dxos/protocols/proto/dxos/rpc',
-          'storybook-dark-mode'
-        ]
-      },
-      build: {
-        commonjsOptions: {
-          include: [/packages/, /node_modules/]
-        }
+        include: viteConfig.optimizeDeps.include
       },
       plugins: [
         ThemePlugin({

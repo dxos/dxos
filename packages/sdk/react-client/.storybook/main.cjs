@@ -21,28 +21,22 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
-          '@dxos/async',
-          '@dxos/client',
-          '@dxos/client/testing',
-          '@dxos/codec-protobuf',
           '@dxos/config',
-          '@dxos/debug',
           '@dxos/keys',
-          '@dxos/log',
-          '@dxos/messaging',
           '@dxos/protocols',
-          '@dxos/react-async',
-          '@dxos/react-components',
-          '@dxos/rpc',
-          '@dxos/rpc-tunnel',
-          '@dxos/util',
-          'storybook-dark-mode'
+          '@dxos/protocols/proto/dxos/client',
+          '@dxos/protocols/proto/dxos/client/services',
+          '@dxos/protocols/proto/dxos/config',
+          '@dxos/protocols/proto/dxos/echo/feed',
+          '@dxos/protocols/proto/dxos/echo/model/document',
+          '@dxos/protocols/proto/dxos/echo/object',
+          '@dxos/protocols/proto/dxos/halo/credentials',
+          '@dxos/protocols/proto/dxos/halo/invitations',
+          '@dxos/protocols/proto/dxos/halo/keys',
+          '@dxos/protocols/proto/dxos/iframe',
+          '@dxos/protocols/proto/dxos/mesh/bridge',
+          '@dxos/protocols/proto/dxos/rpc'
         ]
-      },
-      build: {
-        commonjsOptions: {
-          include: [/packages/, /node_modules/]
-        }
       },
       plugins: [
         ConfigPlugin(),

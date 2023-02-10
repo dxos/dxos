@@ -22,10 +22,7 @@ module.exports = {
     mergeConfig(config, {
       optimizeDeps: {
         force: true,
-        include: [
-          ...viteConfig.optimizeDeps.include,
-          'storybook-dark-mode'
-        ]
+        include: viteConfig.optimizeDeps.include
       },
       plugins: [
         viteConfig.plugins.find(plugin => plugin.name === 'dxos-config'),

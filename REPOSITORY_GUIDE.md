@@ -185,19 +185,30 @@ To make all eslint errors look yellow in `vscode`, open your user preferences (n
   "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }]
 ```
 
-### Storybook
+### Vite Optimize Dependencies
 
-```
-Cannot GET /` when running 'pnpm run storybook'
-```
+The repo is currently in the process of transitioning to ESM but still contains some packages which do not output ESM.
+This causes issues for Vite because it expects all source code to be ESM and treats all code within the repo as source code because it resolves outside of a `node_modules` directory.
+In order to address this, [vite needs to be configured](https://vitejs.dev/guide/dep-pre-bundling.html#monorepos-and-linked-dependencies) to explicitly optimize these dependencies.
+Optimizing dependencies which are not available in a package generates warnings so instead of a single common list the following list is provided as a guideline of packages which are known to be needed in this list:
 
-Solution:
-
-```bash
-pnpm run storybook --no-manager-cache
-```
-
-[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
+- `@dxos/config`
+- `@dxos/keys`
+- `@dxos/mosaic`
+- `@dxos/plexus`
+- `@dxos/protocols`
+- `@dxos/protocols/proto/dxos/client`
+- `@dxos/protocols/proto/dxos/client/services`
+- `@dxos/protocols/proto/dxos/config`
+- `@dxos/protocols/proto/dxos/echo/feed`
+- `@dxos/protocols/proto/dxos/echo/model/document`
+- `@dxos/protocols/proto/dxos/echo/object`
+- `@dxos/protocols/proto/dxos/halo/credentials`
+- `@dxos/protocols/proto/dxos/halo/invitations`
+- `@dxos/protocols/proto/dxos/halo/keys`
+- `@dxos/protocols/proto/dxos/iframe`
+- `@dxos/protocols/proto/dxos/mesh/bridge`
+- `@dxos/protocols/proto/dxos/rpc`
 
 ### Mobile development
 

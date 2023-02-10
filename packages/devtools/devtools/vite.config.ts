@@ -24,7 +24,6 @@ export default defineConfig({
     force: true,
     include: [
       '@dxos/config',
-      '@dxos/gem-spore/testing',
       '@dxos/keys',
       '@dxos/log',
       '@dxos/mosaic',

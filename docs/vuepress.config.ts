@@ -16,7 +16,6 @@ import { apiSidebar, telemetryPlugin } from './src';
 const env = (value?: string) => (value ? `'${value}'` : undefined);
 
 const OPTIMIZE_DEPS = [
-  '@dxos/client/testing',
   '@dxos/config',
   '@dxos/keys',
   '@dxos/log',

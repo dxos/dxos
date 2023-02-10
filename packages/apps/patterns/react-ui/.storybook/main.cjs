@@ -23,22 +23,22 @@ module.exports = {
     optimizeDeps: {
       force: true,
       include: [
-        '@dxos/client',
-        '@dxos/client/testing',
         '@dxos/config',
-        '@dxos/react-client',
-        '@dxos/react-components',
-        '@dxos/util',
-        'storybook-dark-mode'
+        '@dxos/keys',
+        '@dxos/protocols',
+        '@dxos/protocols/proto/dxos/client',
+        '@dxos/protocols/proto/dxos/client/services',
+        '@dxos/protocols/proto/dxos/config',
+        '@dxos/protocols/proto/dxos/echo/feed',
+        '@dxos/protocols/proto/dxos/echo/model/document',
+        '@dxos/protocols/proto/dxos/echo/object',
+        '@dxos/protocols/proto/dxos/halo/credentials',
+        '@dxos/protocols/proto/dxos/halo/invitations',
+        '@dxos/protocols/proto/dxos/halo/keys',
+        '@dxos/protocols/proto/dxos/iframe',
+        '@dxos/protocols/proto/dxos/mesh/bridge',
+        '@dxos/protocols/proto/dxos/rpc'
       ]
-    },
-    build: {
-      commonjsOptions: {
-        include: [
-          /packages/,
-          /node_modules/
-        ]
-      }
     },
     plugins: [ConfigPlugin(), ThemePlugin({
       content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']

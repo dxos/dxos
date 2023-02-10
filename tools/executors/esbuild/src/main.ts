@@ -53,6 +53,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         outdir,
         outExtension: { '.js': extension },
         format,
+        splitting: format === 'esm',
         write: true,
         sourcemap: options.sourcemap,
         metafile: options.metafile,

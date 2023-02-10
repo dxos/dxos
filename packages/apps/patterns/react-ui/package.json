@@ -18,6 +18,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -32,7 +33,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/react": "^18.0.21",

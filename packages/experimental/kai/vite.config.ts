@@ -43,11 +43,10 @@ export default defineConfig({
     force: true,
     include: [
       '@dxos/config',
-      '@dxos/gem-spore/testing',
+      '@dxos/keys',
       '@dxos/mosaic',
       '@dxos/plexus',
       '@dxos/protocols',
-      '@dxos/keys',
       '@dxos/protocols/proto/dxos/client',
       '@dxos/protocols/proto/dxos/client/services',
       '@dxos/protocols/proto/dxos/config',
@@ -57,6 +56,7 @@ export default defineConfig({
       '@dxos/protocols/proto/dxos/halo/credentials',
       '@dxos/protocols/proto/dxos/halo/invitations',
       '@dxos/protocols/proto/dxos/halo/keys',
+      '@dxos/protocols/proto/dxos/iframe',
       '@dxos/protocols/proto/dxos/mesh/bridge',
       '@dxos/protocols/proto/dxos/rpc'
     ]
