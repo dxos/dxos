@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-export const BraneFrame = React.lazy(() => import('./BraneFrame'));
 export const CalendarFrame = React.lazy(() => import('./CalendarFrame'));
 export const ChessFrame = React.lazy(() => import('./ChessFrame'));
 export const DocumentFrame = React.lazy(() => import('./DocumentFrame'));
