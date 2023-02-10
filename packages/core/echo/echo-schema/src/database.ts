@@ -216,8 +216,8 @@ export class EchoDatabase {
    * Create object with a proper prototype representing the given item.
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
-    if (item.model instanceof DocumentModel) {
-      const type = item.model.get('@type');
+    if (item.modelMeta.type === DocumentModel.meta.type) {
+      const type = item._stateManager.state['@type']
       if (!type) {
         return new Document();
       }
@@ -229,10 +229,10 @@ export class EchoDatabase {
       } else {
         return new Proto();
       }
-    } else if (item.model instanceof TextModel) {
+    } else if (item.modelMeta.type === TextModel.meta.type) {
       return new TextObject();
     } else {
-      log.warn('Unknown model type', { model: item.model });
+      log.warn('Unknown model type', { type: item.modelMeta.type });
       return undefined;
     }
   }

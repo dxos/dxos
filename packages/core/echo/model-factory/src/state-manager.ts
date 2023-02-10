@@ -57,10 +57,10 @@ export class StateManager<M extends Model> {
   private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
+  public readonly update = new Event();
+
   public _modelMeta: ModelMeta | null = null;
   private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
-
-  private _model: M | null = null;
 
   /**
    * Mutations that were applied on top of the _snapshot.
@@ -107,11 +107,6 @@ export class StateManager<M extends Model> {
     return this._modelMeta;
   }
 
-  get model(): M {
-    assert(this._model, 'Model not initialized.');
-    return this._model;
-  }
-
   async destroy() {
     log('destroy');
     try {
@@ -119,9 +114,8 @@ export class StateManager<M extends Model> {
     } catch {}
   }
 
-  private _emitModelUpdate() {
-    assert(this._model);
-    this._model.update.emit(this._model);
+  private _emitUpdate() {
+    this.update.emit();
   }
 
   processOptimisticMutation(mutation: MutationOf<M>, tag?: string) {
@@ -140,7 +134,7 @@ export class StateManager<M extends Model> {
     if (this.initialized) {
       log('Optimistic apply', mutation);
       this._stateMachine!.process(mutation);
-      this._emitModelUpdate();
+      this._emitUpdate();
     }
 
     return optimisticMutation;
@@ -179,6 +173,7 @@ export class StateManager<M extends Model> {
 
   /**
    * Writes the mutation to the output stream.
+   * @deprecated
    */
   private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
     if (!this._feedWriter) {
@@ -250,14 +245,6 @@ export class StateManager<M extends Model> {
     this._modelMeta = modelConstructor.meta;
 
     this._resetStateMachine();
-
-    // eslint-disable-next-line new-cap
-    this._model = new modelConstructor(
-      this._modelMeta,
-      this._itemId,
-      () => this._stateMachine!.getState(),
-      this._feedWriter ? (mutation) => this._write(mutation) : undefined
-    );
   }
 
   /**
@@ -303,7 +290,7 @@ export class StateManager<M extends Model> {
         // Mutation can safely be append at the end preserving order.
         const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation.value);
         this._stateMachine!.process(mutationDecoded);
-        this._emitModelUpdate();
+        this._emitUpdate();
       }
     }
 
@@ -352,7 +339,7 @@ export class StateManager<M extends Model> {
 
     if (this.initialized) {
       this._resetStateMachine();
-      this._emitModelUpdate();
+      this._emitUpdate();
     }
   }
 }

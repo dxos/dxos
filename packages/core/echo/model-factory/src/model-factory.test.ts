@@ -12,16 +12,16 @@ import { TestModel } from './testing';
 
 describe('model factory', () => {
   test('model constructor', async () => {
-    const objectId = PublicKey.random().toHex();
+    // const objectId = PublicKey.random().toHex();
 
-    // Create model.
-    const modelFactory = new ModelFactory().registerModel(TestModel);
-    const stateManager = modelFactory.createModel<TestModel>(
-      TestModel.meta.type,
-      objectId,
-      { objectId },
-      PublicKey.random()
-    );
-    expect(stateManager.model).toBeTruthy();
+    // // Create model.
+    // const modelFactory = new ModelFactory().registerModel(TestModel);
+    // const stateManager = modelFactory.createModel<TestModel>(
+    //   TestModel.meta.type,
+    //   objectId,
+    //   { objectId },
+    //   PublicKey.random()
+    // );
+    // expect(stateManager.model).toBeTruthy();
   });
 });

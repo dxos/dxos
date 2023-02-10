@@ -249,7 +249,8 @@ export class SpaceProxy implements Space {
   }
 
   get properties(): ObjectProperties {
-    return this._item!.model;
+    // return this._item!.model;
+    return todo(); // TODO(mykola): implement
   }
 
   get invitations() {

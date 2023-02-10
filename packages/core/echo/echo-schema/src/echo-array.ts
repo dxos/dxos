@@ -304,7 +304,7 @@ export class EchoArray<T> implements Array<T> {
   //
 
   private _getBackingModel(): DocumentModel | undefined {
-    return this._object?._item?.model;
+    return this._object?._model;
   }
 
   private _decode(value: any): T | undefined {

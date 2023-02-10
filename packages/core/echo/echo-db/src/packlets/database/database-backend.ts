@@ -21,6 +21,7 @@ import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
+import { Context } from '@dxos/context';
 
 /**
  * Generic interface to represent a backend for the database.
@@ -99,6 +100,7 @@ export type MutateResult = {
   // TODO(dmaretskyi): .
 };
 
+const FLUSH_TIMEOUT = 5_000;
 /**
  * Database backend that is backed by the DataService instance.
  * Uses DataMirror to populate entities in ItemManager.
@@ -106,7 +108,7 @@ export type MutateResult = {
 export class DatabaseBackendProxy implements DatabaseBackend {
   private _entities?: Stream<EchoEvent>;
 
-  private readonly _subscriptions = new EventSubscriptions();
+  private readonly _ctx = new Context();
   public _itemManager!: ItemManager;
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
@@ -126,15 +128,13 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
 
-    this._subscriptions.add(
-      modelFactory.registered.on(async (model) => {
-        for (const item of this._itemManager.getUninitializedEntities()) {
-          if (item._stateManager.modelType === model.meta.type) {
-            await this._itemManager.initializeModel(item.id);
-          }
+    modelFactory.registered.on(this._ctx, async (model) => {
+      for (const item of this._itemManager.getUninitializedEntities()) {
+        if (item._stateManager.modelType === model.meta.type) {
+          await this._itemManager.initializeModel(item.id);
         }
-      })
-    );
+      }
+    })
 
     const loaded = new Trigger();
 
@@ -143,11 +143,19 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     });
     this._entities.subscribe(
       async (msg) => {
+        log('process', {
+          clientTag: msg.clientTag,
+          feedKey: msg.feedKey,
+          seq: msg.seq,
+          objectCount: msg.batch.objects?.length ?? 0,
+        })
+
         // console.log(inspect(msg, false, null, true))
         this._process(msg.batch, false);
 
         if(msg.clientTag) {
           this._mutationRoundTripTriggers.get(msg.clientTag)?.wake();
+          this._mutationRoundTripTriggers.delete(msg.clientTag);
         }
 
         // Notify that initial set of items has been loaded.
@@ -223,11 +231,16 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   }
 
   mutate(batch: EchoObjectBatch): MutateResult {
+    if(this._ctx.disposed) {
+      throw new Error('Database is closed');
+    }
+
     const objectsCreated: Item<any>[] = [];
 
     const clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
     tagMutationsInBatch(batch, clientTag);
     this._mutationRoundTripTriggers.set(clientTag, new Trigger());
+    log('mutate', { clientTag, objectCount: batch.objects?.length ?? 0 })
 
     // Optimistic apply.
     this._process(batch, true, objectsCreated);
@@ -254,7 +267,19 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   }
 
   async close(): Promise<void> {
-    this._subscriptions.clear();
+    this._ctx.dispose();
+
+    // NOTE: Must be before entities stream is closed so that confirmations can come in.
+    // TODO(dmaretskyi): Extract as db.flush()?.
+    try {
+      await Promise.all(Array.from(this._mutationRoundTripTriggers.values()).map((trigger) => trigger.wait({ timeout: FLUSH_TIMEOUT })));
+    } catch(err) {
+      log.error('timeout waiting for mutations to flush', {
+        timeout: FLUSH_TIMEOUT,
+        mutationTags: Array.from(this._mutationRoundTripTriggers.keys())
+      })
+    }
+
     await this._entities?.close();
   }
 
