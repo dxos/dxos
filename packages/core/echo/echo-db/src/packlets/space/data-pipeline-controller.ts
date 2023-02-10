@@ -121,6 +121,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       this._params.memberKey,
       this.databaseBackend.getWriteStream()
     );
+    this._itemManager._debugLabel = 'backend';
 
     // Connect pipeline to the database.
     await this.databaseBackend.open(this._itemManager, this._params.modelFactory);

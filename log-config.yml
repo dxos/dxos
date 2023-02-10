@@ -11,7 +11,9 @@ filter:
   # - notarization:debug
   # - feed-store:debug
   # - control-pipeline:debug
-  - state-manager:debug
+  # - state-manager:debug
+  - feed-store:debug
+  - client-services:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug

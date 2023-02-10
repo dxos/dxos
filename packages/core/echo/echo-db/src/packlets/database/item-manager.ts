@@ -11,6 +11,7 @@ import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { logInfo } from '@dxos/log';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -32,6 +33,10 @@ export interface ItemConstructionOptions extends ModelConstructionOptions {
   itemType: ItemType | undefined;
   parentId?: ItemID;
 }
+
+export type DbOptions = {
+  label?: string;
+};
 
 /**
  * Manages the creation and indexing of items.
@@ -61,6 +66,9 @@ export class ItemManager {
    * @private
    */
   private readonly _pendingItems = new Map<ItemID, (item: Item<Model>) => void>();
+
+  @logInfo
+  public _debugLabel: string | undefined;
 
   /**
    * @param _writeStream Outbound `dxos.echo.IEchoObject` mutation stream.
@@ -177,7 +185,15 @@ export class ItemManager {
       );
 
     // Create the model with the outbound stream.
-    return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
+    const stateManager = this._modelFactory.createModel<Model>(
+      modelType,
+      itemId,
+      snapshot,
+      this._memberKey,
+      outboundTransform
+    );
+    stateManager._debugLabel = this._debugLabel;
+    return stateManager;
   }
 
   /**

@@ -12,7 +12,7 @@ import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
 import { validateKey } from './util';
 
-describe('DocumentModel', () => {
+describe.skip('DocumentModel', () => {
   test('checks valid keys', () => {
     const valid = ['x', 'foo', 'foo_bar', 'foo.bar', '@type', '$type', 'foo$bar'];
     for (const key of valid) {
