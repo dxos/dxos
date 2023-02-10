@@ -143,8 +143,9 @@ This will begin tracking further changes on the object and replicating them to o
 
 ### Next steps
 
-- [Using ECHO with React](echo/react)
-- [using ECHO with TypeScript](echo/typescript)
+- ECHO with [React](echo/react)
+- ECHO with [TypeScript](echo/typescript)
+- ECHO with [strongly typed objects](echo/typescript/types)
 
 ## Starting a KUBE
 
@@ -206,9 +207,9 @@ In this guide we built a local-first, collaborative app using the ECHO database 
 We hope you'll find the technology useful, and welcome your contributions. Happy building! 🚀
 
 Using DXOS:
-- ECHO with [strongly typed objects](echo/typescript/types)
 - ECHO with [React](echo/react/)
 - ECHO with [TypeScript](echo/typescript/)
+- ECHO with [strongly typed objects](echo/typescript/types)
 
 Get in touch and contribute:
 - DXOS [repository on GitHub](https:/github.com/dxos/dxos)
