@@ -50,7 +50,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   // prettier-ignore
   constructor(
     initialProps?: Record<keyof any, any>,
-    private readonly _schemaType?: EchoSchemaType,
+    private readonly _schemaType?: EchoSchemaType
   ) {
     super();
     Object.assign(this._uninitialized!, initialProps);
