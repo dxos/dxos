@@ -44,8 +44,7 @@
       "!{projectRoot}/**/*.test.ts",
       "!{projectRoot}/**/*.md",
       "!{projectRoot}/eslintConfig.json",
-      "!{workspaceRoot}/.eslintrc*.js",
-      "!{workspaceRoot}/deprecated/**/*"
+      "!{workspaceRoot}/.eslintrc*.js"
     ]
   },
   "targetDefaults": {

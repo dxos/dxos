@@ -29,9 +29,6 @@ module.exports = {
     '*.t.ts',
     // Docs snippets
     'docs/docs/**/*',
-
-    // Deprecated packages
-    './deprecated/**/*',
   ],
   overrides: [
     {
