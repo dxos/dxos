@@ -52,9 +52,6 @@
       "path": "../../../core/protocols"
     },
     {
-      "path": "../../../experimental/react-client-testing"
-    },
-    {
       "path": "../../../sdk/client"
     },
     {

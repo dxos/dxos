@@ -1,9 +1,0 @@
-version: 1
-
-package:
-  modules:
-    - name: dxos:story/react-client-testing
-      type: dxos:type/app
-      build:
-        command: npm run build:book
-        outdir: out/book

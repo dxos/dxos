@@ -9,13 +9,12 @@ import { Box, Button, Toolbar } from '@mui/material';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
-import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components-deprecated';
 import { RegistryProvider } from '@dxos/react-registry-client';
 import { RegistryClient } from '@dxos/registry-client';
 
 import { ErrorBoundary, JoinSpaceDialog, SpaceSharingDialog } from '../src';
-import { Column, createMockRegistryWithBot } from './helpers';
+import { Column, createMockRegistryWithBot, ProfileInitializer } from './helpers';
 
 export default {
   title: 'react-toolkit/SpaceSharing'

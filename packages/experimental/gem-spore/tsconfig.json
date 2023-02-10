@@ -20,9 +20,6 @@
       "path": "../../common/react-components"
     },
     {
-      "path": "../client-testing"
-    },
-    {
       "path": "../gem-core"
     }
   ]
