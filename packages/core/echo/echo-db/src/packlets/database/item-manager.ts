@@ -13,7 +13,7 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { logInfo } from '@dxos/log';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
-import { ItemID, ItemType } from '@dxos/protocols';
+import { ItemID } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 

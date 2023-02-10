@@ -26,7 +26,7 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
 import { HaloProxy } from './halo-proxy';
-import { Space, SpaceProxy, SPACE_ITEM_TYPE } from './space-proxy';
+import { Space, SpaceProxy } from './space-proxy';
 
 /**
  * TODO(burdon): Public API (move comments here).
