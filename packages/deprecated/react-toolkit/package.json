@@ -47,7 +47,6 @@
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-client-testing": "workspace:*",
     "@dxos/react-components-deprecated": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@emotion/react": "^11.9.0",

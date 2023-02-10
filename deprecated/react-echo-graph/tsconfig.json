@@ -1,13 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "emitDeclarationOnly": false,
     "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "exclude": [
     "/node_modules/"
@@ -21,40 +20,25 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/esbuild-plugins"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/node-std"
     },
     {
       "path": "../../common/react-async"
     },
     {
-      "path": "../../core/halo/credentials"
+      "path": "../../experimental/gem-core"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../experimental/react-registry-client"
-    },
-    {
-      "path": "../../experimental/registry-client"
+      "path": "../../experimental/gem-spore"
     },
     {
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../react-client-testing"
     },
     {
       "path": "../react-components-deprecated"
