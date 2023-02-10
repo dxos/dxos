@@ -4,16 +4,17 @@
 
 import '@dxosTheme';
 import type { StoryFn } from '@storybook/react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { Client, Invitation, PublicKey } from '@dxos/client';
+import { Client, Invitation, PublicKey, TextObject } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientProvider, useSpace } from '@dxos/react-client';
+import { ClientProvider, useQuery, useSpace } from '@dxos/react-client';
 import { Loading, mx } from '@dxos/react-components';
 
+import { Document } from '../../testing';
 import { Composer, ComposerProps } from './Composer';
 
 // TODO(wittjosiah): @dxos/log.
@@ -27,23 +28,18 @@ export default {
 export const Default = {
   render: ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
     const space = useSpace(spaceKey);
-    const [item] = null as any; // useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
+    const [document] = useQuery(space, Document.filter());
 
-    useAsyncEffect(async () => {
-      if (id === 0) {
-        // await space?.database.createItem({
-        //   model: TextModel,
-        //   type: DOCUMENT_TYPE
-        // });
-      }
+    useEffect(() => {
+      id === 0 && space?.experimental.db.save(new Document({ content: new TextObject() }));
     }, [space]);
 
     return (
       <main className='grow pli-7 mbs-7'>
-        {item && space ? (
+        {document && space ? (
           <Composer
             {...args}
-            item={item}
+            document={document.content}
             slots={{
               editor: {
                 className: mx(

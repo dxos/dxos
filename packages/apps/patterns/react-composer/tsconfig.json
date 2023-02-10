@@ -28,6 +28,12 @@
       "path": "../../../common/react-components"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../core/echo/echo-typegen"
+    },
+    {
       "path": "../../../core/echo/text-model"
     },
     {

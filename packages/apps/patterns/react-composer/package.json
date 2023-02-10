@@ -12,6 +12,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "prebuild": "dxtype src/testing/proto/schema.proto src/testing/proto/gen/schema.ts"
+  },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -33,6 +36,8 @@
     "yjs": "^13.5.44"
   },
   "devDependencies": {
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-typegen": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6"
   },
