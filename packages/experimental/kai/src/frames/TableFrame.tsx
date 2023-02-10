@@ -7,8 +7,8 @@ import { Column } from 'react-table';
 
 import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
+import { Table, Searchbar, Selector, SelectorOption } from '@dxos/react-components';
 
-import { Searchbar, Selector, SelectorOption, Table } from '../components';
 import { useSpace } from '../hooks';
 import { schema } from '../proto';
 
