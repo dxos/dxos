@@ -19,7 +19,7 @@ describe('services/ServiceContext', () => {
     await performInvitation(device1.haloInvitations, device2.haloInvitations, undefined);
 
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
-    await syncItems(space1, space2!);
+    await syncItems(space1.dataPipelineController, space2!.dataPipelineController);
   });
 
   test('new space is synchronized on device invitations', async () => {
@@ -33,7 +33,7 @@ describe('services/ServiceContext', () => {
     const space1 = await device1.dataSpaceManager!.createSpace();
     await device2.dataSpaceManager?.updated.waitForCondition(() => !!device2.dataSpaceManager!.spaces.get(space1.key));
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
-    await syncItems(space1, space2!);
+    await syncItems(space1.dataPipelineController, space2!.dataPipelineController);
   });
 
   test('joined space is synchronized on device invitations', async () => {
@@ -51,6 +51,6 @@ describe('services/ServiceContext', () => {
 
     await device2.dataSpaceManager?.updated.waitForCondition(() => !!device2.dataSpaceManager!.spaces.get(space1.key));
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
-    await syncItems(space1, space2!);
+    await syncItems(space1.dataPipelineController, space2!.dataPipelineController);
   });
 });

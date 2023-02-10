@@ -127,7 +127,7 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     })
     .attr('cx', (d) => d.x)
     .attr('cy', (d) => d.y)
-    .attr('r', (d) => d.r);
+    .attr('r', (d) => d.r ?? 16);
 
   // Update labels.
   if (options.labels) {
@@ -137,7 +137,7 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
         return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
       })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
-      .attr('dx', (d) => (d.r + 6) * (d.x > 0 ? 1 : -1))
+      // .attr('dx', (d) => ((d.r ?? 0) + 6) * (d.x > 0 ? 1 : -1))
       .attr('x', (d) => d.x)
       .attr('y', (d) => d.y);
   }
@@ -172,18 +172,14 @@ const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     .attr('d', (d) => {
       const { source, target } = d;
 
-      const getPoint = (el): Point => {
-        return [parseFloat(el.attr('cx')), parseFloat(el.attr('cy'))];
-      };
-
       // Get the current position if the node exists.
       let initSource: Point;
       let initTarget: Point;
+      const getPoint = (el): Point => [parseFloat(el.attr('cx')), parseFloat(el.attr('cy'))];
       nodes.selectAll('g').each(function (d) {
         if (options.idAccessor(d) === source.id) {
           initSource = getPoint(d3.select(this).select('circle'));
-        }
-        if (options.idAccessor(d) === target.id) {
+        } else if (options.idAccessor(d) === target.id) {
           initTarget = getPoint(d3.select(this).select('circle'));
         }
       });

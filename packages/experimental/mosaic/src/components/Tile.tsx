@@ -54,7 +54,7 @@ export type TileClasses = {
 
 export type TileProps<T extends {}> = {
   item: Item<T>;
-  bounds: Bounds;
+  bounds?: Bounds;
   classes?: TileClasses;
   selected?: boolean;
   Content?: FC<TileContentProps<T>>;
@@ -77,8 +77,8 @@ export const Tile = <T extends {} = {}>({
   const { attributes, listeners, transform, isDragging, setNodeRef } = useDraggable({ id: item.id });
   const style = {
     transform: CSS.Transform.toString(transform),
-    width: bounds.width,
-    height: bounds.height
+    width: bounds?.width,
+    height: bounds?.height
   };
 
   // prettier-ignore

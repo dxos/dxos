@@ -49,6 +49,8 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/chess-app": "workspace:*",
+    "@dxos/mosaic": "workspace:*",
+    "@dxos/plexus": "workspace:*",
     "@dxos/react-composer": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@monaco-editor/react": "^4.4.6",
