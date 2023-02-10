@@ -10,7 +10,7 @@ DXOS enables the development and operation of internet scale, privacy preserving
 DXOS is under development and will continue to change frequently. <br/>Your feedback is most welcome. [GitHub](https://github.com/dxos/dxos/issues), [`@dxos_org` on Twitter](https://twitter.com/dxos_org). <br/>See [Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
 :::
 
-DXOS consists of a few technologies that work together:
+DXOS is a group of technologies that work together:
 
 *   [ECHO](echo) - Database and reactive state container for offline-first, real-time, collaborative apps.
 *   [HALO](halo) - Identity for decentralized apps.

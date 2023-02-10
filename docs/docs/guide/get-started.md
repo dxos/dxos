@@ -17,7 +17,11 @@ DXOS is the developer platform for **collaborative**, **offline-first**, **priva
 
 ## Create an app
 
-DXOS project templates are based on `vite`, `typescript`, `react`, `tailwind`, and other opinions to get you going quickly.
+DXOS project templates are based on `vite`, `typescript`, `react`, `tailwind`, and other opinions to get you going quickly. 
+
+DXOS works in any Node.js or Browser environment. There is a [TypeScript API](echo/typescript/) and a [`react` API](echo/react/). 
+
+This guide will walk you through creating and deploying a react project.
 
 Initialize an empty folder with `npm init` like this:
 
@@ -42,16 +46,32 @@ You should be able to open two windows and see reactive updates like in the vide
 
 <video controls loop autoplay style="width:100%" src="/images/quickstart.mp4"></video>
 
+::: info Why this is cool:
+
+- State is being reactively shared between all instances of the app running on the same machine.
+- Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) controlled by the `halo.dxos.org` domain.
+- The app running on `localhost` subscribes to the data through a local shared memory connection with `halo.dxos.org` which works offline.
+- When remote peers join the same [space](./glossary#space), their changes are given to running apps through `halo` in the same way. Learn more about the [vault topology](echo/README#local-vault-topology).
+- Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
+- User identity (and their public/private keys) are established securely and maintained for the whole device (browser profile) without a password.
+- Everything works offline.
+- Real-time collaboration is possible when online.
+- There are **no servers** or [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping) to worry about.
+  :::
+
+Now you have an application that does all the above. It relies on [ECHO](./echo) to perform state consensus and [HALO](./halo) for identity.
+
 ## ECHO State Consensus
 
 [ECHO](./#echo) is a peer-to-peer graph database designed for offline-first and real-time collaboration. There is no central server, peers exchange data directly over p2p connections.
 
-To use ECHO:
+### How to use ECHO
 
-1. Create a [Client](echo/typescript/) using [`<ClientProvider />`](echo/react) in `react`
-2. Establish [identity](halo)
-3. Create or join a [space](echo/react/spaces)
-4. Perform reads and writes
+1. Install `@dxos/client` or `@dxos/react-client` for `react`
+2. Create a [Client](echo/typescript/) using [`<ClientProvider />`](echo/react) in `react`
+3. Establish [identity](halo)
+4. Create or join a [space](echo/react/spaces)
+5. Perform reads and writes
 
 ```tsx file=./echo/react/snippets/create-client-react.tsx#L5-
 import React from 'react';
@@ -83,20 +103,47 @@ const App = () => (
 );
 
 createRoot(document.body).render(<App />);
-
 ```
 
-Now you can manipulate [objects](./glossary#object) in the space and they will replicate with all members of the space in a peer-to-peer fashion.
+::: tip Tip
+To see an example without `react` see the [TypeScript Guide](echo/typescript/)
+:::
 
-Reading objects is as simple as `space.query()` or `useQuery()` in `react`.
+Now you can manipulate [objects](./glossary#object) in the space directly and they will replicate with all members of the space in a peer-to-peer fashion.
 
-The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
+### Mutations
+Any objects coming from `useQuery` are **tracked**. Manipulate them directly:
 
-Next steps:
+```ts
+const objects = useQuery(space, {});
 
-- [ECHO configuration](echo/configuration)
-- [ECHO with React](echo/react)
-- [Client](../api/@dxos/client/classes/Client.md) API Documentation
+const object = objects[0];
+object.counter = 0;
+object.name = 'example';
+```
+The above writes will start propagating to connected peers in the space on the next tick.
+
+The changes will also cause any subscribed UI components in the app to re-render accordingly as well.
+
+Creating new objects:
+```ts
+import { Document } from '@dxos/react-client';
+
+const newThing = new Document();
+newThing.someProperty = 'example';
+
+space.experimental.db.save(newThing);
+```
+This will begin tracking further changes on the object and replicating them to other peers.
+
+### Recap
+- Reading objects is as simple as `space.query()` in TypeScript or `useQuery()` in `react`.
+- The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
+
+### Next steps
+
+- [Using ECHO with React](echo/react)
+- [using ECHO with TypeScript](echo/typescript)
 
 ## Starting a KUBE
 
@@ -117,6 +164,8 @@ kube status # verify it's running
 
 Once KUBE is running, you're ready to deploy to it. 🚀
 
+Learn more about what [services](kube/README#kube-overview) KUBE runs.
+
 ## Deploying your app to a KUBE
 
 To deploy to your local KUBE:
@@ -125,7 +174,7 @@ To deploy to your local KUBE:
 - Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
 - Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
 
-If you're using the DXOS application template (from `dx app create`):
+If you're using a DXOS application template (from `dx app create` or `npm init @dxos/*`):
 
 ```bash
 pnpm run deploy
@@ -137,7 +186,7 @@ To deploy any static app with a `dx.yml` file:
 dx app publish
 ```
 
-Your app will now be accessible in a browser `http://<app-name>.localhost`.
+Your app will now be accessible in a browser at `http://<app-name>.localhost` where `<app-name>` is found in `dx.yml`. 🚀
 
 If you started with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost).
 
@@ -145,13 +194,27 @@ If you started with `dx app create hello`, the app will be on [`hello.localhost`
 Your app will now always be available on your machine until it or KUBE is stopped.
 :::
 
-You can also ask KUBE to expose the app to the world wide web so you can share the URL with friends. Simply set `tunnel: true` in `dx.yml` and redeploy. Read more about KUBE [`tunneling`](./kube/tunneling).
-
-:::note Coming soon
-- `console` - a management console for the apps running on your KUBE
-  :::
-
 Read more:
 
 - [`dx.yml` file schema](kube/dx-yml-file)
 - DXOS [templates](cli/templates) and [samples](samples).
+
+### Tunneling
+
+You can also ask KUBE to expose the app to the world wide web so you can share the URL with friends. Simply set `tunnel: true` in `dx.yml` and redeploy. Read more about KUBE [`tunneling`](./kube/tunneling).
+
+## Next steps
+
+In this guide we demonstrated how to build local-first, collaborative applications using DXOS application templates, the ECHO database and HALO identity. 
+
+We hope you'll find the technology useful, and welcome your contributions. Happy building! 🚀
+
+Using DXOS:
+- ECHO with [strongly typed objects](echo/typescript/types)
+- ECHO with [React](echo/react/)
+- ECHO with [TypeScript](echo/typescript/)
+
+Get in touch and contribute:
+- DXOS [repository on GitHub](https:/github.com/dxos/dxos)
+- File a bug in [Issues](https:/github.com/dxos/dxos/issues)
+- Join the DXOS [Discord]()

@@ -54,10 +54,6 @@ In order to build local-first and offline-first applications with peer-to-peer c
 
 Most applications need to understand, store, and protect the identity of the user using them. Users don't want to memorize new passwords for every application, and developers don't want to implement the hard parts of secure authentication. [Read more](halo)
 
-### [MESH](mesh)
-
-Legacy network topologies were designed for the world of client-server. NATs and firewalls make it harder for peers to locate each other. [Read more](mesh)
-
 ### [KUBE](kube)
 
 Cloud providers have created too much gravity and complexity around the primitives of hosting code and running servers. You shouldn't have to understand and code against a complex cloud provider just to deploy and host a typical offline-first application. [Read more](kube)
