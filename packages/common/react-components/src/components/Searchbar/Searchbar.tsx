@@ -25,13 +25,14 @@ export const Searchbar: FC<{
     <div className='flex flex-1 flex-col bg-white'>
       <div className={mx('flex flex-1 items-center p-2', border && 'border rounded')}>
         <Input
-          label={undefined}
+          label={'Search'}
           onChange={(event) => handleChange(event.target.value)}
           placeholder='Search...'
           slots={{
             root: {
               className: 'flex flex-1 mlb-0'
             },
+            label: { className: 'sr-only' },
             input: {
               className: 'flex flex-1',
               spellCheck: false
