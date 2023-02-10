@@ -217,7 +217,7 @@ export class EchoDatabase {
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
     if (item.modelMeta.type === DocumentModel.meta.type) {
-      const type = item._stateManager.state['@type']
+      const type = item._stateManager.state['@type'];
       if (!type) {
         return new Document();
       }

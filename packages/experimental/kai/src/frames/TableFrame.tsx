@@ -10,7 +10,7 @@ import { useQuery } from '@dxos/react-client';
 
 import { Searchbar, Selector, SelectorOption, Table } from '../components';
 import { useSpace } from '../hooks';
-import { Contact, Organization, Project, schema } from '../proto';
+import { schema } from '../proto';
 
 // UX field types.
 const COLUMN_TYPES = ['string', 'number', 'boolean'];

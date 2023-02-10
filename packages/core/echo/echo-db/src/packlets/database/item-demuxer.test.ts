@@ -78,7 +78,7 @@ describe('Item demuxer', () => {
     expect(item).toBeTruthy();
 
     const [updated, onUpdate] = latch();
-    const model: TestModel = todo() //item?.model as TestModel;
+    const model: TestModel = todo(); // item?.model as TestModel;
     model.subscribe((model) => {
       expect((model as TestModel).keys.length).toBe(1);
       onUpdate();

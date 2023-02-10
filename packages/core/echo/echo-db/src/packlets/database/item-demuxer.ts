@@ -73,7 +73,7 @@ export class ItemDemuxer {
               mutations?.map((mutation) => ({
                 ...mutation,
                 meta
-              })) ?? [],
+              })) ?? []
           },
           itemType,
           parentId: mutation?.parentId
@@ -85,7 +85,8 @@ export class ItemDemuxer {
       //
       // Model mutations.
       //
-      if (mutation && !genesis) { // TODO(dmaretskyi): Fix.
+      if (mutation && !genesis) {
+        // TODO(dmaretskyi): Fix.
         if (mutation.parentId || mutation.action) {
           const item = this._itemManager.getItem(objectId);
           assert(item);

@@ -78,13 +78,7 @@ export abstract class EchoObject<T extends Model = any> {
       () => this._getState(),
       async (mutation): Promise<MutationWriteReceipt> => {
         const result = this._database!._backend.mutate(
-          createModelMutation(
-            this._id,
-            encodeModelMutation(
-              this._model!.modelMeta,
-              mutation,
-            )
-          )
+          createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation))
         );
 
         return result.getReceipt();

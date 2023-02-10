@@ -16,8 +16,7 @@ test('generate test data', async () => {
   await client.initialize();
   await client.halo.createProfile();
   const space = await client.echo.createSpace();
-  const generator = new Generator(space.experimental.db, 
-    {
+  const generator = new Generator(space.experimental.db, {
     organizations: { min: 1, max: 1 },
     projects: { min: 1, max: 1 },
     tasks: { min: 1, max: 1 },
@@ -25,7 +24,6 @@ test('generate test data', async () => {
     events: { min: 1, max: 1 },
     documents: { min: 1, max: 1 },
     notes: { min: 1, max: 1 }
-  }
-  );
+  });
   await generator.generate();
 });

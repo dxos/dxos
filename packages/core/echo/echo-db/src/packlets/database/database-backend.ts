@@ -4,8 +4,9 @@
 
 import assert from 'node:assert';
 
-import { EventSubscriptions, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -13,7 +14,7 @@ import { ModelFactory, MutationWriteReceipt } from '@dxos/model-factory';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
-import { DataService, EchoEvent, MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
+import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { tagMutationsInBatch } from './builder';
@@ -21,7 +22,6 @@ import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { Context } from '@dxos/context';
 
 /**
  * Generic interface to represent a backend for the database.
@@ -134,7 +134,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
           await this._itemManager.initializeModel(item.id);
         }
       }
-    })
+    });
 
     const loaded = new Trigger();
 
@@ -147,13 +147,13 @@ export class DatabaseBackendProxy implements DatabaseBackend {
           clientTag: msg.clientTag,
           feedKey: msg.feedKey,
           seq: msg.seq,
-          objectCount: msg.batch.objects?.length ?? 0,
-        })
+          objectCount: msg.batch.objects?.length ?? 0
+        });
 
         // console.log(inspect(msg, false, null, true))
         this._process(msg.batch, false);
 
-        if(msg.clientTag) {
+        if (msg.clientTag) {
           this._mutationRoundTripTriggers.get(msg.clientTag)?.wake();
           this._mutationRoundTripTriggers.delete(msg.clientTag);
         }
@@ -228,7 +228,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   }
 
   mutate(batch: EchoObjectBatch): MutateResult {
-    if(this._ctx.disposed) {
+    if (this._ctx.disposed) {
       throw new Error('Database is closed');
     }
 
@@ -237,7 +237,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     const clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
     tagMutationsInBatch(batch, clientTag);
     this._mutationRoundTripTriggers.set(clientTag, new Trigger());
-    log('mutate', { clientTag, objectCount: batch.objects?.length ?? 0 })
+    log('mutate', { clientTag, objectCount: batch.objects?.length ?? 0 });
 
     // Optimistic apply.
     this._process(batch, true, objectsCreated);
@@ -258,7 +258,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
           waitToBeProcessed: async () => {
             await this._mutationRoundTripTriggers.get(clientTag)?.wait();
           }
-        }
+        };
       }
     };
   }
@@ -269,12 +269,14 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     // NOTE: Must be before entities stream is closed so that confirmations can come in.
     // TODO(dmaretskyi): Extract as db.flush()?.
     try {
-      await Promise.all(Array.from(this._mutationRoundTripTriggers.values()).map((trigger) => trigger.wait({ timeout: FLUSH_TIMEOUT })));
-    } catch(err) {
+      await Promise.all(
+        Array.from(this._mutationRoundTripTriggers.values()).map((trigger) => trigger.wait({ timeout: FLUSH_TIMEOUT }))
+      );
+    } catch (err) {
       log.error('timeout waiting for mutations to flush', {
         timeout: FLUSH_TIMEOUT,
         mutationTags: Array.from(this._mutationRoundTripTriggers.keys())
-      })
+      });
     }
 
     await this._entities?.close();

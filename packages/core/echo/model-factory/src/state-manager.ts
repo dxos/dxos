@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Event, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
+import type { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import type { MutationMeta, MutationMetaWithTimeframe, ItemID } from '@dxos/protocols';
@@ -15,16 +15,7 @@ import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
-import {
-  ModelConstructor,
-  ModelMessage,
-  ModelMeta,
-  ModelType,
-  MutationOf,
-  MutationWriteReceipt,
-  StateOf,
-  StateMachine
-} from './types';
+import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, StateOf, StateMachine } from './types';
 
 type OptimisticMutation = {
   tag?: string;
@@ -109,7 +100,7 @@ export class StateManager<M extends Model> {
     log('destroy');
     try {
       await Promise.all(this._pendingWrites);
-    } catch { }
+    } catch {}
   }
 
   private _emitUpdate() {
@@ -225,10 +216,7 @@ export class StateManager<M extends Model> {
    */
   processMessage(meta: MutationMetaWithTimeframe, mutation: Any, clientTag?: string) {
     // Remove optimistic mutation from the queue.
-    const optimisticIndex = this._optimisticMutations.findIndex(
-      (message) =>
-        (message.tag && message.tag === clientTag)
-    );
+    const optimisticIndex = this._optimisticMutations.findIndex((message) => message.tag && message.tag === clientTag);
     if (optimisticIndex !== -1) {
       this._optimisticMutations.splice(optimisticIndex, 1);
     }
@@ -247,7 +235,7 @@ export class StateManager<M extends Model> {
       insertionIndex,
       optimisticIndex,
       lengthBefore,
-      mutation: this._modelMeta?.mutationCodec.decode(mutation.value),
+      mutation: this._modelMeta?.mutationCodec.decode(mutation.value)
     });
 
     // Perform state updates.

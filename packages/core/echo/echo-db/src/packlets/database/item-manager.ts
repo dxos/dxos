@@ -11,6 +11,7 @@ import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { logInfo } from '@dxos/log';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -19,7 +20,6 @@ import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { createMappedFeedWriter } from '../common';
 import { UnknownModelError } from '../errors';
 import { Item } from './item';
-import { logInfo } from '@dxos/log';
 
 const log = debug('dxos:echo-db:item-manager');
 
@@ -36,7 +36,7 @@ export interface ItemConstructionOptions extends ModelConstructionOptions {
 
 export type DbOptions = {
   label?: string;
-}
+};
 
 /**
  * Manages the creation and indexing of items.
@@ -76,7 +76,7 @@ export class ItemManager {
   constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
-    private readonly _writeStream?: FeedWriter<DataMessage>,
+    private readonly _writeStream?: FeedWriter<DataMessage>
   ) {}
 
   get entities() {
@@ -185,7 +185,13 @@ export class ItemManager {
       );
 
     // Create the model with the outbound stream.
-    const stateManager =  this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
+    const stateManager = this._modelFactory.createModel<Model>(
+      modelType,
+      itemId,
+      snapshot,
+      this._memberKey,
+      outboundTransform
+    );
     stateManager._debugLabel = this._debugLabel;
     return stateManager;
   }

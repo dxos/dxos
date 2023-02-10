@@ -139,7 +139,7 @@ export class TestPeer<M extends Model> {
   ) {}
 
   get model(): M {
-    return null as any
+    return null as any;
     // return this.stateManager.model;
   }
 
