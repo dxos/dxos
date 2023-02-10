@@ -8,7 +8,13 @@ A `space` is an instance of an ECHO database which can be replicated by a number
 
 This section describes how to create, join, and invite peers to [ECHO Spaces](../platform/#spaces) in `react`.
 
-## Hooks
+## Creating spaces
+To create a space, call the `client.echo.createSpace()` API:
+
+:::apidoc[@dxos/react-client.Client.echo]
+:::
+
+## Obtaining a Space reactively
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
 
 :::apidoc[@dxos/react-client.useSpace]

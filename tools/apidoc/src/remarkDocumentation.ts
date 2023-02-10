@@ -42,7 +42,9 @@ export const remarkDocumentation = async (config: Config) => {
         );
       if (content !== processed.value && !!processed.value) {
         console.log('processing', file);
-        await fs.writeFile(file, processed.value);
+        // fix invalid \::: directives as a quick hack here
+        const content2 = processed.value.toString().replace(/\\:::/g, ':::');
+        await fs.writeFile(file, content2);
       }
     } catch (err: any) {
       console.warn(`problem in file ${file}`);
