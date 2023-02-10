@@ -179,7 +179,7 @@ Arguments: none
 ### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L29)
 
 
-Returns the first space in the current spaces array. If none exists, null
+Returns the first space in the current spaces array. If none exist,  `null` 
 will be returned at first, then the hook will re-run and return a space once
 it has been created. Requires a ClientProvider somewhere in the parent tree.
 

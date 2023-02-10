@@ -7,7 +7,7 @@ order: 10
 
 Here's how a task list app might handle rendering a list in React:
 
-```tsx file=./snippets/hooks.tsx#L5-
+```tsx file=./snippets/use-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Space } from '@dxos/client';
