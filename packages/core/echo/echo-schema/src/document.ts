@@ -137,7 +137,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
       return {
         '@id': this[id],
         '@type': this[type],
-        ...convert(this._item?.model.toObject())
+        ...convert(this._model?.toObject())
       };
     }
   }
@@ -189,7 +189,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
   private _getModelProp(prop: string): any {
     let type;
-    const value = this._item!.model.get(prop);
+    const value = this._model!.get(prop);
 
     if (!type && this._schemaType) {
       const field = this._schemaType.fields.find((field) => field.name === prop);
@@ -228,8 +228,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
         createModelMutation(
           this[id],
           encodeModelMutation(
-            this._item!.modelMeta,
-            this._item!.model.builder().set(prop, new Reference(value[id])).build()
+            this._model!.modelMeta,
+            this._model!.builder().set(prop, new Reference(value[id])).build()
           )
         )
       );
@@ -241,8 +241,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
         createModelMutation(
           this[id],
           encodeModelMutation(
-            this._item!.modelMeta,
-            this._item!.model.builder().set(prop, OrderedArray.fromValues([])).build()
+            this._model!.modelMeta,
+            this._model!.builder().set(prop, OrderedArray.fromValues([])).build()
           )
         )
       );
@@ -254,8 +254,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
           createModelMutation(
             this[id],
             encodeModelMutation(
-              this._item!.modelMeta,
-              this._item!.model.builder().set(prop, new Reference(value['@id'])).build()
+              this._model!.modelMeta,
+              this._model!.builder().set(prop, new Reference(value['@id'])).build()
             )
           )
         );
@@ -269,7 +269,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
       this._database?._backend.mutate(
         createModelMutation(
           this[id],
-          encodeModelMutation(this._item!.modelMeta, this._item!.model.builder().set(prop, value).build())
+          encodeModelMutation(this._model!.modelMeta, this._model!.builder().set(prop, value).build())
         )
       );
     }

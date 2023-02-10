@@ -97,6 +97,11 @@ export class StateManager<M extends Model> {
     return this._modelType;
   }
 
+  get state(): StateOf<M> {
+    assert(this._stateMachine, 'State machine not initialized.');
+    return this._stateMachine.getState();
+  }
+
   get modelMeta(): ModelMeta {
     assert(this._modelMeta, 'Model not initialized.');
     return this._modelMeta;

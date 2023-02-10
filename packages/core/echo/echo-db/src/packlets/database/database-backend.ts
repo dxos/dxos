@@ -9,7 +9,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
+import { ModelFactory, MutationWriteReceipt } from '@dxos/model-factory';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
@@ -94,7 +94,8 @@ export class DatabaseBackendHost implements DatabaseBackend {
 
 export type MutateResult = {
   objectsCreated: Item<any>[];
-  getReceipt(): Promise<MutationReceipt>;
+  getReceipt(): Promise<MutationWriteReceipt>;
+
   // TODO(dmaretskyi): .
 };
 
@@ -109,6 +110,8 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   public _itemManager!: ItemManager;
   private _clientTagPrefix = PublicKey.random().toHex().slice(0, 8);
   private _clientTagCounter = 0;
+
+  private _mutationRoundTripTriggers = new Map<string, Trigger>();
 
   // prettier-ignore
   constructor(
@@ -142,6 +145,10 @@ export class DatabaseBackendProxy implements DatabaseBackend {
       async (msg) => {
         // console.log(inspect(msg, false, null, true))
         this._process(msg.batch, false);
+
+        if(msg.clientTag) {
+          this._mutationRoundTripTriggers.get(msg.clientTag)?.wake();
+        }
 
         // Notify that initial set of items has been loaded.
         loaded.wake();
@@ -220,6 +227,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
     const clientTag = `${this._clientTagPrefix}:${this._clientTagCounter++}`;
     tagMutationsInBatch(batch, clientTag);
+    this._mutationRoundTripTriggers.set(clientTag, new Trigger());
 
     // Optimistic apply.
     this._process(batch, true, objectsCreated);
@@ -233,7 +241,14 @@ export class DatabaseBackendProxy implements DatabaseBackend {
     return {
       objectsCreated,
       getReceipt: async () => {
-        return writePromise;
+        const feedReceipt = await writePromise;
+
+        return {
+          ...feedReceipt,
+          waitToBeProcessed: async () => {
+            await this._mutationRoundTripTriggers.get(clientTag)?.wait();
+          }
+        }
       }
     };
   }

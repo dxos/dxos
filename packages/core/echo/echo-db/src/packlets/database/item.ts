@@ -40,9 +40,6 @@ export class Item<M extends Model | null = Model> {
 
   private readonly _subscriptions = new EventSubscriptions();
 
-  /**
-   * @internal
-   */
   public _stateManager!: StateManager<NonNullable<M>>;
 
   /**

@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Item } from '@dxos/echo-db';
+import { createModelMutation, encodeModelMutation, Item } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { Model, ModelConstructor } from '@dxos/model-factory';
+import { Model, ModelConstructor, MutationWriteReceipt } from '@dxos/model-factory';
 
 import { EchoDatabase } from './database';
 import { base, db, id } from './defs';
@@ -30,6 +30,13 @@ export abstract class EchoObject<T extends Model = any> {
    * @internal
    */
   _item?: Item<T>;
+
+  /**
+   * Not present for freshly created objects.
+   * Created locally when object is bound to database.
+   * @internal
+   */
+  _model?: T;
 
   /**
    * @internal
@@ -65,6 +72,30 @@ export abstract class EchoObject<T extends Model = any> {
   // TODO(burdon): Document.
   async _bind(item: Item<T>) {
     this._item = item;
+    this._model = new this._modelConstructor(
+      this._modelConstructor.meta,
+      this._id,
+      () => this._getState(),
+      async (mutation): Promise<MutationWriteReceipt> => {
+        const result = this._database!._backend.mutate(
+          createModelMutation(
+            this._id,
+            encodeModelMutation(
+              this._model!.modelMeta,
+              mutation,
+            )
+          )
+        );
+
+        return result.getReceipt();
+      }
+    );
+
     await this._onBind();
+  }
+
+  protected _getState(): any | undefined {
+    // TODO(dmaretskyi): Local state-machine for unbound objects.
+    return this._item?._stateManager.state;
   }
 }
