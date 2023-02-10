@@ -32,7 +32,13 @@ export interface ComposerProps {
 }
 
 // TODO(burdon): Pass in document (or fragment?) directly (remove dependency on item).
-export const Composer = ({ item, doc = item?.model?.doc, field = 'content', fragment, slots = {} }: ComposerProps) => {
+export const Composer = ({
+  item,
+  doc /* = item?.model?.doc */,
+  field = 'content',
+  fragment,
+  slots = {}
+}: ComposerProps) => {
   const { t } = useTranslation('appkit');
 
   // Reference:

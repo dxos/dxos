@@ -154,6 +154,10 @@ export class EchoSchema {
     private readonly _root: pb.Root
   ) {}
 
+  get types() {
+    return Array.from(this._prototypes.keys()).map((name) => this.getType(name));
+  }
+
   getType(name: string): EchoSchemaType {
     return new EchoSchemaType(this._root.lookupType(name));
   }
