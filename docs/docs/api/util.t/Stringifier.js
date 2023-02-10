@@ -222,13 +222,17 @@ export class Stringifier {
             ? this.class(node, options)
             : node.kind === ReflectionKind.TypeAlias
                 ? this.type(node, options)
-                : node.kind === ReflectionKind.Property
+                : node.kind === ReflectionKind.Property || node.kind === ReflectionKind.Accessor
                     ? this.property(node, options)
-                    : node.kind === ReflectionKind.FunctionOrMethod || node.kind === ReflectionKind.Function
+                    : node.kind === ReflectionKind.FunctionOrMethod ||
+                        node.kind === ReflectionKind.Function ||
+                        node.kind === ReflectionKind.Method
                         ? this.method(node)
                         : node.kind === ReflectionKind.Interface
                             ? this.interface(node, options)
-                            : '';
+                            : process.env.DEBUG
+                                ? JSON.stringify(node, null, 2)
+                                : '';
     }
 }
 //# sourceMappingURL=Stringifier.js.map
