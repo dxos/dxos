@@ -11,11 +11,11 @@ export class TextObject extends EchoObject<TextModel> {
 
   get doc(): Doc | undefined {
     this._database?._logObjectAccess(this);
-    return this._item?.model?.doc;
+    return this._model?.doc;
   }
 
   get model(): TextModel | undefined {
     this._database?._logObjectAccess(this);
-    return this._item?.model;
+    return this._model;
   }
 }

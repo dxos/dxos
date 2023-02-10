@@ -40,9 +40,6 @@ export class Item<M extends Model | null = Model> {
 
   private readonly _subscriptions = new EventSubscriptions();
 
-  /**
-   * @internal
-   */
   public _stateManager!: StateManager<NonNullable<M>>;
 
   /**
@@ -65,7 +62,7 @@ export class Item<M extends Model | null = Model> {
     this._stateManager = stateManager;
 
     if (this._stateManager.initialized) {
-      this._subscriptions.add(this._stateManager.model.subscribe(() => this._onUpdate.emit(this)));
+      this._subscriptions.add(this._stateManager.update.on(() => this._onUpdate.emit(this)));
     }
     this._updateParent(parent);
   }
@@ -83,18 +80,7 @@ export class Item<M extends Model | null = Model> {
   }
 
   get modelMeta(): ModelMeta {
-    return this._stateManager.model.modelMeta;
-  }
-
-  /**
-   * @deprecated
-   */
-  get model(): M {
-    if (!this._stateManager.initialized) {
-      return null as any;
-    }
-
-    return this._stateManager.model;
+    return this._stateManager.modelMeta;
   }
 
   /**

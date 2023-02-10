@@ -7,34 +7,20 @@ import assert from 'node:assert';
 import { Event, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
+import type { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import type { MutationMeta, MutationMetaWithTimeframe, ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
-import {
-  ModelConstructor,
-  ModelMessage,
-  ModelMeta,
-  ModelType,
-  MutationOf,
-  MutationWriteReceipt,
-  StateOf,
-  StateMachine
-} from './types';
+import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, StateOf, StateMachine } from './types';
 
 type OptimisticMutation = {
   tag?: string;
 
   mutation: Any;
-
-  /**
-   * Contains the receipt after this mutation has been written to the feed.
-   */
-  receipt?: WriteReceipt;
 };
 
 /**
@@ -57,10 +43,13 @@ export class StateManager<M extends Model> {
   private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
+  @logInfo
+  public _debugLabel: string | undefined;
+
+  public readonly update = new Event();
+
   public _modelMeta: ModelMeta | null = null;
   private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
-
-  private _model: M | null = null;
 
   /**
    * Mutations that were applied on top of the _snapshot.
@@ -97,14 +86,14 @@ export class StateManager<M extends Model> {
     return this._modelType;
   }
 
+  get state(): StateOf<M> {
+    assert(this._stateMachine, 'State machine not initialized.');
+    return this._stateMachine.getState();
+  }
+
   get modelMeta(): ModelMeta {
     assert(this._modelMeta, 'Model not initialized.');
     return this._modelMeta;
-  }
-
-  get model(): M {
-    assert(this._model, 'Model not initialized.');
-    return this._model;
   }
 
   async destroy() {
@@ -114,19 +103,19 @@ export class StateManager<M extends Model> {
     } catch {}
   }
 
-  private _emitModelUpdate() {
-    assert(this._model);
-    this._model.update.emit(this._model);
+  private _emitUpdate() {
+    this.update.emit();
   }
 
-  processOptimisticMutation(mutation: MutationOf<M>, tag?: string) {
+  processOptimisticMutation(mutation: MutationOf<M>, clientTag?: string) {
+    log.info('process optimistic mutation', { clientTag, mutation });
     // Construct and enqueue an optimistic mutation.
     const mutationEncoded = {
       type_url: 'todo', // TODO(mykola): this._modelMeta!.mutationCodec.typeUrl ???
       value: this._modelMeta!.mutationCodec.encode(mutation)
     };
     const optimisticMutation: OptimisticMutation = {
-      tag,
+      tag: clientTag,
       mutation: mutationEncoded
     };
     this._optimisticMutations.push(optimisticMutation);
@@ -135,67 +124,42 @@ export class StateManager<M extends Model> {
     if (this.initialized) {
       log('Optimistic apply', mutation);
       this._stateMachine!.process(mutation);
-      this._emitModelUpdate();
+      this._emitUpdate();
     }
 
     return optimisticMutation;
   }
 
-  async confirm(mutation: OptimisticMutation, receipt: WriteReceipt): Promise<MutationWriteReceipt> {
-    log('Confirm', mutation);
-    mutation.receipt = receipt;
+  // async confirm(mutation: OptimisticMutation, receipt: WriteReceipt): Promise<MutationWriteReceipt> {
+  //   log('Confirm', mutation);
+  //   mutation.receipt = receipt;
 
-    // Promise that resolves when this mutation has been processed.
-    const processed = this._mutationProcessed.waitFor(
-      (meta) => receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-    );
+  //   // Promise that resolves when this mutation has been processed.
+  //   const processed = this._mutationProcessed.waitFor(
+  //     (meta) => receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
+  //   );
 
-    // Sanity checks.
-    void processed.then(() => {
-      if (!mutation.receipt) {
-        log.error('Optimistic mutation was processed without being confirmed', {
-          itemId: this._itemId
-        });
-      }
-      if (this._optimisticMutations.includes(mutation)) {
-        log.error('Optimistic mutation was processed without being removed from the optimistic queue', {
-          itemId: this._itemId
-        });
-      }
-    });
+  //   // Sanity checks.
+  //   void processed.then(() => {
+  //     if (!mutation.receipt) {
+  //       log.error('Optimistic mutation was processed without being confirmed', {
+  //         itemId: this._itemId
+  //       });
+  //     }
+  //     if (this._optimisticMutations.includes(mutation)) {
+  //       log.error('Optimistic mutation was processed without being removed from the optimistic queue', {
+  //         itemId: this._itemId
+  //       });
+  //     }
+  //   });
 
-    return {
-      ...receipt,
-      waitToBeProcessed: async () => {
-        await processed;
-      }
-    };
-  }
-
-  /**
-   * Writes the mutation to the output stream.
-   */
-  private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
-    if (!this._feedWriter) {
-      throw new Error(`Read-only model: ${this._itemId}`);
-    }
-
-    const optimisticMutation = this.processOptimisticMutation(mutation);
-
-    const receiptPromise = this._feedWriter.write(optimisticMutation.mutation);
-
-    // Track receipt promise.
-    this._pendingWrites.add(receiptPromise);
-    void receiptPromise.then(() => {
-      this._pendingWrites.delete(receiptPromise);
-    });
-
-    // Write mutation to the feed store and assign metadata from the receipt.
-    // Confirms that the optimistic mutation has been written to the feed store.
-    // NOTE: Possible race condition: What if processMessage gets called before write() resolves?
-    const receipt = await receiptPromise;
-    return await this.confirm(optimisticMutation, receipt);
-  }
+  //   return {
+  //     ...receipt,
+  //     waitToBeProcessed: async () => {
+  //       await processed;
+  //     }
+  //   };
+  // }
 
   /**
    * Re-creates the state machine based on the current snapshot and enqueued mutations.
@@ -245,14 +209,6 @@ export class StateManager<M extends Model> {
     this._modelMeta = modelConstructor.meta;
 
     this._resetStateMachine();
-
-    // eslint-disable-next-line new-cap
-    this._model = new modelConstructor(
-      this._modelMeta,
-      this._itemId,
-      () => this._stateMachine!.getState(),
-      this._feedWriter ? (mutation) => this._write(mutation) : undefined
-    );
   }
 
   /**
@@ -260,11 +216,7 @@ export class StateManager<M extends Model> {
    */
   processMessage(meta: MutationMetaWithTimeframe, mutation: Any, clientTag?: string) {
     // Remove optimistic mutation from the queue.
-    const optimisticIndex = this._optimisticMutations.findIndex(
-      (message) =>
-        (message.tag && message.tag === clientTag) ||
-        (message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq)
-    );
+    const optimisticIndex = this._optimisticMutations.findIndex((message) => message.tag && message.tag === clientTag);
     if (optimisticIndex !== -1) {
       this._optimisticMutations.splice(optimisticIndex, 1);
     }
@@ -276,11 +228,15 @@ export class StateManager<M extends Model> {
     });
     const lengthBefore = this._mutations.length;
     this._mutations.splice(insertionIndex, 0, { meta, mutation });
-    log(
-      `Process ${PublicKey.from(meta.feedKey)}/${
-        meta.seq
-      } insertionIndex=${insertionIndex} optimisticIndex=${optimisticIndex} queue length=${lengthBefore}`
-    );
+    log.info('process message', {
+      feed: PublicKey.from(meta.feedKey),
+      seq: meta.seq,
+      clientTag,
+      insertionIndex,
+      optimisticIndex,
+      lengthBefore,
+      mutation: this._modelMeta?.mutationCodec.decode(mutation.value)
+    });
 
     // Perform state updates.
     if (this.initialized) {
@@ -298,7 +254,7 @@ export class StateManager<M extends Model> {
         // Mutation can safely be append at the end preserving order.
         const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation.value);
         this._stateMachine!.process(mutationDecoded);
-        this._emitModelUpdate();
+        this._emitUpdate();
       }
     }
 
@@ -347,7 +303,7 @@ export class StateManager<M extends Model> {
 
     if (this.initialized) {
       this._resetStateMachine();
-      this._emitModelUpdate();
+      this._emitUpdate();
     }
   }
 }
