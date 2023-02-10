@@ -4,8 +4,9 @@
 
 import React, { ChangeEvent, useCallback, useState, KeyboardEvent, ComponentPropsWithoutRef } from 'react';
 
-import { useId } from '@dxos/react-components';
+import { ThemeProvider, useId, randomString } from '@dxos/react-components';
 
+import { appkitTranslations } from '../../translations';
 import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
 
 export default {
@@ -22,7 +23,7 @@ export const Default = {
       const [items, setItems] = useState<Record<string, EditableListItemData>>(
         [...Array(6)].reduce((acc, _, index) => {
           const item = {
-            id: `${listId}--listItem-${index}`,
+            id: `${listId}--listItem-${randomString()}`,
             title: `${listId} item ${index + 1}`,
             completed: false
           };
@@ -38,15 +39,29 @@ export const Default = {
       const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(listId);
 
       const addItem = useCallback(() => {
-        const addedItem = {
-          id: `${listId}--listItem-${itemOrder.length}`,
-          title: nextItemTitle,
-          completed: false
-        };
-        setItems({ ...items, [addedItem.id]: addedItem });
-        setItemOrder([...itemOrder, addedItem.id]);
-        setNextItemTitle('');
+        if (nextItemTitle.length > 0) {
+          console.log('[add item]', itemOrder, items);
+          const addedItem = {
+            id: `${listId}--listItem-${randomString()}`,
+            title: nextItemTitle,
+            completed: false
+          };
+          setItems({ ...items, [addedItem.id]: addedItem });
+          setItemOrder([...itemOrder, addedItem.id]);
+          setNextItemTitle('');
+        }
       }, [items, itemOrder, nextItemTitle]);
+
+      const deleteItem = useCallback(
+        (deletedId: string) => {
+          const nextItemOrder = itemOrder.filter((id) => id !== deletedId);
+          const { [deletedId]: _deletedItem, ...nextItems } = items;
+          console.log('[deleting]', deletedId, nextItemOrder, nextItems);
+          setItemOrder(nextItemOrder);
+          setItems(nextItems);
+        },
+        [items, itemOrder]
+      );
 
       const onAddItemKeyDown = useCallback(
         (event: KeyboardEvent<HTMLInputElement>) => {
@@ -74,7 +89,8 @@ export const Default = {
           onChangeNextItemTitle={({ target: { value } }) => setNextItemTitle(value)}
           slots={{
             root: hostAttrs as ComponentPropsWithoutRef<'div'>,
-            addItem: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } }
+            addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } },
+            addItemButton: { disabled: nextItemTitle.length < 1 }
           }}
         >
           {itemOrder.map((id) => {
@@ -86,6 +102,7 @@ export const Default = {
                 {...{
                   id,
                   title,
+                  onClickDelete: () => deleteItem(id),
                   onChangeTitle: ({ target: { value } }: ChangeEvent<HTMLInputElement>) =>
                     updateItem(id, { title: value }),
                   completed,
@@ -99,10 +116,10 @@ export const Default = {
     };
 
     return (
-      <>
+      <ThemeProvider resourceExtensions={[appkitTranslations]}>
         <EditableListInstance />
         <EditableListInstance />
-      </>
+      </ThemeProvider>
     );
   },
   args: {}

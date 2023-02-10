@@ -3,7 +3,7 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { Plus } from 'phosphor-react';
+import { DotsThree, Plus, X } from 'phosphor-react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
 import {
@@ -21,7 +21,13 @@ import {
   mx,
   Button,
   getSize,
-  useTranslation
+  useTranslation,
+  DropdownMenu,
+  DropdownMenuItem,
+  valenceColorText,
+  Tooltip,
+  defaultDescription,
+  ButtonProps
 } from '@dxos/react-components';
 
 export interface EditableListItemSlots {
@@ -37,6 +43,7 @@ export interface EditableListItemProps {
   defaultTitle?: string;
   title?: string;
   onChangeTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onClickDelete?: () => void;
   slots?: EditableListItemSlots;
 }
 
@@ -44,7 +51,8 @@ export interface EditableListSlots {
   root?: Omit<ComponentPropsWithoutRef<'div'>, 'children'>;
   listHeading?: InputProps['slots'];
   list?: ListProps['slots'];
-  addItem?: InputProps['slots'];
+  addItemInput?: InputProps['slots'];
+  addItemButton?: ButtonProps;
 }
 
 export interface EditableListProps {
@@ -169,24 +177,40 @@ export const EditableList = ({
           }}
           slots={{
             input: {
-              ...slots.addItem?.input,
-              className: mx('p-2', slots.addItem?.input?.className)
+              ...slots.addItemInput?.input,
+              className: mx('p-2', slots.addItemInput?.input?.className)
             },
             root: {
-              ...slots.addItem?.root,
-              className: mx('grow mbs-0', slots.addItem?.root?.className)
+              ...slots.addItemInput?.root,
+              className: mx('grow mbs-0', slots.addItemInput?.root?.className)
             },
             label: {
-              ...slots.addItem?.label,
-              className: mx('sr-only', slots.addItem?.label?.className)
+              ...slots.addItemInput?.label,
+              className: mx('sr-only', slots.addItemInput?.label?.className)
             }
           }}
         />
         <ListItemEndcap>
-          <Button variant='ghost' compact className={getSize(10)} onClick={onClickAdd}>
-            <Plus weight='bold' className={getSize(4)} />
-            <span className='sr-only'>{t('add list item label')}</span>
-          </Button>
+          <Tooltip
+            content={
+              <>
+                <span className='mie-2'>{t('add list item label')}</span>
+                <span className={defaultDescription}>⏎</span>
+              </>
+            }
+            side='left'
+            tooltipLabelsTrigger
+          >
+            <Button
+              variant='ghost'
+              compact
+              {...slots.addItemButton}
+              className={mx(getSize(10), slots.addItemButton?.className)}
+              onClick={onClickAdd}
+            >
+              <Plus weight='bold' className={getSize(4)} />
+            </Button>
+          </Tooltip>
         </ListItemEndcap>
       </div>
     </div>
@@ -203,10 +227,12 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
       defaultTitle,
       title,
       onChangeTitle,
+      onClickDelete,
       slots = {}
     }: EditableListItemProps,
     forwardedRef
   ) => {
+    const { t } = useTranslation('appkit');
     return (
       <ListItem
         ref={forwardedRef}
@@ -222,8 +248,8 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           <Input
             {...{
               variant: 'subdued',
-              label: 'Crud heading',
-              placeholder: 'Crud heading',
+              label: t('list item input label'),
+              placeholder: t('list item input placeholder'),
               slots: {
                 root: {
                   ...slots.input?.root,
@@ -247,6 +273,20 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           </Input>
           <span className='sr-only'>{title}</span>
         </ListItemHeading>
+        <ListItemEndcap>
+          <DropdownMenu
+            trigger={
+              <Button variant='ghost' compact className={getSize(10)}>
+                <DotsThree weight='light' className={getSize(4)} />
+              </Button>
+            }
+          >
+            <DropdownMenuItem onClick={onClickDelete} className={valenceColorText('error')}>
+              <span className='grow'>{t('delete list item label')}</span>
+              <X className={getSize(4)} />
+            </DropdownMenuItem>
+          </DropdownMenu>
+        </ListItemEndcap>
       </ListItem>
     );
   }
