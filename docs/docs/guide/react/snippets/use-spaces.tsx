@@ -16,10 +16,10 @@ import {
 
 export const TaskList = (props: { space: Space }) => {
   const { space } = props;
-  const members = useQuery(space, { type: 'task' });
+  const tasks = useQuery(space, { type: 'task' });
   return (
     <>
-      {members?.map((item) => (
+      {tasks?.map((item) => (
         <div key={item[id]}>{item.model.get('title')}</div>
       ))}
     </>

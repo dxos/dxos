@@ -8,6 +8,7 @@ import MdIt from 'markdown-it';
 import type Renderer from 'markdown-it/lib/renderer';
 import remarkParse from 'remark-parse';
 import remarkPrettier from 'remark-prettier';
+import { ContainerReflection } from 'typedoc';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 
@@ -49,7 +50,7 @@ export namespace Remark {
           console.warn(`problem in in ${vfile.path}: invalid apidoc directive, no [label] found`);
           return tree;
         }
-        const [packageName, symbolName] = label.split('.');
+        const [packageName, symbolName, ...restMembers]: string[] = label.split('.');
         const pkage = packagesInProject(api)?.find((p) => p.name === packageName);
         if (!pkage) {
           console.warn(
@@ -57,10 +58,22 @@ export namespace Remark {
           );
           return tree;
         }
-        const symbol = findReflection(pkage, (node) => node.name === symbolName);
+        let symbol = findReflection(pkage, (node) => node.name === symbolName);
         if (!symbol) {
           console.warn(
             `problem in file ${vfile.path}: symbol ${symbol} of package ${packageName} not found while processing apidoc directive`
+          );
+          return tree;
+        }
+        let next: string | undefined;
+        while ((next = restMembers.shift())) {
+          symbol = findReflection(symbol as any, (node) => node.name === next);
+        }
+        if (!symbol) {
+          console.warn(
+            `problem in file ${vfile.path}: member ${restMembers.join(
+              '.'
+            )} of ${symbol} of package ${packageName} not found while processing apidoc directive`
           );
           return tree;
         }
