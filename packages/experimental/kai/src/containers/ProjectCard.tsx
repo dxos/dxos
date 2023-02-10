@@ -38,7 +38,7 @@ export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) =
       </div>
 
       {/* Tasks */}
-      <TaskList id={project[id]} tasks={project.tasks} />
+      <TaskList id={project[id]} collection={project} tasksKey='tasks' />
 
       {/* Contacts */}
       {project.team?.length > 0 && (

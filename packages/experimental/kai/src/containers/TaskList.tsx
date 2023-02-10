@@ -7,7 +7,7 @@ import React, { ComponentPropsWithoutRef, FC, KeyboardEvent, useCallback, useSta
 
 import { id as idKey } from '@dxos/echo-schema';
 import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from '@dxos/react-appkit';
-import { useQuery } from '@dxos/react-client';
+import { useQuery, withReactor } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-components';
 
 import { useSpace } from '../hooks';
@@ -15,9 +15,10 @@ import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
 
-export interface TaskListProps {
+export interface TaskListProps<K = { tasks: never }> {
   id: string;
-  tasks: Task[];
+  collection: { [Property in keyof K]: Task[] };
+  tasksKey?: keyof K;
   readonly?: boolean;
 }
 
@@ -29,10 +30,10 @@ export const TaskListQuery: FC<TaskListQueryProps> = (props) => {
   const space = useSpace();
   const tasks = useQuery(space, Task.filter(props.filter));
 
-  return <TaskList {...props} tasks={tasks} />;
+  return <TaskList {...props} collection={{ tasks }} />;
 };
 
-export const TaskList: FC<TaskListProps> = ({ id, tasks, readonly }) => {
+export const TaskList: FC<TaskListProps> = ({ id, collection, tasksKey = 'tasks', readonly }) => {
   const space = useSpace(); // TODO(burdon): Factor out.
   const [saving, setSaving] = useState(false);
   const { t } = useTranslation('kai');
@@ -40,9 +41,10 @@ export const TaskList: FC<TaskListProps> = ({ id, tasks, readonly }) => {
   const labelId = `${listId}__label`;
 
   const [nextItemTitle, setNextItemTitle] = useState('');
-  const taskIds = tasks.map((task) => task[idKey]);
 
   const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(listId);
+
+  console.log('Tasks', collection[tasksKey]);
 
   const addItem = useCallback(() => {
     if (nextItemTitle.length > 0) {
@@ -55,7 +57,7 @@ export const TaskList: FC<TaskListProps> = ({ id, tasks, readonly }) => {
           })
         )
         .then((task) => {
-          tasks.push(task);
+          collection[tasksKey].push(task);
           setNextItemTitle('');
         })
         .finally(() => setSaving(false));
@@ -84,9 +86,11 @@ export const TaskList: FC<TaskListProps> = ({ id, tasks, readonly }) => {
     [onListItemInputKeyDown, addItem]
   );
 
-  const handleItemIdOrderMove = (oldIndex: number, newIndex: number) => {
-    const [task] = tasks.splice(oldIndex, 1);
-    tasks.splice(newIndex, 0, task);
+  const taskItemAttrs = { ...itemAttrs, onKeyDown: onListItemInputKeyDown };
+
+  const handleMoveItem = (oldIndex: number, newIndex: number) => {
+    const [task] = collection[tasksKey].splice(oldIndex, 1);
+    collection[tasksKey].splice(newIndex, 0, task);
   };
 
   return (
@@ -100,10 +104,9 @@ export const TaskList: FC<TaskListProps> = ({ id, tasks, readonly }) => {
         labelId={labelId}
         onClickAdd={addItem}
         nextItemTitle={nextItemTitle}
-        itemIdOrder={taskIds}
+        itemIdOrder={collection[tasksKey].map((task) => task[idKey])}
         // todo (thure): let’s try without onChangeItemIdOrder here
-        // onChangeItemIdOrder={() => tasks.map((task) => task[id])}
-        onItemIdOrderMove={handleItemIdOrderMove}
+        onMoveItem={handleMoveItem}
         onChangeNextItemTitle={({ target: { value } }) => setNextItemTitle(value)}
         slots={{
           root: hostAttrs as ComponentPropsWithoutRef<'div'>,
@@ -111,19 +114,8 @@ export const TaskList: FC<TaskListProps> = ({ id, tasks, readonly }) => {
           addItemButton: { disabled: nextItemTitle.length < 1 }
         }}
       >
-        {tasks?.map((task) => (
-          <EditableListItem
-            key={task[idKey]}
-            {...{
-              id: task[idKey],
-              title: task.title,
-              onChangeTitle: ({ target: { value } }) => (task.title = value),
-              completed: task.completed,
-              onChangeCompleted: (nextCompleted) => (task.completed = nextCompleted),
-              onClickDelete: () => deleteItem(task),
-              slots: { input: { input: { ...itemAttrs, onKeyDown: onListItemInputKeyDown } } }
-            }}
-          />
+        {collection[tasksKey]?.map((task) => (
+          <TaskListItem key={task[idKey]} task={task} taskItemAttrs={taskItemAttrs} deleteTask={deleteItem} />
         ))}
       </EditableList>
       {saving && (
@@ -134,3 +126,38 @@ export const TaskList: FC<TaskListProps> = ({ id, tasks, readonly }) => {
     </>
   );
 };
+
+export const TaskListItem = withReactor(
+  ({
+    task,
+    deleteTask,
+    taskItemAttrs
+  }: {
+    task: Task;
+    deleteTask: (taskToDelete: Task) => Promise<void>;
+    taskItemAttrs: ComponentPropsWithoutRef<'input'>;
+  }) => {
+    // const [title, setTitle] = useState(task.title);
+    // const [completed, setCompleted] = useState(task.completed);
+    return (
+      <EditableListItem
+        {...{
+          id: task[idKey],
+          title: task.title,
+          onChangeTitle: ({ target: { value } }) => {
+            task.title = value;
+            // setTitle(value);
+          },
+          completed: task.completed,
+          onChangeCompleted: (nextCompleted) => {
+            task.completed = nextCompleted;
+            // setCompleted(nextCompleted);
+          },
+          onClickDelete: () => deleteTask(task),
+          slots: { input: { input: taskItemAttrs } }
+        }}
+      />
+    );
+  },
+  { componentName: 'TaskListItem' }
+);
