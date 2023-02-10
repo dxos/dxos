@@ -11,7 +11,7 @@ export const App = () => {
   // typically you would put this on a specific route like /spaces
   return (
     <SpacesPage
-      spacePath="/spaces:space"
+      spacePath="/spaces/:space" // how to navigate to a specific space
       onSpaceCreate={() => {
         // handle the event that the user clicks "create space"
         // this is where you can initialize the space with new objects

@@ -116,8 +116,41 @@ See [the platform overview](../platform/#spaces) describing the general process 
 
 In `react` the package `@dxos/react-appkit` offers components that implement the entire join flow.
 
-To implement these in your own way, see the TypeScript API about [joining spaces](../typescript/spaces).
+::: note Tip
+To implement invitation flows in your own way, see the TypeScript API about [joining spaces](../typescript/spaces).
+:::
 
-Using the pre-built space join flow for `react`:
+The pre-built space join flow is contained in the `SpacesPage` component for `react`. This is designed to be a panel or full-screen page that:
+- lists spaces
+- allows joining spaces with an invite code
+- allows creating spaces
+- supports navigating to a space by clicking it
+
 ```tsx file=./snippets/spaces-flows.tsx#L5-
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { ClientProvider } from '@dxos/react-client';
+import { SpacesPage } from '@dxos/react-appkit';
+
+export const App = () => {
+  // typically this would be on a specific route like /spaces
+  return (
+    <SpacesPage
+      spacePath="/spaces/:space"
+      onSpaceCreate={() => {
+        // handle the event that the user clicks "create space"
+        // this is where you can initialize the space with new objects
+      }}
+    />
+  );
+};
+
+const root = createRoot(document.getElementById('root')!);
+root.render(
+  <ClientProvider>
+    <App />
+  </ClientProvider>
+);
 ```
+
+See a more detailed example in the [`Tasks` application sample](../samples#tasks).
