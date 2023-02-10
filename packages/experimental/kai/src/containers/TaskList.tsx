@@ -62,7 +62,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; fullWidth?:
   };
 
   return (
-    <div className='min-bs-full flex flex-1 justify-center bg-gray-100'>
+    <>
       {/* TODO(burdon): Adapt width to container. */}
       <div
         className={mx('flex flex-col overflow-y-auto bg-white', fullWidth ? 'w-full' : 'w-screen is-full md:is-column')}
@@ -89,7 +89,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; fullWidth?:
           <Spinner />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

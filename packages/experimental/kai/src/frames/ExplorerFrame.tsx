@@ -2,19 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AsteriskSimple, Graph, Tree } from 'phosphor-react';
+import { AsteriskSimple, Graph, Leaf, Tree } from 'phosphor-react';
 import React, { FC, useMemo, useState } from 'react';
 
 import { GraphModel } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore/testing';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button, GraphComponent, PlexusComponent, TreeComponent } from '../components';
+import { Button, GraphComponent, PlexusComponent, TreeComponent, TreeType } from '../components';
 
 enum ViewType {
   GRAPH = 1,
-  TREE = 2,
-  PLEX = 3
+  PLEX = 2,
+  TREE = 3,
+  RADIAL = 4
 }
 
 type View = {
@@ -38,10 +39,16 @@ const views: View[] = [
     Component: PlexusComponent
   },
   {
+    type: ViewType.RADIAL,
+    label: 'Radial',
+    Icon: Tree,
+    Component: (args: any) => <TreeComponent type={TreeType.RADIAL} {...args} />
+  },
+  {
     type: ViewType.TREE,
     label: 'Tree',
-    Icon: Tree,
-    Component: TreeComponent
+    Icon: Leaf,
+    Component: (args: any) => <TreeComponent type={TreeType.DENDROGRAM} {...args} />
   }
 ];
 
@@ -50,7 +57,7 @@ export const ExplorerFrame = () => {
 
   // TODO(burdon): Echo model.
   const model = useMemo(() => {
-    const root = createTree({ depth: 3, children: 3 });
+    const root = createTree({ depth: 4, children: 4 });
     const model = new TestGraphModel(convertTreeToGraph(root));
     model.setSelected(root.id);
     return model;

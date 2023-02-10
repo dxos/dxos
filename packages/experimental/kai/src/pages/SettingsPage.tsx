@@ -26,7 +26,7 @@ const SettingsPage = () => {
           className='flex flex-1 flex-col overflow-y-scroll bg-gray-50 text-sm'
           style={{ width: 700, maxWidth: 700 }}
         >
-          <div className='flex items-center justify-between p-2 bg-orange-400'>
+          <div className='flex items-center justify-between p-2 bg-appbar-header'>
             <div className='flex items-center'>
               <Link to='/' title='Home'>
                 <Bug className={mx(getSize(8))} />

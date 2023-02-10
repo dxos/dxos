@@ -3,30 +3,31 @@
 //
 
 import { Planet, ShareNetwork } from 'phosphor-react';
-import React, { FC } from 'react';
+import React from 'react';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { getSize, mx } from '@dxos/react-components';
 
-// TODO(burdon): Generic List control.
-export const SpaceList: FC<{
+export type SpaceListProps = {
   value: PublicKey;
   spaces: Space[];
   onSelect: (spaceKey: PublicKey) => void;
   onShare: (spaceKey: PublicKey) => void;
-}> = ({ value, spaces, onSelect, onShare }) => {
+};
+
+export const SpaceList = ({ value, spaces, onSelect, onShare }: SpaceListProps) => {
   return (
     <div className='flex flex-col'>
       {spaces.map((space) => (
         <div
           key={space.key.toHex()}
           className={mx(
-            'flex p-2 pl-3 pr-4 items-center hover:bg-orange-100',
-            space.key.equals(value) && 'hover:bg-orange-200 bg-orange-200'
+            'flex p-2 pl-3 pr-4 items-center hover:bg-selection-hover',
+            space.key.equals(value) && 'hover:bg-selection-bg bg-selection-bg'
           )}
         >
-          <div className={mx('flex mr-3', space.key.equals(value) && 'text-orange-500')}>
+          <div className={mx('flex mr-3', space.key.equals(value) && 'text-selection-text')}>
             <Planet className={getSize(6)} />
           </div>
 
