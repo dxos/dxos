@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/deprecated/react-ipfs/src",
+  "sourceRoot": "packages/experimental/react-ipfs/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/deprecated/react-ipfs/src/index.ts",
-        "outputPath": "packages/deprecated/react-ipfs/dist/types",
-        "tsConfig": "packages/deprecated/react-ipfs/tsconfig.json"
+        "main": "packages/experimental/react-ipfs/src/index.ts",
+        "outputPath": "packages/experimental/react-ipfs/dist/types",
+        "tsConfig": "packages/experimental/react-ipfs/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/deprecated/react-ipfs/src/index.ts"
+          "packages/experimental/react-ipfs/src/index.ts"
         ],
-        "outputPath": "packages/deprecated/react-ipfs/dist/lib"
+        "outputPath": "packages/experimental/react-ipfs/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/deprecated/react-ipfs/**/*.{ts,tsx,js,jsx}"
+          "packages/experimental/react-ipfs/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [

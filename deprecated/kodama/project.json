@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/deprecated/kodama/src",
+  "sourceRoot": "packages/experimental/kodama/src",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/deprecated/kodama/src/index.ts",
-        "outputPath": "packages/deprecated/kodama/dist",
-        "tsConfig": "packages/deprecated/kodama/tsconfig.json"
+        "main": "packages/experimental/kodama/src/index.ts",
+        "outputPath": "packages/experimental/kodama/dist",
+        "tsConfig": "packages/experimental/kodama/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -18,7 +18,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/deprecated/kodama/**/*.{ts,tsx,js,jsx}"
+          "packages/experimental/kodama/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
@@ -28,14 +28,14 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/deprecated/kodama",
-        "outputPath": "tmp/mocha/packages/deprecated/kodama",
-        "resultsPath": "test-results/packages/deprecated/kodama",
+        "coveragePath": "coverage/packages/experimental/kodama",
+        "outputPath": "tmp/mocha/packages/experimental/kodama",
+        "resultsPath": "test-results/packages/experimental/kodama",
         "testPatterns": [
-          "packages/deprecated/kodama/src/**/*.test.{ts,js}"
+          "packages/experimental/kodama/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/deprecated/kodama/src/**/*"
+          "packages/experimental/kodama/src/**/*"
         ]
       },
       "outputs": [
