@@ -78,9 +78,6 @@ export namespace Remark {
           );
           return tree;
         }
-        if (restMembers.length) {
-          console.log(symbol);
-        }
         const content = stringifier.stringify(symbol, {
           subset: node.attributes?.class,
           level: node?.attributes?.level ? Number(node?.attributes?.level) : undefined,
