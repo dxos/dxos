@@ -12,7 +12,7 @@ This section describes how to create, join, and invite peers to [ECHO Spaces](..
 
 To create a space, call the `client.echo.createSpace()` API:
 
-:::apidoc[@dxos/react-client.Client.echo]
+:::apidoc[@dxos/react-client.EchoProxy.createSpace]
 :::
 
 ## Obtaining a Space reactively
