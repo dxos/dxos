@@ -1,12 +1,8 @@
 ---
-position: 1
-title: Overview
-dir:
-  text: HALO Identity
-  order: 13
+order: 2
 ---
 
-# HALO
+# HALO Identity
 
 HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements.
 
@@ -17,9 +13,20 @@ HALO is a system of components for implementing decentralized identity designed 
 The HALO application also acts as a secure vault where all ECHO data is physically stored on behalf of the user and their applications. Read more about [local vault topology](../echo/#local-vault-topology).
 
 ## Features
+- Public/private key-pair authentication mechanism integrated into ECHO
+- Passwordless log in
+- Local-first credentials and key storage
+- Multi-device synchronization of identities, credentials, ECHO spaces
+- Paper-key identity recovery
 
-*   Public/private key-pair authentication mechanism integrated into ECHO
-*   Passwordless log in
-*   Local-first credentials and key storage
-*   Multi-device synchronization of identities, credentials, ECHO spaces
-*   Paper-key identity recovery
+## Establishing user identity
+
+There are three ways a user can establish their identity (login) with HALO on any given [device](../glossary#device).
+1. Create a new identity
+2. Use an identity from another device
+3. Recover an identity using a [seed phrase](../glossary#seed-phrase)
+
+Open [https://halo.dxos.org](https://halo.dxos.org) and you will be guided through the options.
+
+![HALO application](./images/halo-dark.png#dark)
+![HALO application](./images/halo-light.png#light)

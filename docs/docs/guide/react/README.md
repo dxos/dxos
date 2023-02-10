@@ -2,7 +2,7 @@
 order: 1
 dir:
   text: React Guide
-  order: 1
+  order: 3
 ---
 
 # Installation
@@ -15,7 +15,7 @@ npm install --save @dxos/react-client
 If using one of the DXOS application templates via [`npm init @dxos`](../../cli/app-templates) this is pre-installed
 \:::
 
-# Configuration
+## Configuration
 
 When using `react`, create a `ClientProvider` to wrap your application. This allows nested components to `useClient` and the other hooks in `@dxos/react-client`.
 
@@ -117,4 +117,4 @@ createRoot(document.body).render(<App />);
 
 \:::
 
-See [advanced scenarios](../advanced) for more configuration recipes.
+See [configuration](../typescript/config) in the TypeScript guide for more configuration recipes.

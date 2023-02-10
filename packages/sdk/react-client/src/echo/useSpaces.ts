@@ -2,11 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-<<<<<<< HEAD
-import { useEffect, useSyncExternalStore, useRef } from 'react';
-=======
 import { useMemo, useState, useEffect, useSyncExternalStore, useRef } from 'react';
->>>>>>> bf49a9572 (feat: make useOrCreateFirstSpace)
 
 import { Space } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
@@ -36,18 +32,6 @@ export const useOrCreateFirstSpace = () => {
   const [space, setSpace] = useState(spaces?.[0]);
   const isCreatingSpace = useRef(false);
   useEffect(() => {
-<<<<<<< HEAD
-    if (!space && create && !creating.current) {
-      creating.current = true;
-      client.echo
-        .createSpace()
-        .then(() => (creating.current = false))
-        .catch((err) => {
-          console.error(err); // TODO(burdon): Log.
-          creating.current = false;
-        });
-    }
-=======
     const timeout = setTimeout(async () => {
       if (!space && !isCreatingSpace.current) {
         isCreatingSpace.current = true;
@@ -63,7 +47,6 @@ export const useOrCreateFirstSpace = () => {
       }
     });
     return () => clearTimeout(timeout);
->>>>>>> bf49a9572 (feat: make useOrCreateFirstSpace)
   }, [space]);
   return space;
 };

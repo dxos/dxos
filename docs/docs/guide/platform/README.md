@@ -1,15 +1,12 @@
 ---
-title: Overview
-order: 0
 dir:
-  text: ECHO Database
-  order: 10
-next: react
+  text: Platform Overview
+  order: 2.5
 ---
 
-# Overview
+# ECHO Database
 
-ECHO (The **E**ventually **C**onsistent **H**ierrarhical **O**bject store) is a peer-to-peer graph database written in TypeScript.
+ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript.
 
 *   Secure, P2P data replication based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)
 *   No servers or central authority, all the data is with the clients
@@ -50,6 +47,6 @@ The vault domain is responsible for holding end-user identity (keys) and all ECH
 
 A service worker and the CRDT-based architecture of ECHO enable both offline and real-time collaboration.
 
-![HALO Vault Topology Diagram](./diagrams/topology.drawio.svg)
+![HALO Vault Topology Diagram](./images/topology.drawio.svg)
 
 This means that when apps request the user's identity (ask to log in), they are in fact obtaining a secure identifier from the local HALO application directly, without making any network calls. Any reads and writes end up storing data in a database owned by the `halo.dxos.com` application, which serves as an identity wallet and data vault where specific devices or applications can be revoked from accessing user data at any time.

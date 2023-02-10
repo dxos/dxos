@@ -3,7 +3,7 @@ title: Installation
 order: 0
 dir:
   text: TypeScript Guide
-  order: 2
+  order: 4
 ---
 
 # ECHO Installation

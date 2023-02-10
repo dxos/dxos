@@ -2,7 +2,7 @@
 position: 1
 label: Overview
 dir:
-  text: Command Line Tool
+  text: Command Line Tools
   order: 19
 ---
 

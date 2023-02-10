@@ -9,7 +9,7 @@ DXOS is the developer platform for **collaborative**, **offline-first**, **priva
 
 ::: note In this guide
 
-- Starting a project with an [app template](#create-an-app)
+- Starting a react project with an [app template](#create-an-app)
 - Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`
 - Starting a [KUBE](#starting-a-kube) to host the app
 - [Deploying](#deploying-your-app-to-a-kube) the app to KUBE
@@ -21,7 +21,7 @@ DXOS project templates are based on `vite`, `typescript`, `react`, `tailwind`, a
 
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](echo/typescript/) and a [`react` API](echo/react/). 
 
-This guide will walk you through creating and deploying a react project.
+This guide will walk you through creating and deploying a `react` app.
 
 Initialize an empty folder with `npm init` like this:
 
@@ -49,9 +49,9 @@ You should be able to open two windows and see reactive updates like in the vide
 ::: info Why this is cool:
 
 - State is being reactively shared between all instances of the app running on the same machine.
-- Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) controlled by the `halo.dxos.org` domain.
+- Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. Learn more about the [HALO vault topology](echo/README#local-vault-topology).
 - The app running on `localhost` subscribes to the data through a local shared memory connection with `halo.dxos.org` which works offline.
-- When remote peers join the same [space](./glossary#space), their changes are given to running apps through `halo` in the same way. Learn more about the [vault topology](echo/README#local-vault-topology).
+- When remote peers join the same [space](./glossary#space), their changes are given to running apps through `halo` in the same way.
 - Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
 - User identity (and their public/private keys) are established securely and maintained for the whole device (browser profile) without a password.
 - Everything works offline.
@@ -67,11 +67,12 @@ Now you have an application that does all the above. It relies on [ECHO](./echo)
 
 ### How to use ECHO
 
-1. Install `@dxos/client` or `@dxos/react-client` for `react`
-2. Create a [Client](echo/typescript/) using [`<ClientProvider />`](echo/react) in `react`
-3. Establish [identity](halo)
-4. Create or join a [space](echo/react/spaces)
-5. Perform reads and writes
+1. Install `@dxos/client` or `@dxos/react-client` for `react`.
+2. Create a [Client](echo/typescript/) or use a [`<ClientProvider />`](echo/react) in `react`.
+3. Establish [identity](halo).
+4. Create or join a [space](echo/react/spaces).
+5. Find objects with `useQuery`.
+6. Mutate objects as you would plain JavaScript objects.
 
 ```tsx file=./echo/react/snippets/create-client-react.tsx#L5-
 import React from 'react';
@@ -191,13 +192,8 @@ Your app will now be accessible in a browser at `http://<app-name>.localhost` wh
 If you started with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost).
 
 ::: warning
-Your app will now always be available on your machine until it or KUBE is stopped.
+Your app will now always be available on your machine until KUBE or the specific app is stopped.
 :::
-
-Read more:
-
-- [`dx.yml` file schema](kube/dx-yml-file)
-- DXOS [templates](cli/templates) and [samples](samples).
 
 ### Tunneling
 
@@ -205,7 +201,7 @@ You can also ask KUBE to expose the app to the world wide web so you can share t
 
 ## Next steps
 
-In this guide we demonstrated how to build local-first, collaborative applications using DXOS application templates, the ECHO database and HALO identity. 
+In this guide we built a local-first, collaborative app using the ECHO database and HALO identity. We deployed it to a KUBE on the local network and exposed the app to the external web with tunneling.
 
 We hope you'll find the technology useful, and welcome your contributions. Happy building! 🚀
 
@@ -216,5 +212,5 @@ Using DXOS:
 
 Get in touch and contribute:
 - DXOS [repository on GitHub](https:/github.com/dxos/dxos)
-- File a bug in [Issues](https:/github.com/dxos/dxos/issues)
-- Join the DXOS [Discord]()
+- File a bug or idea in [Issues](https:/github.com/dxos/dxos/issues)
+- Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
