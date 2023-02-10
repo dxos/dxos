@@ -103,6 +103,7 @@ export const useEditableListKeyboardInteractions = (hostId: string) => {
     },
     [hostId]
   );
+
   return { onListItemInputKeyDown, hostAttrs, itemAttrs };
 };
 
@@ -125,6 +126,7 @@ export const EditableList = ({
     onChange: onChangeItemIdOrder
   });
   const { t } = useTranslation('appkit');
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -139,6 +141,7 @@ export const EditableList = ({
       });
     }
   };
+
   return (
     <div role='none' {...slots.root} className={mx('contents', slots.root?.className)}>
       <List
