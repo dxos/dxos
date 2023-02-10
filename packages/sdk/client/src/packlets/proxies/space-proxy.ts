@@ -342,7 +342,7 @@ export class SpaceProxy implements Space {
     log('remove invitation', { id });
     const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
     void this._invitations[index]?.cancel();
-    this._invitations = [...this._invitations.splice(index, 1)];
+    this._invitations = [...this._invitations.slice(0, index), ...this._invitations.slice(index + 1)];
     this.invitationsUpdate.emit();
   }
 

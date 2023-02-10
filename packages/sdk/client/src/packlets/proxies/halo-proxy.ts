@@ -61,7 +61,7 @@ export class HaloProxy implements Halo {
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
 
-  private readonly _invitations: CancellableInvitationObservable[] = [];
+  private _invitations: CancellableInvitationObservable[] = [];
   private _invitationProxy?: HaloInvitationsProxy;
 
   private _profile?: Profile;
@@ -235,7 +235,7 @@ export class HaloProxy implements Halo {
 
     log('create invitation', options);
     const invitation = this._invitationProxy!.createInvitation(undefined, options);
-    this._invitations.push(invitation);
+    this._invitations = [...this._invitations, invitation];
 
     const unsubscribe = invitation.subscribe({
       onConnecting: () => {
@@ -263,7 +263,7 @@ export class HaloProxy implements Halo {
     log('remove invitation', { id });
     const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
     void this._invitations[index]?.cancel();
-    this._invitations.splice(index, 1);
+    this._invitations = [...this._invitations.slice(0, index), ...this._invitations.slice(index + 1)];
     this.invitationsUpdate.emit();
   }
 
