@@ -30,3 +30,8 @@ Open [https://halo.dxos.org](https://halo.dxos.org) and you will be guided throu
 
 ![HALO application](./images/halo-dark.png#dark)
 ![HALO application](./images/halo-light.png#light)
+
+## Next steps
+How to establish HALO identity in code:
+- Use the [`useIdetity` hook in react](../react/identity)
+- Use the [`client.halo.profile` field in TypeScript](../typescript/identity)
