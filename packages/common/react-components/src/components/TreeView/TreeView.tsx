@@ -5,7 +5,8 @@
 import { CaretDown, CaretRight } from 'phosphor-react';
 import React, { FC, ReactNode, useState } from 'react';
 
-import { getSize, mx } from '@dxos/react-components';
+import { getSize } from '../../styles';
+import { mx } from '../../util';
 
 const isScalar = (data: any) => !(typeof data === 'object' || Array.isArray(data));
 const createKey = (key: string, prefix?: string) => (prefix === undefined ? key : `${prefix}.${key}`);

@@ -7,8 +7,8 @@ import React, { FC } from 'react';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
+import { TreeView, TreeViewItem } from '@dxos/react-components';
 
-import { TreeView, TreeViewItem } from '../components';
 import { useSpace } from '../hooks';
 import { Project } from '../proto';
 

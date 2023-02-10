@@ -6,9 +6,8 @@ import { AppStoreLogo, Robot } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, mx, Searchbar } from '@dxos/react-components';
 
-import { Searchbar } from '../components';
 import {
   BotID,
   FrameID,
