@@ -14,7 +14,7 @@ module.exports = {
   osThemeExtension: {
     ...osThemeExtension,
     spacing: {
-      sidebar: '280px'
+      sidebar: '390px'
     }
   },
 

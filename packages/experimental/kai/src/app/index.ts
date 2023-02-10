@@ -5,5 +5,5 @@
 export * from './Actions';
 export * from './App';
 export * from './AppBar';
-export * from './Frames';
+export * from './FrameSelector';
 export * from './Sidebar';
