@@ -19,6 +19,7 @@ import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { createMappedFeedWriter } from '../common';
 import { UnknownModelError } from '../errors';
 import { Item } from './item';
+import { logInfo } from '@dxos/log';
 
 const log = debug('dxos:echo-db:item-manager');
 
@@ -31,6 +32,10 @@ export interface ModelConstructionOptions {
 export interface ItemConstructionOptions extends ModelConstructionOptions {
   itemType: ItemType | undefined;
   parentId?: ItemID;
+}
+
+export type DbOptions = {
+  label?: string;
 }
 
 /**
@@ -62,13 +67,16 @@ export class ItemManager {
    */
   private readonly _pendingItems = new Map<ItemID, (item: Item<Model>) => void>();
 
+  @logInfo
+  public _debugLabel: string | undefined;
+
   /**
    * @param _writeStream Outbound `dxos.echo.IEchoObject` mutation stream.
    */
   constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
-    private readonly _writeStream?: FeedWriter<DataMessage>
+    private readonly _writeStream?: FeedWriter<DataMessage>,
   ) {}
 
   get entities() {
@@ -177,7 +185,9 @@ export class ItemManager {
       );
 
     // Create the model with the outbound stream.
-    return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
+    const stateManager =  this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
+    stateManager._debugLabel = this._debugLabel;
+    return stateManager;
   }
 
   /**

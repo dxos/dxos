@@ -176,12 +176,9 @@ export class DatabaseBackendProxy implements DatabaseBackend {
       assert(object.objectId);
 
       let entity: Item<any> | undefined;
-      if (object.genesis) {
+      if (object.genesis && !this._itemManager.entities.has(object.objectId)) {
         log('Construct', { object });
         assert(object.genesis.modelType);
-        if (this._itemManager.entities.has(object.objectId)) {
-          continue;
-        }
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
           itemType: object.genesis.itemType,

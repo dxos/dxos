@@ -135,6 +135,7 @@ export class SpaceProxy implements Space {
 
     this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
     this._itemManager = new ItemManager(this._modelFactory, memberKey, this._dbBackend.getWriteStream());
+    this._itemManager._debugLabel = 'frontend';
 
     this._experimental = {
       db: new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter)

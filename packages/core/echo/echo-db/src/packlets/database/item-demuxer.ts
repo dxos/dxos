@@ -63,6 +63,7 @@ export class ItemDemuxer {
         const { itemType, modelType } = genesis;
         assert(modelType);
 
+        // TODO(dmaretskyi): Support snapshot.
         const entity = await this._itemManager.constructItem({
           itemId: objectId,
           modelType,
@@ -72,7 +73,7 @@ export class ItemDemuxer {
               mutations?.map((mutation) => ({
                 ...mutation,
                 meta
-              })) ?? []
+              })) ?? [],
           },
           itemType,
           parentId: mutation?.parentId
@@ -84,7 +85,7 @@ export class ItemDemuxer {
       //
       // Model mutations.
       //
-      if (mutation) {
+      if (mutation && !genesis) { // TODO(dmaretskyi): Fix.
         if (mutation.parentId || mutation.action) {
           const item = this._itemManager.getItem(objectId);
           assert(item);
