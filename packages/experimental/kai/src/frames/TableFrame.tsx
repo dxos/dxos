@@ -5,25 +5,26 @@
 import React, { useState } from 'react';
 import { Column } from 'react-table';
 
-import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
-import { useQuery } from '@dxos/react-client';
+import { Document, DocumentBase, EchoSchemaType, id, TypeFilter } from '@dxos/echo-schema';
+import { PublicKey, useQuery } from '@dxos/react-client';
 import { Table, Searchbar, Selector, SelectorOption } from '@dxos/react-components';
 
 import { useSpace } from '../hooks';
-import { Contact, Organization, Project } from '../proto';
+import { Contact, Organization, Project, Task } from '../proto';
 
 // UX field types.
 const COLUMN_TYPES = ['string', 'number', 'boolean'];
 
-type ColumnType<T extends DocumentBase> = SelectorOption & {
-  filter?: TypeFilter<any>;
-  subFilter?: (match?: string) => (object: T) => boolean;
-  columns: Column<Document>[];
-};
-
+// TODO(burdon): Factor out.
 const generateTypes = (schemaTypes: EchoSchemaType[]) => {
   const generateColumns = (type: EchoSchemaType) => {
-    const columns: Column<Document>[] = [];
+    const columns: Column<Document>[] = [
+      {
+        Header: 'id',
+        accessor: (object) => PublicKey.from(object[id]).truncate()
+      }
+    ];
+
     for (const field of type.fields) {
       if (COLUMN_TYPES.includes(field.type.kind)) {
         columns.push({
@@ -47,13 +48,20 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
   }));
 };
 
-const types: ColumnType<any>[] = generateTypes([Organization.type, Project.type, Contact.type]);
+type ColumnType<T extends DocumentBase> = SelectorOption & {
+  filter?: TypeFilter<any>;
+  subFilter?: (match?: string) => (object: T) => boolean;
+  columns: Column<Document>[];
+};
+
+// TODO(burdon): Query schema for types.
+const types: ColumnType<any>[] = generateTypes([Organization.type, Project.type, Task.type, Contact.type]);
 
 const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
 export const TableFrame = () => {
   const space = useSpace();
-  const [type, setType] = useState<ColumnType<any>>(types[2]);
+  const [type, setType] = useState<ColumnType<any>>(types[0]);
   const [text, setText] = useState<string>();
   const objects = useQuery(space, type.filter).filter(type.subFilter?.(text) ?? Boolean);
 
