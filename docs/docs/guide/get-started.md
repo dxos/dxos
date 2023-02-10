@@ -7,13 +7,13 @@ title: Get started
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. Learn about the [mission](why).
 
-\::: note In this guide
+::: note In this guide
 
 *   Starting a react project with an [app template](#create-an-app)
 *   Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`
 *   Starting a [KUBE](#starting-a-kube) to host the app
 *   [Deploying](#deploying-your-app-to-a-kube) the app to KUBE
-    \:::
+    :::
 
 ## Create an app
 
@@ -36,9 +36,9 @@ pnpm install
 pnpm serve
 ```
 
-\::: note
+::: note
 Only [`pnpm`](https://pnpm.io/) is supported for now: `npm i -g pnpm`.
-\:::
+:::
 
 This will start the development server 🚀.
 
@@ -46,7 +46,7 @@ You should be able to open two windows and see reactive updates like in the vide
 
 <video controls loop autoplay style="width:100%" src="/images/quickstart.mp4"></video>
 
-\::: info Why this is cool:
+::: info Why this is cool:
 
 *   State is being reactively shared between all instances of the app running on the same machine.
 *   Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. Learn more about the [HALO vault topology](echo/README#local-vault-topology).
@@ -57,7 +57,7 @@ You should be able to open two windows and see reactive updates like in the vide
 *   Everything works offline.
 *   Real-time collaboration is possible when online.
 *   There are **no servers** or [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping) to worry about.
-    \:::
+    :::
 
 Now you have an application that does all the above. It relies on [ECHO](./echo) to perform state consensus and [HALO](./halo) for identity.
 
@@ -106,9 +106,9 @@ const App = () => (
 createRoot(document.body).render(<App />);
 ```
 
-\::: tip Tip
+::: tip Tip
 To see an example without `react` see the [TypeScript Guide](./typescript/)
-\:::
+:::
 
 Now you can manipulate [objects](./glossary#object) in the space directly and they will replicate with all members of the space in a peer-to-peer fashion.
 
@@ -197,9 +197,9 @@ Your app will now be accessible in a browser at `http://<app-name>.localhost` wh
 
 If you started with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost).
 
-\::: warning
+::: warning
 Your app will now always be available on your machine until KUBE or the specific app is stopped.
-\:::
+:::
 
 ### Tunneling
 

@@ -57,7 +57,7 @@ Before we can manipulate data, we need a [user identity](identity) and a [space]
 
 ## Further configuration
 
-\:::details Using a fallback element during initial load
+:::details Using a fallback element during initial load
 A fallback element is displayed while the Client is initializing. Any component can be used, and it will be given an instance of the `client` as a prop directly. A reasonable default is available as `GenericFallback` from `@dxos/react-appkit`.
 
 ```tsx file=./snippets/create-client-react-with-fallback.tsx#L5-
