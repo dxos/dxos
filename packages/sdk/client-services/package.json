@@ -10,7 +10,7 @@
   "browser": {
     "jsondown": false,
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./testing.cjs": "./dist/lib/browser/packlets/testing/index.mjs"
+    "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
