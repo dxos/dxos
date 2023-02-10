@@ -298,32 +298,7 @@
         },
         {
           "type": "json",
-          "path": "packages/deprecated/client-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/kodama/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/react-client-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/deprecated/react-components-deprecated/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/react-echo-graph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/react-ipfs/package.json",
           "jsonpath": "$.version"
         },
         {

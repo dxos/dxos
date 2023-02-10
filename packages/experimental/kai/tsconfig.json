@@ -76,9 +76,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../deprecated/client-testing"
-    },
-    {
       "path": "../../sdk/client"
     },
     {

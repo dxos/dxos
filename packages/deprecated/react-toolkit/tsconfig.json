@@ -57,9 +57,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../react-client-testing"
-    },
-    {
       "path": "../react-components-deprecated"
     }
   ]
