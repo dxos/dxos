@@ -21,7 +21,7 @@ export const useSpace = (spaceKey?: PublicKeyLike) => {
 };
 
 /**
- * Returns the first space in the current spaces array. If none exists, null
+ * Returns the first space in the current spaces array. If none exist, `null`
  * will be returned at first, then the hook will re-run and return a space once
  * it has been created. Requires a ClientProvider somewhere in the parent tree.
  * @returns a Space

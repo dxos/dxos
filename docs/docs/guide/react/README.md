@@ -79,15 +79,9 @@ const App = () => {
 
 createRoot(document.body).render(<App />);
 ```
-<<<<<<< HEAD
-=======
-
 :::
->>>>>>> 151d945bb (wip docs)
 
-\:::
-
-\:::details Passing a custom Client object to ClientProvider
+:::details Passing a custom Client object to ClientProvider
 
 ```tsx file=./snippets/create-client-react-with-client.tsx#L5-
 import React from 'react';
@@ -106,9 +100,9 @@ const App = () => {
 createRoot(document.body).render(<App />);
 ```
 
-\:::
+:::
 
-\:::details Supplying configuration without a Client
+:::details Supplying configuration without a Client
 
 Alternatively, a config function may be supplied instead of a client, and a client will be generated internally.
 
@@ -133,6 +127,6 @@ createRoot(document.body).render(<App />);
 
 ```
 
-\:::
+:::
 
 See [configuration](../typescript/config) in the TypeScript guide for more configuration recipes.

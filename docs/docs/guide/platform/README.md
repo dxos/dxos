@@ -33,9 +33,9 @@ There are several steps to establishing a space between peers:
 
 This verifies that the connection is secure, and the identities of peers are mutually confirmed.
 
-::: tip
+\::: tip
 If you're using `react`, DXOS provides a simple [UI flow](react) that implements generating and accepting invitations to spaces.
-:::
+\:::
 
 ## Objects
 

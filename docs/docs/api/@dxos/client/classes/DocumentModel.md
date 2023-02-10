@@ -140,7 +140,11 @@ Arguments: none
 
 Returns an immutable object.
 
+<<<<<<< HEAD
 Returns: <code>Record&lt;string, any&gt;</code>
+=======
+Returns: <code>DocumentModelState</code>
+>>>>>>> 464c6e793 (docs wip)
 
 Arguments: none
 ### [toString()]()

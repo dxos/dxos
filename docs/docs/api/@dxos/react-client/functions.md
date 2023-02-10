@@ -174,6 +174,19 @@ Creates a network status subscription.
 Returns: <code>NetworkStatus</code>
 
 Arguments: none
+<<<<<<< HEAD
+=======
+### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L29)
+
+
+Returns the first space in the current spaces array. If none exists, null
+will be returned at first, then the hook will re-run and return a space once
+it has been created. Requires a ClientProvider somewhere in the parent tree.
+
+Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
+
+Arguments: none
+>>>>>>> 464c6e793 (docs wip)
 ### [useQuery(\[space\], \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L18)
 
 
@@ -224,19 +237,41 @@ Returns: <code>T[]</code>
 Arguments: 
 
 `resultSet`: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;T&gt;</code>
+<<<<<<< HEAD
 ### [useSpace(\[spaceKey\], \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
+=======
+### [useSelection(selection)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L21)
 
 
-Get a specific Space via its key.
-Requires ClientContext to be set via ClientProvider.
+Hook to generate values from a selection using a selector function.
+
+NOTE:
+All values that may change the selection result  must be passed to deps array
+for updates to work correctly.
+
+Returns: <code>undefined | T[]</code>
+
+Arguments: 
+
+`selection`: <code>[Selection](/api/@dxos/react-client/classes/Selection)&lt;T, void&gt; | [SelectionResult](/api/@dxos/react-client/classes/SelectionResult)&lt;T, any&gt; | Falsy</code>
+### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L18)
+>>>>>>> 464c6e793 (docs wip)
+
+
+Get a specific Space using its key. Returns undefined when no spaceKey is
+available. Requires a ClientProvider somewhere in the parent tree.
 
 Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 Arguments: 
 
+<<<<<<< HEAD
 `spaceKey`: <code>"null" | PublicKeyLike</code>
 
 `options`: <code>object</code>
+=======
+`spaceKey`: <code>PublicKeyLike</code>
+>>>>>>> 464c6e793 (docs wip)
 ### [useSpaceInvitation(\[spaceKey\], \[invitationId\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L24)
 
 
@@ -255,11 +290,15 @@ Returns: <code>[CancellableInvitationObservable](/api/@dxos/react-client/interfa
 Arguments: 
 
 `spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+<<<<<<< HEAD
 ### [useSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L42)
+=======
+### [useSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L59)
+>>>>>>> 464c6e793 (docs wip)
 
 
 Get all Spaces available to current user.
-Requires ClientContext to be set via ClientProvider.
+Requires a ClientProvider somewhere in the parent tree.
 
 Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)[]</code>
 
@@ -293,7 +332,11 @@ Returns: <code>[SubscriptionHandle](/api/@dxos/react-client/interfaces/Subscript
 
 Arguments: 
 
+<<<<<<< HEAD
 `selection`: <code>[Selection](/api/@dxos/react-client/types/Selection)</code>
+=======
+`selection`: <code>Selection</code>
+>>>>>>> 464c6e793 (docs wip)
 ### [withReactor(component, opts)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L64)
 
 

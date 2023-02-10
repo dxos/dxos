@@ -1,5 +1,9 @@
 # Class `Item`
+<<<<<<< HEAD
 <sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:25]()</sub>
+=======
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:14]()</sub>
+>>>>>>> 464c6e793 (docs wip)
 
 
 A globally addressable data item.
@@ -21,7 +25,11 @@ The state of the model is formed from the following components (in order):
 - Optimistic mutations.
 
 ## Constructors
+<<<<<<< HEAD
 ### [constructor(_itemManager, _id)]()
+=======
+### [constructor(_itemManager, _id, _type, stateManager, \[_writeStream\], \[parent\])]()
+>>>>>>> 464c6e793 (docs wip)
 
 
 Items are constructed by the  `Database`  object.
@@ -33,6 +41,17 @@ Arguments:
 `_itemManager`: <code>ItemManager</code>
 
 `_id`: <code>string</code>
+<<<<<<< HEAD
+=======
+
+`_type`: <code>undefined | string</code>
+
+`stateManager`: <code>StateManager&lt;NonNullable&lt;M&gt;&gt;</code>
+
+`_writeStream`: <code>FeedWriter&lt;DataMessage&gt;</code>
+
+`parent`: <code>"null" | [Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;</code>
+>>>>>>> 464c6e793 (docs wip)
 
 ## Properties
 ### [_debugLabel]()
@@ -43,20 +62,38 @@ Type: <code>ItemManager</code>
 Type: <code>"null" | ModelMeta&lt;any, any, any&gt;</code>
 ### [_onUpdate]()
 Type: <code>Event&lt;[Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;&gt;</code>
+<<<<<<< HEAD
+=======
+### [children]()
+Type: <code>[Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;[]</code>
+>>>>>>> 464c6e793 (docs wip)
 ### [deleted]()
 Type: <code>boolean</code>
 ### [id]()
 Type: <code>string</code>
+<<<<<<< HEAD
 ### [initialized]()
 Type: <code>boolean</code>
+=======
+### [model]()
+Type: <code>M</code>
+>>>>>>> 464c6e793 (docs wip)
 ### [modelMeta]()
 Type: <code>undefined | ModelMeta&lt;any, any, any&gt;</code>
 ### [modelType]()
 Type: <code>string</code>
 ### [parent]()
+<<<<<<< HEAD
 Type: <code>"null" | string</code>
 ### [state]()
 Type: <code>StateOf&lt;M&gt;</code>
+=======
+Type: <code>"null" | [Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;</code>
+### [readOnly]()
+Type: <code>boolean</code>
+### [type]()
+Type: <code>undefined | string</code>
+>>>>>>> 464c6e793 (docs wip)
 
 ## Methods
 ### [createSnapshot()]()

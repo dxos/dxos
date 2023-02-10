@@ -25,11 +25,11 @@ The object returned is of type [`Identity`](/api/@dxos/client/interfaces/Identit
 
 The `{ login: true }` tells HALO to log the user in using the HALO application. Omitting this enables the developer to receive `null` from this hook when the user has no existing HALO identity on this device.
 
-::: note
+\::: note
 When using `{ login: true }` the hook will fire twice. Once with `null`, and then again with an identity when one has been established.
-:::
+\:::
 
-::: details Using with React Router
+\::: details Using with React Router
 If using [`react-router`](https://www.npmjs.com/package/react-router) the component [`RequireIdentity`]() from [`@dxos/react-appkit`]() automatically redirects the user to the HALO app when no identity is found, and returns back when established.
 
 ```tsx file=./snippets/require-identity.tsx#L5-
@@ -49,6 +49,6 @@ export const Routes = () => {
 };
 ```
 
-:::
+\:::
 
 Once identity is established, a [`space`](spaces) must be created or joined in order to manipulate data.

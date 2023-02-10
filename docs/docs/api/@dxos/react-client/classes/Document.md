@@ -22,6 +22,11 @@ Arguments:
 Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
 
 Proxied object.
+<<<<<<< HEAD
+=======
+### [_modelConstructor]()
+Type: <code>typeof [DocumentModel](/api/@dxos/react-client/classes/DocumentModel)</code>
+>>>>>>> 464c6e793 (docs wip)
 ### [[data]]()
 Type: <code>any</code>
 ### [[db]]()
