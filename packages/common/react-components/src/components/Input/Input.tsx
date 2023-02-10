@@ -28,6 +28,7 @@ export const Input = ({
   length = 6,
   validationMessage,
   validationValence,
+  variant = 'default',
   slots = {}
 }: InputProps) => {
   const internalInputId = useId('input');
@@ -57,7 +58,8 @@ export const Input = ({
     defaultValue,
     onChange,
     validationMessage,
-    validationValence
+    validationValence,
+    variant
   };
 
   const bareInput =

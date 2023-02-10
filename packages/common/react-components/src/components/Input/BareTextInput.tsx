@@ -5,7 +5,7 @@
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useForwardedRef, useThemeContext } from '../../hooks';
-import { defaultInput } from '../../styles';
+import { defaultInput, subduedInput } from '../../styles';
 import { mx } from '../../util';
 import { InputProps, InputSize } from './InputProps';
 
@@ -17,10 +17,10 @@ const sizeMap: Record<InputSize, string> = {
 };
 
 export type BareTextInputProps = Omit<ComponentPropsWithRef<'input'>, 'size'> &
-  Pick<InputProps, 'validationMessage' | 'validationValence' | 'size'>;
+  Pick<InputProps, 'validationMessage' | 'validationValence' | 'size' | 'variant'>;
 
 export const BareTextInput = forwardRef<HTMLInputElement, BareTextInputProps>(
-  ({ validationValence, validationMessage, size, ...inputSlot }, ref) => {
+  ({ validationValence, validationMessage, variant, size, ...inputSlot }, ref) => {
     const { themeVariant } = useThemeContext();
     const inputRef = useForwardedRef(ref);
     return (
@@ -28,7 +28,7 @@ export const BareTextInput = forwardRef<HTMLInputElement, BareTextInputProps>(
         {...inputSlot}
         ref={inputRef}
         className={mx(
-          defaultInput(
+          (variant === 'subdued' ? subduedInput : defaultInput)(
             {
               disabled: inputSlot.disabled,
               ...(validationMessage && { validationValence })

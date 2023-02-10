@@ -118,11 +118,11 @@ export const DropdownMenu = ({ trigger, children, slots = {} }: DropdownMenuProp
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
           align='end'
-          sideOffset={5}
+          sideOffset={4}
           {...slots.content}
           className={mx(
             'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
-            'w-48 rounded-lg px-1.5 py-1 shadow-md md:w-56',
+            'w-48 rounded-lg p-1 shadow-md md:w-56',
             'bg-white dark:bg-neutral-800',
             slots.content?.className
           )}
