@@ -23,7 +23,7 @@ export const AppBar = () => {
   return (
     <div className='flex items-center justify-between fixed px-5 inline-start-0 inline-end-0 block-start-0 bs-appbar bg-appbar-header z-[1]'>
       <div className='flex items-center'>
-        <Bug className={mx('logo', getSize(8))} />
+        <Bug className={mx('logo', getSize(8))} data-testid='kai-bug' />
       </div>
 
       <Menu />
