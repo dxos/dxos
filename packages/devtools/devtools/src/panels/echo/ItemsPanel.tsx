@@ -7,12 +7,10 @@ import React, { useState } from 'react';
 import { deleted, Document, DocumentBase, id, Item, schema, type } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
-import { TreeView, TreeViewItem, Searchbar } from '@dxos/kai';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
-import { useSelection } from '@dxos/react-client';
-import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
 import { useQuery } from '@dxos/react-client';
+import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
 import { DetailsTable, JsonView } from '../../components';
@@ -31,18 +29,6 @@ const textFilter = (text?: string) => {
     const match = item.title?.match(matcher);
     return match !== null;
   };
-};
-
-const modelToObject = (model: Model<any>) => {
-  if (model instanceof DocumentModel) {
-    return model.toObject();
-  } else if (model instanceof TextModel) {
-    return model.textContent;
-  } else if (model instanceof MessengerModel) {
-    return model.messages;
-  }
-
-  return model.toJSON();
 };
 
 // TODO(burdon): Rationalize with new API.

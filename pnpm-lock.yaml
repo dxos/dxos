@@ -2582,6 +2582,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/gem-spore': workspace:*
       '@dxos/kai': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -2658,6 +2659,7 @@ importers:
       react-vis: 1.11.12_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
+      '@dxos/gem-spore': link:../../experimental/gem-spore
       '@dxos/kai': link:../../experimental/kai
       '@dxos/mosaic': link:../../experimental/mosaic
       '@dxos/plexus': link:../../experimental/plexus
