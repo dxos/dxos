@@ -39,12 +39,12 @@ module.exports = {
         bg: colors.slate[200]
       },
       sidebar: {
-        bg: colors.neutral[100]
+        bg: colors.zinc[100]
       },
       // TODO(burdon): Mui Paper?
       panel: {
-        bg: colors.slate[300],
-        border: colors.slate[300]
+        bg: colors.zinc[300],
+        border: colors.zinc[300]
       },
       selection: {
         hover: secondary[100],
