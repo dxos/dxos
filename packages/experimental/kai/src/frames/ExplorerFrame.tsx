@@ -50,7 +50,7 @@ export const ExplorerFrame = () => {
 
   // TODO(burdon): Echo model.
   const model = useMemo(() => {
-    const root = createTree({ depth: 3, children: 3 });
+    const root = createTree({ depth: 4, children: 4 });
     const model = new TestGraphModel(convertTreeToGraph(root));
     model.setSelected(root.id);
     return model;
