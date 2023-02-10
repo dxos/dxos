@@ -5,22 +5,22 @@
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useForwardedRef } from '../../hooks';
-import { defaultInput } from '../../styles';
+import { defaultInput, subduedInput } from '../../styles';
 import { mx } from '../../util';
 import { TextareaProps } from './InputProps';
 
 export type BareTextareaInputProps = ComponentPropsWithRef<'textarea'> &
-  Pick<TextareaProps, 'validationMessage' | 'validationValence'>;
+  Pick<TextareaProps, 'validationMessage' | 'validationValence' | 'variant'>;
 
 export const BareTextareaInput = forwardRef<HTMLTextAreaElement, BareTextareaInputProps>(
-  ({ validationValence, validationMessage, ...inputSlot }, ref) => {
+  ({ validationValence, validationMessage, variant, ...inputSlot }, ref) => {
     const textareaRef = useForwardedRef(ref);
     return (
       <textarea
         ref={textareaRef}
         {...inputSlot}
         className={mx(
-          defaultInput({
+          (variant === 'subdued' ? subduedInput : defaultInput)({
             disabled: inputSlot.disabled,
             ...(validationMessage && { validationValence })
           }),
