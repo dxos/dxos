@@ -24,12 +24,12 @@ import {
   useTranslation
 } from '@dxos/react-components';
 
-export interface CrudListItemSlots {
+export interface EditableListItemSlots {
   listItem?: ListItemProps['slots'];
   input?: InputProps['slots'];
 }
 
-export interface CrudListItemProps {
+export interface EditableListItemProps {
   id: string;
   defaultCompleted?: boolean;
   completed?: boolean;
@@ -37,17 +37,17 @@ export interface CrudListItemProps {
   defaultTitle?: string;
   title?: string;
   onChangeTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
-  slots?: CrudListItemSlots;
+  slots?: EditableListItemSlots;
 }
 
-export interface CrudListSlots {
+export interface EditableListSlots {
   root?: Omit<ComponentPropsWithoutRef<'div'>, 'children'>;
   listHeading?: InputProps['slots'];
   list?: ListProps['slots'];
   addItem?: InputProps['slots'];
 }
 
-export interface CrudListProps {
+export interface EditableListProps {
   id: string;
   labelId: string;
   completable?: boolean;
@@ -59,7 +59,7 @@ export interface CrudListProps {
   itemIdOrder?: string[];
   onChangeItemIdOrder?: (itemIdOrder: string[]) => void;
   children?: ReactNode;
-  slots?: CrudListSlots;
+  slots?: EditableListSlots;
 }
 
 const focusAndSetCaretPosition = (prevEl: HTMLInputElement, nextEl: HTMLInputElement) => {
@@ -72,14 +72,14 @@ const focusAndSetCaretPosition = (prevEl: HTMLInputElement, nextEl: HTMLInputEle
   }
 };
 
-export const useCrudListKeyboardInteractions = (hostId: string) => {
+export const useEditableListKeyboardInteractions = (hostId: string) => {
   const hostAttrs = { 'data-focus-series-host': hostId };
-  const itemAttrs = { 'data-focus-series': 'crudList' };
+  const itemAttrs = { 'data-focus-series': 'editableList' };
   const onListItemInputKeyDown = useCallback(
     (event: KeyboardEvent<Element>) => {
       const inputsInScope = Array.from(
         document.querySelectorAll<HTMLInputElement>(
-          `[data-focus-series-host="${hostId}"] [data-focus-series="crudList"]`
+          `[data-focus-series-host="${hostId}"] [data-focus-series="editableList"]`
         )
       );
       const targetIndex = inputsInScope.findIndex((sibling) => sibling === event.target);
@@ -106,7 +106,7 @@ export const useCrudListKeyboardInteractions = (hostId: string) => {
   return { onListItemInputKeyDown, hostAttrs, itemAttrs };
 };
 
-export const CrudList = ({
+export const EditableList = ({
   children,
   labelId,
   completable,
@@ -118,7 +118,7 @@ export const CrudList = ({
   itemIdOrder,
   onChangeItemIdOrder,
   slots = {}
-}: CrudListProps) => {
+}: EditableListProps) => {
   const [listItemIds, setListItemIds] = useControllableState({
     prop: itemIdOrder,
     defaultProp: defaultItemIdOrder,
@@ -190,7 +190,7 @@ export const CrudList = ({
   );
 };
 
-export const CrudListItem = forwardRef<HTMLLIElement, CrudListItemProps>(
+export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>(
   (
     {
       id,
@@ -201,7 +201,7 @@ export const CrudListItem = forwardRef<HTMLLIElement, CrudListItemProps>(
       title,
       onChangeTitle,
       slots = {}
-    }: CrudListItemProps,
+    }: EditableListItemProps,
     forwardedRef
   ) => {
     return (
@@ -212,7 +212,7 @@ export const CrudListItem = forwardRef<HTMLLIElement, CrudListItemProps>(
           defaultSelected: defaultCompleted,
           selected: completed,
           onSelectedChange: onChangeCompleted,
-          slots
+          slots: slots.listItem
         }}
       >
         <ListItemHeading>

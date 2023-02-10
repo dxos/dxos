@@ -6,20 +6,20 @@ import React, { ChangeEvent, useCallback, useState, KeyboardEvent, ComponentProp
 
 import { useId } from '@dxos/react-components';
 
-import { CrudList, CrudListItem, useCrudListKeyboardInteractions } from './CrudList';
+import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
 
 export default {
-  component: CrudList
+  component: EditableList
 } as any;
 
-type CrudListItemData = { id: string; title: string; completed: boolean };
+type EditableListItemData = { id: string; title: string; completed: boolean };
 
 export const Default = {
   render: ({ ...args }) => {
-    const CrudListInstance = () => {
+    const EditableListInstance = () => {
       const listId = useId('L');
       const [nextItemTitle, setNextItemTitle] = useState('');
-      const [items, setItems] = useState<Record<string, CrudListItemData>>(
+      const [items, setItems] = useState<Record<string, EditableListItemData>>(
         [...Array(6)].reduce((acc, _, index) => {
           const item = {
             id: `${listId}--listItem-${index}`,
@@ -31,11 +31,11 @@ export const Default = {
         }, {})
       );
       const [itemOrder, setItemOrder] = useState(Object.keys(items));
-      const updateItem = (id: string, props: Partial<CrudListItemData>) => {
+      const updateItem = (id: string, props: Partial<EditableListItemData>) => {
         setItems({ ...items, [id]: Object.assign({}, items[id], props) });
       };
 
-      const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useCrudListKeyboardInteractions(listId);
+      const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(listId);
 
       const addItem = useCallback(() => {
         const addedItem = {
@@ -60,7 +60,7 @@ export const Default = {
       );
 
       return (
-        <CrudList
+        <EditableList
           {...args}
           id={listId}
           labelId='excluded'
@@ -80,7 +80,7 @@ export const Default = {
           {itemOrder.map((id) => {
             const { title, completed } = items[id];
             return (
-              <CrudListItem
+              <EditableListItem
                 key={id}
                 slots={{ input: { input: { ...itemAttrs, onKeyDown: onListItemInputKeyDown } } }}
                 {...{
@@ -94,14 +94,14 @@ export const Default = {
               />
             );
           })}
-        </CrudList>
+        </EditableList>
       );
     };
 
     return (
       <>
-        <CrudListInstance />
-        <CrudListInstance />
+        <EditableListInstance />
+        <EditableListInstance />
       </>
     );
   },
