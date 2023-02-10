@@ -4,7 +4,7 @@
 
 import { EventEmitter, SVGContext } from '@dxos/gem-core';
 
-import { defaultIdAccessor, IdAccessor } from '../graph';
+import { defaultIdAccessor, IdAccessor } from './types';
 
 export type ProjectorOptions = {
   idAccessor: IdAccessor;
