@@ -4,12 +4,12 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { useQuery, Document, useIdentity, useSpace } from '@dxos/react-client';
+import { useQuery, Document, useIdentity, useSpace, useOrCreateFirstSpace } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
 export const Counter = () => {
   const identity = useIdentity({ login: true });
-  const space = useSpace(null, { create: true });
+  const space = useOrCreateFirstSpace();
   const [counter] = useQuery(space, { type: 'counter' });
   const creating = useRef(false);
   useEffect(() => {

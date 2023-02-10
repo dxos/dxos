@@ -33,7 +33,7 @@ There are several steps to establishing a space between peers:
 
 This verifies that the connection is secure, and the identities of peers are mutually confirmed.
 
-:::tip
+::: tip
 If you're using `react`, DXOS provides a simple [UI flow](react) that implements generating and accepting invitations to spaces.
 :::
 
@@ -70,5 +70,6 @@ A service worker and the CRDT-based architecture of ECHO enable both offline and
 This means that when apps request the user's identity (ask to log in), they are in fact obtaining a secure identifier from the local HALO application directly, without making any network calls. Any reads and writes end up storing data in a database owned by the `halo.dxos.com` application, which serves as an identity wallet and data vault where specific devices or applications can be revoked from accessing user data at any time.
 
 ## Next steps
-- If using `react` see the [React guide](../react/)
-- Otherwise, follow the [TypeScript guide](../typescript/)
+
+*   If using `react` see the [React guide](../react/)
+*   Otherwise, follow the [TypeScript guide](../typescript/)

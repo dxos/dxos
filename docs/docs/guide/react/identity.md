@@ -12,6 +12,10 @@ This section describes how to obtain [HALO identity](../platform/halo) in `react
 The user's identity can be obtained by a react application with the `useIdentity` hook:
 
 ```tsx file=./snippets/use-identity.tsx#L5-
+import React from 'react';
+import { useIdentity } from '@dxos/react-client';
+
+export const MyComponent = () => {
   const identity = useIdentity({ login: true });
   return <>{/* ... */}</>;
 };
@@ -29,6 +33,10 @@ When using `{ login: true }` the hook will fire twice. Once with `null`, and the
 If using [`react-router`](https://www.npmjs.com/package/react-router) the component [`RequireIdentity`]() from [`@dxos/react-appkit`]() automatically redirects the user to the HALO app when no identity is found, and returns back when established.
 
 ```tsx file=./snippets/require-identity.tsx#L5-
+import React from 'react';
+import { useRoutes } from 'react-router-dom';
+import { RequireIdentity } from '@dxos/react-appkit';
+
 export const Routes = () => {
   return useRoutes([
     {
@@ -40,6 +48,7 @@ export const Routes = () => {
   ]);
 };
 ```
+
 :::
 
 Once identity is established, a [`space`](spaces) must be created or joined in order to manipulate data.

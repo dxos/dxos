@@ -74,7 +74,7 @@ Now you have an application that does all the above. It relies on [ECHO](./echo)
 5. Find objects with `useQuery`.
 6. Mutate objects as you would plain JavaScript objects.
 
-```tsx file=./echo/react/snippets/create-client-react.tsx#L5-
+```tsx file=./react/snippets/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
@@ -107,7 +107,7 @@ createRoot(document.body).render(<App />);
 ```
 
 ::: tip Tip
-To see an example without `react` see the [TypeScript Guide](echo/typescript/)
+To see an example without `react` see the [TypeScript Guide](./typescript/)
 :::
 
 Now you can manipulate [objects](./glossary#object) in the space directly and they will replicate with all members of the space in a peer-to-peer fashion.
@@ -143,9 +143,9 @@ This will begin tracking further changes on the object and replicating them to o
 
 ### Next steps
 
-- ECHO with [React](echo/react)
-- ECHO with [TypeScript](echo/typescript)
-- ECHO with [strongly typed objects](echo/typescript/types)
+- ECHO with [React](./react)
+- ECHO with [TypeScript](./typescript)
+- ECHO with [strongly typed objects](./typescript/types)
 
 ## Starting a KUBE
 
@@ -207,9 +207,9 @@ In this guide we built a local-first, collaborative app using the ECHO database 
 We hope you'll find the technology useful, and welcome your contributions. Happy building! 🚀
 
 Using DXOS:
-- ECHO with [React](echo/react/)
-- ECHO with [TypeScript](echo/typescript/)
-- ECHO with [strongly typed objects](echo/typescript/types)
+- ECHO with [React](./react/)
+- ECHO with [TypeScript](./typescript/)
+- ECHO with [strongly typed objects](./typescript/types)
 
 Get in touch and contribute:
 - DXOS [repository on GitHub](https:/github.com/dxos/dxos)

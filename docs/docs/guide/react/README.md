@@ -11,9 +11,9 @@ dir:
 npm install --save @dxos/react-client
 ```
 
-\::: note
+::: note
 If using one of the DXOS application templates via [`npm init @dxos`](../../cli/app-templates) this is pre-installed
-\:::
+:::
 
 ## Configuration
 
@@ -22,11 +22,24 @@ When using `react`, create a `ClientProvider` to wrap your application. This all
 ```tsx file=./snippets/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ClientProvider, useClient } from '@dxos/react-client';
+import {
+  ClientProvider,
+  useClient,
+  useIdentity,
+  useOrCreateFirstSpace,
+  useQuery,
+  id
+} from '@dxos/react-client';
 
 const Component = () => {
-  const client = useClient();
-  return <pre>{JSON.stringify(client.toJSON(), null, 2)}</pre>;
+  // get the user to log in before a space can be obtained
+  const identity = useIdentity({ login: true });
+  // create or use the first space
+  const space = useOrCreateFirstSpace();
+  // grab everything in the space
+  const objects = useQuery(space, {});
+  // show the id of the first object returned
+  return <>{objects?.[0]?.[id]}</>;
 };
 
 const App = () => (
@@ -66,6 +79,11 @@ const App = () => {
 
 createRoot(document.body).render(<App />);
 ```
+<<<<<<< HEAD
+=======
+
+:::
+>>>>>>> 151d945bb (wip docs)
 
 \:::
 

@@ -19,7 +19,7 @@ Arguments: none
 :::
 
 :::apidoc[@dxos/react-client.useSelection]
-### [useSelection(selection, deps)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L20)
+### [useSelection(selection)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L21)
 
 Hook to generate values from a selection using a selector function.
 
@@ -32,6 +32,4 @@ Returns: <code>undefined | T\[]</code>
 Arguments:
 
 `selection`: <code>[Selection](/api/@dxos/react-client/classes/Selection)\<T, void> | [SelectionResult](/api/@dxos/react-client/classes/SelectionResult)\<T, any> | Falsy</code>
-
-`deps`: <code>readonly any\[]</code>
 :::

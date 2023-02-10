@@ -10,10 +10,10 @@ import { PublicKeyLike } from '@dxos/keys';
 import { useClient } from '../client';
 
 /**
- * Get a specific Space via its key. Returns undefined when no spaceKey is
+ * Get a specific Space using its key. Returns undefined when no spaceKey is
  * available. Requires a ClientProvider somewhere in the parent tree.
  * @returns a Space
- * @param spaceKey the key to look for
+ * @param [spaceKey] the key of the space to look for
  */
 export const useSpace = (spaceKey?: PublicKeyLike) => {
   const spaces = useSpaces();
@@ -53,7 +53,8 @@ export const useOrCreateFirstSpace = () => {
 
 /**
  * Get all Spaces available to current user.
- * Requires ClientContext to be set via ClientProvider.
+ * Requires a ClientProvider somewhere in the parent tree.
+ * @returns an array of Spaces
  */
 export const useSpaces = (): Space[] => {
   const client = useClient();

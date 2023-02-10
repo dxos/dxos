@@ -33,8 +33,11 @@ Type: <code>string</code>
 Type: <code>ModelMeta&lt;any, any, any&gt;</code>
 ### [readOnly]()
 Type: <code>boolean</code>
+<<<<<<< HEAD
 ### [type]()
 Type: <code>undefined | string</code>
+=======
+>>>>>>> 151d945bb (wip docs)
 
 ## Methods
 ### [addToSet(key, value)]()
@@ -140,7 +143,11 @@ Arguments: none
 
 Returns an immutable object.
 
+<<<<<<< HEAD
 Returns: <code>Record&lt;string, any&gt;</code>
+=======
+Returns: <code>DocumentModelState</code>
+>>>>>>> 151d945bb (wip docs)
 
 Arguments: none
 ### [toString()]()
