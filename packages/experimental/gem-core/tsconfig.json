@@ -18,9 +18,6 @@
     },
     {
       "path": "../../common/react-components"
-    },
-    {
-      "path": "../client-testing"
     }
   ]
 }

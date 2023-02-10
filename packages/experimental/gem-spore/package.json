@@ -34,7 +34,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/client-testing": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@types/d3": "^7.1.0",
     "@types/faker": "^5.5.9",

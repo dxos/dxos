@@ -22,9 +22,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../client-testing"
     }
   ],
   "ts-node": {
