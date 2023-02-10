@@ -59,11 +59,11 @@ describe.skip('TextModel', () => {
       new MockFeedWriter()
     );
 
-    const text = faker.lorem.lines(1);
+    const _text = faker.lorem.lines(1);
     // model1.model.insert(text, 0);
 
     const snapshot = model1.createSnapshot();
-    const model2 = modelFactory.createModel<TextModel>(
+    const _model2 = modelFactory.createModel<TextModel>(
       TextModel.meta.type,
       'test',
       snapshot,

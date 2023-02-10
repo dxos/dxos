@@ -8,10 +8,10 @@ import { describe } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 // feedA < feedB
-const feedA = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000001');
-const feedB = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000002');
+const _feedA = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000001');
+const _feedB = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000002');
 
-const createId = () => PublicKey.random().toHex();
+const _createId = () => PublicKey.random().toHex();
 
 describe('StateManager', () => {
   // test('construct readonly and apply mutations', () => {
@@ -251,7 +251,7 @@ describe('StateManager', () => {
   // });
 });
 
-const createMeta = (feedKey: PublicKey, seq: number): MutationMetaWithTimeframe => ({
+const _createMeta = (feedKey: PublicKey, seq: number): MutationMetaWithTimeframe => ({
   feedKey,
   memberKey: feedKey,
   seq,

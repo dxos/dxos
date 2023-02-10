@@ -264,7 +264,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
   }
 
   async close(): Promise<void> {
-    this._ctx.dispose();
+    await this._ctx.dispose();
 
     // NOTE: Must be before entities stream is closed so that confirmations can come in.
     // TODO(dmaretskyi): Extract as db.flush()?.
