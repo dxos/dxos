@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/client-testing/src",
+  "sourceRoot": "packages/deprecated/client-testing/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/experimental/client-testing/src/index.ts",
-        "outputPath": "packages/experimental/client-testing/dist/types",
-        "tsConfig": "packages/experimental/client-testing/tsconfig.json"
+        "main": "packages/deprecated/client-testing/src/index.ts",
+        "outputPath": "packages/deprecated/client-testing/dist/types",
+        "tsConfig": "packages/deprecated/client-testing/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/client-testing/src/index.ts"
+          "packages/deprecated/client-testing/src/index.ts"
         ],
-        "outputPath": "packages/experimental/client-testing/dist/lib"
+        "outputPath": "packages/deprecated/client-testing/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/client-testing/**/*.{ts,js}"
+          "packages/deprecated/client-testing/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -43,14 +43,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/client-testing",
-        "outputPath": "tmp/mocha/packages/experimental/client-testing",
-        "resultsPath": "test-results/packages/experimental/client-testing",
+        "coveragePath": "coverage/packages/deprecated/client-testing",
+        "outputPath": "tmp/mocha/packages/deprecated/client-testing",
+        "resultsPath": "test-results/packages/deprecated/client-testing",
         "testPatterns": [
-          "packages/experimental/client-testing/src/**/*.test.{ts,js}"
+          "packages/deprecated/client-testing/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/experimental/client-testing/src/**/*"
+          "packages/deprecated/client-testing/src/**/*"
         ]
       },
       "outputs": [

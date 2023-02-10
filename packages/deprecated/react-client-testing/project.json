@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/react-client-testing/src",
+  "sourceRoot": "packages/deprecated/react-client-testing/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/experimental/react-client-testing/src/index.ts",
-        "outputPath": "packages/experimental/react-client-testing/dist/types",
-        "tsConfig": "packages/experimental/react-client-testing/tsconfig.json"
+        "main": "packages/deprecated/react-client-testing/src/index.ts",
+        "outputPath": "packages/deprecated/react-client-testing/dist/types",
+        "tsConfig": "packages/deprecated/react-client-testing/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/react-client-testing/src/index.ts"
+          "packages/deprecated/react-client-testing/src/index.ts"
         ],
-        "outputPath": "packages/experimental/react-client-testing/dist/lib"
+        "outputPath": "packages/deprecated/react-client-testing/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/react-client-testing/**/*.{ts,tsx,js,jsx}"
+          "packages/deprecated/react-client-testing/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
