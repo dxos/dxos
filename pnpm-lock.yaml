@@ -1405,6 +1405,7 @@ importers:
       '@types/lodash.merge': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@types/react-table': ^7.7.14
       '@vitejs/plugin-react': ^3.0.1
       alea: ^1.0.1
       autoprefixer: ^10.4.12
@@ -1420,6 +1421,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-i18next: ^11.18.6
+      react-table: ^7.8.0
       storybook-dark-mode: ^1.1.2
       tailwind-merge: ^1.8.0
       tailwindcss: ^3.1.8
@@ -1461,6 +1463,7 @@ importers:
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
+      react-table: 7.8.0_react@18.2.0
       tailwind-merge: 1.8.0
       tailwindcss: 3.1.8_postcss@8.4.18
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
@@ -1470,6 +1473,7 @@ importers:
       '@types/lodash.merge': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@types/react-table': 7.7.14
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
       esbuild: 0.16.14
       esbuild-style-plugin: 1.6.1
@@ -2571,7 +2575,6 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
-      '@dxos/chess-app': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
@@ -2600,7 +2603,6 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
-      '@monaco-editor/react': ^4.4.6
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -2608,8 +2610,6 @@ importers:
       '@types/react-table': ^7.7.14
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
-      faker: ^5.5.3
-      monaco-editor: ^0.25.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       react: ^18.2.0
@@ -2633,7 +2633,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/document-model': link:../../core/echo/document-model
       '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/kai': link:../../experimental/kai
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
@@ -2659,12 +2658,11 @@ importers:
       react-vis: 1.11.12_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
-      '@dxos/chess-app': link:../../experimental/chess-app
+      '@dxos/kai': link:../../experimental/kai
       '@dxos/mosaic': link:../../experimental/mosaic
       '@dxos/plexus': link:../../experimental/plexus
       '@dxos/react-composer': link:../../apps/patterns/react-composer
       '@dxos/react-ui': link:../../apps/patterns/react-ui
-      '@monaco-editor/react': 4.4.6_mxtbfgz57rpc6pjn6jsomqlbdm
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -2672,8 +2670,6 @@ importers:
       '@types/react-table': 7.7.14
       '@types/react-vis': 1.11.11
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
-      faker: 5.5.3
-      monaco-editor: 0.25.2
       postcss: 8.4.21
       tailwindcss: 3.1.8_postcss@8.4.21
       typescript: 4.8.4
@@ -14333,7 +14329,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -34369,7 +34365,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
