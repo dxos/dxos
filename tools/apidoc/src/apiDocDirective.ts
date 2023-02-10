@@ -66,7 +66,8 @@ export namespace Remark {
           return tree;
         }
         let next: string | undefined;
-        while ((next = restMembers.shift())) {
+        const restMembers2 = [...restMembers];
+        while ((next = restMembers2.shift())) {
           symbol = findReflection(symbol as any, (node) => node.name === next);
         }
         if (!symbol) {
