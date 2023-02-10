@@ -141,6 +141,10 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot')
   };
 
+  get type() {
+    return this._getState().type;
+  }
+
   /**
    * Returns an immutable object.
    */

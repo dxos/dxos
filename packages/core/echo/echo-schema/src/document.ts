@@ -71,7 +71,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 
   get [type](): string | null {
-    return this[base]?._schemaType?.name ?? this._item?.model.toObject().type ?? null;
+    return this[base]?._schemaType?.name ?? this._item?.model.type ?? null;
   }
 
   // TODO(burdon): Method on Document vs EchoObject?
