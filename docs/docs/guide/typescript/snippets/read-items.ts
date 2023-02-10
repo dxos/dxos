@@ -15,4 +15,4 @@ const { value: spaces } = client.echo.querySpaces();
 const space = spaces[0];
 
 // query items by selecting them
-const selection = space.database.select({ type });
+const selection = space.experimental.db.query({ /* ... */ });

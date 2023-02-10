@@ -23,22 +23,3 @@ const space = spaces[0];
 // query items by selecting them
 const selection = space.database.select({ type });
 ```
-
-### Filtering data
-
-```ts file=./snippets/read-items-selections.ts#L17-
-// filter selections by chaining
-const selection = space.database
-  .select({ type })
-  .filter((item) => !item.deleted);
-```
-
-### Selecting children
-
-```ts file=./snippets/read-items-selections-children.ts#L17-
-// filter selections by chaining
-const selection = space.database
-  .select({ type })
-  .children()
-  .filter((item) => !item.deleted);
-```

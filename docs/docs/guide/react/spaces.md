@@ -22,6 +22,10 @@ Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
 Arguments: none
 :::
 
+```tsx file=./snippets/create-spaces.tsx
+
+```
+
 ## Obtaining a Space reactively
 
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
@@ -64,7 +68,7 @@ Arguments: none
 
 ### Example
 
-```tsx file=./snippets/use-spaces.tsx#L5-
+```tsx{27,30,34} file=./snippets/use-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Space } from '@dxos/client';
