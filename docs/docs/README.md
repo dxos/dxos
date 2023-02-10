@@ -25,3 +25,7 @@ features:
     details: UI components to create real-time data-driven PWA applications.
 footer: MIT Licensed | Copyright © DXOS.org
 ---
+## todo
+- indentation of headings
+- X logo is too bright in the app samples
+- the windows in the demo are too close together (not obvious these are two sep windows)

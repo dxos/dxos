@@ -1,9 +1,9 @@
 ---
 order: 2
-title: Get started
+title: Getting started
 ---
 
-# Get started
+# Getting started
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. Learn about the [mission](why).
 
@@ -13,7 +13,8 @@ DXOS is the developer platform for **collaborative**, **offline-first**, **priva
 *   Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`
 *   Starting a [KUBE](#starting-a-kube) to host the app
 *   [Deploying](#deploying-your-app-to-a-kube) the app to KUBE
-    :::
+
+:::
 
 ## Create an app
 
@@ -49,7 +50,7 @@ You should be able to open two windows and see reactive updates like in the vide
 ::: info Why this is cool:
 
 *   State is being reactively shared between all instances of the app running on the same machine.
-*   Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. Learn more about the [HALO vault topology](echo/README#local-vault-topology).
+*   Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
 *   The app running on `localhost` subscribes to the data through a local shared memory connection with `halo.dxos.org` which works offline.
 *   When remote peers join the same [space](./glossary#space), their changes are given to running apps through `halo` in the same way.
 *   Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
@@ -57,7 +58,7 @@ You should be able to open two windows and see reactive updates like in the vide
 *   Everything works offline.
 *   Real-time collaboration is possible when online.
 *   There are **no servers** or [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping) to worry about.
-    :::
+:::
 
 Now you have an application that does all the above. It relies on [ECHO](./echo) to perform state consensus and [HALO](./halo) for identity.
 

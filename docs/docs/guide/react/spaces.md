@@ -22,8 +22,32 @@ Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
 Arguments: none
 :::
 
-```tsx file=./snippets/create-spaces.tsx
+```tsx{14} file=./snippets/create-spaces.tsx
+//
+// Copyright 2022 DXOS.org
+//
 
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { ClientProvider, useClient } from '@dxos/react-client';
+
+export const App = () => {
+  const client = useClient();
+  return (
+    <button
+      onClick={async () => {
+        const space = await client.echo.createSpace();
+      }}
+    ></button>
+  );
+};
+
+const root = createRoot(document.getElementById('root')!);
+root.render(
+  <ClientProvider>
+    <App />
+  </ClientProvider>
+);
 ```
 
 ## Obtaining a Space reactively
@@ -125,10 +149,11 @@ To implement invitation flows in your own way, see the TypeScript API about [joi
 :::
 
 The pre-built space join flow is contained in the `SpacesPage` component for `react`. This is designed to be a panel or full-screen page that:
-- lists spaces
-- allows joining spaces with an invite code
-- allows creating spaces
-- supports navigating to a space by clicking it
+
+*   lists spaces
+*   allows joining spaces with an invite code
+*   allows creating spaces
+*   supports navigating to a space by clicking it
 
 ```tsx file=./snippets/spaces-flows.tsx#L5-
 import React from 'react';
@@ -137,10 +162,10 @@ import { ClientProvider } from '@dxos/react-client';
 import { SpacesPage } from '@dxos/react-appkit';
 
 export const App = () => {
-  // typically this would be on a specific route like /spaces
+  // typically you would put this on a specific route like /spaces
   return (
     <SpacesPage
-      spacePath="/spaces/:space"
+      spacePath="/spaces/:space" // how to navigate to a specific space
       onSpaceCreate={() => {
         // handle the event that the user clicks "create space"
         // this is where you can initialize the space with new objects
