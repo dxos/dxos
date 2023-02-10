@@ -36,6 +36,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/client-testing"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -43,9 +46,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../client-testing"
     }
   ]
 }

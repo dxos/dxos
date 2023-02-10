@@ -26,7 +26,13 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../deprecated/react-components-deprecated"
+      "path": "../../experimental/gem-core"
+    },
+    {
+      "path": "../../experimental/gem-spore"
+    },
+    {
+      "path": "../../experimental/react-client-testing"
     },
     {
       "path": "../../sdk/client"
@@ -35,13 +41,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../gem-core"
-    },
-    {
-      "path": "../gem-spore"
-    },
-    {
-      "path": "../react-client-testing"
+      "path": "../react-components-deprecated"
     }
   ]
 }
