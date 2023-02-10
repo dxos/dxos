@@ -15,15 +15,27 @@ ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a p
 *   Collaboration on key-value objects, bodies of text, and other "custom data models".
 *   Supports offline writes and conflict resolution when peers rejoin the network
 
-### Spaces
+## Spaces
 
-Data is replicated within containers called `spaces`. A `space` is an instance of an ECHO database which can be replicated by a number of peers.
+Spaces are units of sharing and access control in ECHO. Roughly equivalent to a "collection" in a document store, A `space` is an instance of an ECHO database which can be replicated by a number of peers. A given peer is typically a part of many spaces at any given time.
 
-### Objects
+There are several steps to establishing a space between peers:
+
+1.  <span class="peer-a">**Peer A**</span> listens on the peer network for peers intereseted in a specific [invite code](glossary#invitation-code) it generated
+2.  <span class="peer-b">**Peer B**</span> obtains the [invite code](glossary#invitation-code) and locates the listening <span class="peer-a">**Peer A**</span> via the [signaling network](glossary#signaling-service)
+3.  <span class="peer-a">**Peer A**</span> and B establish a secure connection via [Diffie Hellmann](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) key exchange
+4.  <span class="peer-a">**Peer A**</span> generates an [authorization code](glossary#authorization-code)
+5.  Finally, <span class="peer-b">**Peer B**</span> must provide the [authorization code](glossary#authorization-code) to <span class="peer-a">**Peer A**</span> over the connection just established to verify the security of the channel
+
+:::tip
+If you're using `react`, DXOS provides a simple [UI flow](react) that implements generating and accepting invitations to spaces.
+:::
+
+## Objects
 
 Units of data are referred to as `objects` (like documents or rows in other databases). `Objects` always belong to a space. Objects can have fields with values, and strong relationships to other objects to form trees or graphs.
 
-### Glossary
+## Glossary
 
 See the [glossary](glossary) for definitions of other terms you'll find in this guide.
 
@@ -50,3 +62,7 @@ A service worker and the CRDT-based architecture of ECHO enable both offline and
 ![HALO Vault Topology Diagram](./images/topology.drawio.svg)
 
 This means that when apps request the user's identity (ask to log in), they are in fact obtaining a secure identifier from the local HALO application directly, without making any network calls. Any reads and writes end up storing data in a database owned by the `halo.dxos.com` application, which serves as an identity wallet and data vault where specific devices or applications can be revoked from accessing user data at any time.
+
+## Next steps
+- If using `react` see the [React guide](../react/)
+- For everything else follow the [TypeScript guide](../typescript/)

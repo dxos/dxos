@@ -1,7 +1,9 @@
 ---
-title: Spaces
 order: 3
 ---
+# Spaces
+
+A `space` is an instance of an ECHO database which can be replicated by a number of peers. 
 
 This section describes how to create, join, and invite peers to [ECHO Spaces](../platform/#spaces).
 
