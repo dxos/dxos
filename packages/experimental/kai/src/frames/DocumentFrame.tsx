@@ -23,7 +23,7 @@ export const DocumentFrame = withReactor(() => {
   const fragment = document?.content.doc!.getXmlFragment('content');
 
   return (
-    <div className='flex flex-1 overflow-hidden justify-center bg-gray-300'>
+    <div className='flex flex-1 overflow-hidden justify-center bg-panel-bg'>
       <div className='flex flex-col overflow-hidden w-full lg:w-[800px] bg-white shadow-lg'>
         <div className='flex p-3'>
           <Selector

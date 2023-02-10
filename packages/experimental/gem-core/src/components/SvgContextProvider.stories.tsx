@@ -5,15 +5,10 @@
 import { css } from '@emotion/css';
 import React from 'react';
 
-import {
-  FullScreen,
-  SVGContextProvider,
-  defaultGridStyles,
-  useGrid,
-  useSvgContext,
-  useZoom,
-  createSvgContext
-} from '../src';
+import { useGrid, useSvgContext, useZoom, createSvgContext } from '../hooks';
+import { defaultGridStyles } from '../styles';
+import { FullScreen } from './FullScreen';
+import { SVGContextProvider } from './SVGContextProvider';
 
 // Pros
 // - Natural layout and control of DOM (incl. SVG element).

@@ -7,6 +7,7 @@ import React, { ReactNode } from 'react';
 /**
  * Fullscreen container.
  */
+// TODO(burdon): Replace with tailwind.
 export const FullScreen = ({
   children,
   style,

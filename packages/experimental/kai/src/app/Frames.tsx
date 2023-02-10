@@ -33,7 +33,7 @@ import {
   ChessFrame,
   StackFrame,
   DocumentFrame,
-  BraneFrame,
+  ExplorerFrame,
   FileFrame,
   KanbanFrame,
   MapFrame,
@@ -131,7 +131,7 @@ export const frames: FrameDef[] = [
     title: 'Explorer',
     description: 'Graphical User Interface and Data Explorer (GUIDE).',
     Icon: Graph,
-    Component: BraneFrame
+    Component: ExplorerFrame
   },
   {
     id: FrameID.MAPS,
@@ -172,7 +172,7 @@ export const FrameSelector: FC = () => {
   return (
     <div
       className={mx(
-        'flex flex-col-reverse bg-orange-500',
+        'flex flex-col-reverse bg-appbar-toolbar',
         'fixed inline-end-0 block-start-appbar bs-toolbar transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
         isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
       )}

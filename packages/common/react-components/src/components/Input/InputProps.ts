@@ -8,6 +8,8 @@ import { MessageValence } from '../../props';
 
 export type InputSize = 'md' | 'lg' | 'pin' | 'textarea';
 
+export type InputVariant = 'default' | 'subdued';
+
 interface SharedTextInputProps
   extends Pick<ComponentPropsWithRef<'input'>, 'value' | 'defaultValue' | 'onChange' | 'disabled' | 'placeholder'> {
   label: ReactNode;
@@ -18,6 +20,7 @@ interface SharedTextInputProps
   validationMessage?: ReactNode;
   validationValence?: MessageValence;
   length?: number;
+  variant?: InputVariant;
 }
 
 interface SharedSlots {

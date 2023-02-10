@@ -18,7 +18,7 @@ export const MemberList: FC<{ identityKey: PublicKey; members: SpaceMember[] }> 
         <div key={member.identityKey.toHex()} className='flex overflow-hidden mb-1 items-center'>
           <div className='mr-3'>
             {member.identityKey.equals(identityKey) ? (
-              <UserCircle className={mx(getSize(6), 'text-orange-500')} />
+              <UserCircle className={mx(getSize(6), 'text-selection-text')} />
             ) : member.presence === SpaceMember.PresenceState.ONLINE ? (
               <Smiley className={mx(getSize(6), 'text-green-500')} />
             ) : (

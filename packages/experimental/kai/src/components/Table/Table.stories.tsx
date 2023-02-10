@@ -9,7 +9,7 @@ import { EchoObject } from '@dxos/echo-schema';
 
 import '@dxosTheme';
 
-import { Contact } from '../proto';
+import { Contact } from '../../proto';
 import { Table } from './Table';
 
 export default {
