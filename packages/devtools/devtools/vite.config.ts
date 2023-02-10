@@ -24,6 +24,7 @@ export default defineConfig({
     force: true,
     include: [
       '@dxos/config',
+      '@dxos/gem-spore/testing',
       '@dxos/keys',
       '@dxos/log',
       '@dxos/mosaic',
@@ -51,7 +52,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           highlighter: ['react-syntax-highlighter'],
-          vendor: ['react', 'react-router-dom', 'react-dom'],
+          vendor: ['react', 'react-router-dom', 'react-dom']
         }
       }
     }
