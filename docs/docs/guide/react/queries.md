@@ -5,7 +5,7 @@ order: 4
 
 # Queries
 
-The simplest way to access data in `ECHO` from `react` is by using a `useQuery` on a `space`. This will return generic objects which can be mutated like regular JavaScript objects. [Type-safety](#type-safe-queries) can be added with the declaration of a schema.
+The simplest way to access data in [`ECHO`](../platform) from `react` is by using a [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) hook on a [`space`](../glossary#space). This will return generic objects which can be [mutated](./mutations) like regular JavaScript objects. `useQuery<T>` can also return strongly typed results as will be shown [below](#type-safe-queries).
 
 ## Untyped queries
 
@@ -19,18 +19,20 @@ import {
   useOrCreateFirstSpace,
   useIdentity,
   useQuery,
-  id,
+  id
 } from '@dxos/react-client';
 
 export const App = () => {
   useIdentity({ login: true });
   const space = useOrCreateFirstSpace();
   const tasks = useQuery(space, { type: 'task' });
-  return <>
-    {tasks?.map((item) => (
-      <div key={item[id]}>{item.title}</div>
-    ))}
-  </>;
+  return (
+    <>
+      {tasks?.map((item) => (
+        <div key={item[id]}>{item.title}</div>
+      ))}
+    </>
+  );
 };
 
 const root = createRoot(document.getElementById('root')!);
@@ -44,6 +46,7 @@ root.render(
 The API definition of `useQuery` is below. It returns a generic `Document` type which supports the ability to set and read arbitrary keys and values. See [below](#type-safe-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
+
 ### [useQuery(\[space\], \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L18)
 
 Create subscription.
@@ -59,7 +62,13 @@ Arguments:
 
 ## Type-safe Queries
 
-It's possible to obtain strongly typed objects from `useQuery` if we provide a declaration of all the relevant types in a `schema`.
+It's possible to obtain strongly typed objects from `useQuery<T>` if we provide a type argument `T`.
+
+Because `useQuery` returns tracked ECHO objects, their type must descend from [`DocumentBase`](/api/@dxos/client/classes/DocumentBase). DXOS provides a tool to generate these types from a schema definition file.
+
+> There are many benefits to expressing the type schema of an application in a language-neutral and inter-operable way. One of them is the ability to generate type-safe data layer code, which makes development faster and safer.
+
+[`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
 Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):
 
@@ -82,14 +91,23 @@ message TaskList {
   repeated Task tasks = 2;
 }
 ```
-Note the directives `option (object) = true;` which instruct the framework to generate TypeScript classes from the marked `messages`.
 
-Using a tool called `dxtype` from `@dxos/echo-schema` we can generate corresponding TypeScript types for use with DXOS Client.
+Using a tool called `dxtype` from `@dxos/echo-schema` we can generate corresponding classes for use with DXOS Client.
 
 ```bash
 dxtype <input protobuf file> <output typescript file>
 ```
 
-::: info Tip
-If you're using one of the DXOS [application templates](../cli/app-templates), this is pre-configured as a `prebuild` script for you.
+::: note
+Note the directives `option (object) = true;` which instruct the framework to generate TypeScript classes from the marked `messages`.
 :::
+
+::: info Tip
+If you're using one of the DXOS [application templates](../cli/app-templates), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
+:::
+
+The output is a typescript file that looks like this:
+
+```tsx file=./snippets/schema.ts
+
+```
