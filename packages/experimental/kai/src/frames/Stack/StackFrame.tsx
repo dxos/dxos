@@ -43,7 +43,7 @@ export const StackFrame: FC = () => {
     <div
       ref={ref}
       className={mx(
-        'flex flex-col h-full overflow-hidden gap-0',
+        'flex flex-col h-full overflow-x-hidden overflow-y-scroll gap-0',
         'p-0', // Full width for mobile.
         'md:p-0 md:gap-0 md:grid md:overflow-hidden md:grid-cols-2 md:grid-rows-2',
         'lg:p-0 lg:gap-0 lg:grid lg:overflow-hidden lg:grid-cols-3 lg:grid-rows-2'
