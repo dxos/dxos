@@ -57,6 +57,7 @@ export interface EditableListProps {
   id: string;
   labelId: string;
   completable?: boolean;
+  variant?: 'ordered-draggable' | 'unordered';
   onClickAdd?: () => void;
   defaultNextItemTitle?: string;
   nextItemTitle?: string;
@@ -117,6 +118,7 @@ export const EditableList = ({
   children,
   labelId,
   completable,
+  variant = 'ordered-draggable',
   onClickAdd,
   nextItemTitle,
   defaultNextItemTitle,
@@ -140,7 +142,7 @@ export const EditableList = ({
     <div role='none' {...slots.root} className={mx('contents', slots.root?.className)}>
       <List
         labelId={labelId}
-        variant='ordered-draggable'
+        variant={variant}
         selectable={completable}
         onDragEnd={handleDragEnd}
         listItemIds={itemIdOrder ?? []}
