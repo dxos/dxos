@@ -16,11 +16,11 @@ import { Button, List, ListItemButton } from '../../components';
 import { useFileDownload, useIpfsClient, useSpace } from '../../hooks';
 import { File } from '../../proto';
 
-const images = ['JPG', 'PNG', 'GIF'];
+const images = ['jpg', 'png', 'gif'];
 
 // TODO(burdon): Wildcard?
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
-const fileTypes = [...images, 'TXT', 'MD', 'PDF', 'ZIP'];
+const fileTypes = [...images, 'txt', 'md', 'pdf', 'zip'];
 
 /**
  * File/content preview.

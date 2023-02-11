@@ -20,8 +20,16 @@ import {
   SpacePage
 } from '../pages';
 
+export enum Section {
+  REGISTRY = 'registry',
+  SETTINGS = 'settings'
+}
+
+// TODO(burdon): Use these below.
+export enum Page {}
+
 export const createSpacePath = (spaceKey: PublicKey, frame?: string) =>
-  `/${spaceKey.truncate()}` + (frame ? `/${frame}` : '');
+  `/${spaceKey.truncate()}` + (frame ? `/frame/${frame}` : '');
 
 export const createInvitationPath = (invitation: Invitation) =>
   `/space/join?invitation=${InvitationEncoder.encode(invitation)}`;
@@ -69,7 +77,11 @@ export const useAppRoutes = () =>
           element: <SpacePage />,
           children: [
             {
-              path: '/:spaceKey/:frame',
+              path: '/:spaceKey/:section',
+              element: <SpacePage />
+            },
+            {
+              path: '/:spaceKey/:section/:frame',
               element: <SpacePage />
             }
           ]
