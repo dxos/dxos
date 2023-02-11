@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
+import React, { Context, Dispatch, FC, ReactNode, SetStateAction, createContext, useContext, useState } from 'react';
 
 export enum FrameID {
   STACK = 'stack',
