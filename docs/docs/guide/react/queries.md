@@ -5,11 +5,11 @@ order: 4
 
 # Queries
 
-The simplest way to access data in `ECHO` from `react` is by using a `useQuery` on a `space`.
+The simplest way to access data in `ECHO` from `react` is by using a `useQuery` on a `space`. This will return generic objects which can be mutated like regular JavaScript objects. [Type-safety](#type-safe-queries) can be added with the declaration of a schema.
 
 ## Untyped queries
 
-The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) from package `@dxos/react-client` is the [`space`](../glossary#space) and the second is an optional filter which matches all objects which have all the keys and values specified in the filter.
+The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) from package `@dxos/react-client` is the [`space`](../glossary#space) and the second is an optional filter which matches all objects which have all the keys and values specified in the filter. The return type is an iterable array of `Document` objects.
 
 ```tsx file=./snippets/use-query.tsx#L5-
 import React from 'react';
@@ -61,3 +61,18 @@ Returns: <code>[Document](/api/@dxos/react-client/classes/Document)\[]</code>
 ## Type-safe Queries
 
 It's possible to obtain strongly typed objects from `useQuery` if we provide a declaration of all the relevant types in a `schema`.
+
+Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):
+
+```proto file=./snippets/schema.proto
+```
+
+Using a tool called `dxtype` from `@dxos/echo-schema` we can generate corresponding TypeScript types for use with DXOS Client.
+
+```bash
+dxtype <input protobuf file> <output typescript file>
+```
+
+::: info Tip
+If you're using one of the DXOS [application templates](../cli/app-templates), this is pre-configured as a `prebuild` script for you.
+:::
