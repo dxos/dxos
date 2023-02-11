@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { DotsThree, Plus, X } from 'phosphor-react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
@@ -10,7 +9,6 @@ import {
   List,
   ListItem,
   DragEndEvent,
-  arrayMove,
   ListItemHeading,
   Input,
   ListItemEndcap,
@@ -65,7 +63,7 @@ export interface EditableListProps {
   onChangeNextItemTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
   defaultItemIdOrder?: string[];
   itemIdOrder?: string[];
-  onChangeItemIdOrder?: (itemIdOrder: string[]) => void;
+  onMoveItem?: (oldIndex: number, newIndex: number) => void;
   children?: ReactNode;
   slots?: EditableListSlots;
 }
@@ -123,42 +121,29 @@ export const EditableList = ({
   nextItemTitle,
   defaultNextItemTitle,
   onChangeNextItemTitle,
-  defaultItemIdOrder,
   itemIdOrder,
-  onChangeItemIdOrder,
+  onMoveItem,
   slots = {}
 }: EditableListProps) => {
-  const [listItemIds, setListItemIds] = useControllableState({
-    prop: itemIdOrder,
-    defaultProp: defaultItemIdOrder,
-    onChange: onChangeItemIdOrder
-  });
   const { t } = useTranslation('appkit');
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
-      setListItemIds((itemIds) => {
-        if (itemIds && over?.id) {
-          const oldIndex = itemIds.findIndex((id) => id === active.id);
-          const newIndex = itemIds.findIndex((id) => id === over.id);
-          return arrayMove(itemIds, oldIndex, newIndex);
-        } else {
-          return itemIds;
-        }
-      });
+    if (itemIdOrder && over?.id && active.id !== over?.id) {
+      const oldIndex = itemIdOrder.findIndex((id) => id === active.id);
+      const newIndex = itemIdOrder.findIndex((id) => id === over.id);
+      onMoveItem?.(oldIndex, newIndex);
     }
   };
 
   return (
     <div role='none' {...slots.root} className={mx('contents', slots.root?.className)}>
       <List
-        // ref={forwardedRef}
         labelId={labelId}
         variant='ordered-draggable'
         selectable={completable}
         onDragEnd={handleDragEnd}
-        listItemIds={listItemIds ?? []}
+        listItemIds={itemIdOrder ?? []}
         slots={slots.list}
       >
         {children}
@@ -168,8 +153,8 @@ export const EditableList = ({
         <ListItemEndcap className='invisible' />
         <Input
           variant='subdued'
-          label='Add new item'
-          placeholder='Add new item'
+          label={t('new list item input label')}
+          placeholder={t('new list item input placeholder')}
           {...{
             value: nextItemTitle,
             defaultValue: defaultNextItemTitle,

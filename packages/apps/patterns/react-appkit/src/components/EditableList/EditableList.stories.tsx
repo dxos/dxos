@@ -4,7 +4,7 @@
 
 import React, { ChangeEvent, useCallback, useState, KeyboardEvent, ComponentPropsWithoutRef } from 'react';
 
-import { ThemeProvider, useId, randomString } from '@dxos/react-components';
+import { ThemeProvider, useId, randomString, arrayMove } from '@dxos/react-components';
 
 import { appkitTranslations } from '../../translations';
 import { EditableList, EditableListItem, useEditableListKeyboardInteractions } from './EditableList';
@@ -82,9 +82,7 @@ export const Default = {
           completable
           onClickAdd={addItem}
           itemIdOrder={itemOrder}
-          onChangeItemIdOrder={(nextOrder: string[]) => {
-            setItemOrder(nextOrder);
-          }}
+          onMoveItem={(oldIndex, newIndex) => setItemOrder(arrayMove(itemOrder, oldIndex, newIndex))}
           nextItemTitle={nextItemTitle}
           onChangeNextItemTitle={({ target: { value } }) => setNextItemTitle(value)}
           slots={{

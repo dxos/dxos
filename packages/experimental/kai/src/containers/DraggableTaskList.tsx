@@ -2,20 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DndContext, useDndContext } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { SortableContext, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { DotsSixVertical } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
+import { EditableList, EditableListProps } from '@dxos/react-appkit';
 import { withReactor } from '@dxos/react-client';
+import { randomString } from '@dxos/react-components';
 
-import { Button } from '../components';
 import { useSpace } from '../hooks';
 import { Task } from '../proto';
-import { TaskItem, NewTaskItem } from './TaskList';
+import { TaskItem } from './TaskList';
 
 /**
  * Sortable task list.
@@ -40,10 +36,8 @@ export const DraggableTaskList: FC<{
     }
   };
 
-  const handleDragEnd = ({ active, over }: any) => {
-    if (onDrag && over?.id && active.id !== over?.id) {
-      const i1 = tasks.findIndex((task) => task[id] === active.id);
-      const i2 = tasks.findIndex((task) => task[id] === over.id);
+  const handleDragEnd = (i1: number, i2: number) => {
+    if (onDrag) {
       onDrag(i1, i2);
     }
   };
@@ -61,42 +55,46 @@ export const DraggableTaskList: FC<{
 
   return (
     <div>
-      <DndContext onDragEnd={onDrag ? handleDragEnd : undefined} modifiers={[restrictToVerticalAxis]}>
-        <SortableContext items={tasks.map((task) => task[id])}>
-          <DraggableTaskListContainer tasks={tasks} newTask={newTask} onCreate={handleCreateTask} />
-        </SortableContext>
-      </DndContext>
+      <DraggableTaskListContainer
+        items={tasks.map((task) => task[id])}
+        onMoveItem={onDrag ? handleDragEnd : undefined}
+        tasks={tasks}
+        newTask={newTask}
+        onCreate={handleCreateTask}
+      />
     </div>
   );
 });
 
 export const DraggableTaskListContainer: FC<{
   tasks: Task[];
+  items: string[];
+  onMoveItem?: EditableListProps['onMoveItem'];
   newTask?: Task;
   onCreate?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-}> = withReactor(({ tasks, newTask, onCreate, onDelete }) => {
-  const { active } = useDndContext();
-
-  // TODO(burdon): Order isn't reliable after dragging.
+}> = withReactor(({ tasks, newTask, onCreate, onDelete, items, onMoveItem }) => {
+  const [newTaskTitle, setNewTaskTitle] = useState('');
   return (
-    <div>
-      {tasks.map((task, index) => (
-        <DraggableTaskItem
-          key={task[id]}
-          task={task}
-          onDelete={onDelete}
-          orderIndex={index}
-          isLast={index === tasks.length - 1}
-        />
-      ))}
-
-      {newTask && (
-        <div className='flex ml-7' style={active ? { visibility: 'hidden' } : {}}>
-          <NewTaskItem task={newTask} onEnter={onCreate} />
-        </div>
-      )}
-    </div>
+    <>
+      <EditableList
+        completable
+        id={id in tasks ? (tasks as unknown as { [id]: string })[id] : randomString()}
+        labelId='omitted'
+        onMoveItem={onMoveItem}
+        itemIdOrder={items}
+        nextItemTitle={newTaskTitle}
+        onChangeNextItemTitle={({ target: { value } }) => setNewTaskTitle(value)}
+        onClickAdd={() => {
+          onCreate?.(new Task({ title: newTaskTitle ?? '' }));
+          setNewTaskTitle('');
+        }}
+      >
+        {tasks.map((task) => (
+          <DraggableTaskItem key={task[id]} task={task} onDelete={onDelete} />
+        ))}
+      </EditableList>
+    </>
   );
 });
 
@@ -104,24 +102,7 @@ export const DraggableTaskItem: FC<{
   task: Task;
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
-  orderIndex: number;
-  isLast?: boolean;
-}> = withReactor(({ task, onEnter, onDelete, orderIndex, isLast }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task[id] });
-
+}> = withReactor(({ task, onEnter, onDelete }) => {
   // TODO(burdon): Dragging doesn't handle variable height items?
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition
-  };
-
-  return (
-    <div ref={setNodeRef} className='flex flex-1 items-center ml-3' style={style}>
-      <Button className='w-4' {...listeners} {...attributes}>
-        <DotsSixVertical />
-      </Button>
-
-      <TaskItem {...{ task, onDelete, onEnter, orderIndex, isLast }} />
-    </div>
-  );
+  return <TaskItem {...{ task, onDelete, onEnter }} />;
 });

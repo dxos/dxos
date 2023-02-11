@@ -2,16 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Spinner, XCircle } from 'phosphor-react';
-import React, { FC, KeyboardEvent, useCallback, useEffect, useState } from 'react';
+import { Spinner } from 'phosphor-react';
+import React, { FC, useEffect, useState } from 'react';
 
-import { base, deleted, id } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
+import { id } from '@dxos/echo-schema';
+import { EditableListItem } from '@dxos/react-appkit';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { mx, Input, List } from '@dxos/react-components';
 
-import { Button, Input, CardRow } from '../components';
-import { useAppState, useSpace } from '../hooks';
+import { useSpace } from '../hooks';
 import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
@@ -67,7 +66,7 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; fullWidth?:
       <div
         className={mx('flex flex-col overflow-y-auto bg-white', fullWidth ? 'w-full' : 'w-screen is-full md:is-column')}
       >
-        <div className='mt-1'>
+        <List labelId='excluded' variant='unordered'>
           {tasks?.map((task, index) => (
             <TaskItem
               key={task[id]}
@@ -75,11 +74,9 @@ export const TaskList: FC<{ completed?: boolean; readonly?: boolean; fullWidth?:
               onSave={handleSave}
               onDelete={readonly ? undefined : handleDeleteTask}
               readonly={readonly}
-              orderIndex={index}
-              isLast={index === tasks.length - 1}
             />
           ))}
-        </div>
+        </List>
 
         {/* TODO(burdon): Keep pinned to bottom on create. */}
         {newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />}
@@ -98,40 +95,27 @@ export const NewTaskItem: FC<{
   onEnter?: (task: Task) => void;
   lastIndex?: number;
 }> = ({ task, onEnter, lastIndex }) => {
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<Element>) => {
-      if (event.key === 'PageUp') {
-        event.preventDefault();
-        (document.querySelector(`input[data-orderindex="${lastIndex ?? 0}"]`) as HTMLElement | undefined)?.focus();
-      }
-    },
-    [lastIndex]
-  );
-
   return (
-    <CardRow
-      sidebar={<input className='invisible' type='checkbox' disabled />}
-      header={
-        <Input
-          id='new-task'
-          className='w-full p-1'
-          spellCheck={false}
-          value={task.title}
-          placeholder='Enter text'
-          onKeyDown={onKeyDown}
-          onEnter={(value) => {
-            if (value.length) {
-              task.title = value;
+    <Input
+      label='new task'
+      slots={{
+        input: {
+          id: 'new-task',
+          spellCheck: false,
+          onKeyDown: ({ key }) => {
+            if (key === 'Enter' && task.title.length) {
               onEnter?.(task);
               return true;
             }
-          }}
-          onChange={(value) => {
-            task.title = value;
-          }}
-        />
-      }
-      action={<div />}
+          }
+        },
+        root: { className: 'w-full p-1' }
+      }}
+      defaultValue={task.title}
+      placeholder='Enter text'
+      onChange={({ target: { value } }) => {
+        task.title = value;
+      }}
     />
   );
 };
@@ -143,111 +127,25 @@ export const TaskItem: FC<{
   onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
-  isLast?: boolean;
-  orderIndex: number;
 }> = withReactor(
-  ({ task, readonly, showAssigned, onEnter, onDelete, onSave, orderIndex, isLast }) => {
-    const { debug } = useAppState();
+  ({ task, readonly, showAssigned, onEnter, onDelete, onSave }) => {
     useReactorContext({
       onChange: () => {
         onSave?.(task);
       }
     });
 
-    const onKeyDown = useCallback(
-      (event: KeyboardEvent<Element>) => {
-        switch (event.key) {
-          case 'PageDown': {
-            event.preventDefault();
-            if (isLast) {
-              (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
-            } else {
-              (
-                document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
-              )?.focus();
-            }
-            break;
-          }
-          case 'PageUp': {
-            event.preventDefault();
-            (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
-            break;
-          }
-        }
-      },
-      [task, orderIndex, isLast]
-    );
-
-    const onKeyUp = useCallback(
-      (event: KeyboardEvent<Element>) => {
-        switch (event.key) {
-          case 'Enter': {
-            if (event.shiftKey) {
-              (
-                document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined
-              )?.focus();
-            } else {
-              if (isLast) {
-                (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
-              } else {
-                (
-                  document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
-                )?.focus();
-              }
-            }
-            onEnter?.(task);
-            break;
-          }
-        }
-      },
-      [task, orderIndex, isLast]
-    );
-
     return (
-      <CardRow
-        sidebar={
-          <input
-            type='checkbox'
-            disabled={readonly}
-            checked={!!task.completed}
-            onChange={() => (task.completed = !task.completed)}
-          />
-        }
-        action={
-          onDelete && (
-            <Button className='text-gray-300' onClick={() => onDelete(task)}>
-              <XCircle className={mx(getSize(6), 'hover:text-red-400')} />
-            </Button>
-          )
-        }
-        header={
-          <Input
-            className={mx('w-full p-1', task[deleted] && 'text-red-300')}
-            spellCheck={false}
-            value={task.title}
-            placeholder='Enter text'
-            onKeyDown={onKeyDown}
-            onKeyUp={onKeyUp}
-            onChange={(value) => {
-              task.title = value;
-            }}
-            disabled={readonly}
-            data-orderindex={orderIndex}
-          />
-        }
-      >
-        {showAssigned && (
-          <div className='ml-8 pl-1 text-sm text-blue-800'>
-            <div>{task.assignee?.name}</div>
-            {debug && (
-              <div>
-                <div>{PublicKey.from(task[id]).truncate()}</div>
-                <div>{(task[base] as any)._schemaType?.name}</div>
-              </div>
-            )}
-          </div>
-        )}
-      </CardRow>
+      <EditableListItem
+        id={task[id]}
+        completed={task.completed}
+        onChangeCompleted={(completed) => (task.completed = completed)}
+        title={task.title}
+        onChangeTitle={({ target: { value } }) => {
+          task.title = value ?? '';
+        }}
+        onClickDelete={() => onDelete?.(task)}
+      />
     );
   },
   { componentName: 'TaskItem' }
