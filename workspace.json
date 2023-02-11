@@ -7,7 +7,7 @@
     "async": "packages/common/async",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
-    "bender-bot": "packages/bots/bender-bot",
+    "bender-bot": "packages/deprecated/bender-bot",
     "braneframe": "packages/apps/braneframe",
     "chess-app": "packages/experimental/chess-app",
     "cli": "packages/devtools/cli",

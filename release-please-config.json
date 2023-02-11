@@ -93,11 +93,6 @@
         },
         {
           "type": "json",
-          "path": "packages/bots/bender-bot/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },
@@ -294,6 +289,11 @@
         {
           "type": "json",
           "path": "packages/core/protocols/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/deprecated/bender-bot/package.json",
           "jsonpath": "$.version"
         },
         {
