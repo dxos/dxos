@@ -40,6 +40,34 @@ This template provides some opinions for app development:
 | `@dxos/react-components` | UI components for React |
 | `@dxos/react-ui` | UI flows for managing HALO identity and ECHO spaces |
 
+## Turn features on or off
+
+Invoking the template with `--interactive` like below will ask about enabling each feature one at a time.
+```bash
+npm init @dxos --interactive # or
+dx app create <appname> --interactive
+```
+Example turning off PWA features:
+```bash
+dx app create example --interactive
+Creating app...
+? Include react: Yes
+? Include the DXOS UI system for react: Yes
+? Include a Storybook component sandbox (https://storybook.js.org): Yes
+? Enable PWA support: No
+
+Application example created.
+
+Run the app:
+$ cd example
+$ pnpm install
+$ pnpm serve
+
+See also:
+- example/README.md
+- https://docs.dxos.org/guide/cli/app-templates
+```
+
 ## Source code
 
 The templates can be found in the main [`dxos` repo](https://github.com/dxos/dxos) under [`packages/apps/templates`](https://github.com/dxos/dxos/tree/main/packages/apps/templates).

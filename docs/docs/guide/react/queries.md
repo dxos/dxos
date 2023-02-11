@@ -5,7 +5,7 @@ order: 4
 
 # Queries
 
-The simplest way to access data in [`ECHO`](../platform) from `react` is by using a [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) hook on a [`space`](../glossary#space). This will return generic objects which can be [mutated](./mutations) like regular JavaScript objects. `useQuery<T>` can also return strongly typed results as will be shown [below](#type-safe-queries).
+The simplest way to access data in [`ECHO`](../platform) from `react` is by using a [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) hook on a [`space`](../glossary#space). This will return generic objects which can be [mutated](./mutations) like regular JavaScript objects. `useQuery<T>` can also return strongly typed results as will be shown [below](#typed-queries).
 
 ## Untyped queries
 
@@ -27,8 +27,8 @@ export const App = () => {
   const space = useOrCreateFirstSpace();
   const tasks = useQuery(space, { type: 'task' });
   return <>
-    {tasks?.map((item) => (
-      <div key={item[id]}>{item.title}</div>
+    {tasks?.map((task) => (
+      <div key={task[id]}>{task.title}</div>
     ))}
   </>;
 };
@@ -41,7 +41,7 @@ root.render(
 );
 ```
 
-The API definition of `useQuery` is below. It returns a generic `Document` type which supports the ability to set and read arbitrary keys and values. See [below](#type-safe-queries) for how to add type safety.
+The API definition of `useQuery` is below. It returns a generic `Document` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
 ### [useQuery(\[space\], \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L18)
@@ -57,7 +57,7 @@ Arguments:
 `filter`: <code>[Filter](/api/@dxos/react-client/types/Filter)\<T></code>
 :::
 
-## Type-safe Queries
+## Typed Queries
 
 It's possible to obtain strongly typed objects from `useQuery<T>` if we provide a type argument `T`.
 
@@ -153,10 +153,9 @@ export const App = () => {
   useIdentity({ login: true });
   const space = useOrCreateFirstSpace();
   const tasks = useQuery<Task>(space, Task.filter());
-  //    ^?
   return <>
-    {tasks?.map((item) => (
-      <div key={item[id]}>{item.title} - {item.completed}</div>
+    {tasks?.map((task) => (
+      <div key={task[id]}>{task.title} - {task.completed}</div>
     ))}
   </>;
 };
