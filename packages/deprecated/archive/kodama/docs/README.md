@@ -18,9 +18,9 @@ flowchart LR
 subgraph experimental [experimental]
   style experimental fill:transparent
   dxos/kodama("@dxos/kodama"):::root
-  click dxos/kodama "dxos/dxos/tree/main/packages/experimental/kodama/docs"
+  click dxos/kodama "dxos/dxos/tree/main/packages/deprecated/archive/kodama/docs"
   dxos/client-testing("@dxos/client-testing"):::def
-  click dxos/client-testing "dxos/dxos/tree/main/packages/experimental/client-testing/docs"
+  click dxos/client-testing "dxos/dxos/tree/main/packages/deprecated/archive/client-testing/docs"
 end
 
 subgraph common [common]

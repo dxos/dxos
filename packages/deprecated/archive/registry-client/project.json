@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/deprecated/registry-client/src",
+  "sourceRoot": "packages/deprecated/archive/registry-client/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/deprecated/registry-client/src/index.ts",
-        "outputPath": "packages/deprecated/registry-client/dist/types",
-        "tsConfig": "packages/deprecated/registry-client/tsconfig.json"
+        "main": "packages/deprecated/archive/registry-client/src/index.ts",
+        "outputPath": "packages/deprecated/archive/registry-client/dist/types",
+        "tsConfig": "packages/deprecated/archive/registry-client/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/deprecated/registry-client/src/index.ts"
+          "packages/deprecated/archive/registry-client/src/index.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/deprecated/registry-client/dist/lib"
+        "outputPath": "packages/deprecated/archive/registry-client/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/deprecated/registry-client/**/*.{ts,js}"
+          "packages/deprecated/archive/registry-client/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -41,14 +41,14 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/deprecated/registry-client",
-        "outputPath": "tmp/mocha/packages/deprecated/registry-client",
-        "resultsPath": "test-results/packages/deprecated/registry-client",
+        "coveragePath": "coverage/packages/deprecated/archive/registry-client",
+        "outputPath": "tmp/mocha/packages/deprecated/archive/registry-client",
+        "resultsPath": "test-results/packages/deprecated/archive/registry-client",
         "testPatterns": [
-          "packages/deprecated/registry-client/src/**/*.test.{ts,js}"
+          "packages/deprecated/archive/registry-client/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/deprecated/registry-client/src/**/*"
+          "packages/deprecated/archive/registry-client/src/**/*"
         ]
       },
       "outputs": [

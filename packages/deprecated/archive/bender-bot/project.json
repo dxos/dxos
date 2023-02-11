@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/deprecated/bender-bot/src",
+  "sourceRoot": "packages/deprecated/archive/bender-bot/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/deprecated/bender-bot/src/index.ts",
-        "outputPath": "packages/deprecated/bender-bot/dist/types",
-        "tsConfig": "packages/deprecated/bender-bot/tsconfig.json"
+        "main": "packages/deprecated/archive/bender-bot/src/index.ts",
+        "outputPath": "packages/deprecated/archive/bender-bot/dist/types",
+        "tsConfig": "packages/deprecated/archive/bender-bot/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -18,7 +18,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/deprecated/bender-bot/**/*.{ts,js}"
+          "packages/deprecated/archive/bender-bot/**/*.{ts,js}"
         ]
       },
       "outputs": [

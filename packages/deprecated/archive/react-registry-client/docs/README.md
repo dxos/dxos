@@ -18,9 +18,9 @@ flowchart LR
 subgraph experimental [experimental]
   style experimental fill:transparent
   dxos/react-registry-client("@dxos/react-registry-client"):::root
-  click dxos/react-registry-client "dxos/dxos/tree/main/packages/experimental/react-registry-client/docs"
+  click dxos/react-registry-client "dxos/dxos/tree/main/packages/deprecated/archive/react-registry-client/docs"
   dxos/registry-client("@dxos/registry-client"):::def
-  click dxos/registry-client "dxos/dxos/tree/main/packages/experimental/registry-client/docs"
+  click dxos/registry-client "dxos/dxos/tree/main/packages/deprecated/archive/registry-client/docs"
 end
 
 subgraph sdk [sdk]

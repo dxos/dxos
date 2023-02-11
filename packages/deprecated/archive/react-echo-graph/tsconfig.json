@@ -26,10 +26,10 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../experimental/gem-core"
+      "path": "../../deprecated/archive/gem-core"
     },
     {
-      "path": "../../experimental/gem-spore"
+      "path": "../../deprecated/archive/gem-spore"
     },
     {
       "path": "../../sdk/client"

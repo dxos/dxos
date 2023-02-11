@@ -10,13 +10,13 @@
     "outDir": "dist/types",
     "paths": {
       "@polkadot/api/augment": [
-        "./packages/experimental/registry-client/src/polkadot/interfaces/augment-api.ts"
+        "./packages/deprecated/archive/registry-client/src/polkadot/interfaces/augment-api.ts"
       ],
       "@polkadot/types/augment": [
-        "./packages/experimental/registry-client/src/polkadot/interfaces/augment-types.ts"
+        "./packages/deprecated/archive/registry-client/src/polkadot/interfaces/augment-types.ts"
       ],
       "sample-polkadotjs-typegen/*": [
-        "./packages/experimental/registry-client/src/*"
+        "./packages/deprecated/archive/registry-client/src/*"
       ]
     }
   },

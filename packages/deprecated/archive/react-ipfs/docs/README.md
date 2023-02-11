@@ -18,7 +18,7 @@ flowchart LR
 subgraph experimental [experimental]
   style experimental fill:transparent
   dxos/react-ipfs("@dxos/react-ipfs"):::root
-  click dxos/react-ipfs "dxos/dxos/tree/main/packages/experimental/react-ipfs/docs"
+  click dxos/react-ipfs "dxos/dxos/tree/main/packages/deprecated/archive/react-ipfs/docs"
 end
 
 subgraph sdk [sdk]

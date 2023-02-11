@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/deprecated/react-registry-client/src",
+  "sourceRoot": "packages/deprecated/archive/react-registry-client/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/deprecated/react-registry-client/src/index.ts",
-        "outputPath": "packages/deprecated/react-registry-client/dist/types",
-        "tsConfig": "packages/deprecated/react-registry-client/tsconfig.json"
+        "main": "packages/deprecated/archive/react-registry-client/src/index.ts",
+        "outputPath": "packages/deprecated/archive/react-registry-client/dist/types",
+        "tsConfig": "packages/deprecated/archive/react-registry-client/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/deprecated/react-registry-client/src/index.ts"
+          "packages/deprecated/archive/react-registry-client/src/index.ts"
         ],
-        "outputPath": "packages/deprecated/react-registry-client/dist/lib"
+        "outputPath": "packages/deprecated/archive/react-registry-client/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/deprecated/react-registry-client/**/*.{ts,tsx,js,jsx}"
+          "packages/deprecated/archive/react-registry-client/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [

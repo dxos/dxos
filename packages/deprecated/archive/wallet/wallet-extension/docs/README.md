@@ -18,14 +18,14 @@ flowchart LR
 subgraph deprecated [deprecated]
   style deprecated fill:transparent
   dxos/react-components("@dxos/react-components-deprecated"):::def
-  click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
+  click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/archive/react-components/docs"
   dxos/react-toolkit("@dxos/react-toolkit"):::def
-  click dxos/react-toolkit "dxos/dxos/tree/main/packages/deprecated/react-toolkit/docs"
+  click dxos/react-toolkit "dxos/dxos/tree/main/packages/deprecated/archive/react-toolkit/docs"
 
   subgraph wallet [wallet]
     style wallet fill:transparent
     dxos/wallet-extension("@dxos/wallet-extension"):::root
-    click dxos/wallet-extension "dxos/dxos/tree/main/packages/deprecated/wallet/wallet-extension/docs"
+    click dxos/wallet-extension "dxos/dxos/tree/main/packages/deprecated/archive/wallet/wallet-extension/docs"
   end
 end
 
@@ -134,9 +134,9 @@ end
 subgraph experimental [experimental]
   style experimental fill:transparent
   dxos/react-registry-client("@dxos/react-registry-client"):::def
-  click dxos/react-registry-client "dxos/dxos/tree/main/packages/experimental/react-registry-client/docs"
+  click dxos/react-registry-client "dxos/dxos/tree/main/packages/deprecated/archive/react-registry-client/docs"
   dxos/registry-client("@dxos/registry-client"):::def
-  click dxos/registry-client "dxos/dxos/tree/main/packages/experimental/registry-client/docs"
+  click dxos/registry-client "dxos/dxos/tree/main/packages/deprecated/archive/registry-client/docs"
 end
 
 %% Links
@@ -231,9 +231,9 @@ dxos/registry-client --> dxos/client
 | [`@dxos/react-async`](../../../../common/react-async/docs/README.md) |  |
 | [`@dxos/react-client`](../../../../sdk/react-client/docs/README.md) | &check; |
 | [`@dxos/react-components-deprecated`](../../../react-components/docs/README.md) | &check; |
-| [`@dxos/react-registry-client`](../../../../experimental/react-registry-client/docs/README.md) |  |
+| [`@dxos/react-registry-client`](../../../../deprecated/archive/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../react-toolkit/docs/README.md) | &check; |
-| [`@dxos/registry-client`](../../../../experimental/registry-client/docs/README.md) |  |
+| [`@dxos/registry-client`](../../../../deprecated/archive/registry-client/docs/README.md) |  |
 | [`@dxos/rpc`](../../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../../core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/teleport`](../../../../core/mesh/teleport/docs/README.md) |  |

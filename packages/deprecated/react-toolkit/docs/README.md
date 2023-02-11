@@ -18,7 +18,7 @@ flowchart LR
 subgraph deprecated [deprecated]
   style deprecated fill:transparent
   dxos/react-toolkit("@dxos/react-toolkit"):::root
-  click dxos/react-toolkit "dxos/dxos/tree/main/packages/deprecated/react-toolkit/docs"
+  click dxos/react-toolkit "dxos/dxos/tree/main/packages/deprecated/archive/react-toolkit/docs"
 end
 
 subgraph common [common]

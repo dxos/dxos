@@ -18,11 +18,11 @@ flowchart LR
 subgraph experimental [experimental]
   style experimental fill:transparent
   dxos/react-echo-graph("@dxos/react-echo-graph"):::root
-  click dxos/react-echo-graph "dxos/dxos/tree/main/packages/experimental/react-echo-graph/docs"
+  click dxos/react-echo-graph "dxos/dxos/tree/main/packages/deprecated/archive/react-echo-graph/docs"
   dxos/gem-core("@dxos/gem-core"):::def
-  click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
+  click dxos/gem-core "dxos/dxos/tree/main/packages/deprecated/archive/gem-core/docs"
   dxos/gem-spore("@dxos/gem-spore"):::def
-  click dxos/gem-spore "dxos/dxos/tree/main/packages/experimental/gem-spore/docs"
+  click dxos/gem-spore "dxos/dxos/tree/main/packages/deprecated/archive/gem-spore/docs"
 end
 
 %% Links
