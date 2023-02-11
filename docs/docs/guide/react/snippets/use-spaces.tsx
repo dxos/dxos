@@ -4,7 +4,6 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Space } from '@dxos/client';
 import {
   ClientProvider,
   useSpaces,
@@ -25,10 +24,10 @@ export const App = () => {
   // get or create a first space:
   const space3 = useOrCreateFirstSpace();
   
-  // get items from the space as an array of JS objects
-  const items = useQuery(space3);
+  // get objects from the space as an array of JS objects
+  const objects = useQuery(space3);
 
-  return <>{items?.length}</>;
+  return <>{objects?.length}</>;
 };
 
 const root = createRoot(document.getElementById('root')!);

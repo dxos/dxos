@@ -20,8 +20,14 @@ export const App = () => {
   const tasks = useQuery<Task>(space, Task.filter());
   return <>
     {tasks?.map((task) => (
-      <div key={task[id]}>{task.title} - {task.completed}</div>
+      <div key={task[id]} onClick={() => {
+        task.completed = true;
+      }}>{task.title} - {task.completed}</div>
     ))}
+    <button name="add" onClick={() => {
+      const task = new Task({ title: 'buy milk' });
+      space.experimental.db.save(task);
+    }}>Add a task</button>
   </>;
 };
 

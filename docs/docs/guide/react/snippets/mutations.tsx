@@ -9,23 +9,22 @@ import {
   useOrCreateFirstSpace,
   useIdentity,
   useQuery,
+  Document,
   id,
 } from '@dxos/react-client';
-
-import { Task } from './schema';
 
 export const App = () => {
   useIdentity({ login: true });
   const space = useOrCreateFirstSpace();
-  const tasks = useQuery<Task>(space, Task.filter());
+  const tasks = useQuery(space, { type: 'task' });
   return <>
-    {tasks?.map((item) => (
-      <div key={item[id]} onClick={() => {
-        item.completed = true;
-      }}>{item.title} - {item.completed}</div>
+    {tasks?.map((task) => (
+      <div key={task[id]} onClick={() => {
+        task.completed = true;
+      }}>{task.title} - {task.completed}</div>
     ))}
     <button name="add" onClick={() => {
-      const task = new Task({ title: 'buy milk' });
+      const task = new Document({ title: 'buy milk' });
       space.experimental.db.save(task);
     }}>Add a task</button>
   </>;

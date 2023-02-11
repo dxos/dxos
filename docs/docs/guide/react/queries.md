@@ -128,7 +128,8 @@ export class Task extends DocumentBase {
   declare completed: boolean;
 }
 ```
-Declared are the ancestor class and specific fields on the type. 
+
+Declared are the ancestor class and specific fields on the type.
 
 There are other utilities like a `filter` you can pass to `useQuery` to locate items of this type.
 :::
@@ -152,6 +153,7 @@ export const App = () => {
   useIdentity({ login: true });
   const space = useOrCreateFirstSpace();
   const tasks = useQuery<Task>(space, Task.filter());
+  //    ^?
   return <>
     {tasks?.map((item) => (
       <div key={item[id]}>{item.title} - {item.completed}</div>

@@ -17,8 +17,8 @@ export const App = () => {
   const space = useOrCreateFirstSpace();
   const tasks = useQuery(space, { type: 'task' });
   return <>
-    {tasks?.map((item) => (
-      <div key={item[id]}>{item.title}</div>
+    {tasks?.map((task) => (
+      <div key={task[id]}>{task.title}</div>
     ))}
   </>;
 };
