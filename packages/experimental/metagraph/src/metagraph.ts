@@ -42,6 +42,7 @@ export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T
 }
 
 export type Query = {
+  type: string;
   tags?: string[];
 };
 
@@ -69,7 +70,11 @@ export class Metagraph {
         const observable = new QueryObservableProvider<Module>(async () => {
           const response = await fetch(this._serverUrl);
           const { modules = [] } = ((await response.json()) as { modules: Module[] }) ?? {};
-          observable.results = modules.filter(({ tags }) => {
+          observable.results = modules.filter(({ type, tags }) => {
+            if (query?.type !== type) {
+              return false;
+            }
+
             if (!query?.tags?.length) {
               return true;
             }

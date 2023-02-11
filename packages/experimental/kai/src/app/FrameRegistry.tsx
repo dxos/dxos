@@ -8,16 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx, Searchbar } from '@dxos/react-components';
 
-import {
-  createSpacePath,
-  useBotDispatch,
-  useBots,
-  useFrames,
-  useFrameDispatch,
-  useSpace,
-  BotDef,
-  FrameDef
-} from '../hooks';
+import { createSpacePath, useBots, useFrames, useSpace, BotDef, FrameDef, useAppReducer } from '../hooks';
 
 // TODO(burdon): Move to DMG?
 enum ExtensionType {
@@ -60,8 +51,7 @@ export const FrameRegistry = () => {
 
   const { frames, active: activeFrames } = useFrames();
   const { bots, active: activeBots } = useBots();
-  const setActiveFrame = useFrameDispatch();
-  const setActiveBot = useBotDispatch();
+  const { setActiveFrame, setActiveBot } = useAppReducer();
 
   const handleSelect = (id: string) => {
     switch (type) {
@@ -75,8 +65,8 @@ export const FrameRegistry = () => {
       }
 
       case ExtensionType.BOT: {
-        // TODO(burdon): Toggle.
-        setActiveBot(id, true);
+        const active = !activeBots.find((botId) => botId === id);
+        setActiveBot(id, active, space);
         break;
       }
     }

@@ -7,6 +7,7 @@ import { Document, EchoDatabase, Subscription, TypeFilter } from '@dxos/echo-sch
 /**
  * Adds info to records.
  */
+// TODO(burdon): Bot should not be typed by document.
 export class Bot<T extends Document> {
   protected _subscription?: Subscription;
 

@@ -4,10 +4,10 @@
 
 import React, { Context, FC, ReactNode, createContext, useContext, useReducer } from 'react';
 
+import { Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
-import { BotDef } from './useBots';
-import { FrameDef } from './useFrames';
+import { BotManager } from './useBots';
 
 export type AppState = {
   // Debug info.
@@ -20,40 +20,66 @@ export type AppState = {
   pwa?: boolean;
 
   // Active frames.
-  frames?: {
-    defs: FrameDef[];
-    active: string[];
-  };
+  frames?: string[];
 
   // Active bots.
-  bots?: {
-    defs: BotDef[];
-    active: string[];
-  };
+  bots?: string[];
 };
 
 type Action = {
-  type: string;
+  type: 'set-active-bot' | 'set-active-frame';
 };
 
-const reducer = (state: AppState, action: Action): AppState => {
+type SetBotAction = Action & {
+  botId: string;
+  active: boolean;
+  space?: Space;
+};
+
+type SetFrameAction = Action & {
+  frameId: string;
+  active: boolean;
+};
+
+type ActionType = SetBotAction | SetFrameAction;
+
+// TODO(burdon): Inject.
+const botManager = new BotManager();
+
+const reducer = (state: AppState, action: ActionType): AppState => {
   switch (action.type) {
-    case 'test': {
-      console.log('TEST');
-      break;
+    // TODO(burdon): Activate bot.
+    case 'set-active-bot': {
+      const { botId, active, space } = action as SetBotAction;
+      const bots = (state.bots ?? []).filter((bot) => bot !== botId);
+      if (active) {
+        bots.push(botId);
+        botManager.start(botId, space!);
+      }
+
+      return { ...state, bots };
+    }
+
+    case 'set-active-frame': {
+      const { frameId, active } = action as SetFrameAction;
+      const frames = (state.frames ?? []).filter((frame) => frame !== frameId);
+      if (active) {
+        frames.push(frameId);
+      }
+
+      return { ...state, frames };
     }
 
     default: {
       throw new Error(`Invalid action: ${JSON.stringify(action)}`);
     }
   }
-
-  return { ...state };
 };
 
 export type AppReducer = {
   state: AppState;
-  test: () => void;
+  setActiveBot: (id: string, active: boolean, space?: Space) => void;
+  setActiveFrame: (id: string, active: boolean) => void;
 };
 
 export const AppStateContext: Context<AppReducer | undefined> = createContext<AppReducer | undefined>(undefined);
@@ -65,8 +91,11 @@ export const AppStateProvider: FC<{ children: ReactNode; initialState?: AppState
 
   const value: AppReducer = {
     state,
-    test: () => {
-      dispatch({ type: 'test' });
+    setActiveBot: (id: string, active: boolean, space?: Space) => {
+      dispatch({ type: 'set-active-bot', botId: id, active, space });
+    },
+    setActiveFrame: (id: string, active: boolean) => {
+      dispatch({ type: 'set-active-frame', frameId: id, active });
     }
   };
 

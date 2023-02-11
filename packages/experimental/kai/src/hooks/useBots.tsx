@@ -2,14 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'assert';
 import { Binoculars, Sword } from 'phosphor-react';
-import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
+import { FC, useMemo } from 'react';
 
+import { Space } from '@dxos/client';
 import { EchoDatabase } from '@dxos/echo-schema';
 import { Module } from '@dxos/protocols/proto/dxos/config';
+import { useModules } from '@dxos/react-metagraph';
 
 import { ResearchBot, Bot, ChessBot } from '../bots';
-import { useSpace } from './useSpace';
+import { useAppState } from './useAppState';
 
 export type BotDef = {
   module: Module;
@@ -19,7 +22,7 @@ export type BotDef = {
   };
 };
 
-export const bots: BotDef[] = [
+export const defs: BotDef[] = [
   {
     module: {
       id: 'dxos.module.bot.research',
@@ -46,55 +49,46 @@ export const bots: BotDef[] = [
   }
 ];
 
+/**
+ * Mock bot manager.
+ */
+export class BotManager {
+  private readonly _active = new Map<string, Bot<any>>();
+
+  start(botId: string, space: Space) {
+    const def = defs.find((def) => def.module.id === botId);
+    assert(def);
+    const { constructor } = def.runtime;
+    const bot = constructor(space.experimental.db); // TODO(burdon): New API.
+    this._active.set(botId, bot);
+    void bot.start();
+  }
+
+  stop(botId: string) {
+    const bot = this._active.get(botId);
+    if (bot) {
+      bot.stop();
+    }
+  }
+}
+
+export const botModules: Module[] = defs.map(({ module }) => module);
+
 export type BotMap = Map<string, BotDef>;
 
-export type BotsContextType = {
-  bots: BotMap;
-  active: string[];
-};
-
-const createBotMap = (bots: BotDef[]): BotMap =>
-  bots.reduce((map: BotMap, bot) => {
-    map.set(bot.module.id!, bot);
-    return map;
-  }, new Map<string, BotDef>());
-
-export type BotsStateContextType = [BotsContextType, Dispatch<SetStateAction<BotsContextType>>];
-
-export const BotsContext: Context<BotsStateContextType | undefined> = createContext<BotsStateContextType | undefined>(
-  undefined
-);
-
-export const BotsProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  // TODO(burdon): useDMG.
-  const [state, setState] = useState<BotsContextType>({ bots: createBotMap(bots), active: [] });
-  return <BotsContext.Provider value={[state, setState]}>{children}</BotsContext.Provider>;
-};
-
 export const useBots = (): { bots: BotMap; active: string[] } => {
-  const [{ bots, active }] = useContext(BotsContext)!;
+  const { modules } = useModules({ type: 'dxos.module.bot' });
+  const { bots: active = [] } = useAppState()!;
+  const bots = useMemo(
+    () =>
+      modules.reduce((map, module) => {
+        const def = defs.find((def) => def.module.id === module.id);
+        assert(def);
+        map.set(module.id!, def);
+        return map;
+      }, new Map<string, BotDef>()),
+    [modules]
+  );
+
   return { bots, active };
-};
-
-export const useBotDispatch = () => {
-  const space = useSpace();
-  const [, dispatch] = useContext(BotsContext)!;
-  return (id: string, state: boolean) => {
-    dispatch((context: BotsContextType) => {
-      const { bots, active } = context;
-      if (active.findIndex((active) => active === id) !== -1) {
-        return context;
-      }
-
-      // TODO(burdon): Start bot.
-      const { constructor } = bots.get(id)!;
-      const bot = constructor(space.experimental.db);
-      void bot.start();
-
-      return {
-        bots,
-        active: [...active, id]
-      };
-    });
-  };
 };

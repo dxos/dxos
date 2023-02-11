@@ -5,7 +5,7 @@
 import { Context, createContext, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Metagraph } from '@dxos/metagraph';
+import { Metagraph, Query } from '@dxos/metagraph';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useConfig } from '@dxos/react-client';
 
@@ -35,12 +35,20 @@ export type ModulesResult = {
   isLoading: boolean;
 };
 
+export type UseModulesOptions = {
+  polling?: number;
+};
+
+const MAX_POLLING_INTERVAL = 3_000;
+
 /**
  * Query modules.
  */
-export const useModules = (type: string, tags?: string[], pollingMs = -1): ModulesResult => {
+export const useModules = (query: Query, { polling }: UseModulesOptions = {}): ModulesResult => {
   const metagraph = useMetagraph();
   const [isLoading, setLoading] = useState(true);
+
+  // TODO(burdon): Better cache.
   const [modules, setModules] = useState<Module[]>([]);
 
   useEffect(() => {
@@ -51,7 +59,7 @@ export const useModules = (type: string, tags?: string[], pollingMs = -1): Modul
     let interval: NodeJS.Timeout;
     let unsubscribe: () => void | undefined;
     setTimeout(async () => {
-      const observable = await metagraph.modules.query({ tags });
+      const observable = await metagraph.modules.query(query);
       setModules(observable.results);
       setLoading(false);
       unsubscribe = observable.subscribe({
@@ -62,10 +70,9 @@ export const useModules = (type: string, tags?: string[], pollingMs = -1): Modul
         }
       });
 
-      const minPollingInterval = 1_000;
-      if (pollingMs > minPollingInterval) {
+      if (polling) {
         // TODO(wittjosiah): More detailed status which takes into account subsequent loading states.
-        interval = setInterval(() => observable.fetch());
+        interval = setInterval(() => observable.fetch(), Math.max(polling, MAX_POLLING_INTERVAL));
       }
     });
 

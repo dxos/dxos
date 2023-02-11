@@ -11,9 +11,16 @@ import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphContext } from '@dxos/react-metagraph';
 
-import { AppState, AppStateProvider, useAppRoutes, useClientProvider, bots } from '../hooks';
+import {
+  AppState,
+  AppStateProvider,
+  useAppRoutes,
+  useClientProvider,
+  botModules,
+  defaultFrames,
+  frameModules
+} from '../hooks';
 import kaiTranslations from '../translations';
-import { frames } from './FrameDefs';
 
 const Routes = () => {
   return useAppRoutes();
@@ -25,10 +32,9 @@ const Routes = () => {
 export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider();
 
-  // TODO(burdon): JSON config.
   const metagraphContext = {
-    frames: frames.map(({ module }) => module),
-    bots: bots.map(({ module }) => module)
+    frames: frameModules,
+    bots: botModules
   };
 
   // TODO(burdon): Error boundary and indicator.
@@ -42,7 +48,7 @@ export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initia
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>
             <MetagraphContext.Provider value={metagraphContext}>
-              <AppStateProvider initialState={initialState}>
+              <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
                 <HashRouter>
                   <Routes />
                   {children}
