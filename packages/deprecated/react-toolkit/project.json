@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/deprecated/archive/react-toolkit/src",
+  "sourceRoot": "packages/deprecated/react-toolkit/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/deprecated/archive/react-toolkit/src/index.ts",
-        "outputPath": "packages/deprecated/archive/react-toolkit/dist/types",
-        "tsConfig": "packages/deprecated/archive/react-toolkit/tsconfig.json"
+        "main": "packages/deprecated/react-toolkit/src/index.ts",
+        "outputPath": "packages/deprecated/react-toolkit/dist/types",
+        "tsConfig": "packages/deprecated/react-toolkit/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/deprecated/archive/react-toolkit/src/index.ts"
+          "packages/deprecated/react-toolkit/src/index.ts"
         ],
-        "outputPath": "packages/deprecated/archive/react-toolkit/dist/lib"
+        "outputPath": "packages/deprecated/react-toolkit/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/deprecated/archive/react-toolkit/**/*.{ts,tsx,js,jsx}"
+          "packages/deprecated/react-toolkit/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
