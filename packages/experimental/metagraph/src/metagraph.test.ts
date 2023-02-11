@@ -11,7 +11,7 @@ import { Config } from '@dxos/config';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
-import { Metagraph } from './metagraph';
+import { MetagraphClient } from './metagraph';
 import { TestServer } from './testing';
 
 const modules: Module[] = [
@@ -58,7 +58,7 @@ describe('Metagraph queries', () => {
   });
 
   test('basic module queries', async () => {
-    const metagraph = new Metagraph(
+    const metagraph = new MetagraphClient(
       new Config({
         runtime: {
           services: {

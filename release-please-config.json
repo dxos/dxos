@@ -293,11 +293,6 @@
         },
         {
           "type": "json",
-          "path": "packages/deprecated/bender-bot/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/deprecated/react-components-deprecated/package.json",
           "jsonpath": "$.version"
         },
@@ -314,16 +309,6 @@
         {
           "type": "json",
           "path": "packages/deprecated/registry-client/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/wallet/wallet-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/wallet/wallet-playground/package.json",
           "jsonpath": "$.version"
         },
         {

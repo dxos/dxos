@@ -35,6 +35,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../deprecated/react-components-deprecated"
     }
   ]
 }
