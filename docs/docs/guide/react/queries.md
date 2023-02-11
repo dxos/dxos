@@ -22,8 +22,6 @@ import {
   id,
 } from '@dxos/react-client';
 
-type MyFoo = { id: string };
-
 export const App = () => {
   useIdentity({ login: true });
   const space = useOrCreateFirstSpace();
@@ -105,29 +103,35 @@ Note the directives `option (object) = true;` which instruct the framework to ge
 If you're using one of the DXOS [application templates](../cli/app-templates), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
 :::
 
-The output is a typescript file that looks like this:
+::: details See TypeScript output from `dxtype`
+The output is a typescript file that looks roughly like this:
 
-```tsx file=./snippets/schema.ts
-//
-// Copyright 2022 DXOS.org
-//
-
+```ts file=./snippets/schema.ts#L5-
 import { DocumentBase, TypeFilter, EchoSchema } from "@dxos/react-client";
 
-export const schema = EchoSchema.fromJson('{ "protobuf generated json here": true }');
+export const schema = EchoSchema.fromJson(
+  '{ "protobuf generated json here": true }'
+);
 
 export class Task extends DocumentBase {
   static readonly type = schema.getType('dxos.tasks.Task');
 
-  static filter(opts?: { title?: string, completed?: boolean, previous?: Task }): TypeFilter<Task> {
+  static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {
     return Task.type.createFilter(opts);
   }
 
-  constructor(opts?: { title?: string, completed?: boolean, previous?: Task }) {
+  constructor(opts?: { title?: string, completed?: boolean }) {
     super({ ...opts, '@type': Task.type.name }, Task.type);
   }
 
   declare title: string;
   declare completed: boolean;
 }
+```
+:::
+
+To use the type declarations, simply import the relevant type like `Task` from the typescript location out of `dxtype` and pass it to `useQuery<T>`:
+
+```tsx file=./snippets/use-query-typed.tsx#L5-
+
 ```

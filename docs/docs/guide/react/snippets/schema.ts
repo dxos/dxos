@@ -4,16 +4,18 @@
 
 import { DocumentBase, TypeFilter, EchoSchema } from "@dxos/react-client";
 
-export const schema = EchoSchema.fromJson('{ "protobuf generated json here": true }');
+export const schema = EchoSchema.fromJson(
+  '{ "protobuf generated json here": true }'
+);
 
 export class Task extends DocumentBase {
   static readonly type = schema.getType('dxos.tasks.Task');
 
-  static filter(opts?: { title?: string, completed?: boolean, previous?: Task }): TypeFilter<Task> {
+  static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {
     return Task.type.createFilter(opts);
   }
 
-  constructor(opts?: { title?: string, completed?: boolean, previous?: Task }) {
+  constructor(opts?: { title?: string, completed?: boolean }) {
     super({ ...opts, '@type': Task.type.name }, Task.type);
   }
 

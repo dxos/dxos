@@ -20,18 +20,6 @@ import {
   id
 } from '@dxos/react-client';
 
-export const TaskList = (props: { space: Space }) => {
-  const { space } = props;
-  const tasks = useQuery(space, { type: 'task' });
-  return (
-    <>
-      {tasks?.map((item) => (
-        <div key={item[id]}>{item.title}</div>
-      ))}
-    </>
-  );
-};
-
 export const App = () => {
   // usually space IDs are in the URL like in params.id: 
   const space1 = useSpace('<space_key_goes_here>');
@@ -42,7 +30,11 @@ export const App = () => {
   
   // get or create a first space:
   const space3 = useOrCreateFirstSpace();
-  return <TaskList space={space3} />;
+  
+  // get items from the space as an array of JS objects
+  const items = useQuery(space3);
+
+  return <>{items?.length}</>;
 };
 
 const root = createRoot(document.getElementById('root')!);
