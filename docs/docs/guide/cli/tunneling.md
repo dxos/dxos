@@ -1,16 +1,11 @@
 ---
-description: Tunneling apps
+order: 10
 ---
 
-# Tunneling Apps
+# Tunneling
 
-You can expose any application deployed to your local [KUBE](../kube) to the Internet through a tunnel.
+The CLI can be used to configure live [tunnels](../kube/tunneling) on the [KUBE](../kube/).
 
-To do this, change property `tunnel` to `true` inside `dx.yml`, and run publish command again:
-
-```bash
-dx publish
-```
 
 Output of the command will contain public link of your application.
 

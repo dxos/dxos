@@ -1,5 +1,4 @@
 ---
-title: Identity
 order: 2
 ---
 

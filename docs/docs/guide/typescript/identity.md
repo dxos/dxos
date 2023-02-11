@@ -2,19 +2,11 @@
 order: 1
 ---
 
-# HALO Identity
+# Identity
 
-In order to support multiple concurrent writers, ECHO mutations are recorded in append-only feeds that preserve the identity of all the writers. This makes it possible to resolve conflicts and implement powerful features like undo and time travel.
+This section describes how to obtain [HALO identity](../platform/halo) in TypeScript.
 
-A HALO identity allows users to authenticate using asymmetric key cryptography without the use of passwords.
-
-To create or join a [space](spaces) in ECHO, the user must first [establish their identity](../halo) in the [HALO](halo) app.
-
-:::note
-All data and identity information is stored in browser local storage on a domain separate from the application's. This enables end-user privacy and data sovereignty. Read more about the [vault topology](./#local-vault-topology).
-:::
-
-For react usage, see the [react guide](./react/identity.md).
+To create or join a [space](./spaces) in ECHO, the user must first [establish their identity](../platform/halo#establishing-user-identity) in the [HALO](../platform/halo) app.
 
 ## Logging in
 

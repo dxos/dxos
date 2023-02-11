@@ -46,16 +46,17 @@ This will start the development server 🚀.
 
 You should be able to open two windows pointed at the dev server and see reactive updates like in the video below.
 
-<video controls loop autoplay style="width:100%" src="/images/quickstart.mp4"></video>
+<video class="dark" controls loop autoplay style="width:100%" src="/images/hello-dark.mp4"></video>
+<video class="light" controls loop autoplay style="width:100%" src="/images/hello-light.mp4"></video>
 
 ::: info Why this is cool:
 
 *   State is being reactively shared between all instances of the app running on the same machine.
 *   Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
 *   The app running on `localhost` subscribes to the data through a local shared memory connection with [HALO](./platform/halo) on `halo.dxos.org` which is fast and works offline.
-*   When remote peers join the same [space](./glossary#space), their changes are given to running apps through `halo` in the same way.
+*   When remote peers join the same [space](./glossary#space), their changes are given to running apps through [HALO](./platform/halo) in the same way.
 *   Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
-*   User identity (and their public/private keys) are established securely and maintained for the whole device (browser profile) without a password.
+*   User identity (and their public/private keys) are established securely and maintained for the whole device (browser profile), without a password.
 *   Everything works offline.
 *   Real-time collaboration is possible when online.
 *   There are **no servers** or [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping) to worry about.
@@ -71,10 +72,10 @@ Now you have an application that does all the above. It relies on [ECHO](./echo)
 ### How to use ECHO
 
 1.  Install `@dxos/client` or `@dxos/react-client` for `react`.
-2.  Create a [Client](echo/typescript/) or use a [`<ClientProvider />`](echo/react) in `react`.
-3.  Establish [identity](halo).
-4.  Create or join a [space](echo/react/spaces).
-5.  Find objects with `useQuery`.
+2.  Create a [Client](typescript) or use a [`<ClientProvider />`](react) in `react`.
+3.  Establish [identity](platform/halo).
+4.  Create or join a [space](platform/#spaces).
+5.  Find objects with [`useQuery`](react/queries).
 6.  Mutate objects as you would plain JavaScript objects.
 
 ```tsx file=./react/snippets/create-client-react.tsx#L5-
@@ -153,7 +154,7 @@ This will begin tracking further changes on the object and replicating them to o
 
 *   ECHO with [React](./react)
 *   ECHO with [TypeScript](./typescript)
-*   ECHO with [strongly typed objects](./typescript/types)
+*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 ## Starting a KUBE
 

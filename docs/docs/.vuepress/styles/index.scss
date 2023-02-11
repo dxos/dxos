@@ -168,3 +168,16 @@ h2,h3,h4,h5,h6 {
 div[class*=language-] .highlight-lines {
   line-height: 1.376;
 }
+
+video.dark {
+  display: none;
+}
+
+html[data-theme=dark] {
+  video.dark {
+    display: block;
+  }
+  video.light {
+    display: none;
+  }
+}

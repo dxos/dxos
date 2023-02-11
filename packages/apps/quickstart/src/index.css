@@ -32,3 +32,7 @@
 .dxos .demo {
   @apply rounded bg-zinc-200 dark:bg-zinc-900 p-6 text-center;
 }
+
+.dxos img {
+  opacity: 0.05;
+}

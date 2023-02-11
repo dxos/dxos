@@ -37,6 +37,10 @@ This verifies that the connection is secure, and the identities of peers are mut
 If you're using `react`, DXOS provides a simple [UI flow](../react/spaces#joining-spaces) that implements generating and accepting invitations to spaces.
 :::
 
+**Next steps:**
+  - Create or join a space in [TypeScript](../typescript/spaces)
+  - Create or join a space in [React](../react/spaces)
+
 ## Objects
 
 Units of data are referred to as `objects` (like documents or rows in other databases). `Objects` always belong to a space. Objects can have fields with values, and strong relationships to other objects to form trees or graphs.
@@ -47,13 +51,13 @@ See the [glossary](glossary) for definitions of other terms you'll find in this 
 
 ## How to use ECHO
 
-*   Install the appropriate npm package [`@dxos/client`](typescript) or [`@dxos/react-client`](react)
-*   Create a [Client](typescript#configuration) (or a [ClientProvider](react#cofiguration) in react)
-*   Set up an identity with [HALO](../halo)
-*   Create or Join a [Space](spaces)
-*   [Query items](queries) (in [react](react/queries))
-*   [Create items](mutations#creating-items) (in [react](react/mutations))
-*   [Mutate items](mutations#mutating-data) (in [react](react/mutations))
+*   Install the appropriate npm package [`@dxos/client`](../typescript) or [`@dxos/react-client`](../react)
+*   Create a [Client](../typescript#configuration) (or a [ClientProvider](../react#cofiguration) in react)
+*   Set up an identity with [HALO](./halo)
+*   Create or Join a [Space](#spaces)
+*   [Query items](../typescript/queries) (in [react](../react/queries))
+*   [Create items](../typescript/mutations#creating-items) (in [react](../react/mutations))
+*   [Mutate items](../typescript/mutations#mutating-data) (in [react](../react/mutations))
 
 ## Local Vault Topology
 
