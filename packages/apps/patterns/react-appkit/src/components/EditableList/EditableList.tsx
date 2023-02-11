@@ -151,7 +151,7 @@ export const EditableList = ({
         {children}
       </List>
       <div className='flex'>
-        <ListItemDragHandle className='invisible' />
+        <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} />
         <ListItemEndcap className='invisible' />
         <Input
           variant='subdued'
