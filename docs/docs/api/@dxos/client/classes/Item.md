@@ -1,9 +1,13 @@
 # Class `Item`
 <<<<<<< HEAD
+<<<<<<< HEAD
 <sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:25]()</sub>
 =======
 <sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:14]()</sub>
 >>>>>>> 464c6e793 (docs wip)
+=======
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:13]()</sub>
+>>>>>>> ac192b194 (tunneling)
 
 
 A globally addressable data item.
@@ -63,7 +67,12 @@ Type: <code>"null" | ModelMeta&lt;any, any, any&gt;</code>
 ### [_onUpdate]()
 Type: <code>Event&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;&gt;</code>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+### [_stateManager]()
+Type: <code>StateManager&lt;NonNullable&lt;M&gt;&gt;</code>
+>>>>>>> ac192b194 (tunneling)
 ### [children]()
 Type: <code>[Item](/api/@dxos/client/classes/Item)&lt;any&gt;[]</code>
 >>>>>>> 464c6e793 (docs wip)
@@ -72,12 +81,15 @@ Type: <code>boolean</code>
 ### [id]()
 Type: <code>string</code>
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### [initialized]()
 Type: <code>boolean</code>
 =======
 ### [model]()
 Type: <code>M</code>
 >>>>>>> 464c6e793 (docs wip)
+=======
+>>>>>>> ac192b194 (tunneling)
 ### [modelMeta]()
 Type: <code>undefined | ModelMeta&lt;any, any, any&gt;</code>
 ### [modelType]()
@@ -111,7 +123,15 @@ Perform late intitalization.
 
 Only possible if the modelContructor wasn't passed during StateManager's creation.
 
+<<<<<<< HEAD
 Returns: <code>void</code>
+=======
+Arguments: none
+### [setParent(parentId)]()
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+>>>>>>> ac192b194 (tunneling)
 
 Arguments: 
 

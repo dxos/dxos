@@ -111,9 +111,11 @@ To create (insert) a new object, simply construct a `new` one with the appropria
 ## Deleting objects
 
 To delete an object (typed or untyped) call the `delete` API on a space.
+
 ```ts
 await space.experimental.db.delete(task)
 ```
+
 ::: note
-Objects in ECHO are not physically deleted, they are marked with a deleted field and remain in the change history until the next [epoch](../glossary#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online. 
+Objects in ECHO are not physically deleted, they are marked with a deleted field and remain in the change history until the next [epoch](../glossary#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
 :::

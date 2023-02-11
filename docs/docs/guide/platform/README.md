@@ -38,8 +38,9 @@ If you're using `react`, DXOS provides a simple [UI flow](../react/spaces#joinin
 :::
 
 **Next steps:**
-  - Create or join a space in [TypeScript](../typescript/spaces)
-  - Create or join a space in [React](../react/spaces)
+
+*   Create or join a space in [TypeScript](../typescript/spaces)
+*   Create or join a space in [React](../react/spaces)
 
 ## Objects
 

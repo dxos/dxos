@@ -1,5 +1,9 @@
 # Class `SpaceProxy`
+<<<<<<< HEAD
 <sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:36]()</sub>
+=======
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:62]()</sub>
+>>>>>>> ac192b194 (tunneling)
 
 
 
@@ -25,8 +29,15 @@ Arguments:
 Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/react-client/interfaces/CancellableInvitationObservable)&gt;</code>
 ### [stateUpdate]()
 Type: <code>Event&lt;void&gt;</code>
+<<<<<<< HEAD
 ### [db]()
 Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
+=======
+### [experimental]()
+Type: <code>Experimental</code>
+
+Next-gen database.
+>>>>>>> ac192b194 (tunneling)
 ### [internal]()
 Type: <code>Internal</code>
 ### [invitations]()
@@ -38,7 +49,11 @@ Type: <code>boolean</code>
 ### [key]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 ### [properties]()
+<<<<<<< HEAD
 Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
+=======
+Type: <code>ObjectProperties</code>
+>>>>>>> ac192b194 (tunneling)
 
 ## Methods
 ### [_setOpen(open)]()

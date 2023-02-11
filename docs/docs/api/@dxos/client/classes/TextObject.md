@@ -35,6 +35,7 @@ Type: <code>undefined | TextModel</code>
 ### [_getState()]()
 
 
+<<<<<<< HEAD
 Returns: <code>Doc</code>
 
 Arguments: none
@@ -55,6 +56,11 @@ Returns: <code>undefined | MutateResult</code>
 Arguments: 
 
 `mutation`: <code>Mutation</code>
+=======
+Returns: <code>any</code>
+
+Arguments: none
+>>>>>>> ac192b194 (tunneling)
 ### [_onBind()]()
 
 

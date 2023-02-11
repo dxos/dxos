@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <<<<<<< HEAD:docs/docs/api/@dxos/react-client/types/Selection.md
 # Type `Selection`
 <sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database.d.ts:13]()</sub>
@@ -25,3 +26,7 @@ Arguments:
 
 `callback`: <code>function</code>
 >>>>>>> 52d857b5c (wip docs):docs/docs/api/@dxos/react-client/types/Query.md
+=======
+# Type `Selection`
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database.d.ts:12]()</sub>
+>>>>>>> ac192b194 (tunneling)

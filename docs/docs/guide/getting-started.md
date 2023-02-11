@@ -46,8 +46,7 @@ This will start the development server 🚀.
 
 You should be able to open two windows pointed at the dev server and see reactive updates like in the video below.
 
-<video class="dark" controls loop autoplay style="width:100%" src="/images/hello-dark.mp4"></video>
-<video class="light" controls loop autoplay style="width:100%" src="/images/hello-light.mp4"></video>
+<video class="dark" controls loop autoplay style="width:100%" src="/images/hello-dark.mp4"></video> <video class="light" controls loop autoplay style="width:100%" src="/images/hello-light.mp4"></video>
 
 ::: info Why this is cool:
 

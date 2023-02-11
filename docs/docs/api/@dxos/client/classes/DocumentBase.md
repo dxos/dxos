@@ -63,6 +63,7 @@ Arguments:
 ### [_getState()]()
 
 
+<<<<<<< HEAD
 Returns: <code>DocumentModelState</code>
 
 Arguments: none
@@ -83,6 +84,11 @@ Returns: <code>undefined | MutateResult</code>
 Arguments: 
 
 `mutation`: <code>ObjectMutationSet</code>
+=======
+Returns: <code>any</code>
+
+Arguments: none
+>>>>>>> ac192b194 (tunneling)
 ### [_onBind()]()
 
 

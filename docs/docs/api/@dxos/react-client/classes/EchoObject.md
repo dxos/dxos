@@ -33,6 +33,7 @@ ID accessor.
 ### [_getState()]()
 
 
+<<<<<<< HEAD
 Returns: <code>StateOf&lt;T&gt;</code>
 
 Arguments: none
@@ -53,6 +54,11 @@ Returns: <code>undefined | MutateResult</code>
 Arguments: 
 
 `mutation`: <code>MutationOf&lt;T&gt;</code>
+=======
+Returns: <code>any</code>
+
+Arguments: none
+>>>>>>> ac192b194 (tunneling)
 ### [_onBind()]()
 
 

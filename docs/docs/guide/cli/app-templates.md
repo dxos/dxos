@@ -45,11 +45,14 @@ This template provides some opinions for app development:
 ## Turn features on or off
 
 Invoking the template with `--interactive` like below will ask about enabling each feature one at a time.
+
 ```bash
 npm init @dxos --interactive # or
 dx app create <appname> --interactive
 ```
+
 Example turning off PWA features:
+
 ```bash
 dx app create example --interactive
 Creating app...

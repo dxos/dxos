@@ -229,6 +229,7 @@ Arguments:
 
 `resultSet`: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;T&gt;</code>
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### [useSpace(\[spaceKey\], \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
 =======
 ### [useSelection(selection)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L21)
@@ -245,6 +246,8 @@ Returns: <code>undefined | T[]</code>
 Arguments: 
 
 `selection`: <code>[Selection](/api/@dxos/react-client/classes/Selection)&lt;T, void&gt; | [SelectionResult](/api/@dxos/react-client/classes/SelectionResult)&lt;T, any&gt; | Falsy</code>
+=======
+>>>>>>> ac192b194 (tunneling)
 ### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L18)
 >>>>>>> 464c6e793 (docs wip)
 
@@ -324,10 +327,14 @@ Returns: <code>[SubscriptionHandle](/api/@dxos/react-client/interfaces/Subscript
 Arguments: 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 `selection`: <code>[Selection](/api/@dxos/react-client/types/Selection)</code>
 =======
 `selection`: <code>Selection</code>
 >>>>>>> 464c6e793 (docs wip)
+=======
+`selection`: <code>[Selection](/api/@dxos/react-client/types/Selection)</code>
+>>>>>>> ac192b194 (tunneling)
 ### [withReactor(component, opts)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useReactor.tsx#L64)
 
 
