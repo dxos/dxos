@@ -52,12 +52,6 @@
     },
     {
       "path": "../react-components-deprecated"
-    },
-    {
-      "path": "../react-registry-client"
-    },
-    {
-      "path": "../registry-client"
     }
   ]
 }

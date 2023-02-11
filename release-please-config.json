@@ -298,17 +298,7 @@
         },
         {
           "type": "json",
-          "path": "packages/deprecated/react-registry-client/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/deprecated/react-toolkit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/registry-client/package.json",
           "jsonpath": "$.version"
         },
         {
