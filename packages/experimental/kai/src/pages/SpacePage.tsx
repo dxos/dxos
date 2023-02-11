@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../app';
-import { createSpacePath, SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId, Section } from '../hooks';
+import { Section, SpaceContext, SpaceContextType, useActiveFrames, createSpacePath, defaultFrameId } from '../hooks';
 import { ManageSpacePage } from '../pages';
 
 // TODO(burdon): Factor out.
