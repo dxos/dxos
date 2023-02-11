@@ -4,26 +4,30 @@
 
 import React, { Context, Dispatch, FC, ReactNode, SetStateAction, createContext, useContext, useState } from 'react';
 
+import { Module } from '@dxos/protocols/proto/dxos/config';
+
+// TODO(burdon): Remove enum (registry).
 export enum FrameID {
-  STACK = 'stack',
-  TABLE = 'table',
-  KANBAN = 'kanban',
-  TASK = 'task',
-  CALENDAR = 'events',
-  DOCUMENT = 'document',
-  NOTE = 'note',
-  FILE = 'file',
-  SKETCH = 'sketch',
-  EXPLORER = 'explorer',
-  MAPS = 'maps',
-  PRESENTER = 'presenter', // TODO(burdon): MDX.
-  CHESS = 'chess',
-  SANDBOX = 'sandbox'
+  STACK = 'dxos.module.frame.stack',
+  TABLE = 'dxos.module.frame.table',
+  KANBAN = 'dxos.module.frame.kanban',
+  TASK = 'dxos.module.frame.task',
+  CALENDAR = 'dxos.module.frame.events',
+  DOCUMENT = 'dxos.module.frame.document',
+  NOTE = 'dxos.module.frame.note',
+  FILE = 'dxos.module.frame.file',
+  SKETCH = 'dxos.module.frame.sketch',
+  EXPLORER = 'dxos.module.frame.explorer',
+  MAPS = 'dxos.module.frame.maps',
+  PRESENTER = 'dxos.module.frame.presenter', // TODO(burdon): MDX.
+  CHESS = 'dxos.module.frame.chess',
+  SANDBOX = 'dxos.module.frame.sandbox'
 }
 
 export const defaultFrameId = FrameID.STACK;
 
 // prettier-ignore
+// TODO(burdon): From space.
 const activeFrames = [
   FrameID.STACK,
   FrameID.TABLE,
@@ -33,29 +37,27 @@ const activeFrames = [
   // FrameID.NOTES
 ];
 
-// TODO(burdon): Compact view (e.g., within Space).
 export type FrameDef = {
-  id: FrameID;
-  system?: boolean;
-  title: string;
-  description?: string;
-  Icon: FC<any>;
-  Component: FC<any>;
-  Tile?: FC<any>;
+  module: Module;
+  runtime: {
+    Icon: FC<any>;
+    Component: FC<any>;
+    Tile?: FC<any>;
+  };
 };
 
-export type FrameMap = { [index: string]: FrameDef };
+export type FrameMap = Map<string, FrameDef>;
 
 export type FramesContextType = {
   frames: FrameMap;
-  active: FrameID[];
+  active: string[];
 };
 
 const createFrameMap = (frames: FrameDef[]): FrameMap =>
   frames.reduce((map: FrameMap, frame) => {
-    map[frame.id] = frame;
+    map.set(frame.module.id!, frame);
     return map;
-  }, {});
+  }, new Map<string, FrameDef>());
 
 export type FramesStateContextType = [FramesContextType, Dispatch<SetStateAction<FramesContextType>>];
 
@@ -69,19 +71,15 @@ export const FramesProvider: FC<{ children: ReactNode; frames: FrameDef[] }> = (
   return <FramesContext.Provider value={[state, setState]}>{children}</FramesContext.Provider>;
 };
 
-export const useFrames = (): FrameMap => {
-  const [{ frames }] = useContext(FramesContext)!;
-  return frames;
-};
-
-export const useActiveFrames = (): FrameDef[] => {
-  const [{ active, frames }] = useContext(FramesContext)!;
-  return active.map((id) => frames[id]);
+// TODO(burdon): DMG.
+export const useFrames = (): { frames: FrameMap; active: string[] } => {
+  const [{ frames, active }] = useContext(FramesContext)!;
+  return { frames, active };
 };
 
 export const useFrameDispatch = () => {
   const [, dispatch] = useContext(FramesContext)!;
-  return (id: FrameID, add: boolean) => {
+  return (id: string, add: boolean) => {
     dispatch((context: FramesContextType) => {
       const { frames, active } = context;
       const list = active.filter((frame) => frame !== id);

@@ -14,6 +14,7 @@ export interface QueryEvents<T> {
   onUpdate(result: T[]): void;
 }
 
+// TODO(burdon): Observable pattern?
 export interface QueryObservable<T> extends Observable<QueryEvents<T>> {
   get results(): T[];
   fetch(): void;

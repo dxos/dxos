@@ -75,6 +75,9 @@
       "path": "../../deprecated/react-toolkit"
     },
     {
+      "path": "../../deprecated/registry-client"
+    },
+    {
       "path": "../../experimental/gem-spore"
     },
     {
@@ -85,9 +88,6 @@
     },
     {
       "path": "../../experimental/plexus"
-    },
-    {
-      "path": "../../experimental/registry-client"
     },
     {
       "path": "../../sdk/client"

@@ -1,20 +1,16 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "emitDeclarationOnly": false,
     "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
-  "exclude": [
-    "/node_modules/"
-  ],
   "include": [
-    "src",
-    "stories"
+    "playwright",
+    "src"
   ],
   "references": [
     {
@@ -24,10 +20,10 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/esbuild-plugins"
+      "path": "../../common/keys"
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/log"
     },
     {
       "path": "../../common/node-std"
@@ -36,7 +32,7 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../core/halo/credentials"
+      "path": "../../common/util"
     },
     {
       "path": "../../core/protocols"
@@ -51,13 +47,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../react-components-deprecated"
-    },
-    {
-      "path": "../react-registry-client"
-    },
-    {
-      "path": "../registry-client"
+      "path": "../metagraph"
     }
   ]
 }

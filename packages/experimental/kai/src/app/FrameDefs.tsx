@@ -38,95 +38,163 @@ import { FrameID, FrameDef } from '../hooks';
 // prettier-ignore
 export const frames: FrameDef[] = [
   {
-    id: FrameID.STACK,
-    title: 'Stack',
-    description: 'Configurable tiles.',
-    Icon: Stack,
-    Component: StackFrame
+    module: {
+      id: FrameID.STACK,
+      type: 'dxos.module.frame',
+      displayName: 'Stack',
+      description: 'Configurable tiles.'
+    },
+    runtime: {
+      Icon: Stack,
+      Component: StackFrame
+    }
   },
   {
-    id: FrameID.TABLE,
-    title: 'Table',
-    description: 'Generic data browser.',
-    Icon: Table,
-    Component: TableFrame
+    module: {
+      id: FrameID.TABLE,
+      type: 'dxos.module.frame',
+      displayName: 'Table',
+      description: 'Generic data browser.'
+
+    },
+    runtime: {
+      Icon: Table,
+      Component: TableFrame
+    }
   },
   {
-    id: FrameID.KANBAN,
-    title: 'Kanban',
-    description: 'Card based process management.',
-    Icon: KanbanIcon,
-    Component: Kanban.Frame,
-    Tile: Kanban.Tile
+    module: {
+      id: FrameID.KANBAN,
+      type: 'dxos.module.frame',
+      displayName: 'Kanban',
+      description: 'Card based process management.'
+    },
+    runtime: {
+      Icon: KanbanIcon,
+      Component: Kanban.Frame,
+      Tile: Kanban.Tile
+    }
   },
   {
-    id: FrameID.TASK,
-    title: 'Tasks',
-    description: 'Project and task management tools.',
-    Icon: ListChecks,
-    Component: TaskFrame
+    module: {
+      id: FrameID.TASK,
+      type: 'dxos.module.frame',
+      displayName: 'Tasks',
+      description: 'Project and task management tools.'
+    },
+    runtime: {
+      Icon: ListChecks,
+      Component: TaskFrame
+    }
   },
   {
-    id: FrameID.CALENDAR,
-    title: 'Events',
-    description: 'Calendar and time management tools.',
-    Icon: Calendar,
-    Component: CalendarFrame
+    module: {
+      id: FrameID.CALENDAR,
+      type: 'dxos.module.frame',
+      displayName: 'Events',
+      description: 'Calendar and time management tools.'
+
+    },
+    runtime: {
+      Icon: Calendar,
+      Component: CalendarFrame
+    }
   },
   {
-    id: FrameID.DOCUMENT,
-    title: 'Documents',
-    description: 'Realtime structured document editing.',
-    Icon: Article,
-    Component: DocumentFrame
+    module: {
+      id: FrameID.DOCUMENT,
+      type: 'dxos.module.frame',
+      displayName: 'Documents',
+      description: 'Realtime structured document editing.'
+    },
+    runtime: {
+      Icon: Article,
+      Component: DocumentFrame
+    }
   },
   {
-    id: FrameID.NOTE,
-    title: 'Notes',
-    description: 'Brainstorming notes.',
-    Icon: Cards,
-    Component: NoteFrame
+    module: {
+      id: FrameID.NOTE,
+      type: 'dxos.module.frame',
+      displayName: 'Notes',
+      description: 'Brainstorming notes.'
+
+    },
+    runtime: {
+      Icon: Cards,
+      Component: NoteFrame
+    }
   },
   {
-    id: FrameID.FILE,
-    title: 'Files',
-    description: 'Distributed file sharing.',
-    Icon: Files,
-    Component: FileFrame
+    module: {
+      id: FrameID.FILE,
+      type: 'dxos.module.frame',
+      displayName: 'Files',
+      description: 'Distributed file sharing.'
+    },
+    runtime: {
+      Icon: Files,
+      Component: FileFrame
+    }
   },
   {
-    id: FrameID.SKETCH,
-    title: 'Sketch',
-    description: 'Simple sketches.',
-    Icon: HighlighterCircle,
-    Component: SketchFrame
+    module: {
+      id: FrameID.SKETCH,
+      type: 'dxos.module.frame',
+      displayName: 'Sketch',
+      description: 'Simple sketches.'
+    },
+    runtime: {
+      Icon: HighlighterCircle,
+      Component: SketchFrame
+    }
   },
   {
-    id: FrameID.EXPLORER,
-    title: 'Explorer',
-    description: 'Graphical User Interface and Data Explorer (GUIDE).',
-    Icon: Graph,
-    Component: ExplorerFrame
+    module: {
+      id: FrameID.EXPLORER,
+      type: 'dxos.module.frame',
+      displayName: 'Explorer',
+      description: 'Graphical User Interface and Data Explorer (GUIDE).'
+    },
+    runtime: {
+      Icon: Graph,
+      Component: ExplorerFrame
+    }
   },
   {
-    id: FrameID.MAPS,
-    title: 'Maps',
-    description: 'Community contributed street maps.',
-    Icon: Compass,
-    Component: MapFrame
+    module: {
+      id: FrameID.MAPS,
+      type: 'dxos.module.frame',
+      displayName: 'Maps',
+      description: 'Community contributed street maps.'
+    },
+    runtime: {
+      Icon: Compass,
+      Component: MapFrame
+    }
   },
   {
-    id: FrameID.CHESS,
-    title: 'Chess',
-    description: 'Peer-to-peer and engine powered games.',
-    Icon: Sword,
-    Component: ChessFrame
+    module: {
+      id: FrameID.CHESS,
+      type: 'dxos.module.frame',
+      displayName: 'Chess',
+      description: 'Peer-to-peer and engine powered games.'
+    },
+    runtime: {
+      Icon: Sword,
+      Component: ChessFrame
+    }
   },
   {
-    id: FrameID.SANDBOX,
-    title: 'Sandbox',
-    description: 'Collaborative code sandbox.',
-    Icon: Code,
-    Component: SandboxFrame
+    module: {
+      id: FrameID.SANDBOX,
+      type: 'dxos.module.frame',
+      displayName: 'Sandbox',
+      description: 'Collaborative code sandbox.'
+    },
+    runtime: {
+      Icon: Code,
+      Component: SandboxFrame
+    }
   }
 ];

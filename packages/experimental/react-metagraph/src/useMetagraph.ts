@@ -2,12 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { Context, createContext, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Metagraph } from '@dxos/metagraph';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useConfig } from '@dxos/react-client';
+
+export type MetagraphContextType = {
+  frames?: Module[];
+  bots?: Module[];
+};
+
+export const MetagraphContext: Context<MetagraphContextType> = createContext<MetagraphContextType>({});
 
 /**
  * Retrieve a configured metagraph object.
@@ -31,7 +38,7 @@ export type ModulesResult = {
 /**
  * Query modules.
  */
-export const useModules = (tags: string[], pollingMs = -1): ModulesResult => {
+export const useModules = (type: string, tags?: string[], pollingMs = -1): ModulesResult => {
   const metagraph = useMetagraph();
   const [isLoading, setLoading] = useState(true);
   const [modules, setModules] = useState<Module[]>([]);
