@@ -12,8 +12,6 @@ import {
   id,
 } from '@dxos/react-client';
 
-type MyFoo = { id: string };
-
 export const App = () => {
   useIdentity({ login: true });
   const space = useOrCreateFirstSpace();

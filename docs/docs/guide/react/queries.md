@@ -19,20 +19,20 @@ import {
   useOrCreateFirstSpace,
   useIdentity,
   useQuery,
-  id
+  id,
 } from '@dxos/react-client';
+
+type MyFoo = { id: string };
 
 export const App = () => {
   useIdentity({ login: true });
   const space = useOrCreateFirstSpace();
   const tasks = useQuery(space, { type: 'task' });
-  return (
-    <>
-      {tasks?.map((item) => (
-        <div key={item[id]}>{item.title}</div>
-      ))}
-    </>
-  );
+  return <>
+    {tasks?.map((item) => (
+      <div key={item[id]}>{item.title}</div>
+    ))}
+  </>;
 };
 
 const root = createRoot(document.getElementById('root')!);
@@ -46,7 +46,6 @@ root.render(
 The API definition of `useQuery` is below. It returns a generic `Document` type which supports the ability to set and read arbitrary keys and values. See [below](#type-safe-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
-
 ### [useQuery(\[space\], \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L18)
 
 Create subscription.
@@ -109,5 +108,26 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks like this:
 
 ```tsx file=./snippets/schema.ts
+//
+// Copyright 2022 DXOS.org
+//
 
+import { DocumentBase, TypeFilter, EchoSchema } from "@dxos/react-client";
+
+export const schema = EchoSchema.fromJson('{ "protobuf generated json here": true }');
+
+export class Task extends DocumentBase {
+  static readonly type = schema.getType('dxos.tasks.Task');
+
+  static filter(opts?: { title?: string, completed?: boolean, previous?: Task }): TypeFilter<Task> {
+    return Task.type.createFilter(opts);
+  }
+
+  constructor(opts?: { title?: string, completed?: boolean, previous?: Task }) {
+    super({ ...opts, '@type': Task.type.name }, Task.type);
+  }
+
+  declare title: string;
+  declare completed: boolean;
+}
 ```
