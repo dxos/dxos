@@ -10,8 +10,14 @@ import { useSpaces } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
+<<<<<<< HEAD
 import { AppBar, FrameContainer, FrameSelector, Sidebar } from '../app';
 import { createSpacePath, SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from '../hooks';
+=======
+import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../app';
+import { createSpacePath, SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId, Section } from '../hooks';
+import { ManageSpacePage } from '../pages';
+>>>>>>> main
 
 // TODO(burdon): Factor out.
 const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
@@ -61,9 +67,15 @@ const SpacePage = () => {
         <AppBar />
         <FrameSelector />
         <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
+<<<<<<< HEAD
           {/* {section === Section.REGISTRY && <FrameRegistry />} */}
           {/* TODO(burdon): Rename (not a page). */}
           {/* {section === Section.SETTINGS && <ManageSpacePage />} */}
+=======
+          {section === Section.REGISTRY && <FrameRegistry />}
+          {/* TODO(burdon): Rename (not a page). */}
+          {section === Section.SETTINGS && <ManageSpacePage />}
+>>>>>>> main
           {frame && <FrameContainer frame={frame} />}
         </div>
       </PanelSidebarProvider>
