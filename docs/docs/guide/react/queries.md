@@ -128,10 +128,41 @@ export class Task extends DocumentBase {
   declare completed: boolean;
 }
 ```
+Declared are the ancestor class and specific fields on the type. 
+
+There are other utilities like a `filter` you can pass to `useQuery` to locate items of this type.
 :::
 
 To use the type declarations, simply import the relevant type like `Task` from the typescript location out of `dxtype` and pass it to `useQuery<T>`:
 
-```tsx file=./snippets/use-query-typed.tsx#L5-
+```tsx{11,16} file=./snippets/use-query-typed.tsx#L5-
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  ClientProvider,
+  useOrCreateFirstSpace,
+  useIdentity,
+  useQuery,
+  id,
+} from '@dxos/react-client';
 
+import { Task } from './schema';
+
+export const App = () => {
+  useIdentity({ login: true });
+  const space = useOrCreateFirstSpace();
+  const tasks = useQuery<Task>(space, Task.filter());
+  return <>
+    {tasks?.map((item) => (
+      <div key={item[id]}>{item.title} - {item.completed}</div>
+    ))}
+  </>;
+};
+
+const root = createRoot(document.getElementById('root')!);
+root.render(
+  <ClientProvider>
+    <App />
+  </ClientProvider>
+);
 ```
