@@ -18,7 +18,9 @@ npm init @dxos/bare
 These can also be used from the `dx` CLI:
 
 ```bash
-dx app create --template <template-name> <project-name>
+dx app create <project-name>
+# or
+dx app create --template bare <project-name>
 ```
 
 ## `hello` template
