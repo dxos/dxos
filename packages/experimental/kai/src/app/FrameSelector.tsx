@@ -11,22 +11,22 @@ import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 // TODO(burdon): Rename frames.
 
-import { useActiveFrames, useSpace, createSpacePath, Section } from '../hooks';
+import { useFrames, useSpace, createSpacePath, Section } from '../hooks';
 
 /**
  * View tabs.
  */
 export const FrameSelector: FC = () => {
   const space = useSpace();
-  const frames = useActiveFrames();
+  const { frames, active: activeFrames } = useFrames();
   const { section, frame: currentFrame } = useParams();
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
   const toggleSidebar = useTogglePanelSidebar();
 
-  const Tab: FC<{ selected: boolean; title: string; Icon: FC<any>; link: string }> = ({
+  const Tab: FC<{ selected: boolean; label: string; Icon: FC<any>; link: string }> = ({
     selected,
-    title,
+    label,
     Icon,
     link
   }) => {
@@ -34,9 +34,9 @@ export const FrameSelector: FC = () => {
       <div
         className={mx('flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black', selected && 'bg-white')}
       >
-        <Link className='flex' to={link} title={title}>
+        <Link className='flex' to={link} title={label}>
           <Icon weight='light' className={getSize(6)} />
-          <div className='hidden lg:flex ml-1'>{title}</div>
+          <div className='hidden lg:flex ml-1'>{label}</div>
         </Link>
       </div>
     );
@@ -58,13 +58,14 @@ export const FrameSelector: FC = () => {
             </button>
           )}
 
-          {frames
-            .filter(({ system }) => !system)
-            .map(({ id, title, Icon }) => (
+          {Array.from(activeFrames)
+            .map((frameId) => frames.get(frameId)!)
+            .filter(Boolean)
+            .map(({ module: { id, displayName }, runtime: { Icon } }) => (
               <Tab
                 key={id}
                 selected={id === currentFrame}
-                title={title}
+                label={displayName ?? ''}
                 Icon={Icon}
                 link={createSpacePath(space.key, id)}
               />
@@ -72,7 +73,7 @@ export const FrameSelector: FC = () => {
         </div>
 
         <div className='flex items-center mr-3'>
-          <Tab selected={section === Section.REGISTRY} title='Registry' Icon={Globe} link={Section.REGISTRY} />
+          <Tab selected={section === Section.REGISTRY} label='Registry' Icon={Globe} link={Section.REGISTRY} />
         </div>
       </div>
     </div>
@@ -83,9 +84,12 @@ export const FrameSelector: FC = () => {
  * Viewport for frame.
  */
 export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
-  const frames = useActiveFrames();
-  const active = frames.find(({ id }) => id === frame);
-  const { Component } = active ?? {};
+  const { frames, active: activeFrames } = useFrames();
+  if (!activeFrames.find((frameId) => frameId === frame)) {
+    return null;
+  }
+
+  const Component = frames.get(frame)?.runtime.Component;
   if (!Component) {
     return null;
   }

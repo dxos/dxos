@@ -48,8 +48,9 @@ message Module {
     optional google.protobuf.Struct env = 10;
   }
 
-  // TODO(burdon): Requires publicKey.
-  optional string name = 1;
+  optional string name = 1; // TODO(burdon): Replace with id (or key?)
+  optional string id = 8; // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
+
   optional string type = 2;
   optional string display_name = 3;
   optional string description = 4;

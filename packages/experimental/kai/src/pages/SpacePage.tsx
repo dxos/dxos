@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../app';
-import { Section, SpaceContext, SpaceContextType, useActiveFrames, createSpacePath, defaultFrameId } from '../hooks';
+import { Section, SpaceContext, SpaceContextType, createSpacePath, defaultFrameId, useFrames } from '../hooks';
 import { ManageSpacePage } from '../pages';
 
 // TODO(burdon): Factor out.
@@ -23,7 +23,7 @@ const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
  */
 const SpacePage = () => {
   const navigate = useNavigate();
-  const frames = useActiveFrames();
+  const { active: activeFrames } = useFrames();
   const { spaceKey: currentSpaceKey, section, frame } = useParams();
   const spaces = useSpaces();
   const space = currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined;
@@ -40,7 +40,8 @@ const SpacePage = () => {
 
   // Change to default view.
   useEffect(() => {
-    if (space && (!section || section === 'frame') && (!frame || !frames.find(({ id }) => id === frame))) {
+    // Default frame if current frame not found.
+    if (space && (!section || section === 'frame') && (!frame || !activeFrames.find((frameId) => frameId === frame))) {
       navigate(createSpacePath(space.key, defaultFrameId));
     }
   }, [currentSpaceKey, section, frame]);
@@ -56,7 +57,7 @@ const SpacePage = () => {
         inlineStart
         slots={{
           content: { children: <Sidebar />, className: 'block-start-appbar' },
-          main: { className: mx(frames.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
+          main: { className: mx(activeFrames.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
         }}
       >
         <AppBar />

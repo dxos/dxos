@@ -6,13 +6,22 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { HashRouter } from 'react-router-dom';
 
+import { MetagraphClientFake } from '@dxos/metagraph';
 import { appkitTranslations, ErrorProvider, Fallback, FatalError } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
+import { MetagraphProvider } from '@dxos/react-metagraph';
 
-import { AppState, AppStateProvider, BotsProvider, FramesProvider, useAppRoutes, useClientProvider } from '../hooks';
+import {
+  AppState,
+  AppStateProvider,
+  useAppRoutes,
+  useClientProvider,
+  botModules,
+  defaultFrames,
+  frameModules
+} from '../hooks';
 import kaiTranslations from '../translations';
-import { frames } from './FrameDefs';
 
 const Routes = () => {
   return useAppRoutes();
@@ -23,6 +32,9 @@ const Routes = () => {
  */
 export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider();
+  const metagraphContext = {
+    client: new MetagraphClientFake([...botModules, ...frameModules])
+  };
 
   // TODO(burdon): Error boundary and indicator.
   return (
@@ -34,16 +46,14 @@ export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initia
       <ErrorProvider>
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>
-            <AppStateProvider value={initialState}>
-              <BotsProvider>
-                <FramesProvider frames={frames}>
-                  <HashRouter>
-                    <Routes />
-                    {children}
-                  </HashRouter>
-                </FramesProvider>
-              </BotsProvider>
-            </AppStateProvider>
+            <MetagraphProvider value={metagraphContext}>
+              <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
+                <HashRouter>
+                  <Routes />
+                  {children}
+                </HashRouter>
+              </AppStateProvider>
+            </MetagraphProvider>
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>

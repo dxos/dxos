@@ -5,13 +5,14 @@
 import React, { useMemo } from 'react';
 
 import { Heading, Loading, useTranslation } from '@dxos/react-components';
+import { useModules } from '@dxos/react-metagraph';
 
 import { AppList, AppProps } from '../components';
-import { useModules } from '../experimental';
 
 const AppsPage = () => {
   const { t } = useTranslation('halo');
-  const { modules, isLoading } = useModules(['showcase'], 1_000);
+  // TODO(burdon): Type should be dxos.module.app (check dx.yml files).
+  const { modules, isLoading } = useModules({ type: 'app', tags: ['showcase'] }, { polling: 1_000 });
   const apps = useMemo<AppProps[]>(
     () =>
       modules.map((module) => ({

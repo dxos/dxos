@@ -4,6 +4,9 @@
 
 import React, { FC, ReactNode } from 'react';
 
+/**
+ * @deprecated
+ */
 export const CardRow: FC<{ sidebar?: ReactNode; action?: ReactNode; header: ReactNode; children?: ReactNode }> = ({
   sidebar,
   action,
