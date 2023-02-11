@@ -14,7 +14,7 @@ import { getSize } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button, MemberList, SpaceList } from '../components';
-import { useSpace, createSpacePath, useAppState, createInvitationPath } from '../hooks';
+import { useSpace, createSpacePath, useAppState, createInvitationPath, Section } from '../hooks';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
@@ -94,8 +94,7 @@ export const Sidebar = () => {
       return;
     }
 
-    navigate(`/${spaceKey.truncate()}/settings`);
-    // navigate(createSpacePath(spaceKey, FrameID.SETTINGS));
+    navigate(`/${spaceKey.truncate()}/${Section.SETTINGS}`);
   };
 
   return (
@@ -119,7 +118,7 @@ export const Sidebar = () => {
             </Button>
           </div>
           <div className='flex items-center'>
-            <Button className='mr-2' onClick={toggleSidebar}>
+            <Button className='mr-4' onClick={toggleSidebar}>
               {isOpen && <CaretLeft className={getSize(6)} />}
             </Button>
           </div>
