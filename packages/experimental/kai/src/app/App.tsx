@@ -6,10 +6,11 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { HashRouter } from 'react-router-dom';
 
+import { MetagraphClientFake } from '@dxos/metagraph';
 import { appkitTranslations, ErrorProvider, Fallback, FatalError } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
-import { MetagraphContext } from '@dxos/react-metagraph';
+import { MetagraphProvider } from '@dxos/react-metagraph';
 
 import {
   AppState,
@@ -31,10 +32,8 @@ const Routes = () => {
  */
 export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initialState = {}, children }) => {
   const clientProvider = useClientProvider();
-
   const metagraphContext = {
-    frames: frameModules,
-    bots: botModules
+    client: new MetagraphClientFake([...botModules, ...frameModules])
   };
 
   // TODO(burdon): Error boundary and indicator.
@@ -47,14 +46,14 @@ export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initia
       <ErrorProvider>
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>
-            <MetagraphContext.Provider value={metagraphContext}>
+            <MetagraphProvider value={metagraphContext}>
               <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
                 <HashRouter>
                   <Routes />
                   {children}
                 </HashRouter>
               </AppStateProvider>
-            </MetagraphContext.Provider>
+            </MetagraphProvider>
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>

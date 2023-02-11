@@ -23,7 +23,10 @@ export interface QueryObservable<T> extends Observable<QueryEvents<T>> {
 export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T>> implements QueryObservable<T> {
   private _results: T[] = [];
 
-  constructor(private readonly _callback: () => Promise<void>) {
+  // prettier-ignore
+  constructor(
+    private readonly _callback: () => Promise<void>
+  ) {
     super();
   }
 
@@ -46,14 +49,27 @@ export type Query = {
   tags?: string[];
 };
 
+const moduleFilter = (query: Query) => (module: Module) => {
+  if (query?.type !== module.type) {
+    return false;
+  }
+
+  return !query?.tags?.length || query?.tags?.filter((tag) => module.tags?.includes(tag)).length > 0;
+};
+
 export interface ServiceApi<T> {
   query(query?: Query): Promise<QueryObservable<T>>;
+}
+
+export interface Metagraph {
+  get modules(): ServiceApi<Module>;
 }
 
 /**
  * Metagraph client API.
  */
-export class Metagraph {
+// TODO(burdon): Unit test.
+export class MetagraphClient implements Metagraph {
   private readonly _serverUrl!: string;
 
   constructor(private readonly _config: Config) {
@@ -64,23 +80,29 @@ export class Metagraph {
 
   get modules(): ServiceApi<Module> {
     return {
-      query: async (query?: Query) => {
-        // TODO(burdon): Replace fetch with dxRPC?
-        // TODO(burdon): Cache observables?
+      query: async (query: Query) => {
         const observable = new QueryObservableProvider<Module>(async () => {
+          // TODO(burdon): Replace fetch with dxRPC?
           const response = await fetch(this._serverUrl);
           const { modules = [] } = ((await response.json()) as { modules: Module[] }) ?? {};
-          observable.results = modules.filter(({ type, tags }) => {
-            if (query?.type !== type) {
-              return false;
-            }
+          observable.results = modules.filter(moduleFilter(query));
+        });
 
-            if (!query?.tags?.length) {
-              return true;
-            }
+        await observable.fetch();
+        return observable;
+      }
+    };
+  }
+}
 
-            return query?.tags?.filter((tag) => tags?.includes(tag)).length > 0;
-          });
+export class MetagraphClientFake implements Metagraph {
+  constructor(private readonly _modules: Module[] = []) {}
+
+  get modules(): ServiceApi<Module> {
+    return {
+      query: async (query: Query) => {
+        const observable = new QueryObservableProvider<Module>(async () => {
+          observable.results = this._modules.filter(moduleFilter(query));
         });
 
         await observable.fetch();

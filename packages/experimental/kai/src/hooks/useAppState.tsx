@@ -108,10 +108,10 @@ export const AppStateProvider: FC<{ children: ReactNode; initialState?: AppState
 };
 
 export const useAppState = (): AppState => {
-  const { state } = useContext(AppStateContext) ?? raise(new Error('AppStateProvider not initialized.'));
+  const { state } = useContext(AppStateContext) ?? raise(new Error('Missing AppStateContext.'));
   return state;
 };
 
 export const useAppReducer = (): AppReducer => {
-  return useContext(AppStateContext) ?? raise(new Error('AppStateProvider not initialized.'));
+  return useContext(AppStateContext) ?? raise(new Error('Missing AppStateContext.'));
 };

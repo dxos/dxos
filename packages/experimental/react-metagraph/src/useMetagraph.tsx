@@ -2,32 +2,37 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Context, createContext, useEffect, useState } from 'react';
+import React, { Context, createContext, FC, ReactNode, useContext, useEffect, useState } from 'react';
 
+import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { Metagraph, Query } from '@dxos/metagraph';
+import { Metagraph, MetagraphClient, Query } from '@dxos/metagraph';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 import { useConfig } from '@dxos/react-client';
 
 export type MetagraphContextType = {
-  frames?: Module[];
-  bots?: Module[];
+  client: Metagraph;
 };
 
-export const MetagraphContext: Context<MetagraphContextType> = createContext<MetagraphContextType>({});
+export const MetagraphContext: Context<MetagraphContextType | undefined> = createContext<
+  MetagraphContextType | undefined
+>(undefined);
+
+export const MetagraphProvider: FC<{ children?: ReactNode; value?: MetagraphContextType }> = ({ children, value }) => {
+  const config = useConfig();
+  return (
+    <MetagraphContext.Provider value={value ?? { client: new MetagraphClient(config) }}>
+      {children}
+    </MetagraphContext.Provider>
+  );
+};
 
 /**
  * Retrieve a configured metagraph object.
  */
-export const useMetagraph = () => {
-  const config = useConfig();
-  const [metagraph, setMetagraph] = useState<Metagraph>();
-  useEffect(() => {
-    const metagraph = new Metagraph(config);
-    setMetagraph(metagraph);
-  }, [config]);
-
-  return metagraph;
+export const useMetagraph = (): Metagraph => {
+  const { client } = useContext(MetagraphContext) ?? raise(new Error('Missing MetagraphContext.'));
+  return client;
 };
 
 export type ModulesResult = {

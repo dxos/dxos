@@ -60,6 +60,7 @@ export const FrameSelector: FC = () => {
 
           {Array.from(activeFrames)
             .map((frameId) => frames.get(frameId)!)
+            .filter(Boolean)
             .map(({ module: { id, displayName }, runtime: { Icon } }) => (
               <Tab
                 key={id}
