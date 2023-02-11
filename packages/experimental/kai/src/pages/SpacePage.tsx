@@ -10,8 +10,9 @@ import { useSpaces } from '@dxos/react-client';
 import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
-import { FrameContainer, Sidebar, AppBar, FrameSelector } from '../app';
-import { createSpacePath, SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId } from '../hooks';
+import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../app';
+import { createSpacePath, SpaceContext, SpaceContextType, useActiveFrames, defaultFrameId, Section } from '../hooks';
+import { ManageSpacePage } from '../pages';
 
 // TODO(burdon): Factor out.
 const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
@@ -23,7 +24,7 @@ const matchSpaceKey = (spaces: Space[], spaceKey: string): Space | undefined =>
 const SpacePage = () => {
   const navigate = useNavigate();
   const frames = useActiveFrames();
-  const { spaceKey: currentSpaceKey, frame } = useParams();
+  const { spaceKey: currentSpaceKey, section, frame } = useParams();
   const spaces = useSpaces();
   const space = currentSpaceKey ? matchSpaceKey(spaces, currentSpaceKey) : undefined;
   const [spaceContext, setSpaceContext] = useState<SpaceContextType>();
@@ -39,15 +40,16 @@ const SpacePage = () => {
 
   // Change to default view.
   useEffect(() => {
-    if (space && (!frame || !frames.find(({ id }) => id === frame))) {
+    if (space && (!section || section === 'frame') && (!frame || !frames.find(({ id }) => id === frame))) {
       navigate(createSpacePath(space.key, defaultFrameId));
     }
-  }, [currentSpaceKey, frame]);
+  }, [currentSpaceKey, section, frame]);
 
   if (!spaceContext) {
     return null;
   }
 
+  // TODO(burdon): Container of panel (settings, registry or frame).
   return (
     <SpaceContext.Provider value={spaceContext}>
       <PanelSidebarProvider
@@ -60,6 +62,9 @@ const SpacePage = () => {
         <AppBar />
         <FrameSelector />
         <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
+          {section === Section.REGISTRY && <FrameRegistry />}
+          {/* TODO(burdon): Rename (not a page). */}
+          {section === Section.SETTINGS && <ManageSpacePage />}
           {frame && <FrameContainer frame={frame} />}
         </div>
       </PanelSidebarProvider>
