@@ -1,6 +1,7 @@
 ---
 description: DXOS Application templates
 label: Templates
+order: 2
 ---
 
 # Application Templates

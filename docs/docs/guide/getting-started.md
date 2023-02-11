@@ -200,7 +200,7 @@ Your app will now be accessible in a browser at `http://<app-name>.localhost` wh
 
 If you started with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost).
 
-::: warning
+::: warning Caution
 Your app will now always be available on your machine until KUBE or the specific app is stopped.
 :::
 
@@ -218,7 +218,7 @@ Using DXOS:
 
 *   ECHO with [React](./react/)
 *   ECHO with [TypeScript](./typescript/)
-*   ECHO with [strongly typed objects](./typescript/types)
+*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 Get in touch and contribute:
 

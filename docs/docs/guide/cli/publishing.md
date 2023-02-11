@@ -1,5 +1,6 @@
 ---
 description: Publishing apps
+order: 5
 ---
 
 # Publishing Apps

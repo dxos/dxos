@@ -1,6 +1,5 @@
 ---
-position: 1
-label: Overview
+order: 0
 dir:
   text: Command Line Tools
   order: 19

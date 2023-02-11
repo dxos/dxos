@@ -18,3 +18,7 @@ KUBE instances form and propagate the peer-to-peer [MESH](../glossary#mesh) netw
 | **IPFS** | KUBE runs an IPFS node and hosts application code in an IPFS instance |
 | **Signaling Service** | helps peers locate the network and each other on top of `libp2p` |
 | [STUN](https://en.wikipedia.org/wiki/STUN), [TURN](https://en.wikipedia.org/wiki/Traversal_Using_Relays_around_NAT), [ICE](https://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment) | Network hole punching, traversal, and relay services |
+
+### Next steps
+- KUBE [Installation](../kube)
+- [Build an application](../getting-started) and [deploy to KUBE](../getting-started#deploying-your-app-to-a-kube)
