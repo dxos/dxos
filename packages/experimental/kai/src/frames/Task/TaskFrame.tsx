@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { TaskList } from '../../containers';
+import { UnorderedTaskList } from '../../containers';
 
 export const TaskFrame = () => {
   return (
     <div className='min-bs-full flex flex-1 justify-center bg-panel-bg'>
-      <TaskList />
+      <UnorderedTaskList />
     </div>
   );
 };

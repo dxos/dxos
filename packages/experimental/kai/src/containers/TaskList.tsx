@@ -2,93 +2,77 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Spinner } from 'phosphor-react';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { EditableList, EditableListItem } from '@dxos/react-appkit';
+import { EditableList, EditableListItem, EditableListProps } from '@dxos/react-appkit';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
-import { mx } from '@dxos/react-components';
+import { randomString } from '@dxos/react-components';
 
 import { useSpace } from '../hooks';
 import { Task } from '../proto';
 
 // TODO(burdon): Generic header with create.
 
-export const TaskList: FC<{ completed?: boolean; readonly?: boolean; fullWidth?: boolean }> = ({
-  completed = undefined,
-  readonly = false,
-  fullWidth = false
-}) => {
+interface TaskListProps {
+  tasks: Task[];
+  unordered?: boolean;
+  onDelete?: (task: Task) => void;
+  onCreate?: (task: Task) => void;
+  onMoveItem?: EditableListProps['onMoveItem'];
+}
+
+interface UnorderedTaskListProps extends Omit<TaskListProps, 'tasks' | 'unordered'> {
+  filter?: Parameters<typeof Task.filter>[0];
+}
+
+export const UnorderedTaskList: FC<UnorderedTaskListProps> = ({ filter, ...props }) => {
   const space = useSpace(); // TODO(burdon): Factor out.
-  const tasks = useQuery(space, Task.filter({ completed }));
+  const tasks = useQuery(space, Task.filter(filter));
+  return <TaskList unordered tasks={tasks} {...props} />;
+};
+
+export const TaskList: FC<TaskListProps> = withReactor(({ tasks, onCreate, onDelete, onMoveItem, unordered }) => {
+  const space = useSpace(); // TODO(burdon): Factor out.
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    let t: ReturnType<typeof setTimeout> | undefined;
-    if (saving) {
-      if (t) {
-        clearTimeout(t);
-      }
-      t = setTimeout(() => {
-        setSaving(false);
-      }, 1000);
-    }
-
-    return () => clearTimeout(t);
-  }, [saving]);
-
-  const handleCreateTask = async (task: Task) => {
-    if (task.title.length) {
+  const handleCreateTask = async () => {
+    if (newTaskTitle.length) {
+      const task = new Task({ title: newTaskTitle ?? '' });
       await space.experimental.db.save(task);
       setNewTaskTitle('');
+      onCreate?.(task);
     }
   };
 
-  const handleDeleteTask = async (task: Task) => {
-    await space.experimental.db.delete(task);
-  };
+  // TODO(burdon): DND prevents being editable.
+  // TODO(burdon): Delete row.
+  // TODO(burdon): Track index position; move up/down.
+  // TODO(burdon): Highlight active row.
+  // TODO(burdon): Check editable.
+  // TODO(burdon): DragOverlay
 
-  const handleSave = () => {
-    setSaving(true);
-  };
+  // TODO(burdon): Workflowy
+  //  - Tab to indent.
+  //  - Split current task if pressing Enter in the middle.
 
   return (
-    <>
-      {/* TODO(burdon): Adapt width to container. */}
-      <div
-        className={mx('flex flex-col overflow-y-auto bg-white', fullWidth ? 'w-full' : 'w-screen is-full md:is-column')}
-      >
-        <EditableList
-          variant='unordered'
-          id={space.key.toHex()}
-          labelId='excluded'
-          onClickAdd={() => handleCreateTask(new Task({ title: newTaskTitle ?? '' }))}
-          nextItemTitle={newTaskTitle}
-          onChangeNextItemTitle={({ target: { value } }) => {
-            setNewTaskTitle(value);
-          }}
-        >
-          {tasks?.map((task, index) => (
-            <TaskItem
-              key={task[id]}
-              task={task}
-              onSave={handleSave}
-              onDelete={readonly ? undefined : handleDeleteTask}
-              readonly={readonly}
-            />
-          ))}
-        </EditableList>
-      </div>
-      {saving && (
-        <div className='absolute bottom-0 right-0 z-50 p-3 animate-spin text-red-600'>
-          <Spinner />
-        </div>
-      )}
-    </>
+    <EditableList
+      completable
+      variant={unordered ? 'unordered' : 'ordered-draggable'}
+      id={id in tasks ? (tasks as unknown as { [id]: string })[id] : randomString()}
+      labelId='omitted'
+      onMoveItem={onMoveItem}
+      itemIdOrder={tasks.map((task) => task[id])}
+      nextItemTitle={newTaskTitle}
+      onChangeNextItemTitle={({ target: { value } }) => setNewTaskTitle(value)}
+      onClickAdd={handleCreateTask}
+    >
+      {tasks.map((task) => (
+        <TaskItem key={task[id]} task={task} onDelete={onDelete} />
+      ))}
+    </EditableList>
   );
-};
+});
 
 export const TaskItem: FC<{
   task: Task;
