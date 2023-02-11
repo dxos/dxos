@@ -192,15 +192,6 @@ Arguments: none
 
 Create subscription.
 
-Returns: <code>T[]</code>
-
-Arguments: 
-
-`space`: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
-
-`filter`: <code>[TypeFilter](/api/@dxos/react-client/types/TypeFilter)&lt;T&gt;</code>
-Create subscription.
-
 Returns: <code>[Document](/api/@dxos/react-client/classes/Document)[]</code>
 
 Arguments: 

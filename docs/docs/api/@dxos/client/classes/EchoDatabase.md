@@ -47,6 +47,7 @@ Arguments:
 ### [query(\[filter\])]()
 
 
+<<<<<<< HEAD
 Filter by type.
 
 Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;T&gt;</code>
@@ -55,6 +56,9 @@ Arguments:
 
 `filter`: <code>[TypeFilter](/api/@dxos/client/types/TypeFilter)&lt;T&gt;</code>
 Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;[Document](/api/@dxos/client/classes/Document)&gt;</code>
+=======
+Returns: <code>[Query](/api/@dxos/client/types/Query)&lt;[Document](/api/@dxos/client/classes/Document)&gt;</code>
+>>>>>>> 5ed417652 (wip docs)
 
 Arguments: 
 

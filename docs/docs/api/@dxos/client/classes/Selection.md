@@ -68,15 +68,6 @@ Arguments:
 ### [filter(this, filter)]()
 
 
-Filter entities of this selection.
-
-Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
-
-Arguments: 
-
-`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
-
-`filter`: <code>ItemFilter</code>
 Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;U, R&gt;</code>
 
 Arguments: 

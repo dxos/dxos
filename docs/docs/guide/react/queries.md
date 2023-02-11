@@ -48,14 +48,13 @@ The API definition of `useQuery` is below. It returns a generic `Document` type 
 
 Create subscription.
 
+Returns: <code>[Document](/api/@dxos/react-client/classes/Document)\[]</code>
+
 Arguments:
 
 `space`: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
 
-`filter`: <code>[TypeFilter](/api/@dxos/react-client/types/TypeFilter)\<T></code>
-Create subscription.
-
-Returns: <code>[Document](/api/@dxos/react-client/classes/Document)\[]</code>
+`filter`: <code>[Filter](/api/@dxos/react-client/types/Filter)\<T></code>
 :::
 
 ## Type-safe Queries
@@ -64,8 +63,26 @@ It's possible to obtain strongly typed objects from `useQuery` if we provide a d
 
 Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):
 
-```proto file=./snippets/schema.proto
+```proto{6,13} file=./snippets/schema.proto
+syntax = "proto3";
+
+package example.tasks;
+
+message Task {
+  option (object) = true;
+
+  string title = 1;
+  bool completed = 2;
+}
+
+message TaskList {
+  option (object) = true;
+
+  string title = 1;
+  repeated Task tasks = 2;
+}
 ```
+Note the directives `option (object) = true;` which instruct the framework to generate TypeScript classes from the marked `messages`.
 
 Using a tool called `dxtype` from `@dxos/echo-schema` we can generate corresponding TypeScript types for use with DXOS Client.
 
