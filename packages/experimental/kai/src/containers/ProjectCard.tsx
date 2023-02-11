@@ -43,7 +43,7 @@ export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) =
       </div>
 
       {/* Tasks */}
-      <div>
+      <div className='p-1.5'>
         <TaskList
           tasks={project.tasks}
           onCreate={(task: Task) => {

@@ -98,7 +98,7 @@ export const TaskItem: FC<{
         onChangeTitle={({ target: { value } }) => {
           task.title = value ?? '';
         }}
-        onClickDelete={() => onDelete?.(task)}
+        {...(onDelete && { onClickDelete: () => onDelete(task) })}
       />
     );
   },
