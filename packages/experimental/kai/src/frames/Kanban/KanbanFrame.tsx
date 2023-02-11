@@ -61,3 +61,5 @@ export const KanbanFrame: FC = () => {
     </div>
   );
 };
+
+export default KanbanFrame;

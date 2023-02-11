@@ -19,7 +19,7 @@ import {
   useFrameDispatch,
   useFrames,
   useSpace
-} from '../../hooks';
+} from '../hooks';
 
 type ExtensionType = 'app' | 'bot';
 
@@ -51,11 +51,7 @@ const Tile: FC<{
   );
 };
 
-/**
- * DMG Explorer.
- * https://ifttt.com/explore
- */
-export const RegistryFrame = () => {
+export const FrameRegistry = () => {
   const space = useSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>('app');
