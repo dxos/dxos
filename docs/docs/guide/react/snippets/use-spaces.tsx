@@ -20,7 +20,7 @@ export const TaskList = (props: { space: Space }) => {
   return (
     <>
       {tasks?.map((item) => (
-        <div key={item[id]}>{item.model.get('title')}</div>
+        <div key={item[id]}>{item.title}</div>
       ))}
     </>
   );

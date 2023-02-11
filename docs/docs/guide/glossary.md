@@ -51,7 +51,7 @@ Represents an agent or actor in the system
 
 ### Vault
 
-Data in ECHO and HALO identity is physically stored in browser storage on the HALO application's domain, not the consuming application's. Read more about [local vault topology](./echo/#local-vault-topology).
+ECHO data and HALO identities are physically stored in browser storage on the [HALO](./platform/halo) application's domain, not the consuming application's. **This enables data privacy and gives end-users control over their data**. Read more about [HALO vault topology](./platform/#local-vault-topology).
 
 ### Device
 

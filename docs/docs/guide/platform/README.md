@@ -59,9 +59,9 @@ See the [glossary](glossary) for definitions of other terms you'll find in this 
 
 ECHO is uniquely organized to give control over information to the end-user and their devices.
 
-Browsers isolate web apps running on different domains, and this property is used to isolate the main "vault" of storage to a specific domain. By default that's `halo.dxos.org` but developers are free to [operate their own](advanced#custom-halo-source) copies of HALO on their local machine (e.g. using KUBE), their local network, or any other domain.
+Browsers isolate web apps running on different domains, and this property is used to isolate the main `vault` of storage to a specific domain. By default that's [HALO](./halo) on `halo.dxos.org` but developers are free to [operate their own](../typescript/config#custom-halo-source) copies of HALO on their local machine (e.g. using KUBE), their local network, or any other domain.
 
-The vault domain is responsible for holding end-user identity (keys) and all ECHO data in persistent browser or disk storage. It exposes this data to applications via an API over [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+The vault domain is responsible for holding end-user identity (keys, credentials, metadata, ..., etc.) and all ECHO data in persistent browser or disk storage. It exposes this data to applications via an API over [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
 
 A service worker and the CRDT-based architecture of ECHO enable both offline and real-time collaboration.
 

@@ -148,3 +148,18 @@ html[data-theme=dark] .custom-container.note {
     box-shadow: none;
   }
 }
+
+.custom-container {
+  ul {
+    li {
+      margin-bottom: 0.62em;
+    }
+  }
+}
+
+// Rich text formatting
+h2,h3,h4,h5,h6 {
+  >a:first-child {
+    margin-left: -1.1em;
+  }
+}

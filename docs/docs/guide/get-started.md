@@ -9,10 +9,11 @@ DXOS is the developer platform for **collaborative**, **offline-first**, **priva
 
 ::: note In this guide
 
-*   Starting a react project with an [app template](#create-an-app)
-*   Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`
-*   Starting a [KUBE](#starting-a-kube) to host the app
-*   [Deploying](#deploying-your-app-to-a-kube) the app to KUBE
+*   Starting a react project with an [app template](#create-an-app),
+*   Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`.
+*   Using [HALO](#halo-identity) for decentralized identity.
+*   Starting a [KUBE](#starting-a-kube) to host the app.
+*   [Deploying](#deploying-your-app-to-a-kube) the app to KUBE.
 
 :::
 
@@ -43,15 +44,15 @@ Only [`pnpm`](https://pnpm.io/) is supported for now: `npm i -g pnpm`.
 
 This will start the development server 🚀.
 
-You should be able to open two windows and see reactive updates like in the video below.
+You should be able to open two windows pointed at the dev server and see reactive updates like in the video below.
 
 <video controls loop autoplay style="width:100%" src="/images/quickstart.mp4"></video>
 
 ::: info Why this is cool:
 
 *   State is being reactively shared between all instances of the app running on the same machine.
-*   Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
-*   The app running on `localhost` subscribes to the data through a local shared memory connection with `halo.dxos.org` which works offline.
+*   Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
+*   The app running on `localhost` subscribes to the data through a local shared memory connection with [HALO](./platform/halo) on `halo.dxos.org` which is fast and works offline.
 *   When remote peers join the same [space](./glossary#space), their changes are given to running apps through `halo` in the same way.
 *   Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
 *   User identity (and their public/private keys) are established securely and maintained for the whole device (browser profile) without a password.

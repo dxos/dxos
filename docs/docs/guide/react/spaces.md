@@ -22,11 +22,7 @@ Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
 Arguments: none
 :::
 
-```tsx{14} file=./snippets/create-spaces.tsx
-//
-// Copyright 2022 DXOS.org
-//
-
+```tsx{10} file=./snippets/create-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider, useClient } from '@dxos/react-client';
@@ -92,7 +88,7 @@ Arguments: none
 
 ### Example
 
-```tsx{27,30,34} file=./snippets/use-spaces.tsx#L5-
+```tsx{15,27,30,34} file=./snippets/use-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Space } from '@dxos/client';
@@ -142,18 +138,19 @@ root.render(
 
 See [the platform overview](../platform/#spaces) describing the general process of joining peers to a space.
 
-In `react` the package `@dxos/react-appkit` offers components that implement the entire join flow.
+In `react` the package `@dxos/react-appkit` offers components that implement the entire join flow. See [how to include DXOS UI packages]() in your project, or use one of the DXOS [application templates](../cli/app-templates) which have DXOS UI pre-configured.
 
 ::: note Tip
-To implement invitation flows in your own way, see the TypeScript API about [joining spaces](../typescript/spaces).
+To implement invitation flows manually, see the TypeScript API about [joining spaces](../typescript/spaces).
 :::
 
-The pre-built space join flow is contained in the `SpacesPage` component for `react`. This is designed to be a panel or full-screen page that:
+The pre-built space join flow is contained in the `SpacesPage` component for `react`. This is designed to be a panel or a full-screen page.
 
-*   lists spaces
-*   allows joining spaces with an invite code
-*   allows creating spaces
-*   supports navigating to a space by clicking it
+### SpacesPage
+*   Lists spaces.
+*   Allows joining spaces with an invite code.
+*   Allows creating spaces.
+*   Supports navigating to a space by clicking it.
 
 ```tsx file=./snippets/spaces-flows.tsx#L5-
 import React from 'react';
