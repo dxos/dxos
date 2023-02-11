@@ -2,24 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Article,
-  Calendar,
-  Cards,
-  Compass,
-  Files,
-  Stack,
-  Gear,
-  Globe,
-  Graph,
-  HighlighterCircle,
-  Kanban,
-  ListChecks,
-  Sword,
-  Table,
-  Code,
-  CaretRight
-} from 'phosphor-react';
+import { Globe, CaretRight } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -27,133 +10,8 @@ import { getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 // TODO(burdon): Rename frames.
-import {
-  CalendarFrame,
-  ChessFrame,
-  StackFrame,
-  DocumentFrame,
-  ExplorerFrame,
-  FileFrame,
-  KanbanFrame,
-  MapFrame,
-  NoteFrame,
-  RegistryFrame,
-  SketchFrame,
-  TableFrame,
-  TaskFrame,
-  SandboxFrame
-} from '../frames';
-import { FrameID, FrameDef, useActiveFrames, useSpace, createSpacePath } from '../hooks';
-import { ManageSpacePage } from '../pages';
 
-// prettier-ignore
-export const frameSelector: FrameDef[] = [
-  {
-    id: FrameID.SETTINGS,
-    title: 'Settings',
-    Icon: Gear,
-    Component: ManageSpacePage,
-    system: true
-  },
-  {
-    id: FrameID.REGISTRY,
-    title: 'Registry',
-    Icon: Globe,
-    Component: RegistryFrame,
-    system: true
-  },
-  {
-    id: FrameID.STACK,
-    title: 'Stack',
-    description: 'Configurable tiles.',
-    Icon: Stack,
-    Component: StackFrame
-  },
-  {
-    id: FrameID.TABLE,
-    title: 'Table',
-    description: 'Generic data browser.',
-    Icon: Table,
-    Component: TableFrame
-  },
-  {
-    id: FrameID.KANBAN,
-    title: 'Kanban',
-    description: 'Card based process management.',
-    Icon: Kanban,
-    Component: KanbanFrame
-  },
-  {
-    id: FrameID.TASK,
-    title: 'Tasks',
-    description: 'Project and task management tools.',
-    Icon: ListChecks,
-    Component: TaskFrame
-  },
-  {
-    id: FrameID.CALENDAR,
-    title: 'Events',
-    description: 'Calendar and time management tools.',
-    Icon: Calendar,
-    Component: CalendarFrame
-  },
-  {
-    id: FrameID.DOCUMENT,
-    title: 'Documents',
-    description: 'Realtime structured document editing.',
-    Icon: Article,
-    Component: DocumentFrame
-  },
-  {
-    id: FrameID.NOTE,
-    title: 'Notes',
-    description: 'Brainstorming notes.',
-    Icon: Cards,
-    Component: NoteFrame
-  },
-  {
-    id: FrameID.FILE,
-    title: 'Files',
-    description: 'Distributed file sharing.',
-    Icon: Files,
-    Component: FileFrame
-  },
-  {
-    id: FrameID.SKETCH,
-    title: 'Sketch',
-    description: 'Simple sketches.',
-    Icon: HighlighterCircle,
-    Component: SketchFrame
-  },
-  {
-    id: FrameID.EXPLORER,
-    title: 'Explorer',
-    description: 'Graphical User Interface and Data Explorer (GUIDE).',
-    Icon: Graph,
-    Component: ExplorerFrame
-  },
-  {
-    id: FrameID.MAPS,
-    title: 'Maps',
-    description: 'Community contributed street maps.',
-    Icon: Compass,
-    Component: MapFrame
-  },
-  {
-    id: FrameID.CHESS,
-    title: 'Chess',
-    description: 'Peer-to-peer and engine powered games.',
-    Icon: Sword,
-    Component: ChessFrame
-  },
-  {
-    id: FrameID.SANDBOX,
-    title: 'Sandbox',
-    description: 'Collaborative code sandbox.',
-    Icon: Code,
-    Component: SandboxFrame
-  }
-];
+import { useActiveFrames, useSpace, createSpacePath, Section } from '../hooks';
 
 /**
  * View tabs.
@@ -161,7 +19,7 @@ export const frameSelector: FrameDef[] = [
 export const FrameSelector: FC = () => {
   const space = useSpace();
   const frames = useActiveFrames();
-  const { frame: currentFrame } = useParams();
+  const { section, frame: currentFrame } = useParams();
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
   const toggleSidebar = useTogglePanelSidebar();
@@ -214,7 +72,7 @@ export const FrameSelector: FC = () => {
         </div>
 
         <div className='flex items-center mr-3'>
-          <Tab selected={FrameID.REGISTRY === currentFrame} title='Registry' Icon={Globe} link={FrameID.REGISTRY} />
+          <Tab selected={section === Section.REGISTRY} title='Registry' Icon={Globe} link={Section.REGISTRY} />
         </div>
       </div>
     </div>

@@ -5,8 +5,6 @@
 import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 export enum FrameID {
-  SETTINGS = 'settings',
-  REGISTRY = 'registry',
   STACK = 'stack',
   TABLE = 'table',
   KANBAN = 'kanban',
@@ -23,12 +21,10 @@ export enum FrameID {
   SANDBOX = 'sandbox'
 }
 
-export const defaultFrameId = FrameID.KANBAN;
+export const defaultFrameId = FrameID.STACK;
 
 // prettier-ignore
 const activeFrames = [
-  FrameID.SETTINGS,
-  FrameID.REGISTRY,
   FrameID.STACK,
   FrameID.TABLE,
   FrameID.TASK,
@@ -45,7 +41,7 @@ export type FrameDef = {
   description?: string;
   Icon: FC<any>;
   Component: FC<any>;
-  Compact?: FC<any>;
+  Tile?: FC<any>;
 };
 
 export type FrameMap = { [index: string]: FrameDef };

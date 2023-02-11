@@ -14,7 +14,7 @@ import { getSize } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button, MemberList, SpaceList } from '../components';
-import { useSpace, createSpacePath, FrameID, useAppState, createInvitationPath } from '../hooks';
+import { useSpace, createSpacePath, useAppState, createInvitationPath } from '../hooks';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
@@ -94,7 +94,8 @@ export const Sidebar = () => {
       return;
     }
 
-    navigate(createSpacePath(spaceKey, FrameID.SETTINGS));
+    navigate(`/${spaceKey.truncate()}/settings`);
+    // navigate(createSpacePath(spaceKey, FrameID.SETTINGS));
   };
 
   return (
