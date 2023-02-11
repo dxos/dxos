@@ -59,6 +59,7 @@ You should be able to open two windows pointed at the dev server and see reactiv
 *   Everything works offline.
 *   Real-time collaboration is possible when online.
 *   There are **no servers** or [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping) to worry about.
+
 :::
 
 Now you have an application that does all the above. It relies on [ECHO](./echo) to perform state consensus and [HALO](./halo) for identity.

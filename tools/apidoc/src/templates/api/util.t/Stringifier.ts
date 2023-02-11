@@ -111,7 +111,7 @@ export class Stringifier {
     ### [${ref.name.replace('[', '\\[').replace(']', '\\]')}${args}](${ref.sources?.[0]?.url})
     ${this.comment(ref.comment)}
 
-    ${ref.signatures?.map((s) => this.signature(s))}
+    ${ref?.signatures ? this.signature(ref.signatures[ref.signatures.length - 1]) : ''}
     `;
   }
 

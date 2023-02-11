@@ -107,7 +107,7 @@ export const TaskList = (props: { space: Space }) => {
   return (
     <>
       {tasks?.map((item) => (
-        <div key={item[id]}>{item.model.get('title')}</div>
+        <div key={item[id]}>{item.title}</div>
       ))}
     </>
   );
@@ -147,6 +147,7 @@ To implement invitation flows manually, see the TypeScript API about [joining sp
 The pre-built space join flow is contained in the `SpacesPage` component for `react`. This is designed to be a panel or a full-screen page.
 
 ### SpacesPage
+
 *   Lists spaces.
 *   Allows joining spaces with an invite code.
 *   Allows creating spaces.

@@ -5,11 +5,11 @@ order: 100
 
 # Glossary
 
-### ECHO
+### [ECHO](./platform)
 
 Eventually Consistent Hierarchical Object Store supporting multiple concurrent writers and latent offline writers
 
-### HALO
+### [HALO](./platform/halo)
 
 A protocol, application, and SDK for managing a decentralized user identity for end users and developers
 
@@ -17,15 +17,15 @@ A protocol, application, and SDK for managing a decentralized user identity for 
 
 The set of peer networking technologies behind ECHO, HALO and KUBE
 
-### KUBE
+### [KUBE](./platform/kube)
 
 A reslilient, self-contained set of services for hosting and supporting decentralized applications
 
-### Space
+### [Space](./platform/#spaces)
 
 An ECHO replication domain containing objects which all the peers in the space replicate
 
-### Object
+### [Object](./platform/#objects)
 
 A unit of data in a space, a bag of properties and values with a type and identity
 
