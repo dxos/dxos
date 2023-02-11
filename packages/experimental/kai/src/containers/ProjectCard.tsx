@@ -45,6 +45,7 @@ export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) =
       {/* Tasks */}
       <div className='p-1.5'>
         <TaskList
+          id={project[id]}
           tasks={project.tasks}
           onCreate={(task: Task) => {
             project.tasks.push(task);

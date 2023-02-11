@@ -2,10 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useState } from 'react';
+import React, { ComponentPropsWithoutRef, FC, KeyboardEvent, useState } from 'react';
 
 import { id } from '@dxos/echo-schema';
-import { EditableList, EditableListItem, EditableListProps } from '@dxos/react-appkit';
+import {
+  EditableList,
+  EditableListItem,
+  EditableListItemSlots,
+  EditableListProps,
+  useEditableListKeyboardInteractions
+} from '@dxos/react-appkit';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { randomString } from '@dxos/react-components';
 
@@ -16,6 +22,7 @@ import { Task } from '../proto';
 
 interface TaskListProps {
   tasks: Task[];
+  id?: string;
   unordered?: boolean;
   onDelete?: (task: Task) => void;
   onCreate?: (task: Task) => void;
@@ -32,57 +39,74 @@ export const UnorderedTaskList: FC<UnorderedTaskListProps> = ({ filter, ...props
   return <TaskList unordered tasks={tasks} {...props} />;
 };
 
-export const TaskList: FC<TaskListProps> = withReactor(({ tasks, onCreate, onDelete, onMoveItem, unordered }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const handleCreateTask = async () => {
-    if (newTaskTitle.length) {
-      const task = new Task({ title: newTaskTitle ?? '' });
-      await space.experimental.db.save(task);
-      setNewTaskTitle('');
-      onCreate?.(task);
-    }
-  };
+export const TaskList: FC<TaskListProps> = withReactor(
+  ({ id: propsId, tasks, onCreate, onDelete, onMoveItem, unordered }) => {
+    const space = useSpace(); // TODO(burdon): Factor out.
+    const [newTaskTitle, setNewTaskTitle] = useState('');
+    const listId = propsId ?? space.key.toHex() ?? randomString();
+    const handleCreateTask = async () => {
+      if (newTaskTitle.length) {
+        const task = new Task({ title: newTaskTitle ?? '' });
+        await space.experimental.db.save(task);
+        setNewTaskTitle('');
+        onCreate?.(task);
+      }
+    };
 
-  // TODO(burdon): DND prevents being editable.
-  // TODO(burdon): Delete row.
-  // TODO(burdon): Track index position; move up/down.
-  // TODO(burdon): Highlight active row.
-  // TODO(burdon): Check editable.
-  // TODO(burdon): DragOverlay
+    // TODO(burdon): DND prevents being editable.
+    // TODO(burdon): Delete row.
+    // TODO(burdon): Track index position; move up/down.
+    // TODO(burdon): Highlight active row.
+    // TODO(burdon): Check editable.
+    // TODO(burdon): DragOverlay
 
-  // TODO(burdon): Workflowy
-  //  - Tab to indent.
-  //  - Split current task if pressing Enter in the middle.
+    // TODO(burdon): Workflowy
+    //  - Tab to indent.
+    //  - Split current task if pressing Enter in the middle.
 
-  return (
-    <EditableList
-      completable
-      variant={unordered ? 'unordered' : 'ordered-draggable'}
-      id={id in tasks ? (tasks as unknown as { [id]: string })[id] : randomString()}
-      labelId='omitted'
-      onMoveItem={onMoveItem}
-      itemIdOrder={tasks.map((task) => task[id])}
-      nextItemTitle={newTaskTitle}
-      onChangeNextItemTitle={({ target: { value } }) => setNewTaskTitle(value)}
-      onClickAdd={handleCreateTask}
-    >
-      {tasks.map((task) => (
-        <TaskItem key={task[id]} task={task} onDelete={onDelete} />
-      ))}
-    </EditableList>
-  );
-});
+    const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(listId);
+
+    const onAddItemKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Enter') {
+        void handleCreateTask();
+      } else {
+        onListItemInputKeyDown(event);
+      }
+    };
+
+    const itemSlots = { input: { input: { ...itemAttrs, onKeyDown: onListItemInputKeyDown } } };
+
+    return (
+      <EditableList
+        completable
+        variant={unordered ? 'unordered' : 'ordered-draggable'}
+        id={listId}
+        labelId='omitted'
+        onMoveItem={onMoveItem}
+        itemIdOrder={tasks.map((task) => task[id])}
+        nextItemTitle={newTaskTitle}
+        onChangeNextItemTitle={({ target: { value } }) => setNewTaskTitle(value)}
+        onClickAdd={handleCreateTask}
+        slots={{
+          root: hostAttrs as ComponentPropsWithoutRef<'div'>,
+          addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } }
+        }}
+      >
+        {tasks.map((task) => (
+          <TaskItem key={task[id]} task={task} onDelete={onDelete} slots={itemSlots} />
+        ))}
+      </EditableList>
+    );
+  }
+);
 
 export const TaskItem: FC<{
   task: Task;
-  readonly?: boolean;
-  showAssigned?: boolean;
-  onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
+  slots?: EditableListItemSlots;
 }> = withReactor(
-  ({ task, readonly, showAssigned, onEnter, onDelete, onSave }) => {
+  ({ task, onDelete, onSave, slots }) => {
     useReactorContext({
       onChange: () => {
         onSave?.(task);
@@ -99,6 +123,7 @@ export const TaskItem: FC<{
           task.title = value ?? '';
         }}
         {...(onDelete && { onClickDelete: () => onDelete(task) })}
+        slots={slots}
       />
     );
   },
