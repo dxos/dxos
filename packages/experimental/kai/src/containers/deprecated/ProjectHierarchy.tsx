@@ -10,7 +10,7 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { TreeView, TreeViewItem } from '@dxos/react-components';
 
-import { Project } from '../proto';
+import { Project } from '../../proto';
 
 export const mapProjectToItem = (project: Project): TreeViewItem => ({
   id: project[id],

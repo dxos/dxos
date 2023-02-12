@@ -7,8 +7,8 @@ import React, { FC, useEffect, useState } from 'react';
 import { Space } from '@dxos/client';
 import { EchoDatabase } from '@dxos/echo-schema';
 
-import { Button } from '../components';
-import { Task } from '../proto';
+import { Button } from '../../components';
+import { Task } from '../../proto';
 
 /**
  * Mutation batch.

@@ -13,7 +13,7 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { useFileDownload, useGenerator, useSpace, createSpacePath } from '../hooks';
+import { useFileDownload, useGenerator, useSpace, createSpacePath } from '../../hooks';
 
 // TODO(burdon): Factor out.
 export const isMobile = new MobileDetect(window.navigator.userAgent).mobile();

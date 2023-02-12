@@ -41,14 +41,14 @@ export const Kanban: FC<{
               key={column.id ?? i}
               className='flex flex-col overflow-hidden w-screen md:w-column snap-center px-4 md:px-2 pb-4'
             >
-              <div className='flex flex-col first:ml-0 overflow-hidden border drop-shadow-md bg-gray-100 rounded'>
+              <div className='flex flex-col first:ml-0 overflow-hidden border drop-shadow-md bg-zinc-200 border-zinc-300 rounded'>
                 <div className='flex p-3 rounded-t text-sm'>{column.header}</div>
                 <div className='flex flex-col flex-1 overflow-y-auto px-3'>
                   {/* Cards. */}
                   {filtered.map((object) => {
                     const { Content } = column;
                     return (
-                      <div key={object[id]} className='mb-2 bg-white rounded border border-slate-300'>
+                      <div key={object[id]} className='mb-2 bg-white rounded border border-zinc-300'>
                         <Content object={object} />
                       </div>
                     );

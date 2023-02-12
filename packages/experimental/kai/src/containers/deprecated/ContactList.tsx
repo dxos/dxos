@@ -10,8 +10,8 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
-import { Input, CardRow } from '../components';
-import { Address, Contact } from '../proto';
+import { Input, CardRow } from '../../components';
+import { Address, Contact } from '../../proto';
 
 export const ContactList: FC<{ space: Space }> = ({ space }) => {
   const contacts: Contact[] = useQuery(space, Contact.filter());

@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { captureException } from '@dxos/sentry';
 
-import { App } from './app';
+import { App } from './containers';
 import { AppState } from './hooks';
 
 import '../style.css';

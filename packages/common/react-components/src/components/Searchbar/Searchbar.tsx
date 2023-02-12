@@ -12,10 +12,9 @@ import { Input } from '../Input';
  * Search bar.
  */
 export const Searchbar: FC<{
-  border?: boolean;
   disabled?: boolean;
   onSearch?: (text: string) => void;
-}> = ({ border = true, disabled, onSearch }) => {
+}> = ({ disabled, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
@@ -23,8 +22,8 @@ export const Searchbar: FC<{
   };
 
   return (
-    <div className='flex flex-1 flex-col bg-white'>
-      <div className={mx('flex flex-1 items-center p-2', border && 'border rounded')}>
+    <div className='flex flex-1 flex-col'>
+      <div className={mx('flex flex-1 items-center')}>
         <Input
           label={'Search'}
           onChange={(event) => handleChange(event.target.value)}
@@ -41,6 +40,8 @@ export const Searchbar: FC<{
             }
           }}
         />
+
+        {/* TODO(burdon): Move decorator inside input. */}
         <button className='p-1' onClick={() => onSearch?.(text)}>
           <MagnifyingGlass />
         </button>
