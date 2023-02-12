@@ -388,6 +388,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/react-metagraph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/react-registry-client/package.json",
           "jsonpath": "$.version"
         },

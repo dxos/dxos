@@ -72,6 +72,7 @@
     "react-components": "packages/common/react-components",
     "react-components-deprecated": "packages/deprecated/react-components-deprecated",
     "react-composer": "packages/apps/patterns/react-composer",
+    "react-metagraph": "packages/experimental/react-metagraph",
     "react-registry-client": "packages/experimental/react-registry-client",
     "react-toolkit": "packages/deprecated/react-toolkit",
     "react-ui": "packages/apps/patterns/react-ui",

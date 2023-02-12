@@ -2,35 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AppStoreLogo, Robot } from 'phosphor-react';
+import { FrameCorners, Robot } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx, Searchbar } from '@dxos/react-components';
 
-import {
-  BotID,
-  FrameID,
-  createSpacePath,
-  useActiveBots,
-  useActiveFrames,
-  useBotDispatch,
-  useBots,
-  useFrameDispatch,
-  useFrames,
-  useSpace
-} from '../hooks';
+import { createSpacePath, useBots, useFrames, useSpace, BotDef, FrameDef, useAppReducer } from '../hooks';
 
-type ExtensionType = 'app' | 'bot';
+// TODO(burdon): Move to DMG?
+enum ExtensionType {
+  FRAME,
+  BOT
+}
 
 const Tile: FC<{
   id: string;
-  title: string;
+  label: string;
   description?: string;
   active: boolean;
   Icon: FC<any>;
   onSelect: (id: string) => void;
-}> = ({ id, title, description, active, Icon, onSelect }) => {
+}> = ({ id, label, description, active, Icon, onSelect }) => {
   return (
     <div
       className={mx(
@@ -41,7 +34,7 @@ const Tile: FC<{
       onClick={() => onSelect(id)}
     >
       <div className='flex flex-1 flex-col'>
-        <h2 className='text-xl font-display font-medium text-black mb-1'>{title}</h2>
+        <h2 className='text-xl font-display font-medium text-black mb-1'>{label}</h2>
         <div className='text-black'>{description}</div>
       </div>
       <div className='flex flex-col justify-center ml-2 text-black'>
@@ -54,71 +47,73 @@ const Tile: FC<{
 export const FrameRegistry = () => {
   const space = useSpace();
   const navigate = useNavigate();
-  const [type, setType] = useState<ExtensionType>('app');
+  const [type, setType] = useState<ExtensionType>(ExtensionType.FRAME);
 
-  // TODO(burdon): DMG.
-  const frames = useFrames();
-  const activeFrames = useActiveFrames();
-  const setActiveFrame = useFrameDispatch();
-  const bots = useBots();
-  const activeBots = useActiveBots();
-  const setActiveBot = useBotDispatch();
+  const { frames, active: activeFrames } = useFrames();
+  const { bots, active: activeBots } = useBots();
+  const { setActiveFrame, setActiveBot } = useAppReducer();
 
   const handleSelect = (id: string) => {
     switch (type) {
-      case 'app': {
-        const active = !activeFrames.find((frame) => frame.id === id);
-        setActiveFrame(id as FrameID, active);
+      case ExtensionType.FRAME: {
+        const active = !activeFrames.find((frameId) => frameId === id);
+        setActiveFrame(id, active);
         if (active) {
           navigate(createSpacePath(space.key, id));
         }
         break;
       }
 
-      case 'bot': {
-        // TODO(burdon): Toggle.
-        setActiveBot(id as BotID, true);
+      case ExtensionType.BOT: {
+        const active = !activeBots.find((botId) => botId === id);
+        setActiveBot(id, active, space);
         break;
       }
     }
   };
 
+  const modules: Map<string, FrameDef | BotDef> = type === ExtensionType.FRAME ? frames : bots;
+
   return (
-    <div className='flex flex-col flex-1'>
+    <div className='flex flex-col flex-1 overflow-hidden'>
       <div className='flex justify-center'>
         <div className='flex w-column items-center m-10'>
-          <Searchbar />
+          <Searchbar disabled />
           <div className='ml-4'>
-            <button className='ml-2' onClick={() => setType('app')} title='Apps'>
-              <AppStoreLogo
-                weight={type === 'app' ? 'regular' : 'thin'}
-                className={mx(getSize(8), 'text-gray-400', type === 'app' && 'text-800')}
+            <button className='ml-2' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
+              <FrameCorners
+                weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
+                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
               />
             </button>
-            <button className='ml-2' onClick={() => setType('bot')} title='Bots'>
+            <button className='ml-2' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
               <Robot
-                weight={type === 'bot' ? 'regular' : 'thin'}
-                className={mx(getSize(8), 'text-gray-400', type === 'bot' && 'text-800')}
+                weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
+                className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
               />
             </button>
           </div>
         </div>
       </div>
 
-      <div className='flex justify-center'>
+      <div className='flex flex-1 justify-center overflow-y-scroll'>
         <div className='flex flex-col p-4'>
           <div className='flex flex-col grid-cols-1 gap-4 lg:grid lg:grid-cols-3'>
-            {Object.values(type === 'app' ? frames : bots)
-              .filter(({ system }) => !system)
-              .map(({ id, title, description, Icon }) => (
+            {Array.from(modules.values())
+              // .filter(({ system }) => !system)
+              .map(({ module: { id, displayName, description }, runtime: { Icon } }) => (
                 <Tile
-                  key={id}
-                  id={id}
-                  title={title}
+                  key={id!}
+                  id={id!}
+                  label={displayName ?? id!}
                   description={description}
                   Icon={Icon}
                   onSelect={handleSelect}
-                  active={!!((type === 'app' ? activeFrames : activeBots) as any[]).find((active) => active.id === id)}
+                  active={
+                    !!((type === ExtensionType.FRAME ? activeFrames : activeBots) as any[]).find(
+                      (active) => active === id
+                    )
+                  }
                 />
               ))}
           </div>
