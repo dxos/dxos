@@ -11,8 +11,7 @@ import { AppList, AppProps } from '../components';
 
 const AppsPage = () => {
   const { t } = useTranslation('halo');
-  // TODO(burdon): Type should be dxos.module.app (check dx.yml files).
-  const { modules, isLoading } = useModules({ type: 'app', tags: ['showcase'] }, { polling: 1_000 });
+  const { modules, isLoading } = useModules({ type: 'dxos:type/app', tags: ['showcase'] }, { polling: 1_000 });
   const apps = useMemo<AppProps[]>(
     () =>
       modules.map((module) => ({

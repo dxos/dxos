@@ -53,7 +53,7 @@ export const FrameSelector: FC = () => {
       <div className='flex justify-between'>
         <div className='flex items-center'>
           {!isOpen && (
-            <button className='ml-5 mr-2' onClick={toggleSidebar}>
+            <button className='ml-5 mr-3' onClick={toggleSidebar}>
               {<CaretRight className={getSize(6)} />}
             </button>
           )}

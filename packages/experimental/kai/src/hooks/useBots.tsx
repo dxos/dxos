@@ -26,7 +26,7 @@ export const defs: BotDef[] = [
   {
     module: {
       id: 'dxos.module.bot.research',
-      type: 'dxos.module.bot',
+      type: 'dxos:type/bot',
       displayName: 'ResearchBot',
       description: 'Background data analysis and text matching.'
     },
@@ -38,7 +38,7 @@ export const defs: BotDef[] = [
   {
     module: {
       id: 'dxos.module.bot.chess',
-      type: 'dxos.module.bot',
+      type: 'dxos:type/bot',
       displayName: 'ChessBot',
       description: 'Basic chess engine.'
     },
@@ -77,7 +77,7 @@ export const botModules: Module[] = defs.map(({ module }) => module);
 export type BotMap = Map<string, BotDef>;
 
 export const useBots = (): { bots: BotMap; active: string[] } => {
-  const { modules } = useModules({ type: 'dxos.module.bot' });
+  const { modules } = useModules({ type: 'dxos:type/bot' });
   const { bots: active = [] } = useAppState()!;
   const bots = useMemo(
     () =>

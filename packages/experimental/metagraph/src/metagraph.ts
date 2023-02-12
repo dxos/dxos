@@ -49,21 +49,21 @@ export type Query = {
   tags?: string[];
 };
 
-const moduleFilter = (query: Query) => (module: Module) => {
-  if (query?.type !== module.type) {
-    return false;
-  }
-
-  return !query?.tags?.length || query?.tags?.filter((tag) => module.tags?.includes(tag)).length > 0;
-};
-
 export interface ServiceApi<T> {
-  query(query?: Query): Promise<QueryObservable<T>>;
+  query(query: Query): Promise<QueryObservable<T>>;
 }
 
 export interface Metagraph {
   get modules(): ServiceApi<Module>;
 }
+
+const moduleFilter = (query: Query) => (module: Module) => {
+  if (query.type !== module.type) {
+    return false;
+  }
+
+  return !query?.tags?.length || query?.tags?.filter((tag) => module.tags?.includes(tag)).length > 0;
+};
 
 /**
  * Metagraph client API.
