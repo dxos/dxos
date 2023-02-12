@@ -12,11 +12,12 @@ import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 import { useFrames, createSpacePath, Section, FrameDef, useFrameState } from '../../hooks';
 
 // TODO(burdon): Floating buttons since main content isn't uniform for tabs.
-const Tab: FC<{ selected: boolean; label: string; Icon: FC<any>; link: string }> = ({
+const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; compact: boolean }> = ({
   selected,
   label,
   Icon,
-  link
+  link,
+  compact = false
 }) => {
   return (
     <div
@@ -24,7 +25,7 @@ const Tab: FC<{ selected: boolean; label: string; Icon: FC<any>; link: string }>
     >
       <Link className='flex' to={link} title={label}>
         <Icon weight='light' className={getSize(6)} />
-        <div className='hidden lg:flex ml-1'>{label}</div>
+        {!compact && <div className='hidden lg:flex ml-1'>{label}</div>}
       </Link>
     </div>
   );
@@ -40,6 +41,7 @@ export const FrameSelector: FC = () => {
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
   const toggleSidebar = useTogglePanelSidebar();
+  const maxTabs = 8; // TODO(burdon): Media query?
 
   return (
     <div
@@ -67,12 +69,19 @@ export const FrameSelector: FC = () => {
                 label={displayName ?? ''}
                 Icon={Icon}
                 link={createSpacePath(space!.key, id)}
+                compact={activeFrames.length > maxTabs}
               />
             ))}
         </div>
 
-        <div className='flex items-center mr-3'>
-          <Tab selected={section === Section.REGISTRY} label='Registry' Icon={Globe} link={Section.REGISTRY} />
+        <div className='flex items-center mr-1'>
+          <Tab
+            selected={section === Section.REGISTRY}
+            label='Registry'
+            Icon={Globe}
+            link={Section.REGISTRY}
+            compact={activeFrames.length > maxTabs}
+          />
         </div>
       </div>
     </div>

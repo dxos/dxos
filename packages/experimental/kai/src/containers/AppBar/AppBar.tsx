@@ -22,7 +22,13 @@ export const Menu = () => {
 // TODO(burdon): Show search box or Space name in title.
 export const AppBar = () => {
   return (
-    <div className='flex items-center justify-between fixed px-5 inline-start-0 inline-end-0 block-start-0 bs-appbar bg-appbar-header z-[1]'>
+    <div
+      className={mx(
+        'flex items-center justify-between px-5',
+        'fixed inline-start-0 inline-end-0 block-start-0 z-[1]',
+        'bs-appbar bg-appbar-header'
+      )}
+    >
       <div className='flex items-center'>
         <Bug className={mx('logo', getSize(8))} data-testid='kai-bug' />
       </div>

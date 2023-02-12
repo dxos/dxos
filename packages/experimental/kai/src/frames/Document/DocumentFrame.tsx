@@ -14,23 +14,23 @@ import { Document } from '../../proto';
 export const DocumentFrame = withReactor(() => {
   const navigate = useNavigate();
   const { space, frame, objectId } = useFrameState();
-  const documents = useQuery(space, Document.filter());
+  const objects = useQuery(space, Document.filter());
 
   // Default to first.
-  const document = objectId ? (space!.experimental.db.getObjectById(objectId) as Document) : undefined;
+  const object = objectId ? (space!.experimental.db.getObjectById(objectId) as Document) : undefined;
   useEffect(() => {
-    if (frame && !document && documents.length) {
-      navigate(createSpacePath(space!.key, frame?.module.id, documents[0][id]));
+    if (frame && !object && objects.length) {
+      navigate(createSpacePath(space!.key, frame?.module.id, objects[0][id]));
     }
-  }, [frame, document, documents]);
+  }, [frame, object, objects]);
 
   // TODO(burdon): Handle error.
-  if (!document || !document.content) {
+  if (!object || !object.content) {
     return null;
   }
 
   // TODO(burdon): Factor out container with fragment and scrolling.
-  const fragment = document.content.doc!.getXmlFragment('content');
+  const fragment = object.content.doc!.getXmlFragment('content');
 
   return (
     <div className='flex flex-1 overflow-hidden justify-center bg-panel-bg'>
