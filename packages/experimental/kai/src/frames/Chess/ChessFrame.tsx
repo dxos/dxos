@@ -14,8 +14,7 @@ import { getSize, mx } from '@dxos/react-components';
 
 import { useSpace } from '../../hooks';
 
-const smallSize = 300;
-const panelWidth = 160;
+const gridSize = 300;
 
 const chessPieces = [ChessPieces.RIOHACHA, ChessPieces.STANDARD, ChessPieces.FUTURE, ChessPieces.CUSTOM];
 
@@ -93,25 +92,20 @@ const Play: FC<{
   return (
     <div className='flex flex-col flex-1'>
       <div className='flex w-full p-5'>
-        <button onClick={() => onClose()}>
-          <ArrowUUpLeft weight='thin' className={getSize(6)} />
-        </button>
+        <div>
+          <button onClick={() => onClose()}>
+            <ArrowUUpLeft weight='thin' className={getSize(6)} />
+          </button>
+        </div>
+        <div className='flex-1' />
+        <div className='absolute right-6 hidden md:flex flex-col w-[160px] justify-center shadow'>
+          <ChessPanel model={model} orientation={orientation} onFlip={handleFlip} />
+        </div>
       </div>
 
-      <div className='flex flex-1 flex-col justify-center'>
-        <div className='flex justify-center'>
-          <div className='hidden lg:flex' style={{ width: panelWidth }} />
-
-          <div className='w-[380px] md:w-[640px] shadow'>
-            {/* TODO(burdon): Slots. */}
-            <Chessboard model={model} orientation={orientation} pieces={chessPieces[pieces]} onUpdate={handleUpdate} />
-          </div>
-
-          <div className='hidden lg:flex flex-col ml-6 justify-center' style={{ width: panelWidth }}>
-            <div className='shadow'>
-              <ChessPanel model={model} orientation={orientation} onFlip={handleFlip} />
-            </div>
-          </div>
+      <div className='flex flex-1 justify-center items-center'>
+        <div className='w-full m-4 md:w-[700px] shadow'>
+          <Chessboard model={model} orientation={orientation} pieces={chessPieces[pieces]} onUpdate={handleUpdate} />
         </div>
       </div>
 
@@ -141,10 +135,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
-    <div
-      className='flex justify-center items-center bg-zinc-200 shadow'
-      style={{ width: smallSize, height: smallSize }}
-    >
+    <div className='flex justify-center items-center bg-zinc-200 shadow' style={{ width: gridSize, height: gridSize }}>
       <div className='flex'>
         {onClick && (
           <button onClick={onClick}>
@@ -156,20 +147,20 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   );
 
   return (
-    <div className='flex flex-1 justify-center'>
-      <div className='overflow-y-auto scrollbar'>
-        <div className='flex grid grid-cols-1 md:grid-cols-3 grid-flow-row gap-4 m-6'>
-          {games.map((game) => (
-            <div
-              key={game[id]}
-              className='shadow border-2'
-              style={{ width: smallSize, height: smallSize }}
-              onClick={() => onSelect(game)}
-            >
-              <Chessboard model={{ chess: createChess(game) }} pieces={chessPieces[pieces]} readonly />
-            </div>
-          ))}
+    <div className='flex overflow-y-auto scrollbar justify-center'>
+      <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 m-8'>
+        {games.map((game) => (
+          <div
+            key={game[id]}
+            className='shadow border'
+            style={{ width: gridSize, height: gridSize }}
+            onClick={() => onSelect(game)}
+          >
+            <Chessboard model={{ chess: createChess(game) }} pieces={chessPieces[pieces]} readonly />
+          </div>
+        ))}
 
+        <div>
           <Placeholder onClick={onCreate} />
         </div>
       </div>

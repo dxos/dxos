@@ -39,11 +39,12 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
     >
       <div>
         <div className={mx('flex w-full p-2 pl-3 pr-4 items-center')}>
-          <div className={mx('flex mr-3', selected && 'text-selection-text')}>
-            <Planet className={getSize(6)} />
-          </div>
-
           <div className='flex flex-1 font-mono cursor-pointer' onClick={() => onAction(SpaceItemAction.SELECT)}>
+            <div className={mx('flex mr-3', selected && 'text-selection-text')}>
+              <Planet className={getSize(6)} />
+            </div>
+
+            {/* TODO(burdon): Name. */}
             {space.key.truncate()}
           </div>
 
