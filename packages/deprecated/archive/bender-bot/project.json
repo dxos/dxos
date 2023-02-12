@@ -1,0 +1,29 @@
+{
+  "sourceRoot": "packages/deprecated/archive/bender-bot/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/deprecated/archive/bender-bot/src/index.ts",
+        "outputPath": "packages/deprecated/archive/bender-bot/dist/types",
+        "tsConfig": "packages/deprecated/archive/bender-bot/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/deprecated/archive/bender-bot/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

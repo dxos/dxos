@@ -1,0 +1,36 @@
+{
+  "sourceRoot": "packages/deprecated/archive/wallet/wallet-extension/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "assets": [
+          "packages/deprecated/archive/wallet/wallet-extension/*.md"
+        ],
+        "main": "packages/deprecated/archive/wallet/wallet-extension/src/index.ts",
+        "outputPath": "packages/deprecated/archive/wallet/wallet-extension/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/deprecated/archive/wallet/wallet-extension/tsconfig.json",
+        "updateBuildableProjectDepsInPackageJson": false
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/deprecated/archive/wallet/wallet-extension/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}

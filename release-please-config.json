@@ -93,11 +93,6 @@
         },
         {
           "type": "json",
-          "path": "packages/bots/bender-bot/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },
@@ -308,16 +303,6 @@
         },
         {
           "type": "json",
-          "path": "packages/deprecated/wallet/wallet-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/deprecated/wallet/wallet-playground/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/devtools/cli/package.json",
           "jsonpath": "$.version"
         },
@@ -389,16 +374,6 @@
         {
           "type": "json",
           "path": "packages/experimental/react-metagraph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/react-registry-client/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/registry-client/package.json",
           "jsonpath": "$.version"
         },
         {
