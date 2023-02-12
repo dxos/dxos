@@ -25,9 +25,10 @@ export enum Section {
   SETTINGS = 'settings'
 }
 
-// TODO(burdon): Use these below.
+// TODO(burdon): Define and use consistently.
 export enum Page {}
 
+// TODO(burdon): Use FrameDef?
 export const createSpacePath = (spaceKey: PublicKey, frame?: string, objectId?: string) =>
   `/${spaceKey.truncate()}` + (frame ? `/frame/${frame}` + (objectId ? `/${objectId}` : '') : '');
 

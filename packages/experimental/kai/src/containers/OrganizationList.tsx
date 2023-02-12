@@ -5,16 +5,15 @@
 import { Buildings, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
+import { Space } from '@dxos/client';
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
 import { Input, CardRow } from '../components';
-import { useSpace } from '../hooks';
 import { Address, Organization } from '../proto';
 
-export const OrganizationList: FC = () => {
-  const space = useSpace(); // TODO(burdon): Factor out.
+export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   const organizations: Organization[] = useQuery(space, Organization.filter());
 
   return (

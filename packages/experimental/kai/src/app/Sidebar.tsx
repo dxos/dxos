@@ -18,13 +18,12 @@ import { useSpace, createSpacePath, useAppState, createInvitationPath, Section }
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
-  const { frame, view } = useParams();
+  const { frame } = useParams();
   const navigate = useNavigate();
   const client = useClient();
   const space = useSpace();
   const spaces = useSpaces();
   const members = useMembers(space.key);
-  const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
@@ -50,10 +49,6 @@ export const Sidebar = () => {
   // TODO(wittjosiah): Find a better way to do this.
   if (prevSpace !== space) {
     setPrevSpace(space);
-  }
-
-  if (prevView !== view) {
-    setPrevView(view);
   }
 
   const handleCreateSpace = async () => {

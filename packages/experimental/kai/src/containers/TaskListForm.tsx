@@ -4,10 +4,10 @@
 
 import React, { FC, useEffect, useState } from 'react';
 
+import { Space } from '@dxos/client';
 import { EchoDatabase } from '@dxos/echo-schema';
 
 import { Button } from '../components';
-import { useSpace } from '../hooks';
 import { Task } from '../proto';
 
 /**
@@ -38,8 +38,11 @@ const useTransaction = (db: EchoDatabase): Transaction => {
   return tx;
 };
 
-export const TaskListForm: FC<{ task: Task; onClose: () => void }> = ({ task: currentTask, onClose }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
+export const TaskListForm: FC<{ space: Space; task: Task; onClose: () => void }> = ({
+  space,
+  task: currentTask,
+  onClose
+}) => {
   const tx = useTransaction(space.experimental.db);
   const task = tx.wrap(currentTask); // Projection.
 
