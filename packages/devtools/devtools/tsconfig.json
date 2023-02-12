@@ -87,9 +87,6 @@
       "path": "../../experimental/plexus"
     },
     {
-      "path": "../../experimental/registry-client"
-    },
-    {
       "path": "../../sdk/client"
     },
     {

@@ -42,12 +42,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../experimental/react-registry-client"
-    },
-    {
-      "path": "../../experimental/registry-client"
-    },
-    {
       "path": "../../sdk/client"
     },
     {

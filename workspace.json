@@ -7,7 +7,6 @@
     "async": "packages/common/async",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
-    "bender-bot": "packages/bots/bender-bot",
     "braneframe": "packages/apps/braneframe",
     "chess-app": "packages/experimental/chess-app",
     "cli": "packages/devtools/cli",
@@ -72,10 +71,9 @@
     "react-components": "packages/common/react-components",
     "react-components-deprecated": "packages/deprecated/react-components-deprecated",
     "react-composer": "packages/apps/patterns/react-composer",
-    "react-registry-client": "packages/experimental/react-registry-client",
+    "react-metagraph": "packages/experimental/react-metagraph",
     "react-toolkit": "packages/deprecated/react-toolkit",
     "react-ui": "packages/apps/patterns/react-ui",
-    "registry-client": "packages/experimental/registry-client",
     "ridoculous": "tools/ridoculous",
     "rpc": "packages/core/mesh/rpc",
     "rpc-tunnel": "packages/core/mesh/rpc-tunnel",
@@ -100,8 +98,6 @@
     "toolbox": "tools/executors/toolbox",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
-    "wallet-extension": "packages/deprecated/wallet/wallet-extension",
-    "wallet-playground": "packages/deprecated/wallet/wallet-playground",
     "x": "tools/x"
   }
 }
