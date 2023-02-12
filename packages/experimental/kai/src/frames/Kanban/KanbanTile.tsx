@@ -13,18 +13,24 @@ import { Button, Input, List, ListItemButton } from '../../components';
 import { createSpacePath } from '../../hooks';
 import { Kanban } from '../../proto';
 
+// TODO(burdon): Reuse basic item creation.
 export const KanbanTile = () => {
-  // TODO(burdon): Doesn't update if space changes (get from param not context).
+  // TODO(burdon): Doesn't update if space changes (get from param not context). Pass in space?
+  const { frame, spaceKey, objectId } = useParams();
   const space = useSpace();
-  const { frame, object: objectId } = useParams();
   const objects = useQuery(space, Kanban.filter());
   const navigate = useNavigate();
 
-  // TODO(burdon): Selection.
+  console.log('>>>>>>>>>>>>>>>>', spaceKey, space?.key.truncate());
+
   // TODO(burdon): Option to auto-create.
   useEffect(() => {
     if (objects.length === 0) {
       void handleCreate();
+    } else {
+      if (!objectId) {
+        handleSelect(objects[0][id]);
+      }
     }
   }, [objects]);
 

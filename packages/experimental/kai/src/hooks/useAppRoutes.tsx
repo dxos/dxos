@@ -85,7 +85,7 @@ export const useAppRoutes = () =>
               element: <SpacePage />
             },
             {
-              path: '/:spaceKey/:section/:frame/:object',
+              path: '/:spaceKey/:section/:frame/:objectId',
               element: <SpacePage />
             }
           ]
