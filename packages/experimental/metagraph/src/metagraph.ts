@@ -50,7 +50,7 @@ export type Query = {
 };
 
 const moduleFilter = (query: Query) => (module: Module) => {
-  if (query?.type !== module.type) {
+  if (query.type !== module.type) {
     return false;
   }
 
@@ -58,7 +58,7 @@ const moduleFilter = (query: Query) => (module: Module) => {
 };
 
 export interface ServiceApi<T> {
-  query(query?: Query): Promise<QueryObservable<T>>;
+  query(query: Query): Promise<QueryObservable<T>>;
 }
 
 export interface Metagraph {

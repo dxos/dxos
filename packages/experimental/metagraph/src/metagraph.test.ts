@@ -73,7 +73,7 @@ describe('Metagraph queries', () => {
     );
 
     {
-      const observable = await metagraph.modules.query();
+      const observable = await metagraph.modules.query({ type: 'test' });
       const results = observable.results;
       expect(results).to.have.length(5);
     }
@@ -82,8 +82,8 @@ describe('Metagraph queries', () => {
       const trigger = new Trigger<number>();
       const observable = await metagraph.modules.query({ type: 'test', tags: ['prod'] });
       const unsubscribe = observable.subscribe({
-        onUpdate: (results: Module[]) => {
-          trigger.wake(results.length);
+        onUpdate: (modules: Module[]) => {
+          trigger.wake(modules.length);
         }
       });
 
