@@ -34,11 +34,11 @@ export type TableClasses = {
   selected?: string;
 };
 
-// TODO(burdon): Theme.
+// TODO(burdon): Convert to slots.
 export const defaultTableClasses: TableClasses = {
   header: 'text-sm',
-  row: 'hover:bg-gray-200',
-  selected: 'bg-slate-300'
+  row: 'hover:bg-zinc-200',
+  selected: 'bg-zinc-300'
 };
 
 export type TableProps<T extends {}> = {
@@ -89,7 +89,7 @@ export const Table = <T extends {}>({
               {...headerGroup.getHeaderGroupProps({
                 // style: { paddingRight: '15px' },
               })}
-              className='tr bg-gray-200'
+              className='tr h-[2.5rem] border-b border-zinc-300'
             >
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
@@ -116,7 +116,7 @@ export const Table = <T extends {}>({
               // eslint-disable-next-line react/jsx-key
               <div
                 className={mx(
-                  'tr border-b border-solid border-slate-100 cursor-pointer',
+                  'tr odd:bg-white even:bg-slate-100',
                   row.original === selected && classes?.selected,
                   classes?.row
                 )}

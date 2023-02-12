@@ -79,8 +79,8 @@ export const Selector: FC<{
   // TODO(burdon): On change dynamic options.
 
   return (
-    <div className='flex flex-1 flex-col bg-white'>
-      <div className={mx('flex flex-1 items-center p-2 border', open ? 'rounded-t' : 'rounded')}>
+    <div className='flex w-full'>
+      <div className='flex flex-col'>
         <Input
           label={'Select'}
           value={value ? getText(value) : text}
@@ -88,7 +88,7 @@ export const Selector: FC<{
           placeholder={placeholder ?? 'Select...'}
           slots={{
             root: {
-              className: 'flex flex-1 mlb-0'
+              className: 'flex flex-1 mlb-0 border-t rounded'
             },
             label: { className: 'sr-only' },
             input: {
@@ -99,30 +99,34 @@ export const Selector: FC<{
           }}
         />
 
-        <div className='flex' style={{ width: 24 }}>
-          {hasOptions && (
-            <button className='p-1' onClick={handleToggleOpen}>
-              {open ? <CaretDown /> : <CaretUp />}
-            </button>
-          )}
-        </div>
+        {hasOptions && open && (
+          <div className='relative z-50'>
+            <div
+              className='absolute flex flex-col overflow-y-auto w-full bg-zinc-100 shadow border-t rounded'
+              style={{ maxHeight: rows * 32 }}
+            >
+              {options!.map((option) => (
+                <div
+                  key={option.id}
+                  className={mx('p-1 px-3 cursor-pointer', selected === option.id && 'bg-zinc-200')}
+                  onClick={() => handleSelect(option.id)}
+                >
+                  {option.title}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {hasOptions && open && (
-        <div className='relative z-50'>
-          <div className='absolute flex flex-col overflow-y-auto w-full bg-gray-100' style={{ maxHeight: rows * 32 }}>
-            {options!.map((option) => (
-              <div
-                key={option.id}
-                className={mx('p-1 pl-2 pr-2 cursor-pointer', selected === option.id && 'bg-gray-300')}
-                onClick={() => handleSelect(option.id)}
-              >
-                {option.title}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* TODO(burdon): Move decorator inside input. */}
+      <div className='flex' style={{ width: 24 }}>
+        {hasOptions && (
+          <button className='p-1' onClick={handleToggleOpen}>
+            {open ? <CaretDown /> : <CaretUp />}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

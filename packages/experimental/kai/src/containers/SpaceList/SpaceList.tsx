@@ -10,7 +10,7 @@ import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { getSize, mx } from '@dxos/react-components';
 
-import { useFrames } from '../hooks';
+import { useFrames } from '../../hooks';
 
 enum SpaceItemAction {
   SELECT = 1,
@@ -30,33 +30,37 @@ export type SpaceItemProps = {
 // TODO(burdon): Full width mobile.
 const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
-    <div className={mx('flex flex-col mx-3 mt-3 border rounded')}>
-      <div
-        className={mx(
-          'flex w-full p-2 pl-3 pr-4 items-center hover:bg-selection-hover',
-          selected && 'hover:bg-selection-bg bg-selection-bg'
-        )}
-      >
-        <div className={mx('flex mr-3', selected && 'text-selection-text')}>
-          <Planet className={getSize(6)} />
-        </div>
+    <div
+      className={mx(
+        'flex flex-col mx-3 first:mt-3 mb-3 rounded border border-slate-300',
+        'hover:bg-selection-hover',
+        selected && 'hover:bg-selection-bg bg-selection-bg border-slate-500'
+      )}
+    >
+      <div>
+        <div className={mx('flex w-full p-2 pl-3 pr-4 items-center')}>
+          <div className='flex flex-1 font-mono cursor-pointer' onClick={() => onAction(SpaceItemAction.SELECT)}>
+            <div className={mx('flex mr-3', selected && 'text-selection-text')}>
+              <Planet className={getSize(6)} />
+            </div>
 
-        <div className='flex flex-1 font-mono cursor-pointer' onClick={() => onAction(SpaceItemAction.SELECT)}>
-          {space.key.truncate()}
-        </div>
-
-        {selected && (
-          <div
-            className='flex cursor-pointer'
-            onClick={() => onAction(SpaceItemAction.SHARE)}
-            data-testid='space-settings'
-          >
-            <ShareNetwork className={getSize(6)} />
+            {/* TODO(burdon): Name. */}
+            {space.key.truncate()}
           </div>
-        )}
-      </div>
 
-      {selected && children}
+          {selected && (
+            <div
+              className='flex cursor-pointer'
+              onClick={() => onAction(SpaceItemAction.SHARE)}
+              data-testid='space-settings'
+            >
+              <ShareNetwork className={getSize(6)} />
+            </div>
+          )}
+        </div>
+
+        {selected && <div className='flex bg-white rounded-b'>{children}</div>}
+      </div>
     </div>
   );
 };
@@ -93,7 +97,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
   };
 
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col flex-1'>
       {spaces.map((space) => (
         <SpaceItem
           key={space.key.toHex()}

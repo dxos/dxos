@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getSize, mx, Searchbar } from '@dxos/react-components';
 
-import { createSpacePath, useBots, useFrames, useSpace, BotDef, FrameDef, useAppReducer } from '../hooks';
+import { createSpacePath, useBots, useFrames, useSpace, BotDef, FrameDef, useAppReducer } from '../../hooks';
 
 // TODO(burdon): Move to DMG?
 enum ExtensionType {

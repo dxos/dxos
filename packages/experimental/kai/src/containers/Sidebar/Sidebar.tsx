@@ -13,8 +13,10 @@ import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { Button, MemberList, SpaceList } from '../components';
-import { useSpace, createSpacePath, useAppState, createInvitationPath, Section } from '../hooks';
+import { Button } from '../../components';
+import { useSpace, createSpacePath, useAppState, createInvitationPath, Section, createSectionPath } from '../../hooks';
+import { MemberList } from '../MembersList';
+import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
@@ -89,14 +91,12 @@ export const Sidebar = () => {
       return;
     }
 
-    navigate(`/${spaceKey.truncate()}/${Section.SETTINGS}`);
+    navigate(createSectionPath(spaceKey, Section.SETTINGS));
   };
 
+  // TODO(burdon): Mobile slider (full width, no blur).
   return (
-    <div
-      role='none'
-      className='flex flex-col overflow-auto min-bs-full shadow backdrop-blur bg-sidebar-bg dark:bg-neutral-950/[.33]'
-    >
+    <div role='none' className='flex flex-col overflow-auto min-bs-full bg-sidebar-bg'>
       {/* Match Frame selector. */}
       <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
         <div className='flex justify-between p-1 pl-4'>
@@ -120,9 +120,9 @@ export const Sidebar = () => {
         </div>
       </div>
 
-      <div className='flex flex-col flex-1'>
+      <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
-        <div className='flex shrink-0 flex-col overflow-y-auto'>
+        <div className='flex overflow-y-auto'>
           <SpaceList spaces={spaces} selected={space.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
         </div>
 
@@ -136,6 +136,7 @@ export const Sidebar = () => {
           </div>
         </div>
 
+        {/* TODO(burdon): Move some actions to menu. */}
         <Actions />
       </div>
     </div>

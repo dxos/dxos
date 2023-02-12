@@ -13,8 +13,8 @@ import { Space } from '@dxos/client';
 import { id } from '@dxos/echo-schema';
 import { withReactor } from '@dxos/react-client';
 
-import { Button } from '../components';
-import { Task } from '../proto';
+import { Button } from '../../components';
+import { Task } from '../../proto';
 import { TaskItem, NewTaskItem } from './TaskList';
 
 /**

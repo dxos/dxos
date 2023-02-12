@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './ContactCard';
-export * from './ContactList';
-export * from './DraggableTaskList';
-export * from './OrganizationList';
-export * from './ProjectCard';
-export * from './ProjectHierarchy';
-export * from './TaskList';
-export * from './TaskListForm';
+export * from './deprecated';
+
+export * from './App';
+export * from './AppBar';
+export * from './FrameRegistry';
+export * from './FrameSelector';
+export * from './MembersList';
+export * from './Sidebar';
+export * from './SpaceList';
