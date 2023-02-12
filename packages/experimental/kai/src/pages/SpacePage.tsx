@@ -38,6 +38,7 @@ const SpacePage = () => {
     <PanelSidebarProvider
       inlineStart
       slots={{
+        // TODO(burdon): block-start-appbar is ignored.
         content: { className: 'block-start-appbar', children: <Sidebar /> },
         main: { className: mx(active.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
       }}

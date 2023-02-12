@@ -22,7 +22,7 @@ module.exports = {
     spacing: {
       appbar: '48px',
       toolbar: '40px',
-      header: '88px', // Combined height of appbar and toolbar.
+      header: '88px', // Combined height of appbar and toolbar (pbs-header).
 
       // Standardize column width (based on iPhone Pro 12).
       column: '390px'

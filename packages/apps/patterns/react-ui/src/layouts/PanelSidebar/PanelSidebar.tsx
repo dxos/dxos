@@ -73,13 +73,17 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
   const setDisplayState = (displayState: SetStateAction<PanelSidebarState>) =>
     displayState === 'show' ? internalShow() : internalHide();
 
+  console.log(slots);
+
   return (
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
       <DialogPrimitive.Root open={domShow} modal={!isLg}>
+        {/* Sidebar. */}
         <DialogPrimitive.Content
           {...slots?.content}
           className={mx(
-            'fixed block-start-0 block-end-0 is-sidebar z-50 overscroll-contain transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out overflow-x-hidden overflow-y-auto',
+            'fixed __block-start-0 block-end-0 is-sidebar z-50 overscroll-contain overflow-x-hidden overflow-y-auto',
+            'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
             transitionShow ? 'inline-start-0' : '-inline-start-sidebar',
             slots?.content?.className
           )}
@@ -87,6 +91,7 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
           <DialogPrimitive.Title className='sr-only'>{t('sidebar label')}</DialogPrimitive.Title>
           {slots?.content?.children}
         </DialogPrimitive.Content>
+
         {!isLg && (
           <DialogPrimitive.Overlay
             className={mx(
@@ -97,6 +102,8 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
             onClick={internalHide}
           />
         )}
+
+        {/* Main content. */}
         <div
           role='none'
           {...slots?.main}
