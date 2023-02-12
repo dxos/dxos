@@ -120,9 +120,9 @@ export const Sidebar = () => {
         </div>
       </div>
 
-      <div className='flex flex-col flex-1'>
+      <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
-        <div className='flex shrink-0 flex-col overflow-y-auto'>
+        <div className='flex overflow-y-auto'>
           <SpaceList spaces={spaces} selected={space.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
         </div>
 

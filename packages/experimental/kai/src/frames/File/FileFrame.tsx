@@ -22,13 +22,11 @@ export const FileFrame = () => {
 
   const url = urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object.cid);
   const ext = object.name.split('.').at(-1)?.toLowerCase();
-  const isImage = imageTypes.findIndex((value) => value === ext) !== -1;
+  const image = imageTypes.findIndex((value) => value === ext) !== -1;
 
   return (
-    <div className='hidden md:flex flex-1 flex-col'>
-      <div className='flex flex-1 p-4 bg-panel-bg'>
-        <FilePreview url={url} image={isImage} />
-      </div>
+    <div className='flex flex-1 p-4 bg-panel-bg'>
+      <FilePreview url={url} image={image} />
     </div>
   );
 };
