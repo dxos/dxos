@@ -65,7 +65,7 @@ export const FrameSelector: FC = () => {
                 selected={id === currentFrame}
                 label={displayName ?? ''}
                 Icon={Icon}
-                link={createSpacePath(space.key, id)}
+                link={createSpacePath(space!.key, id)}
               />
             ))}
         </div>
