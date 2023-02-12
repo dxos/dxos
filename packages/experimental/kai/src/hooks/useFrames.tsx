@@ -57,7 +57,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.stack',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Stack',
       description: 'Configurable tiles.'
     },
@@ -69,7 +69,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.table',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Table',
       description: 'Generic data browser.'
 
@@ -82,7 +82,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.kanban',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Kanban',
       description: 'Card based process management.'
     },
@@ -95,7 +95,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.task',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Tasks',
       description: 'Project and task management tools.'
     },
@@ -107,7 +107,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.calendar',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Events',
       description: 'Calendar and time management tools.'
 
@@ -120,7 +120,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.document',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Documents',
       description: 'Realtime structured document editing.'
     },
@@ -132,7 +132,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.note',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Notes',
       description: 'Brainstorming notes.'
 
@@ -145,7 +145,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.file',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Files',
       description: 'Distributed file sharing.'
     },
@@ -157,7 +157,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.sketch',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Sketch',
       description: 'Simple sketches.'
     },
@@ -169,7 +169,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.explorer',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Explorer',
       description: 'Graphical User Interface and Data Explorer (GUIDE).'
     },
@@ -181,7 +181,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.maps',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Maps',
       description: 'Community contributed street maps.'
     },
@@ -193,7 +193,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.chess',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Chess',
       description: 'Peer-to-peer and engine powered games.'
     },
@@ -205,7 +205,7 @@ const defs: FrameDef[] = [
   {
     module: {
       id: 'dxos.module.frame.sandbox',
-      type: 'dxos.module.frame',
+      type: 'dxos:type/frame',
       displayName: 'Sandbox',
       description: 'Collaborative code sandbox.'
     },
@@ -233,7 +233,7 @@ export const defaultFrames = [
 export type FrameMap = Map<string, FrameDef>;
 
 export const useFrames = (): { frames: FrameMap; active: string[] } => {
-  const { modules } = useModules({ type: 'dxos.module.frame' });
+  const { modules } = useModules({ type: 'dxos:type/frame' });
   const { frames: active = [] } = useAppState()!;
   const frames = useMemo(
     () =>
