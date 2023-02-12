@@ -28,8 +28,7 @@ module.exports = {
       column: '390px'
     },
 
-    // TODO(burdon): Themes: light/dark.
-    // TODO(burdon): Naming scheme?
+    // TODO(burdon): Naming scheme (for theme: e.g., dark:bg-dark-toolbar-bg).
     colors: {
       appbar: {
         header: primary[400],

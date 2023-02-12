@@ -38,12 +38,14 @@ const SpacePage = () => {
     <PanelSidebarProvider
       inlineStart
       slots={{
-        content: { children: <Sidebar />, className: 'block-start-appbar' },
+        content: { className: 'block-start-appbar', children: <Sidebar /> },
         main: { className: mx(active.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
       }}
     >
       <AppBar />
       <FrameSelector />
+
+      {/* Main content. */}
       <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
         {/* TODO(burdon): Rename (not a page). */}
         {section === Section.SETTINGS && <ManageSpacePage />}

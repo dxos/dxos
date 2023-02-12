@@ -23,7 +23,10 @@ import {
 } from '../../hooks';
 import kaiTranslations from '../../translations';
 
-const Routes = () => {
+/**
+ * Routes component must be inside of Router container.
+ */
+const AppRoutes = () => {
   return useAppRoutes();
 };
 
@@ -48,7 +51,7 @@ export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initia
             <MetagraphProvider value={metagraphContext}>
               <AppStateProvider initialState={{ ...initialState, frames: defaultFrames }}>
                 <HashRouter>
-                  <Routes />
+                  <AppRoutes />
                   {children}
                 </HashRouter>
               </AppStateProvider>

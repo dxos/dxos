@@ -14,7 +14,7 @@ import { getSize } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { Button } from '../../components';
-import { useSpace, createSpacePath, useAppState, createInvitationPath, Section } from '../../hooks';
+import { useSpace, createSpacePath, useAppState, createInvitationPath, Section, createSectionPath } from '../../hooks';
 import { MemberList } from '../MembersList';
 import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';
@@ -91,14 +91,12 @@ export const Sidebar = () => {
       return;
     }
 
-    navigate(`/${spaceKey.truncate()}/${Section.SETTINGS}`);
+    navigate(createSectionPath(spaceKey, Section.SETTINGS));
   };
 
+  // TODO(burdon): Mobile slider (full width, no blur).
   return (
-    <div
-      role='none'
-      className='flex flex-col overflow-auto min-bs-full shadow backdrop-blur bg-sidebar-bg dark:bg-neutral-950/[.33]'
-    >
+    <div role='none' className='flex flex-col overflow-auto min-bs-full bg-sidebar-bg'>
       {/* Match Frame selector. */}
       <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
         <div className='flex justify-between p-1 pl-4'>

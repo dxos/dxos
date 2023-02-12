@@ -11,8 +11,27 @@ import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { useFrames, createSpacePath, Section, FrameDef, useFrameState } from '../../hooks';
 
+// TODO(burdon): Floating buttons since main content isn't uniform for tabs.
+const Tab: FC<{ selected: boolean; label: string; Icon: FC<any>; link: string }> = ({
+  selected,
+  label,
+  Icon,
+  link
+}) => {
+  return (
+    <div
+      className={mx('flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black', selected && 'bg-white')}
+    >
+      <Link className='flex' to={link} title={label}>
+        <Icon weight='light' className={getSize(6)} />
+        <div className='hidden lg:flex ml-1'>{label}</div>
+      </Link>
+    </div>
+  );
+};
+
 /**
- * View tabs.
+ * Frame tabs.
  */
 export const FrameSelector: FC = () => {
   const { space } = useFrameState();
@@ -21,24 +40,6 @@ export const FrameSelector: FC = () => {
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
   const toggleSidebar = useTogglePanelSidebar();
-
-  const Tab: FC<{ selected: boolean; label: string; Icon: FC<any>; link: string }> = ({
-    selected,
-    label,
-    Icon,
-    link
-  }) => {
-    return (
-      <div
-        className={mx('flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black', selected && 'bg-white')}
-      >
-        <Link className='flex' to={link} title={label}>
-          <Icon weight='light' className={getSize(6)} />
-          <div className='hidden lg:flex ml-1'>{label}</div>
-        </Link>
-      </div>
-    );
-  };
 
   return (
     <div
