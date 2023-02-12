@@ -30,7 +30,7 @@ export type SpaceItemProps = {
 // TODO(burdon): Full width mobile.
 const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
-    <div className={mx('flex flex-col mx-3 mt-3 border rounded-lg p-1')}>
+    <div className={mx('flex flex-col mx-3 first:mt-3 mb-3 rounded border-2')}>
       <div
         className={mx(
           'flex w-full p-2 pl-3 pr-4 items-center hover:bg-selection-hover',
@@ -93,7 +93,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
   };
 
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col flex-1'>
       {spaces.map((space) => (
         <SpaceItem
           key={space.key.toHex()}
