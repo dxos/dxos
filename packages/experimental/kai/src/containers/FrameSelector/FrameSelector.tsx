@@ -9,7 +9,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { useFrames, createSpacePath, Section, FrameDef, useFrameState } from '../hooks';
+import { useFrames, createSpacePath, Section, FrameDef, useFrameState } from '../../hooks';
 
 /**
  * View tabs.

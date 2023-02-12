@@ -20,8 +20,8 @@ import {
   botModules,
   defaultFrames,
   frameModules
-} from '../hooks';
-import kaiTranslations from '../translations';
+} from '../../hooks';
+import kaiTranslations from '../../translations';
 
 const Routes = () => {
   return useAppRoutes();
@@ -36,7 +36,6 @@ export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initia
     client: new MetagraphClientFake([...botModules, ...frameModules])
   };
 
-  // TODO(burdon): Error boundary and indicator.
   return (
     <ThemeProvider
       appNs='kai'

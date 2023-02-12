@@ -13,8 +13,10 @@ import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { Button, MemberList, SpaceList } from '../components';
-import { useSpace, createSpacePath, useAppState, createInvitationPath, Section } from '../hooks';
+import { Button } from '../../components';
+import { useSpace, createSpacePath, useAppState, createInvitationPath, Section } from '../../hooks';
+import { MemberList } from '../MembersList';
+import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {

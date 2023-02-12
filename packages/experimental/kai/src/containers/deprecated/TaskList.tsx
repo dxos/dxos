@@ -11,9 +11,9 @@ import { PublicKey } from '@dxos/keys';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 
-import { Button, Input, CardRow } from '../components';
-import { useAppState } from '../hooks';
-import { Task } from '../proto';
+import { Button, Input, CardRow } from '../../components';
+import { useAppState } from '../../hooks';
+import { Task } from '../../proto';
 
 // TODO(burdon): Generic header with create.
 

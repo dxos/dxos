@@ -10,7 +10,7 @@ import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { getSize, mx } from '@dxos/react-components';
 
-import { useFrames } from '../hooks';
+import { useFrames } from '../../hooks';
 
 enum SpaceItemAction {
   SELECT = 1,
@@ -30,7 +30,7 @@ export type SpaceItemProps = {
 // TODO(burdon): Full width mobile.
 const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
-    <div className={mx('flex flex-col mx-3 mt-3 border rounded')}>
+    <div className={mx('flex flex-col mx-3 mt-3 border rounded-lg p-1')}>
       <div
         className={mx(
           'flex w-full p-2 pl-3 pr-4 items-center hover:bg-selection-hover',
@@ -56,7 +56,7 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
         )}
       </div>
 
-      {selected && children}
+      {selected && <div className='flex bg-white'>{children}</div>}
     </div>
   );
 };

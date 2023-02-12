@@ -10,8 +10,8 @@ import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
-import { Input, CardRow } from '../components';
-import { Address, Organization } from '../proto';
+import { Input, CardRow } from '../../components';
+import { Address, Organization } from '../../proto';
 
 export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   const organizations: Organization[] = useQuery(space, Organization.filter());

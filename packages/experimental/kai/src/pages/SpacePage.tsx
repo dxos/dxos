@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
-import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../app';
+import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
 import { Section, createSpacePath, defaultFrameId, useFrameState, useFrames } from '../hooks';
 import { ManageSpacePage } from '../pages';
 
