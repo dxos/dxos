@@ -16,6 +16,10 @@ export type SpaceContextType = {
 // TODO(wittjosiah): Consider using react router outlet context (see tasks app).
 export const SpaceContext: Context<SpaceContextType> = createContext<SpaceContextType>({});
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export const useSpace = (): Space => {
   const { space } = useContext(SpaceContext) ?? {};
   assert(space);

@@ -10,7 +10,7 @@ import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { getSize, mx } from '@dxos/react-components';
 
-import { useFrames } from '../hooks';
+import { useFrames, useSpace } from '../hooks';
 
 enum SpaceItemAction {
   SELECT = 1,
@@ -73,6 +73,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
   // TODO(burdon): Move to containers.
   const { frame: currentFrame } = useParams();
   const { frames } = useFrames();
+  const space = useSpace();
 
   const frame = currentFrame ? frames.get(currentFrame) : undefined;
   const Tile = frame?.runtime.Tile;
@@ -84,6 +85,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
         onSelect(spaceKey);
         break;
       }
+
       case SpaceItemAction.SHARE: {
         onShare(spaceKey);
         break;

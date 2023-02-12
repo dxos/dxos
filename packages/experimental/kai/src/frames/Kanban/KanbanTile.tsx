@@ -4,18 +4,19 @@
 
 import { Kanban as KanbanIcon, PlusCircle } from 'phosphor-react';
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { id, PublicKey, useQuery, useSpace } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/react-components';
 
 import { Button, Input, List, ListItemButton } from '../../components';
 import { createSpacePath } from '../../hooks';
 import { Kanban } from '../../proto';
 
 export const KanbanTile = () => {
+  // TODO(burdon): Doesn't update if space changes (get from param not context).
   const space = useSpace();
-  // TODO(burdon): Doesn't update if space changes.
+  const { frame, object: objectId } = useParams();
   const objects = useQuery(space, Kanban.filter());
   const navigate = useNavigate();
 
@@ -32,7 +33,7 @@ export const KanbanTile = () => {
   }
 
   const handleSelect = (objectId: string) => {
-    navigate(createSpacePath(space.key, 'dxos.module.frame.kanban', objectId));
+    navigate(createSpacePath(space.key, frame, objectId));
   };
 
   const handleCreate = async () => {
@@ -43,12 +44,18 @@ export const KanbanTile = () => {
 
   // TODO(burdon): Reuse list.
   // TODO(burdon): Generic frame tile list.
+  // TODO(burdon): Update title.
+  // TODO(burdon): Delete.
+  // TODO(burdon): Focus on create.
   return (
     <div className='flex flex-col'>
       <List>
         {objects.map((object) => (
           <ListItemButton key={object[id]}>
-            <div className='pl-1 pr-2 cursor-pointer' onClick={() => handleSelect(object[id])}>
+            <div
+              className={mx('pl-1 pr-2 cursor-pointer', object[id] === objectId && 'text-blue-500')}
+              onClick={() => handleSelect(object[id])}
+            >
               <KanbanIcon className={getSize(6)} />
             </div>
             <Input className='w-full p-1' value={object.title} placeholder='Title' />
@@ -60,6 +67,7 @@ export const KanbanTile = () => {
         <Button onClick={handleCreate}>
           <PlusCircle className={getSize(6)} />
         </Button>
+        <div>{space.key.truncate()}</div>
       </div>
     </div>
   );
