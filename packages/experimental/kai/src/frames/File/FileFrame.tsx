@@ -25,7 +25,7 @@ export const FileFrame = () => {
   const image = imageTypes.findIndex((value) => value === ext) !== -1;
 
   return (
-    <div className='flex flex-1 p-4 bg-panel-bg'>
+    <div className='flex flex-1 pt-2 md:p-4'>
       <FilePreview url={url} image={image} />
     </div>
   );

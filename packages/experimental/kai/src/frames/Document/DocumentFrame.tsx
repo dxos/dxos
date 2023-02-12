@@ -33,9 +33,9 @@ export const DocumentFrame = withReactor(() => {
   const fragment = object.content.doc!.getXmlFragment('content');
 
   return (
-    <div className='flex flex-1 overflow-hidden justify-center bg-panel-bg'>
+    <div className='flex flex-1 overflow-hidden justify-center'>
       <div className='flex flex-col w-full lg:w-[800px]'>
-        <div className='my-6 bg-white shadow-lg overflow-y-auto '>
+        <div className='my-4 bg-white shadow-lg overflow-y-auto '>
           <Composer
             fragment={fragment}
             slots={{

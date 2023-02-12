@@ -38,11 +38,11 @@ module.exports = {
         bg: colors.slate[200]
       },
       sidebar: {
-        bg: colors.zinc[100]
+        bg: colors.zinc[200]
       },
       // TODO(burdon): Mui Paper?
       panel: {
-        bg: colors.zinc[300],
+        bg: colors.zinc[100],
         border: colors.zinc[300]
       },
       selection: {

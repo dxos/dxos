@@ -21,7 +21,10 @@ const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; 
 }) => {
   return (
     <div
-      className={mx('flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black', selected && 'bg-white')}
+      className={mx(
+        'flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black',
+        selected && 'bg-panel-bg'
+      )}
     >
       <Link className='flex' to={link} title={label}>
         <Icon weight='light' className={getSize(6)} />
@@ -97,5 +100,6 @@ export const FrameContainer: FC<{ frame: FrameDef }> = ({ frame }) => {
     return null;
   }
 
+  // TODO(burdon): Standardize container (bg, padding, centered, size, etc.)
   return <Component />;
 };

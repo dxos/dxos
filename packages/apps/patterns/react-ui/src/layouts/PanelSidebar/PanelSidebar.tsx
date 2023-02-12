@@ -73,8 +73,6 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
   const setDisplayState = (displayState: SetStateAction<PanelSidebarState>) =>
     displayState === 'show' ? internalShow() : internalHide();
 
-  console.log(slots);
-
   return (
     <PanelSidebarContext.Provider value={{ setDisplayState, displayState }}>
       <DialogPrimitive.Root open={domShow} modal={!isLg}>
@@ -82,6 +80,7 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
         <DialogPrimitive.Content
           {...slots?.content}
           className={mx(
+            // TODO(burdon): Fix '__block-start-0'
             'fixed __block-start-0 block-end-0 is-sidebar z-50 overscroll-contain overflow-x-hidden overflow-y-auto',
             'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
             transitionShow ? 'inline-start-0' : '-inline-start-sidebar',
@@ -92,6 +91,7 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
           {slots?.content?.children}
         </DialogPrimitive.Content>
 
+        {/* TODO(burdon): Simple comment required. */}
         {!isLg && (
           <DialogPrimitive.Overlay
             className={mx(

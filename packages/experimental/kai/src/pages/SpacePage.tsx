@@ -47,8 +47,8 @@ const SpacePage = () => {
       <FrameSelector />
 
       {/* Main content. */}
-      <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
-        {/* TODO(burdon): Rename (not a page). */}
+      <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-panel-bg'>
+        {/* TODO(burdon): Rename ManageSpacePage (not a page). */}
         {section === Section.SETTINGS && <ManageSpacePage />}
         {section === Section.REGISTRY && <FrameRegistry />}
         {frame && <FrameContainer frame={frame} />}
