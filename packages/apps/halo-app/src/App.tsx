@@ -20,6 +20,7 @@ import {
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
+import { MetagraphProvider } from '@dxos/react-metagraph';
 import { captureException } from '@dxos/sentry';
 
 import { NavMenu } from './components';
@@ -106,14 +107,16 @@ export const App = () => {
         {/* TODO(wittjosiah): Hook-up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
-            <HashRouter>
-              <Routes />
-              {needRefresh ? (
-                <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
-              ) : offlineReady ? (
-                <ServiceWorkerToast variant='offlineReady' />
-              ) : null}
-            </HashRouter>
+            <MetagraphProvider>
+              <HashRouter>
+                <Routes />
+                {needRefresh ? (
+                  <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+                ) : offlineReady ? (
+                  <ServiceWorkerToast variant='offlineReady' />
+                ) : null}
+              </HashRouter>
+            </MetagraphProvider>
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>

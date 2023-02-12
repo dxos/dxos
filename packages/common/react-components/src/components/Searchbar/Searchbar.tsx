@@ -13,8 +13,9 @@ import { Input } from '../Input';
  */
 export const Searchbar: FC<{
   border?: boolean;
+  disabled?: boolean;
   onSearch?: (text: string) => void;
-}> = ({ border = true, onSearch }) => {
+}> = ({ border = true, disabled, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
@@ -28,6 +29,7 @@ export const Searchbar: FC<{
           label={'Search'}
           onChange={(event) => handleChange(event.target.value)}
           placeholder='Search...'
+          disabled={disabled}
           slots={{
             root: {
               className: 'flex flex-1 mlb-0'

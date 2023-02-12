@@ -16,7 +16,6 @@ export const List: FC<ListProps> = ({ classes, children }) => {
   return <ul className={mx('flex flex-col w-full overflow-hidden', classes?.root)}>{children}</ul>;
 };
 
-// TODO(burdon): Inherit from parent.
 export type ListItemClasses = {
   root?: string;
   hover?: string;
@@ -30,6 +29,9 @@ export type ListItemProps = {
   onClick?: () => void;
 };
 
+/**
+ * @deprecated
+ */
 export const ListItemButton: FC<ListItemProps> = ({ selected, classes, children, onClick }) => {
   return (
     <li

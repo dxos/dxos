@@ -64,7 +64,7 @@ class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean
   override render() {
     if (this.state.hasError) {
       // You can render any custom fallback UI
-      return <h1>Something went wrong.</h1>;
+      return <div>Runtime Error</div>;
     }
 
     return this.props.children;
