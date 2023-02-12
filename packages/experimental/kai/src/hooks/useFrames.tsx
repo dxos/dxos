@@ -218,7 +218,7 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.stack';
+export const defaultFrameId = 'dxos.module.frame.kanban';
 
 // prettier-ignore
 export const defaultFrames = [

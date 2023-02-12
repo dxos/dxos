@@ -63,9 +63,9 @@ const SpacePage = () => {
         <AppBar />
         <FrameSelector />
         <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
-          {section === Section.REGISTRY && <FrameRegistry />}
           {/* TODO(burdon): Rename (not a page). */}
           {section === Section.SETTINGS && <ManageSpacePage />}
+          {section === Section.REGISTRY && <FrameRegistry />}
           {frame && <FrameContainer frame={frame} />}
         </div>
       </PanelSidebarProvider>

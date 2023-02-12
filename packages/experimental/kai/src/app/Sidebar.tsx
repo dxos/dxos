@@ -106,7 +106,7 @@ export const Sidebar = () => {
       <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
         <div className='flex justify-between p-1 pl-4'>
           <div className='flex items-center pr-3'>
-            {/* TODO(burdon): Remove initial focus */}
+            {/* TODO(burdon): Remove initial focus. */}
             <Button />
             <Button className='flex ml-2' title='Create new space' onClick={handleCreateSpace}>
               <span className='sr-only'>Create new space</span>
