@@ -58,6 +58,7 @@ describe('Metagraph queries', () => {
   });
 
   test('basic module queries', async () => {
+    // TODO(burdon): Use fake to test filtering.
     const metagraph = new MetagraphClient(
       new Config({
         runtime: {
