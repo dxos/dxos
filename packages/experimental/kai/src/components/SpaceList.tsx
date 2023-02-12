@@ -101,6 +101,7 @@ export type SpaceListProps = {
   onShare: (spaceKey: PublicKey) => void;
 };
 
+// TODO(burdon): Use vertical mosaic.
 export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProps) => {
   // TODO(burdon): Factor pattern?
   const handleAction = (spaceKey: PublicKey, action: SpaceItemAction) => {

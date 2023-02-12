@@ -100,10 +100,16 @@
       "path": "../gem-spore"
     },
     {
+      "path": "../metagraph"
+    },
+    {
       "path": "../mosaic"
     },
     {
       "path": "../plexus"
+    },
+    {
+      "path": "../react-metagraph"
     }
   ],
   "ts-node": {
