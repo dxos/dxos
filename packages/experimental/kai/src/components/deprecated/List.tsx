@@ -12,6 +12,9 @@ export type ListClasses = {
 
 export type ListProps = { classes?: ListClasses; children?: ReactNode };
 
+/**
+ * @deprecated
+ */
 export const List: FC<ListProps> = ({ classes, children }) => {
   return <ul className={mx('flex flex-col w-full overflow-hidden', classes?.root)}>{children}</ul>;
 };
@@ -42,7 +45,7 @@ export const ListItemButton: FC<ListItemProps> = ({ selected, classes, children,
         selected && classes?.selected
       )}
     >
-      <div className={mx('flex w-full p-2 items-center overflow-hidden')} onClick={onClick}>
+      <div className={mx('flex w-full px-2 py-1 items-center overflow-hidden')} onClick={onClick}>
         {children}
       </div>
     </li>

@@ -18,13 +18,12 @@ import { useSpace, createSpacePath, useAppState, createInvitationPath, Section }
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
-  const { frame, view } = useParams();
+  const { frame } = useParams();
   const navigate = useNavigate();
   const client = useClient();
   const space = useSpace();
   const spaces = useSpaces();
   const members = useMembers(space.key);
-  const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
@@ -50,10 +49,6 @@ export const Sidebar = () => {
   // TODO(wittjosiah): Find a better way to do this.
   if (prevSpace !== space) {
     setPrevSpace(space);
-  }
-
-  if (prevView !== view) {
-    setPrevView(view);
   }
 
   const handleCreateSpace = async () => {
@@ -106,7 +101,7 @@ export const Sidebar = () => {
       <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
         <div className='flex justify-between p-1 pl-4'>
           <div className='flex items-center pr-3'>
-            {/* TODO(burdon): Remove initial focus */}
+            {/* TODO(burdon): Remove initial focus. */}
             <Button />
             <Button className='flex ml-2' title='Create new space' onClick={handleCreateSpace}>
               <span className='sr-only'>Create new space</span>
