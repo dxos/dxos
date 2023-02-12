@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { mx } from '@dxos/react-components';
 import { PanelSidebarProvider } from '@dxos/react-ui';
 
-import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../app';
+import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
 import { Section, createSpacePath, defaultFrameId, useFrameState, useFrames } from '../hooks';
 import { ManageSpacePage } from '../pages';
 
@@ -38,14 +38,17 @@ const SpacePage = () => {
     <PanelSidebarProvider
       inlineStart
       slots={{
-        content: { children: <Sidebar />, className: 'block-start-appbar' },
+        // TODO(burdon): block-start-appbar is ignored.
+        content: { className: 'block-start-appbar', children: <Sidebar /> },
         main: { className: mx(active.length > 1 ? 'pbs-header' : 'pbs-appbar', 'bs-full overflow-hidden') }
       }}
     >
       <AppBar />
       <FrameSelector />
-      <div role='none' className='bs-full overflow-auto overscroll-contain bg-white flex flex-col bg-white'>
-        {/* TODO(burdon): Rename (not a page). */}
+
+      {/* Main content. */}
+      <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-panel-bg'>
+        {/* TODO(burdon): Rename ManageSpacePage (not a page). */}
         {section === Section.SETTINGS && <ManageSpacePage />}
         {section === Section.REGISTRY && <FrameRegistry />}
         {frame && <FrameContainer frame={frame} />}

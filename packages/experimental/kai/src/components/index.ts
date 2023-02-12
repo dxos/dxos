@@ -4,5 +4,4 @@
 
 export * from './deprecated';
 
-export * from './MemberList';
-export * from './SpaceList';
+export * from './FilePreview';
