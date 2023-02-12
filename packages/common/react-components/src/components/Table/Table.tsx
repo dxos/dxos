@@ -34,10 +34,10 @@ export type TableClasses = {
   selected?: string;
 };
 
-// TODO(burdon): Theme.
+// TODO(burdon): Convert to slots.
 export const defaultTableClasses: TableClasses = {
   header: 'text-sm',
-  row: 'hover:bg-gray-200',
+  row: 'hover:bg-slate-200',
   selected: 'bg-slate-300'
 };
 
@@ -89,7 +89,7 @@ export const Table = <T extends {}>({
               {...headerGroup.getHeaderGroupProps({
                 // style: { paddingRight: '15px' },
               })}
-              className='tr bg-gray-200'
+              className='tr bg-slate-300 h-[2.5rem]'
             >
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (

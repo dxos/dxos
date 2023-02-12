@@ -46,10 +46,10 @@ module.exports = {
         border: colors.zinc[300]
       },
       selection: {
-        hover: secondary[500],
-        bg: secondary[200],
+        hover: secondary[200],
+        bg: secondary[300],
         text: primary[500],
-        border: primary[400]
+        border: primary[600]
       }
     }
   }
