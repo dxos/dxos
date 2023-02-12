@@ -77,6 +77,7 @@ export const SpacesPageComponent = (props: SpacesPageComponentProps) => {
           children: t('spaces label')
         }}
       />
+
       <SpaceList spaces={spaces} />
     </>
   );

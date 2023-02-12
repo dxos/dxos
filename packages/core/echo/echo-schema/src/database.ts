@@ -67,6 +67,7 @@ export class EchoDatabase {
     return this._router;
   }
 
+  // TODO(burdon): Return type via generic?
   getObjectById(id: string) {
     const obj = this._objects.get(id);
     if (!obj) {
@@ -75,6 +76,7 @@ export class EchoDatabase {
     if ((obj as any)[deleted] === true) {
       return undefined;
     }
+
     return obj;
   }
 

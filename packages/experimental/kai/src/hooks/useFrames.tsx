@@ -19,18 +19,21 @@ import {
   Code
 } from 'phosphor-react';
 import { FC, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 
+import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
+import { useSpaces } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
   CalendarFrame,
   ChessFrame,
   StackFrame,
-  DocumentFrame,
+  Document,
   ExplorerFrame,
   FileFrame,
-  Kanban,
+  KanbanFrame,
   MapFrame,
   NoteFrame,
   SketchFrame,
@@ -88,8 +91,7 @@ const defs: FrameDef[] = [
     },
     runtime: {
       Icon: KanbanIcon,
-      Component: Kanban.Frame,
-      Tile: Kanban.Tile
+      Component: KanbanFrame
     }
   },
   {
@@ -126,7 +128,8 @@ const defs: FrameDef[] = [
     },
     runtime: {
       Icon: Article,
-      Component: DocumentFrame
+      Component: Document.Frame,
+      Tile: Document.Tile
     }
   },
   {
@@ -218,13 +221,14 @@ const defs: FrameDef[] = [
 
 export const frameModules: Module[] = defs.map(({ module }) => module);
 
-export const defaultFrameId = 'dxos.module.frame.stack';
+export const defaultFrameId = 'dxos.module.frame.document';
 
 // prettier-ignore
 export const defaultFrames = [
   'dxos.module.frame.stack',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
+  'dxos.module.frame.document',
   'dxos.module.frame.kanban'
   // 'dxos.module.frame.explorer'
   // 'dxos.module.frame.notes'
@@ -232,6 +236,7 @@ export const defaultFrames = [
 
 export type FrameMap = Map<string, FrameDef>;
 
+// TODO(burdon): Active is unsound.
 export const useFrames = (): { frames: FrameMap; active: string[] } => {
   const { modules } = useModules({ type: 'dxos:type/frame' });
   const { frames: active = [] } = useAppState()!;
@@ -247,4 +252,25 @@ export const useFrames = (): { frames: FrameMap; active: string[] } => {
   );
 
   return { frames, active };
+};
+
+export type FrameState = {
+  space?: Space;
+  frame?: FrameDef;
+  objectId?: string;
+};
+
+// TODO(burdon): Combine frame hooks?
+// TODO(burdon): Better abstraction for app state hierarchy?
+export const useFrameState = (): FrameState => {
+  const { spaceKey, frame, objectId } = useParams();
+
+  const spaces = useSpaces();
+  const space = spaces.find((space) => space.key.truncate() === spaceKey);
+
+  // TODO(burdon): Active is unsound.
+  const { frames, active: activeFrames } = useFrames();
+  const frameDef = frame && activeFrames.find((frameId) => frameId === frame) ? frames.get(frame) : undefined;
+
+  return { space, frame: frameDef, objectId };
 };

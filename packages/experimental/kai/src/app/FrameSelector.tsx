@@ -9,15 +9,13 @@ import { Link, useParams } from 'react-router-dom';
 import { getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-// TODO(burdon): Rename frames.
-
-import { useFrames, useSpace, createSpacePath, Section } from '../hooks';
+import { useFrames, createSpacePath, Section, FrameDef, useFrameState } from '../hooks';
 
 /**
  * View tabs.
  */
 export const FrameSelector: FC = () => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const { frames, active: activeFrames } = useFrames();
   const { section, frame: currentFrame } = useParams();
   const { displayState } = useContext(PanelSidebarContext);
@@ -67,7 +65,7 @@ export const FrameSelector: FC = () => {
                 selected={id === currentFrame}
                 label={displayName ?? ''}
                 Icon={Icon}
-                link={createSpacePath(space.key, id)}
+                link={createSpacePath(space!.key, id)}
               />
             ))}
         </div>
@@ -83,13 +81,8 @@ export const FrameSelector: FC = () => {
 /**
  * Viewport for frame.
  */
-export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
-  const { frames, active: activeFrames } = useFrames();
-  if (!activeFrames.find((frameId) => frameId === frame)) {
-    return null;
-  }
-
-  const Component = frames.get(frame)?.runtime.Component;
+export const FrameContainer: FC<{ frame: FrameDef }> = ({ frame }) => {
+  const Component = frame.runtime.Component;
   if (!Component) {
     return null;
   }

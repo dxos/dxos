@@ -35,6 +35,7 @@ export interface DialogProps {
   slots?: DialogSlots;
 }
 
+// TODO(burdon): Add size property.
 export const Dialog = ({
   title,
   titleVisuallyHidden,

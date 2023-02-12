@@ -2,67 +2,53 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { id } from '@dxos/echo-schema';
-import { useQuery, withReactor } from '@dxos/react-client';
-import { Selector } from '@dxos/react-components';
+import { id, useQuery, withReactor } from '@dxos/react-client';
 import { Composer } from '@dxos/react-composer';
 
-import { Input } from '../../components';
-import { useSpace } from '../../hooks';
+import { createSpacePath, useFrameState } from '../../hooks';
 import { Document } from '../../proto';
 
 export const DocumentFrame = withReactor(() => {
-  const space = useSpace();
+  const navigate = useNavigate();
+  const { space, frame, objectId } = useFrameState();
   const documents = useQuery(space, Document.filter());
-  const [document, setDocument] = useState<Document>();
-  useEffect(() => {
-    setDocument(undefined);
-  }, [space]);
 
-  const fragment = document?.content.doc!.getXmlFragment('content');
+  // Default to first.
+  const document = objectId ? (space!.experimental.db.getObjectById(objectId) as Document) : undefined;
+  useEffect(() => {
+    if (frame && !document && documents.length) {
+      navigate(createSpacePath(space!.key, frame?.module.id, documents[0][id]));
+    }
+  }, [frame, document, documents]);
+
+  // TODO(burdon): Handle error.
+  if (!document || !document.content) {
+    return null;
+  }
+
+  // TODO(burdon): Factor out container with fragment and scrolling.
+  const fragment = document.content.doc!.getXmlFragment('content');
 
   return (
     <div className='flex flex-1 overflow-hidden justify-center bg-panel-bg'>
-      <div className='flex flex-col overflow-hidden w-full lg:w-[800px] bg-white shadow-lg'>
-        <div className='flex p-3'>
-          <Selector
-            placeholder='Document'
-            options={documents.map((document) => ({ id: document[id], title: document.title }))}
-            onSelect={(selected) => {
-              setDocument(selected ? documents.find((document) => document[id] === selected) : undefined);
+      <div className='flex flex-col w-full lg:w-[800px]'>
+        <div className='my-6 bg-white shadow-lg overflow-y-auto '>
+          <Composer
+            fragment={fragment}
+            slots={{
+              root: { className: 'grow' },
+              editor: {
+                className: 'z-0 bg-white text-black h-full w-full p-8 pb-16 min-bs-[12em] text-xl md:text-base'
+              }
             }}
           />
         </div>
-
-        {document && (
-          <div className='flex flex-col flex-1 overflow-hidden'>
-            <div className='flex p-4 border-b items-center'>
-              <Input
-                className='w-full p-1 text-lg outline-0'
-                spellCheck={false}
-                value={document.title}
-                onChange={(value) => (document.title = value)}
-              />
-            </div>
-
-            {document.content?.doc && (
-              <div className='flex flex-1 m-2 overflow-y-auto'>
-                <Composer
-                  fragment={fragment}
-                  slots={{
-                    root: { className: 'grow' },
-                    editor: {
-                      className: 'z-0 bg-white text-black h-full w-full p-3 min-bs-[12em] text-xl md:text-base'
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
 });
+
+export default DocumentFrame;

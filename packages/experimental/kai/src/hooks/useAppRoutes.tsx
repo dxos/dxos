@@ -25,11 +25,12 @@ export enum Section {
   SETTINGS = 'settings'
 }
 
-// TODO(burdon): Use these below.
+// TODO(burdon): Define and use consistently.
 export enum Page {}
 
-export const createSpacePath = (spaceKey: PublicKey, frame?: string) =>
-  `/${spaceKey.truncate()}` + (frame ? `/frame/${frame}` : '');
+// TODO(burdon): Use FrameDef?
+export const createSpacePath = (spaceKey: PublicKey, frame?: string, objectId?: string) =>
+  `/${spaceKey.truncate()}` + (frame ? `/frame/${frame}` + (objectId ? `/${objectId}` : '') : '');
 
 export const createInvitationPath = (invitation: Invitation) =>
   `/space/join?invitation=${InvitationEncoder.encode(invitation)}`;
@@ -82,6 +83,10 @@ export const useAppRoutes = () =>
             },
             {
               path: '/:spaceKey/:section/:frame',
+              element: <SpacePage />
+            },
+            {
+              path: '/:spaceKey/:section/:frame/:objectId',
               element: <SpacePage />
             }
           ]

@@ -9,11 +9,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical } from 'phosphor-react';
 import React, { FC, useEffect, useState } from 'react';
 
+import { Space } from '@dxos/client';
 import { id } from '@dxos/echo-schema';
 import { withReactor } from '@dxos/react-client';
 
 import { Button } from '../components';
-import { useSpace } from '../hooks';
 import { Task } from '../proto';
 import { TaskItem, NewTaskItem } from './TaskList';
 
@@ -22,11 +22,11 @@ import { TaskItem, NewTaskItem } from './TaskList';
  * https://docs.dndkit.com/presets/sortable
  */
 export const DraggableTaskList: FC<{
+  space: Space;
   tasks: Task[];
   onCreate?: (task: Task) => void;
   onDrag?: (active: number, over: number) => void;
-}> = withReactor(({ tasks, onCreate, onDrag }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
+}> = withReactor(({ space, tasks, onCreate, onDrag }) => {
   const [newTask, setNewTask] = useState<Task>();
   useEffect(() => {
     setNewTask(new Task());
