@@ -136,6 +136,7 @@ export const Sidebar = () => {
           </div>
         </div>
 
+        {/* TODO(burdon): Move some actions to menu. */}
         <Actions />
       </div>
     </div>
