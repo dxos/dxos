@@ -1,0 +1,51 @@
+{
+  "sourceRoot": "packages/deprecated/archive/kodama/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/deprecated/archive/kodama/src/index.ts",
+        "outputPath": "packages/deprecated/archive/kodama/dist",
+        "tsConfig": "packages/deprecated/archive/kodama/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/deprecated/archive/kodama/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/deprecated/archive/kodama",
+        "outputPath": "tmp/mocha/packages/deprecated/archive/kodama",
+        "resultsPath": "test-results/packages/deprecated/archive/kodama",
+        "testPatterns": [
+          "packages/deprecated/archive/kodama/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/deprecated/archive/kodama/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "test"
+  ]
+}

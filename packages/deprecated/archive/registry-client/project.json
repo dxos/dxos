@@ -1,0 +1,65 @@
+{
+  "sourceRoot": "packages/deprecated/archive/registry-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/deprecated/archive/registry-client/src/index.ts",
+        "outputPath": "packages/deprecated/archive/registry-client/dist/types",
+        "tsConfig": "packages/deprecated/archive/registry-client/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/deprecated/archive/registry-client/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/deprecated/archive/registry-client/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/deprecated/archive/registry-client/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/deprecated/archive/registry-client",
+        "outputPath": "tmp/mocha/packages/deprecated/archive/registry-client",
+        "resultsPath": "test-results/packages/deprecated/archive/registry-client",
+        "testPatterns": [
+          "packages/deprecated/archive/registry-client/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/deprecated/archive/registry-client/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

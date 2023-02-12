@@ -1,0 +1,47 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types"
+  },
+  "exclude": [
+    "/node_modules/"
+  ],
+  "include": [
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/esbuild-plugins"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../deprecated/archive/gem-core"
+    },
+    {
+      "path": "../../deprecated/archive/gem-spore"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../react-client-testing"
+    },
+    {
+      "path": "../react-components-deprecated"
+    }
+  ]
+}
