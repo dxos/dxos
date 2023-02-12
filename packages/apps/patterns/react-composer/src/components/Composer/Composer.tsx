@@ -62,7 +62,7 @@ export const Composer = ({
         }
       }
     },
-    [doc]
+    [doc, fragment]
   );
 
   return <EditorContent {...slots?.root} editor={editor} />;

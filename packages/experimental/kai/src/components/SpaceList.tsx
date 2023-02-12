@@ -2,12 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Kanban, Planet, ShareNetwork } from 'phosphor-react';
-import React from 'react';
+import { Planet, ShareNetwork } from 'phosphor-react';
+import React, { ReactNode } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { getSize, mx } from '@dxos/react-components';
+
+import { useFrames } from '../hooks';
 
 enum SpaceItemAction {
   SELECT = 1,
@@ -17,38 +20,15 @@ enum SpaceItemAction {
 export type SpaceItemProps = {
   space: Space;
   selected?: boolean;
+  children?: ReactNode;
   onAction: (action: SpaceItemAction) => void;
 };
-
-// TODO(burdon): Frame API provides compact view.
-const items = [
-  {
-    id: 'item-1',
-    Icon: Kanban,
-    label: 'Org chart'
-  },
-  {
-    id: 'item-2',
-    Icon: Kanban,
-    label: 'Team planning'
-  },
-  {
-    id: 'item-3',
-    Icon: Kanban,
-    label: 'Tasks'
-  },
-  {
-    id: 'item-4',
-    Icon: Kanban,
-    label: 'Recruiting'
-  }
-];
 
 // TODO(burdon): Repurposable panel (compact, vs full mode). Tile?
 // TODO(burdon): Editable space name?
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
-const SpaceItem = ({ space, selected, onAction }: SpaceItemProps) => {
+const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
     <div className={mx('flex flex-col mx-3 mt-3 border rounded')}>
       <div
@@ -76,20 +56,7 @@ const SpaceItem = ({ space, selected, onAction }: SpaceItemProps) => {
         )}
       </div>
 
-      {selected && false && (
-        <div className='flex bg-white'>
-          <ul>
-            {items.map(({ id, Icon, label }) => (
-              <div key={id} className='flex items-center px-3 py-2 text-sm'>
-                <div className='pr-3'>
-                  <Icon className={getSize(6)} />
-                </div>
-                <div>{label}</div>
-              </div>
-            ))}
-          </ul>
-        </div>
-      )}
+      {selected && children}
     </div>
   );
 };
@@ -103,6 +70,13 @@ export type SpaceListProps = {
 
 // TODO(burdon): Use vertical mosaic.
 export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProps) => {
+  // TODO(burdon): Move to containers.
+  const { frame: currentFrame } = useParams();
+  const { frames } = useFrames();
+
+  const frame = currentFrame ? frames.get(currentFrame) : undefined;
+  const Tile = frame?.runtime.Tile;
+
   // TODO(burdon): Factor pattern?
   const handleAction = (spaceKey: PublicKey, action: SpaceItemAction) => {
     switch (action) {
@@ -110,6 +84,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
         onSelect(spaceKey);
         break;
       }
+
       case SpaceItemAction.SHARE: {
         onShare(spaceKey);
         break;
@@ -125,7 +100,9 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
           space={space}
           selected={space.key.equals(selected)}
           onAction={(action) => handleAction(space.key, action)}
-        />
+        >
+          {Tile && <Tile />}
+        </SpaceItem>
       ))}
     </div>
   );

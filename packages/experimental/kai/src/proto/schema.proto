@@ -88,6 +88,12 @@ message Project {
   string tag = 6;
 }
 
+message Kanban {
+  option (object) = true;
+
+  string title = 1;
+}
+
 message Document {
   option (object) = true;
 

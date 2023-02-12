@@ -14,7 +14,8 @@ import { Project, tags } from '../../proto';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
-  return <ProjectCard project={object as Project} />;
+  const space = useSpace();
+  return <ProjectCard space={space} project={object as Project} />;
 };
 
 // TODO(burdon): Generalize type and field.

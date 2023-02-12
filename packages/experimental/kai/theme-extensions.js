@@ -49,8 +49,8 @@ module.exports = {
       selection: {
         hover: secondary[100],
         bg: secondary[200],
-        text: secondary[500],
-        border: secondary[400]
+        text: primary[500],
+        border: primary[400]
       }
     }
   }
