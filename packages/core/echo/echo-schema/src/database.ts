@@ -5,9 +5,8 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseBackendProxy, Item, ItemManager, encodeModelMutation } from '@dxos/echo-db';
+import { DatabaseBackendProxy, Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
@@ -102,14 +101,7 @@ export class EchoDatabase {
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
 
-    let mutation: Any | undefined;
-    if (obj instanceof DocumentBase) {
-      const props = {
-        type: obj[type]
-      };
-      const modelMeta = obj[base]._modelConstructor.meta;
-      mutation = encodeModelMutation(modelMeta, modelMeta.getInitMutation!(props));
-    }
+    const snapshot = obj[base]._createSnapshot();
 
     const result = this._backend.mutate({
       objects: [
@@ -118,13 +110,10 @@ export class EchoDatabase {
           genesis: {
             modelType: obj[base]._modelConstructor.meta.type
           },
-          mutations: !mutation
-            ? []
-            : [
-                {
-                  model: mutation
-                }
-              ]
+          snapshot: {
+            // TODO(dmaretskyi): Parent id, deleted flag.
+            model: snapshot
+          }
         }
       ]
     });
