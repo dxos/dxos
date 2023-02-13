@@ -9,38 +9,42 @@ import { Link, useParams } from 'react-router-dom';
 import { getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-// TODO(burdon): Rename frames.
+import { useFrames, createSpacePath, Section, useFrameState } from '../../hooks';
 
-import { useFrames, useSpace, createSpacePath, Section } from '../hooks';
+// TODO(burdon): Floating buttons since main content isn't uniform for tabs.
+const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; compact: boolean }> = ({
+  selected,
+  label,
+  Icon,
+  link,
+  compact = false
+}) => {
+  return (
+    <div
+      className={mx(
+        'flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black',
+        selected && 'bg-panel-bg'
+      )}
+    >
+      <Link className='flex' to={link} title={label}>
+        <Icon weight='light' className={getSize(6)} />
+        {!compact && <div className='hidden lg:flex ml-1'>{label}</div>}
+      </Link>
+    </div>
+  );
+};
 
 /**
- * View tabs.
+ * Frame tabs.
  */
 export const FrameSelector: FC = () => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const { frames, active: activeFrames } = useFrames();
   const { section, frame: currentFrame } = useParams();
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
   const toggleSidebar = useTogglePanelSidebar();
-
-  const Tab: FC<{ selected: boolean; label: string; Icon: FC<any>; link: string }> = ({
-    selected,
-    label,
-    Icon,
-    link
-  }) => {
-    return (
-      <div
-        className={mx('flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black', selected && 'bg-white')}
-      >
-        <Link className='flex' to={link} title={label}>
-          <Icon weight='light' className={getSize(6)} />
-          <div className='hidden lg:flex ml-1'>{label}</div>
-        </Link>
-      </div>
-    );
-  };
+  const maxTabs = 8; // TODO(burdon): Media query?
 
   return (
     <div
@@ -53,7 +57,7 @@ export const FrameSelector: FC = () => {
       <div className='flex justify-between'>
         <div className='flex items-center'>
           {!isOpen && (
-            <button className='ml-5 mr-3' onClick={toggleSidebar}>
+            <button className='mx-3' onClick={toggleSidebar}>
               {<CaretRight className={getSize(6)} />}
             </button>
           )}
@@ -67,32 +71,22 @@ export const FrameSelector: FC = () => {
                 selected={id === currentFrame}
                 label={displayName ?? ''}
                 Icon={Icon}
-                link={createSpacePath(space.key, id)}
+                link={createSpacePath(space!.key, id)}
+                compact={activeFrames.length > maxTabs}
               />
             ))}
         </div>
 
-        <div className='flex items-center mr-3'>
-          <Tab selected={section === Section.REGISTRY} label='Registry' Icon={Globe} link={Section.REGISTRY} />
+        <div className='flex items-center mr-1'>
+          <Tab
+            selected={section === Section.REGISTRY}
+            label='Registry'
+            Icon={Globe}
+            link={Section.REGISTRY}
+            compact={activeFrames.length > maxTabs}
+          />
         </div>
       </div>
     </div>
   );
-};
-
-/**
- * Viewport for frame.
- */
-export const FrameContainer: FC<{ frame: string }> = ({ frame }) => {
-  const { frames, active: activeFrames } = useFrames();
-  if (!activeFrames.find((frameId) => frameId === frame)) {
-    return null;
-  }
-
-  const Component = frames.get(frame)?.runtime.Component;
-  if (!Component) {
-    return null;
-  }
-
-  return <Component />;
 };

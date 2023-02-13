@@ -4,5 +4,6 @@
 
 export * from './Button';
 export * from './CardRow';
+export * from './EditableObjectList';
 export * from './Input';
 export * from './List';

@@ -5,15 +5,16 @@
 import { Archive, ArrowsOut, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
+import { Space } from '@dxos/client';
 import { id } from '@dxos/echo-schema';
 import { withReactor } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 
-import { Input, CardRow, Button } from '../components';
-import { Project, Task } from '../proto';
+import { Input, CardRow, Button } from '../../components';
+import { Project, Task } from '../../proto';
 import { TaskList } from './TaskList';
 
-export const ProjectCard: FC<{ project: Project }> = withReactor(({ project }) => {
+export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor(({ space, project }) => {
   const handleExpand = () => {};
 
   // TODO(burdon): Pass in Task1, Task2.

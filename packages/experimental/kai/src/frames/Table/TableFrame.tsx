@@ -76,20 +76,22 @@ export const TableFrame = () => {
   };
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-3 border-b border-slate-200 border-solid'>
-        <div className='flex'>
-          <div className='mr-2'>
-            <Selector options={types} value={type.id} onSelect={handleSelect} />
-          </div>
-          <div>
-            <Searchbar onSearch={handleSearch} />
-          </div>
+    <div className='flex flex-col flex-1 overflow-hidden px-2'>
+      <div className='flex p-3'>
+        <div className='mr-4'>
+          <Selector options={types} value={type.id} onSelect={handleSelect} />
+        </div>
+        <div>
+          <Searchbar onSearch={handleSearch} />
         </div>
       </div>
 
       {/* <div className='flex flex-1 overflow-hidden'> */}
-      <Table<Document> columns={type.columns} data={objects} />
+      <Table<Document>
+        columns={type.columns}
+        data={objects}
+        classes={{ header: 'bg-panel-bg', row: 'hover:bg-selection-hover' }}
+      />
       {/* </div> */}
     </div>
   );

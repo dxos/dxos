@@ -9,5 +9,5 @@ import { useSpace } from './useSpace';
 
 export const useGenerator = (): Generator => {
   const space = useSpace();
-  return useMemo(() => new Generator(space.experimental.db), [space]);
+  return useMemo(() => new Generator(space!.experimental.db), [space]);
 };

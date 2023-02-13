@@ -14,7 +14,8 @@ import { Project, tags } from '../../proto';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
-  return <ProjectCard project={object as Project} />;
+  const space = useSpace();
+  return <ProjectCard space={space} project={object as Project} />;
 };
 
 // TODO(burdon): Generalize type and field.
@@ -49,7 +50,7 @@ export const KanbanFrame: FC = () => {
   // TODO(burdon): Type and column/field selectors.
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='py-3 px-0 md:px-2'>
+      <div className='flex p-3'>
         <div className='w-screen md:w-column px-4 md:px-2'>
           <Searchbar onSearch={handleSearch} />
         </div>

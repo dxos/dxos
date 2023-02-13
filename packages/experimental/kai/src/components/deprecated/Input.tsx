@@ -4,8 +4,12 @@
 
 import React, { ChangeEvent, InputHTMLAttributes, KeyboardEvent, forwardRef, useEffect, useRef, useState } from 'react';
 
-export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'onBlur'> {
+import { mx } from '@dxos/react-components';
+
+export interface InputProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'value' | 'onChange' | 'onBlur'> {
   value?: string;
+  className?: string;
   onChange?: (value: string) => void;
   onEnter?: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
@@ -18,7 +22,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
  * @deprecated
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ value: initialValue, onKeyDown, onChange, onEnter, onBlur, delay = 1000, ...props }, ref) => {
+  ({ className, value: initialValue, onKeyDown, onChange, onEnter, onBlur, delay = 1000, ...props }, ref) => {
     const t = useRef<ReturnType<typeof setTimeout>>();
     const [value, setValue] = useState<string | undefined>(initialValue);
 
@@ -72,6 +76,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <input
         ref={ref}
+        className={mx('bg-transparent', className)}
         value={value ?? ''}
         onChange={handleChange}
         onKeyDown={handleKeyDown}

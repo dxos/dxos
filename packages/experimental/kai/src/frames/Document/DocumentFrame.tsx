@@ -2,67 +2,78 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { id } from '@dxos/echo-schema';
-import { useQuery, withReactor } from '@dxos/react-client';
-import { Selector } from '@dxos/react-components';
+import { id, useQuery, withReactor } from '@dxos/react-client';
+import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { Input } from '../../components';
-import { useSpace } from '../../hooks';
+import { createSpacePath, useFrameState } from '../../hooks';
 import { Document } from '../../proto';
 
 export const DocumentFrame = withReactor(() => {
-  const space = useSpace();
-  const documents = useQuery(space, Document.filter());
-  const [document, setDocument] = useState<Document>();
-  useEffect(() => {
-    setDocument(undefined);
-  }, [space]);
+  const navigate = useNavigate();
+  const { space, frame, objectId } = useFrameState();
+  const objects = useQuery(space, Document.filter());
 
-  const fragment = document?.content.doc!.getXmlFragment('content');
+  // Default to first.
+  const object = objectId ? (space!.experimental.db.getObjectById(objectId) as Document) : undefined;
+  useEffect(() => {
+    if (frame && !object && objects.length) {
+      navigate(createSpacePath(space!.key, frame?.module.id, objects[0][id]));
+    }
+  }, [frame, object, objects]);
+
+  // TODO(burdon): Handle error.
+  if (!object || !object.content) {
+    return null;
+  }
+
+  // TODO(burdon): Factor out container with fragment and scrolling.
+  const fragment = object.content.doc!.getXmlFragment('content');
+
+  // TODO(burdon): Spellcheck false in dev mode.
+  const spellCheck = false;
 
   return (
-    <div className='flex flex-1 overflow-hidden justify-center bg-panel-bg'>
-      <div className='flex flex-col overflow-hidden w-full lg:w-[800px] bg-white shadow-lg'>
-        <div className='flex p-3'>
-          <Selector
-            placeholder='Document'
-            options={documents.map((document) => ({ id: document[id], title: document.title }))}
-            onSelect={(selected) => {
-              setDocument(selected ? documents.find((document) => document[id] === selected) : undefined);
+    <div className='flex flex-1 overflow-hidden justify-center'>
+      <div className='flex flex-col w-full md:max-w-[800px]'>
+        <div className='m-0 md:m-4 bg-white shadow-lg overflow-y-auto '>
+          {/* TODO(burdon): Why is label required? */}
+          {/* TODO(burdon): Throttle input. */}
+          <Input
+            value={object.title}
+            onChange={(event) => {
+              object.title = event.target.value;
+            }}
+            label=''
+            placeholder='Title'
+            slots={{
+              root: {
+                className: 'px-6 m-0 my-6'
+              },
+              input: {
+                className: 'p-2 border-0 text-xl',
+                spellCheck
+              }
+            }}
+          />
+
+          <Composer
+            fragment={fragment}
+            slots={{
+              root: { className: 'grow' },
+              editor: {
+                className: 'z-0 bg-white text-black h-full w-full px-8 pb-16 min-bs-[12em] text-xl md:text-base',
+                spellCheck
+              }
             }}
           />
         </div>
-
-        {document && (
-          <div className='flex flex-col flex-1 overflow-hidden'>
-            <div className='flex p-4 border-b items-center'>
-              <Input
-                className='w-full p-1 text-lg outline-0'
-                spellCheck={false}
-                value={document.title}
-                onChange={(value) => (document.title = value)}
-              />
-            </div>
-
-            {document.content?.doc && (
-              <div className='flex flex-1 m-2 overflow-y-auto'>
-                <Composer
-                  fragment={fragment}
-                  slots={{
-                    root: { className: 'grow' },
-                    editor: {
-                      className: 'z-0 bg-white text-black h-full w-full p-3 min-bs-[12em] text-xl md:text-base'
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
 });
+
+export default DocumentFrame;

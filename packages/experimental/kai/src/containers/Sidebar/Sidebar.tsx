@@ -13,18 +13,19 @@ import { useClient, useMembers, useSpaces } from '@dxos/react-client';
 import { getSize } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { Button, MemberList, SpaceList } from '../components';
-import { useSpace, createSpacePath, useAppState, createInvitationPath, Section } from '../hooks';
+import { Button } from '../../components';
+import { useSpace, createSpacePath, useAppState, createInvitationPath, Section, createSectionPath } from '../../hooks';
+import { MemberList } from '../MembersList';
+import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
-  const { frame, view } = useParams();
+  const { frame } = useParams();
   const navigate = useNavigate();
   const client = useClient();
   const space = useSpace();
   const spaces = useSpaces();
   const members = useMembers(space.key);
-  const [prevView, setPrevView] = useState(view);
   const [prevSpace, setPrevSpace] = useState(space);
   const toggleSidebar = useTogglePanelSidebar();
   const { displayState } = useContext(PanelSidebarContext);
@@ -52,12 +53,9 @@ export const Sidebar = () => {
     setPrevSpace(space);
   }
 
-  if (prevView !== view) {
-    setPrevView(view);
-  }
-
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
+    // await space.properties.set('title', 'XXX'); // TODO(burdon): Not implemented.
     navigate(createSpacePath(space.key));
   };
 
@@ -94,40 +92,36 @@ export const Sidebar = () => {
       return;
     }
 
-    navigate(`/${spaceKey.truncate()}/${Section.SETTINGS}`);
+    navigate(createSectionPath(spaceKey, Section.SETTINGS));
   };
 
+  // TODO(burdon): Mobile slider (full width, no blur).
   return (
-    <div
-      role='none'
-      className='flex flex-col overflow-auto min-bs-full shadow backdrop-blur bg-sidebar-bg dark:bg-neutral-950/[.33]'
-    >
+    <div role='none' className='flex flex-col overflow-auto min-bs-full bg-sidebar-bg'>
       {/* Match Frame selector. */}
       <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
-        <div className='flex justify-between p-1 pl-4'>
-          <div className='flex items-center pr-3'>
-            {/* TODO(burdon): Remove initial focus */}
+        <div className='flex justify-between p-1 px-4'>
+          <div className='flex items-center'>
+            {/* TODO(burdon): Remove initial focus. */}
             <Button />
-            <Button className='flex ml-2' title='Create new space' onClick={handleCreateSpace}>
+            <Button className='flex mr-2' title='Create new space' onClick={handleCreateSpace}>
               <span className='sr-only'>Create new space</span>
               <PlusCircle className={getSize(6)} />
             </Button>
-            <Button className='flex ml-2' title='Join a space' onClick={handleJoinSpace}>
+            <Button className='flex mr-2' title='Join a space' onClick={handleJoinSpace}>
               <span className='sr-only'>Join a space</span>
               <ArrowCircleDownLeft className={getSize(6)} />
             </Button>
           </div>
           <div className='flex items-center'>
-            <Button className='mr-4' onClick={toggleSidebar}>
-              {isOpen && <CaretLeft className={getSize(6)} />}
-            </Button>
+            <Button onClick={toggleSidebar}>{isOpen && <CaretLeft className={getSize(6)} />}</Button>
           </div>
         </div>
       </div>
 
-      <div className='flex flex-col flex-1'>
+      <div className='flex flex-col flex-1 overflow-hidden'>
         {/* Spaces */}
-        <div className='flex shrink-0 flex-col overflow-y-auto'>
+        <div className='flex overflow-y-auto'>
           <SpaceList spaces={spaces} selected={space.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
         </div>
 
@@ -141,6 +135,7 @@ export const Sidebar = () => {
           </div>
         </div>
 
+        {/* TODO(burdon): Move some actions to menu. */}
         <Actions />
       </div>
     </div>

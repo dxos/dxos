@@ -2,12 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Kanban, Planet, ShareNetwork } from 'phosphor-react';
-import React from 'react';
+import { Planet, ShareNetwork } from 'phosphor-react';
+import React, { ReactNode } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { getSize, mx } from '@dxos/react-components';
+import { humanize } from '@dxos/util';
+
+import { useFrames } from '../../hooks';
 
 enum SpaceItemAction {
   SELECT = 1,
@@ -17,52 +21,34 @@ enum SpaceItemAction {
 export type SpaceItemProps = {
   space: Space;
   selected?: boolean;
+  children?: ReactNode;
   onAction: (action: SpaceItemAction) => void;
 };
-
-// TODO(burdon): Frame API provides compact view.
-const items = [
-  {
-    id: 'item-1',
-    Icon: Kanban,
-    label: 'Org chart'
-  },
-  {
-    id: 'item-2',
-    Icon: Kanban,
-    label: 'Team planning'
-  },
-  {
-    id: 'item-3',
-    Icon: Kanban,
-    label: 'Tasks'
-  },
-  {
-    id: 'item-4',
-    Icon: Kanban,
-    label: 'Recruiting'
-  }
-];
 
 // TODO(burdon): Repurposable panel (compact, vs full mode). Tile?
 // TODO(burdon): Editable space name?
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
-const SpaceItem = ({ space, selected, onAction }: SpaceItemProps) => {
+const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
-    <div className={mx('flex flex-col mx-3 mt-3 border rounded')}>
-      <div
-        className={mx(
-          'flex w-full p-2 pl-3 pr-4 items-center hover:bg-selection-hover',
-          selected && 'hover:bg-selection-bg bg-selection-bg'
-        )}
-      >
-        <div className={mx('flex mr-3', selected && 'text-selection-text')}>
-          <Planet className={getSize(6)} />
-        </div>
+    <div
+      className={mx(
+        'flex flex-col overflow-hidden mx-3 first:mt-3 mb-3 rounded border border-panel-border',
+        'hover:bg-selection-hover',
+        selected && 'hover:bg-selection-bg bg-selection-bg border-selection-border'
+      )}
+    >
+      <div className={mx('flex w-full overflow-hidden p-2 pl-3 pr-4 items-center')}>
+        <div
+          className='flex flex-1 overflow-hidden font-mono cursor-pointer'
+          onClick={() => onAction(SpaceItemAction.SELECT)}
+        >
+          <div className={mx('flex mr-3', selected && 'text-selection-text')}>
+            <Planet className={getSize(6)} />
+          </div>
 
-        <div className='flex flex-1 font-mono cursor-pointer' onClick={() => onAction(SpaceItemAction.SELECT)}>
-          {space.key.truncate()}
+          {/* TODO(burdon): Name. */}
+          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>{humanize(space.key)}</h2>
         </div>
 
         {selected && (
@@ -76,20 +62,7 @@ const SpaceItem = ({ space, selected, onAction }: SpaceItemProps) => {
         )}
       </div>
 
-      {selected && false && (
-        <div className='flex bg-white'>
-          <ul>
-            {items.map(({ id, Icon, label }) => (
-              <div key={id} className='flex items-center px-3 py-2 text-sm'>
-                <div className='pr-3'>
-                  <Icon className={getSize(6)} />
-                </div>
-                <div>{label}</div>
-              </div>
-            ))}
-          </ul>
-        </div>
-      )}
+      {selected && <div className='flex bg-white rounded-b'>{children}</div>}
     </div>
   );
 };
@@ -103,6 +76,13 @@ export type SpaceListProps = {
 
 // TODO(burdon): Use vertical mosaic.
 export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProps) => {
+  // TODO(burdon): Move to containers.
+  const { frame: currentFrame } = useParams();
+  const { frames } = useFrames();
+
+  const frame = currentFrame ? frames.get(currentFrame) : undefined;
+  const Tile = frame?.runtime.Tile;
+
   // TODO(burdon): Factor pattern?
   const handleAction = (spaceKey: PublicKey, action: SpaceItemAction) => {
     switch (action) {
@@ -110,6 +90,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
         onSelect(spaceKey);
         break;
       }
+
       case SpaceItemAction.SHARE: {
         onShare(spaceKey);
         break;
@@ -118,14 +99,16 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
   };
 
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col flex-1 overflow-hidden'>
       {spaces.map((space) => (
         <SpaceItem
           key={space.key.toHex()}
           space={space}
           selected={space.key.equals(selected)}
           onAction={(action) => handleAction(space.key, action)}
-        />
+        >
+          {Tile && <Tile />}
+        </SpaceItem>
       ))}
     </div>
   );

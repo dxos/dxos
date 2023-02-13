@@ -17,6 +17,7 @@ export interface ComposerSlots {
   root?: Omit<ComponentProps<'div'>, 'ref'>;
   editor?: {
     className?: string;
+    spellCheck?: boolean;
   };
 }
 
@@ -58,11 +59,12 @@ export const Composer = ({
       ],
       editorProps: {
         attributes: {
-          class: mx('focus:outline-none focus-visible:outline-none', slots?.editor?.className)
+          class: mx('focus:outline-none focus-visible:outline-none', slots?.editor?.className),
+          spellcheck: slots?.editor?.spellCheck === false ? 'false' : 'true'
         }
       }
     },
-    [doc]
+    [doc, fragment]
   );
 
   return <EditorContent {...slots?.root} editor={editor} />;
