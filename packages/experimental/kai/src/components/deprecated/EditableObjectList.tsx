@@ -7,11 +7,7 @@ import React, { FC } from 'react';
 
 import { Document } from '@dxos/echo-schema';
 import { id } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
-
-import { Button } from './Button';
-import { Input } from './Input';
-import { List, ListItemButton } from './List';
+import { getSize, List, ListItem, Button, Input, ListItemEndcap, mx } from '@dxos/react-components';
 
 // TODO(burdon): Make fully generic (don't depend on Document).
 export type EditableObjectListProps<T extends Document> = {
@@ -53,38 +49,53 @@ export const EditableObjectList = <T extends Document>({
   const ActionIcon = Action ?? Circle;
 
   return (
-    <div className='flex flex-col w-full'>
-      <List>
-        {objects.map((object) => (
-          <ListItemButton key={object[id]}>
-            <div
-              className={mx('pl-1 pr-2 cursor-pointer', object[id] === selected && 'text-selection-text')}
-              onClick={() => onSelect?.(object[id])}
-            >
-              <Icon className={getSize(6)} />
-            </div>
-            <Input
-              className='w-full p-1'
-              value={getTitle(object)}
-              onChange={(text: string) => onUpdate?.(object[id], text)}
-              placeholder='Title'
-              autoFocus={!getTitle(object)?.length}
-            />
-            {onAction && (
-              <div className='pr-2' onClick={() => onAction?.(object[id])}>
-                <ActionIcon className={getSize(6)} />
-              </div>
-            )}
-          </ListItemButton>
-        ))}
+    <div role='none' className='p-1 is-full'>
+      <List labelId='excluded'>
+        {objects.map((object) => {
+          const isSelected = object[id] === selected && 'text-selection-text';
+          return (
+            <ListItem id={object[id]} key={object[id]}>
+              <ListItemEndcap asChild>
+                <Button
+                  variant='ghost'
+                  onClick={() => onSelect?.(object[id])}
+                  className={mx('p-0 flex items-center justify-center', isSelected ? 'text-selection-text' : '')}
+                >
+                  <Icon className={getSize(6)} />
+                </Button>
+              </ListItemEndcap>
+              <Input
+                variant='subdued'
+                value={getTitle(object)}
+                onChange={({ target: { value } }) => onUpdate?.(object[id], value)}
+                placeholder='Title'
+                label='Title'
+                slots={{
+                  root: { className: 'm-0 grow' },
+                  label: { className: 'sr-only' },
+                  input: { autoFocus: !getTitle(object)?.length }
+                }}
+              />
+              {onAction && (
+                <ListItemEndcap asChild>
+                  <Button
+                    variant='ghost'
+                    className='p-0 flex items-center justify-center'
+                    onClick={() => onAction?.(object[id])}
+                  >
+                    <ActionIcon className={getSize(6)} />
+                  </Button>
+                </ListItemEndcap>
+              )}
+            </ListItem>
+          );
+        })}
       </List>
 
       {onCreate && (
-        <div className='flex px-3 py-2'>
-          <Button onClick={handleCreate}>
-            <Plus className={getSize(6)} />
-          </Button>
-        </div>
+        <Button compact variant='ghost' onClick={handleCreate} className='mbs-2'>
+          <Plus className={getSize(6)} />
+        </Button>
       )}
     </div>
   );

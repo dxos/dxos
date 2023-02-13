@@ -10,6 +10,7 @@ import { createCollection } from '@radix-ui/react-collection';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { DotsSixVertical } from 'phosphor-react';
 import React, {
@@ -138,25 +139,38 @@ type ListItemContextValue = { headingId: string };
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
-const ListItemEndcap = ({ children, className, ...props }: ComponentPropsWithoutRef<'div'>) => {
+const ListItemEndcap = ({
+  children,
+  className,
+  asChild,
+  ...props
+}: ComponentPropsWithoutRef<'div'> & { asChild?: boolean }) => {
+  const Root = asChild ? Slot : 'div';
   return (
-    <div role='none' {...props} className={mx(defaultListItemEndcap, className)}>
+    <Root {...(!asChild && { role: 'none' })} {...props} className={mx(defaultListItemEndcap, className)}>
       {children}
-    </div>
+    </Root>
   );
 };
 
 const ListItemHeading = ({
   children,
   className,
+  asChild,
   __scopeSelect,
   ...props
-}: ScopedProps<ComponentPropsWithoutRef<'div'>>) => {
+}: ScopedProps<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean }) => {
   const { headingId } = useListItemContext(LIST_ITEM_NAME, __scopeSelect);
+  const Root = asChild ? Slot : 'div';
   return (
-    <div role='none' {...props} id={headingId} className={mx(defaultListItemHeading, className)}>
+    <Root
+      {...(!asChild && { role: 'none' })}
+      {...props}
+      id={headingId}
+      className={mx(defaultListItemHeading, className)}
+    >
       {children}
-    </div>
+    </Root>
   );
 };
 
