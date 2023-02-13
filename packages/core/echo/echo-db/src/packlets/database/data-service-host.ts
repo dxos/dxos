@@ -51,7 +51,6 @@ export class DataServiceHost {
         return {
           objectId: entity.id,
           genesis: {
-            itemType: entity.type,
             modelType: entity.modelType
           },
           snapshot: {

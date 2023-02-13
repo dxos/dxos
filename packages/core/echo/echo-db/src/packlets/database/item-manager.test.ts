@@ -23,7 +23,6 @@ describe('ItemManager', () => {
       const item = await itemManager.constructItem({
         itemId,
         modelType: DocumentModel.meta.type,
-        itemType: undefined,
         snapshot: { objectId: itemId }
       });
       expect(item.id).toEqual(itemId);
@@ -107,7 +106,6 @@ const defaultOpts = (): ItemConstructionOptions => {
   return {
     itemId,
     modelType: DocumentModel.meta.type,
-    itemType: undefined,
     snapshot: { objectId: itemId }
   };
 };

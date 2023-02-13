@@ -60,7 +60,7 @@ export class ItemDemuxer {
       // New item.
       //
       if (genesis) {
-        const { itemType, modelType } = genesis;
+        const { modelType } = genesis;
         assert(modelType);
 
         // TODO(dmaretskyi): Support snapshot.
@@ -75,7 +75,6 @@ export class ItemDemuxer {
                 meta
               })) ?? []
           },
-          itemType,
           parentId: mutation?.parentId
         });
 
@@ -123,7 +122,6 @@ export class ItemDemuxer {
 
     return {
       genesis: {
-        itemType: item.type,
         modelType: item.modelType
       },
       snapshot: {
@@ -146,7 +144,6 @@ export class ItemDemuxer {
       await this._itemManager.constructItem({
         itemId: item.objectId,
         modelType: item.genesis.modelType,
-        itemType: item.genesis.itemType,
         parentId: item.snapshot?.parentId,
         snapshot: item // TODO(mykola): Refactor to pass just EchoObject.
       });
