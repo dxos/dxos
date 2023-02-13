@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
-import { Event, synchronized, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, synchronized, Trigger } from '@dxos/async';
 import {
   ClientServicesProvider,
   CancellableInvitationObservable,
@@ -15,13 +15,15 @@ import {
 import { todo } from '@dxos/debug';
 import { DocumentModel, ObjectProperties } from '@dxos/document-model';
 import { Item, ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, EchoDatabase } from '@dxos/echo-schema';
+import { DatabaseRouter, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+
+import { SpaceMeta } from '../proto';
 
 export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
 
@@ -39,6 +41,7 @@ export interface Space extends ISpace {
   get isOpen(): boolean;
   get isActive(): boolean;
   get invitations(): CancellableInvitationObservable[];
+  get data(): SpaceMeta;
 
   // // TODO(burdon): Remove and move accessors to proxy.
   // get database(): Database;
@@ -103,6 +106,8 @@ export class SpaceProxy implements Space {
   private readonly _invitationProxy: SpaceInvitationsProxy;
   private _invitations: CancellableInvitationObservable[] = [];
 
+  private _data?: SpaceMeta;
+
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
 
@@ -161,6 +166,13 @@ export class SpaceProxy implements Space {
     return this._state.isActive;
   }
 
+  /**
+   * Space Metadata stored in the database.
+   */
+  get data() {
+    return this._data!;
+  }
+
   // get database(): Database {
   //   if (!this._database) {
   //     throw new ApiError('Space not open.');
@@ -215,7 +227,23 @@ export class SpaceProxy implements Space {
     log('database ready');
     this._databaseInitialized.wake();
 
-    // this._item = await this._database!.waitForItem<DocumentModel>({ type: SPACE_ITEM_TYPE });
+    {
+      // Wait for SpaceMeta document.
+      const waitForSpaceMeta = new Trigger();
+      const subscription = this._experimental!.db.query(SpaceMeta.filter()).subscribe((query: Query<SpaceMeta>) => {
+        if (query.getObjects().length === 1) {
+          this._data = query.getObjects()[0];
+          waitForSpaceMeta.wake();
+          subscription();
+        }
+      });
+
+      try {
+        await asyncTimeout(waitForSpaceMeta.wait(), 3_000, new ApiError('SpaceMeta not found.'));
+      } finally {
+        subscription();
+      }
+    }
 
     this.stateUpdate.emit();
     log('initialized');
