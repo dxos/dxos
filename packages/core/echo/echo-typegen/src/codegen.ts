@@ -157,7 +157,7 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
     .push('}', 1).nl()
 
     .push(`constructor(opts?: { ${initializer} }) {`, 1)
-    .push(`super({ ...opts, '@type': ${name}.type.name }, ${name}.type);`, 2)
+    .push(`super({ ...opts}, ${name}.type);`, 2)
     .push('}', 1).nl()
 
     .push(fields, 1)

@@ -4,14 +4,10 @@
 
 import React, { useState } from 'react';
 
-import { deleted, Document, DocumentBase, id, Item, schema, type } from '@dxos/client';
+import { deleted, Document, DocumentBase, id, type } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
-import { MessengerModel } from '@dxos/messenger-model';
-import { Model } from '@dxos/model-factory';
 import { useQuery } from '@dxos/react-client';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
-import { TextModel } from '@dxos/text-model';
 
 import { DetailsTable, JsonView } from '../../components';
 import { SpaceToolbar } from '../../containers';

@@ -3,6 +3,7 @@
 //
 
 import { Event, EventSubscriptions } from '@dxos/async';
+import { DocumentModel } from '@dxos/document-model';
 import { FeedWriter } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Model, ModelMeta, StateManager } from '@dxos/model-factory';
@@ -54,7 +55,6 @@ export class Item<M extends Model | null = Model> {
   constructor(
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
-    private readonly _type: ItemType | undefined,
     stateManager: StateManager<NonNullable<M>>,
     private readonly _writeStream?: FeedWriter<DataMessage>,
     parent?: Item<any> | null
@@ -72,7 +72,9 @@ export class Item<M extends Model | null = Model> {
   }
 
   get type(): ItemType | undefined {
-    return this._type;
+    if (this.modelType === DocumentModel.meta.type) {
+      return (this._stateManager as any)._stateMachine._object.type;
+    }
   }
 
   get modelType(): string {
