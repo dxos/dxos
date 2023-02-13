@@ -27,6 +27,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
+import { SpaceMeta } from '../proto';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -176,14 +177,7 @@ export class EchoProxy implements Echo {
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
     await spaceProxy.initialize(); // Idempotent.
-    spaceProxy.internal.db.mutate({
-      objects: [
-        {
-          objectId: PublicKey.random().toHex(),
-          genesis: { modelType: DocumentModel.meta.type }
-        }
-      ]
-    });
+    await spaceProxy.experimental.db.save(new SpaceMeta());
 
     return spaceProxy;
   }
