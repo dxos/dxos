@@ -55,6 +55,7 @@ export const Sidebar = () => {
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
+    // await space.properties.set('title', 'XXX'); // TODO(burdon): Not implemented.
     navigate(createSpacePath(space.key));
   };
 
@@ -99,23 +100,21 @@ export const Sidebar = () => {
     <div role='none' className='flex flex-col overflow-auto min-bs-full bg-sidebar-bg'>
       {/* Match Frame selector. */}
       <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
-        <div className='flex justify-between p-1 pl-4'>
-          <div className='flex items-center pr-3'>
+        <div className='flex justify-between p-1 px-4'>
+          <div className='flex items-center'>
             {/* TODO(burdon): Remove initial focus. */}
             <Button />
-            <Button className='flex ml-2' title='Create new space' onClick={handleCreateSpace}>
+            <Button className='flex mr-2' title='Create new space' onClick={handleCreateSpace}>
               <span className='sr-only'>Create new space</span>
               <PlusCircle className={getSize(6)} />
             </Button>
-            <Button className='flex ml-2' title='Join a space' onClick={handleJoinSpace}>
+            <Button className='flex mr-2' title='Join a space' onClick={handleJoinSpace}>
               <span className='sr-only'>Join a space</span>
               <ArrowCircleDownLeft className={getSize(6)} />
             </Button>
           </div>
           <div className='flex items-center'>
-            <Button className='mr-4' onClick={toggleSidebar}>
-              {isOpen && <CaretLeft className={getSize(6)} />}
-            </Button>
+            <Button onClick={toggleSidebar}>{isOpen && <CaretLeft className={getSize(6)} />}</Button>
           </div>
         </div>
       </div>

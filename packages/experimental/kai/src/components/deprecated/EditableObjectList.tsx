@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, PlusCircle } from 'phosphor-react';
+import { Circle, Plus } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Document } from '@dxos/echo-schema';
@@ -22,6 +22,7 @@ export type EditableObjectListProps<T extends Document> = {
   Action?: FC<any>;
   onSelect?: (id: string) => void;
   onAction?: (id: string) => Promise<void>;
+  onUpdate?: (id: string, text: string) => Promise<void>;
   onCreate?: () => Promise<string>;
 };
 
@@ -36,8 +37,9 @@ export const EditableObjectList = <T extends Document>({
   Icon,
   Action,
   onSelect,
-  onCreate,
-  onAction
+  onAction,
+  onUpdate,
+  onCreate
 }: EditableObjectListProps<T>) => {
   const handleCreate = async () => {
     if (onCreate) {
@@ -51,7 +53,7 @@ export const EditableObjectList = <T extends Document>({
   const ActionIcon = Action ?? Circle;
 
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col w-full'>
       <List>
         {objects.map((object) => (
           <ListItemButton key={object[id]}>
@@ -61,7 +63,13 @@ export const EditableObjectList = <T extends Document>({
             >
               <Icon className={getSize(6)} />
             </div>
-            <Input className='w-full p-1' value={getTitle(object)} placeholder='Title' />
+            <Input
+              className='w-full p-1'
+              value={getTitle(object)}
+              onChange={(text: string) => onUpdate?.(object[id], text)}
+              placeholder='Title'
+              autoFocus={!getTitle(object)?.length}
+            />
             {onAction && (
               <div className='pr-2' onClick={() => onAction?.(object[id])}>
                 <ActionIcon className={getSize(6)} />
@@ -74,7 +82,7 @@ export const EditableObjectList = <T extends Document>({
       {onCreate && (
         <div className='flex px-3 py-2'>
           <Button onClick={handleCreate}>
-            <PlusCircle className={getSize(6)} />
+            <Plus className={getSize(6)} />
           </Button>
         </div>
       )}

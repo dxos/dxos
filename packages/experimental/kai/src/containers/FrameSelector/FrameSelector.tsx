@@ -9,7 +9,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { useFrames, createSpacePath, Section, FrameDef, useFrameState } from '../../hooks';
+import { useFrames, createSpacePath, Section, useFrameState } from '../../hooks';
 
 // TODO(burdon): Floating buttons since main content isn't uniform for tabs.
 const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; compact: boolean }> = ({
@@ -57,7 +57,7 @@ export const FrameSelector: FC = () => {
       <div className='flex justify-between'>
         <div className='flex items-center'>
           {!isOpen && (
-            <button className='ml-5 mr-3' onClick={toggleSidebar}>
+            <button className='mx-3' onClick={toggleSidebar}>
               {<CaretRight className={getSize(6)} />}
             </button>
           )}
@@ -89,17 +89,4 @@ export const FrameSelector: FC = () => {
       </div>
     </div>
   );
-};
-
-/**
- * Viewport for frame.
- */
-export const FrameContainer: FC<{ frame: FrameDef }> = ({ frame }) => {
-  const Component = frame.runtime.Component;
-  if (!Component) {
-    return null;
-  }
-
-  // TODO(burdon): Standardize container (bg, padding, centered, size, etc.)
-  return <Component />;
 };
