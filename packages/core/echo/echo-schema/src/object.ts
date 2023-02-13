@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
-import assert from 'node:assert';
 
 import { EchoDatabase } from './database';
 import { base, db, id } from './defs';
@@ -28,7 +29,7 @@ export abstract class EchoObject<T extends Model = any> {
   _database?: EchoDatabase;
 
   /**
-   * Present only on objects not persisted in the database. 
+   * Present only on objects not persisted in the database.
    * @internal
    */
   _stateMachine: StateMachine<StateOf<T>, MutationOf<T>, any> | undefined;
@@ -65,8 +66,8 @@ export abstract class EchoObject<T extends Model = any> {
         return {
           feedKey: PublicKey.from('00'),
           seq: 0,
-          waitToBeProcessed: () => Promise.resolve(),
-        }
+          waitToBeProcessed: () => Promise.resolve()
+        };
       }
     );
   }
@@ -88,7 +89,7 @@ export abstract class EchoObject<T extends Model = any> {
   /**
    * Called after object is bound to database.
    */
-  protected async _onBind(): Promise<void> { }
+  protected async _onBind(): Promise<void> {}
 
   /**
    * @internal
@@ -109,9 +110,9 @@ export abstract class EchoObject<T extends Model = any> {
   _createSnapshot(): Any {
     if (this._stateMachine) {
       assert(this._modelConstructor.meta.snapshotCodec);
-      return (this._modelConstructor.meta.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine.snapshot())
+      return (this._modelConstructor.meta.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine.snapshot());
     } else {
-      throw new Error('Only implemented on unpersisted objects.')
+      throw new Error('Only implemented on unpersisted objects.');
     }
   }
 
@@ -142,13 +143,7 @@ export abstract class EchoObject<T extends Model = any> {
     } else {
       assert(this._database);
       return this._database._backend.mutate(
-        createModelMutation(
-          this._id,
-          encodeModelMutation(
-            this._model!.modelMeta,
-            mutation
-          )
-        )
+        createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation))
       );
     }
   }

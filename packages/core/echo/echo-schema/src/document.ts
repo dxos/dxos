@@ -2,17 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
 import { InspectOptionsStylized, inspect } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
-import { createModelMutation, encodeModelMutation } from '@dxos/echo-db';
-import { log } from '@dxos/log';
 
 import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
-import assert from 'node:assert';
 import { isReferenceLike } from './util';
 
 const isValidKey = (key: string | symbol) =>
@@ -55,7 +53,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
     if (this._schemaType) {
       // Set type.
-      this._mutate({ type: this._schemaType.name })
+      this._mutate({ type: this._schemaType.name });
 
       for (const field of this._schemaType.fields) {
         if (field.type.kind === 'array') {
@@ -207,9 +205,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     this._database?._logObjectAccess(this);
 
     if (value instanceof EchoObject) {
-      this._mutate(
-        this._model.builder().set(key, new Reference(value[id])).build()
-      );
+      this._mutate(this._model.builder().set(key, new Reference(value[id])).build());
       this._linkObject(value);
     } else if (value instanceof EchoArray) {
       const values = value.map((item) => {
@@ -222,22 +218,16 @@ export class DocumentBase extends EchoObject<DocumentModel> {
           return item;
         }
       });
-      this._mutate(
-        this._model.builder().set(key, OrderedArray.fromValues(values)).build()
-      );
+      this._mutate(this._model.builder().set(key, OrderedArray.fromValues(values)).build());
       value._attach(this[base], key);
     } else if (Array.isArray(value)) {
       // TODO(dmaretskyi): Make a single mutation.
-      this._mutate(
-        this._model.builder().set(key, OrderedArray.fromValues([])).build()
-      );
+      this._mutate(this._model.builder().set(key, OrderedArray.fromValues([])).build());
       this._get(key).push(...value);
     } else if (typeof value === 'object' && value !== null) {
       if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
         // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-        this._mutate(
-          this._model.builder().set(key, new Reference(value['@id'])).build()
-        );
+        this._mutate(this._model.builder().set(key, new Reference(value['@id'])).build());
       } else {
         const sub = this._createProxy({}, key);
         for (const [subKey, subValue] of Object.entries(value)) {
@@ -245,9 +235,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
         }
       }
     } else {
-      this._mutate(
-        this._model.builder().set(key, value).build()
-      );
+      this._mutate(this._model.builder().set(key, value).build());
     }
   }
 
@@ -315,7 +303,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     assert(this._linkCache);
 
     const promises = [];
-    for(const obj of this._linkCache.values()) {
+    for (const obj of this._linkCache.values()) {
       promises.push(this._database!.save(obj));
     }
     this._linkCache = undefined;
@@ -325,24 +313,26 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
   /**
    * @internal
+   * Store referenced object.
    */
   _linkObject(obj: EchoObject) {
-    if(this._database) {
-      this._database.save(obj);
+    if (this._database) {
+      void this._database.save(obj);
     } else {
-      assert(this._linkCache)
+      assert(this._linkCache);
       this._linkCache.set(obj[id], obj);
     }
   }
 
   /**
    * @internal
+   * Lookup referenced object.
    */
   _lookupLink(id: string): EchoObject | undefined {
-    if(this._database) {
+    if (this._database) {
       return this._database.getObjectById(id);
     } else {
-      assert(this._linkCache)
+      assert(this._linkCache);
       return this._linkCache.get(id);
     }
   }

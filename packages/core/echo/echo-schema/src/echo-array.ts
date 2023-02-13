@@ -24,7 +24,7 @@ export class EchoArray<T> implements Array<T> {
   /**
    * Until this array is attached a document, the items are stored in this array.
    */
-  private  _uninitialized?: T[] = [];
+  private _uninitialized?: T[] = [];
 
   private _document?: Document;
   private _property?: string;
