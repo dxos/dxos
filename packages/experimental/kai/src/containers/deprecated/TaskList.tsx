@@ -83,15 +83,15 @@ export const TaskList: FC<TaskListProps> = withReactor(
         variant={unordered ? 'unordered' : 'ordered-draggable'}
         id={listId}
         labelId='omitted'
-        onMoveItem={onMoveItem}
         itemIdOrder={tasks.map((task) => task[id])}
         nextItemTitle={newTaskTitle}
-        onChangeNextItemTitle={({ target: { value } }) => setNewTaskTitle(value)}
-        onClickAdd={handleCreateTask}
         slots={{
           root: hostAttrs as ComponentPropsWithoutRef<'div'>,
           addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } }
         }}
+        onMoveItem={onMoveItem}
+        onChangeNextItemTitle={({ target: { value } }) => setNewTaskTitle(value)}
+        onClickAdd={handleCreateTask}
       >
         {tasks.map((task) => (
           <TaskItem key={task[id]} task={task} onDelete={onDelete} slots={itemSlots} />
@@ -118,13 +118,13 @@ export const TaskItem: FC<{
       <EditableListItem
         id={task[id]}
         completed={task.completed}
-        onChangeCompleted={(completed) => (task.completed = completed)}
         title={task.title}
+        slots={slots}
+        onChangeCompleted={(completed) => (task.completed = completed)}
         onChangeTitle={({ target: { value } }) => {
           task.title = value ?? '';
         }}
         {...(onDelete && { onClickDelete: () => onDelete(task) })}
-        slots={slots}
       />
     );
   },
