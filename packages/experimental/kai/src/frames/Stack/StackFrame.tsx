@@ -7,7 +7,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-components';
 
-import { ContactList, OrganizationList, ProjectHierarchy, TaskList } from '../../containers';
+import { ContactList, OrganizationList, ProjectHierarchy, UnorderedTaskList } from '../../containers';
 import { useSpace } from '../../hooks';
 
 export const TileMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
@@ -65,7 +65,7 @@ export const StackFrame: FC = () => {
 
       <div className={mx(cardStyles, 'row-span-2')}>
         <Tile scrollbar header={<TileMenu title='Tasks' />}>
-          <TaskList fullWidth space={space} />
+          <UnorderedTaskList space={space} />
         </Tile>
       </div>
 

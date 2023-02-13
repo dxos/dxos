@@ -16,9 +16,6 @@ package dxos.echo.object;
  */
 message EchoObject {
   message Genesis {
-    // TODO(dmaretskyi): Remove.
-    optional string item_type = 1;
-
     string model_type = 2;
 
     optional string model_version = 3;

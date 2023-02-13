@@ -4,6 +4,7 @@
 
 import assert from 'node:assert';
 
+import { Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy, Item, ItemManager, encodeModelMutation } from '@dxos/echo-db';
@@ -12,7 +13,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db, deleted, id, type } from './defs';
-import { DELETED, Document, DocumentBase } from './document';
+import { DELETED, Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
 
@@ -46,6 +47,11 @@ export interface SubscriptionHandle {
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
+  /**
+   * @internal
+   */
+  public readonly _updateEvent = new Event<Item[]>();
+
   constructor(
     /**
      * @internal
@@ -55,8 +61,8 @@ export class EchoDatabase {
     private readonly _router: DatabaseRouter
   ) {
     // TODO(dmaretskyi): Don't debounce?
-    this._itemManager.debouncedUpdate.on(() => this._update());
-    this._update();
+    this._itemManager.update.on((item) => this._update([item]));
+    this._update([]);
   }
 
   get objects() {
@@ -98,7 +104,9 @@ export class EchoDatabase {
 
     let mutation: Any | undefined;
     if (obj instanceof DocumentBase) {
-      const props = { '@type': obj[base]._uninitialized?.['@type'] };
+      const props = {
+        type: obj[type]
+      };
       const modelMeta = obj[base]._modelConstructor.meta;
       mutation = encodeModelMutation(modelMeta, modelMeta.getInitMutation!(props));
     }
@@ -147,12 +155,6 @@ export class EchoDatabase {
   query<T extends Document>(filter: TypeFilter<T>): Query<T>;
   query(filter?: Filter<any>): Query;
   query(filter: Filter<any>): Query {
-    // TODO(burdon): Create separate test.
-    const matcher = (object: EchoObject): object is DocumentBase =>
-      object instanceof DocumentBase &&
-      !object[deleted] &&
-      (!filter || Object.entries(filter).every(([key, value]) => (object as any)[key] === value));
-
     // Current result.
     let cache: Document[] | undefined;
 
@@ -160,7 +162,7 @@ export class EchoDatabase {
       getObjects: () => {
         if (!cache) {
           // TODO(burdon): Sort.
-          cache = Array.from(this._objects.values()).filter(matcher);
+          cache = Array.from(this._objects.values()).filter((obj): obj is DocumentBase => filterMatcher(filter, obj));
         }
 
         return cache;
@@ -168,11 +170,10 @@ export class EchoDatabase {
 
       // TODO(burdon): Trigger callback on call (not just update).
       subscribe: (callback: (query: Query) => void) => {
-        // TODO(dmaretskyi): Don't debounce?
-        return this._backend._itemManager.debouncedUpdate.on((updatedObjects) => {
-          const changed = updatedObjects.some((object) => {
+        return this._updateEvent.on((updated) => {
+          const changed = updated.some((object) => {
             if (this._objects.has(object.id)) {
-              const match = matcher(this._objects.get(object.id)!);
+              const match = filterMatcher(filter, this._objects.get(object.id)!);
               const exists = cache?.find((obj) => obj[id] === object.id);
               return match || (exists && !match);
             } else {
@@ -198,7 +199,7 @@ export class EchoDatabase {
     this._router._logObjectAccess(obj);
   }
 
-  private _update() {
+  private _update(changed: Item[]) {
     for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
         const obj = this._createObjectInstance(object);
@@ -212,6 +213,8 @@ export class EchoDatabase {
         obj[base]._bind(object).catch((err) => log.catch(err));
       }
     }
+
+    this._updateEvent.emit(changed);
   }
 
   /**
@@ -239,3 +242,32 @@ export class EchoDatabase {
     }
   }
 }
+
+// TODO(burdon): Create separate test.
+const filterMatcher = (filter: Filter<any>, object: EchoObject): object is DocumentBase => {
+  if (!isDocument(object)) {
+    return false;
+  }
+  if (object[deleted]) {
+    return false;
+  }
+
+  if (typeof filter === 'object' && filter['@type'] && object[type] !== filter['@type']) {
+    return false;
+  }
+
+  if (typeof filter === 'function') {
+    return filter(object);
+  } else if (typeof filter === 'object' && filter !== null) {
+    for (const key in filter) {
+      if (key === '@type') {
+        continue;
+      }
+      if ((object as any)[key] !== filter[key]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};

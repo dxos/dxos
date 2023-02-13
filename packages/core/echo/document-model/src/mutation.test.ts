@@ -166,7 +166,7 @@ describe('Mutations', () => {
 
   test('MutationUtil', () => {
     const data1 = MutationUtil.applyMutationSet(
-      {},
+      { data: {} },
       {
         mutations: [
           {
@@ -227,16 +227,18 @@ describe('Mutations', () => {
     );
 
     expect(data1).toEqual({
-      name: 'DXOS',
-      labels: ['red', 'green'],
-      contact: [
-        {
-          email: 'admin@dxos.org'
-        },
-        {
-          email: 'info@dxos.org'
-        }
-      ]
+      data: {
+        name: 'DXOS',
+        labels: ['red', 'green'],
+        contact: [
+          {
+            email: 'admin@dxos.org'
+          },
+          {
+            email: 'info@dxos.org'
+          }
+        ]
+      }
     });
 
     const data2 = MutationUtil.applyMutationSet(data1, {
@@ -263,8 +265,10 @@ describe('Mutations', () => {
     });
 
     expect(data2).toEqual({
-      name: 'DXOS',
-      labels: ['green']
+      data: {
+        name: 'DXOS',
+        labels: ['green']
+      }
     });
   });
 });

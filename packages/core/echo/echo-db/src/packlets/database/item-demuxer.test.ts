@@ -56,7 +56,6 @@ describe('Item demuxer', () => {
       object: {
         objectId,
         genesis: {
-          itemType: 'dxos:item/test',
           modelType: TestModel.meta.type
         }
       }

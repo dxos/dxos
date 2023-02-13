@@ -20,6 +20,11 @@ import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
 import { removeKey } from './util';
 
+export type DocumentModelState = {
+  data: Record<string, any>;
+  type?: string;
+};
+
 /**
  * @typedef {Object} Value
  * @typedef {{ key:string, value:Value }} KeyValue
@@ -233,14 +238,17 @@ export class ValueUtil {
  * Represents mutations on objects.
  */
 export class MutationUtil {
-  static applyMutationSet(object: any, message: ObjectMutationSet) {
+  static applyMutationSet(object: DocumentModelState, message: ObjectMutationSet): DocumentModelState {
     assert(message);
+    if (message.type) {
+      object.type = message.type;
+    }
     const { mutations } = message;
-    mutations?.forEach((mutation) => MutationUtil.applyMutation(object, mutation));
+    mutations?.forEach((mutation) => MutationUtil.applyMutation(object.data, mutation));
     return object;
   }
 
-  static applyMutation(object: any, mutation: ObjectMutation) {
+  static applyMutation(object: Record<string, any>, mutation: ObjectMutation) {
     assert(object);
     const { operation = ObjectMutation.Operation.SET, key, value } = mutation;
     switch (operation) {

@@ -13,7 +13,7 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { logInfo } from '@dxos/log';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
-import { ItemID, ItemType } from '@dxos/protocols';
+import { ItemID } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
@@ -30,7 +30,6 @@ export interface ModelConstructionOptions {
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined;
   parentId?: ItemID;
 }
 
@@ -52,6 +51,7 @@ export class ItemManager {
   /**
    * Update event.
    * Contains a list of all entities changed from the last update.
+   * @deprecated Likely to cause race conditions.
    */
   readonly debouncedUpdate: Event<Item[]> = debounceItemUpdateEvent(this.update);
 
@@ -107,9 +107,8 @@ export class ItemManager {
   async createItem(
     modelType: ModelType,
     itemId: ItemID = createId(),
-    itemType?: ItemType,
     parentId?: ItemID,
-    initProps?: any // TODO(burdon): Remove/change to array of mutations.
+    initProps?: { type?: string; obj?: Record<string, any> } // TODO(burdon): Remove/change to array of mutations.
   ): Promise<Item<Model<unknown>>> {
     assert(this._writeStream); // TODO(burdon): Throw ReadOnlyError();
     assert(modelType);
@@ -138,7 +137,6 @@ export class ItemManager {
       object: {
         objectId: itemId,
         genesis: {
-          itemType,
           modelType
         },
         mutations:
@@ -221,7 +219,7 @@ export class ItemManager {
   /**
    * Constructs an item with the appropriate model.
    */
-  constructItem({ itemId, itemType, modelType, parentId, snapshot }: ItemConstructionOptions): Item<any> {
+  constructItem({ itemId, modelType, parentId, snapshot }: ItemConstructionOptions): Item<any> {
     assert(itemId);
     assert(modelType);
 
@@ -237,7 +235,7 @@ export class ItemManager {
       snapshot
     });
 
-    const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
+    const item = new Item(this, itemId, modelStateManager, this._writeStream, parent);
     if (parent) {
       this.update.emit(parent);
     }
