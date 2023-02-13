@@ -6,8 +6,9 @@ import { Planet, ShareNetwork } from 'phosphor-react';
 import React, { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
+import { Space, SpaceMeta } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
+import { useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
@@ -30,6 +31,7 @@ export type SpaceItemProps = {
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
 const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
+  const [meta] = useQuery(space, SpaceMeta.filter());
   return (
     <div
       className={mx(
@@ -48,7 +50,9 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
           </div>
 
           {/* TODO(burdon): Name. */}
-          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>{humanize(space.key)}</h2>
+          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>
+            {meta && meta.title ? meta.title : humanize(space.key)}
+          </h2>
         </div>
 
         {selected && (
