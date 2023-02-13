@@ -106,7 +106,8 @@ message Query {
  * State snapshot.
  */
 message ObjectSnapshot {
-  Value root                          = 1;
+  optional string type                = 1;
+  Value root                          = 2;
 }
 
 /**

@@ -9,17 +9,15 @@ import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
-import { MutationUtil, ValueUtil } from './mutation';
+import { DocumentModelState, MutationUtil, ValueUtil } from './mutation';
 import { OrderedArray } from './ordered-array';
 import { validateKey } from './util';
-
-export type DocumentModelState = Record<string, any>;
 
 /**
  * Processes object mutations.
  */
 class DocumentModelStateMachine implements StateMachine<DocumentModelState, ObjectMutationSet, ObjectSnapshot> {
-  private _object: DocumentModelState = {};
+  private _object: DocumentModelState = { data: {} };
 
   getState(): DocumentModelState {
     return this._object;
@@ -27,9 +25,10 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 
   reset(snapshot: ObjectSnapshot): void {
     assert(snapshot.root);
-    const object: any = {};
-    ValueUtil.applyValue(object, 'root', snapshot.root);
-    this._object = object.root;
+    const object: DocumentModelState = { data: {} };
+    ValueUtil.applyValue(object, 'data', snapshot.root);
+    this._object = object;
+    this._object.type = snapshot.type;
   }
 
   process(mutation: ObjectMutationSet): void {
@@ -38,7 +37,8 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
 
   snapshot(): ObjectSnapshot {
     return {
-      root: ValueUtil.createMessage(this._object)
+      root: ValueUtil.createMessage(this._object.data),
+      type: this._object.type
     };
   }
 }
@@ -131,20 +131,25 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
     mutationCodec: schema.getCodecForType('dxos.echo.model.document.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
-    getInitMutation(obj: any): ObjectMutationSet {
+    getInitMutation({ obj, type }: { obj: Record<string, any>; type: string }): ObjectMutationSet {
       return {
-        mutations: MutationUtil.createMultiFieldMutation(obj)
+        mutations: obj ? MutationUtil.createMultiFieldMutation(obj) : [],
+        type
       };
     },
 
     snapshotCodec: schema.getCodecForType('dxos.echo.model.document.ObjectSnapshot')
   };
 
+  get type() {
+    return this._getState().type;
+  }
+
   /**
    * Returns an immutable object.
    */
   toObject() {
-    return this._getState();
+    return this._getState().data;
   }
 
   builder() {
@@ -153,7 +158,7 @@ export class DocumentModel extends Model<DocumentModelState, ObjectMutationSet> 
 
   get(key: string, defaultValue?: unknown) {
     validateKey(key);
-    return get(this._getState(), key, defaultValue);
+    return get(this._getState().data, key, defaultValue);
   }
 
   async set(key: string, value: unknown) {
