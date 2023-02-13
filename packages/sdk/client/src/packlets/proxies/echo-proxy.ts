@@ -14,7 +14,6 @@ import {
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { failUndefined, inspectObject } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
 import { ResultSet } from '@dxos/echo-db';
 import { DatabaseRouter } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
@@ -25,9 +24,9 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
+import { SpaceMeta, SpaceMetaOptions } from '../proto';
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
-import { SpaceMeta } from '../proto';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -166,7 +165,7 @@ export class EchoProxy implements Echo {
   /**
    * Creates a new space.
    */
-  async createSpace(): Promise<Space> {
+  async createSpace(meta?: SpaceMetaOptions): Promise<Space> {
     assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
     const space = await this._serviceProvider.services.SpaceService.createSpace();
 
@@ -177,7 +176,7 @@ export class EchoProxy implements Echo {
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
     await spaceProxy.initialize(); // Idempotent.
-    await spaceProxy.experimental.db.save(new SpaceMeta());
+    await spaceProxy.experimental.db.save(new SpaceMeta(meta));
 
     return spaceProxy;
   }
