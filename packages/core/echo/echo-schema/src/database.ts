@@ -12,7 +12,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db, deleted, id, type } from './defs';
-import { DELETED, Document, DocumentBase } from './document';
+import { DELETED, Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
 
@@ -149,12 +149,6 @@ export class EchoDatabase {
   query<T extends Document>(filter: TypeFilter<T>): Query<T>;
   query(filter?: Filter<any>): Query;
   query(filter: Filter<any>): Query {
-    // TODO(burdon): Create separate test.
-    const matcher = (object: EchoObject): object is DocumentBase =>
-      object instanceof DocumentBase &&
-      !object[deleted] &&
-      (!filter || Object.entries(filter).every(([key, value]) => (object as any)[key] === value));
-
     // Current result.
     let cache: Document[] | undefined;
 
@@ -162,7 +156,7 @@ export class EchoDatabase {
       getObjects: () => {
         if (!cache) {
           // TODO(burdon): Sort.
-          cache = Array.from(this._objects.values()).filter(matcher);
+          cache = Array.from(this._objects.values()).filter((obj): obj is DocumentBase => filterMatcher(filter, obj));
         }
 
         return cache;
@@ -171,10 +165,10 @@ export class EchoDatabase {
       // TODO(burdon): Trigger callback on call (not just update).
       subscribe: (callback: (query: Query) => void) => {
         // TODO(dmaretskyi): Don't debounce?
-        return this._backend._itemManager.debouncedUpdate.on((updatedObjects) => {
-          const changed = updatedObjects.some((object) => {
+        return this._backend._itemManager.update.on((updatedObject) => {
+          const changed = [updatedObject].some((object) => {
             if (this._objects.has(object.id)) {
-              const match = matcher(this._objects.get(object.id)!);
+              const match = filterMatcher(filter, this._objects.get(object.id)!);
               const exists = cache?.find((obj) => obj[id] === object.id);
               return match || (exists && !match);
             } else {
@@ -241,3 +235,32 @@ export class EchoDatabase {
     }
   }
 }
+
+// TODO(burdon): Create separate test.
+const filterMatcher = (filter: Filter<any>, object: EchoObject): object is DocumentBase => {
+  if (!isDocument(object)) {
+    return false;
+  }
+  if (object[deleted]) {
+    return false;
+  }
+
+  if (typeof filter === 'object' && filter['@type'] && object[type] !== filter['@type']) {
+    return false;
+  }
+
+  if (typeof filter === 'function') {
+    return filter(object);
+  } else if (typeof filter === 'object' && filter !== null) {
+    for (const key in filter) {
+      if (key === '@type') {
+        continue;
+      }
+      if ((object as any)[key] !== filter[key]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
