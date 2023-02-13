@@ -139,30 +139,6 @@ export const Sidebar = () => {
         <div className='flex overflow-y-auto'>
           <SpaceList spaces={spaces} selected={space.key} onSelect={handleSelectSpace} onShare={handleShareSpace} />
         </div>
-        <div className='flex mr-4 ml-4'>
-          <div className='flex flex-1'>
-            <Input
-              value={spaceTitle}
-              onChange={(e) => setSpaceTitle(e.target.value)}
-              variant='subdued'
-              label={t('new space input label')}
-              placeholder={t('new space input placeholder')}
-              slots={{
-                root: {
-                  className: mx('grow mb-0 border rounded border-gray-500')
-                },
-                label: {
-                  className: mx('sr-only')
-                }
-              }}
-            />
-          </div>
-          <div className='flex flex-shrink items-center ml-2'>
-            <Button onClick={handleCreateSpace}>
-              <Plus weight='bold' className={getSize(4)} />
-            </Button>
-          </div>
-        </div>
 
         <div className='flex-1' />
 
