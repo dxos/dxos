@@ -103,7 +103,7 @@ export class ItemDemuxer {
 
       if (snapshot?.model) {
         const entity = this._itemManager.entities.get(objectId) ?? failUndefined();
-        entity._stateManager.resetToSnapshot(snapshot.model);
+        entity._stateManager.resetToSnapshot(message.data); // TODO(dmaretskyi): Fix.
       }
 
       this.mutation.emit(message);

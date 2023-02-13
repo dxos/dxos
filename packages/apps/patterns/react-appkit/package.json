@@ -16,6 +16,7 @@
     "prebuild": "dxtype src/proto/tasks.proto src/proto/gen/tasks.ts"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

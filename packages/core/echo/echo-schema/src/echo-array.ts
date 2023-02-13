@@ -21,9 +21,12 @@ export class EchoArray<T> implements Array<T> {
     return Array;
   }
 
-  private readonly _uninitialized?: T[] = [];
+  /**
+   * Until this array is attached a document, the items are stored in this array.
+   */
+  private _uninitialized?: T[] = [];
 
-  private _object?: Document;
+  private _document?: Document;
   private _property?: string;
 
   [base]: EchoArray<T> = this;
@@ -304,12 +307,12 @@ export class EchoArray<T> implements Array<T> {
   //
 
   private _getBackingModel(): DocumentModel | undefined {
-    return this._object?._model;
+    return this._document?._model;
   }
 
   private _decode(value: any): T | undefined {
     if (value instanceof Reference) {
-      return this._object!._database!.getObjectById(value.itemId) as T | undefined;
+      return this._document!._lookupLink(value.itemId) as T | undefined;
     } else {
       return value;
     }
@@ -317,7 +320,7 @@ export class EchoArray<T> implements Array<T> {
 
   private _encode(value: T) {
     if (value instanceof EchoObject) {
-      void this._object!._database!.save(value);
+      void this._document!._linkObject(value);
       return new Reference(value[id]);
     } else if (
       typeof value === 'object' &&
@@ -334,15 +337,10 @@ export class EchoArray<T> implements Array<T> {
   /**
    * @internal
    */
-  _bind(object: Document, property: string) {
-    this._object = object;
+  _attach(document: Document, property: string) {
+    this._document = document;
     this._property = property;
-    assert(this._uninitialized);
-
-    const model = this._getBackingModel()!;
-    if (!(model.get(this._property!) instanceof OrderedArray)) {
-      void model.set(this._property!, OrderedArray.fromValues(this._uninitialized.map((value) => this._encode(value))));
-    }
+    this._uninitialized = undefined;
 
     return this;
   }
