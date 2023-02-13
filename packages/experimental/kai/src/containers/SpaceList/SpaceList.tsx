@@ -50,7 +50,13 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
 
           {/* TODO(burdon): Name. */}
           <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>
-            {space.data.title ?? humanize(space.key)}
+            <input
+              className='bg-transparent border-none outline-none text-ellipsis'
+              value={space.data.title ?? humanize(space.key)}
+              onChange={(event) => {
+                space.data.title = event.target.value;
+              }}
+            />
           </h2>
         </div>
 
