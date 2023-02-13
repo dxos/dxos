@@ -52,14 +52,14 @@ export const EditableObjectList = <T extends Document>({
     <div role='none' className='p-1 is-full'>
       <List labelId='excluded'>
         {objects.map((object) => {
-          const isSelected = object[id] === selected && 'text-selection-text';
+          const isSelected = object[id] === selected;
           return (
             <ListItem id={object[id]} key={object[id]}>
               <ListItemEndcap asChild>
                 <Button
                   variant='ghost'
                   onClick={() => onSelect?.(object[id])}
-                  className={mx('p-0 flex items-center justify-center', isSelected ? 'text-selection-text' : '')}
+                  className={mx('p-0 flex items-center justify-center gap-1', isSelected ? 'text-selection-text' : '')}
                 >
                   <Icon className={getSize(6)} />
                 </Button>
