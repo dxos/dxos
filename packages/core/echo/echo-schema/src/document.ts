@@ -54,6 +54,9 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     super(DocumentModel);
 
     if (this._schemaType) {
+      // Set type.
+      this._mutate({ type: this._schemaType.name })
+
       for (const field of this._schemaType.fields) {
         if (field.type.kind === 'array') {
           this._set(field.name, new EchoArray());
