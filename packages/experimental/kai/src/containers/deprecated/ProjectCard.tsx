@@ -24,13 +24,6 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
     project.tasks.splice(over, 0, task);
   };
 
-  const handleDelete = (task: Task) => {
-    const index = project.tasks.indexOf(task);
-    if (index >= 0) {
-      project.tasks.splice(project.tasks.indexOf(task), 1);
-    }
-  };
-
   return (
     <div className='flex flex-col pb-2'>
       {/* Header */}
@@ -59,7 +52,6 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
           onCreate={(task: Task) => {
             project.tasks.push(task);
           }}
-          onDelete={handleDelete}
           onMoveItem={handleDrag}
         />
       </div>
