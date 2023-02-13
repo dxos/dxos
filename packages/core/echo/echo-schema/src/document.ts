@@ -71,7 +71,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 
   get [type](): string | null {
-    return this[base]?._schemaType?.name ?? this._model?.type ?? null;
+    return this[base]?._schemaType?.name ?? this[base]._model?.type ?? null;
   }
 
   // TODO(burdon): Method on Document vs EchoObject?
@@ -316,7 +316,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
             }
 
             default: {
-              return Reflect.get(target, property, receiver);
+              return Reflect.get(this, property, receiver);
             }
           }
         }
@@ -326,7 +326,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
       set: (target, property, value, receiver) => {
         if (!isValidKey(property)) {
-          return Reflect.set(target, property, value, receiver);
+          return Reflect.set(this, property, value, receiver);
         }
 
         this._set(getProperty(property as string), value);

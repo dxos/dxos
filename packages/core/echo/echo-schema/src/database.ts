@@ -4,6 +4,7 @@
 
 import assert from 'node:assert';
 
+import { Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy, Item, ItemManager, encodeModelMutation } from '@dxos/echo-db';
@@ -46,6 +47,11 @@ export interface SubscriptionHandle {
 export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
+  /**
+   * @internal
+   */
+  public readonly _updateEvent = new Event<Item[]>();
+
   constructor(
     /**
      * @internal
@@ -55,8 +61,8 @@ export class EchoDatabase {
     private readonly _router: DatabaseRouter
   ) {
     // TODO(dmaretskyi): Don't debounce?
-    this._itemManager.debouncedUpdate.on(() => this._update());
-    this._update();
+    this._itemManager.update.on((item) => this._update([item]));
+    this._update([]);
   }
 
   get objects() {
@@ -164,9 +170,8 @@ export class EchoDatabase {
 
       // TODO(burdon): Trigger callback on call (not just update).
       subscribe: (callback: (query: Query) => void) => {
-        // TODO(dmaretskyi): Don't debounce?
-        return this._backend._itemManager.update.on((updatedObject) => {
-          const changed = [updatedObject].some((object) => {
+        return this._updateEvent.on((updated) => {
+          const changed = updated.some((object) => {
             if (this._objects.has(object.id)) {
               const match = filterMatcher(filter, this._objects.get(object.id)!);
               const exists = cache?.find((obj) => obj[id] === object.id);
@@ -194,7 +199,7 @@ export class EchoDatabase {
     this._router._logObjectAccess(obj);
   }
 
-  private _update() {
+  private _update(changed: Item[]) {
     for (const object of this._itemManager.entities.values() as any as Item<any>[]) {
       if (!this._objects.has(object.id)) {
         const obj = this._createObjectInstance(object);
@@ -208,6 +213,8 @@ export class EchoDatabase {
         obj[base]._bind(object).catch((err) => log.catch(err));
       }
     }
+
+    this._updateEvent.emit(changed);
   }
 
   /**
