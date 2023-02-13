@@ -121,8 +121,8 @@ export class EchoProxy implements Echo {
 
           // NOTE: Must set in a map before initializing.
           this._spaces.set(spaceProxy.key, spaceProxy);
-          await spaceProxy.initialize();
           this._spacesInitialized.emit(spaceProxy.key);
+          await spaceProxy.initialize();
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
           // spaceProxy.database.entityUpdate.on((entity) => {
@@ -175,8 +175,8 @@ export class EchoProxy implements Echo {
     const spaceProxy = this._spaces.get(space.publicKey) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
-    await spaceProxy.initialize(); // Idempotent.
     await spaceProxy.experimental.db.save(new SpaceMeta(meta));
+    await spaceProxy.initialize(); // Idempotent.
 
     return spaceProxy;
   }
