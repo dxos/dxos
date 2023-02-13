@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { id, useQuery, withReactor } from '@dxos/react-client';
+import { Input } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createSpacePath, useFrameState } from '../../hooks';
@@ -32,16 +33,40 @@ export const DocumentFrame = withReactor(() => {
   // TODO(burdon): Factor out container with fragment and scrolling.
   const fragment = object.content.doc!.getXmlFragment('content');
 
+  // TODO(burdon): Spellcheck false in dev mode.
+  const spellCheck = false;
+
   return (
     <div className='flex flex-1 overflow-hidden justify-center'>
-      <div className='flex flex-col w-full lg:w-[800px]'>
-        <div className='my-4 bg-white shadow-lg overflow-y-auto '>
+      <div className='flex flex-col w-full md:max-w-[800px]'>
+        <div className='m-0 md:m-4 bg-white shadow-lg overflow-y-auto '>
+          {/* TODO(burdon): Why is label required? */}
+          {/* TODO(burdon): Throttle input. */}
+          <Input
+            value={object.title}
+            onChange={(event) => {
+              object.title = event.target.value;
+            }}
+            label=''
+            placeholder='Title'
+            slots={{
+              root: {
+                className: 'px-6 m-0 my-6'
+              },
+              input: {
+                className: 'p-2 border-0 text-xl',
+                spellCheck
+              }
+            }}
+          />
+
           <Composer
             fragment={fragment}
             slots={{
               root: { className: 'grow' },
               editor: {
-                className: 'z-0 bg-white text-black h-full w-full p-8 pb-16 min-bs-[12em] text-xl md:text-base'
+                className: 'z-0 bg-white text-black h-full w-full px-8 pb-16 min-bs-[12em] text-xl md:text-base',
+                spellCheck
               }
             }}
           />

@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom';
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { getSize, mx } from '@dxos/react-components';
+import { humanize } from '@dxos/util';
 
 import { useFrames } from '../../hooks';
 
@@ -32,35 +33,36 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
     <div
       className={mx(
-        'flex flex-col mx-3 first:mt-3 mb-3 rounded border border-slate-300',
+        'flex flex-col overflow-hidden mx-3 first:mt-3 mb-3 rounded border border-panel-border',
         'hover:bg-selection-hover',
-        selected && 'hover:bg-selection-bg bg-selection-bg border-slate-500'
+        selected && 'hover:bg-selection-bg bg-selection-bg border-selection-border'
       )}
     >
-      <div>
-        <div className={mx('flex w-full p-2 pl-3 pr-4 items-center')}>
-          <div className='flex flex-1 font-mono cursor-pointer' onClick={() => onAction(SpaceItemAction.SELECT)}>
-            <div className={mx('flex mr-3', selected && 'text-selection-text')}>
-              <Planet className={getSize(6)} />
-            </div>
-
-            {/* TODO(burdon): Name. */}
-            {space.key.truncate()}
+      <div className={mx('flex w-full overflow-hidden p-2 pl-3 pr-4 items-center')}>
+        <div
+          className='flex flex-1 overflow-hidden font-mono cursor-pointer'
+          onClick={() => onAction(SpaceItemAction.SELECT)}
+        >
+          <div className={mx('flex mr-3', selected && 'text-selection-text')}>
+            <Planet className={getSize(6)} />
           </div>
 
-          {selected && (
-            <div
-              className='flex cursor-pointer'
-              onClick={() => onAction(SpaceItemAction.SHARE)}
-              data-testid='space-settings'
-            >
-              <ShareNetwork className={getSize(6)} />
-            </div>
-          )}
+          {/* TODO(burdon): Name. */}
+          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>{humanize(space.key)}</h2>
         </div>
 
-        {selected && <div className='flex bg-white rounded-b'>{children}</div>}
+        {selected && (
+          <div
+            className='flex cursor-pointer'
+            onClick={() => onAction(SpaceItemAction.SHARE)}
+            data-testid='space-settings'
+          >
+            <ShareNetwork className={getSize(6)} />
+          </div>
+        )}
       </div>
+
+      {selected && <div className='flex bg-white rounded-b'>{children}</div>}
     </div>
   );
 };
@@ -97,7 +99,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
   };
 
   return (
-    <div className='flex flex-col flex-1'>
+    <div className='flex flex-col flex-1 overflow-hidden'>
       {spaces.map((space) => (
         <SpaceItem
           key={space.key.toHex()}
