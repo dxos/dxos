@@ -8,7 +8,7 @@ const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
 
 // https://tailwindcss.com/docs/customizing-colors#aliasing-color-names
 const primary = colors.orange;
-const secondary = colors.stone;
+const secondary = colors.slate;
 const neutral = colors.zinc;
 
 module.exports = {
@@ -50,7 +50,7 @@ module.exports = {
         hover: secondary[200],
         bg: secondary[300],
         text: secondary[700],
-        border: secondary[400]
+        border: secondary[600]
       }
     }
   }
