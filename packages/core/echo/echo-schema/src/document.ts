@@ -12,6 +12,8 @@ import { base, data, deleted, id, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
+import assert from 'node:assert';
+import { isReferenceLike } from './util';
 
 const isValidKey = (key: string | symbol) =>
   !(
@@ -40,26 +42,28 @@ export const DEFAULT_VISITORS: ConvertVisitors = {
 // TODO(burdon): Support immutable objects?
 export class DocumentBase extends EchoObject<DocumentModel> {
   /**
-   * Pending values before committed to model.
-   * @internal
+   * Until object is persisted in the database, the linked object references are stored in this cache.
    */
-  _uninitialized?: Record<keyof any, any> = {};
-
-  override _modelConstructor = DocumentModel;
+  private _linkCache? = new Map<string, EchoObject>();
 
   // prettier-ignore
   constructor(
     initialProps?: Record<keyof any, any>,
     private readonly _schemaType?: EchoSchemaType
   ) {
-    super();
-    Object.assign(this._uninitialized!, initialProps);
+    super(DocumentModel);
 
     if (this._schemaType) {
       for (const field of this._schemaType.fields) {
-        if (field.type.kind === 'array' && !this._uninitialized![field.name]) {
-          this._uninitialized![field.name] = new EchoArray();
+        if (field.type.kind === 'array') {
+          this._set(field.name, new EchoArray());
         }
+      }
+    }
+
+    if (initialProps) {
+      for (const field in initialProps) {
+        this._set(field, initialProps[field]);
       }
     }
 
@@ -127,19 +131,11 @@ export class DocumentBase extends EchoObject<DocumentModel> {
       }
     };
 
-    if (this._uninitialized) {
-      return {
-        '@id': this[id],
-        '@type': this[type],
-        ...convert(this._uninitialized)
-      };
-    } else {
-      return {
-        '@id': this[id],
-        '@type': this[type],
-        ...convert(this._model?.toObject())
-      };
-    }
+    return {
+      '@id': this[id],
+      '@type': this[type],
+      ...convert(this._model?.toObject())
+    };
   }
 
   [inspect.custom](
@@ -167,32 +163,14 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   //   };
   // }
 
-  private _get(key: string) {
+  private _get(key: string): any {
     this._database?._logObjectAccess(this);
 
-    if (!this._item) {
-      return this._uninitialized![key];
-    } else {
-      return this._getModelProp(key);
-    }
-  }
-
-  private _set(key: string, value: any) {
-    this._database?._logObjectAccess(this);
-
-    if (!this._item) {
-      this._uninitialized![key] = value;
-    } else {
-      this._setModelProp(key, value).catch((err) => log.catch(err));
-    }
-  }
-
-  private _getModelProp(prop: string): any {
     let type;
-    const value = this._model!.get(prop);
+    const value = this._model.get(key);
 
     if (!type && this._schemaType) {
-      const field = this._schemaType.fields.find((field) => field.name === prop);
+      const field = this._schemaType.fields.find((field) => field.name === key);
       if (field?.type.kind === 'array') {
         type = 'array';
       }
@@ -212,65 +190,60 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
     switch (type) {
       case 'ref':
-        return this._database!.getObjectById((value as Reference).itemId);
+        return this._lookupLink((value as Reference).itemId);
       case 'object':
-        return this._createProxy({}, prop);
+        return this._createProxy({}, key);
       case 'array':
-        return new EchoArray()._bind(this[base], prop);
+        return new EchoArray()._attach(this[base], key);
       default:
         return value;
     }
   }
 
-  private async _setModelProp(prop: string, value: any) {
+  private _set(key: string, value: any) {
+    this._database?._logObjectAccess(this);
+
     if (value instanceof EchoObject) {
-      this._database?._backend.mutate(
-        createModelMutation(
-          this[id],
-          encodeModelMutation(
-            this._model!.modelMeta,
-            this._model!.builder().set(prop, new Reference(value[id])).build()
-          )
-        )
+      this._mutate(
+        this._model.builder().set(key, new Reference(value[id])).build()
       );
-      await this._database!.save(value);
+      this._linkObject(value);
     } else if (value instanceof EchoArray) {
-      value._bind(this[base], prop);
-    } else if (Array.isArray(value)) {
-      this._database?._backend.mutate(
-        createModelMutation(
-          this[id],
-          encodeModelMutation(
-            this._model!.modelMeta,
-            this._model!.builder().set(prop, OrderedArray.fromValues([])).build()
-          )
-        )
+      const values = value.map((item) => {
+        if (item instanceof EchoObject) {
+          this._linkObject(item);
+          return new Reference(item[id]);
+        } else if (isReferenceLike(item)) {
+          return new Reference(item['@id']);
+        } else {
+          return item;
+        }
+      });
+      this._mutate(
+        this._model.builder().set(key, OrderedArray.fromValues(values)).build()
       );
-      this._getModelProp(prop).push(...value);
+      value._attach(this[base], key);
+    } else if (Array.isArray(value)) {
+      // TODO(dmaretskyi): Make a single mutation.
+      this._mutate(
+        this._model.builder().set(key, OrderedArray.fromValues([])).build()
+      );
+      this._get(key).push(...value);
     } else if (typeof value === 'object' && value !== null) {
       if (Object.getOwnPropertyNames(value).length === 1 && value['@id']) {
         // Special case for assigning unresolved references in the form of { '@id': '0x123' }
-        this._database?._backend.mutate(
-          createModelMutation(
-            this[id],
-            encodeModelMutation(
-              this._model!.modelMeta,
-              this._model!.builder().set(prop, new Reference(value['@id'])).build()
-            )
-          )
+        this._mutate(
+          this._model.builder().set(key, new Reference(value['@id'])).build()
         );
       } else {
-        const sub = this._createProxy({}, prop);
+        const sub = this._createProxy({}, key);
         for (const [subKey, subValue] of Object.entries(value)) {
           sub[subKey] = subValue;
         }
       }
     } else {
-      this._database?._backend.mutate(
-        createModelMutation(
-          this[id],
-          encodeModelMutation(this._model!.modelMeta, this._model!.builder().set(prop, value).build())
-        )
+      this._mutate(
+        this._model.builder().set(key, value).build()
       );
     }
   }
@@ -336,14 +309,39 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 
   protected override async _onBind() {
-    const promises = [];
-    for (const [key, value] of Object.entries(this._uninitialized!)) {
-      promises.push(this._setModelProp(key, value));
-    }
+    assert(this._linkCache);
 
-    this._uninitialized = undefined;
+    const promises = [];
+    for(const obj of this._linkCache.values()) {
+      promises.push(this._database!.save(obj));
+    }
+    this._linkCache = undefined;
 
     await Promise.all(promises);
+  }
+
+  /**
+   * @internal
+   */
+  _linkObject(obj: EchoObject) {
+    if(this._database) {
+      this._database.save(obj);
+    } else {
+      assert(this._linkCache)
+      this._linkCache.set(obj[id], obj);
+    }
+  }
+
+  /**
+   * @internal
+   */
+  _lookupLink(id: string): EchoObject | undefined {
+    if(this._database) {
+      return this._database.getObjectById(id);
+    } else {
+      assert(this._linkCache)
+      return this._linkCache.get(id);
+    }
   }
 }
 

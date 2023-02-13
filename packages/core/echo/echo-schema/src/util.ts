@@ -12,3 +12,9 @@ export const strip = (obj: any): any => {
 
   return obj;
 };
+
+export const isReferenceLike = (value: any): value is { '@id': string } =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.getOwnPropertyNames(value).length === 1 &&
+  typeof (value as any)['@id'] === 'string';

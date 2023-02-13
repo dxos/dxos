@@ -281,6 +281,38 @@ describe('EchoDatabase', () => {
       expect(task.tags instanceof EchoArray).toBeTruthy();
       expect(task.tags.length).toEqual(0);
     });
+
+    test('importing arrays into a database', async () => {
+      const db = await createDatabase();
+
+      const root = new Document({ title: 'Main task' });
+      root.array = [
+        new Document({ title: 'Subtask 1' }),
+        'red',
+      ]
+      expect(root.array.length).toEqual(2);
+      expect(root.array[0].title).toEqual('Subtask 1');
+      expect(root.array[1]).toEqual('red');
+
+      await db.save(root);
+
+      expect(root.array.length).toEqual(2);
+      expect(root.array[0].title).toEqual('Subtask 1');
+      expect(root.array[1]).toEqual('red');
+      expect(db.query().getObjects()).toContain(root.array[0]);
+    })
+
+    test('importing empty arrays into a database', async () => {
+      const db = await createDatabase();
+
+      const root = new Document();
+      root.array = []
+      expect(root.array.length).toEqual(0);
+
+      await db.save(root);
+
+      expect(root.array.length).toEqual(0);
+    })
   });
 
   describe('text', () => {

@@ -102,14 +102,7 @@ export class EchoDatabase {
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
 
-    let mutation: Any | undefined;
-    if (obj instanceof DocumentBase) {
-      const props = {
-        type: obj[type]
-      };
-      const modelMeta = obj[base]._modelConstructor.meta;
-      mutation = encodeModelMutation(modelMeta, modelMeta.getInitMutation!(props));
-    }
+    let snapshot = obj[base]._createSnapshot();
 
     const result = this._backend.mutate({
       objects: [
@@ -118,13 +111,10 @@ export class EchoDatabase {
           genesis: {
             modelType: obj[base]._modelConstructor.meta.type
           },
-          mutations: !mutation
-            ? []
-            : [
-                {
-                  model: mutation
-                }
-              ]
+          snapshot: {
+            // TODO(dmaretskyi): Parent id, deleted flag.
+            model: snapshot
+          }
         }
       ]
     });
