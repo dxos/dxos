@@ -46,6 +46,7 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
       {/* Tasks */}
       <div className='p-1.5'>
         <TaskList
+          space={space}
           id={project[id]}
           tasks={project.tasks}
           onCreate={(task: Task) => {

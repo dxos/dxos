@@ -65,7 +65,7 @@ export const StackFrame: FC = () => {
 
       <div className={mx(cardStyles, 'row-span-2')}>
         <Tile scrollbar header={<TileMenu title='Tasks' />}>
-          <UnorderedTaskList />
+          <UnorderedTaskList space={space} />
         </Tile>
       </div>
 

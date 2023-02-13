@@ -16,12 +16,13 @@ import {
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { randomString } from '@dxos/react-components';
 
-import { useSpace } from '../hooks';
-import { Task } from '../proto';
+import { useSpace } from '../../hooks';
+import { Task } from '../../proto';
 
 // TODO(burdon): Generic header with create.
 
 interface TaskListProps {
+  space: Space;
   tasks: Task[];
   id?: string;
   unordered?: boolean;
@@ -41,8 +42,7 @@ export const UnorderedTaskList: FC<UnorderedTaskListProps> = ({ filter, ...props
 };
 
 export const TaskList: FC<TaskListProps> = withReactor(
-  ({ id: propsId, tasks, onCreate, onDelete, onMoveItem, unordered }) => {
-    const space = useSpace(); // TODO(burdon): Factor out.
+  ({ space, id: propsId, tasks, onCreate, onDelete, onMoveItem, unordered }) => {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const listId = propsId ?? space.key.toHex() ?? randomString();
     const handleCreateTask = async () => {
