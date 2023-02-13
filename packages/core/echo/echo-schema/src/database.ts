@@ -155,7 +155,10 @@ export class EchoDatabase {
       isDocument(object) &&
       !object[deleted] &&
       (typeof filter !== 'object' || filter['@type'] || object[type] === filter['@type']) &&
-      (!filter || Object.entries(filter).filter(([key]) => key !== '@type').every(([key, value]) => (object as any)[key] === value));
+      (!filter ||
+        Object.entries(filter)
+          .filter(([key]) => key !== '@type')
+          .every(([key, value]) => (object as any)[key] === value));
 
     // Current result.
     let cache: Document[] | undefined;
