@@ -6,9 +6,9 @@ import { Planet, ShareNetwork } from 'phosphor-react';
 import React, { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Space, SpaceMeta } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client';
+import { withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
@@ -30,7 +30,7 @@ export type SpaceItemProps = {
 // TODO(burdon): Editable space name?
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
-const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
+const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
     <div
       className={mx(
@@ -68,7 +68,7 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
       {selected && <div className='flex bg-paper-bg'>{children}</div>}
     </div>
   );
-};
+});
 
 export type SpaceListProps = {
   spaces: Space[];
