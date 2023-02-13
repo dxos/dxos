@@ -36,12 +36,6 @@ export default defineConfig({
   },
 
   // TODO(burdon): Document.
-  optimizeDeps: {
-    force: true,
-    include: []
-  },
-
-  // TODO(burdon): Document.
   build: {
     sourcemap: true,
     commonjsOptions: {

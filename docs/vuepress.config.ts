@@ -15,25 +15,6 @@ import { apiSidebar, telemetryPlugin } from './src';
 
 const env = (value?: string) => (value ? `'${value}'` : undefined);
 
-const OPTIMIZE_DEPS = [
-  '@dxos/client/testing',
-  '@dxos/config',
-  '@dxos/keys',
-  '@dxos/log',
-  '@dxos/protocols',
-  '@dxos/protocols/proto/dxos/client',
-  '@dxos/protocols/proto/dxos/client/services',
-  '@dxos/protocols/proto/dxos/config',
-  '@dxos/protocols/proto/dxos/echo/feed',
-  '@dxos/protocols/proto/dxos/echo/model/document',
-  '@dxos/protocols/proto/dxos/echo/object',
-  '@dxos/protocols/proto/dxos/halo/credentials',
-  '@dxos/protocols/proto/dxos/halo/invitations',
-  '@dxos/protocols/proto/dxos/halo/keys',
-  '@dxos/protocols/proto/dxos/mesh/bridge',
-  '@dxos/protocols/proto/dxos/rpc'
-];
-
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
@@ -109,10 +90,6 @@ const config: UserConfig = defineUserConfig({
         'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
         'process.env.DX_RELEASE': env(process.env.DX_RELEASE),
         'process.env.DX_TELEMETRY_API_KEY': env(process.env.DX_TELEMETRY_API_KEY)
-      },
-      optimizeDeps: {
-        force: true,
-        include: OPTIMIZE_DEPS
       },
       // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
       ssr: {

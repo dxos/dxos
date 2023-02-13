@@ -11,15 +11,6 @@ export default defineConfig({
     host: true,
   },
   optimizeDeps: {
-    force: true,
-    include: [
-      "@dxos/client",
-      "@dxos/react-client",
-      "@dxos/react-appkit",
-      "@dxos/react-components",
-      "@dxos/echo-schema",
-      "@dxos/config",
-    ],
     esbuildOptions: {
       // TODO(wittjosiah): Remove.
       plugins: [

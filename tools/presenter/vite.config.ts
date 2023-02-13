@@ -84,21 +84,6 @@ export default defineConfig({
     }
   },
 
-  // TODO(burdon): Factor out with dxosPlugin?
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/client',
-      '@dxos/client-services',
-      '@dxos/config',
-      '@dxos/keys',
-      '@dxos/log',
-      '@dxos/gem-core',
-      '@dxos/gem-spore',
-      '@dxos/react-client'
-    ]
-  },
-
   // TODO(burdon): dxosPlugin, themePlugin (see halo-app).
   plugins: [
     ConfigPlugin(),

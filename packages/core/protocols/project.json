@@ -3,10 +3,26 @@
   "projectType": "library",
   "targets": {
     "compile": {
+      "dependsOn": [
+        "compile-lib",
+        "compile-node"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "true"
+        ]
+      }
+    },
+    "compile-lib": {
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/core/protocols/src/index.ts",
-        "outputPath": "packages/core/protocols/dist",
+        "outputPath": "packages/core/protocols/dist/esm",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
@@ -14,6 +30,19 @@
       },
       "outputs": [
         "{options.outputPath}"
+      ]
+    },
+    "compile-node": {
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "tsc-cjs"
+      },
+      "outputs": [
+        "packages/core/protocols/dist/cjs"
       ]
     },
     "lint": {
@@ -35,8 +64,7 @@
       ],
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
-        "basePath": "packages/core/protocols/src/proto",
-        "exportPath": "packages/core/protocols/dist/src/proto/gen"
+        "basePath": "packages/core/protocols/src/proto"
       },
       "outputs": [
         "packages/core/protocols/proto",

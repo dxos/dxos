@@ -19,20 +19,6 @@ module.exports = {
     options: {}
   },
   viteFinal: async (config) => mergeConfig(config, {
-    optimizeDeps: {
-      force: true,
-      include: [
-        'storybook-dark-mode'
-      ]
-    },
-    build: {
-      commonjsOptions: {
-        include: [
-          /packages/,
-          /node_modules/
-        ]
-      }
-    },
     plugins: [ThemePlugin({
       content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
     })],

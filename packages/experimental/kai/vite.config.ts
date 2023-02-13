@@ -38,30 +38,6 @@ export default defineConfig({
     // hmr: false
   },
 
-  // NOTE: Required to import non ESM modules.
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/config',
-      '@dxos/gem-spore/testing',
-      '@dxos/mosaic',
-      '@dxos/plexus',
-      '@dxos/protocols',
-      '@dxos/keys',
-      '@dxos/protocols/proto/dxos/client',
-      '@dxos/protocols/proto/dxos/client/services',
-      '@dxos/protocols/proto/dxos/config',
-      '@dxos/protocols/proto/dxos/echo/feed',
-      '@dxos/protocols/proto/dxos/echo/model/document',
-      '@dxos/protocols/proto/dxos/echo/object',
-      '@dxos/protocols/proto/dxos/halo/credentials',
-      '@dxos/protocols/proto/dxos/halo/invitations',
-      '@dxos/protocols/proto/dxos/halo/keys',
-      '@dxos/protocols/proto/dxos/mesh/bridge',
-      '@dxos/protocols/proto/dxos/rpc'
-    ]
-  },
-
   build: {
     sourcemap: true,
     commonjsOptions: {

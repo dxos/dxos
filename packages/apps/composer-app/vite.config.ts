@@ -24,18 +24,6 @@ export default defineConfig({
         : false
   },
   optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/client',
-      '@dxos/config',
-      '@dxos/log',
-      '@dxos/react-appkit',
-      '@dxos/react-client',
-      '@dxos/react-composer',
-      '@dxos/react-components',
-      '@dxos/sentry',
-      '@dxos/text-model'
-    ],
     esbuildOptions: {
       // TODO(wittjosiah): Remove.
       plugins: [
