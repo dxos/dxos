@@ -34,15 +34,8 @@ export type TableClasses = {
   selected?: string;
 };
 
-// TODO(burdon): Convert to slots.
-export const defaultTableClasses: TableClasses = {
-  header: 'text-sm',
-  row: 'hover:bg-zinc-200',
-  selected: 'bg-zinc-300'
-};
-
 export type TableProps<T extends {}> = {
-  classes?: TableClasses;
+  classes?: TableClasses; // TODO(burdon): Change to slots.
   columns: Column<T>[];
   data?: T[];
   selected?: T;
@@ -54,13 +47,7 @@ export type TableProps<T extends {}> = {
  * https://react-table-v7.tanstack.com/docs/overview
  */
 // TODO(burdon): Checkbox in left gutter.
-export const Table = <T extends {}>({
-  columns,
-  data = [],
-  classes = defaultTableClasses,
-  onSelect,
-  selected
-}: TableProps<T>) => {
+export const Table = <T extends {}>({ columns, data = [], classes, onSelect, selected }: TableProps<T>) => {
   const defaultColumn = useMemo(
     () => ({
       // When using the useFlexLayout:
@@ -85,12 +72,7 @@ export const Table = <T extends {}>({
         <div className='thead sticky top-0'>
           {headerGroups.map((headerGroup) => (
             // eslint-disable-next-line react/jsx-key
-            <div
-              {...headerGroup.getHeaderGroupProps({
-                // style: { paddingRight: '15px' },
-              })}
-              className='tr h-[2.5rem] border-b border-zinc-300'
-            >
+            <div {...headerGroup.getHeaderGroupProps()} className='tr h-[2.5rem] border-b border-zinc-300'>
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key

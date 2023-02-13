@@ -12,7 +12,7 @@ import { useSpace } from '../../hooks';
 
 export const TileMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
   return (
-    <div className='flex w-full p-2 px-3 items-center bg-toolbar-bg'>
+    <div className='flex w-full p-2 px-3 items-center border-b'>
       <h2>{title}</h2>
       <div className='flex-1' />
       {children}

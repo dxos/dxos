@@ -114,6 +114,7 @@ export class MutationBuilder {
 /**
  * Defines generic object accessor.
  */
+// TODO(burdon): Replace with object model.
 export interface ObjectProperties {
   get(key: string, defaultValue?: unknown): any;
   set(key: string, value: unknown): Promise<void>;

@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { id } from '@dxos/client';
-import { PublicKey, TextObject, useQuery } from '@dxos/react-client';
+import { TextObject, useQuery } from '@dxos/react-client';
 
 import { EditableObjectList } from '../../components';
 import { createSpacePath, useFrameState } from '../../hooks';
@@ -24,9 +24,15 @@ export const DocumentTile = () => {
     navigate(createSpacePath(space.key, frame?.module.id, objectId));
   };
 
+  const handleUpdate = async (objectId: string, text: string) => {
+    const object = objects.find((object) => object[id] === objectId);
+    if (object) {
+      object.title = text;
+    }
+  };
+
   const handleCreate = async () => {
-    const title = `doc-${PublicKey.random().toHex().slice(0, 4)}`;
-    const object = await space.experimental.db.save(new Document({ title }));
+    const object = await space.experimental.db.save(new Document());
     object.content = new TextObject(); // TODO(burdon): Make automatic?
     return object[id];
   };
@@ -40,6 +46,7 @@ export const DocumentTile = () => {
       Icon={Icon}
       getTitle={(object) => object.title}
       onSelect={handleSelect}
+      onUpdate={handleUpdate}
       onCreate={handleCreate}
     />
   );

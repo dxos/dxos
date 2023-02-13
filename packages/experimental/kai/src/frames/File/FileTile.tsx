@@ -54,6 +54,13 @@ export const FileTile = () => {
     navigate(createSpacePath(space.key, frame?.module.id, objectId));
   };
 
+  const handleUpdate = async (objectId: string, text: string) => {
+    const object = objects.find((object) => object[id] === objectId);
+    if (object) {
+      object.name = text;
+    }
+  };
+
   // https://www.npmjs.com/package/react-drag-drop-files
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
   // https://developer.mozilla.org/en-US/docs/Web/API/File
@@ -91,6 +98,7 @@ export const FileTile = () => {
         getTitle={(object) => object.name}
         onSelect={handleSelect}
         onAction={handleDownload}
+        onUpdate={handleUpdate}
       />
 
       {isMd && (

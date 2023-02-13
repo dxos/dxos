@@ -14,7 +14,7 @@ export type FilePreviewProps = {
  */
 export const FilePreview: FC<FilePreviewProps> = ({ url, image = false }) => {
   if (!image) {
-    return <iframe className='w-full h-full' src={url} />;
+    return <iframe className='w-full h-full overflow-auto' src={url} />;
   }
 
   const styles = [
