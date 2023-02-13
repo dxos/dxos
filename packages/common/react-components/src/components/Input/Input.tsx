@@ -86,7 +86,9 @@ export const Input = ({
       >
         {label}
       </label>
+
       {bareInput}
+
       {(description || validationMessage) && (
         <p
           {...(!isInvalid && { id: descriptionId })}

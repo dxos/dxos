@@ -7,24 +7,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
+import { humanize } from '@dxos/util';
 
-// TODO(burdon): Menu component.
-export const Menu = () => {
-  return (
-    <div className='flex shrink-0 items-center'>
-      <Link className='pl-2' to='/identity' title='Identity'>
-        <User className={getSize(6)} />
-      </Link>
-    </div>
-  );
-};
+import { useSpace } from '../../hooks';
 
 // TODO(burdon): Show search box or Space name in title.
 export const AppBar = () => {
+  const space = useSpace();
+
+  // TODO(burdon): Get title.
+  // console.log(':::::::::::::', space.experimental.db);
+
   return (
     <div
       className={mx(
-        'flex items-center justify-between px-5',
+        'flex justify-between items-center px-5',
         'fixed inline-start-0 inline-end-0 block-start-0 z-[1]',
         'bs-appbar bg-appbar-header'
       )}
@@ -32,8 +29,21 @@ export const AppBar = () => {
       <div className='flex items-center'>
         <Bug className={mx('logo', getSize(8))} data-testid='kai-bug' />
       </div>
+      {space && (
+        <div className='flex overflow-hidden mx-6'>
+          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-xl'>{humanize(space.key)}</h2>
+        </div>
+      )}
 
-      <Menu />
+      <div className='flex-1' />
+
+      {/* TODO(burdon): Help button. */}
+      {/* TODO(burdon): Share button. */}
+      <div className='flex items-center'>
+        <Link className='pl-2' to='/identity' title='Identity'>
+          <User className={getSize(6)} />
+        </Link>
+      </div>
     </div>
   );
 };

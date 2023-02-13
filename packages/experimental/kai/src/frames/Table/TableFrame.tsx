@@ -87,7 +87,11 @@ export const TableFrame = () => {
       </div>
 
       {/* <div className='flex flex-1 overflow-hidden'> */}
-      <Table<Document> columns={type.columns} data={objects} />
+      <Table<Document>
+        columns={type.columns}
+        data={objects}
+        classes={{ header: 'bg-panel-bg', row: 'hover:bg-selection-hover' }}
+      />
       {/* </div> */}
     </div>
   );

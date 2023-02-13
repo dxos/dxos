@@ -7,8 +7,9 @@ const colors = require('tailwindcss/colors');
 const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
 
 // https://tailwindcss.com/docs/customizing-colors#aliasing-color-names
-const primary = colors.orange; // teal
+const primary = colors.orange;
 const secondary = colors.slate;
+const neutral = colors.zinc;
 
 module.exports = {
   osThemeExtension: {
@@ -24,7 +25,7 @@ module.exports = {
       toolbar: '40px',
       header: '88px', // Combined height of appbar and toolbar (pbs-header).
 
-      // Standardize column width (based on iPhone Pro 12).
+      // Standardize column width for tiles (based on iPhone Pro 12).
       column: '390px'
     },
 
@@ -35,21 +36,21 @@ module.exports = {
         toolbar: primary[500]
       },
       toolbar: {
-        bg: colors.slate[200]
+        bg: neutral[300]
       },
       sidebar: {
-        bg: colors.zinc[200]
+        bg: neutral[200]
       },
       // TODO(burdon): Mui Paper?
       panel: {
-        bg: colors.zinc[100],
-        border: colors.zinc[300]
+        bg: neutral[100],
+        border: neutral[300]
       },
       selection: {
         hover: secondary[200],
         bg: secondary[300],
-        text: primary[500],
-        border: primary[600]
+        text: secondary[700],
+        border: secondary[600]
       }
     }
   }
