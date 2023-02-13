@@ -150,10 +150,12 @@ export class EchoDatabase {
   query(filter?: Filter<any>): Query;
   query(filter: Filter<any>): Query {
     // TODO(burdon): Create separate test.
+    // TODO(dmaretskyi): Extract.
     const matcher = (object: EchoObject): object is DocumentBase =>
       object instanceof DocumentBase &&
       !object[deleted] &&
-      (!filter || Object.entries(filter).every(([key, value]) => (object as any)[key] === value));
+      (typeof filter !== 'object' || filter['@type'] || object[type] === filter['@type']) &&
+      (!filter || Object.entries(filter).filter(([key]) => key !== '@type').every(([key, value]) => (object as any)[key] === value));
 
     // Current result.
     let cache: Document[] | undefined;
