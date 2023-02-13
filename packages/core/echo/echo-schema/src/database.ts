@@ -12,7 +12,7 @@ import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db, deleted, id, type } from './defs';
-import { DELETED, Document, DocumentBase } from './document';
+import { DELETED, Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
 
@@ -152,7 +152,7 @@ export class EchoDatabase {
     // TODO(burdon): Create separate test.
     // TODO(dmaretskyi): Extract.
     const matcher = (object: EchoObject): object is DocumentBase =>
-      object instanceof DocumentBase &&
+      isDocument(object) &&
       !object[deleted] &&
       (typeof filter !== 'object' || filter['@type'] || object[type] === filter['@type']) &&
       (!filter || Object.entries(filter).filter(([key]) => key !== '@type').every(([key, value]) => (object as any)[key] === value));

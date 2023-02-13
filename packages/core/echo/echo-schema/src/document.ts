@@ -355,3 +355,5 @@ export class Document extends DocumentBase {
   // Property accessor.
   [key: string]: any;
 }
+
+export const isDocument = (object: any): object is DocumentBase => !!object[base];
