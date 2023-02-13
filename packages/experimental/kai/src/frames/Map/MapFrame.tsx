@@ -6,13 +6,14 @@
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 import { LatLngExpression } from 'leaflet';
+import { Check } from 'phosphor-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
+import { getSize, mx, NavMenu } from '@dxos/react-components';
 
-import { List, ListItemButton } from '../../components';
 import { useSpace } from '../../hooks';
 import { LatLng, Organization } from '../../proto';
 
@@ -95,11 +96,9 @@ export const MapControl = () => {
 
       {/* List panel. */}
       {objects.length > 0 && (
-        <div className='flex flex-col absolute top-4 bottom-4 right-4 overflow-hidden' style={{ zIndex: 1000 }}>
-          <div className='flex bg-white border rounded-md overflow-y-auto' style={{ width: 240 }}>
-            {/* TODO(burdon): Clicking on list starts map drag. */}
-            <PlaceList<Organization> items={objects} value={selected} onSelect={handleSelect} getter={getter} />
-          </div>
+        <div className='absolute block-start-4 block-end-4 inline-end-4 overflow-hidden z-[400] bs-sm'>
+          {/* TODO(burdon): Clicking on list starts map drag. */}
+          <PlaceList<Organization> items={objects} value={selected} onSelect={handleSelect} getter={getter} />
         </div>
       )}
     </div>
@@ -132,23 +131,24 @@ export const PlaceList = <T,>({ items, value, getter, onSelect }: PlaceListProps
   );
 
   return (
-    <div className='flex flex-col w-full overflow-hidden pt-2 pb-2 select-none'>
-      <List>
-        {items.map((item) => (
-          <ListItemButton
-            key={getter.id(item)}
-            selected={getter.id(item) === selected}
-            onClick={() => handleSelect(getter.id(item))}
-            classes={{
-              root: 'p-1 text-sm',
-              hover: 'bg-sky-100',
-              selected: 'bg-sky-200'
-            }}
-          >
-            {getter.label(item)}
-          </ListItemButton>
-        ))}
-      </List>
-    </div>
+    <NavMenu
+      variant='vertical'
+      items={items.map((item) => {
+        const active = getter.id(item) === selected;
+        return {
+          children: (
+            <>
+              <Check weight='bold' className={mx(getSize(4), !active && 'invisible')} />
+              <span>{getter.label(item)}</span>
+            </>
+          ),
+          triggerLinkProps: {
+            className: '!text-current cursor-pointer pointer-events-auto flex items-center gap-2',
+            onClick: () => handleSelect(getter.id(item))
+          }
+        };
+      })}
+      slots={{ root: { className: 'cursor-default pointer-events-none' } }}
+    />
   );
 };
