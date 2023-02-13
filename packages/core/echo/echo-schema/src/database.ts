@@ -4,6 +4,7 @@
 
 import assert from 'node:assert';
 
+import { Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy, Item, ItemManager, encodeModelMutation } from '@dxos/echo-db';
@@ -15,7 +16,6 @@ import { base, db, deleted, id, type } from './defs';
 import { DELETED, Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
-import { Event } from '@dxos/async';
 
 export type PropertiesFilter = Record<string, any>;
 export type OperatorFilter<T extends DocumentBase> = (document: T) => boolean;
@@ -61,7 +61,7 @@ export class EchoDatabase {
     private readonly _router: DatabaseRouter
   ) {
     // TODO(dmaretskyi): Don't debounce?
-    this._itemManager.update.on(item => this._update([item]));
+    this._itemManager.update.on((item) => this._update([item]));
     this._update([]);
   }
 
