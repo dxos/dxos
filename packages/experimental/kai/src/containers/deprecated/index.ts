@@ -4,7 +4,6 @@
 
 export * from './ContactCard';
 export * from './ContactList';
-export * from './DraggableTaskList';
 export * from './OrganizationList';
 export * from './ProjectCard';
 export * from './ProjectHierarchy';

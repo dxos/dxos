@@ -2,253 +2,135 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Spinner, XCircle } from 'phosphor-react';
-import React, { FC, KeyboardEvent, useCallback, useEffect, useState } from 'react';
+import React, { ComponentPropsWithoutRef, FC, KeyboardEvent, useState } from 'react';
 
 import { Space } from '@dxos/client';
-import { base, deleted, id } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
+import { id } from '@dxos/echo-schema';
+import {
+  EditableList,
+  EditableListItem,
+  EditableListItemSlots,
+  EditableListProps,
+  useEditableListKeyboardInteractions
+} from '@dxos/react-appkit';
 import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { randomString } from '@dxos/react-components';
 
-import { Button, Input, CardRow } from '../../components';
-import { useAppState } from '../../hooks';
+import { useSpace } from '../../hooks';
 import { Task } from '../../proto';
 
 // TODO(burdon): Generic header with create.
 
-export const TaskList: FC<{ space: Space; completed?: boolean; readonly?: boolean; fullWidth?: boolean }> = ({
-  space,
-  completed = undefined,
-  readonly = false,
-  fullWidth = false
-}) => {
-  const tasks = useQuery(space, Task.filter({ completed }));
-  const [newTask, setNewTask] = useState<Task>();
-  const [saving, setSaving] = useState(false);
+interface TaskListProps {
+  space: Space;
+  tasks: Task[];
+  id?: string;
+  unordered?: boolean;
+  onDelete?: (task: Task) => void;
+  onCreate?: (task: Task) => void;
+  onMoveItem?: EditableListProps['onMoveItem'];
+}
 
-  useEffect(() => {
-    let t: ReturnType<typeof setTimeout> | undefined;
-    if (saving) {
-      if (t) {
-        clearTimeout(t);
+interface UnorderedTaskListProps extends Omit<TaskListProps, 'tasks' | 'unordered'> {
+  filter?: Parameters<typeof Task.filter>[0];
+}
+
+export const UnorderedTaskList: FC<UnorderedTaskListProps> = ({ filter, ...props }) => {
+  const space = useSpace(); // TODO(burdon): Factor out.
+  const tasks = useQuery(space, Task.filter(filter));
+  return <TaskList unordered tasks={tasks} {...props} />;
+};
+
+export const TaskList: FC<TaskListProps> = withReactor(
+  ({ space, id: propsId, tasks, onCreate, onDelete, onMoveItem, unordered }) => {
+    const [newTaskTitle, setNewTaskTitle] = useState('');
+    const listId = propsId ?? space.key.toHex() ?? randomString();
+    const handleCreateTask = async () => {
+      if (newTaskTitle.length) {
+        const task = new Task({ title: newTaskTitle ?? '' });
+        await space.experimental.db.save(task);
+        setNewTaskTitle('');
+        onCreate?.(task);
       }
-      t = setTimeout(() => {
-        setSaving(false);
-      }, 1000);
-    }
+    };
 
-    return () => clearTimeout(t);
-  }, [saving]);
+    const handleDeleteTask = async (task: Task) => {
+      await space.experimental.db.delete(task);
+      onDelete?.(task);
+    };
 
-  useEffect(() => {
-    if (!readonly) {
-      setNewTask(new Task());
-    }
-  }, []);
+    // TODO(burdon): DND prevents being editable.
+    // TODO(burdon): Delete row.
+    // TODO(burdon): Track index position; move up/down.
+    // TODO(burdon): Highlight active row.
+    // TODO(burdon): Check editable.
+    // TODO(burdon): DragOverlay
 
-  const handleCreateTask = async (task: Task) => {
-    if (task.title.length) {
-      await space.experimental.db.save(task);
-      setNewTask(new Task());
-    }
-  };
+    // TODO(burdon): Workflowy
+    //  - Tab to indent.
+    //  - Split current task if pressing Enter in the middle.
 
-  const handleDeleteTask = async (task: Task) => {
-    await space.experimental.db.delete(task);
-  };
+    const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(listId);
 
-  const handleSave = () => {
-    setSaving(true);
-  };
+    const onAddItemKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Enter') {
+        void handleCreateTask();
+      } else {
+        onListItemInputKeyDown(event);
+      }
+    };
 
-  return (
-    <>
-      {/* TODO(burdon): Adapt width to container. */}
-      <div
-        className={mx('flex flex-col overflow-y-auto bg-white', fullWidth ? 'w-full' : 'w-screen is-full md:is-column')}
+    const itemSlots = { input: { input: { ...itemAttrs, onKeyDown: onListItemInputKeyDown } } };
+
+    return (
+      <EditableList
+        completable
+        variant={unordered ? 'unordered' : 'ordered-draggable'}
+        id={listId}
+        labelId='omitted'
+        itemIdOrder={tasks.map((task) => task[id])}
+        nextItemTitle={newTaskTitle}
+        slots={{
+          root: hostAttrs as ComponentPropsWithoutRef<'div'>,
+          addItemInput: { input: { ...itemAttrs, onKeyDown: onAddItemKeyDown } }
+        }}
+        onMoveItem={onMoveItem}
+        onChangeNextItemTitle={({ target: { value } }) => setNewTaskTitle(value)}
+        onClickAdd={handleCreateTask}
       >
-        <div className='mt-1'>
-          {tasks?.map((task, index) => (
-            <TaskItem
-              key={task[id]}
-              task={task}
-              onSave={handleSave}
-              onDelete={readonly ? undefined : handleDeleteTask}
-              readonly={readonly}
-              orderIndex={index}
-              isLast={index === tasks.length - 1}
-            />
-          ))}
-        </div>
-
-        {/* TODO(burdon): Keep pinned to bottom on create. */}
-        {newTask && <NewTaskItem task={newTask} onEnter={handleCreateTask} lastIndex={tasks.length - 1} />}
-      </div>
-      {saving && (
-        <div className='absolute bottom-0 right-0 z-50 p-3 animate-spin text-red-600'>
-          <Spinner />
-        </div>
-      )}
-    </>
-  );
-};
-
-export const NewTaskItem: FC<{
-  task: Task;
-  onEnter?: (task: Task) => void;
-  lastIndex?: number;
-}> = ({ task, onEnter, lastIndex }) => {
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<Element>) => {
-      if (event.key === 'PageUp') {
-        event.preventDefault();
-        (document.querySelector(`input[data-orderindex="${lastIndex ?? 0}"]`) as HTMLElement | undefined)?.focus();
-      }
-    },
-    [lastIndex]
-  );
-
-  return (
-    <CardRow
-      sidebar={<input className='invisible' type='checkbox' disabled />}
-      header={
-        <Input
-          id='new-task'
-          className='w-full p-1'
-          spellCheck={false}
-          value={task.title}
-          placeholder='Enter text'
-          onKeyDown={onKeyDown}
-          onEnter={(value) => {
-            if (value.length) {
-              task.title = value;
-              onEnter?.(task);
-              return true;
-            }
-          }}
-          onChange={(value) => {
-            task.title = value;
-          }}
-        />
-      }
-      action={<div />}
-    />
-  );
-};
+        {tasks.map((task) => (
+          <TaskItem key={task[id]} task={task} onDelete={handleDeleteTask} slots={itemSlots} />
+        ))}
+      </EditableList>
+    );
+  }
+);
 
 export const TaskItem: FC<{
   task: Task;
-  readonly?: boolean;
-  showAssigned?: boolean;
-  onEnter?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onSave?: (task: Task) => void;
-  isLast?: boolean;
-  orderIndex: number;
+  slots?: EditableListItemSlots;
 }> = withReactor(
-  ({ task, readonly, showAssigned, onEnter, onDelete, onSave, orderIndex, isLast }) => {
-    const { debug } = useAppState();
+  ({ task, onDelete, onSave, slots }) => {
     useReactorContext({
       onChange: () => {
         onSave?.(task);
       }
     });
 
-    const onKeyDown = useCallback(
-      (event: KeyboardEvent<Element>) => {
-        switch (event.key) {
-          case 'PageDown': {
-            event.preventDefault();
-            if (isLast) {
-              (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
-            } else {
-              (
-                document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
-              )?.focus();
-            }
-            break;
-          }
-          case 'PageUp': {
-            event.preventDefault();
-            (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
-            break;
-          }
-        }
-      },
-      [task, orderIndex, isLast]
-    );
-
-    const onKeyUp = useCallback(
-      (event: KeyboardEvent<Element>) => {
-        switch (event.key) {
-          case 'Enter': {
-            if (event.shiftKey) {
-              (
-                document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined
-              )?.focus();
-            } else {
-              if (isLast) {
-                (document.querySelector('input#new-task') as HTMLElement | undefined)?.focus();
-              } else {
-                (
-                  document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
-                )?.focus();
-              }
-            }
-            onEnter?.(task);
-            break;
-          }
-        }
-      },
-      [task, orderIndex, isLast]
-    );
-
     return (
-      <CardRow
-        sidebar={
-          <input
-            type='checkbox'
-            disabled={readonly}
-            checked={!!task.completed}
-            onChange={() => (task.completed = !task.completed)}
-          />
-        }
-        action={
-          onDelete && (
-            <Button className='text-gray-300' onClick={() => onDelete(task)}>
-              <XCircle className={mx(getSize(6), 'hover:text-red-400')} />
-            </Button>
-          )
-        }
-        header={
-          <Input
-            className={mx('w-full p-1', task[deleted] && 'text-red-300')}
-            spellCheck={false}
-            value={task.title}
-            placeholder='Enter text'
-            onKeyDown={onKeyDown}
-            onKeyUp={onKeyUp}
-            onChange={(value) => {
-              task.title = value;
-            }}
-            disabled={readonly}
-            data-orderindex={orderIndex}
-          />
-        }
-      >
-        {showAssigned && (
-          <div className='ml-8 pl-1 text-sm text-blue-800'>
-            <div>{task.assignee?.name}</div>
-            {debug && (
-              <div>
-                <div>{PublicKey.from(task[id]).truncate()}</div>
-                <div>{(task[base] as any)._schemaType?.name}</div>
-              </div>
-            )}
-          </div>
-        )}
-      </CardRow>
+      <EditableListItem
+        id={task[id]}
+        completed={task.completed}
+        title={task.title}
+        slots={slots}
+        onChangeCompleted={(completed) => (task.completed = completed)}
+        onChangeTitle={({ target: { value } }) => {
+          task.title = value ?? '';
+        }}
+        {...(onDelete && { onClickDelete: () => onDelete(task) })}
+      />
     );
   },
   { componentName: 'TaskItem' }
