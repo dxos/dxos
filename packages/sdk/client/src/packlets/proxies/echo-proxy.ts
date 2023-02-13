@@ -121,8 +121,8 @@ export class EchoProxy implements Echo {
 
           // NOTE: Must set in a map before initializing.
           this._spaces.set(spaceProxy.key, spaceProxy);
-          this._spacesInitialized.emit(spaceProxy.key);
           await spaceProxy.initialize();
+          this._spacesInitialized.emit(spaceProxy.key);
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
           // spaceProxy.database.entityUpdate.on((entity) => {
