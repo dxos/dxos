@@ -3,12 +3,13 @@
 //
 
 import expect from 'expect'; // TODO(burdon): Convert to chai.
+import { inspect } from 'node:util';
 import waitForExpect from 'wait-for-expect';
 
 import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
-import { id } from './defs';
+import { data, id } from './defs';
 import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
@@ -28,6 +29,12 @@ describe('EchoDatabase', () => {
 
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
+    expect(obj[data]).toEqual({
+      '@id': obj[id],
+      '@type': null,
+      title: 'Test title',
+      description: 'Test description'
+    });
   });
 
   test('get/set properties after save', async () => {
@@ -147,20 +154,16 @@ describe('EchoDatabase', () => {
 
     const task1 = new Document({ category: 'eng', title: 'Task 1' });
     await db.save(task1);
-    await waitForExpect(() => {
-      expect(query.getObjects()).toEqual([task1]);
-      expect(counter).toBeGreaterThanOrEqual(1);
-    });
+    expect(query.getObjects()).toEqual([task1]);
+    expect(counter).toBeGreaterThanOrEqual(1);
 
     const task2 = new Document({ category: 'legal', title: 'Task 2' });
     await db.save(task2);
     expect(query.getObjects()).toEqual([task1]);
 
     task2.category = 'eng';
-    await waitForExpect(() => {
-      expect(query.getObjects()).toEqual([task1, task2]);
-      expect(counter).toBeGreaterThanOrEqual(2);
-    });
+    expect(query.getObjects()).toEqual([task1, task2]);
+    expect(counter).toBeGreaterThanOrEqual(2);
   });
 
   test('toJSON', async () => {
@@ -194,7 +197,8 @@ describe('EchoDatabase', () => {
     });
     await db.save(task);
 
-    console.log(task);
+    inspect(task);
+    // console.log(task);
   });
 
   describe('ordered arrays', () => {
