@@ -12,7 +12,7 @@ import { getSize } from '@dxos/react-components';
 
 import { Input, CardRow, Button } from '../../components';
 import { Project, Task } from '../../proto';
-import { DraggableTaskList } from './DraggableTaskList';
+import { TaskList } from './TaskList';
 
 export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor(({ space, project }) => {
   const handleExpand = () => {};
@@ -44,14 +44,15 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
       </div>
 
       {/* Tasks */}
-      <div>
-        <DraggableTaskList
+      <div className='p-1.5'>
+        <TaskList
           space={space}
+          id={project[id]}
           tasks={project.tasks}
           onCreate={(task: Task) => {
             project.tasks.push(task);
           }}
-          onDrag={handleDrag}
+          onMoveItem={handleDrag}
         />
       </div>
 

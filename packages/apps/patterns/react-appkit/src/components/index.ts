@@ -4,6 +4,7 @@
 
 export * from './AuthChoices';
 export * from './DeviceList';
+export * from './EditableList';
 export * from './ErrorProvider';
 export * from './Fallback';
 export * from './FatalError';

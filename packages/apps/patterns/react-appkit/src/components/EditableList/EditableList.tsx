@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { DotsThree, Plus, X } from 'phosphor-react';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
@@ -10,7 +9,6 @@ import {
   List,
   ListItem,
   DragEndEvent,
-  arrayMove,
   ListItemHeading,
   Input,
   ListItemEndcap,
@@ -59,13 +57,14 @@ export interface EditableListProps {
   id: string;
   labelId: string;
   completable?: boolean;
+  variant?: 'ordered-draggable' | 'unordered';
   onClickAdd?: () => void;
   defaultNextItemTitle?: string;
   nextItemTitle?: string;
   onChangeNextItemTitle?: (event: ChangeEvent<HTMLInputElement>) => void;
   defaultItemIdOrder?: string[];
   itemIdOrder?: string[];
-  onChangeItemIdOrder?: (itemIdOrder: string[]) => void;
+  onMoveItem?: (oldIndex: number, newIndex: number) => void;
   children?: ReactNode;
   slots?: EditableListSlots;
 }
@@ -119,57 +118,45 @@ export const EditableList = ({
   children,
   labelId,
   completable,
+  variant = 'ordered-draggable',
   onClickAdd,
   nextItemTitle,
   defaultNextItemTitle,
   onChangeNextItemTitle,
-  defaultItemIdOrder,
   itemIdOrder,
-  onChangeItemIdOrder,
+  onMoveItem,
   slots = {}
 }: EditableListProps) => {
-  const [listItemIds, setListItemIds] = useControllableState({
-    prop: itemIdOrder,
-    defaultProp: defaultItemIdOrder,
-    onChange: onChangeItemIdOrder
-  });
   const { t } = useTranslation('appkit');
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
-      setListItemIds((itemIds) => {
-        if (itemIds && over?.id) {
-          const oldIndex = itemIds.findIndex((id) => id === active.id);
-          const newIndex = itemIds.findIndex((id) => id === over.id);
-          return arrayMove(itemIds, oldIndex, newIndex);
-        } else {
-          return itemIds;
-        }
-      });
+    if (itemIdOrder && over?.id && active.id !== over?.id) {
+      const oldIndex = itemIdOrder.findIndex((id) => id === active.id);
+      const newIndex = itemIdOrder.findIndex((id) => id === over.id);
+      onMoveItem?.(oldIndex, newIndex);
     }
   };
 
   return (
     <div role='none' {...slots.root} className={mx('contents', slots.root?.className)}>
       <List
-        // ref={forwardedRef}
         labelId={labelId}
-        variant='ordered-draggable'
+        variant={variant}
         selectable={completable}
         onDragEnd={handleDragEnd}
-        listItemIds={listItemIds ?? []}
+        listItemIds={itemIdOrder ?? []}
         slots={slots.list}
       >
         {children}
       </List>
       <div className='flex'>
-        <ListItemDragHandle className='invisible' />
+        <ListItemDragHandle className={variant === 'ordered-draggable' ? 'invisible' : 'hidden'} />
         <ListItemEndcap className='invisible' />
         <Input
           variant='subdued'
-          label='Add new item'
-          placeholder='Add new item'
+          label={t('new list item input label')}
+          placeholder={t('new list item input placeholder')}
           {...{
             value: nextItemTitle,
             defaultValue: defaultNextItemTitle,
@@ -273,20 +260,22 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           </Input>
           <span className='sr-only'>{title}</span>
         </ListItemHeading>
-        <ListItemEndcap>
-          <DropdownMenu
-            trigger={
-              <Button variant='ghost' compact className={getSize(10)}>
-                <DotsThree weight='light' className={getSize(4)} />
-              </Button>
-            }
-          >
-            <DropdownMenuItem onClick={onClickDelete} className={valenceColorText('error')}>
-              <span className='grow'>{t('delete list item label')}</span>
-              <X className={getSize(4)} />
-            </DropdownMenuItem>
-          </DropdownMenu>
-        </ListItemEndcap>
+        {onClickDelete && (
+          <ListItemEndcap>
+            <DropdownMenu
+              trigger={
+                <Button variant='ghost' compact className={getSize(10)}>
+                  <DotsThree weight='light' className={getSize(4)} />
+                </Button>
+              }
+            >
+              <DropdownMenuItem onClick={onClickDelete} className={valenceColorText('error')}>
+                <span className='grow'>{t('delete list item label')}</span>
+                <X className={getSize(4)} />
+              </DropdownMenuItem>
+            </DropdownMenu>
+          </ListItemEndcap>
+        )}
       </ListItem>
     );
   }

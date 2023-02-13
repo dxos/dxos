@@ -4,16 +4,16 @@
 
 import React from 'react';
 
-import { TaskList } from '../../containers';
+import { UnorderedTaskList } from '../../containers';
 import { useSpace } from '../../hooks';
 
 export const TaskFrame = () => {
   const space = useSpace();
   return (
-    <div className='min-bs-full flex flex-1 justify-center'>
-      <div className='flex my-4 md:shadow'>
-        <TaskList space={space} />
+    <main className='min-bs-full flex-1 justify-center bg-panel-bg overflow-auto'>
+      <div role='none' className='min-bs-full mli-auto bg-white is-full md:is-column p-2'>
+        <UnorderedTaskList space={space} />
       </div>
-    </div>
+    </main>
   );
 };
