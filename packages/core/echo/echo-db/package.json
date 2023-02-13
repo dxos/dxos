@@ -16,12 +16,9 @@
       "require": "./dist/lib/node/packlets/testing/index.cjs"
     }
   },
-  "types": "INDEX",
+  "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "INDEX": [
-        "dist/types/src/index.d.ts"
-      ],
       "testing": [
         "dist/types/src/packlets/testing/index.d.ts"
       ]
