@@ -54,6 +54,11 @@ export const TaskList: FC<TaskListProps> = withReactor(
       }
     };
 
+    const handleDeleteTask = async (task: Task) => {
+      await space.experimental.db.delete(task);
+      onDelete?.(task);
+    };
+
     // TODO(burdon): DND prevents being editable.
     // TODO(burdon): Delete row.
     // TODO(burdon): Track index position; move up/down.
@@ -94,7 +99,7 @@ export const TaskList: FC<TaskListProps> = withReactor(
         onClickAdd={handleCreateTask}
       >
         {tasks.map((task) => (
-          <TaskItem key={task[id]} task={task} onDelete={onDelete} slots={itemSlots} />
+          <TaskItem key={task[id]} task={task} onDelete={handleDeleteTask} slots={itemSlots} />
         ))}
       </EditableList>
     );
