@@ -50,7 +50,7 @@ export const EditableObjectList = <T extends Document>({
 
   return (
     <div role='none' className='p-1 is-full'>
-      <List labelId='excluded'>
+      <List labelId='todo'>
         {objects.map((object) => {
           const isSelected = object[id] === selected;
           return (
