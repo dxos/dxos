@@ -6,7 +6,6 @@ import { Bug, User } from 'phosphor-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { SpaceMeta, useQuery } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
@@ -16,7 +15,6 @@ import { useSpace, useTheme } from '../../hooks';
 export const AppBar = () => {
   const theme = useTheme();
   const space = useSpace();
-  const [meta] = useQuery(space, SpaceMeta.filter());
 
   return (
     <div
@@ -37,7 +35,7 @@ export const AppBar = () => {
       {space && (
         <div className='flex overflow-hidden mx-6'>
           <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-xl'>
-            {meta && meta.title ? meta.title : humanize(space.key)}
+            {space.data.title ?? humanize(space.key)}
           </h2>
         </div>
       )}

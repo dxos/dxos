@@ -31,7 +31,6 @@ export type SpaceItemProps = {
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
 const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
-  const [meta] = useQuery(space, SpaceMeta.filter());
   return (
     <div
       className={mx(
@@ -51,7 +50,7 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
 
           {/* TODO(burdon): Name. */}
           <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>
-            {meta && meta.title ? meta.title : humanize(space.key)}
+            {space.data.title ?? humanize(space.key)}
           </h2>
         </div>
 
