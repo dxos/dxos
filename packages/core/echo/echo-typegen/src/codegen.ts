@@ -149,14 +149,16 @@ export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
 
   // prettier-ignore
   builder
+    .push(`export type ${name}Options = { ${initializer} };`).nl()
+
     .push(`export class ${name} extends DocumentBase {`)
     .push(`static readonly type = schema.getType('${fullName}');`, 1).nl()
 
-    .push(`static filter(opts?: { ${initializer} }): TypeFilter<${name}> {`, 1)
+    .push(`static filter(opts?: ${name}Options): TypeFilter<${name}> {`, 1)
     .push(`return ${name}.type.createFilter(opts);`, 2)
     .push('}', 1).nl()
 
-    .push(`constructor(opts?: { ${initializer} }) {`, 1)
+    .push(`constructor(opts?: ${name}Options) {`, 1)
     .push(`super({ ...opts}, ${name}.type);`, 2)
     .push('}', 1).nl()
 
