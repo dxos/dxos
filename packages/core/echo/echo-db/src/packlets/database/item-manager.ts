@@ -51,6 +51,7 @@ export class ItemManager {
   /**
    * Update event.
    * Contains a list of all entities changed from the last update.
+   * @deprecated Likely to cause race conditions.
    */
   readonly debouncedUpdate: Event<Item[]> = debounceItemUpdateEvent(this.update);
 
