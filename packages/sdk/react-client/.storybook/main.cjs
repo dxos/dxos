@@ -19,7 +19,11 @@ module.exports = {
   viteFinal: async (config) =>
     mergeConfig(config, {
       optimizeDeps: {
-        force: true,
+        // TODO(wittjosiah): Including force makes startup take longer.
+        //   Without force occasionally optimized deps are out of date.
+        //   However the remaining deps here rarely change much.
+        //   Excluding force seems to help playwright tests pass so it should be left commented out for now.
+        // force: true,
         include: [
           '@dxos/config',
           '@dxos/keys',
