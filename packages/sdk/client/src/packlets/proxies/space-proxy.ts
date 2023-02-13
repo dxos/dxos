@@ -332,6 +332,7 @@ export class SpaceProxy implements Space {
 
   /**
    * Return set of space members.
+   * @deprecated
    */
   // TODO(burdon): Don't expose result object and provide type.
   queryMembers(): ResultSet<SpaceMember> {
