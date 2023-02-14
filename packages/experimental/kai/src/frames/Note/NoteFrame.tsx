@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { id } from '@dxos/echo-schema';
 import { Grid, GridLayout, Item, Location, TileContentProps } from '@dxos/mosaic';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { Button, getSize } from '@dxos/react-components';
 
 import { useSpace } from '../../hooks';
 import { Note, NoteBoard, Location as LocationProto } from '../../proto';
@@ -61,9 +61,9 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
         {/* Icons */}
         <div className='flex shrink-0 pl-3'>
           <div className='invisible group-hover:visible text-gray-500'>
-            <button onClick={handleDelete}>
+            <Button compact variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
               <XCircle className={getSize(6)} />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

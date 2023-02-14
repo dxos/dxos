@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { Serializer } from '@dxos/echo-schema';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useNetworkStatus } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useFileDownload, useGenerator, useSpace, createSpacePath } from '../../hooks';
 
@@ -127,9 +127,9 @@ export const Actions = () => {
       {actions.map((action, i) => {
         const { Icon, handler, title } = action;
         return (
-          <button key={i} className='mr-1' onClick={handler} title={title}>
+          <Button compact key={i} className='mr-1' onClick={handler} title={title}>
             <Icon className={getSize(6)} />
-          </button>
+          </Button>
         );
       })}
     </div>

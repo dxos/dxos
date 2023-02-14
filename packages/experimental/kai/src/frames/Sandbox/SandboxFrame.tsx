@@ -111,7 +111,7 @@ const Frame = () => {
       </ul>
       <div className='flex p-1 mt-4'>
         <input className='w-full border-b pr-4' value={value} onChange={ev => setValue(ev.target.value)} />
-        <button onClick={handleCreate}>Add</button>
+        <Button compact onClick={handleCreate}>Add</Button>
       </div>
     </div>
   )
