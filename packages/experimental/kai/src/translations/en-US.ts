@@ -9,6 +9,5 @@ export const kai = {
   'current app name': 'KAI',
   'device invitations label': 'Devices pending authentication',
   'devices label': 'Devices',
-  'identities empty message': 'There are no identities on this device yet.',
-  'join space label': 'Join Space'
+  'identities empty message': 'There are no identities on this device yet.'
 };
