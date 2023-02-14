@@ -18,10 +18,12 @@ export {
   type SchemaRef
 } from '@dxos/echo-db';
 
+export * from '@dxos/echo-schema';
+
 export { PublicKey } from '@dxos/keys';
 
 // TODO(burdon): Export form `@dxos/echo-db`.
-export { ItemID, DocumentModel } from '@dxos/document-model';
+export { type ItemID, DocumentModel } from '@dxos/document-model';
 
 export {
   type InvitationEvents,
@@ -39,12 +41,12 @@ export {
 
 export { ApiError } from '@dxos/errors';
 
-export { Contact, Profile, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
+export { type Contact, type Profile, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Remove.
-export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
-export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
+export { type KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+export type { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';
@@ -56,5 +58,3 @@ export * from './packlets/proxies';
 
 // TODO(burdon): Create separate export like testing?
 export * from './packlets/devtools';
-
-export * from '@dxos/echo-schema';

@@ -23,25 +23,8 @@ export default defineConfig({
           }
         : false
   },
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/client',
-      '@dxos/config',
-      '@dxos/log',
-      '@dxos/react-appkit',
-      '@dxos/react-client',
-      '@dxos/react-list',
-      '@dxos/react-components',
-      '@dxos/sentry',
-      '@dxos/echo-schema'
-    ]
-  },
   build: {
-    outDir: 'out/tasks',
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    }
+    outDir: 'out/tasks'
   },
   plugins: [
     ConfigPlugin({

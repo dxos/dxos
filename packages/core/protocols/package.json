@@ -6,13 +6,35 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "./dist/esm/src/index.js",
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js",
+      "node": "./dist/cjs/src/index.js"
+    },
+    "./proto/*": {
+      "browser": "./dist/esm/src/proto/gen/*.js",
+      "import": "./dist/esm/src/proto/gen/*.js",
+      "require": "./dist/cjs/src/proto/gen/*.js",
+      "node": "./dist/cjs/src/proto/gen/*.js"
+    }
+  },
+  "types": "dist/esm/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "proto/*": [
+        "dist/esm/src/proto/gen/*"
+      ]
+    }
+  },
   "files": [
     "dist",
-    "proto",
     "src"
   ],
+  "scripts": {
+    "tsc-cjs": "tsc --module commonjs --target es2018 --outdir ./dist/cjs"
+  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/hypercore": "workspace:*",

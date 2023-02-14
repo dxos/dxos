@@ -11,7 +11,7 @@
   "main": "dist/lib/node/index.cjs",
   "browser": {
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./dist/lib/node/testing/index.cjs": "./dist/lib/browser/testing/index.mjs"
+    "./testing.js": "./dist/lib/browser/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

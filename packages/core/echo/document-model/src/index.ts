@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export { ItemID } from '@dxos/protocols';
+export { type ItemID } from '@dxos/protocols';
 
 export * from './document-model';
 export * from './matcher';
