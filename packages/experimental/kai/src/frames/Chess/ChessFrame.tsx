@@ -10,7 +10,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
 import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 
 import { useSpace } from '../../hooks';
 
@@ -93,9 +93,9 @@ const Play: FC<{
     <div className='flex flex-col flex-1'>
       <div className='flex w-full p-5'>
         <div>
-          <button onClick={() => onClose()}>
+          <Button compact onClick={() => onClose()}>
             <ArrowUUpLeft weight='thin' className={getSize(6)} />
-          </button>
+          </Button>
         </div>
         <div className='flex-1' />
         <div className='absolute right-6 hidden md:flex flex-col w-[160px] justify-center shadow'>
@@ -111,12 +111,12 @@ const Play: FC<{
 
       <div className='flex flex-row-reverse w-full p-5'>
         <div className='flex'>
-          <button onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
+          <Button compact onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
             <CaretLeft weight='thin' className={getSize(6)} />
-          </button>
-          <button onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
+          </Button>
+          <Button compact onClick={() => onSetPieces(pieces < chessPieces.length - 1 ? pieces + 1 : 0)}>
             <CaretRight weight='thin' className={getSize(6)} />
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -138,9 +138,9 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
     <div className='flex justify-center items-center bg-zinc-200 shadow' style={{ width: gridSize, height: gridSize }}>
       <div className='flex'>
         {onClick && (
-          <button onClick={onClick}>
+          <Button compact onClick={onClick}>
             <PlusCircle className={mx(getSize(16), 'text-gray-300')} />
-          </button>
+          </Button>
         )}
       </div>
     </div>

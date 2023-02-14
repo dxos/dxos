@@ -9,9 +9,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { id } from '@dxos/echo-schema';
 import { Grid, GridLayout, Item, Location, TileContentProps } from '@dxos/mosaic';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { Button, getSize } from '@dxos/react-components';
 
-import { Input } from '../../components';
 import { useSpace } from '../../hooks';
 import { Note, NoteBoard, Location as LocationProto } from '../../proto';
 
@@ -45,13 +44,13 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
       <div className='flex w-full items-center mb-3'>
         {/* Title */}
         <div className='flex flex-1 overflow-hidden'>
-          <Input
+          <input
             ref={inputRef}
             className='text-lg w-full outline-0 p-1 bg-transparent'
             placeholder='Title'
             autoFocus={selected} // TODO(burdon): Not working.
             value={item.label}
-            onChange={(value: string) => {
+            onChange={({ target: { value } }) => {
               // TODO(burdon): Breaks abstraction: bubble change event instead.
               const note = item.data! as Note;
               note.title = value;
@@ -62,9 +61,9 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
         {/* Icons */}
         <div className='flex shrink-0 pl-3'>
           <div className='invisible group-hover:visible text-gray-500'>
-            <button onClick={handleDelete}>
+            <Button compact variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
               <XCircle className={getSize(6)} />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -128,7 +127,7 @@ export const NoteFrame = () => {
   };
 
   const handleCreate = async (location: Location) => {
-    const note = new Note();
+    const note = new Note({ title: '' });
     await space.experimental.db.save(note);
     setItemLocation(board, note[id], location);
     return note[id];

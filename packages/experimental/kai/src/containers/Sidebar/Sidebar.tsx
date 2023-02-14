@@ -10,10 +10,9 @@ import { useHref, useNavigate, useParams } from 'react-router-dom';
 import { CancellableInvitationObservable, Invitation, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useClient, useMembers, useSpaces } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { Button, getSize } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { Button } from '../../components';
 import { useSpace, createSpacePath, useAppState, createInvitationPath, Section, createSectionPath } from '../../hooks';
 import { MemberList } from '../MembersList';
 import { SpaceList } from '../SpaceList';
@@ -100,21 +99,22 @@ export const Sidebar = () => {
     <div role='none' className='flex flex-col overflow-auto min-bs-full bg-sidebar-bg'>
       {/* Match Frame selector. */}
       <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
-        <div className='flex justify-between p-1 px-4'>
+        <div className='flex justify-between px-4'>
           <div className='flex items-center'>
             {/* TODO(burdon): Remove initial focus. */}
-            <Button />
-            <Button className='flex mr-2' title='Create new space' onClick={handleCreateSpace}>
+            <Button compact variant='ghost' className='flex' title='Create new space' onClick={handleCreateSpace}>
               <span className='sr-only'>Create new space</span>
               <PlusCircle className={getSize(6)} />
             </Button>
-            <Button className='flex mr-2' title='Join a space' onClick={handleJoinSpace}>
+            <Button compact variant='ghost' className='flex' title='Join a space' onClick={handleJoinSpace}>
               <span className='sr-only'>Join a space</span>
               <ArrowCircleDownLeft className={getSize(6)} />
             </Button>
           </div>
           <div className='flex items-center'>
-            <Button onClick={toggleSidebar}>{isOpen && <CaretLeft className={getSize(6)} />}</Button>
+            <Button compact variant='ghost' onClick={toggleSidebar}>
+              {isOpen && <CaretLeft className={getSize(6)} />}
+            </Button>
           </div>
         </div>
       </div>
