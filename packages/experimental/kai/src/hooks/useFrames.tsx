@@ -39,7 +39,8 @@ import {
   SketchFrame,
   TableFrame,
   TaskFrame,
-  SandboxFrame
+  SandboxFrame,
+  BotsFrame
 } from '../frames';
 import { useAppState } from './useAppState';
 
@@ -104,6 +105,18 @@ const defs: FrameDef[] = [
     runtime: {
       Icon: ListChecks,
       Component: TaskFrame
+    }
+  },
+  {
+    module: {
+      id: 'dxos.module.frame.bots',
+      type: 'dxos:type/frame',
+      displayName: 'Bots',
+      description: 'Bts.'
+    },
+    runtime: {
+      Icon: ListChecks,
+      Component: BotsFrame
     }
   },
   {
