@@ -6,7 +6,7 @@ import { FrameCorners, Robot } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getSize, mx, Searchbar } from '@dxos/react-components';
+import { getSize, mx, Searchbar, Button } from '@dxos/react-components';
 
 import { createSpacePath, useBots, useFrames, useSpace, BotDef, FrameDef, useAppReducer } from '../../hooks';
 
@@ -93,18 +93,18 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
         <div className='flex w-column items-center m-10'>
           <Searchbar disabled />
           <div className='ml-4'>
-            <button className='ml-2' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
+            <Button compact className='ml-2' onClick={() => setType(ExtensionType.FRAME)} title='Frames'>
               <FrameCorners
                 weight={type === ExtensionType.FRAME ? 'regular' : 'thin'}
                 className={mx(getSize(8), 'text-gray-400', type === ExtensionType.FRAME && 'text-800')}
               />
-            </button>
-            <button className='ml-2' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
+            </Button>
+            <Button compact className='ml-2' onClick={() => setType(ExtensionType.BOT)} title='Bots'>
               <Robot
                 weight={type === ExtensionType.BOT ? 'regular' : 'thin'}
                 className={mx(getSize(8), 'text-gray-400', type === ExtensionType.BOT && 'text-800')}
               />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

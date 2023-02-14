@@ -6,9 +6,7 @@ import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { EchoObject, id } from '@dxos/echo-schema';
-import { getSize } from '@dxos/react-components';
-
-import { Button } from '../../components';
+import { getSize, Button } from '@dxos/react-components';
 
 export type KanbanColumnDef = {
   id?: string;
@@ -65,7 +63,7 @@ export const Kanban: FC<{
                       )}
                     </div>
                     <div className='flex flex-1 justify-center'>
-                      <Button onClick={() => onCreate(column)}>
+                      <Button compact variant='ghost' onClick={() => onCreate(column)}>
                         <PlusCircle className={getSize(6)} />
                       </Button>
                     </div>

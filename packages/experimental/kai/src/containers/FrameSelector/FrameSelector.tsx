@@ -6,7 +6,7 @@ import { Globe, CaretRight } from 'phosphor-react';
 import React, { FC, useContext } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { useFrames, createSpacePath, Section, useFrameState } from '../../hooks';
@@ -53,9 +53,9 @@ export const FrameSelector: FC = () => {
       <div className='flex justify-between'>
         <div className='flex items-center'>
           {!isOpen && (
-            <button className='mx-3' onClick={toggleSidebar}>
+            <Button compact variant='ghost' className='mx-3 plb-1' onClick={toggleSidebar}>
               {<CaretRight className={getSize(6)} />}
-            </button>
+            </Button>
           )}
 
           {Array.from(activeFrames)
