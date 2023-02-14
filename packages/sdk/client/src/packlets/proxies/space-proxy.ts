@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 import assert from 'node:assert';
 
-import { asyncTimeout, Event, synchronized, Trigger } from '@dxos/async';
+import { Event, synchronized, Trigger } from '@dxos/async';
 import {
   ClientServicesProvider,
   CancellableInvitationObservable,

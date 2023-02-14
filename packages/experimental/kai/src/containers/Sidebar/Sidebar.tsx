@@ -3,14 +3,14 @@
 //
 
 import clipboardCopy from 'clipboard-copy';
-import { PlusCircle, ArrowCircleDownLeft, CaretLeft, Plus } from 'phosphor-react';
+import { PlusCircle, ArrowCircleDownLeft, CaretLeft } from 'phosphor-react';
 import React, { useContext, useEffect, useState } from 'react';
 import { useHref, useNavigate, useParams } from 'react-router-dom';
 
 import { CancellableInvitationObservable, Invitation, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useClient, useMembers, useSpaces } from '@dxos/react-client';
-import { Button, getSize, Input, mx, useTranslation, mx } from '@dxos/react-components';
+import { Button, getSize, useTranslation, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import {
@@ -39,7 +39,6 @@ export const Sidebar = () => {
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
   const { dev } = useAppState();
-  const { t } = useTranslation('kai');
   const [spaceTitle, setSpaceTitle] = useState<string>();
 
   const [observable, setObservable] = useState<CancellableInvitationObservable>();

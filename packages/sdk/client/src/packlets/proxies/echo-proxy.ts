@@ -13,7 +13,7 @@ import {
   InvitationsOptions,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
-import { failUndefined, inspectObject, todo } from '@dxos/debug';
+import { failUndefined, inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { DatabaseRouter } from '@dxos/echo-schema';
 import { ApiError, SystemError } from '@dxos/errors';
