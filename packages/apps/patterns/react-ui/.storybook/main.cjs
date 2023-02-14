@@ -20,26 +20,6 @@ module.exports = {
     options: {}
   },
   viteFinal: async (config) => mergeConfig(config, {
-    optimizeDeps: {
-      force: true,
-      include: [
-        '@dxos/client',
-        '@dxos/client/testing',
-        '@dxos/config',
-        '@dxos/react-client',
-        '@dxos/react-components',
-        '@dxos/util',
-        'storybook-dark-mode'
-      ]
-    },
-    build: {
-      commonjsOptions: {
-        include: [
-          /packages/,
-          /node_modules/
-        ]
-      }
-    },
     plugins: [ConfigPlugin(), ThemePlugin({
       content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
     })]

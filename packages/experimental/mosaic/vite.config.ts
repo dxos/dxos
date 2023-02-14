@@ -36,17 +36,8 @@ export default defineConfig({
   },
 
   // TODO(burdon): Document.
-  optimizeDeps: {
-    force: true,
-    include: []
-  },
-
-  // TODO(burdon): Document.
   build: {
     sourcemap: true,
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
     rollupOptions: {
       output: {
         manualChunks: {
