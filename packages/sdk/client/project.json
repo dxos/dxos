@@ -38,6 +38,15 @@
         "{options.outputFile}"
       ]
     },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/sdk/client/src/packlets/proto/gen"
+      ]
+    },
     "test": {
       "executor": "@dxos/test:run",
       "options": {

@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
+import { withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
@@ -29,7 +30,7 @@ export type SpaceItemProps = {
 // TODO(burdon): Editable space name?
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
-const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
+const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
     <div
       className={mx(
@@ -48,7 +49,15 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
           </div>
 
           {/* TODO(burdon): Name. */}
-          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>{humanize(space.key)}</h2>
+          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>
+            <input
+              className='bg-transparent border-none outline-none text-ellipsis'
+              value={space.data.title ?? humanize(space.key)}
+              onChange={(event) => {
+                space.data.title = event.target.value;
+              }}
+            />
+          </h2>
         </div>
 
         {selected && (
@@ -65,7 +74,7 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
       {selected && <div className='flex bg-paper-bg'>{children}</div>}
     </div>
   );
-};
+});
 
 export type SpaceListProps = {
   spaces: Space[];
