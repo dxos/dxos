@@ -2,6 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './deprecated';
-
+export * from './EditableObjectList';
 export * from './FilePreview';

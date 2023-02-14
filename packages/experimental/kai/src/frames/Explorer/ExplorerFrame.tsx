@@ -7,9 +7,8 @@ import React, { FC, useMemo, useState } from 'react';
 
 import { GraphModel } from '@dxos/gem-spore';
 import { convertTreeToGraph, createTree, TestGraphModel } from '@dxos/gem-spore/testing';
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, mx, Button } from '@dxos/react-components';
 
-import { Button } from '../../components';
 import { GraphComponent } from './GraphComponent';
 import { PlexusComponent } from './PlexusComponent';
 import { TreeComponent, TreeType } from './TreeComponent';
@@ -95,6 +94,8 @@ export const ExplorerFrame = () => {
         <div className='flex-1' />
         {views.map(({ type, label, Icon }) => (
           <Button
+            compact
+            variant='ghost'
             key={type}
             title={label}
             className={mx('mx-1', view === type && 'text-black')}
