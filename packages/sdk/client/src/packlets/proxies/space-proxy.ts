@@ -15,7 +15,7 @@ import {
 import { todo } from '@dxos/debug';
 import { DocumentModel, ObjectProperties } from '@dxos/document-model';
 import { Item, ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, EchoDatabase, Query } from '@dxos/echo-schema';
+import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -41,7 +41,7 @@ export interface Space extends ISpace {
   get isOpen(): boolean;
   get isActive(): boolean;
   get invitations(): CancellableInvitationObservable[];
-  get data(): SpaceMeta;
+  get data(): Document;
 
   // // TODO(burdon): Remove and move accessors to proxy.
   // get database(): Database;
@@ -108,7 +108,7 @@ export class SpaceProxy implements Space {
   private readonly _invitationProxy: SpaceInvitationsProxy;
   private _invitations: CancellableInvitationObservable[] = [];
 
-  private _data?: SpaceMeta;
+  private _data?: Document;
 
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
