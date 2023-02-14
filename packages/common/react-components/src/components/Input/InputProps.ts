@@ -12,7 +12,7 @@ export type InputVariant = 'default' | 'subdued';
 
 interface SharedTextInputProps
   extends Pick<ComponentPropsWithRef<'input'>, 'value' | 'defaultValue' | 'onChange' | 'disabled' | 'placeholder'> {
-  label: ReactNode;
+  label?: ReactNode;
   labelVisuallyHidden?: boolean;
   description?: ReactNode;
   descriptionVisuallyHidden?: boolean;

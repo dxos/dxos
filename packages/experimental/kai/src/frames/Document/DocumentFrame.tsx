@@ -46,7 +46,6 @@ export const DocumentFrame = withReactor(() => {
             onChange={(event) => {
               object.title = event.target.value;
             }}
-            label='title'
             placeholder='Title'
             slots={{
               root: {
