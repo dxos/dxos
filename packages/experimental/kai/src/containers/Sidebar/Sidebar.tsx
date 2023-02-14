@@ -39,7 +39,6 @@ export const Sidebar = () => {
   const { displayState } = useContext(PanelSidebarContext);
   const isOpen = displayState === 'show';
   const { dev } = useAppState();
-  const [spaceTitle, setSpaceTitle] = useState<string>();
 
   const [observable, setObservable] = useState<CancellableInvitationObservable>();
   const href = useHref(observable ? createInvitationPath(observable.invitation!) : '/');
@@ -63,8 +62,7 @@ export const Sidebar = () => {
   }
 
   const handleCreateSpace = async () => {
-    const space = await client.echo.createSpace({ title: spaceTitle });
-    setSpaceTitle(undefined);
+    const space = await client.echo.createSpace();
     // await space.properties.set('title', 'XXX'); // TODO(burdon): Not implemented.
     navigate(createSpacePath(space.key));
   };
