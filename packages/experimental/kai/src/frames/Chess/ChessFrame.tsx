@@ -91,25 +91,25 @@ const Play: FC<{
   // TODO(burdon): Shrink board if small.
   return (
     <div className='flex flex-col flex-1'>
-      <div className='flex w-full p-5'>
+      <div className='flex w-full p-4'>
         <div>
           <Button compact onClick={() => onClose()}>
             <ArrowUUpLeft weight='thin' className={getSize(6)} />
           </Button>
         </div>
         <div className='flex-1' />
-        <div className='absolute right-6 hidden md:flex flex-col w-[160px] justify-center shadow'>
+        <div className='absolute right-6 hidden md:flex flex-col w-[160px] justify-center shadow-1'>
           <ChessPanel model={model} orientation={orientation} onFlip={handleFlip} />
         </div>
       </div>
 
       <div className='flex flex-1 justify-center items-center'>
-        <div className='w-full m-4 md:w-[700px] shadow'>
+        <div className='w-full m-4 md:w-[700px] shadow-1'>
           <Chessboard model={model} orientation={orientation} pieces={chessPieces[pieces]} onUpdate={handleUpdate} />
         </div>
       </div>
 
-      <div className='flex flex-row-reverse w-full p-5'>
+      <div className='flex flex-row-reverse w-full p-4'>
         <div className='flex'>
           <Button compact onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
             <CaretLeft weight='thin' className={getSize(6)} />
@@ -135,11 +135,14 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
-    <div className='flex justify-center items-center bg-zinc-200 shadow' style={{ width: gridSize, height: gridSize }}>
+    <div
+      className='flex justify-center items-center bg-paper-1-bg shadow-1'
+      style={{ width: gridSize, height: gridSize }}
+    >
       <div className='flex'>
         {onClick && (
-          <Button compact onClick={onClick}>
-            <PlusCircle className={mx(getSize(16), 'text-gray-300')} />
+          <Button compact variant='ghost' onClick={onClick}>
+            <PlusCircle className={mx(getSize(16))} />
           </Button>
         )}
       </div>
@@ -152,7 +155,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
         {games.map((game) => (
           <div
             key={game[id]}
-            className='shadow border'
+            className='shadow-1 border'
             style={{ width: gridSize, height: gridSize }}
             onClick={() => onSelect(game)}
           >

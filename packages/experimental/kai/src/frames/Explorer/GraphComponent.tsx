@@ -13,6 +13,7 @@ export type GraphComponentProps<N> = {
 
 export const GraphComponent = <N,>({ model }: GraphComponentProps<N>) => {
   // TODO(burdon): Share parent SVG.
+  // TODO(burdon): Flickers initially.
   return (
     <SVGContextProvider>
       <SVG>

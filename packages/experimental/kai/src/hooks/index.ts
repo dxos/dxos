@@ -11,3 +11,4 @@ export * from './useFrames';
 export * from './useGenerator';
 export * from './useIpfsClient';
 export * from './useSpace';
+export * from './useTheme';

@@ -40,7 +40,7 @@ export const ProjectHierarchy: FC<{ space: Space; header?: boolean }> = withReac
 
   return (
     <div className='mt-2'>
-      <TreeView items={items} highlightClassName='bg-slate-200' />
+      <TreeView items={items} />
     </div>
   );
 });

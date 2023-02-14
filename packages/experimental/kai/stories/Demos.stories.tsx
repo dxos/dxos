@@ -12,7 +12,7 @@ import '@dxosTheme';
 import { range, MinMax } from '../proto';
 
 const Frame: FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className='flex absolute top-0 bottom-0 left-0 right-0 p-8 bg-white'>{children}</div>;
+  return <div className='flex absolute top-0 bottom-0 left-0 right-0 p-8'>{children}</div>;
 };
 
 export default {
@@ -43,8 +43,8 @@ const Card: FC<CardProps> = ({ className, square, selected, ...props }) => {
   return (
     <div
       className={mx(
-        'flex m-1 p-2 rounded border border-gray-400',
-        selected ? 'bg-blue-100' : 'bg-white',
+        'flex m-1 p-2 rounded border',
+        selected ? 'bg-blue-100' : 'bg-paper-bg',
         square ? 'w-[160px] h-[160px]' : 'w-[160px]',
         className
       )}
@@ -165,7 +165,7 @@ export const MasterDetail = () => {
             <Card>4</Card>
             <Card>5</Card>
           </div>
-          <div className='flex w-[200px] m-1 ml-2 p-3 rounded border border-gray-400 bg-white text-sm'>
+          <div className='flex w-[200px] m-1 ml-2 p-3 rounded border border-gray-400 bg-paper-bg text-sm'>
             {faker.lorem.sentences(3)}
           </div>
         </div>

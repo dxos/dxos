@@ -22,7 +22,7 @@ export interface SVGCOntextProviderProps {
  * @constructor
  */
 export const SVGContextProvider = ({ context: provided, children }: SVGCOntextProviderProps) => {
-  const { ref: resizeRef, width, height } = useResizeDetector();
+  const { ref: resizeRef, width = 0, height = 0 } = useResizeDetector();
   const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export const SVGContextProvider = ({ context: provided, children }: SVGCOntextPr
     <SVGContextDef.Provider value={context}>
       {/* Flex is important otherwise div has extra padding.  */}
       <div ref={resizeRef} style={{ display: 'flex', width: '100%', height: '100%' }}>
-        {children}
+        {width !== 0 && height !== 0 && children}
       </div>
     </SVGContextDef.Provider>
   );

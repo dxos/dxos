@@ -63,7 +63,6 @@ const ItemsPanel = () => {
           {/* TODO(burdon): Convert to list with new API. */}
           <TreeView
             items={items.map(getHierarchicalItem).filter(textFilter(filter))}
-            titleClassName={'text-black text-sm'}
             onSelect={(item: any) => setSelectedItem(item.value)}
             selected={selectedItem?.[id]}
           />

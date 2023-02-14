@@ -136,11 +136,11 @@ export const SketchFrame = withReactor(() => {
 
   return (
     <div className='flex flex-col bs-full'>
-      <div className='flex flex-col flex-1 items-center justify-center overflow-auto bg-gray-300'>
+      <div className='flex flex-col flex-1 items-center justify-center overflow-auto'>
         <ReactSketchCanvas
           ref={canvasRef}
           style={{}}
-          className='shadow-md'
+          className='shadow-1'
           width={`${dimensions.width}px`}
           height={`${dimensions.height}px`}
           strokeWidth={strokeWidth}
@@ -151,19 +151,19 @@ export const SketchFrame = withReactor(() => {
       </div>
 
       {/* TODO(burdon): Vertical unless mobile. */}
-      <div className='flex shrink-0 p-2 bg-gray-200'>
+      <div className='flex shrink-0 p-2'>
         <div className='flex items-center mr-4'>
           <GithubPicker width={'100%'} triangle='hide' colors={colors} onChangeComplete={handleColorChange} />
         </div>
 
         <div className='flex items-center'>
           {sizes.map(({ weight, width }, i) => (
-            <Button compact variant='ghost' key={i} onClick={() => setStrokeWidth(width)}>
+            <div key={i} onClick={() => setStrokeWidth(width)}>
               <ScribbleLoop
                 weight={weight}
-                className={mx(getSize(8), 'ml-1', width === strokeWidth && 'bg-gray-200')}
+                className={mx(getSize(8), 'ml-1', width === strokeWidth && 'bg-selection-bg')}
               />
-            </Button>
+            </div>
           ))}
         </div>
 

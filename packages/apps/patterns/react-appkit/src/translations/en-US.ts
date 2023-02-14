@@ -93,7 +93,7 @@ export const appkit = {
   'resume description label': 'Only one tab can be active at a time',
   'resume label': 'Resume',
   'list item input label': 'List item title',
-  'list item input placeholder': 'Add item text here…',
+  'list item input placeholder': 'Enter text…',
   'new list item input label': 'New list item title',
-  'new list item input placeholder': 'Add the next item’s text…'
+  'new list item input placeholder': 'Enter text…'
 };

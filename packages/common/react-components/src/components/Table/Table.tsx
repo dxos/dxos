@@ -27,17 +27,17 @@ const headerProps = (props: any, { column }: { column: any }) => getStyles(props
 
 const cellProps = (props: any, { cell }: { cell: any }) => getStyles(props, cell.column.align);
 
-export type TableClasses = {
-  root?: string;
-  header?: string;
-  row?: string;
-  selected?: string;
+export type TableSlots = {
+  root?: { className: string };
+  header?: { className: string };
+  row?: { className: string };
+  selected?: { className: string };
 };
 
 export type TableProps<T extends {}> = {
-  classes?: TableClasses; // TODO(burdon): Change to slots.
   columns: Column<T>[];
   data?: T[];
+  slots?: TableSlots;
   selected?: T;
   onSelect?: (item: T) => void;
 };
@@ -47,7 +47,7 @@ export type TableProps<T extends {}> = {
  * https://react-table-v7.tanstack.com/docs/overview
  */
 // TODO(burdon): Checkbox in left gutter.
-export const Table = <T extends {}>({ columns, data = [], classes, onSelect, selected }: TableProps<T>) => {
+export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, selected }: TableProps<T>) => {
   const defaultColumn = useMemo(
     () => ({
       // When using the useFlexLayout:
@@ -66,7 +66,7 @@ export const Table = <T extends {}>({ columns, data = [], classes, onSelect, sel
 
   return (
     // TODO(burdon): Remove table class to force scrolling.
-    <div className={mx('flex flex-1 flex-col overflow-x-auto', classes?.root)}>
+    <div className={mx('flex flex-1 flex-col overflow-x-auto', slots.root?.className)}>
       <div className='table' {...getTableProps()}>
         {/* Header */}
         <div className='thead sticky top-0'>
@@ -76,7 +76,7 @@ export const Table = <T extends {}>({ columns, data = [], classes, onSelect, sel
               {/* TODO(burdon): see UseResizeColumnsColumnProps */}
               {headerGroup.headers.map((column: any) => (
                 // eslint-disable-next-line react/jsx-key
-                <div {...column.getHeaderProps(headerProps)} className={mx('th px-4 py-2', classes?.header)}>
+                <div {...column.getHeaderProps(headerProps)} className={mx('th px-4 py-2', slots.header?.className)}>
                   {column.render('Header')}
 
                   {/* Use column.getResizerProps to hook up the events correctly. */}
@@ -97,11 +97,7 @@ export const Table = <T extends {}>({ columns, data = [], classes, onSelect, sel
             return (
               // eslint-disable-next-line react/jsx-key
               <div
-                className={mx(
-                  'tr odd:bg-white even:bg-slate-100',
-                  row.original === selected && classes?.selected,
-                  classes?.row
-                )}
+                className={mx('tr', slots.row?.className, row.original === selected && slots.selected?.className)}
                 onClick={() => onSelect?.(row.original)}
                 {...row.getRowProps()}
               >
