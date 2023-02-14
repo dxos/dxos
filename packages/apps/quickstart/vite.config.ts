@@ -28,9 +28,6 @@ export default defineConfig({
   },
   build: {
     outDir: "out/quickstart",
-    commonjsOptions: {
-      include: [/packages/, /node_modules/],
-    },
   },
   plugins: [
     ConfigPlugin(),

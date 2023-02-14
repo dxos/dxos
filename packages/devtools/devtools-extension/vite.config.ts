@@ -19,9 +19,6 @@ const env = (value?: string) => (value ? `"${value}"` : undefined);
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   build: {
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
     rollupOptions: {
       input: {
         // Everything mentioned in manifest.json will be bundled.

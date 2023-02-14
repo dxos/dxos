@@ -39,10 +39,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'out/composer',
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    }
+    outDir: 'out/composer'
   },
   plugins: [
     ConfigPlugin({

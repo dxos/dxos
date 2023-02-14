@@ -26,10 +26,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "out/tasks-app-2",
-    commonjsOptions: {
-      include: [/packages/, /node_modules/],
-    },
+    outDir: "out/tasks-app-2"
   },
   plugins: [
     ConfigPlugin(),

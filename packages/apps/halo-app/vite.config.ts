@@ -27,9 +27,6 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),

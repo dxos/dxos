@@ -49,9 +49,6 @@ export default defineConfig({
     }
   },
   build: {
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
     rollupOptions: {
       output: {
         manualChunks: {

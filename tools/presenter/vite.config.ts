@@ -79,9 +79,6 @@ export default defineConfig({
 
   build: {
     // minify: false,
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    }
   },
 
   // TODO(burdon): dxosPlugin, themePlugin (see halo-app).

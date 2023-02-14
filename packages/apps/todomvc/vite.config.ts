@@ -22,10 +22,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    outDir: 'out/todomvc',
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    }
+    outDir: 'out/todomvc'
   },
   plugins: [
     ConfigPlugin({ env: ['DX_VAULT'] }),

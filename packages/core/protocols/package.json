@@ -9,11 +9,15 @@
   "exports": {
     ".": {
       "browser": "./dist/esm/src/index.js",
-      "require": "./dist/cjs/src/index.js"
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js",
+      "node": "./dist/cjs/src/index.js"
     },
     "./proto/*": {
       "browser": "./dist/esm/src/proto/gen/*.js",
-      "require": "./dist/cjs/src/proto/gen/*.js"
+      "import": "./dist/esm/src/proto/gen/*.js",
+      "require": "./dist/cjs/src/proto/gen/*.js",
+      "node": "./dist/cjs/src/proto/gen/*.js"
     }
   },
   "types": "dist/esm/src/index.d.ts",

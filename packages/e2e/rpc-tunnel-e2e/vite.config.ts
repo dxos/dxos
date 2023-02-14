@@ -9,13 +9,5 @@ export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
     host: true
-  },
-  build: {
-    commonjsOptions: {
-      include: [
-        /packages/,
-        /node_modules/
-      ]
-    }
   }
 });
