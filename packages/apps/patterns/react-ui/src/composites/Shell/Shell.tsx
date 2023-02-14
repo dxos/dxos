@@ -6,13 +6,14 @@ import React, { useEffect, useState } from 'react';
 
 import { ShellRuntime } from '@dxos/client';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
-import { useClient, useSpace, useSpaces } from '@dxos/react-client';
+import { useClient, useIdentity, useSpace, useSpaces } from '@dxos/react-client';
 
 import { DevicesDialog } from '../DevicesDialog';
 import { JoinDialog } from '../JoinDialog';
 import { SpaceDialog } from '../SpaceDialog';
 
 export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: string }) => {
+  const identity = useIdentity();
   const client = useClient();
   const spaces = useSpaces();
 
@@ -26,6 +27,17 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
   useEffect(() => {
     return runtime.layoutUpdate.on((request) => setLayout(request));
   }, []);
+
+  useEffect(() => {
+    if (identity && layout === ShellLayout.AUTH) {
+      const timeout = setTimeout(async () => {
+        await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: runtime.spaceKey });
+        runtime.setLayout(ShellLayout.DEFAULT);
+      });
+
+      return () => clearTimeout(timeout);
+    }
+  }, [identity]);
 
   switch (layout) {
     case ShellLayout.AUTH:

@@ -1,15 +1,24 @@
 {
   "name": "@dxos/halo-app",
   "version": "0.1.23",
-  "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/testing.cjs",
-  "types": "dist/types/src/testing.d.ts",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./testing": "./dist/testing/node/testing.cjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing.d.ts"
+      ]
+    }
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
