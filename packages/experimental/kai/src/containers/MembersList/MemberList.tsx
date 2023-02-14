@@ -13,10 +13,10 @@ export const MemberList: FC<{ identityKey: PublicKey; members: SpaceMember[] }> 
   members.sort((member) => (member.identityKey.equals(identityKey) ? -1 : 1));
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden pr-4'>
+    <div className='flex flex-1 flex-col overflow-hidden px-4'>
       {members.map((member) => (
         <div key={member.identityKey.toHex()} className='flex overflow-hidden mb-1 items-center'>
-          <div className='mr-3'>
+          <div className='mr-2'>
             {member.identityKey.equals(identityKey) ? (
               <UserCircle className={mx(getSize(6), 'text-selection-text')} />
             ) : member.presence === SpaceMember.PresenceState.ONLINE ? (

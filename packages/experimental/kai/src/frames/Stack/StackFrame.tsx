@@ -12,7 +12,7 @@ import { useSpace } from '../../hooks';
 
 export const TileMenu: FC<{ title: string; children?: ReactNode }> = ({ title, children }) => {
   return (
-    <div className='flex w-full p-2 px-3 items-center border-b'>
+    <div className='flex w-full p-2 px-2 items-center border-b'>
       <h2>{title}</h2>
       <div className='flex-1' />
       {children}
@@ -26,10 +26,9 @@ export const Tile: FC<{
   header?: JSX.Element;
 }> = ({ scrollbar, header, children }) => {
   return (
-    <div className='flex flex-col w-full bg-white overflow-hidden shadow'>
+    <div className='flex flex-col w-full bg-paper-bg border-r overflow-hidden'>
       {header}
-
-      <div className={mx('flex flex-1 flex-col bg-white', scrollbar ? 'overflow-auto' : 'overflow-hidden')}>
+      <div className={mx('flex flex-1 flex-col bg-paper-bg', scrollbar ? 'overflow-auto' : 'overflow-hidden')}>
         {children}
       </div>
     </div>

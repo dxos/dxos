@@ -39,14 +39,14 @@ export const Kanban: FC<{
               key={column.id ?? i}
               className='flex flex-col overflow-hidden w-screen md:w-column snap-center px-4 md:px-2 pb-4'
             >
-              <div className='flex flex-col first:ml-0 overflow-hidden border drop-shadow-md bg-zinc-200 border-zinc-300 rounded'>
-                <div className='flex p-3 rounded-t text-sm'>{column.header}</div>
-                <div className='flex flex-col flex-1 overflow-y-auto px-3'>
+              <div className='flex flex-col first:ml-0 overflow-hidden bg-paper-1-bg border rounded'>
+                <div className='flex p-2 rounded-t text-sm'>{column.header}</div>
+                <div className='flex flex-col flex-1 overflow-y-auto px-2'>
                   {/* Cards. */}
                   {filtered.map((object) => {
                     const { Content } = column;
                     return (
-                      <div key={object[id]} className='mb-2 bg-white rounded border border-zinc-300'>
+                      <div key={object[id]} className='mb-2 bg-paper-bg border rounded'>
                         <Content object={object} />
                       </div>
                     );
@@ -54,7 +54,7 @@ export const Kanban: FC<{
                 </div>
 
                 {onCreate && (
-                  <div className='flex shrink-0 items-center p-3'>
+                  <div className='flex shrink-0 items-center p-2'>
                     <div className='flex flex-1 text-sm'>
                       {filtered.length > 0 && (
                         <span>

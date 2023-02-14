@@ -16,35 +16,47 @@ enum ExtensionType {
   BOT
 }
 
+// TODO(burdon): Inject generic classes for slots from themecontext.
+
+export type FrameRegistrySlots = {
+  root?: {
+    className?: string;
+  };
+  tile?: {
+    className?: string;
+  };
+};
+
 const Tile: FC<{
   id: string;
   label: string;
   description?: string;
   active: boolean;
+  slots?: FrameRegistrySlots;
   Icon: FC<any>;
   onSelect: (id: string) => void;
-}> = ({ id, label, description, active, Icon, onSelect }) => {
+}> = ({ id, label, description, active, slots = {}, Icon, onSelect }) => {
   return (
     <div
       className={mx(
-        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 bg-gray-200 drop-shadow-md',
-        '[&>div>svg]:hover:text-black hover:bg-blue-200',
-        active && 'bg-blue-300 text-black'
+        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 cursor-pointer bg-paper-1-bg hover:bg-selection-hover border',
+        active && '!bg-selection-bg border-selection-border',
+        slots.root?.className
       )}
       onClick={() => onSelect(id)}
     >
       <div className='flex flex-1 flex-col'>
-        <h2 className='text-xl font-display font-medium text-black mb-1'>{label}</h2>
+        <h2 className='text-xl font-display font-medium mb-1'>{label}</h2>
         <div className='text-black'>{description}</div>
       </div>
-      <div className='flex flex-col justify-center ml-2 text-black'>
+      <div className='flex flex-col justify-center ml-2'>
         <Icon weight='duotone' className={mx(getSize(16), '[&>*]:stroke-[8]')} />
       </div>
     </div>
   );
 };
 
-export const FrameRegistry = () => {
+export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }) => {
   const space = useSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>(ExtensionType.FRAME);
@@ -107,6 +119,7 @@ export const FrameRegistry = () => {
                   id={id!}
                   label={displayName ?? id!}
                   description={description}
+                  slots={slots}
                   Icon={Icon}
                   onSelect={handleSelect}
                   active={

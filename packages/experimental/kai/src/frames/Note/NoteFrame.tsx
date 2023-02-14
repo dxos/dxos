@@ -59,7 +59,7 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
         </div>
 
         {/* Icons */}
-        <div className='flex shrink-0 pl-3'>
+        <div className='flex shrink-0 pl-2'>
           <div className='invisible group-hover:visible text-gray-500'>
             <Button compact variant='ghost' onClick={handleDelete} className='mbs-1 mie-1'>
               <XCircle className={getSize(6)} />
@@ -146,8 +146,8 @@ export const NoteFrame = () => {
       layout={layout}
       classes={{
         tile: {
-          root: 'bg-yellow-100 w-sidebar shadow select-none cursor-pointer text-black',
-          selected: 'shadow-lg ring-1 ring-selection-border'
+          root: 'bg-yellow-100 w-sidebar select-none cursor-pointer shadow-1',
+          selected: 'ring-1 ring-selection-border'
         }
       }}
       Content={TileContent}
