@@ -9,7 +9,7 @@ import { Space } from '@dxos/client';
 import {
   Avatar,
   defaultGroup,
-  defaultHover,
+  hover,
   defaultFocus,
   useTranslation,
   defaultDisabled,
@@ -39,7 +39,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             className={mx(
               defaultGroup({ elevation: 1, rounding: 'rounded', spacing: 'p-2' }),
               'flex items-stretch gap-2 mbe-2',
-              defaultHover({}),
+              hover(),
               defaultFocus
             )}
           >

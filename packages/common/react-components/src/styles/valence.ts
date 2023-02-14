@@ -25,7 +25,7 @@ export const valenceColorText = (valence?: MessageValence) => {
   }
 };
 
-export const neutralInputBorder = 'border-neutral-500 dark:border-neutral-600';
+export const neutralInputBorder = 'border-transparent dark:border-transparent';
 export const successInputBorder = 'border-success-500 dark:border-success-600';
 export const infoInputBorder = 'border-info-500 dark:border-info-600';
 export const warningInputBorder = 'border-warning-500 dark:border-warning-600';

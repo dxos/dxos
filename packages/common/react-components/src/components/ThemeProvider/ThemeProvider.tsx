@@ -15,8 +15,10 @@ import { defaultFocus } from '../../styles';
 import { hasIosKeyboard, mx } from '../../util';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
+export type ThemeVariant = 'app' | 'os';
+
 export interface ThemeContextValue {
-  themeVariant: 'app' | 'os';
+  themeVariant: ThemeVariant;
   hasIosKeyboard?: boolean;
 }
 
@@ -30,14 +32,12 @@ export type ThemeProviderProps = PropsWithChildren<{
 
 export const ThemeContext = createContext<ThemeContextValue>({ themeVariant: 'app' });
 
-const Null = () => null;
-
 export const ThemeProvider = ({
   children,
   tooltipProviderProps,
   toastProviderProps,
   toastViewportProps,
-  fallback = <Null />,
+  fallback = null,
   resourceExtensions,
   appNs,
   themeVariant = 'app'

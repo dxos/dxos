@@ -5,7 +5,7 @@
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
-import { defaultFocus, defaultHover, defaultInlineSeparator } from '../../styles';
+import { defaultFocus, hover, defaultInlineSeparator } from '../../styles';
 import { mx } from '../../util';
 import { defaultAppButtonColors, primaryAppButtonColors } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
@@ -63,7 +63,7 @@ const NavMenuInvokerItem = forwardRef(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryAppButtonColors : defaultAppButtonColors,
             defaultFocus,
-            defaultHover({})
+            hover()
           )}
         >
           {children}
@@ -95,7 +95,7 @@ const NavMenuLinkItem = forwardRef(
           active ? primaryAppButtonColors : defaultAppButtonColors,
           active ? 'font-medium' : 'font-normal',
           defaultFocus,
-          defaultHover({}),
+          hover(),
           triggerLinkProps.className
         )}
       >
@@ -118,7 +118,7 @@ const NavMenuTooltipLinkItem = forwardRef(
             active ? primaryAppButtonColors : defaultAppButtonColors,
             active ? 'font-medium' : 'font-normal',
             defaultFocus,
-            defaultHover({}),
+            hover(),
             triggerLinkProps.className
           )}
         >

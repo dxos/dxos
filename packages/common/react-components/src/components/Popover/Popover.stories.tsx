@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { defaultFocus, defaultHover, defaultActive } from '../../styles';
+import { defaultFocus, hover, defaultActive } from '../../styles';
 import { mx } from '../../util';
 import { Avatar } from '../Avatar';
 import { Button } from '../Button';
@@ -29,7 +29,7 @@ export const AvatarTrigger = {
         slots={{
           root: {
             tabIndex: 0,
-            className: mx('button-elevation cursor-pointer rounded-md', defaultHover({}), defaultFocus, defaultActive)
+            className: mx('button-elevation cursor-pointer rounded-md', hover(), defaultFocus, defaultActive)
           }
         }}
         label={<span className='sr-only'>Open popover</span>}

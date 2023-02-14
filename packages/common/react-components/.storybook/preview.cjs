@@ -1,5 +1,4 @@
-import React, {createElement, useEffect} from 'react';
-import {useDarkMode} from 'storybook-dark-mode';
+import React, {createElement} from 'react';
 import {ThemeProvider} from '../src';
 
 export const parameters = {
@@ -10,23 +9,13 @@ export const parameters = {
       date: /Date$/,
     },
   },
+  darkMode: {
+    darkClass: 'dark',
+    lightClass: '',
+    stylePreview: true
+  }
 }
 
-const ThemeWrapper = ({children}) => {
-  // render your custom theme provider
-  const darkMode = useDarkMode();
-  useEffect(() => {
-    document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
-  }, [darkMode])
-  return children;
-};
-
 export const decorators = [
-  (Story) => createElement(ThemeWrapper,
-    {
-      children: createElement(ThemeProvider,
-        {children: createElement(Story)}
-      )
-    }
-  )
+  (Story) => createElement(ThemeProvider, {children: createElement(Story)})
 ];
