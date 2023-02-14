@@ -163,7 +163,6 @@ export class Generator {
   };
 }
 
-// TODO(burdon): TextObject initial state isn't replicated.
 // TODO(burdon): Factor out into TextModel.
 const createTextObjectContent = (content: TextObject, sentences = 5) => {
   // https://prosemirror.net/docs/guide/#doc

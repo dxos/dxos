@@ -40,14 +40,13 @@ export const DocumentFrame = withReactor(() => {
     <div className='flex flex-1 overflow-hidden justify-center'>
       <div className='flex flex-col w-full md:max-w-[800px]'>
         <div className='m-0 md:m-4 overflow-y-auto shadow-1'>
-          {/* TODO(burdon): Why is label required? */}
           {/* TODO(burdon): Throttle input. */}
           <Input
             value={object.title}
             onChange={(event) => {
               object.title = event.target.value;
             }}
-            label=''
+            label='title'
             placeholder='Title'
             slots={{
               root: {
