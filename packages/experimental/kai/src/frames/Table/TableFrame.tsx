@@ -77,7 +77,7 @@ export const TableFrame = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden px-2'>
-      <div className='flex p-2'>
+      <div className='flex p-2 py-4'>
         <div className='mr-4'>
           <Selector options={types} value={type.id} onSelect={handleSelect} />
         </div>
@@ -91,8 +91,8 @@ export const TableFrame = () => {
         columns={type.columns}
         data={objects}
         slots={{
-          header: { className: 'bg-panel-bg' },
-          row: { className: 'hover:bg-selection-hover odd:bg-table-row-odd even:bg-table-row-even' }
+          header: { className: 'bg-paper-1-bg' },
+          row: { className: 'hover:bg-selection-hover odd:bg-table-rowOdd even:bg-table-rowEven' }
         }}
       />
       {/* </div> */}

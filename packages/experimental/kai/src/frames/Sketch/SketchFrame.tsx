@@ -140,7 +140,7 @@ export const SketchFrame = withReactor(() => {
         <ReactSketchCanvas
           ref={canvasRef}
           style={{}}
-          className='shadow-md'
+          className='shadow-1'
           width={`${dimensions.width}px`}
           height={`${dimensions.height}px`}
           strokeWidth={strokeWidth}
@@ -158,12 +158,12 @@ export const SketchFrame = withReactor(() => {
 
         <div className='flex items-center'>
           {sizes.map(({ weight, width }, i) => (
-            <Button compact variant='ghost' key={i} onClick={() => setStrokeWidth(width)}>
+            <div key={i} onClick={() => setStrokeWidth(width)}>
               <ScribbleLoop
                 weight={weight}
-                className={mx(getSize(8), 'ml-1', width === strokeWidth && 'bg-gray-200')}
+                className={mx(getSize(8), 'ml-1', width === strokeWidth && 'bg-selection-bg')}
               />
-            </Button>
+            </div>
           ))}
         </div>
 

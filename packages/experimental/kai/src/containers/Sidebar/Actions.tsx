@@ -123,7 +123,7 @@ export const Actions = () => {
     .flat() as Action[];
 
   return (
-    <div className='flex shrink-0 p-2 px-4'>
+    <div className='flex shrink-0 p-2 px-2'>
       {actions.map((action, i) => {
         const { Icon, handler, title } = action;
         return (

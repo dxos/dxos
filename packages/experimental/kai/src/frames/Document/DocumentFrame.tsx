@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { id, useQuery, withReactor } from '@dxos/react-client';
-import { Input } from '@dxos/react-components';
+import { Input, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
 import { createSpacePath, useFrameState } from '../../hooks';
@@ -39,7 +39,7 @@ export const DocumentFrame = withReactor(() => {
   return (
     <div className='flex flex-1 overflow-hidden justify-center'>
       <div className='flex flex-col w-full md:max-w-[800px]'>
-        <div className='m-0 md:m-4 shadow-lg overflow-y-auto '>
+        <div className='m-0 md:m-4 overflow-y-auto shadow-1'>
           {/* TODO(burdon): Why is label required? */}
           {/* TODO(burdon): Throttle input. */}
           <Input
@@ -51,7 +51,7 @@ export const DocumentFrame = withReactor(() => {
             placeholder='Title'
             slots={{
               root: {
-                className: 'px-6 m-0 my-6'
+                className: 'm-0 px-6 py-6 bg-paper-bg'
               },
               input: {
                 className: 'p-2 border-0 text-xl',
@@ -65,7 +65,10 @@ export const DocumentFrame = withReactor(() => {
             slots={{
               root: { className: 'grow' },
               editor: {
-                className: 'z-0 bg-paper-bg text-black h-full w-full px-8 pb-16 min-bs-[12em] text-xl md:text-base',
+                className: mx(
+                  'z-0 bg-paper-bg text-black h-full w-full px-8 pb-16 min-bs-[12em]',
+                  'text-xl md:text-base bg-paper-bg'
+                ),
                 spellCheck
               }
             }}

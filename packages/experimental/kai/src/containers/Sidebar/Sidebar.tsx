@@ -10,15 +10,24 @@ import { useHref, useNavigate, useParams } from 'react-router-dom';
 import { CancellableInvitationObservable, Invitation, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useClient, useMembers, useSpaces } from '@dxos/react-client';
-import { Button, getSize } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
-import { useSpace, createSpacePath, useAppState, createInvitationPath, Section, createSectionPath } from '../../hooks';
+import {
+  useSpace,
+  createSpacePath,
+  useAppState,
+  createInvitationPath,
+  Section,
+  createSectionPath,
+  useTheme
+} from '../../hooks';
 import { MemberList } from '../MembersList';
 import { SpaceList } from '../SpaceList';
 import { Actions } from './Actions';
 
 export const Sidebar = () => {
+  const theme = useTheme();
   const { frame } = useParams();
   const navigate = useNavigate();
   const client = useClient();
@@ -96,10 +105,13 @@ export const Sidebar = () => {
 
   // TODO(burdon): Mobile slider (full width, no blur).
   return (
-    <div role='none' className='flex flex-col overflow-auto min-bs-full bg-sidebar-bg border-r'>
+    <div
+      role='none'
+      className={mx('flex flex-col overflow-auto min-bs-full bg-sidebar-bg', theme.panel === 'flat' && 'border-r')}
+    >
       {/* Match Frame selector. */}
-      <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar border-b'>
-        <div className='flex justify-between px-4'>
+      <div className={mx('flex flex-col-reverse h-toolbar bg-appbar-toolbar', theme.panel === 'flat' && 'border-b')}>
+        <div className='flex justify-between px-2'>
           <div className='flex items-center'>
             {/* TODO(burdon): Remove initial focus. */}
             <Button compact variant='ghost' className='flex' title='Create new space' onClick={handleCreateSpace}>

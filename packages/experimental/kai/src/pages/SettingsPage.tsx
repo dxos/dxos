@@ -21,26 +21,25 @@ const SettingsPage = () => {
   // TODO(burdon): Toggle settings with local storage.
   return (
     <div className='flex overflow-hidden w-full h-full'>
-      <div className='flex flex-1 overflow-hidden drop-shadow-md justify-center'>
-        <div className='flex flex-1 flex-col overflow-y-scroll border-b text-sm w-full md:w-[700px] md:max-w-[700px]'>
-          <div className='flex items-center justify-between p-2 bg-appbar-header'>
-            <div className='flex items-center'>
-              <Link to='/' title='Home'>
-                <Bug className={mx(getSize(8))} />
-              </Link>
-            </div>
+      <div className='flex flex-col mx-auto overflow-hidden align-center'>
+        <div className='flex items-center justify-between p-2 bg-appbar-header'>
+          <div className='flex items-center'>
+            <Link to='/' title='Home'>
+              <Bug className={mx(getSize(8))} />
+            </Link>
           </div>
-
+        </div>
+        <div className='flex flex-1 flex-col overflow-y-scroll text-sm w-full md:w-[800px] md:max-w-[800px] shadow-1'>
           <div className='flex flex-col'>
-            <h2 className='p-2'>STATE</h2>
-            <SyntaxHighlighter className='w-full mb-4' language='json' style={style}>
+            <h2 className='p-2 bg-paper-3-bg'>STATE</h2>
+            <SyntaxHighlighter className='w-full' language='json' style={style}>
               {JSON.stringify(state, undefined, 2)}
             </SyntaxHighlighter>
           </div>
 
           <div className='flex flex-col'>
-            <h2 className='p-2'>CONFIG</h2>
-            <SyntaxHighlighter className='w-full mb-4' language='json' style={style}>
+            <h2 className='p-2 bg-paper-3-bg'>CONFIG</h2>
+            <SyntaxHighlighter className='w-full' language='json' style={style}>
               {JSON.stringify(client.config.values, undefined, 2)}
             </SyntaxHighlighter>
           </div>

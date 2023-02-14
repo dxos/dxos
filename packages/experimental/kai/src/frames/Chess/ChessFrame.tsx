@@ -98,13 +98,13 @@ const Play: FC<{
           </Button>
         </div>
         <div className='flex-1' />
-        <div className='absolute right-6 hidden md:flex flex-col w-[160px] justify-center shadow'>
+        <div className='absolute right-6 hidden md:flex flex-col w-[160px] justify-center shadow-1'>
           <ChessPanel model={model} orientation={orientation} onFlip={handleFlip} />
         </div>
       </div>
 
       <div className='flex flex-1 justify-center items-center'>
-        <div className='w-full m-4 md:w-[700px] shadow'>
+        <div className='w-full m-4 md:w-[700px] shadow-1'>
           <Chessboard model={model} orientation={orientation} pieces={chessPieces[pieces]} onUpdate={handleUpdate} />
         </div>
       </div>
@@ -135,10 +135,13 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
-    <div className='flex justify-center items-center shadow' style={{ width: gridSize, height: gridSize }}>
+    <div
+      className='flex justify-center items-center bg-paper-1-bg shadow-1'
+      style={{ width: gridSize, height: gridSize }}
+    >
       <div className='flex'>
         {onClick && (
-          <Button compact onClick={onClick}>
+          <Button compact variant='ghost' onClick={onClick}>
             <PlusCircle className={mx(getSize(16))} />
           </Button>
         )}
@@ -152,7 +155,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
         {games.map((game) => (
           <div
             key={game[id]}
-            className='shadow border'
+            className='shadow-1 border'
             style={{ width: gridSize, height: gridSize }}
             onClick={() => onSelect(game)}
           >

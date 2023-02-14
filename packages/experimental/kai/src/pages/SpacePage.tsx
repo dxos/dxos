@@ -2,15 +2,44 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import { CaretRight } from 'phosphor-react';
+import React, { useContext, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { mx } from '@dxos/react-components';
-import { PanelSidebarProvider } from '@dxos/react-ui';
+import { Button, getSize, mx } from '@dxos/react-components';
+import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { Section, createSpacePath, defaultFrameId, useFrameState, useFrames } from '../hooks';
+import { Section, createSpacePath, defaultFrameId, useFrameState, useFrames, useTheme } from '../hooks';
 import { ManageSpacePage } from '../pages';
+
+const Toolbar = () => {
+  const theme = useTheme();
+  const { displayState } = useContext(PanelSidebarContext);
+  const isOpen = displayState === 'show';
+  const toggleSidebar = useTogglePanelSidebar();
+
+  return (
+    <div
+      className={mx(
+        'flex flex-col-reverse bg-appbar-toolbar',
+        theme.panel === 'flat' && 'border-b',
+        'fixed inline-end-0 block-start-appbar bs-toolbar transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
+        isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
+      )}
+    >
+      <div className='flex'>
+        {!isOpen && (
+          <Button compact variant='ghost' className='mx-3 plb-1' onClick={toggleSidebar}>
+            {<CaretRight className={getSize(6)} />}
+          </Button>
+        )}
+
+        <FrameSelector />
+      </div>
+    </div>
+  );
+};
 
 /**
  * Home page with current space.
@@ -44,13 +73,10 @@ const SpacePage = () => {
       }}
     >
       <AppBar />
-      <div>
-        {/* TODO(burdon): Move sidebar open/close here. */}
-        <FrameSelector />
-      </div>
+      <Toolbar />
 
       {/* Main content. */}
-      <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-panel-bg'>
+      <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-paper-2-bg'>
         {/* TODO(burdon): Rename ManageSpacePage (not a page). */}
         {section === Section.SETTINGS && <ManageSpacePage />}
         {section === Section.REGISTRY && <FrameRegistry />}

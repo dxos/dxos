@@ -39,9 +39,8 @@ const Tile: FC<{
   return (
     <div
       className={mx(
-        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 cursor-pointer',
-        // '[&>div>svg]:hover:text-black hover:bg-blue-200',
-        // active && 'bg-blue-300 text-black',
+        'flex w-[240px] h-[140px] border-0 rounded-lg p-4 cursor-pointer bg-paper-1-bg hover:bg-selection-hover border',
+        active && '!bg-selection-bg border-selection-border',
         slots.root?.className
       )}
       onClick={() => onSelect(id)}

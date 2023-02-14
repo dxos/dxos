@@ -146,8 +146,8 @@ export const NoteFrame = () => {
       layout={layout}
       classes={{
         tile: {
-          root: 'bg-yellow-100 w-sidebar shadow select-none cursor-pointer text-black',
-          selected: 'shadow-lg ring-1 ring-selection-border'
+          root: 'bg-yellow-100 w-sidebar select-none cursor-pointer shadow-1',
+          selected: 'ring-1 ring-selection-border'
         }
       }}
       Content={TileContent}

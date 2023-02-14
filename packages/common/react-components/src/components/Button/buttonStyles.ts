@@ -32,6 +32,7 @@ export const buttonStyles = (
     resolvedVariant === 'outline' &&
       'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
     themeVariantFocus(themeVariant),
+    'outline-none', // TODO(burdon): Temporary until styled.
     props.disabled
       ? defaultDisabled
       : !isOsTheme && resolvedVariant !== 'outline' && resolvedVariant !== 'ghost' && 'button-elevation',

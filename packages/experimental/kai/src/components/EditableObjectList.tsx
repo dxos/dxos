@@ -49,7 +49,7 @@ export const EditableObjectList = <T extends Document>({
   const ActionIcon = Action ?? Circle;
 
   return (
-    <div role='none' className='p-1 is-full'>
+    <div role='none' className='is-full'>
       <List labelId='todo'>
         {objects.map((object) => {
           const isSelected = object[id] === selected;
@@ -59,7 +59,10 @@ export const EditableObjectList = <T extends Document>({
                 <Button
                   variant='ghost'
                   onClick={() => onSelect?.(object[id])}
-                  className={mx('p-0 flex items-center justify-center gap-1', isSelected ? 'text-selection-text' : '')}
+                  className={mx(
+                    'p-0 ml-2 flex items-center justify-center gap-1',
+                    isSelected ? 'text-selection-text' : ''
+                  )}
                 >
                   <Icon className={getSize(6)} />
                 </Button>
@@ -93,7 +96,7 @@ export const EditableObjectList = <T extends Document>({
       </List>
 
       {onCreate && (
-        <Button compact variant='ghost' onClick={handleCreate} className='mbs-2'>
+        <Button compact variant='ghost' onClick={handleCreate} className='mbs-2 mx-2'>
           <Plus className={getSize(6)} />
         </Button>
       )}
