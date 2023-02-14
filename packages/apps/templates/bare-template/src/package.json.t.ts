@@ -18,7 +18,7 @@ export namespace Features {
     dependencies: {
       '@dxos/react-client': depVersion,
       react: '^18.2.0',
-      'react-dom': '^18.2.0',
+      'react-dom': '^18.2.0'
       // 'react-router-dom': '^6.3.0'
     },
     devDependencies: {
@@ -60,7 +60,6 @@ export namespace Features {
       '@storybook/mdx2-csf': '^0.0.3',
       '@storybook/testing-library': '^0.0.13',
       'require-from-string': '^2.0.2',
-      'storybook-dark-mode': '^1.1.2',
       webpack: '^5.74.0'
     }
   });

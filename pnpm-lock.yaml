@@ -1388,7 +1388,6 @@ importers:
       react-dom: ^18.2.0
       react-i18next: ^11.18.6
       react-table: ^7.8.0
-      storybook-dark-mode: ^2.0.6
       tailwind-merge: ^1.8.0
       tailwindcss: ^3.1.8
       tailwindcss-logical: ^3.0.0
@@ -1447,7 +1446,6 @@ importers:
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      storybook-dark-mode: 2.0.6_biqbaboplfbrettd7655fr4n2y
       vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
 
   packages/common/sentry:

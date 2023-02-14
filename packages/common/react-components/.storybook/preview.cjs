@@ -1,4 +1,4 @@
-import React, {createElement} from 'react';
+import React, {createElement, useEffect} from 'react';
 import {ThemeProvider} from '../src';
 
 export const parameters = {
@@ -8,14 +8,34 @@ export const parameters = {
       color: /(background|color)$/i,
       date: /Date$/,
     },
-  },
-  darkMode: {
-    darkClass: 'dark',
-    lightClass: '',
-    stylePreview: true
   }
 }
 
-export const decorators = [
-  (Story) => createElement(ThemeProvider, {children: createElement(Story)})
-];
+export const globalTypes = {
+  theme: {
+    name: 'Theme',
+    description: 'Global theme for components',
+    defaultValue: 'light',
+    toolbar: {
+      // The icon for the toolbar item
+      icon: 'circlehollow',
+      // Array of options
+      items: [
+        { value: 'light', icon: 'circlehollow', title: 'light' },
+        { value: 'dark', icon: 'circle', title: 'dark' },
+      ],
+      // Property that specifies if the name of the item will be displayed
+      showName: true,
+    },
+  },
+}
+
+const withTheme = (StoryFn, context) => {
+  const theme = context?.parameters?.theme || context?.globals?.theme;
+  useEffect(()=>{
+    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
+  }, [theme])
+  return createElement(ThemeProvider, {children: createElement(StoryFn)})
+}
+
+export const decorators = [withTheme];
