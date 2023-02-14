@@ -56,25 +56,6 @@ service SigningService {
 }
 
 //
-// Halo
-//
-
-message Identity {
-  dxos.keys.PublicKey identity_key = 1;
-  halo.credentials.ProfileDocument profile = 2;
-}
-
-message RecoverProfileRequest {
-  bytes recovery_key = 1;
-}
-
-service HaloService {
-  rpc RecoverProfile(RecoverProfileRequest) returns (Identity);
-  rpc UpdateProfile(Identity) returns (google.protobuf.Empty);
-  rpc QueryProfile(google.protobuf.Empty) returns (stream Identity);
-}
-
-//
 // Devices
 //
 
@@ -119,9 +100,8 @@ message QueryMembersResponse {
   dxos.halo.credentials.IdentityProfile members = 1;
 }
 
-message CredentialsPackage {
-  dxos.keys.PublicKey space_key = 1;
-  repeated dxos.halo.credentials.Credential credentials = 2;
+message CredentialsBatch {
+  repeated dxos.halo.credentials.Credential credentials = 1;
 }
 
 message QueryCredentialsRequest {
@@ -134,8 +114,10 @@ service SpacesService {
 
   // TODO(dmaretskyi): I dont think we need a separate method here. We can include members in the Space object.
   rpc QueryMembers(QueryMembersRequest) returns (stream QueryMembersResponse);
+
+  rpc GetHaloSpaceKey(google.protobuf.Empty) returns (dxos.keys.PublicKey);
   
-  rpc WriteCredentials(CredentialsPackage) returns (google.protobuf.Empty);
+  rpc WriteHaloCredentials(CredentialsBatch) returns (google.protobuf.Empty);
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 }
 

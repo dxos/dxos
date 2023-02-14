@@ -52,7 +52,10 @@ export class ClientServicesHost implements ClientServicesProvider {
   private readonly _networkManager: NetworkManager;
   private readonly _storage: Storage;
 
-  private _serviceContext!: ServiceContext;
+  /**
+   * @internal
+   */
+  _serviceContext!: ServiceContext;
   private _open = false;
 
   constructor({
@@ -143,7 +146,7 @@ export class ClientServicesHost implements ClientServicesProvider {
         () => this._serviceContext.dataSpaceManager ?? raise(new Error('SpaceManager not initialized'))
       ),
 
-      SpacesService: new SpacesServiceImpl(this._serviceContext.spaceManager),
+      SpacesService: new SpacesServiceImpl(this._serviceContext.spaceManager, this._serviceContext.identityManager),
 
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
