@@ -9,9 +9,8 @@ import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
 
 import { withReactor } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 
-import { Button } from '../../components';
 import { useFileDownload, useIpfsClient, useSpace } from '../../hooks';
 import { File, Path, Sketch } from '../../proto';
 
@@ -136,7 +135,7 @@ export const SketchFrame = withReactor(() => {
   // https://www.npmjs.com/package/react-color
 
   return (
-    <div className='flex flex-col flex-1'>
+    <div className='flex flex-col bs-full'>
       <div className='flex flex-col flex-1 items-center justify-center overflow-auto bg-gray-300'>
         <ReactSketchCanvas
           ref={canvasRef}
@@ -159,7 +158,7 @@ export const SketchFrame = withReactor(() => {
 
         <div className='flex items-center'>
           {sizes.map(({ weight, width }, i) => (
-            <Button key={i} onClick={() => setStrokeWidth(width)}>
+            <Button compact variant='ghost' key={i} onClick={() => setStrokeWidth(width)}>
               <ScribbleLoop
                 weight={weight}
                 className={mx(getSize(8), 'ml-1', width === strokeWidth && 'bg-gray-200')}
@@ -171,14 +170,14 @@ export const SketchFrame = withReactor(() => {
         <div className='flex-1' />
 
         <div className='flex items-center'>
-          <Button title='Clear' onClick={handleClear}>
-            <Trash className={mx(getSize(6), 'mr-2')} />
+          <Button compact variant='ghost' title='Clear' onClick={handleClear}>
+            <Trash className={getSize(6)} />
           </Button>
-          <Button title='Download' onClick={handleDownload}>
-            <DownloadSimple className={mx(getSize(6), 'mr-2')} />
+          <Button compact variant='ghost' title='Download' onClick={handleDownload}>
+            <DownloadSimple className={getSize(6)} />
           </Button>
-          <Button title='Upload' onClick={handleUpload}>
-            <UploadSimple className={mx(getSize(6), 'mr-2')} />
+          <Button compact variant='ghost' title='Upload' onClick={handleUpload}>
+            <UploadSimple className={getSize(6)} />
           </Button>
         </div>
       </div>

@@ -8,9 +8,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { TextObject } from '@dxos/echo-schema';
 import { compile, Editor, Frame } from '@dxos/framebox';
 import { useQuery, withReactor } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { getSize, Button } from '@dxos/react-components';
 
-import { Button } from '../../components';
 import { EmbeddedFrame } from '../../frame-container';
 import { useSpace } from '../../hooks';
 
@@ -61,7 +60,7 @@ export const SandboxFrame = withReactor(() => {
     return (
       <div className='flex shrink-0 w-full justify-between p-2 bg-gray-200'>
         <h2>{selected.name}</h2>
-        <Button onClick={handleCompile}>
+        <Button compact variant='ghost' onClick={handleCompile}>
           <PlayCircle className={getSize(6)} />
         </Button>
       </div>
