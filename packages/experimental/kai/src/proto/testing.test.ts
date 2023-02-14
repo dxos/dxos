@@ -25,5 +25,6 @@ test('generate test data', async () => {
     documents: { min: 1, max: 1 },
     notes: { min: 1, max: 1 }
   });
+
   await generator.generate();
 });

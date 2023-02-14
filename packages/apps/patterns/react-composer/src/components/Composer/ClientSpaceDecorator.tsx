@@ -12,9 +12,10 @@ import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
+import { ClientProvider } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
-import { ClientProvider } from '../client';
+// TODO(burdon): Move back to @dxos/react-client/testing after resolving ESM issues.
 
 /**
  * Storybook decorator to setup identity for n peers and join them into a single space.

@@ -63,7 +63,6 @@ export const Sidebar = () => {
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
-    // await space.properties.set('title', 'XXX'); // TODO(burdon): Not implemented.
     navigate(createSpacePath(space.key));
   };
 
