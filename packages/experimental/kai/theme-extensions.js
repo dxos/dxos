@@ -67,13 +67,13 @@ module.exports = {
       },
 
       sidebar: {
-        bg: neutral[200]
+        bg: neutral[50]
       },
 
       selection: {
         // TODO(burdon): 'selected'
-        hover: secondary[200],
-        bg: secondary[300],
+        hover: secondary[100],
+        bg: secondary[200],
         text: secondary[700],
         border: secondary[400]
       },

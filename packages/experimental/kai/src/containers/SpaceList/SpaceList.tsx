@@ -62,7 +62,7 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
         )}
       </div>
 
-      {selected && <div className='flex bg-paper-1-bg'>{children}</div>}
+      {selected && <div className='flex bg-paper-bg'>{children}</div>}
     </div>
   );
 };
