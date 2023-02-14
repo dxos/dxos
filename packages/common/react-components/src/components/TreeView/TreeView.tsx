@@ -59,25 +59,30 @@ export type TreeViewItem = {
   items?: TreeViewItem[];
 };
 
-// TODO(burdon): Classes.
 // TODO(burdon): Navigate up/down.
 // TODO(burdon): Unselect on Escape.
 
-export const TreeView: FC<{
+export type TreeViewSlots = {
+  root?: {
+    className?: string;
+  };
+  selected?: {
+    className?: string;
+  };
+  title?: {
+    className?: string;
+  };
+};
+
+export type TreeViewProps = {
   items: TreeViewItem[];
-  highlightClassName?: string;
-  titleClassName?: string;
+  slots?: TreeViewSlots;
   onSelect?: (item: TreeViewItem) => void;
   selected?: string;
   expanded?: string[];
-}> = ({
-  items,
-  highlightClassName = 'bg-gray-300',
-  titleClassName = 'text-blue-600 text-base',
-  onSelect,
-  selected,
-  expanded = []
-}) => {
+};
+
+export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selected, expanded = [] }) => {
   const [openMap, setOpenMap] = useState<{ [key: string]: boolean }>(
     expanded?.reduce((map, id) => ({ ...map, [id]: true }), {})
   );
@@ -106,7 +111,11 @@ export const TreeView: FC<{
     return (
       <div className='flex flex-1 flex-col'>
         <div
-          className={mx('flex select-none cursor-pointer pl-3', item.id === selected && highlightClassName)}
+          className={mx(
+            'flex select-none cursor-pointer pl-3',
+            slots.root?.className,
+            item.id === selected && slots.selected?.className
+          )}
           onClick={() => handleSelection(item)}
         >
           <div className='flex items-center' style={{ marginLeft: depth * 16 }}>
@@ -120,7 +129,7 @@ export const TreeView: FC<{
             )}
             {Element || (
               <div style={{ lineHeight: 1.6 }}>
-                <span className={titleClassName}>{item.title}</span>
+                <span className={slots.title?.className}>{item.title}</span>
                 {!item.items && item.value !== undefined && (
                   // eslint-disable-next-line no-octal-escape
                   <span className='pl-2 empty:after:content-["\00a0"]'>{String(item.value)}</span>

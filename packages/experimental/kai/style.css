@@ -9,17 +9,9 @@ html, body, #root {
 }
 
 body {
-  overscroll-behavior: none;
   overflow: hidden;
+  overscroll-behavior: none;
   @apply font-body font-normal text-base;
-}
-
-.logo {
-  transform: rotate(300deg);
-  transition: transform 750ms ease-in-out;
-}
-.logo:hover {
-  transform: rotate(-300deg);
 }
 
 /*

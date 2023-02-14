@@ -33,17 +33,17 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
   return (
     <div
       className={mx(
-        'flex flex-col overflow-hidden mx-3 first:mt-3 mb-3 rounded border border-panel-border',
+        'flex flex-col overflow-hidden',
         'hover:bg-selection-hover',
         selected && 'hover:bg-selection-bg bg-selection-bg border-selection-border'
       )}
     >
-      <div className={mx('flex w-full overflow-hidden p-2 pl-3 pr-4 items-center')}>
+      <div className={mx('flex w-full overflow-hidden p-2 px-4 items-center')}>
         <div
           className='flex flex-1 overflow-hidden font-mono cursor-pointer'
           onClick={() => onAction(SpaceItemAction.SELECT)}
         >
-          <div className={mx('flex mr-3', selected && 'text-selection-text')}>
+          <div className={mx('flex mr-4', selected && 'text-selection-text')}>
             <Planet className={getSize(6)} />
           </div>
 
@@ -62,7 +62,7 @@ const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
         )}
       </div>
 
-      {selected && <div className='flex bg-white rounded-b'>{children}</div>}
+      {selected && <div className='flex bg-paper-bg'>{children}</div>}
     </div>
   );
 };

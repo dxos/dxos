@@ -7,7 +7,7 @@ import React, { FC, PropsWithChildren } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { MetagraphClientFake } from '@dxos/metagraph';
-import { appkitTranslations, ErrorProvider, Fallback, FatalError } from '@dxos/react-appkit';
+import { appkitTranslations, ErrorProvider, FatalError } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
 import { MetagraphProvider } from '@dxos/react-metagraph';
@@ -40,11 +40,7 @@ export const App: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initia
   };
 
   return (
-    <ThemeProvider
-      appNs='kai'
-      resourceExtensions={[appkitTranslations, kaiTranslations]}
-      fallback={<Fallback message='Loading...' />}
-    >
+    <ThemeProvider appNs='kai' resourceExtensions={[appkitTranslations, kaiTranslations]}>
       <ErrorProvider>
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={() => clientProvider(initialState.dev ?? false)}>

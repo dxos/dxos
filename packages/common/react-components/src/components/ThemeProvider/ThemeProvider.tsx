@@ -30,12 +30,14 @@ export type ThemeProviderProps = PropsWithChildren<{
 
 export const ThemeContext = createContext<ThemeContextValue>({ themeVariant: 'app' });
 
+const Null = () => null;
+
 export const ThemeProvider = ({
   children,
   tooltipProviderProps,
   toastProviderProps,
   toastViewportProps,
-  fallback,
+  fallback = <Null />,
   resourceExtensions,
   appNs,
   themeVariant = 'app'
