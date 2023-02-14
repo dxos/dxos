@@ -16,7 +16,7 @@ export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   const organizations: Organization[] = useQuery(space, Organization.filter());
 
   return (
-    <List labelId='todo' slots={{ root: { className: 'p-2' } }}>
+    <List labelId='todo'>
       {organizations.map((organization) => (
         <OrganizationListItem key={organization[id]} organization={organization} />
       ))}

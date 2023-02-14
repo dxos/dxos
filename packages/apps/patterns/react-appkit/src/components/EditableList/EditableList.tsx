@@ -260,6 +260,7 @@ export const EditableListItem = forwardRef<HTMLLIElement, EditableListItemProps>
           </Input>
           <span className='sr-only'>{title}</span>
         </ListItemHeading>
+
         {onClickDelete && (
           <ListItemEndcap>
             <DropdownMenu

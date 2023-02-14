@@ -55,7 +55,7 @@ export type TreeViewItem = {
   title?: string; // TODO(burdon): Rename label; optional component.
   value?: any;
   Element?: ReactNode;
-  Icon?: FC;
+  Icon?: FC<any>;
   items?: TreeViewItem[];
 };
 
@@ -120,11 +120,11 @@ export const TreeView: FC<TreeViewProps> = ({ items, slots = {}, onSelect, selec
         >
           <div className='flex items-center' style={{ marginLeft: depth * 16 }}>
             <div style={{ width: 20 }} onClick={() => handleToggle(item)}>
-              {sub && (open ? <CaretDown className={getSize(3)} /> : <CaretRight className={getSize(3)} />)}
+              {sub && (open ? <CaretDown className={getSize(4)} /> : <CaretRight className={getSize(4)} />)}
             </div>
             {Icon && (
-              <div className='pr-1'>
-                <Icon />
+              <div className='pl-1 pr-2'>
+                <Icon className={getSize(6)} />
               </div>
             )}
             {Element || (

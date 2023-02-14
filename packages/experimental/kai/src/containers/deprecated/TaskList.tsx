@@ -115,7 +115,7 @@ export const TaskItem: FC<{
   ({ task, onDelete, onSave, slots }) => {
     useReactorContext({
       onChange: () => {
-        onSave?.(task);
+        onSave?.(task); // TODO(burdon): Only required on create?
       }
     });
 

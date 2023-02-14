@@ -16,7 +16,7 @@ export const ContactList: FC<{ space: Space }> = ({ space }) => {
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   return (
-    <List labelId='todo' slots={{ root: { className: 'p-2' } }}>
+    <List labelId='todo'>
       {contacts.map((contact) => (
         <ContactListItem key={contact[id]} contact={contact} />
       ))}
@@ -40,11 +40,11 @@ export const ContactListItem: FC<{ contact: Contact }> = withReactor(({ contact 
           onChange={({ target: { value } }) => (contact.name = value)}
           slots={{
             root: { className: 'm-0' },
-            input: { spellCheck: false, className: 'p-1 mbs-1' },
+            input: { spellCheck: false, className: 'p-2' },
             label: { className: 'sr-only' }
           }}
         />
-        <div role='none' className='pis-1'>
+        <div role='none' className='px-2'>
           {contact.username && <div className='flex text-sm text-secondary-text'>{contact.username}</div>}
           {contact.email && <div className='flex text-sm text-secondary-text'>{contact.email}</div>}
           {contact.address && <div className='flex text-sm text-secondary-text'>{address(contact.address)}</div>}

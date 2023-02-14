@@ -28,7 +28,9 @@ export const Tile: FC<{
   return (
     <div className='flex flex-col w-full bg-paper-bg border-r overflow-hidden'>
       {header}
-      <div className={mx('flex flex-1 flex-col bg-paper-bg', scrollbar ? 'overflow-auto' : 'overflow-hidden')}>
+      <div
+        className={mx('flex flex-1 flex-col pr-2 py-2 bg-paper-bg', scrollbar ? 'overflow-auto' : 'overflow-hidden')}
+      >
         {children}
       </div>
     </div>
