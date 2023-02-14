@@ -10,7 +10,7 @@ import { useHref, useNavigate, useParams } from 'react-router-dom';
 import { CancellableInvitationObservable, Invitation, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useClient, useMembers, useSpaces } from '@dxos/react-client';
-import { Button, getSize, useTranslation, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 import { PanelSidebarContext, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import {
