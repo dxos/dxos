@@ -4,7 +4,7 @@
 
 import { scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { raise } from '@dxos/debug';
+import { raise, todo } from '@dxos/debug';
 import { SpaceManager, SpaceNotFoundError } from '@dxos/echo-db';
 import {
   QueryCredentialsRequest,
@@ -45,5 +45,9 @@ export class SpacesServiceImpl implements SpacesService {
       ctx.onDispose(() => processor.close());
       scheduleTask(ctx, () => processor.open());
     });
+  }
+
+  async writeCredentials() {
+    todo();
   }
 }
