@@ -12,8 +12,8 @@
       "require": "./dist/cjs/src/index.js"
     },
     "./proto/*": {
-      "browser": "./dist/esm/src/proto/gen/*",
-      "require": "./dist/cjs/src/proto/gen/*"
+      "browser": "./dist/esm/src/proto/gen/*.js",
+      "require": "./dist/cjs/src/proto/gen/*.js"
     }
   },
   "types": "dist/esm/src/index.d.ts",
