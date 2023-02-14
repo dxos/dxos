@@ -116,10 +116,7 @@
       ]
     },
     "preview": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "bundle"
-      ]
+      "inputs": ["production", "^production"]
     },
     "serve": {
       "inputs": ["production", "^production"],

@@ -20,13 +20,6 @@ module.exports = {
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
-      optimizeDeps: {
-        force: true,
-        include: [
-          ...viteConfig.optimizeDeps.include,
-          'storybook-dark-mode'
-        ]
-      },
       plugins: [
         viteConfig.plugins.find(plugin => plugin.name === 'dxos-config'),
         viteConfig.plugins.find(plugin => plugin.name === 'vite-plugin-dxos-ui-theme')
