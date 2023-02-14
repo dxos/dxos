@@ -98,6 +98,8 @@ export interface Space extends ISpace {
   createSnapshot(): Promise<SpaceSnapshot>;
 }
 
+const META_LOAD_TIMEOUT = 3000;
+
 export class SpaceProxy implements Space {
   private readonly _itemManager?: ItemManager;
   private readonly _experimental?: Experimental;
@@ -229,19 +231,26 @@ export class SpaceProxy implements Space {
 
     {
       // Wait for SpaceMeta document.
-      const waitForSpaceMeta = new Trigger();
-      const subscription = this._experimental!.db.query(SpaceMeta.filter()).subscribe((query: Query<SpaceMeta>) => {
-        if (query.getObjects().length === 1) {
-          this._data = query.getObjects()[0];
-          waitForSpaceMeta.wake();
+      const query = this._experimental!.db.query(SpaceMeta.filter());
+      if (query.getObjects().length === 1) {
+        this._data = query.getObjects()[0];
+      } else {
+        const waitForSpaceMeta = new Trigger();
+        const subscription = query.subscribe((query: Query<SpaceMeta>) => {
+          if (query.getObjects().length === 1) {
+            this._data = query.getObjects()[0];
+            waitForSpaceMeta.wake();
+            subscription();
+          }
+        });
+
+        try {
+          await waitForSpaceMeta.wait({ timeout: META_LOAD_TIMEOUT });
+        } catch {
+          throw new ApiError('SpaceMeta not found.');
+        } finally {
           subscription();
         }
-      });
-
-      try {
-        await asyncTimeout(waitForSpaceMeta.wait(), 3_000, new ApiError('SpaceMeta not found.'));
-      } finally {
-        subscription();
       }
     }
 
