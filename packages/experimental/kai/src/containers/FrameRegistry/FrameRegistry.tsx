@@ -19,7 +19,7 @@ enum ExtensionType {
 // TODO(burdon): Inject generic classes for slots from themecontext.
 
 export type FrameRegistrySlots = {
-  root: {
+  root?: {
     className?: string;
   };
   tile?: {
@@ -32,10 +32,10 @@ const Tile: FC<{
   label: string;
   description?: string;
   active: boolean;
-  slots: FrameRegistrySlots;
+  slots?: FrameRegistrySlots;
   Icon: FC<any>;
   onSelect: (id: string) => void;
-}> = ({ id, label, description, active, slots, Icon, onSelect }) => {
+}> = ({ id, label, description, active, slots = {}, Icon, onSelect }) => {
   return (
     <div
       className={mx(
