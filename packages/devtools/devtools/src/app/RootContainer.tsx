@@ -35,7 +35,6 @@ export const RootContainer = () => {
           selected={pathname}
           onSelect={handleSelect}
           expanded={sections.map((section) => section.id)}
-          titleClassName={'text-black pl-1 text-sm'}
         />
       </div>
 
