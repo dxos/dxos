@@ -1,0 +1,16 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.sdk.client;
+
+/**
+ * Space metadata object.
+ */
+message SpaceMeta {
+  option (object) = true;
+
+  string title = 1;
+}

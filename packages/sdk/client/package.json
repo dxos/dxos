@@ -19,6 +19,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "prebuild": "dxtype src/packlets/proto/schema.proto src/packlets/proto/gen/schema.ts"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -30,6 +33,7 @@
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-typegen": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
