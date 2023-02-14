@@ -42,6 +42,8 @@ class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {
 }
 
 export class TextModel extends Model<Doc, Mutation> {
+  private _unsubscribe?: () => void;
+
   static meta: ModelMeta = {
     type: 'dxos:model/text',
     stateMachine: () => new TextModelStateMachine(),
@@ -53,15 +55,11 @@ export class TextModel extends Model<Doc, Mutation> {
   constructor(
     meta: ModelMeta,
     itemId: ItemID,
-    getState: () => Doc, writeStream?: MutationWriter<Mutation>
+    getState: () => Doc,
+    writeStream?: MutationWriter<Mutation>
   ) {
     super(meta, itemId, getState, writeStream);
-
-    let unsubscribe = this._subscribeToDocUpdates();
-    this.update.on(() => {
-      unsubscribe();
-      unsubscribe = this._subscribeToDocUpdates();
-    });
+    this.initialize();
   }
 
   get doc(): Doc {
@@ -75,6 +73,15 @@ export class TextModel extends Model<Doc, Mutation> {
   // TODO(burdon): How is this different?
   get textContent() {
     return this._textContentInner(this.content);
+  }
+
+  initialize() {
+    this._unsubscribe = this._subscribeToDocUpdates();
+    this.update.on(() => {
+      this._unsubscribe?.();
+      this._unsubscribe = this._subscribeToDocUpdates();
+    });
+    this.update.emit(this);
   }
 
   private _subscribeToDocUpdates() {
