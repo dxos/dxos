@@ -10,10 +10,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { Serializer } from '@dxos/echo-schema';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient, useNetworkStatus } from '@dxos/react-client';
+import { useClient, useCurrentSpace, useNetworkStatus } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useFileDownload, useGenerator, useSpace, createSpacePath } from '../../hooks';
+import { useFileDownload, useGenerator } from '../../hooks';
+import { createSpacePath } from '../../router';
 
 // TODO(burdon): Factor out.
 export const isMobile = new MobileDetect(window.navigator.userAgent).mobile();
@@ -29,12 +30,16 @@ export const Actions = () => {
   const navigate = useNavigate();
   const client = useClient();
   const download = useFileDownload();
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const { state: connectionState } = useNetworkStatus();
   const generator = useGenerator();
   const serializer = useMemo(() => new Serializer(), []);
 
   const handleExportSpace = async () => {
+    if (!space) {
+      return;
+    }
+
     const json = await serializer.export(space.db);
     download(new Blob([JSON.stringify(json, undefined, 2)], { type: 'text/plain' }), 'data.json');
   };
@@ -83,21 +88,22 @@ export const Actions = () => {
       title: 'Settings',
       handler: () => handleSettings()
     },
-    !isMobile && [
-      {
-        Icon: DownloadSimple,
-        title: 'Export data',
-        handler: () => handleExportSpace()
-      },
-      {
-        Icon: () => (
-          <FileUploader types={['json']} handleChange={handleImportSpace}>
-            <UploadSimple className={mx(getSize(6), 'cursor-pointer')} />
-          </FileUploader>
-        ),
-        title: 'Import data'
-      }
-    ],
+    space &&
+      !isMobile && [
+        {
+          Icon: DownloadSimple,
+          title: 'Export data',
+          handler: () => handleExportSpace()
+        },
+        {
+          Icon: () => (
+            <FileUploader types={['json']} handleChange={handleImportSpace}>
+              <UploadSimple className={mx(getSize(6), 'cursor-pointer')} />
+            </FileUploader>
+          ),
+          title: 'Import data'
+        }
+      ],
     {
       Icon: Robot,
       title: 'Generate test data',

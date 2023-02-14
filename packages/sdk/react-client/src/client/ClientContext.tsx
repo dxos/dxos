@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { getAsyncValue, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
 import { printBanner } from '../banner';
-import { SpaceProvider } from '../echo';
+import { SpaceProvider, SpaceProviderProps } from '../echo';
 
 export type ClientContextProps = {
   client: Client;
@@ -69,7 +69,7 @@ export interface ClientProviderProps {
    *
    * Default is true.
    */
-  spaceProvider?: boolean;
+  spaceProvider?: boolean | SpaceProviderProps;
 
   /**
    * Post initialization hook.
@@ -89,7 +89,7 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
-  spaceProvider = true,
+  spaceProvider,
   onInitialize
 }: ClientProviderProps) => {
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
@@ -162,8 +162,8 @@ export const ClientProvider = ({
     return <Fallback client={client} status={status} />;
   }
 
-  if (spaceProvider) {
-    children = <SpaceProvider>{children}</SpaceProvider>;
+  if (spaceProvider !== false) {
+    children = <SpaceProvider {...(spaceProvider === true ? {} : spaceProvider)}>{children}</SpaceProvider>;
   }
 
   // prettier-ignore

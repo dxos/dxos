@@ -9,8 +9,9 @@ import { useQuery, withReactor } from '@dxos/react-client';
 import { Input, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
-import { createSpacePath, useFrameState } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { Document } from '../../proto';
+import { createSpacePath } from '../../router';
 
 export const DocumentFrame = withReactor(() => {
   const navigate = useNavigate();

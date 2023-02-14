@@ -3,10 +3,9 @@
 //
 
 import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
-import { useParams, useOutletContext, generatePath } from 'react-router-dom';
+import { useParams, generatePath } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
-import { useQuery, withReactor } from '@dxos/react-client';
+import { useCurrentSpace, useQuery, withReactor } from '@dxos/react-client';
 
 import { FILTER } from '../constants';
 import { Todo, TodoList } from '../proto';
@@ -14,27 +13,27 @@ import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 
-export const Main = withReactor(() => {
+export const Todos = withReactor(() => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [editing, setEditing] = useState<string>();
-  const { space } = useOutletContext<{ space: Space }>();
+  const [space] = useCurrentSpace();
   const { state } = useParams();
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const [list] = useQuery(space, TodoList.filter());
 
   useEffect(() => {
-    if (!list) {
+    if (space && !list) {
       void space.db.add(new TodoList());
     }
-  }, [list]);
+  }, [space, list]);
 
   if (!list) {
     return null;
   }
 
   // TODO(wittjosiah): Hide deleted items from `useQuery`?
-  const allTodos = list.todos.filter((todo) => !todo.__deleted);
+  const allTodos = list?.todos.filter((todo) => !todo.__deleted) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -62,7 +61,7 @@ export const Main = withReactor(() => {
     list.todos
       .filter((item) => item.completed)
       .forEach((item) => {
-        void space.db.remove(item);
+        void space?.db.remove(item);
       });
   };
 
@@ -94,7 +93,7 @@ export const Main = withReactor(() => {
                 title={todo.title}
                 completed={!!todo.completed}
                 onToggle={() => (todo.completed = !todo.completed)}
-                onDestroy={() => space.db.remove(todo)}
+                onDestroy={() => space?.db.remove(todo)}
                 onEdit={() => setEditing(todo.id)}
                 editing={editing === todo.id}
                 onSave={(title) => {
@@ -112,7 +111,9 @@ export const Main = withReactor(() => {
           count={activeTodoCount}
           completedCount={completedCount}
           nowShowing={state ?? FILTER.ALL}
-          generatePath={(state = '') => generatePath('/:space/:state', { space: space.key.toHex(), state })}
+          generatePath={(state = '') =>
+            space ? generatePath('/:space/:state', { space: space.key.toHex(), state }) : '/'
+          }
           onClearCompleted={handleClearCompleted}
         />
       )}

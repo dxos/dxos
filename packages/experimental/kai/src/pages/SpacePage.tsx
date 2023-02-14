@@ -3,15 +3,15 @@
 //
 
 import { CaretRight } from 'phosphor-react';
-import React, { useContext, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { useParams } from 'react-router-dom';
 
-import { Button, getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx, useTranslation } from '@dxos/react-components';
 import { PanelSidebarContext, PanelSidebarProvider, useTogglePanelSidebar } from '@dxos/react-ui';
 
 import { AppBar, FrameContainer, FrameSelector, FrameRegistry, Sidebar } from '../containers';
-import { Section, createSpacePath, defaultFrameId, useFrameState, useFrames, useTheme } from '../hooks';
-import { ManageSpacePage } from '../pages';
+import { useFrameState, useFrames, useTheme, useDevDataGenerator } from '../hooks';
+import { Section } from '../router';
 
 const Toolbar = () => {
   const theme = useTheme();
@@ -46,23 +46,11 @@ const Toolbar = () => {
  * Home page with current space.
  */
 const SpacePage = () => {
-  const navigate = useNavigate();
+  useDevDataGenerator();
+  const { t } = useTranslation('kai');
   const { active } = useFrames();
   const { section } = useParams();
   const { space, frame } = useFrameState();
-
-  // Redirect if invalid space or frame.
-  useEffect(() => {
-    if (!space) {
-      navigate('/');
-    } else if (!section || (section === 'frame' && !frame)) {
-      navigate(createSpacePath(space!.key, defaultFrameId));
-    }
-  }, [space, section, frame]);
-
-  if (!space) {
-    return null;
-  }
 
   return (
     <PanelSidebarProvider
@@ -77,12 +65,14 @@ const SpacePage = () => {
       <Toolbar />
 
       {/* Main content. */}
-      <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-paper-2-bg'>
-        {/* TODO(burdon): Rename ManageSpacePage (not a page). */}
-        {section === Section.SETTINGS && <ManageSpacePage />}
-        {section === Section.REGISTRY && <FrameRegistry />}
-        {frame && <FrameContainer frame={frame} />}
-      </div>
+      {space ? (
+        <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-paper-2-bg'>
+          {section === Section.REGISTRY && <FrameRegistry />}
+          {frame && <FrameContainer frame={frame} />}
+        </div>
+      ) : (
+        <div className='flex justify-center pbs-4'>{t('select a space')}</div>
+      )}
     </PanelSidebarProvider>
   );
 };

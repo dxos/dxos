@@ -17,7 +17,7 @@ import { Button, getSize, mx } from '@dxos/react-components';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { ContactCard } from '../../containers';
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { Contact, Event as EventType } from '../../proto';
 
 const mapEvents = (event: EventType) => ({
@@ -50,7 +50,7 @@ const views = [
  * https://jquense.github.io/react-big-calendar/examples/index.html?path=/story/about-big-calendar--page
  */
 export const CalendarFrame = () => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const events = useQuery(space, EventType.filter()).map(mapEvents);
   // TODO(burdon): Manage global state persistently.
   const [view, setView] = useState<any>(Views.MONTH);
@@ -125,7 +125,7 @@ export const CalendarFrame = () => {
             components={components}
           />
         </div>
-        {view === Views.AGENDA && contact && (
+        {view === Views.AGENDA && contact && space && (
           <div className='flex flex-1 border-l hidden md:flex pl-4'>
             <ContactCard space={space} contact={contact} />
           </div>
