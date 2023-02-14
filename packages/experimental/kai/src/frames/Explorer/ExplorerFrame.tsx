@@ -91,7 +91,7 @@ export const ExplorerFrame = () => {
   return (
     <div className='flex flex-1 flex-col'>
       {/* Header */}
-      <div className='flex w-full p-2 px-3 bg-gray-200 text-gray-500'>
+      <div className='flex w-full p-2 px-2 bg-toolbar-bg'>
         <div className='flex-1' />
         {views.map(({ type, label, Icon }) => (
           <Button

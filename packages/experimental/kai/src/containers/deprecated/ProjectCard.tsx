@@ -59,7 +59,7 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
       {/* Contacts */}
       {project.team?.length > 0 && (
         <div className='pt-2'>
-          <h2 className='pl-3 text-xs'>Team</h2>
+          <h2 className='pl-2 text-xs'>Team</h2>
           <div className='p-1 pt-1'>
             {project.team?.map((contact) => (
               <CardRow key={contact[id]} sidebar={<User />} header={<div>{contact.name}</div>} />

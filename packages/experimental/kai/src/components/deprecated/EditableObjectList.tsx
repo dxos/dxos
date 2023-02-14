@@ -58,7 +58,7 @@ export const EditableObjectList = <T extends Document>({
         {objects.map((object) => (
           <ListItemButton key={object[id]}>
             <div
-              className={mx('pl-1 pr-2 cursor-pointer', object[id] === selected && 'text-selection-text')}
+              className={mx('px-2 cursor-pointer', object[id] === selected && 'text-selection-text')}
               onClick={() => onSelect?.(object[id])}
             >
               <Icon className={getSize(6)} />
@@ -80,7 +80,7 @@ export const EditableObjectList = <T extends Document>({
       </List>
 
       {onCreate && (
-        <div className='flex px-3 py-2'>
+        <div className='flex px-4 py-2'>
           <Button onClick={handleCreate}>
             <Plus className={getSize(6)} />
           </Button>

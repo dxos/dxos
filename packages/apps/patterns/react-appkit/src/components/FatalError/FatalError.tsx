@@ -39,12 +39,12 @@ export const FatalError = ({ error }: FatalErrorProps) => {
     void navigator.clipboard.writeText(JSON.stringify({ message, stack }));
   }, [message, stack]);
 
-  // TODO(burdon): Make larger on web.
+  // TODO(burdon): Responsive
   return (
-    <Dialog title={t('fatal error label')} initiallyOpen>
+    <Dialog title={t('fatal error label')} slots={{ content: { className: 'w-full md:w-[500px]' } }} initiallyOpen>
       {isDev ? (
         <Alert title={message} valence={'error'} slots={{ root: { className: 'mlb-4' } }}>
-          <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
+          <pre className='text-xs overflow-auto max-w-72 max-h-72 overflow-hidden'>{stack}</pre>
         </Alert>
       ) : (
         <p>{t('fatal error message')}</p>

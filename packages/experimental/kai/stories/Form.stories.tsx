@@ -32,7 +32,7 @@ const Form: FC<{ object: Document }> = ({ object }) => {
   ].join('\n');
 
   return (
-    <div className='flex w-full overflow-hidden p-2 bg-white border'>
+    <div className='flex w-full overflow-hidden p-2 bg-paper-bg border'>
       <div className='flex flex-col w-full'>
         <Row field='name'>
           <Input className='w-full p-1 bg-gray-100' value={object.name} />

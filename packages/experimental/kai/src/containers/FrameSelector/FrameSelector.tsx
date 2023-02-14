@@ -20,12 +20,7 @@ const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; 
   compact = false
 }) => {
   return (
-    <div
-      className={mx(
-        'flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t text-black',
-        selected && 'bg-panel-bg'
-      )}
-    >
+    <div className={mx('flex p-1 px-2 lg:mr-2 items-center cursor-pointer rounded-t', selected && 'bg-panel-bg')}>
       <Link className='flex' to={link} title={label}>
         <Icon weight='light' className={getSize(6)} />
         {!compact && <div className='hidden lg:flex ml-1'>{label}</div>}
@@ -37,6 +32,7 @@ const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; 
 /**
  * Frame tabs.
  */
+// TODO(burdon): Factor out Caret.
 export const FrameSelector: FC = () => {
   const { space } = useFrameState();
   const { frames, active: activeFrames } = useFrames();
@@ -49,7 +45,7 @@ export const FrameSelector: FC = () => {
   return (
     <div
       className={mx(
-        'flex flex-col-reverse bg-appbar-toolbar',
+        'flex flex-col-reverse bg-appbar-toolbar border-b',
         'fixed inline-end-0 block-start-appbar bs-toolbar transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
         isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'
       )}

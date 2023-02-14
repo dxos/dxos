@@ -44,7 +44,10 @@ const SpacePage = () => {
       }}
     >
       <AppBar />
-      <FrameSelector />
+      <div>
+        {/* TODO(burdon): Move sidebar open/close here. */}
+        <FrameSelector />
+      </div>
 
       {/* Main content. */}
       <div role='none' className='flex flex-col bs-full overflow-auto overscroll-contain bg-panel-bg'>

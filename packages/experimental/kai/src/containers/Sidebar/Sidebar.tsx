@@ -97,9 +97,9 @@ export const Sidebar = () => {
 
   // TODO(burdon): Mobile slider (full width, no blur).
   return (
-    <div role='none' className='flex flex-col overflow-auto min-bs-full bg-sidebar-bg'>
+    <div role='none' className='flex flex-col overflow-auto min-bs-full bg-sidebar-bg border-r'>
       {/* Match Frame selector. */}
-      <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar'>
+      <div className='flex flex-col-reverse h-toolbar bg-appbar-toolbar border-b'>
         <div className='flex justify-between p-1 px-4'>
           <div className='flex items-center'>
             {/* TODO(burdon): Remove initial focus. */}
@@ -128,9 +128,8 @@ export const Sidebar = () => {
         <div className='flex-1' />
 
         {/* Members */}
-        <div className='flex flex-col shrink-0 mt-6'>
-          <div className='flex p-1 pl-3 mb-2 text-xs'>Members</div>
-          <div className='flex shrink-0 pl-3'>
+        <div className='flex flex-col shrink-0 my-4'>
+          <div className='flex shrink-0'>
             <MemberList identityKey={client.halo.profile!.identityKey} members={members} />
           </div>
         </div>

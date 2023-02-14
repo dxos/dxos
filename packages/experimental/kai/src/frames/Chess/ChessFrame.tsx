@@ -91,7 +91,7 @@ const Play: FC<{
   // TODO(burdon): Shrink board if small.
   return (
     <div className='flex flex-col flex-1'>
-      <div className='flex w-full p-5'>
+      <div className='flex w-full p-4'>
         <div>
           <button onClick={() => onClose()}>
             <ArrowUUpLeft weight='thin' className={getSize(6)} />
@@ -109,7 +109,7 @@ const Play: FC<{
         </div>
       </div>
 
-      <div className='flex flex-row-reverse w-full p-5'>
+      <div className='flex flex-row-reverse w-full p-4'>
         <div className='flex'>
           <button onClick={() => onSetPieces(pieces > 0 ? pieces - 1 : chessPieces.length - 1)}>
             <CaretLeft weight='thin' className={getSize(6)} />
@@ -135,11 +135,11 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
-    <div className='flex justify-center items-center bg-zinc-200 shadow' style={{ width: gridSize, height: gridSize }}>
+    <div className='flex justify-center items-center shadow' style={{ width: gridSize, height: gridSize }}>
       <div className='flex'>
         {onClick && (
           <button onClick={onClick}>
-            <PlusCircle className={mx(getSize(16), 'text-gray-300')} />
+            <PlusCircle className={mx(getSize(16))} />
           </button>
         )}
       </div>

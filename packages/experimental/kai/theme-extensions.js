@@ -27,10 +27,26 @@ module.exports = {
 
       // Standardize column width for tiles (based on iPhone Pro 12).
       column: '390px'
-    },
+    }
 
     // TODO(burdon): Naming scheme (for theme: e.g., dark:bg-dark-toolbar-bg).
+    // https://m2.material.io/design/color/the-color-system.html#color-theme-creation
+    // https://m3.material.io/styles/color/dynamic-color/overview
+    /*
     colors: {
+      // bg-paper-bg
+      // bg-paper-1-bg
+      // bg-paper-1-shadow
+      paper: {
+        bg: 'white',
+        1: {
+          bg: neutral[100]
+        },
+        2: {
+          bg: neutral[200]
+        },
+      },
+
       appbar: {
         header: primary[400],
         toolbar: primary[500]
@@ -51,7 +67,15 @@ module.exports = {
         bg: secondary[300],
         text: secondary[700],
         border: secondary[600]
+      },
+      secondary: {
+        text: secondary[700]
+      },
+      table: {
+        row-even: 'bg-white'
+        row-odd: 'neutral[100]'
       }
     }
+    */
   }
 };

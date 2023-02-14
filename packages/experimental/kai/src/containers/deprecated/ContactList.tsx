@@ -43,9 +43,9 @@ export const ContactRow: FC<{ contact: Contact }> = withReactor(({ contact }) =>
       }
     >
       <div className='ml-9 mb-1'>
-        {contact.username && <div className='flex text-sm text-green-800'>{contact.username}</div>}
-        {contact.email && <div className='flex text-sm text-green-800'>{contact.email}</div>}
-        {contact.address && <div className='flex text-sm text-gray-800'>{address(contact.address)}</div>}
+        {contact.username && <div className='flex text-sm text-secondary-text'>{contact.username}</div>}
+        {contact.email && <div className='flex text-sm text-secondary-text'>{contact.email}</div>}
+        {contact.address && <div className='flex text-sm text-secondary-text'>{address(contact.address)}</div>}
       </div>
     </CardRow>
   );

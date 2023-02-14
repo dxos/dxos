@@ -39,7 +39,7 @@ export const DocumentFrame = withReactor(() => {
   return (
     <div className='flex flex-1 overflow-hidden justify-center'>
       <div className='flex flex-col w-full md:max-w-[800px]'>
-        <div className='m-0 md:m-4 bg-white shadow-lg overflow-y-auto '>
+        <div className='m-0 md:m-4 shadow-lg overflow-y-auto '>
           {/* TODO(burdon): Why is label required? */}
           {/* TODO(burdon): Throttle input. */}
           <Input
@@ -65,7 +65,7 @@ export const DocumentFrame = withReactor(() => {
             slots={{
               root: { className: 'grow' },
               editor: {
-                className: 'z-0 bg-white text-black h-full w-full px-8 pb-16 min-bs-[12em] text-xl md:text-base',
+                className: 'z-0 bg-paper-bg text-black h-full w-full px-8 pb-16 min-bs-[12em] text-xl md:text-base',
                 spellCheck
               }
             }}

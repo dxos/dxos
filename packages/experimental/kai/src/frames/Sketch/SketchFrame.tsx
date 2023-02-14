@@ -137,7 +137,7 @@ export const SketchFrame = withReactor(() => {
 
   return (
     <div className='flex flex-col flex-1'>
-      <div className='flex flex-col flex-1 items-center justify-center overflow-auto bg-gray-300'>
+      <div className='flex flex-col flex-1 items-center justify-center overflow-auto'>
         <ReactSketchCanvas
           ref={canvasRef}
           style={{}}
@@ -152,7 +152,7 @@ export const SketchFrame = withReactor(() => {
       </div>
 
       {/* TODO(burdon): Vertical unless mobile. */}
-      <div className='flex shrink-0 p-2 bg-gray-200'>
+      <div className='flex shrink-0 p-2'>
         <div className='flex items-center mr-4'>
           <GithubPicker width={'100%'} triangle='hide' colors={colors} onChangeComplete={handleColorChange} />
         </div>
