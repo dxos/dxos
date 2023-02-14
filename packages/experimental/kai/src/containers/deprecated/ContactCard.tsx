@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 
 import { Buildings, User } from 'phosphor-react';
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 
 import { Space } from '@dxos/client';
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
-import { getSize } from '@dxos/react-components';
+import { getSize, Input } from '@dxos/react-components';
 
-import { Input } from '../../components';
 import { Contact, Organization } from '../../proto';
 
 // TODO(burdon): Custom views:
@@ -23,10 +22,13 @@ export const ContactCard: FC<{ space: Space; contact: Contact }> = ({ space, con
     organization.people.find((member) => member[id] === contact[id])
   );
 
-  const handleEnter = async (text: string) => {
-    const organization = new Organization({ name: text });
+  const [orgName, setOrgName] = useState('');
+
+  const handleEnter = async () => {
+    const organization = new Organization({ name: orgName });
     organization.people.push(contact);
     await space.experimental.db.save(organization);
+    setOrgName('');
   };
 
   return (
@@ -81,10 +83,19 @@ export const ContactCard: FC<{ space: Space; contact: Contact }> = ({ space, con
               <td className='align-top'>
                 <div className='text-xl py-4'>
                   <Input
+                    variant='subdued'
                     placeholder='Enter company name...'
-                    className='w-full p-1 text-lg'
-                    spellCheck={false}
-                    onEnter={handleEnter}
+                    label='Enter company name...'
+                    value={orgName}
+                    onChange={({ target: { value } }) => setOrgName(value)}
+                    slots={{
+                      root: { className: 'm-0' },
+                      input: {
+                        spellCheck: false,
+                        onKeyDown: ({ key }) => key === 'Enter' && handleEnter(),
+                        onBlur: handleEnter
+                      }
+                    }}
                   />
                 </div>
               </td>

@@ -12,7 +12,7 @@ import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 're
 
 import { id } from '@dxos/echo-schema';
 import { useQuery } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 
 // import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -67,9 +67,9 @@ export const CalendarFrame = () => {
               {(event.resource as EventType).members.map((member) => (
                 <div key={member[id]} className='flex items-center overflow-hidden cursor-pointer'>
                   <div className='flex items-center mr-1 text-blue-500'>
-                    <button onClick={() => setContact(member)}>
+                    <Button compact onClick={() => setContact(member)}>
                       <User />
-                    </button>
+                    </Button>
                   </div>
                   <div className='overflow-hidden text-ellipsis whitespace-nowrap w-[100px] text-blue-500'>
                     {member.name}
@@ -93,16 +93,21 @@ export const CalendarFrame = () => {
     <div className='flex flex-1 flex-col justify-center overflow-hidden'>
       <div className='flex m-2 pl-2 pr-2'>
         <div>
-          <button>
+          <Button compact>
             <Clock className={getSize(6)} />
-          </button>
+          </Button>
         </div>
         <div className='flex-1' />
         <div>
           {views.map(({ view: v, Icon }) => (
-            <button key={v} className={mx('text-gray-300', v === view && 'text-gray-700')} onClick={() => setView(v)}>
+            <Button
+              compact
+              key={v}
+              className={mx('text-gray-300', v === view && 'text-gray-700')}
+              onClick={() => setView(v)}
+            >
               <Icon weight='light' className={getSize(6)} />
-            </button>
+            </Button>
           ))}
         </div>
       </div>
