@@ -45,5 +45,5 @@ export const focus = (
     : themeVariantFocus(themeVariant);
 };
 
-export const staticFocus = '';
-// 'ring ring-offset-1 ring-primary-500 ring-offset-white dark:ring-primary-200 dark:ring-offset-black';
+export const staticFocus =
+  'ring-2 ring-offset-0 ring-primary-350 ring-offset-white dark:ring-primary-450 dark:ring-offset-black';
