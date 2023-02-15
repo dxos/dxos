@@ -78,6 +78,8 @@ export const PanelSidebarProvider = ({ children, slots }: PropsWithChildren<Pane
       <DialogPrimitive.Root open={domShow} modal={!isLg}>
         {/* Sidebar. */}
         <DialogPrimitive.Content
+          onOpenAutoFocus={(event) => isLg && event.preventDefault()}
+          onCloseAutoFocus={(event) => isLg && event.preventDefault()}
           {...slots?.content}
           className={mx(
             'fixed block-start-0 block-end-0 is-sidebar z-50 overscroll-contain overflow-x-hidden overflow-y-auto',
