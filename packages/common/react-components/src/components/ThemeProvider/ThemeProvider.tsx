@@ -13,8 +13,8 @@ import React, { createContext, PropsWithChildren } from 'react';
 
 import { defaultFocus } from '../../styles';
 import { hasIosKeyboard, mx } from '../../util';
-import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 import { ElevationProvider } from '../ElevationProvider';
+import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
 export type ThemeVariant = 'app' | 'os';
 

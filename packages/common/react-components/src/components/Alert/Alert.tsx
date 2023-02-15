@@ -4,11 +4,10 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { useId } from '../../hooks';
+import { useId, useButtonShadow } from '../../hooks';
 import { MessageValence } from '../../props';
 import { alertValence } from '../../styles';
 import { mx } from '../../util';
-import { useButtonShadow } from '../../hooks/useElevationContext';
 
 export interface AlertSlots {
   root?: Omit<ComponentProps<'div'>, 'children'>;

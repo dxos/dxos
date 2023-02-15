@@ -1,4 +1,9 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import React, { createContext, PropsWithChildren } from 'react';
+
 import { Elevation } from '../../props';
 
 export interface ElevationContextValue {
