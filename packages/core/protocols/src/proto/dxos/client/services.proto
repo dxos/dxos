@@ -134,8 +134,6 @@ service SpacesService {
 
   // TODO(dmaretskyi): I dont think we need a separate method here. We can include members in the Space object.
   rpc QueryMembers(QueryMembersRequest) returns (stream QueryMembersResponse);
-
-  rpc GetHaloSpaceKey(google.protobuf.Empty) returns (dxos.keys.PublicKey);
   
   rpc WriteCredentials(CredentialsBatch) returns (google.protobuf.Empty);
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
