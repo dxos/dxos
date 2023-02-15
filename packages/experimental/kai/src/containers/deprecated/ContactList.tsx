@@ -45,9 +45,9 @@ export const ContactListItem: FC<{ contact: Contact }> = withReactor(({ contact 
           }}
         />
         <div role='none' className='pis-1'>
-          {contact.username && <p className='text-sm text-secondary-text'>{contact.username}</p>}
-          {contact.email && <p className='text-sm text-secondary-text break-all'>{contact.email}</p>}
-          {contact.address && <p className='text-sm text-secondary-text'>{address(contact.address)}</p>}
+          {contact.username && <p className='text-sm text-secondary-text truncate'>{contact.username}</p>}
+          {contact.email && <p className='text-sm text-secondary-text truncate'>{contact.email}</p>}
+          {contact.address && <p className='text-sm text-secondary-text truncate'>{address(contact.address)}</p>}
         </div>
       </ListItemHeading>
     </ListItem>
