@@ -4,7 +4,7 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useForwardedRef, useThemeContext } from '../../hooks';
+import { useButtonShadow, useForwardedRef, useThemeContext } from '../../hooks';
 import { defaultInput, subduedInput } from '../../styles';
 import { mx } from '../../util';
 import { InputProps, InputSize } from './InputProps';
@@ -23,6 +23,7 @@ export const BareTextInput = forwardRef<HTMLInputElement, BareTextInputProps>(
   ({ validationValence, validationMessage, variant, size, ...inputSlot }, ref) => {
     const { themeVariant } = useThemeContext();
     const inputRef = useForwardedRef(ref);
+    const shadow = useButtonShadow();
     return (
       <input
         {...inputSlot}
@@ -38,6 +39,7 @@ export const BareTextInput = forwardRef<HTMLInputElement, BareTextInputProps>(
           sizeMap[size ?? 'md'],
           'block w-full',
           themeVariant === 'os' ? 'pli-1.5 plb-1' : 'pli-2.5 plb-2',
+          !inputSlot.disabled && variant !== 'subdued' && shadow,
           inputSlot?.className
         )}
       />

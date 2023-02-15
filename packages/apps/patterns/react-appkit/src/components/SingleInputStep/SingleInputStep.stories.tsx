@@ -22,7 +22,7 @@ const render = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: stri
   const { t } = useTranslation('appkit');
   return (
     <Group
-      elevation={5}
+      elevation='group'
       label={{
         level: 1,
         className: 'mb-2 text-3xl',

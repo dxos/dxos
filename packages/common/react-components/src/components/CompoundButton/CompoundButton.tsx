@@ -4,7 +4,7 @@
 
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
-import { useId, useThemeContext } from '../../hooks';
+import { useButtonShadow, useId, useThemeContext } from '../../hooks';
 import { defaultDescription, primaryDescription } from '../../styles';
 import { mx } from '../../util';
 import { ButtonProps, buttonStyles } from '../Button';
@@ -37,11 +37,17 @@ export const CompoundButton = ({
   const labelId = useId('compoundButton-label');
   const descriptionId = useId('compoundButton-description');
   const { themeVariant } = useThemeContext();
+  const shadow = useButtonShadow();
   return (
     <button
       {...buttonProps}
       {...slots.root}
-      className={mx(buttonStyles(buttonProps, themeVariant), 'flex items-center gap-4 plb-2.5', slots.root?.className)}
+      className={mx(
+        buttonStyles({ ...buttonProps, variant }, themeVariant),
+        shadow,
+        'flex items-center gap-4 plb-2.5',
+        slots.root?.className
+      )}
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
