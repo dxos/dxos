@@ -5,7 +5,15 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, Observable, observableError, ObservableProvider } from '@dxos/async';
+import {
+  asyncTimeout,
+  Event,
+  EventSubscriptions,
+  Observable,
+  observableError,
+  ObservableProvider,
+  Trigger
+} from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
@@ -21,7 +29,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential, Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { humanize } from '@dxos/util';
 
@@ -55,6 +63,8 @@ export interface Halo {
   removeInvitation(id: string): void;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 }
+
+const THROW_TIMEOUT_ERROR_AFTER = 3000;
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
@@ -229,7 +239,7 @@ export class HaloProxy implements Halo {
   /**
    * Get Halo credentials for the current user.
    */
-  queryCredentials({ type }: { type?: string } = {}) {
+  queryCredentials({ id, type }: { id?: PublicKey; type?: string } = {}) {
     if (!this._profile) {
       throw new ApiError('Identity is not available.');
     }
@@ -245,14 +255,17 @@ export class HaloProxy implements Halo {
       { onUpdate: (credentials: Credential[]) => void; onError: (error?: Error) => void },
       Credential[]
     >();
-    const filteredCredentials: Credential[] = [];
+    const credentials: Credential[] = [];
 
     stream.subscribe(
       (credential) => {
-        if (!type || credential.subject.assertion['@type'] === type) {
-          filteredCredentials.push(credential);
-          observable.setValue(filteredCredentials);
-          observable.callback.onUpdate(filteredCredentials);
+        credentials.push(credential);
+        const newCredentials = credentials
+          .filter((c) => !id || (c.id && id.equals(c.id)))
+          .filter((c) => !type || c.subject.assertion.type === type);
+        if (observable.value?.length !== newCredentials.length) {
+          observable.setValue(newCredentials);
+          observable.callback.onUpdate(newCredentials);
         }
       },
       (err) => {
@@ -336,7 +349,35 @@ export class HaloProxy implements Halo {
   }
 
   /**
-   * Present Credentials chain.
+   * Present Credentials.
    */
-  async presentCredentials() {}
+  async presentCredentials({ id, nonce }: { id: PublicKey; nonce: Uint8Array }): Promise<Presentation> {
+    if (!this._serviceProvider.services.ProfileService) {
+      throw new ApiError('ProfileService is not available.');
+    }
+    const trigger = new Trigger<Credential>();
+    this.queryCredentials({ id }).subscribe({
+      onUpdate: (credentials) => {
+        const credential = credentials.find((credential) => credential.id?.equals(id));
+        if (credential) {
+          trigger.wake(credential);
+        }
+      },
+      onError: (err) => {
+        log.catch(err);
+      }
+    });
+
+    const credential = await asyncTimeout(
+      trigger.wait(),
+      THROW_TIMEOUT_ERROR_AFTER,
+      new ApiError('Timeout while waiting for credential')
+    );
+    return this._serviceProvider.services.ProfileService!.signPresentation({
+      presentation: {
+        credentials: [credential]
+      },
+      nonce
+    });
+  }
 }
