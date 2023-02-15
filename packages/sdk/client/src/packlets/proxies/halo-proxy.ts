@@ -229,7 +229,7 @@ export class HaloProxy implements Halo {
   /**
    * Get Halo credentials for the current user.
    */
-  queryCredentials({ type }: { type: string }) {
+  queryCredentials({ type }: { type?: string } = {}) {
     if (!this._profile) {
       throw new ApiError('Identity is not available.');
     }
@@ -249,7 +249,7 @@ export class HaloProxy implements Halo {
 
     stream.subscribe(
       (credential) => {
-        if (credential.subject.assertion['@type'] === type) {
+        if (!type || credential.subject.assertion['@type'] === type) {
           filteredCredentials.push(credential);
           observable.setValue(filteredCredentials);
           observable.callback.onUpdate(filteredCredentials);
