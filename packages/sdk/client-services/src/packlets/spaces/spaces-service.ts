@@ -7,12 +7,13 @@ import { Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { SpaceManager, SpaceNotFoundError } from '@dxos/echo-db';
 import {
-  CredentialsBatch,
   QueryCredentialsRequest,
   QueryMembersRequest,
   QueryMembersResponse,
   Space,
-  SpacesService
+  SpacesService,
+  WriteCredentialsRequest,
+  WriteCredentialsResponse
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -48,10 +49,12 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  async writeCredentials({ spaceKey, credentials }: CredentialsBatch) {
+  async writeCredentials({ spaceKey, credentials }: WriteCredentialsRequest) {
     const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    const receipts: WriteCredentialsResponse.WriteReceipt[] = [];
     for (const credential of credentials ?? []) {
-      await space.controlPipeline.writer.write({ credential: { credential } });
+      receipts.push(await space.controlPipeline.writer.write({ credential: { credential } }));
     }
+    return { receipts };
   }
 }
