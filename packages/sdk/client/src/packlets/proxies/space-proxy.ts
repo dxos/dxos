@@ -13,7 +13,7 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { DocumentModel, ObjectProperties } from '@dxos/document-model';
+import { DocumentModel } from '@dxos/document-model';
 import { Item, ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
@@ -23,7 +23,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { SpaceMeta } from '../proto';
+import { Properties } from '../proto';
 
 export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
 
@@ -41,7 +41,7 @@ export interface Space extends ISpace {
   get isOpen(): boolean;
   get isActive(): boolean;
   get invitations(): CancellableInvitationObservable[];
-  get data(): Document;
+  get properties(): Document;
 
   // // TODO(burdon): Remove and move accessors to proxy.
   // get database(): Database;
@@ -80,10 +80,6 @@ export interface Space extends ISpace {
   /**
    * @deprecated
    */
-  get properties(): ObjectProperties;
-  /**
-   * @deprecated
-   */
   setProperty(key: string, value?: any): Promise<void>;
   /**
    * @deprecated
@@ -108,7 +104,7 @@ export class SpaceProxy implements Space {
   private readonly _invitationProxy: SpaceInvitationsProxy;
   private _invitations: CancellableInvitationObservable[] = [];
 
-  private _data?: Document;
+  private _properties?: Document;
 
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
@@ -171,8 +167,8 @@ export class SpaceProxy implements Space {
   /**
    * Space Metadata stored in the database.
    */
-  get data() {
-    return this._data!;
+  get properties() {
+    return this._properties!;
   }
 
   // get database(): Database {
@@ -230,15 +226,15 @@ export class SpaceProxy implements Space {
     this._databaseInitialized.wake();
 
     {
-      // Wait for SpaceMeta document.
-      const query = this._experimental!.db.query(SpaceMeta.filter());
+      // Wait for Properties document.
+      const query = this._experimental!.db.query(Properties.filter());
       if (query.getObjects().length === 1) {
-        this._data = query.getObjects()[0];
+        this._properties = query.getObjects()[0];
       } else {
         const waitForSpaceMeta = new Trigger();
-        const subscription = query.subscribe((query: Query<SpaceMeta>) => {
+        const subscription = query.subscribe((query: Query<Properties>) => {
           if (query.getObjects().length === 1) {
-            this._data = query.getObjects()[0];
+            this._properties = query.getObjects()[0];
             waitForSpaceMeta.wake();
             subscription();
           }
@@ -247,7 +243,7 @@ export class SpaceProxy implements Space {
         try {
           await waitForSpaceMeta.wait({ timeout: META_LOAD_TIMEOUT });
         } catch {
-          throw new ApiError('SpaceMeta not found.');
+          throw new ApiError('Properties not found.');
         } finally {
           subscription();
         }
@@ -284,11 +280,6 @@ export class SpaceProxy implements Space {
     return this._clientServices.services.SpaceService.getSpaceDetails({
       spaceKey: this.key
     });
-  }
-
-  get properties(): ObjectProperties {
-    // return this._item!.model;
-    return todo(); // TODO(mykola): implement
   }
 
   get invitations() {
