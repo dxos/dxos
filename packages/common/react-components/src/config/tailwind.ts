@@ -59,7 +59,7 @@ export const tailwindConfig = ({
             200: '#c6c6cc',
             150: '#d4d4d9',
             100: '#e2e2e7',
-            125: '#eaeaee',
+            75: '#eaeaee',
             50: '#f1f1f4',
             25: '#f8f8fa'
           },
