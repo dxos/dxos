@@ -25,43 +25,40 @@ export const valenceColorText = (valence?: MessageValence) => {
   }
 };
 
-export const neutralInputBorder = 'border-transparent dark:border-transparent';
-export const successInputBorder = 'border-success-500 dark:border-success-600';
-export const infoInputBorder = 'border-info-500 dark:border-info-600';
-export const warningInputBorder = 'border-warning-500 dark:border-warning-600';
-export const errorInputBorder = 'border-error-500 dark:border-error-600';
+export const neutralInputValence = '';
+export const successInputValence = 'shadow-success-500/50 dark:shadow-success-600/50';
+export const infoInputValence = 'shadow-info-500/50 dark:shadow-info-600/50';
+export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-600/50';
+export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
 
-export const valenceInputBorder = (
-  valence?: MessageValence,
-  themeVariant: ThemeContextValue['themeVariant'] = 'app'
-) => {
+export const inputValence = (valence?: MessageValence, themeVariant: ThemeContextValue['themeVariant'] = 'app') => {
   switch (valence) {
     case 'success':
-      return successInputBorder;
+      return successInputValence;
     case 'info':
-      return infoInputBorder;
+      return infoInputValence;
     case 'warning':
-      return warningInputBorder;
+      return warningInputValence;
     case 'error':
-      return errorInputBorder;
+      return errorInputValence;
     default:
       return themeVariant === 'os'
         ? 'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent'
-        : neutralInputBorder;
+        : neutralInputValence;
   }
 };
 
-export const neutralAlertColors = 'border-neutral-500 dark:border-neutral-600';
+export const neutralAlertColors = '';
 export const successAlertColors =
-  'border-success-500 dark:border-success-600 text-success-700 dark:text-success-100 bg-success-50 dark:bg-success-900';
+  'shadow-success-500/50 dark:shadow-success-600/50 text-success-700 dark:text-success-100 bg-success-50 dark:bg-success-900';
 export const infoAlertColors =
-  'border-info-500 dark:border-info-600 text-info-700 dark:text-info-100 bg-info-50 dark:bg-info-900';
+  'shadow-info-500/50 dark:shadow-info-600/50 text-info-700 dark:text-info-100 bg-info-50 dark:bg-info-900';
 export const warningAlertColors =
-  'border-warning-500 dark:border-warning-600 text-warning-700 dark:text-warning-100 bg-warning-50 dark:bg-warning-900';
+  'shadow-warning-500/50 dark:shadow-warning-600/50 text-warning-700 dark:text-warning-100 bg-warning-50 dark:bg-warning-900';
 export const errorAlertColors =
-  'border-error-500 dark:border-error-600 text-error-700 dark:text-error-100 bg-error-50 dark:bg-error-900';
+  'shadow-error-500/50 dark:shadow-error-600/50 text-error-700 dark:text-error-100 bg-error-50 dark:bg-error-900';
 
-export const valenceAlertColors = (valence?: MessageValence) => {
+export const alertValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
       return successAlertColors;

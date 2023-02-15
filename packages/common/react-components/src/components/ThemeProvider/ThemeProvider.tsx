@@ -14,6 +14,7 @@ import React, { createContext, PropsWithChildren } from 'react';
 import { defaultFocus } from '../../styles';
 import { hasIosKeyboard, mx } from '../../util';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
+import { ElevationProvider } from '../ElevationProvider';
 
 export type ThemeVariant = 'app' | 'os';
 
@@ -53,7 +54,7 @@ export const ThemeProvider = ({
       >
         <ToastProvider {...toastProviderProps}>
           <TooltipProvider delayDuration={0} {...tooltipProviderProps}>
-            {children}
+            <ElevationProvider elevation='base'>{children}</ElevationProvider>
           </TooltipProvider>
           <ToastViewport
             {...toastViewportProps}

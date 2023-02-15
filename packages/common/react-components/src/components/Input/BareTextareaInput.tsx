@@ -4,7 +4,7 @@
 
 import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useForwardedRef } from '../../hooks';
+import { useButtonShadow, useForwardedRef } from '../../hooks';
 import { defaultInput, subduedInput } from '../../styles';
 import { mx } from '../../util';
 import { TextareaProps } from './InputProps';
@@ -15,6 +15,7 @@ export type BareTextareaInputProps = ComponentPropsWithRef<'textarea'> &
 export const BareTextareaInput = forwardRef<HTMLTextAreaElement, BareTextareaInputProps>(
   ({ validationValence, validationMessage, variant, ...inputSlot }, ref) => {
     const textareaRef = useForwardedRef(ref);
+    const shadow = useButtonShadow();
     return (
       <textarea
         ref={textareaRef}
@@ -25,6 +26,7 @@ export const BareTextareaInput = forwardRef<HTMLTextAreaElement, BareTextareaInp
             ...(validationMessage && { validationValence })
           }),
           'block w-full px-2.5 py-2',
+          !inputSlot.disabled && variant !== 'subdued' && shadow,
           inputSlot?.className
         )}
       />

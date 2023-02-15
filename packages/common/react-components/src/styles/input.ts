@@ -9,7 +9,7 @@ import { defaultDisabled } from './disabled';
 import { staticFocus, focus } from './focus';
 import { hover } from './hover';
 import { defaultPlaceholder } from './text';
-import { valenceInputBorder } from './valence';
+import { inputValence } from './valence';
 
 export const defaultInput = (
   props: {
@@ -20,14 +20,14 @@ export const defaultInput = (
 ) => {
   const { disabled, validationValence } = props;
   return mx(
-    'text-neutral-900 dark:text-white border',
+    'text-neutral-900 dark:text-white',
     themeVariant === 'os'
       ? 'rounded-sm text-sm bg-neutral-50/50 dark:bg-neutral-900/50'
-      : 'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50 shadow-sm',
+      : 'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50',
     focus({ ...props, variant: 'default' }, themeVariant),
     defaultPlaceholder,
     hover({ disabled }, themeVariant),
-    valenceInputBorder(validationValence, themeVariant),
+    inputValence(validationValence, themeVariant),
     disabled && defaultDisabled
   );
 };
@@ -58,8 +58,8 @@ export const staticInput = ({
 }) => {
   return mx(
     defaultPlaceholder,
-    'text-base border rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
-    valenceInputBorder(validationValence),
+    'text-base rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
+    inputValence(validationValence),
     disabled && defaultDisabled,
     focused && staticFocus
   );

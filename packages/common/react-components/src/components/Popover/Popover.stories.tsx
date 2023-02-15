@@ -29,7 +29,7 @@ export const AvatarTrigger = {
         slots={{
           root: {
             tabIndex: 0,
-            className: mx('button-elevation cursor-pointer rounded-md', hover(), defaultFocus, defaultActive)
+            className: mx('shadow-md cursor-pointer rounded-md', hover(), defaultFocus, defaultActive)
           }
         }}
         label={<span className='sr-only'>Open popover</span>}

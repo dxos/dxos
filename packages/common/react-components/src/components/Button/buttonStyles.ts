@@ -25,17 +25,13 @@ export const buttonStyles = (
     isOsTheme ? 'rounded font-system-medium text-xs' : 'rounded-md font-medium text-sm',
     hover(props, themeVariant),
     !isOsTheme && resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',
-    !isOsTheme && resolvedVariant === 'default' && 'border border-neutral-100 dark:border-neutral-750',
     resolvedVariant === 'default' && (isOsTheme ? defaultOsButtonColors : defaultAppButtonColors),
     !props.disabled && resolvedVariant === 'ghost' && ghostAppButtonColors,
-    resolvedVariant === 'primary' && 'border border-primary-550',
     resolvedVariant === 'primary' && primaryAppButtonColors,
     resolvedVariant === 'outline' &&
       'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
     focus({ disabled: props.disabled }, themeVariant),
-    props.disabled
-      ? defaultDisabled
-      : !isOsTheme && resolvedVariant !== 'outline' && resolvedVariant !== 'ghost' && 'button-elevation',
+    props.disabled && defaultDisabled,
     // Register all radix states
     'group',
     isOsTheme ? osActive('be') : defaultActive
