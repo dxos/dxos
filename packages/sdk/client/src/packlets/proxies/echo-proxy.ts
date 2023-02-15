@@ -24,7 +24,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
-import { SpaceMeta, SpaceMetaOptions } from '../proto';
+import { Properties, PropertiesOptions } from '../proto';
 import { HaloProxy } from './halo-proxy';
 import { Space, SpaceProxy } from './space-proxy';
 
@@ -167,7 +167,7 @@ export class EchoProxy implements Echo {
   /**
    * Creates a new space.
    */
-  async createSpace(meta?: SpaceMetaOptions): Promise<Space> {
+  async createSpace(meta?: PropertiesOptions): Promise<Space> {
     assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
     const space = await this._serviceProvider.services.SpaceService.createSpace();
 
@@ -177,7 +177,7 @@ export class EchoProxy implements Echo {
     const spaceProxy = this._spaces.get(space.publicKey) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
-    await spaceProxy.experimental.db.save(new SpaceMeta(meta));
+    await spaceProxy.experimental.db.save(new Properties(meta));
     await spaceProxy.initialize(); // Idempotent.
 
     return spaceProxy;

@@ -51,7 +51,7 @@ export type { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/clien
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';
 
-export { SpaceMeta, SpaceMetaOptions } from './packlets/proto';
+export { Properties, PropertiesOptions } from './packlets/proto';
 
 // TODO(burdon): Remove (currently required for @dxos/client-testing).
 export * from './packlets/proxies';

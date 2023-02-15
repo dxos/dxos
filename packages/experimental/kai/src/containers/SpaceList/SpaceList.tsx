@@ -52,9 +52,9 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
           <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>
             <input
               className='bg-transparent border-none outline-none text-ellipsis'
-              value={space.data.title ?? humanize(space.key)}
+              value={space.properties.title ?? humanize(space.key)}
               onChange={(event) => {
-                space.data.title = event.target.value;
+                space.properties.title = event.target.value;
               }}
             />
           </h2>
