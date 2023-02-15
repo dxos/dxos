@@ -21,6 +21,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { humanize } from '@dxos/util';
 
@@ -226,6 +227,45 @@ export class HaloProxy implements Halo {
   }
 
   /**
+   * Get Halo credentials for the current user.
+   */
+  queryCredentials({ type }: { type: string }) {
+    if (!this._profile) {
+      throw new ApiError('Identity is not available.');
+    }
+    if (!this._serviceProvider.services.SpacesService) {
+      throw new ApiError('SpacesService is not available.');
+    }
+    const stream = this._serviceProvider.services.SpacesService.queryCredentials({
+      spaceKey: this._profile.haloSpace!
+    });
+    this._subscriptions.add(() => stream.close());
+
+    const observable = new ObservableProvider<
+      { onUpdate: (credentials: Credential[]) => void; onError: (error?: Error) => void },
+      Credential[]
+    >();
+    const filteredCredentials: Credential[] = [];
+
+    stream.subscribe(
+      (credential) => {
+        if (credential.subject.assertion['@type'] === type) {
+          filteredCredentials.push(credential);
+          observable.setValue(filteredCredentials);
+          observable.callback.onUpdate(filteredCredentials);
+        }
+      },
+      (err) => {
+        if (err) {
+          observableError(observable, err);
+        }
+      }
+    );
+
+    return observable;
+  }
+
+  /**
    * Initiates device invitation.
    */
   createInvitation(options?: InvitationsOptions) {
@@ -277,5 +317,21 @@ export class HaloProxy implements Halo {
 
     log('accept invitation', options);
     return this._invitationProxy!.acceptInvitation(invitation, options);
+  }
+
+  /**
+   * Write credentials to halo profile.
+   */
+  async writeCredentials(credentials: Credential[]) {
+    if (!this._profile) {
+      throw new ApiError('Identity is not available.');
+    }
+    if (!this._serviceProvider.services.SpacesService) {
+      throw new ApiError('SpacesService is not available.');
+    }
+    await this._serviceProvider.services.SpacesService.writeCredentials({
+      spaceKey: this._profile.haloSpace!,
+      credentials: credentials
+    });
   }
 }
