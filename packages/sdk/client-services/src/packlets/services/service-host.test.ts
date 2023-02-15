@@ -53,12 +53,20 @@ describe('ClientServicesHost', () => {
         }
       }
     });
-    await host.services.SpacesService?.writeHaloCredentials({
+
+    const haloSpace = new Trigger<PublicKey>();
+    host.services.ProfileService!.subscribeProfile()!.subscribe(({ profile }) => {
+      if (profile?.haloSpace) {
+        haloSpace.wake(profile.haloSpace);
+      }
+    });
+
+    await host.services.SpacesService?.writeCredentials({
+      spaceKey: await haloSpace.wait(),
       credentials: [testCredential]
     });
 
-    const haloSpace = await host.services.SpacesService!.getHaloSpaceKey();
-    const stream = host.services.SpacesService!.queryCredentials({ spaceKey: haloSpace });
+    const stream = host.services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
     const queriedCredential = new Trigger<Credential>();
     stream.subscribe((credential) => {
       if (credential.subject.id.equals(testCredential.subject.id)) {
