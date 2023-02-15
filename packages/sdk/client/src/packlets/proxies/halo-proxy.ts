@@ -329,9 +329,14 @@ export class HaloProxy implements Halo {
     if (!this._serviceProvider.services.SpacesService) {
       throw new ApiError('SpacesService is not available.');
     }
-    await this._serviceProvider.services.SpacesService.writeCredentials({
+    return this._serviceProvider.services.SpacesService.writeCredentials({
       spaceKey: this._profile.haloSpace!,
-      credentials: credentials
+      credentials
     });
   }
+
+  /**
+   * Present Credentials chain.
+   */
+  async presentCredentials() {}
 }

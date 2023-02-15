@@ -119,9 +119,17 @@ message QueryMembersResponse {
   dxos.halo.credentials.IdentityProfile members = 1;
 }
 
-message CredentialsBatch {
+message WriteCredentialsRequest {
   dxos.keys.PublicKey space_key = 1;
   repeated dxos.halo.credentials.Credential credentials = 2;
+}
+
+message WriteCredentialsResponse {
+  message WriteReceipt {
+    dxos.keys.PublicKey feedKey = 1;
+    int32 seq = 2;
+  };
+  repeated WriteReceipt receipts = 1;
 }
 
 message QueryCredentialsRequest {
@@ -135,7 +143,7 @@ service SpacesService {
   // TODO(dmaretskyi): I dont think we need a separate method here. We can include members in the Space object.
   rpc QueryMembers(QueryMembersRequest) returns (stream QueryMembersResponse);
   
-  rpc WriteCredentials(CredentialsBatch) returns (google.protobuf.Empty);
+  rpc WriteCredentials(WriteCredentialsRequest) returns (WriteCredentialsResponse);
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 }
 
