@@ -90,6 +90,8 @@ message Profile {
   optional string displayName = 2;
   // TODO(mykola): Factor out. It was added to make deviceKey available in the HaloProxy.
   optional dxos.keys.PublicKey device_key = 3;
+
+  optional dxos.keys.PublicKey halo_space = 4;
 }
 
 message SubscribeProfileResponse {

@@ -32,7 +32,8 @@ export class ProfileServiceImpl implements ProfileService {
             ? {
                 identityKey: this.context.identityManager.identity.identityKey,
                 deviceKey: this.context.identityManager.identity.deviceKey,
-                displayName: this.context.identityManager.identity.profileDocument?.displayName
+                displayName: this.context.identityManager.identity.profileDocument?.displayName,
+                haloSpace: this.context.identityManager.identity.space.key
               }
             : undefined
         });
@@ -49,7 +50,8 @@ export class ProfileServiceImpl implements ProfileService {
     return {
       identityKey: this.context.identityManager.identity!.identityKey,
       deviceKey: this.context.identityManager.identity!.deviceKey,
-      displayName: this.context.identityManager.identity!.profileDocument?.displayName
+      displayName: this.context.identityManager.identity!.profileDocument?.displayName,
+      haloSpace: this.context.identityManager.identity!.space.key
     };
   }
 
