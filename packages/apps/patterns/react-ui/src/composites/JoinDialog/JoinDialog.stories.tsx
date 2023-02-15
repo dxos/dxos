@@ -46,8 +46,8 @@ export const Default = {
 
         const space = await clients[0].echo.createSpace();
         log.info('[space created]', space);
-        await space?.setProperty('title', 'Q3 2022 Planning');
-        log.info('[space title set]', space?.getProperty('title'));
+        // await space?.setProperty('title', 'Q3 2022 Planning');
+        // log.info('[space title set]', space?.getProperty('title'));
 
         const invitation = space.createInvitation({ type: Invitation.Type.INTERACTIVE });
         log.info('[invitation created]', invitation);

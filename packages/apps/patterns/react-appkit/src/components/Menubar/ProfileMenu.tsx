@@ -27,8 +27,7 @@ export const ProfileMenu = (props: PropsWithChildren<ProfileMenuProps>) => {
       slots={{
         content: { collisionPadding: 8, sideOffset: 4, className: 'flex flex-col gap-4 items-center z-[2]' },
         trigger: {
-          className:
-            'flex justify-self-end pointer-events-auto bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full'
+          className: 'flex justify-self-end pointer-events-auto bg-white dark:bg-neutral-700 p-0.5 rounded-full'
         }
       }}
       triggerIsInToolbar
