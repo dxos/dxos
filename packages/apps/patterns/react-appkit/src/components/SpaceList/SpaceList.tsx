@@ -37,7 +37,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             role='group'
             key={keyHex}
             className={mx(
-              defaultGroup({ elevation: 1, rounding: 'rounded', spacing: 'p-2' }),
+              defaultGroup({ elevation: 'group', rounding: 'rounded', spacing: 'p-2' }),
               'flex items-stretch gap-2 mbe-2',
               hover(),
               defaultFocus
