@@ -58,12 +58,10 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  async writeHaloCredentials(credentialsBatch: CredentialsBatch) {
-    if (!this._identityManager.identity) {
-      throw new Error('Identity not initialized.');
-    }
-    for (const credential of credentialsBatch.credentials ?? []) {
-      await this._identityManager.identity.controlPipeline.writer.write({ credential: { credential } });
+  async writeCredentials({ spaceKey, credentials }: CredentialsBatch) {
+    const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    for (const credential of credentials ?? []) {
+      await space.controlPipeline.writer.write({ credential: { credential } });
     }
   }
 }

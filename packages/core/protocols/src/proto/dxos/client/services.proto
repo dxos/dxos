@@ -56,6 +56,25 @@ service SigningService {
 }
 
 //
+// Halo
+//
+
+message Identity {
+  dxos.keys.PublicKey identity_key = 1;
+  halo.credentials.ProfileDocument profile = 2;
+}
+
+message RecoverProfileRequest {
+  bytes recovery_key = 1;
+}
+
+service HaloService {
+  rpc RecoverProfile(RecoverProfileRequest) returns (Identity);
+  rpc UpdateProfile(Identity) returns (google.protobuf.Empty);
+  rpc QueryProfile(google.protobuf.Empty) returns (stream Identity);
+}
+
+//
 // Devices
 //
 
@@ -101,7 +120,8 @@ message QueryMembersResponse {
 }
 
 message CredentialsBatch {
-  repeated dxos.halo.credentials.Credential credentials = 1;
+  dxos.keys.PublicKey space_key = 1;
+  repeated dxos.halo.credentials.Credential credentials = 2;
 }
 
 message QueryCredentialsRequest {
@@ -117,7 +137,7 @@ service SpacesService {
 
   rpc GetHaloSpaceKey(google.protobuf.Empty) returns (dxos.keys.PublicKey);
   
-  rpc WriteHaloCredentials(CredentialsBatch) returns (google.protobuf.Empty);
+  rpc WriteCredentials(CredentialsBatch) returns (google.protobuf.Empty);
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 }
 
