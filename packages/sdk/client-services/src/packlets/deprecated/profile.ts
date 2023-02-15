@@ -2,15 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Stream } from '@dxos/codec-protobuf';
+import { getPresentationProofPayload, SIGNATURE_TYPE_ED25519 } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import {
   CreateProfileRequest,
   Profile,
   ProfileService,
   RecoverProfileRequest,
+  SignPresentationRequest,
   SubscribeProfileResponse
 } from '@dxos/protocols/proto/dxos/client';
+import { Presentation, Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ServiceContext } from '../services';
 import { InviteeInvitations } from './invitations';
@@ -65,5 +70,25 @@ export class ProfileServiceImpl implements ProfileService {
     // const profile = this.echo.halo.getProfile();
     // assert(profile, 'Recovering profile failed.');
     // return profile;
+  }
+
+  async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {
+    assert(this.context.identityManager.identity, 'Identity not initialized.');
+    const proof: Proof = {
+      type: SIGNATURE_TYPE_ED25519,
+      value: new Uint8Array(),
+      creationDate: new Date(),
+      signer: this.context.identityManager.identity.deviceKey,
+      nonce
+    };
+
+    const signedPayload = getPresentationProofPayload(presentation.credentials ?? [], proof);
+    proof.value = await this.context.keyring.sign(this.context.identityManager.identity.deviceKey, signedPayload);
+    proof.chain = this.context.identityManager.identity.deviceCredentialChain;
+
+    return {
+      credentials: presentation.credentials,
+      proofs: [...(presentation.proofs ?? []), proof]
+    };
   }
 }
