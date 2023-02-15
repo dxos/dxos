@@ -72,7 +72,7 @@ describe('Halo', () => {
     expect(await client2.halo.queryDevices().value).to.have.lengthOf(2);
   });
 
-  test.only('query credentials', async () => {
+  test('query credentials', async () => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
