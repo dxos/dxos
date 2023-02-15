@@ -35,6 +35,21 @@ export const Default = {
   }
 };
 
+export const Subdued = {
+  args: {
+    label: 'Hello',
+    placeholder: 'This is a subdued input',
+    disabled: false,
+    description: undefined,
+    labelVisuallyHidden: false,
+    descriptionVisuallyHidden: false,
+    validationMessage: '',
+    validationValence: undefined,
+    length: 6,
+    variant: 'subdued'
+  }
+};
+
 export const Disabled = {
   args: {
     label: 'Disabled',

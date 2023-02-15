@@ -4,20 +4,19 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
+import { useButtonShadow } from '../../hooks/';
 import { mx } from '../../util';
+import { ElevationProvider } from '../ElevationProvider';
 
 export interface ButtonGroupProps extends ComponentProps<'div'> {
   children?: ReactNode;
 }
 
 export const ButtonGroup = ({ children, ...divProps }: ButtonGroupProps) => {
+  const shadow = useButtonShadow();
   return (
-    <div
-      role='none'
-      {...divProps}
-      className={mx('button-elevation [&>*]:grouped-buttons rounded-md', divProps.className)}
-    >
-      {children}
+    <div role='none' {...divProps} className={mx(shadow, 'rounded-md', divProps.className)}>
+      <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
     </div>
   );
 };

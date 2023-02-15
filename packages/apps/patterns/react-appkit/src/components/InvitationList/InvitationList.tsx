@@ -26,7 +26,7 @@ export const InvitationList = ({ createInvitationUrl, invitations, onClickRemove
         children: !empty ? t('invitations label') : t('empty invitations message'),
         className: mx('text-xl', empty && defaultDisabled)
       }}
-      elevation={0}
+      elevation='base'
     >
       {!empty &&
         invitations.map((wrapper, index) => (

@@ -9,6 +9,7 @@ export * from './Checkbox';
 export * from './CompoundButton';
 export * from './Dialog';
 export * from './DropdownMenu';
+export * from './ElevationProvider';
 export * from './Group';
 export * from './Heading';
 export * from './List';
