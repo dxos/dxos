@@ -212,10 +212,8 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
             id={id}
             ref={forwardedRef}
             aria-labelledby={headingId}
-            {...{
-              ...(selectable && { role: 'option', 'aria-selected': !!selected }),
-              className: 'flex'
-            }}
+            {...(selectable && { role: 'option', 'aria-selected': !!selected })}
+            className={mx('flex', slots.root?.className)}
           >
             {variant === 'ordered-draggable' && (
               <ListItemDragHandle {...slots.dragHandle} className={slots.dragHandle?.className} />
@@ -250,8 +248,12 @@ const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: stri
           {...props}
           ref={ref}
           slots={{
-            root: { style: { transform: CSS.Transform.toString(transform), transition } },
-            dragHandle: { ...listeners, ...attributes }
+            ...props.slots,
+            root: {
+              ...props.slots?.root,
+              style: { transform: CSS.Transform.toString(transform), transition, ...props.slots?.root?.style }
+            },
+            dragHandle: { ...listeners, ...attributes, ...props.slots?.dragHandle }
           }}
         />
       </Collection.Slot>
