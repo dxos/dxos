@@ -43,6 +43,7 @@ export const DocumentFrame = withReactor(() => {
           {/* TODO(burdon): Why is label required? */}
           {/* TODO(burdon): Throttle input. */}
           <Input
+            variant='subdued'
             value={object.title}
             onChange={(event) => {
               object.title = event.target.value;
