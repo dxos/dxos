@@ -14,6 +14,6 @@ export const Default = {
   args: {
     label: { level: 3, children: 'Hello' },
     children: 'This is a group.',
-    elevation: 3
+    elevation: 'group'
   }
 };
