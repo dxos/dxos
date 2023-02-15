@@ -66,14 +66,14 @@ describe('ClientServicesHost', () => {
       credentials: [testCredential]
     });
 
-    const stream = host.services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
+    const credentials = host.services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
     const queriedCredential = new Trigger<Credential>();
-    stream.subscribe((credential) => {
+    credentials.subscribe((credential) => {
       if (credential.subject.id.equals(testCredential.subject.id)) {
         queriedCredential.wake(credential);
       }
     });
-    afterTest(() => stream.close());
+    afterTest(() => credentials.close());
 
     await queriedCredential.wait();
   });
