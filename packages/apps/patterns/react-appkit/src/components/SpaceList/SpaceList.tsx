@@ -63,7 +63,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
         children: t('empty spaces label'),
         className: mx('text-xl', defaultDisabled)
       }}
-      elevation={0}
+      elevation='base'
     >
       <p className={defaultDisabled}>{t('empty spaces message')}</p>
     </Group>

@@ -18,5 +18,5 @@ export const useButtonShadow = () => {
     ? 'shadow'
     : elevation === 'chrome'
     ? 'shadow-none'
-    : 'shadow-lg';
+    : 'shadow-md';
 };

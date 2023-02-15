@@ -7,7 +7,7 @@ import { mx } from '../util';
 
 const elevationClassNameMap = new Map<Elevation, string>([
   ['base', 'shadow-none'],
-  ['group', 'shadow-lg'],
+  ['group', 'shadow-md'],
   ['chrome', 'shadow-xl']
 ]);
 
