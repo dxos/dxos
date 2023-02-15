@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-
 import { latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { createCredential } from '@dxos/credentials';
