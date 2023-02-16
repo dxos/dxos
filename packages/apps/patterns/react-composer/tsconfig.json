@@ -19,16 +19,16 @@
   ],
   "references": [
     {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/react-async"
-    },
-    {
       "path": "../../../common/react-components"
     },
     {
-      "path": "../../../core/echo/text-model"
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../../core/protocols"
     },
     {
       "path": "../../../sdk/client"

@@ -31,7 +31,7 @@ export const DocumentFrame = withReactor(() => {
   }
 
   // TODO(burdon): Factor out container with fragment and scrolling.
-  const fragment = object.content.doc!.getXmlFragment('content');
+  // const fragment = object.content.doc!.getXmlFragment('content');
 
   // TODO(burdon): Spellcheck false in dev mode.
   const spellCheck = false;
@@ -61,7 +61,7 @@ export const DocumentFrame = withReactor(() => {
           />
 
           <Composer
-            fragment={fragment}
+            document={object.content}
             slots={{
               root: { className: 'grow' },
               editor: {

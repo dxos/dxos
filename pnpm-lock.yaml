@@ -393,6 +393,8 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
@@ -414,6 +416,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
@@ -427,6 +430,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
@@ -581,11 +585,11 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/react-async': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/text-model': workspace:*
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
       '@tiptap/extension-placeholder': 2.0.0-beta.199
@@ -600,13 +604,7 @@ importers:
       y-protocols: ^1.0.5
       yjs: ^13.5.44
     dependencies:
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-components': link:../../../common/react-components
-      '@dxos/text-model': link:../../../core/echo/text-model
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_nnszoayjhdoucvdi5heuc7vndi
       '@tiptap/extension-placeholder': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
@@ -614,13 +612,19 @@ importers:
       '@tiptap/starter-kit': 2.0.0-beta.199
       prosemirror-model: 1.18.1
       prosemirror-view: 1.29.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
       y-protocols: 1.0.5
       yjs: 13.5.44
     devDependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../../core/echo/echo-typegen
+      '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-client': link:../../../sdk/react-client
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
 
   packages/apps/patterns/react-ui:
     specifiers:
@@ -13787,7 +13791,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -20712,6 +20716,18 @@ packages:
       debug:
         optional: true
 
+  /follow-redirects/1.15.2_debug@4.3.4:
+    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dependencies:
+      debug: 4.3.4
+    dev: true
+
   /fontkit/2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}
     dependencies:
@@ -21934,7 +21950,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -33756,7 +33772,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.9.1
-      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu
+      vite: 4.0.4_udc44hkgfm6fy435xbwnwc7wvu_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

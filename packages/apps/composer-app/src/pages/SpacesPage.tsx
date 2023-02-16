@@ -4,19 +4,16 @@
 
 import React, { useCallback } from 'react';
 
-import { Space } from '@dxos/client';
+import { Space, TextObject } from '@dxos/client';
 import { SpacesPage as BaseSpacesPage } from '@dxos/react-appkit';
-import { DOCUMENT_TYPE } from '@dxos/react-composer';
-import { TextModel } from '@dxos/text-model';
+
+import { Document } from '../proto';
 
 export type SpacesPageProps = {};
 
 export const SpacesPage = (props: SpacesPageProps) => {
   const createComposerDocument = useCallback(async (space: Space) => {
-    // await space.database.createItem({
-    //   model: TextModel,
-    //   type: DOCUMENT_TYPE
-    // });
+    await space.experimental.db.save(new Document({ content: new TextObject() }));
   }, []);
   return <BaseSpacesPage onSpaceCreate={createComposerDocument} />;
 };
