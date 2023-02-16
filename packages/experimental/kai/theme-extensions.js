@@ -19,11 +19,17 @@ module.exports = {
     }
   },
 
+  // Geometry:
+  // - Icons: 24x24
+  // - Default: 2.5rem/40px line-height.
+  // - Dense: 2rem/36px line-height.
+  // - 1.5rem/24px line-height for menus/compact buttons; 28px with padding.
+
   // https://tailwindcss.com/docs/theme#extending-the-default-theme
   kaiThemeExtension: {
     spacing: {
       appbar: '48px',
-      toolbar: '40px',
+      toolbar: '40px', // 32px line height + padding
       header: '88px', // Combined height of appbar and toolbar (pbs-header).
 
       // Standardize column width for tiles (based on iPhone Pro 12).
@@ -75,7 +81,7 @@ module.exports = {
         hover: secondary[100],
         bg: secondary[200],
         text: secondary[700],
-        border: secondary[400]
+        border: secondary[300]
       },
 
       secondary: {

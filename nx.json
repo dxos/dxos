@@ -135,7 +135,8 @@
     "storybook": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^compile"
+        "^compile",
+        "prebuild"
       ]
     },
     "test": {

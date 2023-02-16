@@ -40,6 +40,15 @@
         "{options.outputFile}"
       ]
     },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/apps/patterns/react-composer/src/testing/proto/gen"
+      ]
+    },
     "storybook": {
       "configurations": {
         "ci": {

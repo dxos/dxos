@@ -1,0 +1,17 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.testing.composer;
+
+message Document {
+  option (object) = true;
+
+  TextObject content = 1;
+}
+
+// TODO(dmaretskyi): Move to separate file.
+/// Special object type for text object references.
+message TextObject {}

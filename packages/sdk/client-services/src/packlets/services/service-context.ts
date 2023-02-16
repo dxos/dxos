@@ -29,7 +29,6 @@ import { DataSpaceManager } from '../spaces/data-space-manager';
 /**
  * Shared backend for all client services.
  */
-
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
@@ -41,6 +40,7 @@ export class ServiceContext {
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly haloInvitations: HaloInvitationsHandler;
+
   private _deviceSpaceSync?: CredentialConsumer<any>;
 
   // Initialized after identity is initialized.
@@ -67,10 +67,12 @@ export class ServiceContext {
         }
       })
     });
+
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
       networkManager: this.networkManager
     });
+
     this.identityManager = new IdentityManager(
       this.metadataStore,
       this.keyring,
@@ -157,6 +159,7 @@ export class ServiceContext {
       this.snapshotStore
     );
     await this.dataSpaceManager.open();
+
     this.spaceInvitations = new SpaceInvitationsHandler(
       this.networkManager,
       this.dataSpaceManager,
