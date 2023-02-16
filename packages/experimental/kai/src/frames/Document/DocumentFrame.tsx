@@ -67,7 +67,7 @@ export const DocumentFrame = withReactor(() => {
               root: { className: 'grow' },
               editor: {
                 className: mx(
-                  'z-0 bg-paper-bg text-black h-full w-full px-8 pb-16 min-bs-[12em]',
+                  'z-0 bg-paper-bg text-black h-full w-full min-h-[12em] px-8 pb-16 min-bs-[12em]',
                   'text-xl md:text-base bg-paper-bg'
                 ),
                 spellCheck
