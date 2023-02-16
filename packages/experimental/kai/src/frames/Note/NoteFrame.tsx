@@ -83,7 +83,7 @@ export const NoteFrame = () => {
     if (!board) {
       setTimeout(async () => {
         const board = new NoteBoard();
-        await space.experimental.db.add(board);
+        await space.db.add(board);
         setBoard(board);
       });
     }
@@ -127,7 +127,7 @@ export const NoteFrame = () => {
 
   const handleCreate = async (location: Location) => {
     const note = new Note({ title: '' });
-    await space.experimental.db.add(note);
+    await space.db.add(note);
     setItemLocation(board, note.id, location);
     return note.id;
   };
@@ -135,7 +135,7 @@ export const NoteFrame = () => {
   const handleDelete = (item: Item) => {
     const note = notes.find((note) => item.id === note.id);
     if (note) {
-      void space.experimental.db.remove(note);
+      void space.db.remove(note);
     }
   };
 

@@ -33,7 +33,7 @@ export const useClientProvider = () => {
       const space = await client.echo.createSpace();
 
       // TODO(burdon): Create context.
-      const generator = new Generator(space.experimental.db);
+      const generator = new Generator(space.db);
       await generator.generate();
     }
 

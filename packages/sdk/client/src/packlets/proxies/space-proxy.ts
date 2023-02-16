@@ -13,8 +13,7 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
-import { Item, ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
+import { ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -40,17 +39,11 @@ export interface Space extends ISpace {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
+
   get invitations(): CancellableInvitationObservable[];
   get properties(): Document;
 
-  // // TODO(burdon): Remove and move accessors to proxy.
-  // get database(): Database;
-
-  /**
-   * Next-gen database.
-   */
-  get experimental(): Experimental;
-
+  get db(): EchoDatabase;
   get internal(): Internal;
 
   // get select(): Database['select'];
@@ -97,26 +90,24 @@ export interface Space extends ISpace {
 const META_LOAD_TIMEOUT = 3000;
 
 export class SpaceProxy implements Space {
-  private readonly _itemManager?: ItemManager;
-  private readonly _experimental?: Experimental;
-  private readonly _internal!: Internal;
-  private readonly _dbBackend?: DatabaseBackendProxy;
-  private readonly _invitationProxy: SpaceInvitationsProxy;
-  private _invitations: CancellableInvitationObservable[] = [];
-
-  private _properties?: Document;
-
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
-
-  private _initialized = false;
-  private _item?: Item<DocumentModel>; // TODO(burdon): Rename.
 
   /**
    * @internal
    * To unlock internal operations that should happen after the database is initialized but before initialize() completes.
    */
   public _databaseInitialized = new Trigger();
+
+  private readonly _itemManager?: ItemManager;
+  private readonly _experimental!: Experimental;
+  private readonly _internal!: Internal;
+  private readonly _dbBackend?: DatabaseBackendProxy;
+  private readonly _invitationProxy: SpaceInvitationsProxy;
+
+  private _invitations: CancellableInvitationObservable[] = [];
+  private _properties?: Document;
+  private _initialized = false;
 
   // prettier-ignore
   constructor(
@@ -163,21 +154,8 @@ export class SpaceProxy implements Space {
   }
 
   /**
-   * Space Metadata stored in the database.
+   * @deprecated
    */
-  get properties() {
-    return this._properties!;
-  }
-
-  // get database(): Database {
-  //   if (!this._database) {
-  //     throw new ApiError('Space not open.');
-  //   }
-
-  //   return this._database;
-  // }
-
-  // TODO(burdon): Add deprecated property.
   get experimental(): Experimental {
     if (!this._experimental) {
       throw new ApiError('Space not open.');
@@ -186,8 +164,20 @@ export class SpaceProxy implements Space {
     return this._experimental;
   }
 
+  get db(): EchoDatabase {
+    return this._experimental!.db;
+  }
+
+  // TODO(burdon): Remove?
   get internal(): Internal {
     return this._internal;
+  }
+
+  /**
+   * Space Metadata stored in the database.
+   */
+  get properties() {
+    return this._properties!;
   }
 
   // /**

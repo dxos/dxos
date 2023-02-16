@@ -31,7 +31,7 @@ export const SandboxFrame = withReactor(() => {
           content: new TextObject()
         });
 
-        await space.experimental.db.add(frame);
+        await space.db.add(frame);
         frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
         setSelected(frame);
       });
@@ -99,7 +99,7 @@ const Frame = () => {
   
   const handleCreate = () => {
     const task = new Task({ title: value });
-    space.experimental.db.save(task);
+    space.db.save(task);
   }
 
   return (
