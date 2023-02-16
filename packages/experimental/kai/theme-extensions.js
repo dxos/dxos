@@ -49,21 +49,22 @@ module.exports = {
     colors: {
       paper: {
         bg: 'white',
+        text: 'black',
         1: {
           bg: neutral[50],
-          text: 'black'
+          text: neutral[700]
         },
         2: {
           bg: neutral[100],
-          text: 'black'
+          text: neutral[600]
         },
         3: {
           bg: neutral[200],
-          text: 'black'
+          text: neutral[500]
         },
         4: {
           bg: neutral[300],
-          text: 'black'
+          text: neutral[400]
         }
       },
 
