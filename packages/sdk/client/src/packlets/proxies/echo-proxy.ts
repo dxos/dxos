@@ -111,13 +111,7 @@ export class EchoProxy implements Echo {
             return;
           }
 
-          const spaceProxy = new SpaceProxy(
-            this._serviceProvider,
-            this._modelFactory,
-            space,
-            this.dbRouter,
-            this._haloProxy.profile!.identityKey
-          );
+          const spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // NOTE: Must set in a map before initializing.
           // TODO(dmaretskyi): Filter out uninitialized spaces.

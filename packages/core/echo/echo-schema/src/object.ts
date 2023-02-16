@@ -121,7 +121,7 @@ export abstract class EchoObject<T extends Model = any> {
       return this._stateMachine.getState();
     } else {
       assert(this._item);
-      return this._item._stateManager.state;
+      return this._item.state;
     }
   }
 

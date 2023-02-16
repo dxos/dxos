@@ -11,7 +11,6 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory, MutationWriteReceipt } from '@dxos/model-factory';
-import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
@@ -70,6 +69,8 @@ export class DatabaseBackendHost implements DatabaseBackend {
 
   async open(itemManager: ItemManager, modelFactory: ModelFactory) {
     this._itemManager = itemManager;
+    this._itemManager._debugLabel = 'host';
+
     this._itemDemuxer = new ItemDemuxer(itemManager, modelFactory, this._options);
     this._echoProcessor = this._itemDemuxer.open();
 
@@ -127,10 +128,11 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
+    this._itemManager._debugLabel = 'proxy';
 
     modelFactory.registered.on(this._ctx, async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
-        if (item._stateManager.modelType === model.meta.type) {
+        if (item.modelType === model.meta.type) {
           await this._itemManager.initializeModel(item.id);
         }
       }
@@ -181,9 +183,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
         assert(object.genesis.modelType);
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
-          modelType: object.genesis.modelType,
-          parentId: object.snapshot?.parentId,
-          snapshot: { objectId: object.objectId } // TODO(dmaretskyi): Fix.
+          modelType: object.genesis.modelType
         });
         objectsCreated.push(entity);
       } else {
@@ -196,30 +196,15 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
       if (object.snapshot) {
         log('reset to snapshot', { object });
-        entity._stateManager.resetToSnapshot(object);
+        entity.resetToSnapshot(object);
       } else if (object.mutations) {
         for (const mutation of object.mutations) {
           log('mutate', { id: object.objectId, mutation });
 
-          if (mutation.parentId || mutation.action) {
-            entity._processMutation(mutation, (id) => this._itemManager.getItem(id));
-          }
-
-          if (mutation.model) {
-            if (optimistic) {
-              // console.log('process optimistic', mutation)
-              const decoded = entity._stateManager._modelMeta?.mutationCodec.decode(mutation.model.value);
-              entity._stateManager.processOptimisticMutation(decoded, mutation.meta?.clientTag);
-            } else {
-              // console.log('process event', mutation)
-              assert(mutation.meta);
-              assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-              entity._stateManager.processMessage(
-                mutation.meta as MutationMetaWithTimeframe,
-                mutation.model,
-                mutation.meta.clientTag
-              );
-            }
+          if (optimistic) {
+            entity.processOptimisticMutation(mutation);
+          } else {
+            entity.processMessage(mutation);
           }
         }
       }
