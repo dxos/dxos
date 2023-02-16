@@ -12,8 +12,9 @@ import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db, deleted, id, type } from './defs';
-import { DELETED, Document, DocumentBase, isDocument } from './document';
+import { Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
+import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextObject } from './text-object';
 
 export type PropertiesFilter = Record<string, any>;
@@ -125,16 +126,31 @@ export class EchoDatabase {
   }
 
   /**
-   * Toggle deleted flag.
+   * Delete object.
    */
-  // TODO(burdon): Delete/restore.
-  async delete<T extends DocumentBase>(obj: T): Promise<T> {
-    if (obj[deleted]) {
-      (obj as any)[DELETED] = false;
-    } else {
-      (obj as any)[DELETED] = true;
-    }
-    return obj;
+  delete<T extends DocumentBase>(obj: T) {
+    this._backend.mutate({
+      objects: [{
+        objectId: obj[base]._id,
+        mutations: [{
+          action: EchoObjectProto.Mutation.Action.DELETE
+        }]
+      }]
+    })
+  }
+
+  /**
+   * Restore object.
+   */
+  restore<T extends DocumentBase>(obj: T) {
+    this._backend.mutate({
+      objects: [{
+        objectId: obj[base]._id,
+        mutations: [{
+          action: EchoObjectProto.Mutation.Action.RESTORE
+        }]
+      }]
+    })
   }
 
   /**

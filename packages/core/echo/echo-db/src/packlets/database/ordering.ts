@@ -88,7 +88,7 @@ export class MutationQueue<T> {
    */
   pushConfirmed(entry: MutationInQueue<T>): PushResult {
     assert(entry.mutation.meta!.feedKey);
-    assert(entry.mutation.meta!.seq);
+    assert(typeof entry.mutation.meta!.seq === 'number');
     assert(entry.mutation.meta!.timeframe);
 
     // Remove optimistic mutation from the queue.
