@@ -28,7 +28,7 @@ describe('Serializer', () => {
       expect(data.objects).to.have.length(1);
       expect(data.objects[0]).to.deep.eq({
         '@id': obj.id,
-        '@type': null,
+        '@type': undefined,
         title: 'Test'
       });
     }

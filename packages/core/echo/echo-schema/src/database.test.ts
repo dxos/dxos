@@ -32,7 +32,7 @@ describe('EchoDatabase', () => {
     expect(obj.description).toEqual('Test description');
     expect(obj[data]).toEqual({
       '@id': obj.id,
-      '@type': null,
+      '@type': undefined,
       title: 'Test title',
       description: 'Test description'
     });
@@ -189,7 +189,7 @@ describe('EchoDatabase', () => {
 
     expect(task.toJSON()).toEqual({
       '@id': task.id,
-      '@type': null,
+      '@type': undefined,
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {
