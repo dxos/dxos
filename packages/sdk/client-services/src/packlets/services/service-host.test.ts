@@ -10,7 +10,7 @@ import { MemorySignalManagerContext } from '@dxos/messaging';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { createServiceHost } from '../testing';
+import { createMockCredential, createServiceHost } from '../testing';
 
 describe('ClientServicesHost', () => {
   test('queryCredentials', async () => {
@@ -39,19 +39,12 @@ describe('ClientServicesHost', () => {
 
     await host.services.ProfileService!.createProfile({});
 
-    const testCredential: Credential = await createCredential({
+    const testCredential = await createMockCredential({
       signer: host._serviceContext.keyring,
-      issuer: host._serviceContext.identityManager.identity!.identityKey,
-      subject: new PublicKey(Buffer.from('test')),
-      assertion: {
-        '@type': 'example.testing.rpc.MessageWithAny',
-        payload: {
-          '@type': 'google.protobuf.Any',
-          value: Buffer.from('test')
-        }
-      }
+      issuer: host._serviceContext.identityManager.identity!.deviceKey
     });
 
+    // Test if Profile exposes haloSpace key.
     const haloSpace = new Trigger<PublicKey>();
     host.services.ProfileService!.subscribeProfile()!.subscribe(({ profile }) => {
       if (profile?.haloSpace) {
@@ -74,5 +67,29 @@ describe('ClientServicesHost', () => {
     afterTest(() => credentials.close());
 
     await queriedCredential.wait();
+  });
+
+  test.only('sign presentation', async () => {
+    const host = createServiceHost(new Config(), new MemorySignalManagerContext());
+    await host.open();
+    afterTest(() => host.close());
+
+    await host.services.ProfileService!.createProfile({});
+
+    const testCredential = await createMockCredential({
+      signer: host._serviceContext.keyring,
+      issuer: host._serviceContext.identityManager.identity!.deviceKey
+    });
+
+    const nonce = new Uint8Array([0, 0, 0, 0]);
+
+    const presentation = await host.services.ProfileService!.signPresentation({
+      presentation: {
+        credentials: [testCredential]
+      },
+      nonce
+    });
+
+    console.log(presentation);
   });
 });
