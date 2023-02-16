@@ -41,7 +41,7 @@ export const SpacePage = withReactor(() => {
         task.completed = completed;
       }}
       onTaskDeleted={(task) => {
-        void space.experimental.db.remove(task);
+        void space.db.remove(task);
       }}
     />
   );

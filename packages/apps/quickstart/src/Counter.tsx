@@ -17,7 +17,7 @@ export const Counter = () => {
     if (!counter && space && !creating.current) {
       creating.current = true;
       const c = new Document({ type: 'counter' });
-      void space.experimental.db
+      void space.db
         .add(c)
         .catch((err) => {
           console.error(err);
