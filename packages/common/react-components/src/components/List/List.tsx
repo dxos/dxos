@@ -168,7 +168,11 @@ const ListItemHeading = ({
 const ListItemDragHandle = ({ className, ...props }: Omit<ComponentPropsWithoutRef<'div'>, 'children'>) => {
   const { themeVariant } = useThemeContext();
   return (
-    <div role='button' {...props} className={mx('bs-10 is-5 rounded', themeVariantFocus(themeVariant), className)}>
+    <div
+      role='button'
+      {...props}
+      className={mx('bs-10 is-5 rounded touch-none', themeVariantFocus(themeVariant), className)}
+    >
       <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
     </div>
   );
@@ -204,7 +208,7 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
           ref={forwardedRef}
           aria-labelledby={headingId}
           {...(selectable && { role: 'option', 'aria-selected': !!selected })}
-          className={mx('flex', draggable && 'touch-none', slots.root?.className)}
+          className={mx('flex', slots.root?.className)}
         >
           {draggable && <ListItemDragHandle {...slots.dragHandle} className={slots.dragHandle?.className} />}
           {selectable && (
