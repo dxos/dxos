@@ -41,23 +41,10 @@ export class ItemManager {
   readonly update = new Event<Item<Model>>();
 
   /**
-   * Update event.
-   * Contains a list of all entities changed from the last update.
-   * @deprecated Likely to cause race conditions.
-   */
-  readonly debouncedUpdate: Event<Item[]> = debounceItemUpdateEvent(this.update);
-
-  /**
    * Map of active items.
    * @private
    */
   private readonly _entities = new Map<ItemID, Item<Model>>();
-
-  /**
-   * Map of item promises (waiting for item construction after genesis message has been written).
-   * @private
-   */
-  private readonly _pendingItems = new Map<ItemID, (item: Item<Model>) => void>();
 
   @logInfo
   public _debugLabel: string | undefined;
@@ -88,75 +75,6 @@ export class ItemManager {
   }
 
   /**
-   * Creates an item and writes the genesis message.
-   * @param {ModelType} modelType
-   * @param {ItemType} [itemType]
-   * @param {ItemID} [parentId]
-   * @param initProps
-   * @deprecated
-   */
-  @timed(5_000)
-  async createItem(
-    modelType: ModelType,
-    itemId: ItemID = createId(),
-    parentId?: ItemID,
-    initProps?: { type?: string; obj?: Record<string, any> } // TODO(burdon): Remove/change to array of mutations.
-  ): Promise<Item<Model<unknown>>> {
-    assert(this._writeStream); // TODO(burdon): Throw ReadOnlyError();
-    assert(modelType);
-
-    if (!this._modelFactory.hasModel(modelType)) {
-      throw new UnknownModelError(modelType);
-    }
-
-    let mutation: Uint8Array | undefined;
-    if (initProps) {
-      const meta = this._modelFactory.getModelMeta(modelType);
-      if (!meta.getInitMutation) {
-        throw new Error('Model does not support initializer.');
-      }
-      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
-    }
-
-    // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Item<any>>();
-
-    this._pendingItems.set(itemId, callback);
-
-    // Write Item Genesis block.
-    log('Item Genesis', { itemId });
-    await this._writeStream.write({
-      object: {
-        objectId: itemId,
-        genesis: {
-          modelType
-        },
-        mutations:
-          !mutation && !parentId
-            ? []
-            : [
-                {
-                  parentId,
-                  model: !mutation
-                    ? undefined
-                    : {
-                        '@type': 'google.protobuf.Any',
-                        type_url: 'todo', // TODO(mykola): Make model output google.protobuf.Any.
-                        value: mutation
-                      }
-                }
-              ]
-      }
-    });
-
-    // Unlocked by construct.
-    log('Pending Item:', itemId);
-    const item = await waitForCreation();
-    assert(item instanceof Item);
-    return item;
-  }
-
-  /**
    * Adds new Item to the tracked set. Sets up events and notifies any listeners waiting for this Item to be constructed.
    */
   // TODO(burdon): Parent not used.
@@ -173,9 +91,6 @@ export class ItemManager {
     item.subscribe(() => {
       this.update.emit(item);
     });
-
-    // Notify pending creates.
-    this._pendingItems.get(item.id)?.(item);
   }
 
   /**
@@ -260,7 +175,7 @@ export class ItemManager {
    * Reconstruct an item with a default model when that model becomes registered.
    * New model instance is created and streams are reconnected.
    */
-  async initializeModel(itemId: ItemID) {
+  initializeModel(itemId: ItemID) {
     const item = this._entities.get(itemId);
     assert(item);
 
@@ -272,30 +187,3 @@ export class ItemManager {
     this.update.emit(item);
   }
 }
-
-/**
- * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
- */
-const debounceItemUpdateEvent = (event: Event<Item<any>>): Event<Item<any>[]> => {
-  const debouncedEvent = new Event<Item<any>[]>();
-
-  let firing = false;
-
-  const emittedSinceLastFired = new Set<Item<any>>();
-  debouncedEvent.addEffect(() =>
-    event.on((arg) => {
-      emittedSinceLastFired.add(arg);
-      if (!firing) {
-        firing = true;
-        setTimeout(() => {
-          firing = false;
-          const args = Array.from(emittedSinceLastFired);
-          emittedSinceLastFired.clear();
-          debouncedEvent.emit(args);
-        }, 0);
-      }
-    })
-  );
-
-  return debouncedEvent;
-};
