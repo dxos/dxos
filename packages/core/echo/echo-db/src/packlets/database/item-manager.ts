@@ -12,12 +12,11 @@ import { failUndefined, timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { logInfo } from '@dxos/log';
-import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
+import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 import { ItemID } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { createMappedFeedWriter } from '../common';
 import { UnknownModelError } from '../errors';
 import { Item } from './item';
 
@@ -162,36 +161,6 @@ export class ItemManager {
     const item = await waitForCreation();
     assert(item instanceof Item);
     return item;
-  }
-
-  private _constructModel({ modelType, itemId, snapshot }: ModelConstructionOptions): StateManager<Model> {
-    // Convert model-specific outbound mutation to outbound envelope message.
-    const outboundTransform =
-      this._writeStream &&
-      createMappedFeedWriter<Any, DataMessage>(
-        (mutation: Any) => ({
-          object: {
-            objectId: itemId,
-            mutations: [
-              {
-                model: mutation
-              }
-            ]
-          }
-        }),
-        this._writeStream
-      );
-
-    // Create the model with the outbound stream.
-    const stateManager = this._modelFactory.createModel<Model>(
-      modelType,
-      itemId,
-      snapshot,
-      this._memberKey,
-      outboundTransform
-    );
-    stateManager._debugLabel = this._debugLabel;
-    return stateManager;
   }
 
   /**

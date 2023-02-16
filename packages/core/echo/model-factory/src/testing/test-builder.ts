@@ -13,7 +13,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { Model } from '../model';
 import { ModelFactory } from '../model-factory';
-import { StateManager } from '../state-manager';
 import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
@@ -54,7 +53,7 @@ export class TestBuilder<M extends Model<any>> {
       writer
     );
 
-    const peer = new TestPeer(stateManager, key);
+    const peer = new TestPeer(stateManager, key) as any;
     this._peers.set(key, peer);
     return peer;
   }
@@ -134,7 +133,7 @@ export class TestPeer<M extends Model> {
 
   // prettier-ignore
   constructor(
-    public readonly stateManager: StateManager<M>,
+    public readonly stateManager: any/*StateManager<M>*/,
     public readonly key: PublicKey
   ) {}
 

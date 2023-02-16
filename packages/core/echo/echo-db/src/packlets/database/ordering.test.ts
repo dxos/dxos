@@ -10,7 +10,7 @@ import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { getInsertionIndex } from './ordering';
-import { ModelMessage } from './types';
+import { ModelMessage } from '@dxos/model-factory/src/types';
 
 describe('Ordering', () => {
   // feedA < feedB

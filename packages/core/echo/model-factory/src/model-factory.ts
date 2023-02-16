@@ -13,8 +13,8 @@ import { ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
 import { Model } from './model';
-import { StateManager } from './state-manager';
 import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
+import { todo } from '@dxos/debug';
 
 /**
  * Creates Model instances from a registered collection of Model types.
@@ -67,6 +67,7 @@ export class ModelFactory {
    * @param snapshot Snapshot defining the intial state. `{}` can be provided for empty state.
    * @param memberKey IDENTITY key of the member authoring the model's mutations.
    * @param writeStream Stream for outbound messages.
+   * @deprecated
    */
   createModel<M extends Model>(
     modelType: ModelType,
@@ -74,9 +75,9 @@ export class ModelFactory {
     snapshot: EchoObject,
     memberKey: PublicKey, // TODO(burdon): Change to client ID?
     writeStream?: FeedWriter<Any>
-  ): StateManager<M> {
+  ): any {
     assert(itemId);
     const constructor = this._models.get(modelType)?.constructor;
-    return new StateManager(modelType, constructor, itemId, snapshot, memberKey, writeStream ?? null);
+    return todo()
   }
 }

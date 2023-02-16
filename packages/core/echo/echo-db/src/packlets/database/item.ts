@@ -2,25 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event, EventSubscriptions, scheduleTask } from '@dxos/async';
+import { Event, scheduleTask } from '@dxos/async';
 import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { DocumentModel } from '@dxos/document-model';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { getInsertionIndex, Model, ModelConstructor, ModelMessage, ModelMeta, MutationOf, StateMachine, StateManager, StateOf } from '@dxos/model-factory';
-import { ItemID, ItemType, MutationMeta, MutationMetaWithTimeframe } from '@dxos/protocols';
+import { Model, ModelConstructor, ModelMeta, MutationOf, StateMachine, StateOf } from '@dxos/model-factory';
+import { ItemID, MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoObject, MutationMeta } from '@dxos/protocols/proto/dxos/echo/object';
 import assert from 'node:assert';
 
 import { ItemManager } from './item-manager';
-
-type OptimisticMutation = {
-  tag?: string;
-  mutation: Any;
-};
+import { getInsertionIndex, MutationInQueue } from './ordering';
 
 /**
  * A globally addressable data item.
@@ -41,6 +36,7 @@ type OptimisticMutation = {
  * - The mutatation queue.
  * - Optimistic mutations.
  */
+// TODO(dmaretskyi): Rename to ObjectState.
 export class Item<M extends Model = Model> {
   /**
    * Parent item (or null if this item is a root item).
@@ -62,8 +58,6 @@ export class Item<M extends Model = Model> {
   // Called whenever item processes mutation.
   protected readonly _onUpdate = new Event<Item<any>>();
 
-  private readonly _subscriptions = new EventSubscriptions();
-
   private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
@@ -73,15 +67,21 @@ export class Item<M extends Model = Model> {
   public _modelMeta: ModelMeta | null = null;
   private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
+
+  /**
+   * Snapshot of the base state of the object.
+   */
+  private _initialState: EchoObject;
+
   /**
    * Mutations that were applied on top of the _snapshot.
    */
-  private _mutations: ModelMessage<Any>[] = [];
+  private _mutations: MutationInQueue<MutationOf<M>>[] = [];
 
   /**
    * Mutations that were optimistically applied and haven't yet passed through the feed store.
    */
-  private _optimisticMutations: OptimisticMutation[] = [];
+  private _optimisticMutations: MutationInQueue<MutationOf<M>>[] = [];
 
 
   /**
@@ -94,10 +94,11 @@ export class Item<M extends Model = Model> {
   constructor(
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
-    private _initialState: EchoObject,
+    initialState: EchoObject,
     private readonly _writeStream?: FeedWriter<DataMessage>,
     parent?: Item<any> | null
   ) {
+    this._initialState = initialState;
     this._updateParent(parent);
   }
 
@@ -112,33 +113,6 @@ export class Item<M extends Model = Model> {
   get modelType(): string {
     assert(this._modelMeta);
     return this._modelMeta.type;
-  }
-
-  /**
-   * Subscribe for updates.
-   * @param listener
-   */
-  subscribe(listener: (entity: this) => void) {
-    return this._onUpdate.on(listener as any);
-  }
-
-  /**
-   * @internal
-   * Waits for pending operations to complete.
-   */
-  async destroy() {
-    log('destroy');
-    try {
-      await Promise.all(this._pendingWrites);
-    } catch { }
-  }
-
-  toString() {
-    return `Item(${JSON.stringify({
-      objectId: this.id,
-      parentId: this.parent?.id,
-      type: this.modelMeta?.type,
-    })})`;
   }
 
   get initialized(): boolean {
@@ -164,6 +138,38 @@ export class Item<M extends Model = Model> {
   get state(): StateOf<M> {
     assert(this._stateMachine);
     return this._stateMachine.getState();
+  }
+
+  toString() {
+    return `Item(${JSON.stringify({
+      objectId: this.id,
+      parentId: this.parent?.id,
+      type: this.modelMeta?.type,
+    })})`;
+  }
+
+  /**
+   * Perform late intitalization.
+   *
+   * Only possible if the modelContructor wasn't passed during StateManager's creation.
+   */
+  initialize(modelConstructor: ModelConstructor<M>) {
+    assert(!this._modelMeta, 'Already iniitalized.');
+
+    this._modelMeta = modelConstructor.meta;
+
+    this._resetStateMachine();
+  }
+
+  /**
+   * @internal
+   * Waits for pending operations to complete.
+   */
+  async destroy() {
+    log('destroy');
+    try {
+      await Promise.all(this._pendingWrites);
+    } catch { }
   }
 
   /**
@@ -299,14 +305,11 @@ export class Item<M extends Model = Model> {
   processOptimisticMutation(mutation: MutationOf<M>, clientTag?: string) {
     log('process optimistic mutation', { clientTag, mutation });
 
-    // Construct and enqueue an optimistic mutation.
-    const mutationEncoded = {
-      type_url: 'todo', // TODO(mykola): this._modelMeta!.mutationCodec.typeUrl ???
-      value: this._modelMeta!.mutationCodec.encode(mutation)
-    };
-    const optimisticMutation: OptimisticMutation = {
-      tag: clientTag,
-      mutation: mutationEncoded
+    const optimisticMutation: MutationInQueue<MutationOf<M>> = {
+      mutation: mutation,
+      meta: {
+        clientTag,
+      }
     };
     this._optimisticMutations.push(optimisticMutation);
 
@@ -348,34 +351,23 @@ export class Item<M extends Model = Model> {
 
     // Apply mutations that were read from the inbound stream.
     for (const mutation of this._mutations) {
-      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value));
+      this._stateMachine.process(mutation.mutation);
     }
 
     // Apply optimistic mutations.
     for (const mutation of this._optimisticMutations) {
-      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation.value));
+      this._stateMachine.process(mutation.mutation);
     }
-  }
-
-  /**
-   * Perform late intitalization.
-   *
-   * Only possible if the modelContructor wasn't passed during StateManager's creation.
-   */
-  initialize(modelConstructor: ModelConstructor<M>) {
-    assert(!this._modelMeta, 'Already iniitalized.');
-
-    this._modelMeta = modelConstructor.meta;
-
-    this._resetStateMachine();
   }
 
   /**
    * Processes mutations from the inbound stream.
    */
   processMessage(meta: MutationMetaWithTimeframe, mutation: Any, clientTag?: string) {
+    const decoded = this._modelMeta!.mutationCodec.decode(mutation.value);
+
     // Remove optimistic mutation from the queue.
-    const optimisticIndex = this._optimisticMutations.findIndex((message) => message.tag && message.tag === clientTag);
+    const optimisticIndex = this._optimisticMutations.findIndex((message) => message.meta.clientTag && message.meta.clientTag === clientTag);
     if (optimisticIndex !== -1) {
       this._optimisticMutations.splice(optimisticIndex, 1);
     }
@@ -386,7 +378,7 @@ export class Item<M extends Model = Model> {
       mutation
     });
     const lengthBefore = this._mutations.length;
-    this._mutations.splice(insertionIndex, 0, { meta, mutation });
+    this._mutations.splice(insertionIndex, 0, { mutation: decoded, meta });
     log('process message', {
       feed: PublicKey.from(meta.feedKey),
       seq: meta.seq,
@@ -424,7 +416,6 @@ export class Item<M extends Model = Model> {
   /**
    * Create a snapshot of the current state.
    */
-  // TODO(dmaretskyi): Lift to ObjectState class.
   createSnapshot(): EchoObject {
     if (this.initialized && this.modelMeta!.snapshotCodec && typeof this._stateMachine?.snapshot === 'function') { // If state-machine can create snapshots.
       return {
@@ -471,5 +462,13 @@ export class Item<M extends Model = Model> {
       this._resetStateMachine();
       this._emitUpdate();
     }
+  }
+
+  /**
+   * Subscribe for updates.
+   * @param listener
+   */
+  subscribe(listener: (entity: this) => void) {
+    return this._onUpdate.on(listener as any);
   }
 }

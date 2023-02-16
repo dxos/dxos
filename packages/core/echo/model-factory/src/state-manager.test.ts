@@ -13,6 +13,8 @@ const _feedB = PublicKey.fromHex('0x00000000000000000000000000000000000000000000
 
 const _createId = () => PublicKey.random().toHex();
 
+
+// TODO(dmaretskyi): Move tests to echo-db.
 describe('StateManager', () => {
   // test('construct readonly and apply mutations', () => {
   //   const objectId = createId();
