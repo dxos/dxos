@@ -195,6 +195,7 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
       slots = {}
     } = props;
     const { variant, selectable } = useListContext(LIST_NAME, __scopeSelect);
+    const draggable = variant === 'ordered-draggable';
 
     const [selected = false, setSelected] = useControllableState({
       prop: propsSelected,
@@ -213,11 +214,9 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
             ref={forwardedRef}
             aria-labelledby={headingId}
             {...(selectable && { role: 'option', 'aria-selected': !!selected })}
-            className={mx('flex', slots.root?.className)}
+            className={mx('flex', draggable && 'touch-none', slots.root?.className)}
           >
-            {variant === 'ordered-draggable' && (
-              <ListItemDragHandle {...slots.dragHandle} className={slots.dragHandle?.className} />
-            )}
+            {draggable && <ListItemDragHandle {...slots.dragHandle} className={slots.dragHandle?.className} />}
             {selectable && (
               <ListItemEndcap>
                 <Checkbox
