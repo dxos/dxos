@@ -33,13 +33,13 @@ export class SystemServiceImpl implements SystemService {
     return this._config.values;
   }
 
-  async initSession() {
-    await this._onInit();
-  }
-
   // TODO(burdon): Connect to iframe RPC heartbeat for network status?
   async getStatus() {
     return this._onStatus();
+  }
+
+  async initSession() {
+    await this._onInit();
   }
 
   async reset() {
