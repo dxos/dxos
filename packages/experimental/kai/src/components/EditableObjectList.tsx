@@ -6,7 +6,6 @@ import { Circle, Plus } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Document } from '@dxos/echo-schema';
-import { id } from '@dxos/react-client';
 import { getSize, List, ListItem, Button, Input, ListItemEndcap, mx } from '@dxos/react-components';
 
 // TODO(burdon): Make fully generic (don't depend on Document).
@@ -52,13 +51,13 @@ export const EditableObjectList = <T extends Document>({
     <div role='none' className='is-full'>
       <List labelId='todo'>
         {objects.map((object) => {
-          const isSelected = object[id] === selected;
+          const isSelected = object.id === selected;
           return (
-            <ListItem id={object[id]} key={object[id]}>
+            <ListItem id={object.id} key={object.id}>
               <ListItemEndcap asChild>
                 <Button
                   variant='ghost'
-                  onClick={() => onSelect?.(object[id])}
+                  onClick={() => onSelect?.(object.id)}
                   className={mx(
                     'p-0 ml-2 flex items-center justify-center gap-1',
                     isSelected ? 'text-selection-text' : ''
@@ -70,7 +69,7 @@ export const EditableObjectList = <T extends Document>({
               <Input
                 variant='subdued'
                 value={getTitle(object)}
-                onChange={({ target: { value } }) => onUpdate?.(object[id], value)}
+                onChange={({ target: { value } }) => onUpdate?.(object.id, value)}
                 placeholder='Title'
                 label='Title'
                 slots={{
@@ -84,7 +83,7 @@ export const EditableObjectList = <T extends Document>({
                   <Button
                     variant='ghost'
                     className='p-0 flex items-center justify-center'
-                    onClick={() => onAction?.(object[id])}
+                    onClick={() => onAction?.(object.id)}
                   >
                     <ActionIcon className={getSize(6)} />
                   </Button>

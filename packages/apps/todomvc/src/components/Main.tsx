@@ -6,7 +6,6 @@ import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
-import { deleted, id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
 import { FILTER } from '../constants';
@@ -28,7 +27,7 @@ export const Main = withReactor(() => {
   }
 
   // TODO(wittjosiah): Hide deleted items from `useQuery`?
-  const allTodos = list.todos.filter((todo) => !todo[deleted]);
+  const allTodos = list.todos.filter((todo) => !todo.__deleted);
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -70,7 +69,7 @@ export const Main = withReactor(() => {
     list.todos
       .filter((item) => item.completed)
       .forEach((item) => {
-        void space.experimental.db.delete(item);
+        void space.experimental.db.remove(item);
       });
   };
 
@@ -111,13 +110,13 @@ export const Main = withReactor(() => {
           <ul className='todo-list'>
             {todos.map((todo) => (
               <TodoItem
-                key={todo[id]}
+                key={todo.id}
                 title={todo.title}
                 completed={!!todo.completed}
                 onToggle={() => (todo.completed = !todo.completed)}
-                onDestroy={() => space.experimental.db.delete(todo)}
-                onEdit={() => setEditing(todo[id])}
-                editing={editing === todo[id]}
+                onDestroy={() => space.experimental.db.remove(todo)}
+                onEdit={() => setEditing(todo.id)}
+                editing={editing === todo.id}
                 onSave={(title) => {
                   todo.title = title;
                   setEditing(undefined);

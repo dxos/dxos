@@ -44,7 +44,7 @@ export const KanbanFrame: FC = () => {
 
   const handleCreate = async (column: KanbanColumnDef) => {
     const project = new Project({ tag: column.id });
-    await space.experimental.db.save(project);
+    await space.experimental.db.add(project);
   };
 
   // TODO(burdon): Type and column/field selectors.

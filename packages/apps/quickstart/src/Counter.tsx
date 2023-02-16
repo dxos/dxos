@@ -18,7 +18,7 @@ export const Counter = () => {
       creating.current = true;
       const c = new Document({ type: 'counter' });
       void space.experimental.db
-        .save(c)
+        .add(c)
         .catch((err) => {
           console.error(err);
           creating.current = false;
