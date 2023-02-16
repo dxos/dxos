@@ -28,7 +28,7 @@ export const SpaceList: FC<{
       items={spaces.map((space) => ({
         id: space.key.toHex(),
         key: truncateKey(space.key, 4),
-        text: space.properties.title
+        text: space.properties.name
       }))}
     />
   );
