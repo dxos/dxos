@@ -27,13 +27,11 @@ const Story = ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceK
       setTimeout(async () => {
         // TODO(burdon): Auto-create document.
         const document = new Document({ content: new TextObject() });
-        await space?.experimental.db.save(document);
+        await space?.experimental.db.add(document);
       });
     }
   }, [space]);
 
-  // TODO(burdon): Auto construct.
-  // TODO(burdon): Newline creates error: `Can not convert <> to a Fragment`.
   if (!document?.content) {
     return null;
   }
