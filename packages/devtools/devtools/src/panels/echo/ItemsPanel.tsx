@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Document, DocumentBase, type } from '@dxos/client';
+import { Document, DocumentBase } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useQuery } from '@dxos/react-client';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
@@ -28,10 +28,10 @@ const textFilter = (text?: string) => {
 };
 
 // TODO(burdon): Rationalize with new API.
-const getItemType = (doc: DocumentBase) => doc[type];
+const getItemType = (doc: DocumentBase) => doc.__typename;
 const getItemDetails = (item: DocumentBase) => ({
   id: truncateKey(item.id, 4),
-  type: item[type],
+  type: item.__typename,
   deleted: String(Boolean(item.__deleted)),
   properties: <JsonView data={item.toJSON()} />
 });

@@ -7,7 +7,7 @@ import { InspectOptionsStylized, inspect } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 
-import { base, data, proxy, schema, type } from './defs';
+import { base, data, proxy, schema } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -21,7 +21,9 @@ const isValidKey = (key: string | symbol) =>
     key === '$$typeof' ||
     key === 'toString' ||
     key === 'toJSON' ||
-    key === 'id'
+    key === 'id' ||
+    key === '__deleted' ||
+    key === '__typename'
   );
 
 export type ConvertVisitors = {
@@ -73,8 +75,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     return this[base]?._schemaType?.name ?? 'Document';
   }
 
-  get [type](): string | null {
-    return this[base]?._schemaType?.name ?? this[base]._model?.type ?? null;
+  get __typename(): string | undefined {
+    return this[base]?._schemaType?.name ?? this[base]._model?.type ?? undefined;
   }
 
   // TODO(burdon): Method on Document vs EchoObject?
@@ -98,7 +100,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   get [data]() {
     return {
       '@id': this.id,
-      '@type': this[type],
+      '@type': this.__typename,
       ...this[base]._convert({
         onRef: (id, obj?) => obj ?? { '@id': id }
       })
@@ -131,7 +133,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
     return {
       '@id': this.id,
-      '@type': this[type],
+      '@type': this.__typename,
       ...convert(this._model?.toObject())
     };
   }

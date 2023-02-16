@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { type } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
@@ -43,7 +42,7 @@ describe('schema', () => {
     expect(JSON.stringify(task1)).to.equal(
       JSON.stringify({
         '@id': task1.id,
-        '@type': task1[type],
+        '@type': task1.__typename,
         subTasks: [],
         title: 'Task 1',
         assignee: { '@id': contact.id }
@@ -58,7 +57,7 @@ describe('schema', () => {
 
     expect(contact.toJSON()).to.deep.eq({
       '@id': contact.id,
-      '@type': contact[type],
+      '@type': contact.__typename,
       name: 'User 1',
       tasks: [
         {

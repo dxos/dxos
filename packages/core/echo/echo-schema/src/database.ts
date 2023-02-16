@@ -12,7 +12,7 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { base, db, type } from './defs';
+import { base, db } from './defs';
 import { Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -91,7 +91,7 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
-    log('save', { id: obj.id, type: (obj as any)[type] });
+    log('save', { id: obj.id, type: (obj as any).__typename });
     assert(obj.id); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
     if (obj[base]._database) {
@@ -265,7 +265,7 @@ const filterMatcher = (filter: Filter<any>, object: EchoObject): object is Docum
     return false;
   }
 
-  if (typeof filter === 'object' && filter['@type'] && object[type] !== filter['@type']) {
+  if (typeof filter === 'object' && filter['@type'] && object.__typename !== filter['@type']) {
     return false;
   }
 

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Document, DocumentBase, type } from '@dxos/echo-schema';
+import { Document, DocumentBase } from '@dxos/echo-schema';
 import { Group } from '@dxos/react-components';
 
 import { Task, TaskList } from '../../proto';
@@ -27,7 +27,8 @@ export const DefaultTile: Tile<Document> = {
 
 export const TaskListTile: Tile<TaskList> = {
   // TODO(wittjosiah): Ideally the type string would be exported from the schema as a constant.
-  canRender: (data) => data[type] === TaskList.type.name,
+  // TODO(wittjosiah): `data instanceof TaskList` should work
+  canRender: (data) => data.__typename === TaskList.type.name,
   render: ({ data }) => (
     <BaseTile label={{ children: data.title }}>
       <ul>
@@ -40,7 +41,7 @@ export const TaskListTile: Tile<TaskList> = {
 };
 
 export const TaskTile: Tile<Task> = {
-  canRender: (data) => data[type] === Task.type.name,
+  canRender: (data) => data.__typename === Task.type.name,
   render: ({ data }) => (
     <BaseTile
       label={{
