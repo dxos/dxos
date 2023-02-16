@@ -16,7 +16,7 @@ export const SpacesPage = (props: SpacesPageProps) => {
     <SpacesPageComponent
       onSpaceCreated={async (space) => {
         const defaultList = new Document({ type: 'list' });
-        void space.experimental.db.add(defaultList);
+        void space.db.add(defaultList);
       }}
       onSpaceJoined={({ spaceKey }) => {
         if (!spaceKey) {

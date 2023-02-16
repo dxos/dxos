@@ -17,8 +17,8 @@ type UseQuery = {
  */
 export const useQuery: UseQuery = <T extends DocumentBase>(space?: Space, filter?: Filter<T>): DocumentBase[] => {
   const query = useMemo(
-    () => space?.experimental.db.query(filter ?? {}) as Query<T> | undefined,
-    [space?.experimental.db, ...filterToDepsArray(filter)]
+    () => space?.db.query(filter ?? {}) as Query<T> | undefined,
+    [space?.db, ...filterToDepsArray(filter)]
   );
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore

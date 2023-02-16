@@ -39,7 +39,7 @@ const RecoverIdentityPage = () => {
       await client.halo.createProfile({ seedphrase });
       const space = await client.echo.createSpace();
       if (dev && !client.config.values.runtime?.client?.storage?.persistent) {
-        await new Generator(space.experimental.db).generate();
+        await new Generator(space.db).generate();
       }
 
       redirect();
