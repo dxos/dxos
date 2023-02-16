@@ -20,7 +20,7 @@ describe('ItemManager', () => {
       const itemId = createId();
       const item = await itemManager.constructItem({
         itemId,
-        modelType: DocumentModel.meta.type,
+        modelType: DocumentModel.meta.type
       });
       expect(item.id).toEqual(itemId);
 
@@ -47,7 +47,7 @@ describe('ItemManager', () => {
 
       const parent = await itemManager.constructItem(defaultOpts());
       const child = await itemManager.constructItem({
-        ...defaultOpts(),
+        ...defaultOpts()
       });
 
       expect(child.parent).toEqual(parent.id);
@@ -57,9 +57,9 @@ describe('ItemManager', () => {
       const modelFactory = new ModelFactory().registerModel(DocumentModel);
       const itemManager = new ItemManager(modelFactory);
 
-      const parent = await itemManager.constructItem(defaultOpts());
+      const _parent = await itemManager.constructItem(defaultOpts());
       const child = await itemManager.constructItem({
-        ...defaultOpts(),
+        ...defaultOpts()
       });
 
       itemManager.deconstructItem(child.id);
@@ -73,10 +73,10 @@ describe('ItemManager', () => {
 
       const parent = await itemManager.constructItem(defaultOpts());
       await itemManager.constructItem({
-        ...defaultOpts(),
+        ...defaultOpts()
       });
       await itemManager.constructItem({
-        ...defaultOpts(),
+        ...defaultOpts()
       });
 
       expect(itemManager.entities.size).toEqual(3);
@@ -92,6 +92,6 @@ const defaultOpts = (): ItemConstructionOptions => {
   const itemId = createId();
   return {
     itemId,
-    modelType: DocumentModel.meta.type,
+    modelType: DocumentModel.meta.type
   };
 };

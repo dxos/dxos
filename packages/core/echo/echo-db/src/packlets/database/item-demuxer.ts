@@ -5,15 +5,13 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { Model, ModelFactory } from '@dxos/model-factory';
+import { log } from '@dxos/log';
+import { ModelFactory } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { log } from '@dxos/log';
-import { Item } from './item';
 import { ItemManager } from './item-manager';
-
 
 export interface ItemDemuxerOptions {
   snapshots?: boolean;
@@ -32,7 +30,7 @@ export class ItemDemuxer {
     private readonly _itemManager: ItemManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _options: ItemDemuxerOptions = {}
-  ) { }
+  ) {}
 
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {
@@ -47,7 +45,7 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the SpaceProcessor?
     return async (message: IEchoStream) => {
       const {
-        data: { objectId, genesis, mutations, snapshot },
+        data: { objectId, genesis, mutations },
         meta
       } = message;
       if (mutations) {
@@ -65,7 +63,7 @@ export class ItemDemuxer {
 
         const entity = this._itemManager.constructItem({
           itemId: objectId,
-          modelType,
+          modelType
         });
         entity.resetToSnapshot({
           ...message.data,
@@ -75,7 +73,7 @@ export class ItemDemuxer {
               meta
             })) ?? [],
           meta
-        })
+        });
 
         assert(entity.id === objectId);
       }
@@ -87,7 +85,7 @@ export class ItemDemuxer {
         // Forward mutations to the item's stream.
         this._itemManager.processMutation(objectId, {
           ...mutation,
-          meta,
+          meta
         });
       }
 
@@ -113,9 +111,9 @@ export class ItemDemuxer {
 
       const obj = this._itemManager.constructItem({
         itemId: item.objectId,
-        modelType: item.genesis.modelType,
+        modelType: item.genesis.modelType
       });
-      obj.resetToSnapshot(item)
+      obj.resetToSnapshot(item);
     }
   }
 }

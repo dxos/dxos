@@ -32,7 +32,7 @@ export class DataServiceHost {
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _writeStream?: FeedWriter<DataMessage>
-  ) { }
+  ) {}
 
   /**
    * Real-time subscription to data objects in a space.
@@ -40,7 +40,7 @@ export class DataServiceHost {
   subscribe(): Stream<EchoEvent> {
     return new Stream(({ next, ctx }) => {
       // send current state
-      const objects = Array.from(this._itemManager.entities.values()).map(entity => entity.createSnapshot());
+      const objects = Array.from(this._itemManager.entities.values()).map((entity) => entity.createSnapshot());
 
       next({
         batch: {
@@ -63,7 +63,7 @@ export class DataServiceHost {
               ...mutation.data,
               mutations: mutation.data.mutations?.map((m, mutationIdx) => ({
                 ...m,
-                meta: mutation.meta,
+                meta: mutation.meta
               })),
               meta: mutation.meta
             }
@@ -96,7 +96,7 @@ export class DataServiceHost {
           ...m,
           meta: undefined
         })),
-        meta: undefined,
+        meta: undefined
       }
     });
     if (request.clientTag) {

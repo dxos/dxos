@@ -2,17 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
-import { EchoObject } from '@dxos/protocols/src/proto/gen/dxos/echo/object';
-import { Timeframe } from '@dxos/timeframe';
 import assert from 'node:assert';
+
+import { PublicKey } from '@dxos/keys';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { Timeframe } from '@dxos/timeframe';
 
 export type MutationInQueue<T = any> = {
   /**
    * Decoded mutation for the model.
    */
   decodedModelMutation?: T;
-  mutation: EchoObject.Mutation
+  mutation: EchoObject.Mutation;
 };
 
 /**
@@ -35,7 +36,10 @@ export const getInsertionIndex = (existing: MutationInQueue<unknown>[], newEntry
 
     const deps = Timeframe.dependencies(newEntry.mutation.meta!.timeframe!, existingTimeframe);
     if (deps.isEmpty()) {
-      if (PublicKey.from(newEntry.mutation.meta!.feedKey!).toHex() < PublicKey.from(existing[i].mutation.meta!.feedKey!).toHex()) {
+      if (
+        PublicKey.from(newEntry.mutation.meta!.feedKey!).toHex() <
+        PublicKey.from(existing[i].mutation.meta!.feedKey!).toHex()
+      ) {
         return i;
       }
     }
@@ -48,14 +52,14 @@ export type PushResult = {
   /**
    * Order of mutations has changed.
    */
-  reorder: boolean
+  reorder: boolean;
 
   /**
    * This is a new mutation that needs to be processed by the state machine.
    * Set to `false` if this mutation confirms a previous optimistic mutation.
    */
-  apply: boolean
-}
+  apply: boolean;
+};
 
 export class MutationQueue<T> {
   private _confirmed: MutationInQueue<T>[] = [];
@@ -66,10 +70,7 @@ export class MutationQueue<T> {
   }
 
   getMutations(): MutationInQueue<T>[] {
-    return [
-      ...this._confirmed,
-      ...this._optimistic,
-    ]
+    return [...this._confirmed, ...this._optimistic];
   }
 
   /**
@@ -92,7 +93,12 @@ export class MutationQueue<T> {
     assert(entry.mutation.meta!.timeframe);
 
     // Remove optimistic mutation from the queue.
-    const optimisticIndex = !entry.mutation.meta!.clientTag ? -1 : this._optimistic.findIndex((message) => message.mutation.meta!.clientTag && message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag);
+    const optimisticIndex = !entry.mutation.meta!.clientTag
+      ? -1
+      : this._optimistic.findIndex(
+          (message) =>
+            message.mutation.meta!.clientTag && message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag
+        );
     if (optimisticIndex !== -1) {
       this._optimistic.splice(optimisticIndex, 1);
     }
@@ -102,15 +108,16 @@ export class MutationQueue<T> {
     this._confirmed.splice(insertionIndex, 0, entry);
 
     return {
-      reorder: insertionIndex !== lengthBefore ||
+      reorder:
+        insertionIndex !== lengthBefore ||
         optimisticIndex > 0 ||
         (optimisticIndex === -1 && this._optimistic.length > 0),
 
       apply: optimisticIndex === -1
-    }
+    };
   }
 
   resetConfirmed() {
-    return this._confirmed = [];
+    return (this._confirmed = []);
   }
 }

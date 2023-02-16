@@ -35,9 +35,9 @@ export interface DataPipelineController {
 }
 
 export class NoopDataPipelineController implements DataPipelineController {
-  async open(context: DataPipelineControllerContext): Promise<void> { }
+  async open(context: DataPipelineControllerContext): Promise<void> {}
 
-  async close(): Promise<void> { }
+  async close(): Promise<void> {}
 }
 
 export type DataPipelineControllerImplParams = {
@@ -81,7 +81,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
   public readonly onTimeframeReached = new Event<Timeframe>();
 
-  constructor(private readonly _params: DataPipelineControllerImplParams) { }
+  constructor(private readonly _params: DataPipelineControllerImplParams) {}
 
   public _itemManager!: ItemManager;
   public databaseBackend?: DatabaseBackendHost;

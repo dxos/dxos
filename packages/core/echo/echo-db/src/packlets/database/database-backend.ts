@@ -11,7 +11,6 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory, MutationWriteReceipt } from '@dxos/model-factory';
-import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
@@ -58,7 +57,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
     private readonly _snapshot?: EchoSnapshot,
     private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
-  ) { }
+  ) {}
 
   get isReadOnly(): boolean {
     return !!this._outboundStream;
@@ -80,7 +79,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
     }
   }
 
-  async close() { }
+  async close() {}
 
   getWriteStream(): FeedWriter<DataMessage> | undefined {
     return this._outboundStream;
@@ -184,7 +183,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
         assert(object.genesis.modelType);
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
-          modelType: object.genesis.modelType,
+          modelType: object.genesis.modelType
         });
         objectsCreated.push(entity);
       } else {

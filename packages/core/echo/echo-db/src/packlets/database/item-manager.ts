@@ -2,29 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
-import { Event, trigger } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
-import { createId } from '@dxos/crypto';
-import { failUndefined, timed } from '@dxos/debug';
-import { FeedWriter } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { Event } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { log, logInfo } from '@dxos/log';
-import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
+import { Model, ModelFactory, ModelType } from '@dxos/model-factory';
 import { ItemID } from '@dxos/protocols';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { UnknownModelError } from '../errors';
 import { Item } from './item';
 
 // TODO(dmaretskyi): Merge.
 export type ItemConstructionOptions = {
   itemId: ItemID;
   modelType: ModelType;
-}
+};
 
 /**
  * Manages the creation and indexing of items.
@@ -49,9 +42,7 @@ export class ItemManager {
   /**
    * @param _writeStream Outbound `dxos.echo.IEchoObject` mutation stream.
    */
-  constructor(
-    private readonly _modelFactory: ModelFactory,
-  ) { }
+  constructor(private readonly _modelFactory: ModelFactory) {}
 
   get entities() {
     return this._entities;
@@ -95,7 +86,7 @@ export class ItemManager {
     assert(itemId);
     assert(modelType);
     if (this.entities.has(itemId)) {
-      log.info('init twice')
+      log.info('init twice');
       return this.entities.get(itemId)!;
     }
 
@@ -103,7 +94,7 @@ export class ItemManager {
 
     const item = new Item(this, itemId);
     item._debugLabel = this._debugLabel;
-    item.initialize(modelConstructor)
+    item.initialize(modelConstructor);
 
     this._addItem(item);
 

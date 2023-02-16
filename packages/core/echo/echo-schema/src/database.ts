@@ -8,13 +8,13 @@ import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy, Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
+import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db, deleted, id, type } from './defs';
 import { Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
-import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextObject } from './text-object';
 
 export type PropertiesFilter = Record<string, any>;
@@ -130,13 +130,17 @@ export class EchoDatabase {
    */
   delete<T extends DocumentBase>(obj: T) {
     this._backend.mutate({
-      objects: [{
-        objectId: obj[base]._id,
-        mutations: [{
-          action: EchoObjectProto.Mutation.Action.DELETE
-        }]
-      }]
-    })
+      objects: [
+        {
+          objectId: obj[base]._id,
+          mutations: [
+            {
+              action: EchoObjectProto.Mutation.Action.DELETE
+            }
+          ]
+        }
+      ]
+    });
   }
 
   /**
@@ -144,13 +148,17 @@ export class EchoDatabase {
    */
   restore<T extends DocumentBase>(obj: T) {
     this._backend.mutate({
-      objects: [{
-        objectId: obj[base]._id,
-        mutations: [{
-          action: EchoObjectProto.Mutation.Action.RESTORE
-        }]
-      }]
-    })
+      objects: [
+        {
+          objectId: obj[base]._id,
+          mutations: [
+            {
+              action: EchoObjectProto.Mutation.Action.RESTORE
+            }
+          ]
+        }
+      ]
+    });
   }
 
   /**

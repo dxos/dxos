@@ -5,7 +5,7 @@
 import { ItemID } from '@dxos/protocols';
 
 import { Item } from '../item';
-import { coerceToId, OneOrMultiple, testOneOrMultiple } from './util';
+import { coerceToId, OneOrMultiple } from './util';
 
 //
 // Types
@@ -26,7 +26,7 @@ export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>;
 
 /**
  * Visitor callback.
-* The visitor is passed the current entities and result (accumulator),
+ * The visitor is passed the current entities and result (accumulator),
  * which may be modified and returned.
  */
 export type Callable<T extends Item, R> = (entities: T[], result: R) => R;
@@ -74,7 +74,7 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
   } else {
     return (item) =>
       // (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
-      (!filter.parent || item.parent === coerceToId(filter.parent));
+      !filter.parent || item.parent === coerceToId(filter.parent);
   }
 };
 

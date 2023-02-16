@@ -133,7 +133,7 @@ export class TestPeer<M extends Model> {
 
   // prettier-ignore
   constructor(
-    public readonly stateManager: any/*StateManager<M>*/,
+    public readonly stateManager: any/* StateManager<M> */,
     public readonly key: PublicKey
   ) {}
 

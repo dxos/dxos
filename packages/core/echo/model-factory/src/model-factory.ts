@@ -7,14 +7,13 @@ import assert from 'node:assert';
 import { Event, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { todo } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { Model } from './model';
 import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
-import { todo } from '@dxos/debug';
 
 /**
  * Creates Model instances from a registered collection of Model types.
@@ -69,15 +68,15 @@ export class ModelFactory {
    * @param writeStream Stream for outbound messages.
    * @deprecated
    */
-  createModel<M extends Model>(
+  createModel(
     modelType: ModelType,
     itemId: ItemID,
-    snapshot: EchoObject,
-    memberKey: PublicKey, // TODO(burdon): Change to client ID?
-    writeStream?: FeedWriter<Any>
+    _snapshot: EchoObject,
+    _memberKey: PublicKey, // TODO(burdon): Change to client ID?
+    _writeStream?: FeedWriter<Any>
   ): any {
     assert(itemId);
-    const constructor = this._models.get(modelType)?.constructor;
-    return todo()
+    const _constructor = this._models.get(modelType)?.constructor;
+    return todo();
   }
 }

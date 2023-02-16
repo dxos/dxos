@@ -6,6 +6,7 @@ import expect from 'expect'; // TODO(burdon): Convert to chai.
 import { inspect } from 'node:util';
 import waitForExpect from 'wait-for-expect';
 
+import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
@@ -14,7 +15,6 @@ import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
 import { TextObject } from './text-object';
-import { sleep } from '@dxos/async';
 
 describe('EchoDatabase', () => {
   test('get/set properties', async () => {
@@ -341,8 +341,6 @@ describe('EchoDatabase', () => {
       const db = await createDatabase();
       const task = new Document();
       await db.save(task);
-
-      
       task.text = new TextObject();
       await sleep(10);
       expect(task.text.doc).toBeDefined();

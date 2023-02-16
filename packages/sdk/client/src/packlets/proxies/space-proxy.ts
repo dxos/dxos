@@ -123,7 +123,7 @@ export class SpaceProxy implements Space {
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _state: SpaceType,
-    databaseRouter: DatabaseRouter,
+    databaseRouter: DatabaseRouter
   ) {
     assert(this._clientServices.services.SpaceInvitationsService, 'SpaceInvitationsService not available');
     this._invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);

@@ -2,26 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event, scheduleTask } from '@dxos/async';
-import { Any, ProtoCodec } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
-import { FeedWriter } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
-import { log, logInfo } from '@dxos/log';
-import { Model, ModelConstructor, ModelMeta, MutationOf, StateMachine, StateOf } from '@dxos/model-factory';
-import { ItemID, MutationMetaWithTimeframe } from '@dxos/protocols';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoObject, MutationMeta } from '@dxos/protocols/proto/dxos/echo/object';
 import assert from 'node:assert';
 
+import { Event, scheduleTask } from '@dxos/async';
+import { ProtoCodec } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
+import { log, logInfo } from '@dxos/log';
+import { Model, ModelConstructor, ModelMeta, MutationOf, StateMachine, StateOf } from '@dxos/model-factory';
+import { ItemID } from '@dxos/protocols';
+import { EchoObject, MutationMeta } from '@dxos/protocols/proto/dxos/echo/object';
+
 import { ItemManager } from './item-manager';
-import { getInsertionIndex, MutationInQueue, MutationQueue } from './ordering';
+import { MutationInQueue, MutationQueue } from './ordering';
 
 /**
  * A globally addressable data item.
  * Items are hermetic data structures contained within a Space. They may be hierarchical.
  * The Item data structure is governed by a Model class, which implements data consistency.
- * 
+ *
  * Manages the state machine lifecycle.
  * Snapshots represent the reified state of a set of mutations up until at a particular Timeframe.
  * The state machine maintains a queue of optimistic and committed mutations as they are written to the output stream.
@@ -38,7 +36,6 @@ import { getInsertionIndex, MutationInQueue, MutationQueue } from './ordering';
  */
 // TODO(dmaretskyi): Rename to ObjectState.
 export class Item<M extends Model = Model> {
-
   // Called whenever item processes mutation.
   protected readonly _onUpdate = new Event<Item<any>>();
 
@@ -87,13 +84,10 @@ export class Item<M extends Model = Model> {
    * @param objectId        Addressable ID.
    * @param parent        Parent Item (if not a root Item).
    */
-  constructor(
-    protected readonly _itemManager: ItemManager,
-    private readonly _id: ItemID,
-  ) {
+  constructor(protected readonly _itemManager: ItemManager, private readonly _id: ItemID) {
     this._initialState = {
-      objectId: _id,
-    }
+      objectId: _id
+    };
   }
 
   @logInfo
@@ -134,7 +128,7 @@ export class Item<M extends Model = Model> {
       objectId: this.id,
       parentId: this.parent,
       deleted: this.deleted,
-      type: this.modelMeta?.type,
+      type: this.modelMeta?.type
     })})`;
   }
 
@@ -147,7 +141,7 @@ export class Item<M extends Model = Model> {
     assert(!this._modelMeta, 'Already iniitalized.');
 
     this._modelMeta = modelConstructor.meta;
-    log('initialize')
+    log('initialize');
 
     this._resetState();
   }
@@ -160,7 +154,7 @@ export class Item<M extends Model = Model> {
     log('destroy');
     try {
       await Promise.all(this._pendingWrites);
-    } catch { }
+    } catch {}
   }
 
   /**
@@ -172,7 +166,6 @@ export class Item<M extends Model = Model> {
     const { action, parentId, model } = entry.mutation;
 
     {
-
       switch (action) {
         case EchoObject.Mutation.Action.DELETE: {
           this._deleted = true;
@@ -202,16 +195,16 @@ export class Item<M extends Model = Model> {
   }
 
   private _decodeMutation(mutation: EchoObject.Mutation): MutationInQueue<MutationOf<M>> {
-    assert(this.modelMeta)
+    assert(this.modelMeta);
     return {
       mutation,
       decodedModelMutation: !mutation.model ? undefined : this.modelMeta.mutationCodec.decode(mutation.model.value)
-    }
+    };
   }
 
   /**
-    * Re-creates the state machine based on the current snapshot and enqueued mutations.
-    */
+   * Re-creates the state machine based on the current snapshot and enqueued mutations.
+   */
   private _resetState() {
     assert(this._modelMeta, 'Model not initialized.');
     log('Reset state machine');
@@ -251,7 +244,6 @@ export class Item<M extends Model = Model> {
     }
   }
 
-
   /**
    * Processes mutations from the inbound stream.
    */
@@ -281,7 +273,7 @@ export class Item<M extends Model = Model> {
       }
     }
 
-    log('test confirmed state', this.state)
+    log('test confirmed state', this.state);
 
     // Notify listeners that the mutation has been processed.
     scheduleTask(new Context(), () => this._mutationProcessed.emit(queueEntry.mutation.meta!));
@@ -299,18 +291,19 @@ export class Item<M extends Model = Model> {
       snapshot: {
         ...this._initialState.snapshot,
         parentId: this.parent ?? undefined,
-        deleted: this.deleted,
-      },
-    }
+        deleted: this.deleted
+      }
+    };
 
-    if (this.initialized && this.modelMeta!.snapshotCodec && typeof this._stateMachine?.snapshot === 'function') { // If state-machine can create snapshots.
+    if (this.initialized && this.modelMeta!.snapshotCodec && typeof this._stateMachine?.snapshot === 'function') {
+      // If state-machine can create snapshots.
       return {
         ...commonSnapshot,
         snapshot: {
           ...commonSnapshot.snapshot,
-          model: (this.modelMeta!.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine!.snapshot()),
-        },
-      }
+          model: (this.modelMeta!.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine!.snapshot())
+        }
+      };
     } else {
       return {
         ...commonSnapshot,
@@ -326,17 +319,20 @@ export class Item<M extends Model = Model> {
    * Reset the state to existing snapshot.
    */
   resetToSnapshot(snapshot: EchoObject) {
-    assert(snapshot.genesis)
+    assert(snapshot.genesis);
     assert(snapshot.objectId === this._id);
 
     // We don't reset if this snapshot is a response to the initial optimistic genesis message.
-    const needsReset = !this._initialState.meta?.clientTag
-      || !!this._initialState.meta?.feedKey
-      || this._initialState.meta?.clientTag !== snapshot.meta?.clientTag;
+    const needsReset =
+      !this._initialState.meta?.clientTag ||
+      !!this._initialState.meta?.feedKey ||
+      this._initialState.meta?.clientTag !== snapshot.meta?.clientTag;
 
     this._initialState = snapshot;
-    this._initialStateMutations = (this._initialState.mutations ?? []).map(mutation => this._decodeMutation(mutation));
-    log('resetToSnapshot', { needsReset, snapshot })
+    this._initialStateMutations = (this._initialState.mutations ?? []).map((mutation) =>
+      this._decodeMutation(mutation)
+    );
+    log('resetToSnapshot', { needsReset, snapshot });
 
     if (needsReset) {
       this._mutationQueue.resetConfirmed();
