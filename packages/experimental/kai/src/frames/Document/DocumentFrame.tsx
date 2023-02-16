@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { id, useQuery, withReactor } from '@dxos/react-client';
+import { useQuery, withReactor } from '@dxos/react-client';
 import { Input, mx } from '@dxos/react-components';
 import { Composer } from '@dxos/react-composer';
 
@@ -21,7 +21,7 @@ export const DocumentFrame = withReactor(() => {
   const object = objectId ? (space!.experimental.db.getObjectById(objectId) as Document) : undefined;
   useEffect(() => {
     if (frame && !object && objects.length) {
-      navigate(createSpacePath(space!.key, frame?.module.id, objects[0][id]));
+      navigate(createSpacePath(space!.key, frame?.module.id, objects[0].id));
     }
   }, [frame, object, objects]);
 

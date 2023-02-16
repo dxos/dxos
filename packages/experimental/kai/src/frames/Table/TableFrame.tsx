@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { Column } from 'react-table';
 
-import { Document, DocumentBase, EchoSchemaType, id, TypeFilter } from '@dxos/echo-schema';
+import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
 import { PublicKey, useQuery } from '@dxos/react-client';
 import { Table, Searchbar, Selector, SelectorOption } from '@dxos/react-components';
 
@@ -27,7 +27,7 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
     const columns: Column<Document>[] = [
       {
         Header: 'id',
-        accessor: (object) => PublicKey.from(object[id]).truncate()
+        accessor: (object) => PublicKey.from(object.id).truncate()
       }
     ];
 

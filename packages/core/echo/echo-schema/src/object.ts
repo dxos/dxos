@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
 
 import { EchoDatabase } from './database';
-import { base, db, id } from './defs';
+import { base, db } from './defs';
 
 /**
  * Base class for all echo objects.
@@ -76,8 +76,7 @@ export abstract class EchoObject<T extends Model = any> {
   [base]: this = this;
 
   /** ID accessor. */
-  // TODO(burdon): Expose as property?
-  get [id](): string {
+  get id(): string {
     return this[base]._id;
   }
 

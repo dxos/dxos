@@ -3,12 +3,13 @@
 //
 
 import { Plus } from 'phosphor-react';
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-import { id } from '@dxos/echo-schema';
 import { Button, getSize, Loading } from '@dxos/react-components';
 
-import { CheckboxItem, Input, List } from '.';
+import { CheckboxItem } from './CheckboxItem';
+import { Input } from './Input';
+import { List } from './List';
 
 export type TaskListProps<T extends Task = Task> = {
   title: string;
@@ -21,7 +22,7 @@ export type TaskListProps<T extends Task = Task> = {
 };
 
 export type Task = {
-  [id]: string;
+  id: string;
   title: string;
   completed: boolean;
 };
@@ -83,7 +84,7 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
         {(tasks ?? []).map((task, i) => (
           <CheckboxItem
             ref={(el) => (el ? (tasksRefs.current[i] = el) : null)}
-            key={task[id]}
+            key={task.id}
             autoFocus
             {...{
               placeholder: 'type here',
