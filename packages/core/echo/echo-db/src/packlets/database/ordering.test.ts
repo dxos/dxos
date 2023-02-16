@@ -4,13 +4,11 @@
 
 import expect from 'expect';
 
-import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
-import { getInsertionIndex } from './ordering';
-import { ModelMessage } from '@dxos/model-factory/src/types';
+import { getInsertionIndex, MutationInQueue } from './ordering';
 
 describe('Ordering', () => {
   // feedA < feedB
@@ -66,15 +64,17 @@ describe('Ordering', () => {
   });
 });
 
-const createMutation = (feedKey: PublicKey, seq: number, timeframe: Timeframe): ModelMessage<Any> => ({
-  meta: {
-    feedKey,
-    memberKey: feedKey,
-    seq,
-    timeframe
-  },
+const createMutation = (feedKey: PublicKey, seq: number, timeframe: Timeframe): MutationInQueue => ({
   mutation: {
-    type_url: 'something',
-    value: new Uint8Array()
+    meta: {
+      feedKey,
+      memberKey: feedKey,
+      seq,
+      timeframe
+    },
+    model: {
+      type_url: 'test',
+      value: new Uint8Array()
+    }
   }
 });

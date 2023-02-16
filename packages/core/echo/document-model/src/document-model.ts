@@ -51,7 +51,7 @@ export class MutationBuilder {
 
   // prettier-ignore
   constructor(
-    private readonly _model: DocumentModel
+    private readonly _model?: DocumentModel
   ) { }
 
   set(key: string, value: any) {
@@ -60,6 +60,7 @@ export class MutationBuilder {
   }
 
   private _yjsTransact(key: string, tx: (arr: OrderedArray) => void): this {
+    assert(this._model);
     const arrayInstance = this._model.get(key);
     assert(arrayInstance instanceof OrderedArray);
     const mutation = arrayInstance.transact(() => {
@@ -100,6 +101,7 @@ export class MutationBuilder {
   }
 
   async commit() {
+    assert(this._model);
     return this._model._makeMutation({ mutations: this._mutations });
   }
 

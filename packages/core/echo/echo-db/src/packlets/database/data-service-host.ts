@@ -9,12 +9,10 @@ import { Stream } from '@dxos/codec-protobuf';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
-import { MutationReceipt, EchoEvent, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
 import { tagMutationsInBatch } from './builder';
-import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
@@ -58,22 +56,21 @@ export class DataServiceHost {
         const clientTag = this._clientTagMap.get([mutation.meta.feedKey, mutation.meta.seq]);
         // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
 
+        // Assign feed metadata
         const batch = {
           objects: [
             {
               ...mutation.data,
               mutations: mutation.data.mutations?.map((m, mutationIdx) => ({
                 ...m,
-                meta: {
-                  feedKey: PublicKey.from(mutation.meta.feedKey),
-                  memberKey: PublicKey.from(mutation.meta.memberKey),
-                  seq: mutation.meta.seq,
-                  timeframe: mutation.meta.timeframe
-                }
-              }))
+                meta: mutation.meta,
+              })),
+              meta: mutation.meta
             }
           ]
         };
+
+        // Assign client tag metadata
         if (clientTag) {
           tagMutationsInBatch(batch, clientTag);
         }
@@ -98,7 +95,8 @@ export class DataServiceHost {
         mutations: request.batch.objects[0].mutations?.map((m) => ({
           ...m,
           meta: undefined
-        }))
+        })),
+        meta: undefined,
       }
     });
     if (request.clientTag) {

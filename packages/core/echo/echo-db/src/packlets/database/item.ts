@@ -88,14 +88,16 @@ export class Item<M extends Model = Model> {
   constructor(
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
-    initialState: EchoObject,
     private readonly _writeStream?: FeedWriter<DataMessage>,
     parent?: Item<any> | null
   ) {
-    this._initialState = initialState;
+    this._initialState = {
+      objectId: _id,
+    }
     this._updateParent(parent);
   }
 
+  @logInfo
   get id(): ItemID {
     return this._id;
   }
@@ -104,6 +106,7 @@ export class Item<M extends Model = Model> {
     return this._modelMeta ?? undefined;
   }
 
+  @logInfo
   get modelType(): string {
     assert(this._modelMeta);
     return this._modelMeta.type;
@@ -151,6 +154,7 @@ export class Item<M extends Model = Model> {
     assert(!this._modelMeta, 'Already iniitalized.');
 
     this._modelMeta = modelConstructor.meta;
+    log('initialize')
 
     this._resetStateMachine();
   }
@@ -297,33 +301,12 @@ export class Item<M extends Model = Model> {
     this._onUpdate.emit(this);
   }
 
-  processOptimisticMutation(mutation: MutationOf<M>, clientTag?: string) {
-    log('process optimistic mutation', { clientTag, mutation });
-
-    const optimisticMutation: MutationInQueue<MutationOf<M>> = {
-      mutation: mutation,
-      meta: {
-        clientTag,
-      }
-    };
-    this._mutationQueue.pushOptimistic(optimisticMutation);
-
-    // Process mutation if initialzied, otherwise deferred until state-machine is loaded.
-    if (this.initialized) {
-      log('Optimistic apply', mutation);
-      this._stateMachine!.process(mutation);
-      this._emitUpdate();
-    }
-
-    return optimisticMutation;
-  }
-
   /**
-   * Re-creates the state machine based on the current snapshot and enqueued mutations.
-   */
+    * Re-creates the state machine based on the current snapshot and enqueued mutations.
+    */
   private _resetStateMachine() {
     assert(this._modelMeta, 'Model not initialized.');
-    log('Construct state machine');
+    log('Reset state machine');
 
     this._stateMachine = this._modelMeta.stateMachine();
 
@@ -349,19 +332,39 @@ export class Item<M extends Model = Model> {
     }
   }
 
+  processOptimisticMutation(mutation: EchoObject.Mutation) {
+    log('process optimistic mutation', { mutation });
+
+    const queueEntry: MutationInQueue<MutationOf<M>> = {
+      mutation: mutation,
+      decodedModelMutation: !mutation.model ? undefined : this.modelMeta?.mutationCodec.decode(mutation.model.value)
+    };
+    this._mutationQueue.pushOptimistic(queueEntry);
+
+    // Process mutation if initialzied, otherwise deferred until state-machine is loaded.
+    if (this.initialized) {
+      log('Optimistic apply', mutation);
+      this._stateMachine!.process(queueEntry.decodedModelMutation);
+      this._emitUpdate();
+    }
+  }
+
+
   /**
    * Processes mutations from the inbound stream.
    */
-  processMessage(meta: MutationMeta, mutation: Any) {
+  processMessage(mutation: EchoObject.Mutation) {
     const queueEntry: MutationInQueue<MutationOf<M>> = {
-      mutation: this._modelMeta!.mutationCodec.decode(mutation.value),
-      meta
+      mutation,
+      decodedModelMutation: !mutation.model ? undefined : this.modelMeta?.mutationCodec.decode(mutation.model.value)
     }
 
     const { reorder, apply } = this._mutationQueue.pushConfirmed(queueEntry);
 
     log('process message', {
       mutation: queueEntry,
+      reorder,
+      apply
     });
 
     // Perform state updates.
@@ -372,15 +375,19 @@ export class Item<M extends Model = Model> {
         log('Reset due to order change');
         this._resetStateMachine();
       } else if (apply) {
-        log(`Apply ${JSON.stringify(meta)}`);
+        log('Apply', { meta: queueEntry.mutation.meta });
         // Mutation can safely be append at the end preserving order.
-        this._stateMachine!.process(queueEntry.mutation);
-        this._emitUpdate();
+        if (queueEntry.decodedModelMutation) {
+          this._stateMachine!.process(queueEntry.decodedModelMutation);
+          this._emitUpdate();
+        }
       }
     }
 
+    log('test confirmed state', this.state)
+
     // Notify listeners that the mutation has been processed.
-    scheduleTask(new Context(), () => this._mutationProcessed.emit(meta));
+    scheduleTask(new Context(), () => this._mutationProcessed.emit(queueEntry.mutation.meta!));
   }
 
   /**
@@ -411,10 +418,7 @@ export class Item<M extends Model = Model> {
         },
         mutations: [
           ...(this._initialState.mutations ?? []),
-          ...this._mutationQueue.getConfirmedMutations().map((mutation) => ({
-            model: (this.modelMeta!.mutationCodec as ProtoCodec).encodeAsAny(mutation.mutation),
-            meta: mutation.meta
-          }))
+          ...this._mutationQueue.getConfirmedMutations().map((entry) => entry.mutation)
         ]
       };
     }
@@ -425,12 +429,24 @@ export class Item<M extends Model = Model> {
    * Reset the state to existing snapshot.
    */
   resetToSnapshot(snapshot: EchoObject) {
-    this._initialState = snapshot;
-    this._mutationQueue.resetConfirmed();
+    assert(snapshot.genesis)
+    assert(snapshot.objectId === this._id);
 
-    if (this.initialized) {
-      this._resetStateMachine();
-      this._emitUpdate();
+    // We don't reset if this snapshot is a response to the initial optimistic genesis message.
+    const needsReset = !this._initialState.meta?.clientTag
+      || !!this._initialState.meta?.feedKey
+      || this._initialState.meta?.clientTag !== snapshot.meta?.clientTag;
+
+    this._initialState = snapshot;
+    log('resetToSnapshot', { needsReset, snapshot })
+
+    if (needsReset) {
+      this._mutationQueue.resetConfirmed();
+
+      if (this.initialized) {
+        this._resetStateMachine();
+        this._emitUpdate();
+      }
     }
   }
 

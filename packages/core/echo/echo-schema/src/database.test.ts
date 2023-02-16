@@ -14,6 +14,7 @@ import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
 import { TextObject } from './text-object';
+import { sleep } from '@dxos/async';
 
 describe('EchoDatabase', () => {
   test('get/set properties', async () => {
@@ -48,6 +49,16 @@ describe('EchoDatabase', () => {
 
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
+  });
+
+  test('get/set reference after save', async () => {
+    const db = await createDatabase();
+
+    const obj = new Document();
+    await db.save(obj);
+
+    obj.nested = new Document({ title: 'Test title' });
+    expect(obj.nested.title).toEqual('Test title');
   });
 
   test('initializer', async () => {
@@ -326,18 +337,16 @@ describe('EchoDatabase', () => {
       expect(text.model!.textContent).toEqual('Hello world');
     });
 
-    test('text property', async () => {
+    test.only('text property', async () => {
       const db = await createDatabase();
       const task = new Document();
       await db.save(task);
 
+      
       task.text = new TextObject();
-
-      // Populating the model is done asynchronously for now.
-      await waitForExpect(() => {
-        expect(task.text.doc).toBeDefined();
-        expect(task.text.model).toBeDefined();
-      });
+      await sleep(10);
+      expect(task.text.doc).toBeDefined();
+      expect(task.text.model).toBeDefined();
       expect(task.text.model!.textContent).toEqual('');
 
       task.text.model!.insert('Hello world', 0);

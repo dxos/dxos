@@ -26,7 +26,7 @@ export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>;
 
 /**
  * Visitor callback.
- * The visitor is passed the current entities and result (accumulator),
+* The visitor is passed the current entities and result (accumulator),
  * which may be modified and returned.
  */
 export type Callable<T extends Item, R> = (entities: T[], result: R) => R;

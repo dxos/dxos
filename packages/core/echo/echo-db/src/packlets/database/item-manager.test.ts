@@ -23,7 +23,6 @@ describe('ItemManager', () => {
       const item = await itemManager.constructItem({
         itemId,
         modelType: DocumentModel.meta.type,
-        snapshot: { objectId: itemId }
       });
       expect(item.id).toEqual(itemId);
       // expect(item.model).toBeInstanceOf(DocumentModel);
@@ -105,6 +104,5 @@ const defaultOpts = (): ItemConstructionOptions => {
   return {
     itemId,
     modelType: DocumentModel.meta.type,
-    snapshot: { objectId: itemId }
   };
 };

@@ -2,19 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { ModelMessage } from '@dxos/model-factory';
-import { MutationMeta } from '@dxos/protocols/src/proto/gen/dxos/echo/object';
+import { EchoObject } from '@dxos/protocols/src/proto/gen/dxos/echo/object';
 import { Timeframe } from '@dxos/timeframe';
 import assert from 'node:assert';
 
-export type MutationInQueue<T> = {
+export type MutationInQueue<T = any> = {
   /**
    * Decoded mutation for the model.
    */
-  mutation: T;
-  meta: MutationMeta
+  decodedModelMutation?: T;
+  mutation: EchoObject.Mutation
 };
 
 /**
@@ -22,22 +20,22 @@ export type MutationInQueue<T> = {
  * If appending a new mutation would break the strong order, it returns the proper index to insert the new mutation.
  * Otherwise it returns `exising.length`.
  */
-export const getInsertionIndex = (existing: MutationInQueue<any>[], newMutation: MutationInQueue<any>) => {
+export const getInsertionIndex = (existing: MutationInQueue<unknown>[], newEntry: MutationInQueue<unknown>) => {
   let start = existing.length - 1;
-  for (const ourKey = PublicKey.from(newMutation.meta.feedKey!); start >= 0; start--) {
-    if (ourKey.equals(existing[start].meta.feedKey!)) {
+  for (const ourKey = PublicKey.from(newEntry.mutation.meta!.feedKey!); start >= 0; start--) {
+    if (ourKey.equals(existing[start].mutation.meta!.feedKey!)) {
       break;
     }
   }
   for (let i = start + 1; i < existing.length; i++) {
     const existingTimeframe = Timeframe.merge(
-      existing[i].meta.timeframe!,
-      new Timeframe([[PublicKey.from(existing[i].meta.feedKey!), existing[i].meta.seq! - 1]])
+      existing[i].mutation.meta!.timeframe!,
+      new Timeframe([[PublicKey.from(existing[i].mutation.meta!.feedKey!), existing[i].mutation.meta!.seq! - 1]])
     );
 
-    const deps = Timeframe.dependencies(newMutation.meta.timeframe!, existingTimeframe);
+    const deps = Timeframe.dependencies(newEntry.mutation.meta!.timeframe!, existingTimeframe);
     if (deps.isEmpty()) {
-      if (PublicKey.from(newMutation.meta.feedKey!).toHex() < PublicKey.from(existing[i].meta.feedKey!).toHex()) {
+      if (PublicKey.from(newEntry.mutation.meta!.feedKey!).toHex() < PublicKey.from(existing[i].mutation.meta!.feedKey!).toHex()) {
         return i;
       }
     }
@@ -78,9 +76,9 @@ export class MutationQueue<T> {
    * Pushes optimistic mutation.
    * The mutation is always appended to the end of the queue.
    */
-  pushOptimistic(mutation: MutationInQueue<T>) {
-    assert(mutation.meta.clientTag);
-    this._optimistic.push(mutation);
+  pushOptimistic(entry: MutationInQueue<T>) {
+    assert(entry.mutation.meta!.clientTag);
+    this._optimistic.push(entry);
   }
 
   /**
@@ -88,16 +86,20 @@ export class MutationQueue<T> {
    * Mutation must have feed metadata and timeframe dependencies.
    * Pops optimistic mutation with the same tag.
    */
-  pushConfirmed(mutation: MutationInQueue<T>): PushResult {
+  pushConfirmed(entry: MutationInQueue<T>): PushResult {
+    assert(entry.mutation.meta!.feedKey);
+    assert(entry.mutation.meta!.seq);
+    assert(entry.mutation.meta!.timeframe);
+
     // Remove optimistic mutation from the queue.
-    const optimisticIndex = !mutation.meta.clientTag ? -1 : this._optimistic.findIndex((message) => message.meta.clientTag && message.meta.clientTag === mutation.meta.clientTag);
+    const optimisticIndex = !entry.mutation.meta!.clientTag ? -1 : this._optimistic.findIndex((message) => message.mutation.meta!.clientTag && message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag);
     if (optimisticIndex !== -1) {
       this._optimistic.splice(optimisticIndex, 1);
     }
 
-    const insertionIndex = getInsertionIndex(this._confirmed, mutation);
+    const insertionIndex = getInsertionIndex(this._confirmed, entry);
     const lengthBefore = this._confirmed.length;
-    this._confirmed.splice(insertionIndex, 0, mutation);
+    this._confirmed.splice(insertionIndex, 0, entry);
 
     return {
       reorder: insertionIndex !== lengthBefore ||

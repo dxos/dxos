@@ -15,8 +15,8 @@ import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Item } from './item';
 import { ItemManager } from './item-manager';
+import { log } from '@dxos/log';
 
-const log = debug('dxos:echo-db:item-demuxer');
 
 export interface ItemDemuxerOptions {
   snapshots?: boolean;
@@ -35,7 +35,7 @@ export class ItemDemuxer {
     private readonly _itemManager: ItemManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _options: ItemDemuxerOptions = {}
-  ) {}
+  ) { }
 
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {
@@ -53,6 +53,9 @@ export class ItemDemuxer {
         data: { objectId, genesis, mutations, snapshot },
         meta
       } = message;
+      if (mutations) {
+        assert(mutations.length <= 1); // TODO(dmaretskyi): Only 1 mutation per message is supported.
+      }
       const mutation = mutations?.length === 1 ? mutations?.[0] : undefined;
       assert(objectId);
 
@@ -63,20 +66,21 @@ export class ItemDemuxer {
         const { modelType } = genesis;
         assert(modelType);
 
-        // TODO(dmaretskyi): Support snapshot.
-        const entity = await this._itemManager.constructItem({
+        const entity = this._itemManager.constructItem({
           itemId: objectId,
           modelType,
-          snapshot: {
-            objectId,
-            mutations:
-              mutations?.map((mutation) => ({
-                ...mutation,
-                meta
-              })) ?? []
-          },
+
           parentId: mutation?.parentId
         });
+        entity.resetToSnapshot({
+          ...message.data,
+          mutations:
+            mutations?.map((mutation) => ({
+              ...mutation,
+              meta
+            })) ?? [],
+          meta
+        })
 
         assert(entity.id === objectId);
       }
@@ -95,15 +99,12 @@ export class ItemDemuxer {
 
         if (mutation.model) {
           assert(message.data.mutations);
-          const modelMessage: ModelMessage<Any> = { meta, mutation: mutation.model }; // TODO(mykola): Send google.protobuf.Any instead of Uint8Array.
           // Forward mutations to the item's stream.
-          await this._itemManager.processModelMessage(objectId, modelMessage);
+          this._itemManager.processModelMessage(objectId, {
+            ...mutation,
+            meta,
+          });
         }
-      }
-
-      if (snapshot?.model) {
-        const entity = this._itemManager.entities.get(objectId) ?? failUndefined();
-        entity.resetToSnapshot(message.data); // TODO(dmaretskyi): Fix.
       }
 
       this.mutation.emit(message);
@@ -141,12 +142,12 @@ export class ItemDemuxer {
       assert(item.genesis?.modelType);
       assert(item.snapshot);
 
-      await this._itemManager.constructItem({
+      const obj = this._itemManager.constructItem({
         itemId: item.objectId,
         modelType: item.genesis.modelType,
         parentId: item.snapshot?.parentId,
-        snapshot: item // TODO(mykola): Refactor to pass just EchoObject.
       });
+      obj.resetToSnapshot(item)
     }
   }
 }

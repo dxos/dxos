@@ -11,7 +11,7 @@ import { createId } from '@dxos/crypto';
 import { failUndefined, timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { logInfo } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 import { ItemID } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -20,21 +20,14 @@ import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { UnknownModelError } from '../errors';
 import { Item } from './item';
 
-const log = debug('dxos:echo-db:item-manager');
-
+// TODO(dmaretskyi): Merge.
 export interface ModelConstructionOptions {
   itemId: ItemID;
   modelType: ModelType;
-  snapshot: EchoObject;
 }
-
 export interface ItemConstructionOptions extends ModelConstructionOptions {
   parentId?: ItemID;
 }
-
-export type DbOptions = {
-  label?: string;
-};
 
 /**
  * Manages the creation and indexing of items.
@@ -188,9 +181,13 @@ export class ItemManager {
   /**
    * Constructs an item with the appropriate model.
    */
-  constructItem({ itemId, modelType, parentId, snapshot }: ItemConstructionOptions): Item<any> {
+  constructItem({ itemId, modelType, parentId }: ItemConstructionOptions): Item<any> {
     assert(itemId);
     assert(modelType);
+    if(this.entities.has(itemId)) {
+      log.info('init twice')
+      return this.entities.get(itemId)!;
+    }
 
     const parent = parentId ? this._entities.get(parentId) : null;
     if (parentId && !parent) {
@@ -200,7 +197,8 @@ export class ItemManager {
 
     const { constructor: modelConstructor } = this._modelFactory.getModel(modelType) ?? failUndefined();
 
-    const item = new Item(this, itemId, snapshot, this._writeStream, parent);
+    const item = new Item(this, itemId, this._writeStream, parent);
+    item._debugLabel = this._debugLabel;
     item.initialize(modelConstructor)
 
     if (parent) {
@@ -216,11 +214,11 @@ export class ItemManager {
    * @param itemId Id of the item containing the model.
    * @param message Encoded model message
    */
-  async processModelMessage(itemId: ItemID, message: ModelMessage<Any>) {
+  processModelMessage(itemId: ItemID, mutation: EchoObject.Mutation) {
     const item = this._entities.get(itemId);
     assert(item);
 
-    await item.processMessage(message.meta, message.mutation);
+    item.processMessage(mutation);
     this.update.emit(item);
   }
 

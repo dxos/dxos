@@ -70,6 +70,8 @@ export class DatabaseBackendHost implements DatabaseBackend {
 
   async open(itemManager: ItemManager, modelFactory: ModelFactory) {
     this._itemManager = itemManager;
+    this._itemManager._debugLabel = 'host';
+
     this._itemDemuxer = new ItemDemuxer(itemManager, modelFactory, this._options);
     this._echoProcessor = this._itemDemuxer.open();
 
@@ -127,6 +129,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
+    this._itemManager._debugLabel = 'proxy';
 
     modelFactory.registered.on(this._ctx, async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
@@ -182,8 +185,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
           modelType: object.genesis.modelType,
-          parentId: object.snapshot?.parentId,
-          snapshot: { objectId: object.objectId } // TODO(dmaretskyi): Fix.
+          parentId: object.snapshot?.parentId, // TODO(dmaretskyi): Remove.
         });
         objectsCreated.push(entity);
       } else {
@@ -207,17 +209,9 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
           if (mutation.model) {
             if (optimistic) {
-              // console.log('process optimistic', mutation)
-              const decoded = entity.modelMeta?.mutationCodec.decode(mutation.model.value);
-              entity.processOptimisticMutation(decoded, mutation.meta?.clientTag);
+              entity.processOptimisticMutation(mutation);
             } else {
-              // console.log('process event', mutation)
-              assert(mutation.meta);
-              assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-              entity.processMessage(
-                mutation.meta,
-                mutation.model,
-              );
+              entity.processMessage(mutation);
             }
           }
         }
