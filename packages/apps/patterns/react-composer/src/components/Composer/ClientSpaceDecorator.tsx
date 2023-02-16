@@ -7,14 +7,20 @@ import { ReactRenderer } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { Client, Invitation, PublicKey } from '@dxos/client';
+import { Client, EchoSchema, Invitation, PublicKey } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
+import { ClientProvider } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
-import { ClientProvider } from '../client';
+// TODO(burdon): Move back to @dxos/react-client/testing after resolving ESM issues.
+
+export type ClientSpaceDecoratorOptions = {
+  schema?: EchoSchema;
+  count?: number;
+};
 
 /**
  * Storybook decorator to setup identity for n peers and join them into a single space.
@@ -24,7 +30,7 @@ import { ClientProvider } from '../client';
  * @returns {DecoratorFunction}
  */
 export const ClientSpaceDecorator =
-  ({ count = 2 } = {}): DecoratorFunction<ReactRenderer, any> =>
+  ({ schema, count = 1 }: ClientSpaceDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> =>
   (Story, context) => {
     const clients = useMemo(() => {
       const testBuilder = new TestBuilder();
@@ -37,6 +43,11 @@ export const ClientSpaceDecorator =
     useAsyncEffect(async () => {
       await Promise.all(clients.map((client) => client.initialize()));
       log('initialized');
+
+      if (schema) {
+        clients.forEach((client) => client.echo.dbRouter.setSchema(schema));
+        log('echo schema set');
+      }
 
       await Promise.all(clients.map((client) => client.halo.createProfile()));
       log('identity created');

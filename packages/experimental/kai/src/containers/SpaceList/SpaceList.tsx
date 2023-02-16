@@ -34,7 +34,7 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
   return (
     <div
       className={mx(
-        'flex flex-col overflow-hidden',
+        'flex flex-col overflow-hidden mt-2 mx-2 border',
         'hover:bg-selection-hover',
         selected && 'hover:bg-selection-bg bg-selection-bg border-selection-border'
       )}
@@ -48,16 +48,14 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
             <Planet className={getSize(6)} />
           </div>
 
-          {/* TODO(burdon): Name. */}
-          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis mr-4'>
-            <input
-              className='bg-transparent border-none outline-none text-ellipsis'
-              value={space.properties.name ?? humanize(space.key)}
-              onChange={(event) => {
-                space.properties.name = event.target.value;
-              }}
-            />
-          </h2>
+          {/* TODO(burdon): Use <Input />. */}
+          <input
+            className='w-full bg-transparent mr-4'
+            value={space.properties.name ?? humanize(space.key)}
+            onChange={(event) => {
+              space.properties.name = event.target.value;
+            }}
+          />
         </div>
 
         {selected && (

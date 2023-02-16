@@ -365,6 +365,8 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
@@ -386,6 +388,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
@@ -399,6 +402,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
@@ -552,10 +556,13 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/text-model': workspace:*
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
       '@tiptap/extension-placeholder': 2.0.0-beta.199
@@ -563,34 +570,37 @@ importers:
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      prosemirror-model: ^1.7.1
-      prosemirror-view: ^1.9.10
+      prosemirror-model: ^1.19.0
+      prosemirror-view: ^1.30.1
       react: ^18.2.0
       react-dom: ^18.2.0
       y-protocols: ^1.0.5
       yjs: ^13.5.44
     dependencies:
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/config': link:../../../sdk/config
       '@dxos/debug': link:../../../common/debug
+      '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-components': link:../../../common/react-components
-      '@dxos/text-model': link:../../../core/echo/text-model
       '@tiptap/core': 2.0.0-beta.199
-      '@tiptap/extension-collaboration': 2.0.0-beta.199_nnszoayjhdoucvdi5heuc7vndi
+      '@tiptap/extension-collaboration': 2.0.0-beta.199_wrs3r2liyxd6sebc64ic7svwo4
       '@tiptap/extension-placeholder': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
       '@tiptap/starter-kit': 2.0.0-beta.199
-      prosemirror-model: 1.18.1
-      prosemirror-view: 1.29.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
+      prosemirror-model: 1.19.0
+      prosemirror-view: 1.30.1
       y-protocols: 1.0.5
       yjs: 13.5.44
     devDependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../../core/echo/echo-typegen
+      '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-client': link:../../../sdk/react-client
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
 
   packages/apps/patterns/react-ui:
     specifiers:
@@ -2949,10 +2959,10 @@ importers:
       openai: ^3.1.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
-      prosemirror-model: ^1.7.1
+      prosemirror-model: ^1.19.0
       prosemirror-schema-basic: ^1.2.1
       prosemirror-state: ^1.4.2
-      prosemirror-view: ^1.9.10
+      prosemirror-view: ^1.30.1
       react: ^18.2.0
       react-big-calendar: ^1.5.2
       react-color: ^2.19.3
@@ -3029,7 +3039,7 @@ importers:
       prosemirror-model: 1.19.0
       prosemirror-schema-basic: 1.2.1
       prosemirror-state: 1.4.2
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
       react: 18.2.0
       react-big-calendar: 1.5.2_biqbaboplfbrettd7655fr4n2y
       react-color: 2.19.3_react@18.2.0
@@ -3044,7 +3054,7 @@ importers:
       react-syntax-highlighter: 15.5.0_react@18.2.0
       react-table: 7.8.0_react@18.2.0
       url-join: 5.0.0
-      y-prosemirror: 1.2.0_bxerzyxcxwljqz6lzhld3qlf7u
+      y-prosemirror: 1.2.0_ihntoejlm64yg32k3unxwmpmte
       y-protocols: 1.0.5
       yjs: 13.5.44
     devDependencies:
@@ -4741,7 +4751,7 @@ packages:
     dependencies:
       '@babel/core': 7.19.3
       '@babel/helper-create-class-features-plugin': 7.19.0_@babel+core@7.19.3
-      '@babel/helper-plugin-utils': 7.20.2
+      '@babel/helper-plugin-utils': 7.19.0
     transitivePeerDependencies:
       - supports-color
 
@@ -4753,7 +4763,7 @@ packages:
     dependencies:
       '@babel/core': 7.20.12
       '@babel/helper-create-class-features-plugin': 7.19.0_@babel+core@7.20.12
-      '@babel/helper-plugin-utils': 7.20.2
+      '@babel/helper-plugin-utils': 7.19.0
     transitivePeerDependencies:
       - supports-color
 
@@ -6397,7 +6407,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.20.12
-      '@babel/helper-plugin-utils': 7.20.2
+      '@babel/helper-plugin-utils': 7.19.0
       '@babel/helper-validator-option': 7.18.6
       '@babel/plugin-transform-typescript': 7.19.3_@babel+core@7.20.12
     transitivePeerDependencies:
@@ -8164,7 +8174,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     dependencies:
       '@npmcli/name-from-folder': 1.0.1
-      glob: 8.1.0
+      glob: 8.0.3
       minimatch: 5.1.0
       read-package-json-fast: 2.0.3
     dev: false
@@ -11925,11 +11935,11 @@ packages:
     dependencies:
       prosemirror-commands: 1.3.1
       prosemirror-keymap: 1.2.0
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
       prosemirror-schema-list: 1.2.2
       prosemirror-state: 1.4.2
       prosemirror-transform: 1.7.0
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
     dev: false
 
   /@tiptap/extension-blockquote/2.0.0-beta.199_4focsuckzeocqotdxlryrtksam:
@@ -11955,7 +11965,7 @@ packages:
     dependencies:
       '@tiptap/core': 2.0.0-beta.199
       prosemirror-state: 1.4.2
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
       tippy.js: 6.3.7
     dev: false
 
@@ -11984,14 +11994,14 @@ packages:
       '@tiptap/core': 2.0.0-beta.199
     dev: false
 
-  /@tiptap/extension-collaboration/2.0.0-beta.199_nnszoayjhdoucvdi5heuc7vndi:
+  /@tiptap/extension-collaboration/2.0.0-beta.199_wrs3r2liyxd6sebc64ic7svwo4:
     resolution: {integrity: sha512-ub3doQvy7o7YLwLDz8B/LK7zZ6aEy19C36FJbSXfr93Ws8FhVy2PYvgwBnRYPIifXrS8FVkNL5ULjsH+QlEd5Q==}
     peerDependencies:
       '@tiptap/core': ^2.0.0-beta.193
     dependencies:
       '@tiptap/core': 2.0.0-beta.199
       prosemirror-state: 1.4.2
-      y-prosemirror: 1.0.20_lodp2vto6q3rcicj252ptl3hxi
+      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
     transitivePeerDependencies:
       - prosemirror-model
       - prosemirror-view
@@ -12023,7 +12033,7 @@ packages:
     dependencies:
       '@tiptap/core': 2.0.0-beta.199
       prosemirror-state: 1.4.2
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
       tippy.js: 6.3.7
     dev: false
 
@@ -12108,9 +12118,9 @@ packages:
       '@tiptap/core': ^2.0.0-beta.193
     dependencies:
       '@tiptap/core': 2.0.0-beta.199
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
     dev: false
 
   /@tiptap/extension-strike/2.0.0-beta.199_4focsuckzeocqotdxlryrtksam:
@@ -12139,7 +12149,7 @@ packages:
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-bubble-menu': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/extension-floating-menu': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     dev: false
@@ -15984,7 +15994,7 @@ packages:
       '@npmcli/move-file': 2.0.1
       chownr: 2.0.0
       fs-minipass: 2.1.0
-      glob: 8.1.0
+      glob: 8.0.3
       infer-owner: 1.0.4
       lru-cache: 7.14.0
       minipass: 3.3.4
@@ -21037,7 +21047,6 @@ packages:
       inherits: 2.0.4
       minimatch: 5.1.0
       once: 1.4.0
-    dev: true
 
   /glob/8.1.0:
     resolution: {integrity: sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==}
@@ -21048,6 +21057,7 @@ packages:
       inherits: 2.0.4
       minimatch: 5.1.0
       once: 1.4.0
+    dev: true
 
   /global-modules/0.2.3:
     resolution: {integrity: sha512-JeXuCbvYzYXcwE6acL9V2bAOeSIGl4dD+iwLY9iUx2VBJJ80R18HCn+JCwHM9Oegdfya3lEkGCdaRkSyc10hDA==}
@@ -28423,7 +28433,7 @@ packages:
   /prosemirror-commands/1.3.1:
     resolution: {integrity: sha512-XTporPgoECkOQACVw0JTe3RZGi+fls3/byqt+tXwGTkD7qLuB4KdVrJamDMJf4kfKga3uB8hZ+kUUyZ5oWpnfg==}
     dependencies:
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-transform: 1.7.0
     dev: false
@@ -28433,16 +28443,16 @@ packages:
     dependencies:
       prosemirror-state: 1.4.2
       prosemirror-transform: 1.7.0
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
     dev: false
 
   /prosemirror-gapcursor/1.3.1:
     resolution: {integrity: sha512-GKTeE7ZoMsx5uVfc51/ouwMFPq0o8YrZ7Hx4jTF4EeGbXxBveUV8CGv46mSHuBBeXGmvu50guoV2kSnOeZZnUA==}
     dependencies:
       prosemirror-keymap: 1.2.0
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
     dev: false
 
   /prosemirror-history/1.3.0:
@@ -28460,12 +28470,6 @@ packages:
       w3c-keyname: 2.2.6
     dev: false
 
-  /prosemirror-model/1.18.1:
-    resolution: {integrity: sha512-IxSVBKAEMjD7s3n8cgtwMlxAXZrC7Mlag7zYsAKDndAqnDScvSmp/UdnRTV/B33lTCVU3CCm7dyAn/rVVD0mcw==}
-    dependencies:
-      orderedmap: 2.1.0
-    dev: false
-
   /prosemirror-model/1.19.0:
     resolution: {integrity: sha512-/CvFGJnwc41EJSfDkQLly1cAJJJmBpZwwUJtwZPTjY2RqZJfM8HVbCreOY/jti8wTRbVyjagcylyGoeJH/g/3w==}
     dependencies:
@@ -28481,7 +28485,7 @@ packages:
   /prosemirror-schema-list/1.2.2:
     resolution: {integrity: sha512-rd0pqSDp86p0MUMKG903g3I9VmElFkQpkZ2iOd3EOVg1vo5Cst51rAsoE+5IPy0LPXq64eGcCYlW1+JPNxOj2w==}
     dependencies:
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-transform: 1.7.0
     dev: false
@@ -28491,7 +28495,7 @@ packages:
     dependencies:
       prosemirror-model: 1.19.0
       prosemirror-transform: 1.7.0
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
     dev: false
 
   /prosemirror-transform/1.7.0:
@@ -28500,8 +28504,8 @@ packages:
       prosemirror-model: 1.19.0
     dev: false
 
-  /prosemirror-view/1.29.0:
-    resolution: {integrity: sha512-bifVd5aD9uCNtpLL1AyhquG/cVbNZSv+ALBxTEGYv51a6OHDhq+aOuzqq4MermNdeBdT+5uyURXCALgzk0EN5g==}
+  /prosemirror-view/1.30.1:
+    resolution: {integrity: sha512-pZUfr7lICJkEY7XwzldAKrkflZDeIvnbfuu2RIS01N5NwJmR/dfZzDzJRzhb3SM2QtT/bM8b4Nnib8X3MGpAhA==}
     dependencies:
       prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
@@ -34987,7 +34991,7 @@ packages:
       yjs: 13.5.44
     dev: false
 
-  /y-prosemirror/1.0.20_lodp2vto6q3rcicj252ptl3hxi:
+  /y-prosemirror/1.0.20_ihntoejlm64yg32k3unxwmpmte:
     resolution: {integrity: sha512-LVMtu3qWo0emeYiP+0jgNcvZkqhzE/otOoro+87q0iVKxy/sMKuiJZnokfJdR4cn9qKx0Un5fIxXqbAlR2bFkA==}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -34997,14 +35001,14 @@ packages:
       yjs: ^13.3.2
     dependencies:
       lib0: 0.2.52
-      prosemirror-model: 1.18.1
+      prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
       y-protocols: 1.0.5
       yjs: 13.5.44
     dev: false
 
-  /y-prosemirror/1.2.0_bxerzyxcxwljqz6lzhld3qlf7u:
+  /y-prosemirror/1.2.0_ihntoejlm64yg32k3unxwmpmte:
     resolution: {integrity: sha512-t3uxuX4HIkb1GNt8jV+dplRbNH2OmQD/BNeCCbjLD3Mq0o6JEXxHedv58ZIPFDE6ma24jljlL+u8pGvN6B37XQ==}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -35016,7 +35020,7 @@ packages:
       lib0: 0.2.52
       prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
-      prosemirror-view: 1.29.0
+      prosemirror-view: 1.30.1
       typescript: 4.8.4
       y-protocols: 1.0.5
       yjs: 13.5.44
