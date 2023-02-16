@@ -4,3 +4,4 @@
 
 export * from './signing';
 export * from './proof';
+export * from './verifier';
