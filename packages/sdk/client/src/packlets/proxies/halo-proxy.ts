@@ -262,8 +262,14 @@ export class HaloProxy implements Halo {
         credentials.push(credential);
         const newCredentials = credentials
           .filter((c) => !id || (c.id && id.equals(c.id)))
-          .filter((c) => !type || c.subject.assertion.type === type);
-        if (observable.value?.length !== newCredentials.length) {
+          .filter((c) => !type || c.subject.assertion['@type'] === type);
+        if (
+          newCredentials.length !== observable.value?.length ||
+          !newCredentials.every(
+            (credential, index) =>
+              credential.id && observable.value![index] && credential.id.equals(observable.value![index].id!)
+          )
+        ) {
           observable.setValue(newCredentials);
           observable.callback.onUpdate(newCredentials);
         }

@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { latch, Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -84,17 +84,20 @@ describe('Halo', () => {
 
     const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
 
-    const [done, tick] = latch({ count: 2 });
+    const trigger = new Trigger();
     credentials.subscribe({
       onUpdate: () => {
-        tick();
+        if (credentials.value?.length === 2) {
+          trigger.wake();
+        }
       },
       onError: (error) => {
         throw error;
       }
     });
-    await done();
+    await asyncTimeout(trigger.wait(), 500);
 
-    expect(credentials.value?.length).to.be.greaterThanOrEqual(2);
+    expect(credentials.value!.every((cred) => cred.subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed'))
+      .to.be.true;
   });
 });
