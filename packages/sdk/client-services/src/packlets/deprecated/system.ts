@@ -39,7 +39,7 @@ export class SystemServiceImpl implements SystemService {
 
   // TODO(burdon): Connect to iframe RPC heartbeat for network status?
   async getStatus() {
-    await this._onStatus();
+    return this._onStatus();
   }
 
   async reset() {
