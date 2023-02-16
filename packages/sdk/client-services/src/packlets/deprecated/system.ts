@@ -29,17 +29,17 @@ export class SystemServiceImpl implements SystemService {
     this._onReset = onReset;
   }
 
-  async initSession() {
-    await this._onInit();
-  }
-
   async getConfig() {
     return this._config.values;
   }
 
+  async initSession() {
+    await this._onInit();
+  }
+
   // TODO(burdon): Connect to iframe RPC heartbeat for network status?
   async getStatus() {
-    return await this._onStatus();
+    await this._onStatus();
   }
 
   async reset() {

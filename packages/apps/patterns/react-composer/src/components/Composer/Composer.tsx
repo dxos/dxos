@@ -31,6 +31,10 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
   //   Maybe default is not translated and translated placeholder can be provided by the app.
   const { t } = useTranslation('appkit');
 
+  // TODO(burdon): Value doesn't show up after synced.
+  const v = document?.doc?.getXmlFragment(field);
+  console.log('[[', v?.toString().length, ']]');
+
   // Reference:
   // https://tiptap.dev/installation/react
   // https://github.com/ueberdosis/tiptap
@@ -53,7 +57,7 @@ export const Composer = ({ document, field = 'content', placeholder, slots = {} 
         }
       }
     },
-    [document]
+    [document, document?.doc]
   );
 
   return <EditorContent {...slots?.root} editor={editor} />;

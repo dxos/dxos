@@ -27,7 +27,7 @@ package dxos.client.services;
 //
 
 service SystemService {
-  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config); // TODO(burdon): Stream?
+  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
   rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
