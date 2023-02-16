@@ -7,7 +7,7 @@ import { InspectOptionsStylized, inspect } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 
-import { base, data, deleted, id, proxy, schema, type } from './defs';
+import { base, data, deleted, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -20,7 +20,8 @@ const isValidKey = (key: string | symbol) =>
     key === 'constructor' ||
     key === '$$typeof' ||
     key === 'toString' ||
-    key === 'toJSON'
+    key === 'toJSON' || 
+    key === 'id'
   );
 
 export type ConvertVisitors = {
@@ -96,7 +97,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
   get [data]() {
     return {
-      '@id': this[id],
+      '@id': this.id,
       '@type': this[type],
       ...this[base]._convert({
         onRef: (id, obj?) => obj ?? { '@id': id }
@@ -108,7 +109,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
     const convert = (value: any): any => {
       if (value instanceof EchoObject) {
-        return visitorsWithDefaults.onRef!(value[id], value);
+        return visitorsWithDefaults.onRef!(value.id, value);
       } else if (value instanceof Reference) {
         return visitorsWithDefaults.onRef!(value.itemId, this._database?.getObjectById(value.itemId));
       } else if (value instanceof OrderedArray) {
@@ -129,7 +130,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     };
 
     return {
-      '@id': this[id],
+      '@id': this.id,
       '@type': this[type],
       ...convert(this._model?.toObject())
     };
@@ -149,7 +150,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   //       'span',
   //       {},
   //       ['span', {}, `${this[Symbol.toStringTag]}(`],
-  //       ['span', {}, this[id]],
+  //       ['span', {}, this.id],
   //       ['span', {}, ')']
   //     ],
   //     hasBody: () => true,
@@ -201,13 +202,13 @@ export class DocumentBase extends EchoObject<DocumentModel> {
     this._database?._logObjectAccess(this);
 
     if (value instanceof EchoObject) {
-      this._mutate(this._model.builder().set(key, new Reference(value[id])).build());
+      this._mutate(this._model.builder().set(key, new Reference(value.id)).build());
       this._linkObject(value);
     } else if (value instanceof EchoArray) {
       const values = value.map((item) => {
         if (item instanceof EchoObject) {
           this._linkObject(item);
-          return new Reference(item[id]);
+          return new Reference(item.id);
         } else if (isReferenceLike(item)) {
           return new Reference(item['@id']);
         } else {
@@ -316,7 +317,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
       void this._database.save(obj);
     } else {
       assert(this._linkCache);
-      this._linkCache.set(obj[id], obj);
+      this._linkCache.set(obj.id, obj);
     }
   }
 

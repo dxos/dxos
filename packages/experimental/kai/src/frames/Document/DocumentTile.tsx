@@ -5,7 +5,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { id } from '@dxos/client';
 import { TextObject, useQuery } from '@dxos/react-client';
 
 import { EditableObjectList } from '../../components';
@@ -25,7 +24,7 @@ export const DocumentTile = () => {
   };
 
   const handleUpdate = async (objectId: string, text: string) => {
-    const object = objects.find((object) => object[id] === objectId);
+    const object = objects.find((object) => object.id === objectId);
     if (object) {
       object.title = text;
     }
@@ -34,7 +33,7 @@ export const DocumentTile = () => {
   const handleCreate = async () => {
     const object = await space.experimental.db.save(new Document());
     object.content = new TextObject(); // TODO(burdon): Make automatic?
-    return object[id];
+    return object.id;
   };
 
   const Icon = frame!.runtime.Icon;

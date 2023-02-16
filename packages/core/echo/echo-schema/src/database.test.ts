@@ -10,7 +10,7 @@ import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
-import { data, id } from './defs';
+import { data } from './defs';
 import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
@@ -31,7 +31,7 @@ describe('EchoDatabase', () => {
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
     expect(obj[data]).toEqual({
-      '@id': obj[id],
+      '@id': obj.id,
       '@type': null,
       title: 'Test title',
       description: 'Test description'
@@ -188,12 +188,12 @@ describe('EchoDatabase', () => {
     await db.save(task);
 
     expect(task.toJSON()).toEqual({
-      '@id': task[id],
+      '@id': task.id,
       '@type': null,
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {
-        '@id': task.assignee[id]
+        '@id': task.assignee.id
       }
     });
   });

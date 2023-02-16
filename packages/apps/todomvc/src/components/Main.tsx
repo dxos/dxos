@@ -6,7 +6,7 @@ import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
-import { deleted, id } from '@dxos/echo-schema';
+import { deleted } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
 import { FILTER } from '../constants';
@@ -111,13 +111,13 @@ export const Main = withReactor(() => {
           <ul className='todo-list'>
             {todos.map((todo) => (
               <TodoItem
-                key={todo[id]}
+                key={todo.id}
                 title={todo.title}
                 completed={!!todo.completed}
                 onToggle={() => (todo.completed = !todo.completed)}
                 onDestroy={() => space.experimental.db.delete(todo)}
-                onEdit={() => setEditing(todo[id])}
-                editing={editing === todo[id]}
+                onEdit={() => setEditing(todo.id)}
+                editing={editing === todo.id}
                 onSave={(title) => {
                   todo.title = title;
                   setEditing(undefined);

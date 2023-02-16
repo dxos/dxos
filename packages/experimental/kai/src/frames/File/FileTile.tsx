@@ -8,7 +8,6 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 import urlJoin from 'url-join';
 
-import { id } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useConfig, useQuery } from '@dxos/react-client';
 import { getSize, useMediaQuery } from '@dxos/react-components';
@@ -55,7 +54,7 @@ export const FileTile = () => {
   };
 
   const handleUpdate = async (objectId: string, text: string) => {
-    const object = objects.find((object) => object[id] === objectId);
+    const object = objects.find((object) => object.id === objectId);
     if (object) {
       object.name = text;
     }
@@ -72,12 +71,12 @@ export const FileTile = () => {
     await ipfsClient.pin.add(cid); // TODO(burdon): Option.
     const file = new File({ name: uploadedFile.name, cid: path });
     await space.experimental.db.save(file);
-    handleSelect(file[id]);
+    handleSelect(file.id);
   };
 
   // TODO(burdon): Factor out (ipfs hook/wrapper).
   const handleDownload = async (objectId: string) => {
-    const object = objects.find((object) => object[id] === objectId);
+    const object = objects.find((object) => object.id === objectId);
     if (object?.cid) {
       const url = urlJoin(config.values.runtime!.services!.ipfs!.gateway!, object.cid);
       const response = await fetch(url);

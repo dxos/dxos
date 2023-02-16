@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { base, db, id } from '@dxos/echo-schema';
+import { base, db } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
@@ -14,7 +14,7 @@ describe('database', () => {
   test('saving', async () => {
     const task = new Task({ title: 'test' });
     expect(task.title).to.eq('test');
-    expect(task[id]).to.exist;
+    expect(task.id).to.exist;
     expect(task[base]).to.exist;
     expect(task[db]).to.be.undefined;
 
@@ -24,6 +24,6 @@ describe('database', () => {
 
     const tasks = database.query(Task.filter()).getObjects();
     expect(tasks).to.have.length(1);
-    expect(tasks[0][id]).to.eq(task[id]);
+    expect(tasks[0].id).to.eq(task.id);
   });
 });

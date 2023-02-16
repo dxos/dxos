@@ -3,7 +3,7 @@
 //
 
 import { EchoDatabase } from './database';
-import { base, id, schema } from './defs';
+import { base, schema } from './defs';
 import { Document } from './document';
 import { strip } from './util';
 
@@ -26,7 +26,7 @@ export class Serializer {
     const data = {
       objects: objects.map((object) => {
         return strip({
-          '@id': object[id],
+          '@id': object.id,
           '@type': object[schema] ? object[schema].name : undefined,
           ...object[base].toJSON() // TODO(burdon): Not working unless schema.
         });

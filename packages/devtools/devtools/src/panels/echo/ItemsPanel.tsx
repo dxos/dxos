@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { deleted, Document, DocumentBase, id, type } from '@dxos/client';
+import { deleted, Document, DocumentBase, type } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useQuery } from '@dxos/react-client';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
@@ -30,7 +30,7 @@ const textFilter = (text?: string) => {
 // TODO(burdon): Rationalize with new API.
 const getItemType = (doc: DocumentBase) => doc[type];
 const getItemDetails = (item: DocumentBase) => ({
-  id: truncateKey(item[id], 4),
+  id: truncateKey(item.id, 4),
   type: item[type],
   deleted: String(Boolean(item[deleted])),
   properties: <JsonView data={item.toJSON()} />
@@ -64,7 +64,7 @@ const ItemsPanel = () => {
           <TreeView
             items={items.map(getHierarchicalItem).filter(textFilter(filter))}
             onSelect={(item: any) => setSelectedItem(item.value)}
-            selected={selectedItem?.[id]}
+            selected={selectedItem?.id}
           />
         </div>
 

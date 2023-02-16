@@ -12,7 +12,7 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { base, db, deleted, id, type } from './defs';
+import { base, db, deleted, type } from './defs';
 import { Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -91,8 +91,8 @@ export class EchoDatabase {
    */
   // TODO(burdon): Batches?
   async save<T extends EchoObject>(obj: T): Promise<T> {
-    log('save', { id: obj[id], type: (obj as any)[type] });
-    assert(obj[id]); // TODO(burdon): Undefined when running in test.
+    log('save', { id: obj.id, type: (obj as any)[type] });
+    assert(obj.id); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
     if (obj[base]._database) {
       return obj;
@@ -187,7 +187,7 @@ export class EchoDatabase {
           const changed = updated.some((object) => {
             if (this._objects.has(object.id)) {
               const match = filterMatcher(filter, this._objects.get(object.id)!);
-              const exists = cache?.find((obj) => obj[id] === object.id);
+              const exists = cache?.find((obj) => obj.id === object.id);
               return match || (exists && !match);
             } else {
               return false;

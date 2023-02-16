@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { id } from './defs';
 import { Document } from './document';
 import { SerializedSpace, Serializer } from './serializer';
 import { createDatabase } from './testing';
@@ -28,7 +27,7 @@ describe('Serializer', () => {
       data = await serializer.export(db);
       expect(data.objects).to.have.length(1);
       expect(data.objects[0]).to.deep.eq({
-        '@id': obj[id],
+        '@id': obj.id,
         '@type': null,
         title: 'Test'
       });

@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { id, EchoArray } from '@dxos/echo-schema';
+import { EchoArray } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Task } from './proto';
@@ -27,8 +27,8 @@ describe('ordered-set', () => {
     expect(JSON.parse(JSON.stringify(root, undefined, 2)).subTasks).to.have.length(5);
 
     // Iterators.
-    const ids = root.subTasks.map((task) => task[id]);
-    root.subTasks.forEach((task, i) => expect(task[id]).to.eq(ids[i]));
+    const ids = root.subTasks.map((task) => task.id);
+    root.subTasks.forEach((task, i) => expect(task.id).to.eq(ids[i]));
     expect(Array.from(root.subTasks.values())).to.have.length(5);
 
     root.subTasks = [new Task(), new Task(), new Task()];

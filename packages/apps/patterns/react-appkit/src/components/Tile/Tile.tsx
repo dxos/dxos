@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Document, DocumentBase, id, type } from '@dxos/echo-schema';
+import { Document, DocumentBase, type } from '@dxos/echo-schema';
 import { Group } from '@dxos/react-components';
 
 import { Task, TaskList } from '../../proto';
@@ -32,7 +32,7 @@ export const TaskListTile: Tile<TaskList> = {
     <BaseTile label={{ children: data.title }}>
       <ul>
         {data.tasks.map((task) => (
-          <li key={task[id]}>{task.title}</li>
+          <li key={task.id}>{task.title}</li>
         ))}
       </ul>
     </BaseTile>

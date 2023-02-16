@@ -6,24 +6,24 @@ import { Archive, CheckSquare, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-import { id } from '@dxos/echo-schema';
+
 import { useQuery, withReactor } from '@dxos/react-client';
 import { TreeView, TreeViewItem } from '@dxos/react-components';
 
 import { Project } from '../../proto';
 
 export const mapProjectToItem = (project: Project): TreeViewItem => ({
-  id: project[id],
+  id: project.id,
   title: project.title,
   Icon: Archive,
   items: project.tasks?.map((task) => ({
-    id: task[id],
+    id: task.id,
     title: task.title,
     Icon: CheckSquare,
     items: task.assignee
       ? [
           {
-            id: task.assignee[id],
+            id: task.assignee.id,
             title: task.assignee.name,
             Icon: User
           }

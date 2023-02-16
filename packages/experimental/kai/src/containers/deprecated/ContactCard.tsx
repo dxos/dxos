@@ -5,7 +5,7 @@ import { Buildings, User } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
 import { Space } from '@dxos/client';
-import { id } from '@dxos/echo-schema';
+
 import { useQuery } from '@dxos/react-client';
 import { getSize, Input } from '@dxos/react-components';
 
@@ -19,7 +19,7 @@ import { Contact, Organization } from '../../proto';
 // TODO(burdon): List events, orgs.
 export const ContactCard: FC<{ space: Space; contact: Contact }> = ({ space, contact }) => {
   const organizations = useQuery(space, Organization.filter()).filter((organization) =>
-    organization.people.find((member) => member[id] === contact[id])
+    organization.people.find((member) => member.id === contact.id)
   );
 
   const [orgName, setOrgName] = useState('');
@@ -54,7 +54,7 @@ export const ContactCard: FC<{ space: Space; contact: Contact }> = ({ space, con
           </tr>
 
           {organizations.map((organization) => (
-            <tr key={organization[id]}>
+            <tr key={organization.id}>
               <td className='align-top'>
                 <div className='flex justify-center text-gray-500 pt-2'>
                   <Buildings weight='thin' className={getSize(20)} />
