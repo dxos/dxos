@@ -43,7 +43,7 @@ export class TestBuilder<M extends Model<any>> {
     });
 
     const id = PublicKey.random().toHex();
-    const stateManager = this._modelFactory.createModel<M>(
+    const stateManager = this._modelFactory.createModel(
       this._modelConstructor.meta.type,
       id,
       {
