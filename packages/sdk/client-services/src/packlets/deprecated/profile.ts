@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { createPresentationProof, getPresentationProofPayload, SIGNATURE_TYPE_ED25519 } from '@dxos/credentials';
+import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import {
   CreateProfileRequest,
@@ -15,7 +15,7 @@ import {
   SignPresentationRequest,
   SubscribeProfileResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { Presentation, Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ServiceContext } from '../services';
 import { InviteeInvitations } from './invitations';
@@ -74,17 +74,12 @@ export class ProfileServiceImpl implements ProfileService {
 
   async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {
     assert(this.context.identityManager.identity, 'Identity not initialized.');
-    const proof = await createPresentationProof({
+    return await signPresentation({
       presentation,
       signer: this.context.keyring,
       signerKey: this.context.identityManager.identity.deviceKey,
       chain: this.context.identityManager.identity.deviceCredentialChain,
       nonce
     });
-
-    return {
-      credentials: presentation.credentials,
-      proofs: [...(presentation.proofs ?? []), proof]
-    };
   }
 }

@@ -9,7 +9,7 @@ import { Chain, Presentation, Proof } from '@dxos/protocols/proto/dxos/halo/cred
 import { SIGNATURE_TYPE_ED25519 } from '../credentials';
 import { getPresentationProofPayload } from './signing';
 
-export const createPresentationProof = async ({
+export const signPresentation = async ({
   presentation,
   signer,
   signerKey,
@@ -21,7 +21,7 @@ export const createPresentationProof = async ({
   signerKey: PublicKey;
   chain?: Chain;
   nonce: Uint8Array;
-}): Promise<Proof> => {
+}): Promise<Presentation> => {
   const proof: Proof = {
     type: SIGNATURE_TYPE_ED25519,
     value: new Uint8Array(),
@@ -35,5 +35,9 @@ export const createPresentationProof = async ({
   if (chain) {
     proof.chain = chain;
   }
-  return proof;
+
+  return {
+    credentials: presentation.credentials,
+    proofs: [...(presentation.proofs ?? []), proof]
+  };
 };
