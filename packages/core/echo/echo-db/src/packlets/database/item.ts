@@ -38,22 +38,6 @@ import { getInsertionIndex, MutationInQueue, MutationQueue } from './ordering';
  */
 // TODO(dmaretskyi): Rename to ObjectState.
 export class Item<M extends Model = Model> {
-  /**
-   * Parent item (or null if this item is a root item).
-   */
-  private _parent: Item<any> | null = null;
-
-  /**
-   * Denotes soft delete.
-   * Item can be restored until garbage collection (e.g., via snapshots).
-   */
-  private _deleted = false;
-
-  /**
-   * Managed set of child items.
-   * @internal
-   */
-  readonly _children = new Set<Item<any>>();
 
   // Called whenever item processes mutation.
   protected readonly _onUpdate = new Event<Item<any>>();
@@ -65,8 +49,6 @@ export class Item<M extends Model = Model> {
   public _debugLabel: string | undefined;
 
   public _modelMeta: ModelMeta | null = null;
-  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
-
 
   /**
    * Snapshot of the base state of the object.
@@ -74,9 +56,30 @@ export class Item<M extends Model = Model> {
   private _initialState: EchoObject;
 
   /**
+   * Decoded versions of mutations from _initialState.
+   */
+  private _initialStateMutations: MutationInQueue<MutationOf<M>>[] = [];
+
+  /**
    * Mutations that were applied on top of the _snapshot.
    */
   private _mutationQueue = new MutationQueue<MutationOf<M>>();
+
+  /**
+   * Parent item (or null if this item is a root item).
+   */
+  private _parent: ItemID | null = null;
+
+  /**
+   * Denotes soft delete.
+   * Item can be restored until garbage collection (e.g., via snapshots).
+   */
+  private _deleted = false;
+
+  /**
+   * Model state-machine.
+   */
+  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
   /**
    * Items are constructed by the `Database` object.
@@ -87,12 +90,10 @@ export class Item<M extends Model = Model> {
   constructor(
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
-    parent?: Item<any> | null
   ) {
     this._initialState = {
       objectId: _id,
     }
-    this._updateParent(parent);
   }
 
   @logInfo
@@ -110,6 +111,7 @@ export class Item<M extends Model = Model> {
     return this._modelMeta.type;
   }
 
+  @logInfo
   get initialized(): boolean {
     return !!this._modelMeta;
   }
@@ -118,12 +120,8 @@ export class Item<M extends Model = Model> {
     return this._deleted;
   }
 
-  get parent(): Item<any> | null {
+  get parent(): ItemID | null {
     return this._parent;
-  }
-
-  get children(): Item<any>[] {
-    return Array.from(this._children.values()).filter((item) => !item.deleted);
   }
 
   get state(): StateOf<M> {
@@ -134,7 +132,8 @@ export class Item<M extends Model = Model> {
   toString() {
     return `Item(${JSON.stringify({
       objectId: this.id,
-      parentId: this.parent?.id,
+      parentId: this.parent,
+      deleted: this.deleted,
       type: this.modelMeta?.type,
     })})`;
   }
@@ -150,7 +149,7 @@ export class Item<M extends Model = Model> {
     this._modelMeta = modelConstructor.meta;
     log('initialize')
 
-    this._resetStateMachine();
+    this._resetState();
   }
 
   /**
@@ -165,129 +164,36 @@ export class Item<M extends Model = Model> {
   }
 
   /**
-   * Delete the item.
+   * Apply mutation.
+   * Processes both system metadata & model-specific updates.
    */
-  // TODO(burdon): Referential integrity (e.g., delete/hide children?)
-  // TODO(burdon): Queries should skip deleted items (unless requested).
-  // TODO(burdon): Garbage collection (snapshots should drop deleted items).
-  // TODO(burdon): Prevent updates to model if deleted.
-  // TODO(burdon): If deconstructed (itemManager.deconstructItem) then how to query?
-  // async delete() {
-  //   if (!this._writeStream) {
-  //     throw new Error(`Item is read-only: ${this.id}`);
-  //   }
-  //   if (this.deleted) {
-  //     return;
-  //   }
+  private _applyMutation(entry: MutationInQueue<MutationOf<M>>) {
+    log('_processMutation', { entry });
+    const { action, parentId, model } = entry.mutation;
 
-  //   const onUpdate = this._onUpdate.waitFor(() => this.deleted);
-  //   await this._writeStream.write({
-  //     object: {
-  //       objectId: this.id,
-  //       mutations: [
-  //         {
-  //           action: EchoObject.Mutation.Action.DELETE
-  //         }
-  //       ]
-  //     }
-  //   });
+    {
 
-  //   await onUpdate;
-  // }
+      switch (action) {
+        case EchoObject.Mutation.Action.DELETE: {
+          this._deleted = true;
+          break;
+        }
 
-  // /**
-  //  * Restore deleted item.
-  //  */
-  // async restore() {
-  //   if (!this._writeStream) {
-  //     throw new Error(`Item is read-only: ${this.id}`);
-  //   }
-
-  //   const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
-  //   await this._writeStream.write({
-  //     object: {
-  //       objectId: this.id,
-  //       mutations: [
-  //         {
-  //           action: EchoObject.Mutation.Action.RESTORE
-  //         }
-  //       ]
-  //     }
-  //   });
-
-  //   await onUpdate;
-  // }
-
-  // TODO(telackey): This does not allow null or undefined as a parent_id, but should it since we allow a null parent?
-  // async setParent(parentId: ItemID): Promise<void> {
-  //   if (!this._writeStream || this.readOnly) {
-  //     throw new Error(`Item is read-only: ${this.id}`);
-  //   }
-
-  //   // Wait for mutation below to be processed.
-  //   // TODO(burdon): Refine to wait for this specific mutation.
-  //   const onUpdate = this._onUpdate.waitFor(() => parentId === this._parent?.id);
-
-  //   await this._writeStream.write({
-  //     object: {
-  //       objectId: this.id,
-  //       mutations: [
-  //         {
-  //           parentId
-  //         }
-  //       ]
-  //     }
-  //   });
-
-  //   await onUpdate;
-  // }
-
-  /**
-   * Process a mutation from the stream.
-   * @private (Package-private).
-   * @deprecated
-   */
-  _processMutation(mutation: EchoObject.Mutation, getItem: (objectId: ItemID) => Item<any> | undefined) {
-    log('_processMutation %s', { mutation });
-
-    const { action, parentId } = mutation;
-
-    switch (action) {
-      case EchoObject.Mutation.Action.DELETE: {
-        this._deleted = true;
-        break;
+        case EchoObject.Mutation.Action.RESTORE: {
+          this._deleted = false;
+          break;
+        }
       }
 
-      case EchoObject.Mutation.Action.RESTORE: {
-        this._deleted = false;
-        break;
+      // TODO(burdon): Convert to Action.
+      if (parentId) {
+        this._parent = parentId;
       }
     }
 
-    // TODO(burdon): Convert to Action.
-    if (parentId) {
-      const parent = getItem(parentId);
-      this._updateParent(parent);
-    }
-
-    this._onUpdate.emit(this);
-  }
-
-  /**
-   * Atomically update parent/child relationship.
-   * @param parent
-   */
-  private _updateParent(parent: Item<any> | null | undefined) {
-    log('_updateParent', { parent: parent?.id, prevParent: this._parent?.id });
-    if (this._parent) {
-      this._parent._children.delete(this);
-    }
-
-    if (parent) {
-      this._parent = parent;
-      this._parent._children.add(this);
-    } else {
-      this._parent = null;
+    assert(!!model === !!entry.decodedModelMutation);
+    if (model && this.initialized) {
+      this._stateMachine!.process(entry.decodedModelMutation);
     }
   }
 
@@ -295,13 +201,23 @@ export class Item<M extends Model = Model> {
     this._onUpdate.emit(this);
   }
 
+  private _decodeMutation(mutation: EchoObject.Mutation): MutationInQueue<MutationOf<M>> {
+    assert(this.modelMeta)
+    return {
+      mutation,
+      decodedModelMutation: !mutation.model ? undefined : this.modelMeta.mutationCodec.decode(mutation.model.value)
+    }
+  }
+
   /**
     * Re-creates the state machine based on the current snapshot and enqueued mutations.
     */
-  private _resetStateMachine() {
+  private _resetState() {
     assert(this._modelMeta, 'Model not initialized.');
     log('Reset state machine');
 
+    this._parent = this._initialState.snapshot?.parentId ?? null;
+    this._deleted = this._initialState.snapshot?.deleted ?? false;
     this._stateMachine = this._modelMeta.stateMachine();
 
     // Apply the snapshot.
@@ -312,33 +228,25 @@ export class Item<M extends Model = Model> {
     }
 
     // Apply mutations passed with the snapshot.
-    for (const mutation of this._initialState.mutations ?? []) {
-      if (!mutation.model) {
-        continue;
-      }
-
-      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.model.value);
-      this._stateMachine.process(mutationDecoded);
+    for (const mutation of this._initialStateMutations) {
+      this._applyMutation(mutation);
     }
 
     for (const mutation of this._mutationQueue.getMutations()) {
-      this._stateMachine.process(mutation.mutation);
+      this._applyMutation(mutation);
     }
   }
 
   processOptimisticMutation(mutation: EchoObject.Mutation) {
     log('process optimistic mutation', { mutation });
 
-    const queueEntry: MutationInQueue<MutationOf<M>> = {
-      mutation: mutation,
-      decodedModelMutation: !mutation.model ? undefined : this.modelMeta?.mutationCodec.decode(mutation.model.value)
-    };
+    const queueEntry = this._decodeMutation(mutation);
     this._mutationQueue.pushOptimistic(queueEntry);
 
     // Process mutation if initialzied, otherwise deferred until state-machine is loaded.
     if (this.initialized) {
       log('Optimistic apply', mutation);
-      this._stateMachine!.process(queueEntry.decodedModelMutation);
+      this._applyMutation(queueEntry);
       this._emitUpdate();
     }
   }
@@ -348,11 +256,7 @@ export class Item<M extends Model = Model> {
    * Processes mutations from the inbound stream.
    */
   processMessage(mutation: EchoObject.Mutation) {
-    const queueEntry: MutationInQueue<MutationOf<M>> = {
-      mutation,
-      decodedModelMutation: !mutation.model ? undefined : this.modelMeta?.mutationCodec.decode(mutation.model.value)
-    }
-
+    const queueEntry = this._decodeMutation(mutation);
     const { reorder, apply } = this._mutationQueue.pushConfirmed(queueEntry);
 
     log('process message', {
@@ -367,14 +271,13 @@ export class Item<M extends Model = Model> {
       if (reorder) {
         // Order will be broken, reset the state machine and re-apply all mutations.
         log('Reset due to order change');
-        this._resetStateMachine();
+        this._resetState();
+        this._emitUpdate();
       } else if (apply) {
         log('Apply', { meta: queueEntry.mutation.meta });
         // Mutation can safely be append at the end preserving order.
-        if (queueEntry.decodedModelMutation) {
-          this._stateMachine!.process(queueEntry.decodedModelMutation);
-          this._emitUpdate();
-        }
+        this._applyMutation(queueEntry);
+        this._emitUpdate();
       }
     }
 
@@ -388,35 +291,35 @@ export class Item<M extends Model = Model> {
    * Create a snapshot of the current state.
    */
   createSnapshot(): EchoObject {
+    const commonSnapshot: EchoObject = {
+      objectId: this._id,
+      genesis: {
+        modelType: this.modelType
+      },
+      snapshot: {
+        ...this._initialState.snapshot,
+        parentId: this.parent ?? undefined,
+        deleted: this.deleted,
+      },
+    }
+
     if (this.initialized && this.modelMeta!.snapshotCodec && typeof this._stateMachine?.snapshot === 'function') { // If state-machine can create snapshots.
       return {
-        objectId: this._id,
-        genesis: {
-          modelType: this.modelType
-        },
+        ...commonSnapshot,
         snapshot: {
-          ...this._initialState.snapshot,
+          ...commonSnapshot.snapshot,
           model: (this.modelMeta!.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine!.snapshot()),
-          parentId: this.parent?.id
         },
       }
     } else {
       return {
-        objectId: this._id,
-        genesis: {
-          modelType: this.modelType
-        },
-        snapshot: {
-          ...this._initialState.snapshot,
-          parentId: this.parent?.id
-        },
+        ...commonSnapshot,
         mutations: [
           ...(this._initialState.mutations ?? []),
           ...this._mutationQueue.getConfirmedMutations().map((entry) => entry.mutation)
         ]
       };
     }
-
   }
 
   /**
@@ -432,13 +335,14 @@ export class Item<M extends Model = Model> {
       || this._initialState.meta?.clientTag !== snapshot.meta?.clientTag;
 
     this._initialState = snapshot;
+    this._initialStateMutations = (this._initialState.mutations ?? []).map(mutation => this._decodeMutation(mutation));
     log('resetToSnapshot', { needsReset, snapshot })
 
     if (needsReset) {
       this._mutationQueue.resetConfirmed();
 
       if (this.initialized) {
-        this._resetStateMachine();
+        this._resetState();
         this._emitUpdate();
       }
     }

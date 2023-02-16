@@ -185,7 +185,6 @@ export class DatabaseBackendProxy implements DatabaseBackend {
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
           modelType: object.genesis.modelType,
-          parentId: object.snapshot?.parentId, // TODO(dmaretskyi): Remove.
         });
         objectsCreated.push(entity);
       } else {
@@ -203,16 +202,10 @@ export class DatabaseBackendProxy implements DatabaseBackend {
         for (const mutation of object.mutations) {
           log('mutate', { id: object.objectId, mutation });
 
-          if (mutation.parentId || mutation.action) {
-            entity._processMutation(mutation, (id) => this._itemManager.getItem(id));
-          }
-
-          if (mutation.model) {
-            if (optimistic) {
-              entity.processOptimisticMutation(mutation);
-            } else {
-              entity.processMessage(mutation);
-            }
+          if (optimistic) {
+            entity.processOptimisticMutation(mutation);
+          } else {
+            entity.processMessage(mutation);
           }
         }
       }

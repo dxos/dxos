@@ -2,20 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
-import { failUndefined } from '@dxos/debug';
-import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
+import { Model, ModelFactory } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { log } from '@dxos/log';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
-import { log } from '@dxos/log';
 
 
 export interface ItemDemuxerOptions {
@@ -69,8 +66,6 @@ export class ItemDemuxer {
         const entity = this._itemManager.constructItem({
           itemId: objectId,
           modelType,
-
-          parentId: mutation?.parentId
         });
         entity.resetToSnapshot({
           ...message.data,
@@ -89,22 +84,11 @@ export class ItemDemuxer {
       // Model mutations.
       //
       if (mutation && !genesis) {
-        // TODO(dmaretskyi): Fix.
-        if (mutation.parentId || mutation.action) {
-          const item = this._itemManager.getItem(objectId);
-          assert(item);
-
-          item._processMutation(mutation, (objectId: ItemID) => this._itemManager.getItem(objectId));
-        }
-
-        if (mutation.model) {
-          assert(message.data.mutations);
-          // Forward mutations to the item's stream.
-          this._itemManager.processModelMessage(objectId, {
-            ...mutation,
-            meta,
-          });
-        }
+        // Forward mutations to the item's stream.
+        this._itemManager.processMutation(objectId, {
+          ...mutation,
+          meta,
+        });
       }
 
       this.mutation.emit(message);
@@ -114,22 +98,7 @@ export class ItemDemuxer {
   createSnapshot(): EchoSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.items.map((item) => this.createItemSnapshot(item))
-    };
-  }
-
-  createItemSnapshot(item: Item<Model<any>>): EchoObject {
-    const { snapshot, ...model } = item.createSnapshot();
-
-    return {
-      genesis: {
-        modelType: item.modelType
-      },
-      snapshot: {
-        parentId: item.parent?.id,
-        ...snapshot
-      },
-      ...model
+      items: this._itemManager.items.map((item) => item.createSnapshot())
     };
   }
 
@@ -145,7 +114,6 @@ export class ItemDemuxer {
       const obj = this._itemManager.constructItem({
         itemId: item.objectId,
         modelType: item.genesis.modelType,
-        parentId: item.snapshot?.parentId,
       });
       obj.resetToSnapshot(item)
     }

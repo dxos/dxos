@@ -21,12 +21,9 @@ import { UnknownModelError } from '../errors';
 import { Item } from './item';
 
 // TODO(dmaretskyi): Merge.
-export interface ModelConstructionOptions {
+export type ItemConstructionOptions = {
   itemId: ItemID;
   modelType: ModelType;
-}
-export interface ItemConstructionOptions extends ModelConstructionOptions {
-  parentId?: ItemID;
 }
 
 /**
@@ -54,7 +51,7 @@ export class ItemManager {
    */
   constructor(
     private readonly _modelFactory: ModelFactory,
-  ) {}
+  ) { }
 
   get entities() {
     return this._entities;
@@ -94,29 +91,20 @@ export class ItemManager {
   /**
    * Constructs an item with the appropriate model.
    */
-  constructItem({ itemId, modelType, parentId }: ItemConstructionOptions): Item<any> {
+  constructItem({ itemId, modelType }: ItemConstructionOptions): Item<any> {
     assert(itemId);
     assert(modelType);
-    if(this.entities.has(itemId)) {
+    if (this.entities.has(itemId)) {
       log.info('init twice')
       return this.entities.get(itemId)!;
     }
 
-    const parent = parentId ? this._entities.get(parentId) : null;
-    if (parentId && !parent) {
-      throw new Error(`Missing parent: ${parentId}`);
-    }
-    assert(!parent || parent instanceof Item);
-
     const { constructor: modelConstructor } = this._modelFactory.getModel(modelType) ?? failUndefined();
 
-    const item = new Item(this, itemId, parent);
+    const item = new Item(this, itemId);
     item._debugLabel = this._debugLabel;
     item.initialize(modelConstructor)
 
-    if (parent) {
-      this.update.emit(parent);
-    }
     this._addItem(item);
 
     return item;
@@ -127,7 +115,7 @@ export class ItemManager {
    * @param itemId Id of the item containing the model.
    * @param message Encoded model message
    */
-  processModelMessage(itemId: ItemID, mutation: EchoObject.Mutation) {
+  processMutation(itemId: ItemID, mutation: EchoObject.Mutation) {
     const item = this._entities.get(itemId);
     assert(item);
 
@@ -157,16 +145,6 @@ export class ItemManager {
     assert(item);
 
     this._entities.delete(itemId);
-
-    if (item instanceof Item) {
-      if (item.parent) {
-        item.parent._children.delete(item);
-      }
-
-      for (const child of item.children) {
-        this.deconstructItem(child.id);
-      }
-    }
   }
 
   /**

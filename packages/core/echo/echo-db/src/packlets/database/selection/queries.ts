@@ -74,7 +74,7 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
   } else {
     return (item) =>
       // (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
-      (!filter.parent || item.parent?.id === coerceToId(filter.parent));
+      (!filter.parent || item.parent === coerceToId(filter.parent));
   }
 };
 
