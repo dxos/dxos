@@ -12,7 +12,7 @@ import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/o
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
-import { base, db, deleted, type } from './defs';
+import { base, db, type } from './defs';
 import { Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
@@ -79,7 +79,7 @@ export class EchoDatabase {
     if (!obj) {
       return undefined;
     }
-    if ((obj as any)[deleted] === true) {
+    if ((obj as any).__deleted === true) {
       return undefined;
     }
 
@@ -261,7 +261,7 @@ const filterMatcher = (filter: Filter<any>, object: EchoObject): object is Docum
   if (!isDocument(object)) {
     return false;
   }
-  if (object[deleted]) {
+  if (object.__deleted) {
     return false;
   }
 

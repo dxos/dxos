@@ -6,7 +6,6 @@ import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
 import { useParams, useOutletContext, generatePath } from 'react-router-dom';
 
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
-import { deleted } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 
 import { FILTER } from '../constants';
@@ -28,7 +27,7 @@ export const Main = withReactor(() => {
   }
 
   // TODO(wittjosiah): Hide deleted items from `useQuery`?
-  const allTodos = list.todos.filter((todo) => !todo[deleted]);
+  const allTodos = list.todos.filter((todo) => !todo.__deleted);
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

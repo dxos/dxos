@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { deleted, Document, DocumentBase, type } from '@dxos/client';
+import { Document, DocumentBase, type } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useQuery } from '@dxos/react-client';
 import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
@@ -32,7 +32,7 @@ const getItemType = (doc: DocumentBase) => doc[type];
 const getItemDetails = (item: DocumentBase) => ({
   id: truncateKey(item.id, 4),
   type: item[type],
-  deleted: String(Boolean(item[deleted])),
+  deleted: String(Boolean(item.__deleted)),
   properties: <JsonView data={item.toJSON()} />
 });
 

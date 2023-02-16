@@ -6,7 +6,6 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 import type { Space } from '@dxos/client';
-import { deleted } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Loading } from '@dxos/react-components';
 
@@ -27,7 +26,7 @@ export const SpacePage = withReactor(() => {
   return (
     <TaskListComponent
       title={taskList.title}
-      tasks={taskList.tasks?.filter((t) => !t[deleted])}
+      tasks={taskList.tasks?.filter((t) => !t.__deleted)}
       onTitleChanged={(title) => {
         taskList.title = title;
       }}

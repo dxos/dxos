@@ -7,7 +7,7 @@ import { InspectOptionsStylized, inspect } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 
-import { base, data, deleted, proxy, schema, type } from './defs';
+import { base, data, proxy, schema, type } from './defs';
 import { EchoArray } from './echo-array';
 import { EchoObject } from './object';
 import { EchoSchemaField, EchoSchemaType } from './schema';
@@ -83,7 +83,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 
   /** Deletion. */
-  get [deleted](): boolean {
+  get __deleted(): boolean {
     return this[base]._item?.deleted ?? false;
   }
 
