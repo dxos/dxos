@@ -18,7 +18,7 @@ export const DocumentFrame = withReactor(() => {
   const objects = useQuery(space, Document.filter());
 
   // Default to first.
-  const object = objectId ? (space!.experimental.db.getObjectById(objectId) as Document) : undefined;
+  const object = objectId ? (space!.db.getObjectById(objectId) as Document) : undefined;
   useEffect(() => {
     if (frame && !object && objects.length) {
       navigate(createSpacePath(space!.key, frame?.module.id, objects[0].id));

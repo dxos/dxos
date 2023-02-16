@@ -31,7 +31,7 @@ export const DocumentTile = () => {
   };
 
   const handleCreate = async () => {
-    const object = await space.experimental.db.add(new Document());
+    const object = await space.db.add(new Document());
     object.content = new TextObject(); // TODO(burdon): Make automatic?
     return object.id;
   };

@@ -39,7 +39,7 @@ const CreateIdentityPage = () => {
       await client.halo.createProfile({ displayName });
       const space = await client.echo.createSpace();
       if (dev && !client.config.values.runtime?.client?.storage?.persistent) {
-        await new Generator(space.experimental.db).generate();
+        await new Generator(space.db).generate();
       }
 
       redirect();
