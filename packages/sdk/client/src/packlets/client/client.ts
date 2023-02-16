@@ -19,7 +19,7 @@ import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
 import { SpaceSerializer } from './serializer';
-import { fromIFrame } from './utils';
+import { fromIFrame, fromHost } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -63,7 +63,7 @@ export class Client {
     services
   }: ClientOptions = {}) {
     this._config = config ?? new Config();
-    this._services = services ?? fromIFrame(this._config);
+    this._services = services ?? typeof window !== 'undefined' ? fromIFrame(this._config) : fromHost(this._config);
 
     // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();

@@ -180,7 +180,7 @@ export abstract class BaseCommand extends Command {
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig, services: fromHost(this._clientConfig) });
+      this._client = new Client({ config: this._clientConfig });
       await this._client.initialize();
       log('Initialized');
     }
