@@ -5,7 +5,7 @@
 import stableStringify from 'json-stable-stringify';
 
 import { PublicKey } from '@dxos/keys';
-import { Credential, Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 /**
  * @returns The input message to be signed for a given credential.
@@ -20,19 +20,6 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
     }
   };
   delete copy.id; // ID is not part of the signature payload.
-
-  return Buffer.from(canonicalStringify(copy));
-};
-
-export const getPresentationProofPayload = (credentials: Credential[], proof: Proof): Uint8Array => {
-  const copy = {
-    credentials,
-    proof: {
-      ...proof,
-      value: new Uint8Array(),
-      chain: undefined
-    }
-  };
 
   return Buffer.from(canonicalStringify(copy));
 };
