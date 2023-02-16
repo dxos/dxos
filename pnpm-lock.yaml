@@ -2956,6 +2956,7 @@ importers:
       '@dxos/framebox': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
+      '@dxos/halo-app': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/metagraph': workspace:*
@@ -3108,6 +3109,7 @@ importers:
       yjs: 13.5.44
     devDependencies:
       '@babel/core': 7.19.3
+      '@dxos/halo-app': link:../../apps/halo-app
       '@monaco-editor/react': 4.4.6_mxtbfgz57rpc6pjn6jsomqlbdm
       '@remix-run/router': 1.0.2
       '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi

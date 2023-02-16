@@ -90,6 +90,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/halo-app": "workspace:*",
     "@monaco-editor/react": "^4.4.6",
     "@remix-run/router": "^1.0.2",
     "@swc-node/register": "^1.5.4",
