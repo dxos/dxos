@@ -11,7 +11,7 @@ The simplest way to access data in [`ECHO`](../platform) from `react` is by usin
 
 The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) from package `@dxos/react-client` is the [`space`](../glossary#space) and the second is an optional filter which matches all objects which have all the keys and values specified in the filter. The return type is an iterable array of `Document` objects.
 
-```tsx file=./snippets/use-query.tsx#L5-
+```tsx{14} file=./snippets/use-query.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {

@@ -88,7 +88,7 @@ Arguments: none
 
 ### Example
 
-```tsx{15,27,30,34} file=./snippets/use-spaces.tsx#L5-
+```tsx{14,17,21} file=./snippets/use-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
