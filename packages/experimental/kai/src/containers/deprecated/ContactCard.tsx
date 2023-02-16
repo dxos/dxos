@@ -26,7 +26,7 @@ export const ContactCard: FC<{ space: Space; contact: Contact }> = ({ space, con
   const handleEnter = async () => {
     const organization = new Organization({ name: orgName });
     organization.people.push(contact);
-    await space.experimental.db.add(organization);
+    await space.db.add(organization);
     setOrgName('');
   };
 

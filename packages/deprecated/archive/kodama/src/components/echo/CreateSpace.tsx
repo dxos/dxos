@@ -21,7 +21,7 @@ export const CreateSpace: FC<{
     const name = text.trim();
     if (name.length) {
       const space = await client.echo.createSpace();
-      // void space.setProperty('title', name);
+      space.properties.name = name;
       setName('');
       onCreate?.(space.key);
     }
