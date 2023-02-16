@@ -13,7 +13,8 @@ export type SpacesPageProps = {};
 
 export const SpacesPage = (props: SpacesPageProps) => {
   const createComposerDocument = useCallback(async (space: Space) => {
-    await space.experimental.db.add(new Document({ content: new TextObject() }));
+    await space.db.add(new Document({ content: new TextObject() }));
   }, []);
+
   return <BaseSpacesPage onSpaceCreate={createComposerDocument} />;
 };
