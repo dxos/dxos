@@ -337,7 +337,7 @@ describe('EchoDatabase', () => {
       expect(text.model!.textContent).toEqual('Hello world');
     });
 
-    test.only('text property', async () => {
+    test('text property', async () => {
       const db = await createDatabase();
       const task = new Document();
       await db.save(task);
