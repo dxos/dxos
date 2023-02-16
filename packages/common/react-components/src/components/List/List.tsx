@@ -6,7 +6,6 @@ import { DndContext } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { createCollection } from '@radix-ui/react-collection';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -82,17 +81,11 @@ interface ListItemProps extends Omit<ListItemData, 'id'> {
   id?: string;
 }
 
-// COLLECTION
-
 type ListItemElement = React.ElementRef<typeof Primitive.li>;
-
-const [Collection, useListCollection, createCollectionScope] = createCollection<ListItemElement, ListItemData>(
-  LIST_NAME
-);
 
 // LIST
 
-const [createListContext, createListScope] = createContextScope(LIST_NAME, [createCollectionScope]);
+const [createListContext, createListScope] = createContextScope(LIST_NAME, []);
 
 type ListContextValue = Pick<ListProps, 'selectable' | 'variant'>;
 
@@ -115,15 +108,13 @@ const List: FC<ListProps> = (props: ScopedProps<ListProps>) => {
           selectable
         }}
       >
-        <Collection.Provider scope={__scopeSelect}>
-          {variant === 'ordered-draggable' ? (
-            <DndContext onDragEnd={(props as DraggableListProps).onDragEnd} modifiers={[restrictToVerticalAxis]}>
-              <SortableContext items={(props as DraggableListProps).listItemIds}>{children}</SortableContext>
-            </DndContext>
-          ) : (
-            <>{children}</>
-          )}
-        </Collection.Provider>
+        {variant === 'ordered-draggable' ? (
+          <DndContext onDragEnd={(props as DraggableListProps).onDragEnd} modifiers={[restrictToVerticalAxis]}>
+            <SortableContext items={(props as DraggableListProps).listItemIds}>{children}</SortableContext>
+          </DndContext>
+        ) : (
+          <>{children}</>
+        )}
       </ListProvider>
     </ListRoot>
   );
@@ -177,7 +168,11 @@ const ListItemHeading = ({
 const ListItemDragHandle = ({ className, ...props }: Omit<ComponentPropsWithoutRef<'div'>, 'children'>) => {
   const { themeVariant } = useThemeContext();
   return (
-    <div role='button' {...props} className={mx('bs-10 is-5 rounded', themeVariantFocus(themeVariant), className)}>
+    <div
+      role='button'
+      {...props}
+      className={mx('bs-10 is-5 rounded touch-none', themeVariantFocus(themeVariant), className)}
+    >
       <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
     </div>
   );
@@ -206,30 +201,28 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
     const headingId = useId('listItem__heading');
 
     return (
-      <Collection.ItemSlot id={id} scope={__scopeSelect} selected={selected}>
-        <ListItemProvider scope={__scopeSelect} headingId={headingId}>
-          <Primitive.li
-            {...slots.root}
-            id={id}
-            ref={forwardedRef}
-            aria-labelledby={headingId}
-            {...(selectable && { role: 'option', 'aria-selected': !!selected })}
-            className={mx('flex', draggable && 'touch-none', slots.root?.className)}
-          >
-            {draggable && <ListItemDragHandle {...slots.dragHandle} className={slots.dragHandle?.className} />}
-            {selectable && (
-              <ListItemEndcap>
-                <Checkbox
-                  labelId={headingId}
-                  className='mbs-2.5'
-                  {...{ checked: selected, onCheckedChange: setSelected }}
-                />
-              </ListItemEndcap>
-            )}
-            {children}
-          </Primitive.li>
-        </ListItemProvider>
-      </Collection.ItemSlot>
+      <ListItemProvider scope={__scopeSelect} headingId={headingId}>
+        <Primitive.li
+          {...slots.root}
+          id={id}
+          ref={forwardedRef}
+          aria-labelledby={headingId}
+          {...(selectable && { role: 'option', 'aria-selected': !!selected })}
+          className={mx('flex', slots.root?.className)}
+        >
+          {draggable && <ListItemDragHandle {...slots.dragHandle} className={slots.dragHandle?.className} />}
+          {selectable && (
+            <ListItemEndcap>
+              <Checkbox
+                labelId={headingId}
+                className='mbs-2.5'
+                {...{ checked: selected, onCheckedChange: setSelected }}
+              />
+            </ListItemEndcap>
+          )}
+          {children}
+        </Primitive.li>
+      </ListItemProvider>
     );
   }
 );
@@ -242,20 +235,18 @@ const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: stri
     const ref = useComposedRefs(forwardedRef, setNodeRef) as ComponentPropsWithRef<typeof Primitive.li>['ref'];
 
     return (
-      <Collection.Slot scope={props.__scopeSelect}>
-        <PureListItem
-          {...props}
-          ref={ref}
-          slots={{
-            ...props.slots,
-            root: {
-              ...props.slots?.root,
-              style: { transform: CSS.Transform.toString(transform), transition, ...props.slots?.root?.style }
-            },
-            dragHandle: { ...listeners, ...attributes, ...props.slots?.dragHandle }
-          }}
-        />
-      </Collection.Slot>
+      <PureListItem
+        {...props}
+        ref={ref}
+        slots={{
+          ...props.slots,
+          root: {
+            ...props.slots?.root,
+            style: { transform: CSS.Transform.toString(transform), transition, ...props.slots?.root?.style }
+          },
+          dragHandle: { ...listeners, ...attributes, ...props.slots?.dragHandle }
+        }}
+      />
     );
   }
 );
@@ -271,15 +262,6 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ScopedProps<
   }
 });
 
-export {
-  List,
-  createListScope,
-  useListCollection,
-  ListItem,
-  ListItemHeading,
-  ListItemEndcap,
-  ListItemDragHandle,
-  createListItemScope
-};
+export { List, createListScope, ListItem, ListItemHeading, ListItemEndcap, ListItemDragHandle, createListItemScope };
 
 export type { ListProps, ListVariant, ListItemProps };
