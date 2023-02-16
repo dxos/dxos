@@ -21,7 +21,7 @@ describe('Serializer', () => {
       const db = await createDatabase();
       const obj = new Document();
       obj.title = 'Test';
-      await db.save(obj);
+      await db.add(obj);
       expect(db.objects).to.have.length(1);
 
       data = await serializer.export(db);
@@ -62,7 +62,7 @@ describe('Serializer', () => {
           })
         ]
       });
-      await db.save(obj);
+      await db.add(obj);
 
       await sleep(100);
 

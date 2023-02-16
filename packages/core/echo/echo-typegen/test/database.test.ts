@@ -19,7 +19,7 @@ describe('database', () => {
     expect(task[db]).to.be.undefined;
 
     const database = await createDatabase();
-    await database.save(task);
+    await database.add(task);
     expect(task[db]).to.exist;
 
     const tasks = database.query(Task.filter()).getObjects();

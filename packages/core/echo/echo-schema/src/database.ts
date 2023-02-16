@@ -90,7 +90,7 @@ export class EchoDatabase {
    * Flush mutations.
    */
   // TODO(burdon): Batches?
-  async save<T extends EchoObject>(obj: T): Promise<T> {
+  async add<T extends EchoObject>(obj: T): Promise<T> {
     log('save', { id: obj.id, type: (obj as any).__typename });
     assert(obj.id); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
@@ -128,7 +128,7 @@ export class EchoDatabase {
   /**
    * Delete object.
    */
-  delete<T extends DocumentBase>(obj: T) {
+  remove<T extends DocumentBase>(obj: T) {
     this._backend.mutate({
       objects: [
         {

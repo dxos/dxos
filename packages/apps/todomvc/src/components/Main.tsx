@@ -69,7 +69,7 @@ export const Main = withReactor(() => {
     list.todos
       .filter((item) => item.completed)
       .forEach((item) => {
-        void space.experimental.db.delete(item);
+        void space.experimental.db.remove(item);
       });
   };
 
@@ -114,7 +114,7 @@ export const Main = withReactor(() => {
                 title={todo.title}
                 completed={!!todo.completed}
                 onToggle={() => (todo.completed = !todo.completed)}
-                onDestroy={() => space.experimental.db.delete(todo)}
+                onDestroy={() => space.experimental.db.remove(todo)}
                 onEdit={() => setEditing(todo.id)}
                 editing={editing === todo.id}
                 onSave={(title) => {

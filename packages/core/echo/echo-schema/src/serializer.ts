@@ -47,7 +47,7 @@ export class Serializer {
         ...data
       });
       obj[base]._id = id;
-      await database.save(obj);
+      await database.add(obj);
     }
   }
 }

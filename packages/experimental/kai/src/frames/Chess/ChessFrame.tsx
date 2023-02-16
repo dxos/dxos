@@ -35,7 +35,7 @@ export const ChessFrame: FC = () => {
 
   const handleCreate = async () => {
     const game = new Game();
-    await space.experimental.db.save(game);
+    await space.experimental.db.add(game);
     handleSelect(game);
   };
 

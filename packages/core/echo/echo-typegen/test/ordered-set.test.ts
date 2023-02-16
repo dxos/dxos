@@ -35,7 +35,7 @@ describe('ordered-set', () => {
     expect(root.subTasks.length).to.eq(3);
 
     const db = await createDatabase()
-    await db.save(root);
+    await db.add(root);
   });
 
   test('splice', async () => {
@@ -45,6 +45,6 @@ describe('ordered-set', () => {
     expect(root.subTasks).to.have.length(2);
 
     const db = await createDatabase()
-    await db.save(root);
+    await db.add(root);
   });
 });

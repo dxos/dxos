@@ -70,7 +70,7 @@ export const FileTile = () => {
     log('uploaded', { cid: path, size });
     await ipfsClient.pin.add(cid); // TODO(burdon): Option.
     const file = new File({ name: uploadedFile.name, cid: path });
-    await space.experimental.db.save(file);
+    await space.experimental.db.add(file);
     handleSelect(file.id);
   };
 

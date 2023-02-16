@@ -303,7 +303,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
 
     const promises = [];
     for (const obj of this._linkCache.values()) {
-      promises.push(this._database!.save(obj));
+      promises.push(this._database!.add(obj));
     }
     this._linkCache = undefined;
 
@@ -316,7 +316,7 @@ export class DocumentBase extends EchoObject<DocumentModel> {
    */
   _linkObject(obj: EchoObject) {
     if (this._database) {
-      void this._database.save(obj);
+      void this._database.add(obj);
     } else {
       assert(this._linkCache);
       this._linkCache.set(obj.id, obj);

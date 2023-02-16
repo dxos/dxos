@@ -47,14 +47,14 @@ export const TaskList: FC<TaskListProps> = withReactor(
     const handleCreateTask = async () => {
       if (newTaskTitle.length) {
         const task = new Task({ title: newTaskTitle ?? '' });
-        await space.experimental.db.save(task);
+        await space.experimental.db.add(task);
         setNewTaskTitle('');
         onCreate?.(task);
       }
     };
 
     const handleDeleteTask = async (task: Task) => {
-      await space.experimental.db.delete(task);
+      await space.experimental.db.remove(task);
       onDelete?.(task);
     };
 
