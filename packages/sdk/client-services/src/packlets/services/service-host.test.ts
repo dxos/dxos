@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { createCredential } from '@dxos/credentials';
+import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -69,7 +71,7 @@ describe('ClientServicesHost', () => {
     await queriedCredential.wait();
   });
 
-  test.only('sign presentation', async () => {
+  test('sign presentation', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open();
     afterTest(() => host.close());
@@ -90,6 +92,8 @@ describe('ClientServicesHost', () => {
       nonce
     });
 
-    console.log(presentation);
+    expect(await verifyPresentation(presentation)).to.deep.equal({
+      kind: 'pass'
+    });
   });
 });
