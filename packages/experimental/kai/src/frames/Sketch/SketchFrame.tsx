@@ -55,7 +55,7 @@ export const SketchFrame = withReactor(() => {
   useEffect(() => {
     let sketch: Sketch;
     const result = space.experimental.db.query(Sketch.filter());
-    const objects = result.getObjects();
+    const objects = result.objects;
     if (objects.length) {
       sketch = objects[0];
       setSketch(sketch);

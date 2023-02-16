@@ -161,19 +161,19 @@ describe('EchoDatabase', () => {
     query.subscribe(() => {
       ++counter;
     });
-    expect(query.getObjects()).toEqual([]);
+    expect(query.objects).toEqual([]);
 
     const task1 = new Document({ category: 'eng', title: 'Task 1' });
     await db.add(task1);
-    expect(query.getObjects()).toEqual([task1]);
+    expect(query.objects).toEqual([task1]);
     expect(counter).toBeGreaterThanOrEqual(1);
 
     const task2 = new Document({ category: 'legal', title: 'Task 2' });
     await db.add(task2);
-    expect(query.getObjects()).toEqual([task1]);
+    expect(query.objects).toEqual([task1]);
 
     task2.category = 'eng';
-    expect(query.getObjects()).toEqual([task1, task2]);
+    expect(query.objects).toEqual([task1, task2]);
     expect(counter).toBeGreaterThanOrEqual(2);
   });
 
@@ -307,7 +307,9 @@ describe('EchoDatabase', () => {
       expect(root.array.length).toEqual(2);
       expect(root.array[0].title).toEqual('Subtask 1');
       expect(root.array[1]).toEqual('red');
-      expect(db.query().getObjects()).toContain(root.array[0]);
+      
+      const { objects } = db.query();
+      expect(objects).toContain(root.array[0]);
     });
 
     test('importing empty arrays into a database', async () => {

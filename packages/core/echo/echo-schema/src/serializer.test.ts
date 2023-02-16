@@ -37,8 +37,7 @@ describe('Serializer', () => {
       const db = await createDatabase();
       await serializer.import(db, data);
 
-      const query = db.query();
-      const objects = query.getObjects();
+      const { objects } = db.query();
       expect(objects).to.have.length(1);
       expect(objects[0].title).to.eq('Test');
     }
@@ -76,8 +75,7 @@ describe('Serializer', () => {
       const db = await createDatabase();
       await serializer.import(db, serialized);
 
-      const query = db.query();
-      const objects = query.getObjects();
+      const { objects } = db.query();
       expect(objects).to.have.length(3);
       const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;

@@ -27,13 +27,6 @@ export type TypeFilter<T extends Document> = { __phantom: T } & Filter<T>;
 export type SelectionFn = never; // TODO(burdon): Document or remove.
 export type Selection = EchoObject | SelectionFn | Selection[];
 
-export type Subscription = () => void;
-
-export type Query<T extends Document = Document> = {
-  getObjects(): T[];
-  subscribe(callback: (query: Query<T>) => void): Subscription;
-};
-
 export interface SubscriptionHandle {
   update: (selection: Selection) => void;
   subscribed: boolean;
@@ -163,41 +156,11 @@ export class EchoDatabase {
   query<T extends Document>(filter: TypeFilter<T>): Query<T>;
   query(filter?: Filter<any>): Query;
   query(filter: Filter<any>): Query {
-    // Current result.
-    let cache: Document[] | undefined;
-
-    const query = {
-      getObjects: () => {
-        if (!cache) {
-          // TODO(burdon): Sort.
-          cache = Array.from(this._objects.values()).filter((obj): obj is DocumentBase => filterMatcher(filter, obj));
-        }
-
-        return cache;
-      },
-
-      // TODO(burdon): Trigger callback on call (not just update).
-      subscribe: (callback: (query: Query) => void) => {
-        return this._updateEvent.on((updated) => {
-          const changed = updated.some((object) => {
-            if (this._objects.has(object.id)) {
-              const match = filterMatcher(filter, this._objects.get(object.id)!);
-              const exists = cache?.find((obj) => obj.id === object.id);
-              return match || (exists && !match);
-            } else {
-              return false;
-            }
-          });
-
-          if (changed) {
-            cache = undefined;
-            callback(query);
-          }
-        });
-      }
-    };
-
-    return query;
+    return new Query(
+      this._objects,
+      this._updateEvent,
+      filter
+    );
   }
 
   /**
@@ -250,6 +213,46 @@ export class EchoDatabase {
     }
   }
 }
+
+export type Subscription = () => void;
+
+export class Query<T extends Document = Document> {
+  constructor(
+    private readonly _dbObjects: Map<string, EchoObject>,
+    private readonly _updateEvent: Event<Item[]>,
+    private readonly _filter: Filter<any>,
+  ) { }
+
+  private _cache: T[] | undefined;
+
+  get objects(): T[] {
+    if (!this._cache) {
+      // TODO(burdon): Sort.
+      this._cache = Array.from(this._dbObjects.values()).filter((obj): obj is T => filterMatcher(this._filter, obj));
+    }
+
+    return this._cache;
+  }
+
+  subscribe(callback: (query: Query<T>) => void): Subscription {
+    return this._updateEvent.on((updated) => {
+      const changed = updated.some((object) => {
+        if (this._dbObjects.has(object.id)) {
+          const match = filterMatcher(this._filter, this._dbObjects.get(object.id)!);
+          const exists = this._cache?.find((obj) => obj.id === object.id);
+          return match || (exists && !match);
+        } else {
+          return false;
+        }
+      });
+
+      if (changed) {
+        this._cache = undefined;
+        callback(this);
+      }
+    });
+  }
+};
 
 // TODO(burdon): Create separate test.
 const filterMatcher = (filter: Filter<any>, object: EchoObject): object is DocumentBase => {

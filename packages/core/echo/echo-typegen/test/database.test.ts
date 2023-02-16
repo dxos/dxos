@@ -22,7 +22,7 @@ describe('database', () => {
     await database.add(task);
     expect(task[db]).to.exist;
 
-    const tasks = database.query(Task.filter()).getObjects();
+    const { objects: tasks } = database.query(Task.filter());
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);
   });

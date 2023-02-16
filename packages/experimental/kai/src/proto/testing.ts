@@ -130,7 +130,7 @@ export class Generator {
   };
 
   createTask = async () => {
-    const contacts = this._db.query(Contact.filter()).getObjects();
+    const { objects: contacts } = this._db.query(Contact.filter());
     const contact =
       faker.datatype.boolean() && contacts.length ? contacts[Math.floor(Math.random() * contacts.length)] : undefined;
 
