@@ -5,7 +5,6 @@
 import { Plus } from 'phosphor-react';
 import React, { useRef, useEffect } from 'react';
 
-
 import { Button, getSize, Loading } from '@dxos/react-components';
 
 import { CheckboxItem } from './CheckboxItem';

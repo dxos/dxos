@@ -6,7 +6,6 @@ import { User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, Input, mx } from '@dxos/react-components';
 

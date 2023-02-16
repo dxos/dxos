@@ -8,7 +8,6 @@ import { ArrowUUpLeft, CaretLeft, CaretRight, PlusCircle } from 'phosphor-react'
 import React, { FC, useEffect, useState } from 'react';
 
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
-
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 

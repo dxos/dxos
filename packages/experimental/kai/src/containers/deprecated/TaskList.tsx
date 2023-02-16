@@ -5,7 +5,6 @@
 import React, { ComponentPropsWithoutRef, FC, KeyboardEvent, useState } from 'react';
 
 import { Space } from '@dxos/client';
-
 import {
   EditableList,
   EditableListItem,

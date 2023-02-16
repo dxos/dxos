@@ -10,7 +10,6 @@ import { Article, Clock, GridFour, SquareHalf, Tray, User } from 'phosphor-react
 import React, { useMemo, useState } from 'react';
 import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 'react-big-calendar';
 
-
 import { useQuery } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 

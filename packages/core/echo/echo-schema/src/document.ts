@@ -20,7 +20,7 @@ const isValidKey = (key: string | symbol) =>
     key === 'constructor' ||
     key === '$$typeof' ||
     key === 'toString' ||
-    key === 'toJSON' || 
+    key === 'toJSON' ||
     key === 'id'
   );
 

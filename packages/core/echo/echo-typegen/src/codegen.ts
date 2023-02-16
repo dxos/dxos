@@ -142,7 +142,7 @@ export const generate = (builder: SourceBuilder, root: pb.NamespaceBase) => {
  * Generate class definition.
  */
 export const createObjectClass = (builder: SourceBuilder, type: pb.Type) => {
-  if(!!type.fields['id']) {
+  if (type.fields.id) {
     throw new Error('Reserved name: id');
   }
 

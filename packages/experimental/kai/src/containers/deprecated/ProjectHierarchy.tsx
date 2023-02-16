@@ -6,7 +6,6 @@ import { Archive, CheckSquare, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-
 import { useQuery, withReactor } from '@dxos/react-client';
 import { TreeView, TreeViewItem } from '@dxos/react-components';
 

@@ -4,8 +4,8 @@
 
 // TODO(burdon): Move css to style imports?
 // eslint-disable-next-line no-restricted-imports
-import { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { LatLngExpression } from 'leaflet';
 import { Check } from 'phosphor-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';

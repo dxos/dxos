@@ -5,7 +5,6 @@ import { Buildings, User } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 
 import { Space } from '@dxos/client';
-
 import { useQuery } from '@dxos/react-client';
 import { getSize, Input } from '@dxos/react-components';
 
