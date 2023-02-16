@@ -92,6 +92,7 @@ describe('ClientServicesHost', () => {
       nonce
     });
 
+    expect(presentation.proofs?.[0].nonce).to.deep.equal(nonce);
     expect(await verifyPresentation(presentation)).to.deep.equal({
       kind: 'pass'
     });
