@@ -8,11 +8,12 @@ import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy, Item, ItemManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
+import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 
 import { DatabaseRouter } from './database-router';
 import { base, db, deleted, id, type } from './defs';
-import { DELETED, Document, DocumentBase, isDocument } from './document';
+import { Document, DocumentBase, isDocument } from './document';
 import { EchoObject } from './object';
 import { TextObject } from './text-object';
 
@@ -125,16 +126,39 @@ export class EchoDatabase {
   }
 
   /**
-   * Toggle deleted flag.
+   * Delete object.
    */
-  // TODO(burdon): Delete/restore.
-  async delete<T extends DocumentBase>(obj: T): Promise<T> {
-    if (obj[deleted]) {
-      (obj as any)[DELETED] = false;
-    } else {
-      (obj as any)[DELETED] = true;
-    }
-    return obj;
+  delete<T extends DocumentBase>(obj: T) {
+    this._backend.mutate({
+      objects: [
+        {
+          objectId: obj[base]._id,
+          mutations: [
+            {
+              action: EchoObjectProto.Mutation.Action.DELETE
+            }
+          ]
+        }
+      ]
+    });
+  }
+
+  /**
+   * Restore object.
+   */
+  restore<T extends DocumentBase>(obj: T) {
+    this._backend.mutate({
+      objects: [
+        {
+          objectId: obj[base]._id,
+          mutations: [
+            {
+              action: EchoObjectProto.Mutation.Action.RESTORE
+            }
+          ]
+        }
+      ]
+    });
   }
 
   /**
@@ -210,8 +234,8 @@ export class EchoDatabase {
    * Create object with a proper prototype representing the given item.
    */
   private _createObjectInstance(item: Item<any>): EchoObject | undefined {
-    if (item.modelMeta.type === DocumentModel.meta.type) {
-      const type = item._stateManager.state['@type'];
+    if (item.modelType === DocumentModel.meta.type) {
+      const type = item.state['@type'];
       if (!type) {
         return new Document();
       }
@@ -223,10 +247,10 @@ export class EchoDatabase {
       } else {
         return new Proto();
       }
-    } else if (item.modelMeta.type === TextModel.meta.type) {
+    } else if (item.modelType === TextModel.meta.type) {
       return new TextObject();
     } else {
-      log.warn('Unknown model type', { type: item.modelMeta.type });
+      log.warn('Unknown model type', { type: item.modelType });
       return undefined;
     }
   }

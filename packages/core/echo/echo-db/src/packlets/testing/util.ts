@@ -35,7 +35,7 @@ export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
     })
   );
 
-  const itemManager = new ItemManager(modelFactory, PublicKey.random(), backend.getWriteStream());
+  const itemManager = new ItemManager(modelFactory);
   await backend.open(itemManager, new ModelFactory().registerModel(DocumentModel));
   return {
     backend,
@@ -54,7 +54,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
   const backend = new DatabaseBackendProxy(dataService, spaceKey);
-  const itemManager = new ItemManager(modelFactory, PublicKey.random(), backend.getWriteStream());
+  const itemManager = new ItemManager(modelFactory);
   await backend.open(itemManager, new ModelFactory().registerModel(DocumentModel));
   return {
     itemManager,
