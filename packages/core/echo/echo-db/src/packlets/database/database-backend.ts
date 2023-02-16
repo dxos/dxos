@@ -58,7 +58,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
     private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
     private readonly _snapshot?: EchoSnapshot,
     private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
-  ) {}
+  ) { }
 
   get isReadOnly(): boolean {
     return !!this._outboundStream;
@@ -78,7 +78,7 @@ export class DatabaseBackendHost implements DatabaseBackend {
     }
   }
 
-  async close() {}
+  async close() { }
 
   getWriteStream(): FeedWriter<DataMessage> | undefined {
     return this._outboundStream;
@@ -215,9 +215,8 @@ export class DatabaseBackendProxy implements DatabaseBackend {
               assert(mutation.meta);
               assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
               entity.processMessage(
-                mutation.meta as MutationMetaWithTimeframe,
+                mutation.meta,
                 mutation.model,
-                mutation.meta.clientTag
               );
             }
           }

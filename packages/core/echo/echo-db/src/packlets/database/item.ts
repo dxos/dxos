@@ -15,7 +15,7 @@ import { EchoObject, MutationMeta } from '@dxos/protocols/proto/dxos/echo/object
 import assert from 'node:assert';
 
 import { ItemManager } from './item-manager';
-import { getInsertionIndex, MutationInQueue } from './ordering';
+import { getInsertionIndex, MutationInQueue, MutationQueue } from './ordering';
 
 /**
  * A globally addressable data item.
@@ -76,13 +76,7 @@ export class Item<M extends Model = Model> {
   /**
    * Mutations that were applied on top of the _snapshot.
    */
-  private _mutations: MutationInQueue<MutationOf<M>>[] = [];
-
-  /**
-   * Mutations that were optimistically applied and haven't yet passed through the feed store.
-   */
-  private _optimisticMutations: MutationInQueue<MutationOf<M>>[] = [];
-
+  private _mutationQueue = new MutationQueue<MutationOf<M>>();
 
   /**
    * Items are constructed by the `Database` object.
@@ -253,6 +247,7 @@ export class Item<M extends Model = Model> {
   /**
    * Process a mutation from the stream.
    * @private (Package-private).
+   * @deprecated
    */
   _processMutation(mutation: EchoObject.Mutation, getItem: (objectId: ItemID) => Item<any> | undefined) {
     log('_processMutation %s', { mutation });
@@ -311,7 +306,7 @@ export class Item<M extends Model = Model> {
         clientTag,
       }
     };
-    this._optimisticMutations.push(optimisticMutation);
+    this._mutationQueue.pushOptimistic(optimisticMutation);
 
     // Process mutation if initialzied, otherwise deferred until state-machine is loaded.
     if (this.initialized) {
@@ -349,13 +344,7 @@ export class Item<M extends Model = Model> {
       this._stateMachine.process(mutationDecoded);
     }
 
-    // Apply mutations that were read from the inbound stream.
-    for (const mutation of this._mutations) {
-      this._stateMachine.process(mutation.mutation);
-    }
-
-    // Apply optimistic mutations.
-    for (const mutation of this._optimisticMutations) {
+    for (const mutation of this._mutationQueue.getMutations()) {
       this._stateMachine.process(mutation.mutation);
     }
   }
@@ -363,50 +352,29 @@ export class Item<M extends Model = Model> {
   /**
    * Processes mutations from the inbound stream.
    */
-  processMessage(meta: MutationMetaWithTimeframe, mutation: Any, clientTag?: string) {
-    const decoded = this._modelMeta!.mutationCodec.decode(mutation.value);
-
-    // Remove optimistic mutation from the queue.
-    const optimisticIndex = this._optimisticMutations.findIndex((message) => message.meta.clientTag && message.meta.clientTag === clientTag);
-    if (optimisticIndex !== -1) {
-      this._optimisticMutations.splice(optimisticIndex, 1);
-    }
-
+  processMessage(meta: MutationMeta, mutation: Any) {
     const queueEntry: MutationInQueue<MutationOf<M>> = {
-      mutation: decoded,
+      mutation: this._modelMeta!.mutationCodec.decode(mutation.value),
       meta
     }
 
-    // Insert the mutation into the mutation queue at the right position.
-    const insertionIndex = getInsertionIndex(this._mutations, queueEntry);
-    const lengthBefore = this._mutations.length;
-    this._mutations.splice(insertionIndex, 0, queueEntry);
+    const { reorder, apply } = this._mutationQueue.pushConfirmed(queueEntry);
+
     log('process message', {
-      feed: PublicKey.from(meta.feedKey),
-      seq: meta.seq,
-      clientTag,
-      insertionIndex,
-      optimisticIndex,
-      lengthBefore,
-      mutation: this._modelMeta?.mutationCodec.decode(mutation.value)
+      mutation: queueEntry,
     });
 
     // Perform state updates.
     if (this.initialized) {
       // Reset the state machine if processing this mutation would break the order.
-      if (
-        insertionIndex !== lengthBefore ||
-        optimisticIndex > 0 ||
-        (optimisticIndex === -1 && this._optimisticMutations.length > 0)
-      ) {
+      if (reorder) {
         // Order will be broken, reset the state machine and re-apply all mutations.
         log('Reset due to order change');
         this._resetStateMachine();
-      } else if (optimisticIndex === -1) {
+      } else if (apply) {
         log(`Apply ${JSON.stringify(meta)}`);
         // Mutation can safely be append at the end preserving order.
-        const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation.value);
-        this._stateMachine!.process(mutationDecoded);
+        this._stateMachine!.process(queueEntry.mutation);
         this._emitUpdate();
       }
     }
@@ -443,8 +411,8 @@ export class Item<M extends Model = Model> {
         },
         mutations: [
           ...(this._initialState.mutations ?? []),
-          ...this._mutations.map((mutation) => ({
-            model: mutation.mutation,
+          ...this._mutationQueue.getConfirmedMutations().map((mutation) => ({
+            model: (this.modelMeta!.mutationCodec as ProtoCodec).encodeAsAny(mutation.mutation),
             meta: mutation.meta
           }))
         ]
@@ -458,7 +426,7 @@ export class Item<M extends Model = Model> {
    */
   resetToSnapshot(snapshot: EchoObject) {
     this._initialState = snapshot;
-    this._mutations = [];
+    this._mutationQueue.resetConfirmed();
 
     if (this.initialized) {
       this._resetStateMachine();
