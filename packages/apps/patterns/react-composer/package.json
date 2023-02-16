@@ -16,6 +16,9 @@
     "prebuild": "dxtype src/testing/proto/schema.proto src/testing/proto/gen/schema.ts"
   },
   "dependencies": {
+    "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/react-async": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@tiptap/core": "2.0.0-beta.199",
     "@tiptap/extension-collaboration": "2.0.0-beta.199",

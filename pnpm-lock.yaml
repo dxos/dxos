@@ -581,9 +581,12 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@tiptap/core': 2.0.0-beta.199
@@ -600,6 +603,9 @@ importers:
       y-protocols: ^1.0.5
       yjs: ^13.5.44
     dependencies:
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/log': link:../../../common/log
+      '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-components': link:../../../common/react-components
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_nnszoayjhdoucvdi5heuc7vndi
