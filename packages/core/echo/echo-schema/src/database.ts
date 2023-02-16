@@ -87,7 +87,8 @@ export class EchoDatabase {
   }
 
   /**
-   * Flush mutations.
+   * Add object to th database.
+   * Restores the object if it was deleted.
    */
   // TODO(burdon): Batches?
   async add<T extends EchoObject>(obj: T): Promise<T> {
@@ -95,6 +96,18 @@ export class EchoDatabase {
     assert(obj.id); // TODO(burdon): Undefined when running in test.
     assert(obj[base]);
     if (obj[base]._database) {
+      this._backend.mutate({
+        objects: [
+          {
+            objectId: obj[base]._id,
+            mutations: [
+              {
+                action: EchoObjectProto.Mutation.Action.RESTORE
+              }
+            ]
+          }
+        ]
+      });
       return obj;
     }
 
@@ -126,7 +139,7 @@ export class EchoDatabase {
   }
 
   /**
-   * Delete object.
+   * Remove object.
    */
   remove<T extends DocumentBase>(obj: T) {
     this._backend.mutate({
@@ -136,24 +149,6 @@ export class EchoDatabase {
           mutations: [
             {
               action: EchoObjectProto.Mutation.Action.DELETE
-            }
-          ]
-        }
-      ]
-    });
-  }
-
-  /**
-   * Restore object.
-   */
-  restore<T extends DocumentBase>(obj: T) {
-    this._backend.mutate({
-      objects: [
-        {
-          objectId: obj[base]._id,
-          mutations: [
-            {
-              action: EchoObjectProto.Mutation.Action.RESTORE
             }
           ]
         }
