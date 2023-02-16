@@ -208,7 +208,7 @@ const PureListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>
           ref={forwardedRef}
           aria-labelledby={headingId}
           {...(selectable && { role: 'option', 'aria-selected': !!selected })}
-          className={mx('flex', slots.root?.className)}
+          className={mx('flex', draggable && 'touch-none',slots.root?.className)}
         >
           {draggable && <ListItemDragHandle {...slots.dragHandle} className={slots.dragHandle?.className} />}
           {selectable && (
