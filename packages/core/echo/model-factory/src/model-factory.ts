@@ -7,13 +7,12 @@ import assert from 'node:assert';
 import { Event, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { todo } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 
-import { Model } from './model';
-import { StateManager } from './state-manager';
 import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
 
 /**
@@ -67,16 +66,17 @@ export class ModelFactory {
    * @param snapshot Snapshot defining the intial state. `{}` can be provided for empty state.
    * @param memberKey IDENTITY key of the member authoring the model's mutations.
    * @param writeStream Stream for outbound messages.
+   * @deprecated
    */
-  createModel<M extends Model>(
+  createModel(
     modelType: ModelType,
     itemId: ItemID,
-    snapshot: EchoObject,
-    memberKey: PublicKey, // TODO(burdon): Change to client ID?
-    writeStream?: FeedWriter<Any>
-  ): StateManager<M> {
+    _snapshot: EchoObject,
+    _memberKey: PublicKey, // TODO(burdon): Change to client ID?
+    _writeStream?: FeedWriter<Any>
+  ): any {
     assert(itemId);
-    const constructor = this._models.get(modelType)?.constructor;
-    return new StateManager(modelType, constructor, itemId, snapshot, memberKey, writeStream ?? null);
+    const _constructor = this._models.get(modelType)?.constructor;
+    return todo();
   }
 }

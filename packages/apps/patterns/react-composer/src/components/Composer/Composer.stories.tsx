@@ -22,7 +22,6 @@ export const Default = {
   render: ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
     const space = useSpace(spaceKey);
     const [document] = useQuery(space, Document.filter());
-
     useEffect(() => {
       id === 0 && space?.experimental.db.save(new Document({ content: new TextObject() }));
     }, [space]);

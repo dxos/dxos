@@ -16,7 +16,7 @@ export const ContactList: FC<{ space: Space }> = ({ space }) => {
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   return (
-    <List labelId='todo' slots={{ root: { className: 'p-2 is-full' } }}>
+    <List labelId='todo' slots={{ root: { className: 'is-full' } }}>
       {contacts.map((contact) => (
         <ContactListItem key={contact[id]} contact={contact} />
       ))}
