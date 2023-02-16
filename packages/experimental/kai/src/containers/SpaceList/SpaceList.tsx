@@ -48,16 +48,14 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
             <Planet className={getSize(6)} />
           </div>
 
-          {/* TODO(burdon): Name. */}
-          <h2 className='w-full overflow-hidden whitespace-nowrap text-ellipsis mr-4'>
-            <input
-              className='bg-transparent border-none outline-none text-ellipsis'
-              value={space.properties.title ?? humanize(space.key)}
-              onChange={(event) => {
-                space.properties.title = event.target.value;
-              }}
-            />
-          </h2>
+          {/* TODO(burdon): Use <Input />. */}
+          <input
+            className='w-full bg-transparent'
+            value={space.properties.title ?? humanize(space.key)}
+            onChange={(event) => {
+              space.properties.title = event.target.value;
+            }}
+          />
         </div>
 
         {selected && (
