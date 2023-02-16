@@ -23,9 +23,6 @@ const isValidKey = (key: string | symbol) =>
     key === 'toJSON'
   );
 
-// TODO(burdon): Change to underlying item.deleted property.
-export const DELETED = '__deleted';
-
 export type ConvertVisitors = {
   onRef?: (id: string, obj?: EchoObject) => any;
 };
@@ -85,9 +82,8 @@ export class DocumentBase extends EchoObject<DocumentModel> {
   }
 
   /** Deletion. */
-  // TODO(burdon): Move to base.
   get [deleted](): boolean {
-    return this[base]._get(DELETED) ?? false;
+    return this[base]._item?.deleted ?? false;
   }
 
   /**
