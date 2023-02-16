@@ -34,7 +34,7 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
   return (
     <div
       className={mx(
-        'flex flex-col overflow-hidden',
+        'flex flex-col overflow-hidden mt-2 mx-2 border',
         'hover:bg-selection-hover',
         selected && 'hover:bg-selection-bg bg-selection-bg border-selection-border'
       )}
