@@ -116,7 +116,6 @@ export class EchoProxy implements Echo {
             this._modelFactory,
             space,
             this.dbRouter,
-            this._haloProxy.profile!.identityKey
           );
 
           // NOTE: Must set in a map before initializing.

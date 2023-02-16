@@ -82,13 +82,11 @@ export class Item<M extends Model = Model> {
    * Items are constructed by the `Database` object.
    * @param itemManager
    * @param objectId        Addressable ID.
-   * @param _writeStream  Write stream (if not read-only).
    * @param parent        Parent Item (if not a root Item).
    */
   constructor(
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
-    private readonly _writeStream?: FeedWriter<DataMessage>,
     parent?: Item<any> | null
   ) {
     this._initialState = {
@@ -114,10 +112,6 @@ export class Item<M extends Model = Model> {
 
   get initialized(): boolean {
     return !!this._modelMeta;
-  }
-
-  get readOnly() {
-    return !this._writeStream || this._deleted;
   }
 
   get deleted() {
@@ -178,75 +172,75 @@ export class Item<M extends Model = Model> {
   // TODO(burdon): Garbage collection (snapshots should drop deleted items).
   // TODO(burdon): Prevent updates to model if deleted.
   // TODO(burdon): If deconstructed (itemManager.deconstructItem) then how to query?
-  async delete() {
-    if (!this._writeStream) {
-      throw new Error(`Item is read-only: ${this.id}`);
-    }
-    if (this.deleted) {
-      return;
-    }
+  // async delete() {
+  //   if (!this._writeStream) {
+  //     throw new Error(`Item is read-only: ${this.id}`);
+  //   }
+  //   if (this.deleted) {
+  //     return;
+  //   }
 
-    const onUpdate = this._onUpdate.waitFor(() => this.deleted);
-    await this._writeStream.write({
-      object: {
-        objectId: this.id,
-        mutations: [
-          {
-            action: EchoObject.Mutation.Action.DELETE
-          }
-        ]
-      }
-    });
+  //   const onUpdate = this._onUpdate.waitFor(() => this.deleted);
+  //   await this._writeStream.write({
+  //     object: {
+  //       objectId: this.id,
+  //       mutations: [
+  //         {
+  //           action: EchoObject.Mutation.Action.DELETE
+  //         }
+  //       ]
+  //     }
+  //   });
 
-    await onUpdate;
-  }
+  //   await onUpdate;
+  // }
 
-  /**
-   * Restore deleted item.
-   */
-  async restore() {
-    if (!this._writeStream) {
-      throw new Error(`Item is read-only: ${this.id}`);
-    }
+  // /**
+  //  * Restore deleted item.
+  //  */
+  // async restore() {
+  //   if (!this._writeStream) {
+  //     throw new Error(`Item is read-only: ${this.id}`);
+  //   }
 
-    const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
-    await this._writeStream.write({
-      object: {
-        objectId: this.id,
-        mutations: [
-          {
-            action: EchoObject.Mutation.Action.RESTORE
-          }
-        ]
-      }
-    });
+  //   const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
+  //   await this._writeStream.write({
+  //     object: {
+  //       objectId: this.id,
+  //       mutations: [
+  //         {
+  //           action: EchoObject.Mutation.Action.RESTORE
+  //         }
+  //       ]
+  //     }
+  //   });
 
-    await onUpdate;
-  }
+  //   await onUpdate;
+  // }
 
   // TODO(telackey): This does not allow null or undefined as a parent_id, but should it since we allow a null parent?
-  async setParent(parentId: ItemID): Promise<void> {
-    if (!this._writeStream || this.readOnly) {
-      throw new Error(`Item is read-only: ${this.id}`);
-    }
+  // async setParent(parentId: ItemID): Promise<void> {
+  //   if (!this._writeStream || this.readOnly) {
+  //     throw new Error(`Item is read-only: ${this.id}`);
+  //   }
 
-    // Wait for mutation below to be processed.
-    // TODO(burdon): Refine to wait for this specific mutation.
-    const onUpdate = this._onUpdate.waitFor(() => parentId === this._parent?.id);
+  //   // Wait for mutation below to be processed.
+  //   // TODO(burdon): Refine to wait for this specific mutation.
+  //   const onUpdate = this._onUpdate.waitFor(() => parentId === this._parent?.id);
 
-    await this._writeStream.write({
-      object: {
-        objectId: this.id,
-        mutations: [
-          {
-            parentId
-          }
-        ]
-      }
-    });
+  //   await this._writeStream.write({
+  //     object: {
+  //       objectId: this.id,
+  //       mutations: [
+  //         {
+  //           parentId
+  //         }
+  //       ]
+  //     }
+  //   });
 
-    await onUpdate;
-  }
+  //   await onUpdate;
+  // }
 
   /**
    * Process a mutation from the stream.

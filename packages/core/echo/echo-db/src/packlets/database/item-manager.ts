@@ -54,8 +54,6 @@ export class ItemManager {
    */
   constructor(
     private readonly _modelFactory: ModelFactory,
-    private readonly _memberKey: PublicKey,
-    private readonly _writeStream?: FeedWriter<DataMessage>
   ) {}
 
   get entities() {
@@ -112,7 +110,7 @@ export class ItemManager {
 
     const { constructor: modelConstructor } = this._modelFactory.getModel(modelType) ?? failUndefined();
 
-    const item = new Item(this, itemId, this._writeStream, parent);
+    const item = new Item(this, itemId, parent);
     item._debugLabel = this._debugLabel;
     item.initialize(modelConstructor)
 

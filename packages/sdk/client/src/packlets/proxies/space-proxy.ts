@@ -124,7 +124,6 @@ export class SpaceProxy implements Space {
     private _modelFactory: ModelFactory,
     private _state: SpaceType,
     databaseRouter: DatabaseRouter,
-    memberKey: PublicKey // TODO(burdon): Change to identityKey (see optimistic mutations)?
   ) {
     assert(this._clientServices.services.SpaceInvitationsService, 'SpaceInvitationsService not available');
     this._invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
@@ -137,7 +136,7 @@ export class SpaceProxy implements Space {
     assert(this._clientServices.services.DataService, 'DataService not available');
 
     this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
-    this._itemManager = new ItemManager(this._modelFactory, memberKey, this._dbBackend.getWriteStream());
+    this._itemManager = new ItemManager(this._modelFactory);
 
     this._experimental = {
       db: new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter)

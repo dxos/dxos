@@ -17,7 +17,7 @@ describe('ItemManager', () => {
   describe('basic', () => {
     test('item construction', async () => {
       const modelFactory = new ModelFactory().registerModel(DocumentModel);
-      const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
+      const itemManager = new ItemManager(modelFactory);
 
       const itemId = createId();
       const item = await itemManager.constructItem({
@@ -25,8 +25,6 @@ describe('ItemManager', () => {
         modelType: DocumentModel.meta.type,
       });
       expect(item.id).toEqual(itemId);
-      // expect(item.model).toBeInstanceOf(DocumentModel);
-      expect(item.readOnly).toBeFalsy();
 
       expect(itemManager.entities.size).toEqual(1);
       expect(itemManager.entities.get(itemId)).toEqual(item);
@@ -34,7 +32,7 @@ describe('ItemManager', () => {
 
     test('item deconstruction', async () => {
       const modelFactory = new ModelFactory().registerModel(DocumentModel);
-      const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
+      const itemManager = new ItemManager(modelFactory);
 
       const item = await itemManager.constructItem(defaultOpts());
       expect(itemManager.entities.size).toEqual(1);
@@ -47,7 +45,7 @@ describe('ItemManager', () => {
   describe('parent-child relationship', () => {
     test('can be constructed and will have correct references', async () => {
       const modelFactory = new ModelFactory().registerModel(DocumentModel);
-      const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
+      const itemManager = new ItemManager(modelFactory);
 
       const parent = await itemManager.constructItem(defaultOpts());
       const child = await itemManager.constructItem({
@@ -61,7 +59,7 @@ describe('ItemManager', () => {
 
     test('when child is deleted parent no longer references it', async () => {
       const modelFactory = new ModelFactory().registerModel(DocumentModel);
-      const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
+      const itemManager = new ItemManager(modelFactory);
 
       const parent = await itemManager.constructItem(defaultOpts());
       const child = await itemManager.constructItem({
@@ -77,7 +75,7 @@ describe('ItemManager', () => {
 
     test('when parent is deleted children are deleted as well', async () => {
       const modelFactory = new ModelFactory().registerModel(DocumentModel);
-      const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
+      const itemManager = new ItemManager(modelFactory);
 
       const parent = await itemManager.constructItem(defaultOpts());
       await itemManager.constructItem({

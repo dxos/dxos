@@ -35,9 +35,9 @@ export interface DataPipelineController {
 }
 
 export class NoopDataPipelineController implements DataPipelineController {
-  async open(context: DataPipelineControllerContext): Promise<void> {}
+  async open(context: DataPipelineControllerContext): Promise<void> { }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> { }
 }
 
 export type DataPipelineControllerImplParams = {
@@ -81,7 +81,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
   public readonly onTimeframeReached = new Event<Timeframe>();
 
-  constructor(private readonly _params: DataPipelineControllerImplParams) {}
+  constructor(private readonly _params: DataPipelineControllerImplParams) { }
 
   public _itemManager!: ItemManager;
   public databaseBackend?: DatabaseBackendHost;
@@ -116,11 +116,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database, {
       snapshots: true // TODO(burdon): Config.
     });
-    this._itemManager = new ItemManager(
-      this._params.modelFactory,
-      this._params.memberKey,
-      this.databaseBackend.getWriteStream()
-    );
+    this._itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
     await this.databaseBackend.open(this._itemManager, this._params.modelFactory);
