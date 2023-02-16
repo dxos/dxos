@@ -226,13 +226,13 @@ export class SpaceProxy implements Space {
     {
       // Wait for Properties document.
       const query = this._experimental!.db.query(Properties.filter());
-      if (query.getObjects().length === 1) {
-        this._properties = query.getObjects()[0];
+      if (query.objects.length === 1) {
+        this._properties = query.objects[0];
       } else {
         const waitForSpaceMeta = new Trigger();
         const subscription = query.subscribe((query: Query<Properties>) => {
-          if (query.getObjects().length === 1) {
-            this._properties = query.getObjects()[0];
+          if (query.objects.length === 1) {
+            this._properties = query.objects[0];
             waitForSpaceMeta.wake();
             subscription();
           }

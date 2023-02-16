@@ -27,7 +27,7 @@ export const TaskList = withReactor((props: TaskListProps) => {
         task.completed = completed;
       }}
       onTaskTitleChanged={(task, title) => (task.title = title)}
-      onTaskDeleted={(task) => space.experimental.db.delete(task as any as Document)}
+      onTaskDeleted={(task) => space.experimental.db.remove(task as any as Document)}
       onTaskCreate={() => {
         list.tasks ||= [];
         list.tasks.push(

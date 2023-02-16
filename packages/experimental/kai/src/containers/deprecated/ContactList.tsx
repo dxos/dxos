@@ -6,7 +6,6 @@ import { User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, Input, mx } from '@dxos/react-components';
 
@@ -18,7 +17,7 @@ export const ContactList: FC<{ space: Space }> = ({ space }) => {
   return (
     <List labelId='todo' slots={{ root: { className: 'p-2 is-full' } }}>
       {contacts.map((contact) => (
-        <ContactListItem key={contact[id]} contact={contact} />
+        <ContactListItem key={contact.id} contact={contact} />
       ))}
     </List>
   );
