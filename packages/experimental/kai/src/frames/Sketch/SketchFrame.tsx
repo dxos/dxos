@@ -55,14 +55,14 @@ export const SketchFrame = withReactor(() => {
   useEffect(() => {
     let sketch: Sketch;
     const result = space.experimental.db.query(Sketch.filter());
-    const objects = result.getObjects();
+    const objects = result.objects;
     if (objects.length) {
       sketch = objects[0];
       setSketch(sketch);
     } else {
       sketch = new Sketch();
       setTimeout(async () => {
-        await space.experimental.db.save(sketch);
+        await space.experimental.db.add(sketch);
         setSketch(sketch);
       });
     }
@@ -126,7 +126,7 @@ export const SketchFrame = withReactor(() => {
     const { cid, path } = await ipfsClient.add(new Blob([svg]));
     await ipfsClient.pin.add(cid);
     const file = new File({ name, cid: path });
-    await space.experimental.db.save(file);
+    await space.experimental.db.add(file);
   };
 
   // TODO(burdon): Erase mode: eraseMode.

@@ -31,7 +31,7 @@ export const SandboxFrame = withReactor(() => {
           content: new TextObject()
         });
 
-        await space.experimental.db.save(frame);
+        await space.experimental.db.add(frame);
         frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
         setSelected(frame);
       });
@@ -106,7 +106,7 @@ const Frame = () => {
     <div className='w-full p-4'>
       <ul>
         {tasks.map(task => (
-          <li key={task[id]} className='p-1 hover:bg-blue-200'>{task.title}</li>
+          <li key={task.id} className='p-1 hover:bg-blue-200'>{task.title}</li>
         ))}
       </ul>
       <div className='flex p-1 mt-4'>

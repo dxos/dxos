@@ -5,7 +5,7 @@
 import { PlusCircle } from 'phosphor-react';
 import React, { FC } from 'react';
 
-import { EchoObject, id } from '@dxos/echo-schema';
+import { EchoObject } from '@dxos/echo-schema';
 import { getSize, Button } from '@dxos/react-components';
 
 export type KanbanColumnDef = {
@@ -46,7 +46,7 @@ export const Kanban: FC<{
                   {filtered.map((object) => {
                     const { Content } = column;
                     return (
-                      <div key={object[id]} className='mb-2 bg-paper-bg border rounded'>
+                      <div key={object.id} className='mb-2 bg-paper-bg border rounded'>
                         <Content object={object} />
                       </div>
                     );
