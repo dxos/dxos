@@ -372,13 +372,15 @@ export class Item<M extends Model = Model> {
       this._optimisticMutations.splice(optimisticIndex, 1);
     }
 
+    const queueEntry: MutationInQueue<MutationOf<M>> = {
+      mutation: decoded,
+      meta
+    }
+
     // Insert the mutation into the mutation queue at the right position.
-    const insertionIndex = getInsertionIndex(this._mutations, {
-      meta,
-      mutation
-    });
+    const insertionIndex = getInsertionIndex(this._mutations, queueEntry);
     const lengthBefore = this._mutations.length;
-    this._mutations.splice(insertionIndex, 0, { mutation: decoded, meta });
+    this._mutations.splice(insertionIndex, 0, queueEntry);
     log('process message', {
       feed: PublicKey.from(meta.feedKey),
       seq: meta.seq,
