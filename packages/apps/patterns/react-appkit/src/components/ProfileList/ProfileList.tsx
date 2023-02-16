@@ -24,7 +24,7 @@ export const ProfileList = ({ profiles }: ProfileListProps) => {
           <li
             key={profileHex}
             className={mx(
-              defaultGroup({ elevation: 1, spacing: 'p-1', rounding: 'rounded' }),
+              defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded' }),
               'flex gap-2 items-center'
             )}
           >
@@ -54,7 +54,7 @@ export const ProfileList = ({ profiles }: ProfileListProps) => {
         children: t('empty members message'),
         className: mx('text-xl', defaultDisabled)
       }}
-      elevation={0}
+      elevation='base'
     />
   );
 };
