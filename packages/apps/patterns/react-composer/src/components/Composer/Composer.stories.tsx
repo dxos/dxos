@@ -27,7 +27,7 @@ const Story = ({ spaceKey, id, ...args }: Omit<ComposerProps, 'item'> & { spaceK
       setTimeout(async () => {
         // TODO(burdon): Auto-create document.
         const document = new Document({ content: new TextObject() });
-        await space?.experimental.db.add(document);
+        await space?.db.add(document);
       });
     }
   }, [space]);
