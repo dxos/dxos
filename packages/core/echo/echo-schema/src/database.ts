@@ -156,11 +156,7 @@ export class EchoDatabase {
   query<T extends Document>(filter: TypeFilter<T>): Query<T>;
   query(filter?: Filter<any>): Query;
   query(filter: Filter<any>): Query {
-    return new Query(
-      this._objects,
-      this._updateEvent,
-      filter
-    );
+    return new Query(this._objects, this._updateEvent, filter);
   }
 
   /**
@@ -220,8 +216,8 @@ export class Query<T extends Document = Document> {
   constructor(
     private readonly _dbObjects: Map<string, EchoObject>,
     private readonly _updateEvent: Event<Item[]>,
-    private readonly _filter: Filter<any>,
-  ) { }
+    private readonly _filter: Filter<any>
+  ) {}
 
   private _cache: T[] | undefined;
 
@@ -252,7 +248,7 @@ export class Query<T extends Document = Document> {
       }
     });
   }
-};
+}
 
 // TODO(burdon): Create separate test.
 const filterMatcher = (filter: Filter<any>, object: EchoObject): object is DocumentBase => {

@@ -307,7 +307,7 @@ describe('EchoDatabase', () => {
       expect(root.array.length).toEqual(2);
       expect(root.array[0].title).toEqual('Subtask 1');
       expect(root.array[1]).toEqual('red');
-      
+
       const { objects } = db.query();
       expect(objects).toContain(root.array[0]);
     });
