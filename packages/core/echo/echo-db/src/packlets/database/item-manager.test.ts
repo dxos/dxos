@@ -27,7 +27,6 @@ describe('ItemManager', () => {
       });
       expect(item.id).toEqual(itemId);
       // expect(item.model).toBeInstanceOf(DocumentModel);
-      expect(item.type).toBeUndefined();
       expect(item.readOnly).toBeFalsy();
 
       expect(itemManager.entities.size).toEqual(1);

@@ -34,7 +34,7 @@ export class DataServiceHost {
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _writeStream?: FeedWriter<DataMessage>
-  ) {}
+  ) { }
 
   /**
    * Real-time subscription to data objects in a space.
@@ -42,24 +42,7 @@ export class DataServiceHost {
   subscribe(): Stream<EchoEvent> {
     return new Stream(({ next, ctx }) => {
       // send current state
-      const objects = Array.from(this._itemManager.entities.values()).map((entity): EchoObject => {
-        assert(entity instanceof Item);
-
-        // TODO(dmaretskyi): Extract this to a method on Item.
-        const { snapshot, mutations } = entity._stateManager.createSnapshot();
-
-        return {
-          objectId: entity.id,
-          genesis: {
-            modelType: entity.modelType
-          },
-          snapshot: {
-            ...snapshot,
-            parentId: entity.parent?.id
-          },
-          mutations
-        };
-      });
+      const objects = Array.from(this._itemManager.entities.values()).map(entity => entity.createSnapshot());
 
       next({
         batch: {

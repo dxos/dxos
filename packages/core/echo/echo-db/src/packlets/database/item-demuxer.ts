@@ -40,7 +40,7 @@ export class ItemDemuxer {
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
-        if (item._stateManager.modelType === model.meta.type) {
+        if (item.modelType === model.meta.type) {
           await this._itemManager.initializeModel(item.id);
         }
       }
@@ -103,7 +103,7 @@ export class ItemDemuxer {
 
       if (snapshot?.model) {
         const entity = this._itemManager.entities.get(objectId) ?? failUndefined();
-        entity._stateManager.resetToSnapshot(message.data); // TODO(dmaretskyi): Fix.
+        entity.resetToSnapshot(message.data); // TODO(dmaretskyi): Fix.
       }
 
       this.mutation.emit(message);
@@ -118,7 +118,7 @@ export class ItemDemuxer {
   }
 
   createItemSnapshot(item: Item<Model<any>>): EchoObject {
-    const { snapshot, ...model } = item._stateManager.createSnapshot();
+    const { snapshot, ...model } = item.createSnapshot();
 
     return {
       genesis: {

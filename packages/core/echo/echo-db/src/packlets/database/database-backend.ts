@@ -130,7 +130,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
     modelFactory.registered.on(this._ctx, async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
-        if (item._stateManager.modelType === model.meta.type) {
+        if (item.modelType === model.meta.type) {
           await this._itemManager.initializeModel(item.id);
         }
       }
@@ -196,7 +196,7 @@ export class DatabaseBackendProxy implements DatabaseBackend {
 
       if (object.snapshot) {
         log('reset to snapshot', { object });
-        entity._stateManager.resetToSnapshot(object);
+        entity.resetToSnapshot(object);
       } else if (object.mutations) {
         for (const mutation of object.mutations) {
           log('mutate', { id: object.objectId, mutation });
@@ -208,13 +208,13 @@ export class DatabaseBackendProxy implements DatabaseBackend {
           if (mutation.model) {
             if (optimistic) {
               // console.log('process optimistic', mutation)
-              const decoded = entity._stateManager._modelMeta?.mutationCodec.decode(mutation.model.value);
-              entity._stateManager.processOptimisticMutation(decoded, mutation.meta?.clientTag);
+              const decoded = entity.modelMeta?.mutationCodec.decode(mutation.model.value);
+              entity.processOptimisticMutation(decoded, mutation.meta?.clientTag);
             } else {
               // console.log('process event', mutation)
               assert(mutation.meta);
               assert(mutation.meta.timeframe, 'Mutation timeframe is required.');
-              entity._stateManager.processMessage(
+              entity.processMessage(
                 mutation.meta as MutationMetaWithTimeframe,
                 mutation.model,
                 mutation.meta.clientTag

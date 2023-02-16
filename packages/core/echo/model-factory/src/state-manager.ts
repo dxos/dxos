@@ -37,6 +37,8 @@ type OptimisticMutation = {
  * - The snapshot mutations from the initial state.
  * - The mutatation queue.
  * - Optimistic mutations.
+ * 
+ * @deprecated
  */
 export class StateManager<M extends Model> {
   private readonly _pendingWrites = new Set<Promise<any>>();

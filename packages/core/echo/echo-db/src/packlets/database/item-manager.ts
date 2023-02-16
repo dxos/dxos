@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { Event, trigger } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { createId } from '@dxos/crypto';
-import { timed } from '@dxos/debug';
+import { failUndefined, timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { logInfo } from '@dxos/log';
@@ -90,7 +90,7 @@ export class ItemManager {
   async destroy() {
     log('destroying..');
     for (const item of this._entities.values()) {
-      await item._destroy();
+      await item.destroy();
     }
     this._entities.clear();
   }
@@ -229,13 +229,11 @@ export class ItemManager {
     }
     assert(!parent || parent instanceof Item);
 
-    const modelStateManager = this._constructModel({
-      itemId,
-      modelType,
-      snapshot
-    });
+    const { constructor: modelConstructor } = this._modelFactory.getModel(modelType) ?? failUndefined();
 
-    const item = new Item(this, itemId, modelStateManager, this._writeStream, parent);
+    const item = new Item(this, itemId, snapshot, this._writeStream, parent);
+    item.initialize(modelConstructor)
+
     if (parent) {
       this.update.emit(parent);
     }
@@ -253,7 +251,7 @@ export class ItemManager {
     const item = this._entities.get(itemId);
     assert(item);
 
-    await item._stateManager.processMessage(message.meta, message.mutation);
+    await item.processMessage(message.meta, message.mutation);
     this.update.emit(item);
   }
 
@@ -267,7 +265,7 @@ export class ItemManager {
   }
 
   getUninitializedEntities(): Item<Model>[] {
-    return Array.from(this._entities.values()).filter((Item) => !Item._stateManager.initialized);
+    return Array.from(this._entities.values()).filter((item) => !item.initialized);
   }
 
   /**
@@ -299,10 +297,10 @@ export class ItemManager {
     const item = this._entities.get(itemId);
     assert(item);
 
-    const model = this._modelFactory.getModel(item._stateManager.modelType);
+    const model = this._modelFactory.getModel(item.modelType);
     assert(model, 'Model not registered');
 
-    item._stateManager.initialize(model.constructor);
+    item.initialize(model.constructor);
 
     this.update.emit(item);
   }
