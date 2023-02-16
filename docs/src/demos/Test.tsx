@@ -18,7 +18,7 @@ const TaskList = ({ space }: { space: Space }) => {
     if (event.key === 'Enter' && input) {
       const task = new Task({ title: input.value });
       input.value = '';
-      await space.experimental.db.save(task);
+      await space.db.add(task);
     }
   };
 
@@ -29,7 +29,7 @@ const TaskList = ({ space }: { space: Space }) => {
         <div key={task[id]}>
           <input type='checkbox' checked={!!task.completed} onChange={() => (task.completed = !task.completed)} />
           {task.title}
-          <button onClick={() => space.experimental.db.delete(task)}>x</button>
+          <button onClick={() => space.db.remove(task)}>x</button>
         </div>
       ))}
     </div>

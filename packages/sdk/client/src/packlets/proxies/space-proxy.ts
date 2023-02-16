@@ -24,11 +24,8 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Properties } from '../proto';
 
+// TODO(burdon): Remove.
 export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
-
-interface Experimental {
-  get db(): EchoDatabase;
-}
 
 interface Internal {
   get db(): DatabaseBackendProxy;
@@ -39,15 +36,10 @@ export interface Space extends ISpace {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
-
-  get invitations(): CancellableInvitationObservable[];
-  get properties(): Document;
-
   get db(): EchoDatabase;
+  get properties(): Document;
+  get invitations(): CancellableInvitationObservable[];
   get internal(): Internal;
-
-  // get select(): Database['select'];
-  // get reduce(): Database['reduce'];
 
   open(): Promise<void>;
   close(): Promise<void>;
@@ -60,27 +52,9 @@ export interface Space extends ISpace {
   /**
    * @deprecated
    */
-  // TODO(burdon): Change to `space.properties.title`.
-  setTitle(title: string): Promise<void>;
-  /**
-   * @deprecated
-   */
-  getTitle(): string;
-  /**
-   * @deprecated
-   */
   getDetails(): Promise<SpaceDetails>;
-  /**
-   * @deprecated
-   */
-  setProperty(key: string, value?: any): Promise<void>;
-  /**
-   * @deprecated
-   */
-  getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<SpaceMember>;
-
   createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
   removeInvitation(id: string): void;
 
@@ -99,10 +73,10 @@ export class SpaceProxy implements Space {
    */
   public _databaseInitialized = new Trigger();
 
-  private readonly _itemManager?: ItemManager;
-  private readonly _experimental!: Experimental;
+  private readonly _db!: EchoDatabase;
   private readonly _internal!: Internal;
   private readonly _dbBackend?: DatabaseBackendProxy;
+  private readonly _itemManager?: ItemManager;
   private readonly _invitationProxy: SpaceInvitationsProxy;
 
   private _invitations: CancellableInvitationObservable[] = [];
@@ -125,19 +99,15 @@ export class SpaceProxy implements Space {
     }
 
     assert(this._clientServices.services.DataService, 'DataService not available');
-
     this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
     this._itemManager = new ItemManager(this._modelFactory);
 
-    this._experimental = {
-      db: new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter)
-    };
-
+    this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
     this._internal = {
       db: this._dbBackend
     };
 
-    databaseRouter.register(this.key, this._experimental.db);
+    databaseRouter.register(this.key, this._db);
   }
 
   get key() {
@@ -153,48 +123,22 @@ export class SpaceProxy implements Space {
     return this._state.isActive;
   }
 
-  /**
-   * @deprecated
-   */
-  get experimental(): Experimental {
-    if (!this._experimental) {
-      throw new ApiError('Space not open.');
-    }
-
-    return this._experimental;
+  get db() {
+    return this._db;
   }
 
-  get db(): EchoDatabase {
-    return this._experimental!.db;
+  get properties() {
+    return this._properties!;
+  }
+
+  get invitations() {
+    return this._invitations;
   }
 
   // TODO(burdon): Remove?
   get internal(): Internal {
     return this._internal;
   }
-
-  /**
-   * Space Metadata stored in the database.
-   */
-  get properties() {
-    return this._properties!;
-  }
-
-  // /**
-  //  * Returns a selection context, which can be used to traverse the object graph.
-  //  * @deprecated Use database accessor.
-  //  */
-  // get select(): Database['select'] {
-  //   return this.database.select.bind(this.database);
-  // }
-
-  // /**
-  //  * Returns a selection context, which can be used to traverse the object graph.
-  //  * @deprecated Use database accessor.
-  //  */
-  // get reduce(): Database['reduce'] {
-  //   return this.database.reduce.bind(this.database);
-  // }
 
   /**
    * Called by EchoProxy open.
@@ -215,7 +159,7 @@ export class SpaceProxy implements Space {
 
     {
       // Wait for Properties document.
-      const query = this._experimental!.db.query(Properties.filter());
+      const query = this._db.query(Properties.filter());
       if (query.objects.length === 1) {
         this._properties = query.objects[0];
       } else {
@@ -270,10 +214,6 @@ export class SpaceProxy implements Space {
     });
   }
 
-  get invitations() {
-    return this._invitations;
-  }
-
   // TODO(burdon): Remove deprecated methods.
 
   /**
@@ -287,35 +227,6 @@ export class SpaceProxy implements Space {
     //   active_global,
     //   active_device
     // });
-  }
-
-  /**
-   * @deprecated Use space.properties.
-   */
-  async setTitle(title: string) {
-    // await this.setProperty(SPACE_TITLE_PROPERTY, title);
-  }
-
-  /**
-   * @deprecated Use space.properties.
-   */
-  getTitle() {
-    return todo();
-    // return this.getProperty(SPACE_TITLE_PROPERTY);
-  }
-
-  /**
-   * @deprecated Use space.properties.
-   */
-  async setProperty(key: string, value?: any) {
-    await this.properties.set(key, value);
-  }
-
-  /**
-   * @deprecated Use space.properties.
-   */
-  getProperty(key: string, defaultValue?: any) {
-    return this.properties.get(key, defaultValue);
   }
 
   /**
