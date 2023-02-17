@@ -13,8 +13,9 @@ import { useConfig, useQuery } from '@dxos/react-client';
 import { getSize, useMediaQuery } from '@dxos/react-components';
 
 import { EditableObjectList } from '../../components';
-import { createSpacePath, useFileDownload, useFrameState, useIpfsClient } from '../../hooks';
+import { useFileDownload, useFrameState, useIpfsClient } from '../../hooks';
 import { File } from '../../proto';
+import { createSpacePath } from '../../router';
 import { fileTypes } from './defs';
 
 const FileUpload: FC<{ onUpload: (file: File) => void }> = ({ onUpload }) => {

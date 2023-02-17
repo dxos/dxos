@@ -11,12 +11,12 @@ import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, Button } from '@dxos/react-components';
 
 import { EmbeddedFrame } from '../../frame-container';
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
 export const SandboxFrame = withReactor(() => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
 
@@ -31,7 +31,7 @@ export const SandboxFrame = withReactor(() => {
           content: new TextObject()
         });
 
-        await space.db.add(frame);
+        await space?.db.add(frame);
         frame.content.doc!.getText('monaco').insert(0, EXAMPLE);
         setSelected(frame);
       });

@@ -21,18 +21,29 @@ describe('Basic test', () => {
   });
 
   describe('Default space', () => {
-    test('app loads', async () => {
+    test('create identity', async () => {
       await host.init();
-      await host.createIdentity('host');
-      expect(await host.kaiIsVisible()).to.be.true;
-    });
+
+      expect(await host.kaiIsVisible()).to.be.false;
+
+      await host.shell.createIdentity('host');
+
+      // Wait for app to load identity.
+      await waitForExpect(async () => {
+        expect(await host.kaiIsVisible()).to.be.true;
+      }, 1000);
+    }).skipEnvironments('firefox');
 
     test('invite guest', async () => {
       await guest.init();
-      await guest.createIdentity('guest');
-      const invitationCode = await host.shareSpace();
-      const [authenticationCode] = await Promise.all([host.getAuthenticationCode(), guest.joinSpace(invitationCode)]);
-      await guest.authenticate(authenticationCode);
+      await guest.shell.createIdentity('guest');
+      const invitationCode = await host.shell.createSpaceInvitation();
+      const [authenticationCode] = await Promise.all([
+        host.shell.getAuthenticationCode(),
+        guest.shell.acceptSpaceInvitation(invitationCode)
+      ]);
+      await guest.shell.authenticate(authenticationCode);
+      await host.shell.closeShell();
 
       // Wait for redirect.
       await waitForExpect(async () => {

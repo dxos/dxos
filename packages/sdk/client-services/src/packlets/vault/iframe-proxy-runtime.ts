@@ -7,7 +7,7 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { iframeServiceBundle, WorkerServiceBundle, workerServiceBundle } from './services';
-import { ShellRuntime } from './shell-runtime';
+import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type IFrameProxyRuntimeParams = {
@@ -26,7 +26,7 @@ export class IFrameProxyRuntime {
   private readonly _workerAppPort: RpcPort;
   private readonly _shellPort?: RpcPort;
   private readonly _systemRpc: ProtoRpcPeer<WorkerServiceBundle>;
-  private readonly _shellRuntime?: ShellRuntime;
+  private readonly _shellRuntime?: ShellRuntimeImpl;
   private readonly _transportService = new WebRTCTransportService();
 
   constructor({ systemPort, workerAppPort, windowAppPort, shellPort }: IFrameProxyRuntimeParams) {
@@ -54,11 +54,11 @@ export class IFrameProxyRuntime {
     this._windowAppPort.subscribe((msg) => this._workerAppPort.send(msg));
 
     if (this._shellPort) {
-      this._shellRuntime = new ShellRuntime(this._shellPort);
+      this._shellRuntime = new ShellRuntimeImpl(this._shellPort);
     }
   }
 
-  get shell() {
+  get shell(): ShellRuntime | undefined {
     return this._shellRuntime;
   }
 

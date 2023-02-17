@@ -6,16 +6,16 @@ import { Bug, User } from 'phosphor-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { withReactor } from '@dxos/react-client';
+import { useCurrentSpace, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
-import { useSpace, useTheme } from '../../hooks';
+import { useTheme } from '../../hooks';
 
 // TODO(burdon): Show search box or Space name in title.
 export const AppBar = withReactor(() => {
   const theme = useTheme();
-  const space = useSpace();
+  const [space] = useCurrentSpace();
 
   return (
     <div

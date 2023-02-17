@@ -7,8 +7,7 @@ import { FC } from 'react';
 import hash from 'string-hash';
 
 import { PublicKey } from '@dxos/keys';
-
-import { useSpace } from './useSpace';
+import { useCurrentSpace } from '@dxos/react-client';
 
 // TODO(burdon): Space properties.
 export const ThemeIcons: FC<any>[] = [AirplaneTakeoff, Bank, Buildings, Confetti, Factory, Package, Rocket, Users];
@@ -69,9 +68,10 @@ export const getThemeClasses = (spaceKey: PublicKey) => {
 /**
  * Support theme variants.
  */
+// TODO(wittjosiah): Update head theme as well.
 export const useTheme = (): Theme => {
-  const space = useSpace();
-  const x = hash(space.key.toString());
+  const [space] = useCurrentSpace();
+  const x = space ? hash(space.key.toString()) : 0;
   const classes = themes[x % themes.length];
   return { classes };
 };

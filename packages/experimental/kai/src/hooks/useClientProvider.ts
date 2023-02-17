@@ -2,17 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useCallback } from 'react';
+
 import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 
 import { Generator, schema } from '../proto';
 
-export const useClientProvider = () => {
-  return async (dev: boolean) => {
+export const useClientProvider = (dev: boolean) => {
+  return useCallback(async () => {
     const config = new Config(await Dynamics(), await Envs(), Defaults());
     const client = new Client({
       config,
-      services: config.get('runtime.app.env.DX_VAULT') === 'true' ? fromIFrame(config) : fromHost(config)
+      services: config.get('runtime.app.env.DX_VAULT') === 'true' ? fromIFrame(config, true) : fromHost(config)
     });
 
     await client.initialize();
@@ -38,5 +40,5 @@ export const useClientProvider = () => {
     }
 
     return client;
-  };
+  }, [dev]);
 };
