@@ -2,17 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Planet, ShareNetwork } from 'phosphor-react';
+import { DotsThreeVertical } from 'phosphor-react';
 import React, { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { withReactor } from '@dxos/react-client';
-import { getSize, mx } from '@dxos/react-components';
+import { Button, getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
-import { useFrames } from '../../hooks';
+import { getThemeClasses, useFrames } from '../../hooks';
 
 enum SpaceItemAction {
   SELECT = 1,
@@ -31,6 +31,9 @@ export type SpaceItemProps = {
 // TODO(burdon): Action menu.
 // TODO(burdon): Full width mobile.
 const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceItemProps) => {
+  const { Icon } = getThemeClasses(space.key);
+
+  // TODO(burdon): Use List.
   return (
     <div
       className={mx(
@@ -39,18 +42,18 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
         selected && 'hover:bg-selection-bg bg-selection-bg border-selection-border'
       )}
     >
-      <div className={mx('flex w-full overflow-hidden p-2 px-4 items-center')}>
+      <div className={mx('flex w-full overflow-hidden px-4 items-center')}>
         <div
           className='flex flex-1 overflow-hidden font-mono cursor-pointer'
           onClick={() => onAction(SpaceItemAction.SELECT)}
         >
-          <div className={mx('flex mr-4', selected && 'text-selection-text')}>
-            <Planet className={getSize(6)} />
+          <div className={mx('flex my-2', selected && 'text-selection-text')}>
+            <Icon className={getSize(6)} />
           </div>
 
           {/* TODO(burdon): Use <Input />. */}
           <input
-            className='w-full bg-transparent mr-4'
+            className='w-full bg-transparent px-2 mx-4'
             value={space.properties.name ?? humanize(space.key)}
             onChange={(event) => {
               space.properties.name = event.target.value;
@@ -58,15 +61,16 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
           />
         </div>
 
-        {selected && (
-          <div
-            className='flex cursor-pointer'
-            onClick={() => onAction(SpaceItemAction.SHARE)}
-            data-testid='space-settings'
-          >
-            <ShareNetwork className={getSize(6)} />
-          </div>
-        )}
+        <Button
+          compact
+          variant='ghost'
+          className={mx(selected ? 'flex' : 'invisible')}
+          title='Create new space'
+          onClick={() => onAction(SpaceItemAction.SHARE)}
+          data-testid='space-settings'
+        >
+          <DotsThreeVertical className={getSize(6)} />
+        </Button>
       </div>
 
       {selected && <div className='flex bg-paper-bg'>{children}</div>}

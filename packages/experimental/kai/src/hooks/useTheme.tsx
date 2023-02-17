@@ -6,6 +6,8 @@ import { AirplaneTakeoff, Bank, Buildings, Confetti, Factory, Package, Rocket, U
 import { FC } from 'react';
 import hash from 'string-hash';
 
+import { PublicKey } from '@dxos/keys';
+
 import { useSpace } from './useSpace';
 
 // TODO(burdon): Space properties.
@@ -23,7 +25,7 @@ export type Theme = {
 };
 
 // https://tailwindcss.com/docs/customizing-colors#aliasing-color-names
-const themes: ThemeClasses[] = [
+export const themes: ThemeClasses[] = [
   {
     header: 'bg-sky-500',
     toolbar: 'bg-sky-300'
@@ -57,6 +59,12 @@ const themes: ThemeClasses[] = [
     toolbar: 'bg-blue-300'
   }
 ];
+
+export const getThemeClasses = (spaceKey: PublicKey) => {
+  const x = hash(spaceKey.toString());
+  const classes = themes[x % themes.length];
+  return { classes, Icon: ThemeIcons[x % ThemeIcons.length] };
+};
 
 /**
  * Support theme variants.
