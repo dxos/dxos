@@ -50,10 +50,16 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
           } as ComponentPropsWithoutRef<'input'>
         }}
         {...(validationMessage.length && { validationValence: 'error', validationMessage })}
+        data-testid='identity-input'
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>
-        <Button disabled={disabled} className='grow flex items-center gap-2 pli-2 order-2' onClick={handleNext}>
+        <Button
+          disabled={disabled}
+          className='grow flex items-center gap-2 pli-2 order-2'
+          onClick={handleNext}
+          data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
+        >
           <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
           <span className='grow'>{t('continue label')}</span>
           <CaretRight weight='bold' className={getSize(4)} />
@@ -62,6 +68,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
           disabled={disabled}
           onClick={() => dispatch({ type: 'add identity' })}
           className='flex items-center gap-2 pis-2 pie-4'
+          data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           <CaretLeft weight='bold' className={getSize(4)} />
           <span>{t('back label')}</span>

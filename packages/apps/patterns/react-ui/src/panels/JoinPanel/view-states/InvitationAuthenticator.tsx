@@ -37,7 +37,7 @@ const PureInvitationAuthenticatorContent = ({
   return (
     <>
       <Input
-        label={t('pin input label')}
+        label={t('auth code input label')}
         size='pin'
         length={pinLength}
         onChange={onChange}
@@ -57,6 +57,7 @@ const PureInvitationAuthenticatorContent = ({
           validationValence: 'error',
           validationMessage: t('failed to authenticate message')
         })}
+        data-testid='auth-code-input'
       />
       <div role='none' className='grow' />
       <div className='flex gap-2'>
@@ -65,6 +66,7 @@ const PureInvitationAuthenticatorContent = ({
           className='grow flex items-center gap-2 pli-2 order-2'
           onClick={onAuthenticate}
           data-autofocus-pinlength={invitationType}
+          data-testid={`${invitationType}-invitation-authenticator-next`}
         >
           <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
           <span className='grow'>{t('next label')}</span>
@@ -74,6 +76,7 @@ const PureInvitationAuthenticatorContent = ({
           disabled={disabled}
           className='flex items-center gap-2 pis-2 pie-4'
           onClick={() => dispatch({ type: 'cancel invitation', from: invitationType })}
+          data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
           <CaretLeft weight='bold' className={getSize(4)} />
           <span>{t('cancel label')}</span>

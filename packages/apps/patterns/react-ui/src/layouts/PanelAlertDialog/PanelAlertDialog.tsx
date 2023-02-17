@@ -7,6 +7,8 @@ import React, { ComponentPropsWithoutRef, PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/react-components';
 
+import { defaultDialogContent, defaultOverlay } from '../../styles';
+
 export interface PanelAlertDialogSlots {
   root: ComponentPropsWithoutRef<typeof AlertDialog.Root>;
   overlay: ComponentPropsWithoutRef<typeof AlertDialog.Overlay>;
@@ -23,18 +25,12 @@ export const PanelAlertDialog = ({ titleId, slots = {}, children }: PanelAlertDi
   return (
     <AlertDialog.Root defaultOpen {...slots.root}>
       {slots.trigger && <AlertDialog.Trigger {...slots.trigger} />}
-      <AlertDialog.Overlay
-        {...slots.overlay}
-        className={mx(
-          'fixed inset-0 backdrop-blur z-50 overflow-auto grid place-items-center p-2 md:p-4 lg:p-8',
-          slots.overlay?.className
-        )}
-      >
+      <AlertDialog.Overlay {...slots.overlay} className={mx(defaultOverlay, slots.overlay?.className)}>
         <AlertDialog.Content
           onEscapeKeyDown={(event) => event.preventDefault()}
           {...slots.content}
           aria-labelledby={titleId}
-          className={mx('is-full min-is-[260px] max-is-[320px] shadow-md backdrop-blur-md', slots.content?.className)}
+          className={mx(defaultDialogContent, slots.content?.className)}
         >
           {children}
         </AlertDialog.Content>

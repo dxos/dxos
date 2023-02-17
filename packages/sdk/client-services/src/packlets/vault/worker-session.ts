@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -17,6 +17,7 @@ export type WorkerSessionParams = {
   getService: <Service>(find: (services: Partial<ClientServices>) => Service | undefined) => Promise<Service>;
   systemPort: RpcPort;
   appPort: RpcPort;
+  shellPort: RpcPort;
   readySignal: Trigger<Error | undefined>;
   options?: {
     heartbeatInterval: number;
@@ -28,6 +29,7 @@ export type WorkerSessionParams = {
  */
 export class WorkerSession {
   private readonly _clientRpc: ProtoRpcPeer<ClientServices>;
+  private readonly _shellClientRpc: ProtoRpcPeer<ClientServices>;
   private readonly _iframeRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _getService: WorkerSessionParams['getService'];
@@ -45,6 +47,7 @@ export class WorkerSession {
     getService,
     systemPort,
     appPort,
+    shellPort,
     options = {
       heartbeatInterval: 1_000
     }
@@ -54,23 +57,22 @@ export class WorkerSession {
     this._options = options;
     this._getService = getService;
 
-    this._clientRpc = createProtoRpcPeer({
-      exposed: clientServiceBundle,
-      handlers: {
-        DataService: async () => await this._getService((services) => services.DataService),
-        DevicesService: async () => await this._getService((services) => services.DevicesService),
-        DevtoolsHost: async () => await this._getService((services) => services.DevtoolsHost),
-        HaloInvitationsService: async () => await this._getService((services) => services.HaloInvitationsService),
-        NetworkService: async () => await this._getService((services) => services.NetworkService),
-        ProfileService: async () => await this._getService((services) => services.ProfileService),
-        SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),
-        SpaceService: async () => await this._getService((services) => services.SpaceService),
-        SpacesService: async () => await this._getService((services) => services.SpacesService),
-        SystemService: async () => await this._getService((services) => services.SystemService),
-        TracingService: async () => await this._getService((services) => services.TracingService)
-      },
-      port: appPort
-    });
+    const handlers = {
+      DataService: async () => await this._getService((services) => services.DataService),
+      DevicesService: async () => await this._getService((services) => services.DevicesService),
+      DevtoolsHost: async () => await this._getService((services) => services.DevtoolsHost),
+      HaloInvitationsService: async () => await this._getService((services) => services.HaloInvitationsService),
+      NetworkService: async () => await this._getService((services) => services.NetworkService),
+      ProfileService: async () => await this._getService((services) => services.ProfileService),
+      SpaceInvitationsService: async () => await this._getService((services) => services.SpaceInvitationsService),
+      SpaceService: async () => await this._getService((services) => services.SpaceService),
+      SpacesService: async () => await this._getService((services) => services.SpacesService),
+      SystemService: async () => await this._getService((services) => services.SystemService),
+      TracingService: async () => await this._getService((services) => services.TracingService)
+    };
+
+    this._clientRpc = createProtoRpcPeer({ exposed: clientServiceBundle, handlers, port: appPort });
+    this._shellClientRpc = createProtoRpcPeer({ exposed: clientServiceBundle, handlers, port: shellPort });
 
     this._iframeRpc = createProtoRpcPeer({
       requested: iframeServiceBundle,
@@ -102,7 +104,7 @@ export class WorkerSession {
 
   async open() {
     log.info('opening..');
-    await Promise.all([this._clientRpc.open(), this._iframeRpc.open()]);
+    await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     await this._startTrigger.wait({ timeout: 3_000 });
 
@@ -136,5 +138,13 @@ export class WorkerSession {
     }
 
     await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
+  }
+
+  private async _maybeOpenShell() {
+    try {
+      await asyncTimeout(this._shellClientRpc.open(), 1_000);
+    } catch {
+      log.info('No shell connected.');
+    }
   }
 }

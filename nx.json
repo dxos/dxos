@@ -96,8 +96,8 @@
     "e2e": {
       "inputs": ["default", "^production"],
       "dependsOn": [
-        "build",
-        "bundle"
+        "prebuild",
+        "^compile"
       ]
     },
     "lint": {

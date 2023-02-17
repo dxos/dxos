@@ -8,6 +8,8 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/lib/node/testing.cjs",
+  "types": "dist/types/src/testing.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -22,6 +24,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
