@@ -121,7 +121,7 @@ message Contacts {
 
 message SignPresentationRequest {
   dxos.halo.credentials.Presentation presentation = 1;
-  bytes nonce = 2;
+  optional bytes nonce = 2;
 }
 
 service ProfileService {
