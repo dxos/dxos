@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import expect from 'expect';
 
 import { latch } from '@dxos/async';
@@ -10,6 +9,7 @@ import { checkType, todo } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { describe, test } from '@dxos/test';
@@ -18,8 +18,6 @@ import { Timeframe } from '@dxos/timeframe';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-
-const log = debug('dxos:echo:item-demuxer:test');
 
 describe('Item demuxer', () => {
   test.skip('set-up', async () => {
