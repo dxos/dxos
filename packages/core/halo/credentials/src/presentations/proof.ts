@@ -20,7 +20,7 @@ export const signPresentation = async ({
   signer: Signer;
   signerKey: PublicKey;
   chain?: Chain;
-  nonce: Uint8Array;
+  nonce?: Uint8Array;
 }): Promise<Presentation> => {
   const proof: Proof = {
     type: SIGNATURE_TYPE_ED25519,
