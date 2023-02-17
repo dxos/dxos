@@ -124,6 +124,10 @@ export class Identity {
     return this.space.genesisFeedKey;
   }
 
+  get deviceCredentialChain() {
+    return this._deviceStateMachine.processor.deviceCredentialChain;
+  }
+
   getAdmissionCredentials(): HaloAdmissionCredentials {
     return {
       deviceKey: this.deviceKey,

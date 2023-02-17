@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -70,5 +70,34 @@ describe('Halo', () => {
 
     expect(await client1.halo.queryDevices().value).to.have.lengthOf(2);
     expect(await client2.halo.queryDevices().value).to.have.lengthOf(2);
+  });
+
+  test('query credentials', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    afterTest(() => client.destroy());
+    await client.initialize();
+
+    await client.halo.createProfile({ displayName: 'test-user' });
+    expect(client.halo.profile).exist;
+
+    const credentials = client.halo.queryCredentials({ type: 'dxos.halo.credentials.AdmittedFeed' });
+
+    const trigger = new Trigger();
+    credentials.subscribe({
+      onUpdate: () => {
+        if (credentials.value?.length === 2) {
+          trigger.wake();
+        }
+      },
+      onError: (error) => {
+        throw error;
+      }
+    });
+    await asyncTimeout(trigger.wait(), 500);
+
+    expect(credentials.value!.every((cred) => cred.subject.assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed'))
+      .to.be.true;
   });
 });
