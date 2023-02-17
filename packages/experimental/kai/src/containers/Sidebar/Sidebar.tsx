@@ -109,7 +109,9 @@ export const Sidebar = () => {
       className={mx('flex flex-col overflow-auto min-bs-full bg-sidebar-bg', theme.panel === 'flat' && 'border-r')}
     >
       {/* Match Frame selector. */}
-      <div className={mx('flex flex-col-reverse h-toolbar bg-appbar-toolbar', theme.panel === 'flat' && 'border-b')}>
+      <div
+        className={mx('flex flex-col-reverse h-toolbar', theme.classes?.toolbar, theme.panel === 'flat' && 'border-b')}
+      >
         <div className='flex justify-between px-2'>
           <div className='flex items-center'>
             {/* TODO(burdon): Remove initial focus. */}

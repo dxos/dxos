@@ -39,14 +39,14 @@ export const ContactListItem: FC<{ contact: Contact }> = withReactor(({ contact 
           onChange={({ target: { value } }) => (contact.name = value)}
           slots={{
             root: { className: 'm-0' },
-            input: { spellCheck: false, className: 'p-1 mbs-1' },
+            input: { spellCheck: false, className: 'p-2' },
             label: { className: 'sr-only' }
           }}
         />
-        <div role='none' className='pis-1'>
-          {contact.username && <p className='text-sm text-secondary-text truncate'>{contact.username}</p>}
-          {contact.email && <p className='text-sm text-secondary-text truncate'>{contact.email}</p>}
-          {contact.address && <p className='text-sm text-secondary-text truncate'>{address(contact.address)}</p>}
+        <div role='none' className='pis-2 text-sm text-secondary-text'>
+          {contact.username && <p className='truncate'>{contact.username}</p>}
+          {contact.email && <p className='truncate'>{contact.email}</p>}
+          {contact.address && <p className='truncate'>{address(contact.address)}</p>}
         </div>
       </ListItemHeading>
     </ListItem>

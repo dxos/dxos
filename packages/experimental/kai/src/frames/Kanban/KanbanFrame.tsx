@@ -47,10 +47,11 @@ export const KanbanFrame: FC = () => {
     await space.db.add(project);
   };
 
+  // TODO(burdon): Searchbar Input slots.
   // TODO(burdon): Type and column/field selectors.
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-2 py-4'>
+      <div className='flex p-2 py-2 mb-2'>
         <div className='w-screen md:w-column px-4 md:px-2'>
           <Searchbar onSearch={handleSearch} />
         </div>

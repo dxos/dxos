@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Column } from 'react-table';
 
 import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-schema';
@@ -43,16 +43,18 @@ const generateTypes = (schemaTypes: EchoSchemaType[]) => {
     return columns;
   };
 
-  return schemaTypes.map((schema) => ({
-    id: schema.name,
-    title: schema.shortName,
-    columns: generateColumns(schema),
-    filter: schema.createFilter(),
-    subFilter:
-      (match = '') =>
-      (object: Document) =>
-        JSON.stringify(object.toJSON()).includes(match)
-  }));
+  return schemaTypes
+    .map((schema) => ({
+      id: schema.name,
+      title: schema.shortName,
+      columns: generateColumns(schema),
+      filter: schema.createFilter(),
+      subFilter:
+        (match = '') =>
+        (object: Document) =>
+          JSON.stringify(object.toJSON()).includes(match)
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title));
 };
 
 const types: ColumnType<any>[] = generateTypes(schema.types);
@@ -64,6 +66,10 @@ export const TableFrame = () => {
   const [type, setType] = useState<ColumnType<any>>(types[0]);
   const [text, setText] = useState<string>();
   const objects = useQuery(space, type.filter).filter(type.subFilter?.(text) ?? Boolean);
+
+  useEffect(() => {
+    setType(types[0]);
+  }, []);
 
   const handleSearch = (text: string) => {
     setText(text);
@@ -77,7 +83,7 @@ export const TableFrame = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden px-2'>
-      <div className='flex p-2 py-4'>
+      <div className='flex py-2'>
         <div className='mr-4'>
           <Selector options={types} value={type.id} onSelect={handleSelect} />
         </div>
@@ -86,7 +92,7 @@ export const TableFrame = () => {
         </div>
       </div>
 
-      {/* <div className='flex flex-1 overflow-hidden'> */}
+      {/* TODO(burdon): Editable variant. */}
       <Table<Document>
         columns={type.columns}
         data={objects}
