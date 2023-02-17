@@ -11,6 +11,7 @@ import "dxos/config.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/halo/keys.proto";
+import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 
 package dxos.client;
@@ -90,6 +91,8 @@ message Profile {
   optional string displayName = 2;
   // TODO(mykola): Factor out. It was added to make deviceKey available in the HaloProxy.
   optional dxos.keys.PublicKey device_key = 3;
+
+  optional dxos.keys.PublicKey halo_space = 4;
 }
 
 message SubscribeProfileResponse {
@@ -116,10 +119,17 @@ message Contacts {
   repeated Contact contacts = 1;
 }
 
+message SignPresentationRequest {
+  dxos.halo.credentials.Presentation presentation = 1;
+  optional bytes nonce = 2;
+}
+
 service ProfileService {
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
   rpc SubscribeProfile(google.protobuf.Empty) returns (stream SubscribeProfileResponse);
+
+  rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
 }
 
 message AddKeyRecordRequest {
