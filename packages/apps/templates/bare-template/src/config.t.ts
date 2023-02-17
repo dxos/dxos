@@ -15,7 +15,7 @@ export default defineConfig({
   exclude: ({ monorepo }) => ['project.json', 'tsconfig.plate.json', ...(monorepo ? ['patches/vite*'] : [])],
   inputShape: z
     .object({
-      name: z.string().describe('Name the new package'),
+      name: z.string().describe('Name the new package').default(path.basename(process.cwd())),
       react: z.boolean().describe('Include react').default(true),
       dxosUi: z.boolean().describe('Include the DXOS UI system for react').default(true),
       tailwind: z.boolean().describe('Include tailwind (https://tailwindcss.com)').default(true),
