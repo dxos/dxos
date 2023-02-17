@@ -31,9 +31,6 @@
       "path": "../../../common/feed-store"
     },
     {
-      "path": "../../../common/hypercore"
-    },
-    {
       "path": "../../../common/keys"
     },
     {
@@ -53,21 +50,6 @@
     },
     {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../halo/keyring"
-    },
-    {
-      "path": "../../mesh/messaging"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../../mesh/rpc"
     },
     {
       "path": "../../mesh/teleport"

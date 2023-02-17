@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
@@ -15,8 +14,7 @@ import { ComplexMap } from '@dxos/util';
 import { tagMutationsInBatch } from './builder';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-
-const log = debug('dxos:echo-db:data-service-host');
+import { log } from '@dxos/log';
 
 /**
  * Provides methods for DataService for a single space.
@@ -54,7 +52,7 @@ export class DataServiceHost {
         log('Object update', { mutation });
 
         const clientTag = this._clientTagMap.get([mutation.meta.feedKey, mutation.meta.seq]);
-        // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
+        // TODO(dmaretskyi): Memorąąy leak with _clientTagMap not getting cleared.
 
         // Assign feed metadata
         const batch = {
