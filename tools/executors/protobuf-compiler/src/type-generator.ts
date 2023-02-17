@@ -26,6 +26,7 @@ export const parseAndGenerateSchema = async (
   outDirPath: string,
   packageRoot: string,
   exportPath?: string,
+  compress?: boolean,
   verbose = false
 ) => {
   const logger = new Logger({ verbose });
@@ -49,7 +50,8 @@ export const parseAndGenerateSchema = async (
     baseDir: baseDirPath,
     outDir: outDirPath,
     packageRoot,
-    exportPath
+    exportPath,
+    compress
   });
 };
 
@@ -63,6 +65,7 @@ export interface GenerateSchemaOptions {
   outDir: string;
   packageRoot: string;
   exportPath?: string;
+  compress?: boolean;
 }
 
 /**
@@ -92,7 +95,13 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
   }
 
   const source = printer.printFile(
-    createIndexSourceFile(options.substitutions?.module, options.schema, options.outDir, Array.from(namespaces.keys()))
+    createIndexSourceFile(
+      options.substitutions?.module,
+      options.schema,
+      options.outDir,
+      Array.from(namespaces.keys()),
+      options.compress ?? false
+    )
   );
   writeFileSync(join(options.outDir, 'index.ts'), source);
 
