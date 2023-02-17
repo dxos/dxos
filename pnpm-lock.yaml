@@ -425,6 +425,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-metagraph': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
@@ -463,6 +464,7 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../common/react-components
       '@dxos/react-metagraph': link:../../experimental/react-metagraph
+      '@dxos/react-ui': link:../patterns/react-ui
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
@@ -894,6 +896,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
+      '@dxos/halo-app': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/util': workspace:*
@@ -923,6 +926,7 @@ importers:
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/halo-app': link:../halo-app
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.0.1_vite@4.0.4
