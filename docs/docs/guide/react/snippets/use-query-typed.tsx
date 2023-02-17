@@ -8,8 +8,7 @@ import {
   ClientProvider,
   useOrCreateFirstSpace,
   useIdentity,
-  useQuery,
-  id,
+  useQuery
 } from '@dxos/react-client';
 
 import { Task } from './schema';
@@ -20,7 +19,7 @@ export const App = () => {
   const tasks = useQuery<Task>(space, Task.filter());
   return <>
     {tasks?.map((task) => (
-      <div key={task[id]}>{task.title} - {task.completed}</div>
+      <div key={task.id}>{task.title} - {task.completed}</div>
     ))}
   </>;
 };

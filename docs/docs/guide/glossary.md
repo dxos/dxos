@@ -61,6 +61,14 @@ A running instance of the DXOS `Client` represents a device on the network. Ever
 
 Also known as a paper key. A string of values that make it possible to recover an identity in case of a lost device.
 
+### Snapshot
+
+A flat representation of a specific state of an ECHO space. An ECHO space is made of feeds of mutations which are collapsed into a snapshot for the purposes of catching up a peer or downloading the state of the database without the log of changes.
+
+### Epoch
+
+A specific point in time when the members of a space agree to drop or compress history older than a certain point in time. To call an epoch, peers periodically agree on a specific [snapshot](#snapshot) to refer to as the beginning of the current epoch. This mechanism allows ECHO spaces to control their size on disk and on the wire.
+
 ### PWA
 
 [Progressive Web App](https://en.wikipedia.org/wiki/Progressive_web_app)
