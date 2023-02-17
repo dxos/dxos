@@ -52,7 +52,7 @@ export const JoinPanel = ({
         if (action.method === 'accept device invitation') {
           nextState.activeView = 'halo invitation acceptor';
           if (state.unredeemedHaloInvitationCode) {
-            nextState.haloInvitation = client.echo.acceptInvitation(
+            nextState.haloInvitation = client.halo.acceptInvitation(
               InvitationEncoder.decode(state.unredeemedHaloInvitationCode)
             );
             nextState.unredeemedHaloInvitationCode = undefined;
@@ -126,9 +126,10 @@ export const JoinPanel = ({
     return nextState;
   };
 
+  const unredeemedHaloInvitationCode = mode === 'halo-only' ? initialInvitationCode : undefined;
   const [joinState, dispatch] = useReducer(reducer, {
-    unredeemedHaloInvitationCode: undefined,
-    unredeemedSpaceInvitationCode: initialInvitationCode,
+    unredeemedHaloInvitationCode,
+    unredeemedSpaceInvitationCode: mode === 'halo-only' ? undefined : initialInvitationCode,
     spaceInvitation: undefined,
     haloInvitation: undefined,
     activeView: availableIdentities.length > 0 ? 'identity selector' : 'addition method selector',
@@ -137,6 +138,12 @@ export const JoinPanel = ({
     spaceViewState: 'invitation input',
     haloViewState: 'invitation input'
   });
+
+  useEffect(() => {
+    if (unredeemedHaloInvitationCode) {
+      dispatch({ type: 'select addition method', method: 'accept device invitation' });
+    }
+  }, [unredeemedHaloInvitationCode]);
 
   useEffect(() => {
     // TODO (thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
@@ -244,7 +251,9 @@ export const JoinPanel = ({
               active:
                 joinState.activeView === 'halo invitation acceptor' &&
                 joinState.haloViewState === 'invitation accepted',
-              invitationType: 'halo'
+              invitationType: 'halo',
+              doneActionParent,
+              onDone
             }}
           />
           <IdentityAdded

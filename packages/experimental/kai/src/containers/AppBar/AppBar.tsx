@@ -4,18 +4,18 @@
 
 import { Bug, User } from 'phosphor-react';
 import React from 'react';
-import { Link } from 'react-router-dom';
 
-import { useCurrentSpace, withReactor } from '@dxos/react-client';
+import { ShellLayout, useCurrentSpace, withReactor } from '@dxos/react-client';
 import { getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
-import { useTheme } from '../../hooks';
+import { useShell, useTheme } from '../../hooks';
 
 // TODO(burdon): Show search box or Space name in title.
 export const AppBar = withReactor(() => {
   const theme = useTheme();
   const [space] = useCurrentSpace();
+  const shell = useShell();
 
   return (
     <div
@@ -47,9 +47,13 @@ export const AppBar = withReactor(() => {
       {/* TODO(burdon): Help button. */}
       {/* TODO(burdon): Share button. */}
       <div className='flex items-center'>
-        <Link className='pl-2' to='/identity' title='Identity'>
+        <span
+          className='pl-2 cursor-pointer'
+          onClick={() => shell.setLayout(ShellLayout.DEVICES_LIST, { spaceKey: space?.key })}
+          title='Identity'
+        >
           <User className={getSize(6)} />
-        </Link>
+        </span>
       </div>
     </div>
   );
