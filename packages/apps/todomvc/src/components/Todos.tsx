@@ -28,10 +28,6 @@ export const Todos = withReactor(() => {
     }
   }, [space, list]);
 
-  if (!list) {
-    return null;
-  }
-
   // TODO(wittjosiah): Hide deleted items from `useQuery`?
   const allTodos = list?.todos.filter((todo) => !todo.__deleted) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo.completed : true));
@@ -73,7 +69,7 @@ export const Todos = withReactor(() => {
 
   return (
     <div>
-      <Header onKeyDown={handleNewTodoKeyDown} ref={inputRef} />
+      <Header onKeyDown={list && handleNewTodoKeyDown} ref={inputRef} />
       {todos.length > 0 && (
         <section className='main'>
           <input
