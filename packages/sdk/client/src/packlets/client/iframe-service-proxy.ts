@@ -24,7 +24,7 @@ export type IFrameClientServicesProxyOptions = {
  */
 // TODO(burdon): Move to client-services.
 export class IFrameClientServicesProxy implements ClientServicesProvider {
-  private readonly _options;
+  private readonly _options: IFrameClientServicesProxyOptions;
   private _iframe?: HTMLIFrameElement;
   private _clientServicesProxy?: ClientServicesProxy;
   private _shellController?: ShellController;
@@ -32,10 +32,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   constructor({
     source = DEFAULT_CLIENT_ORIGIN,
     channel = DEFAULT_CLIENT_CHANNEL,
-    shell = DEFAULT_SHELL_CHANNEL,
+    shell = false,
     timeout = 1000
   }: Partial<IFrameClientServicesProxyOptions> = {}) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
+    shell = shell === true && DEFAULT_SHELL_CHANNEL;
     this._options = { source, channel, shell, timeout };
   }
 
