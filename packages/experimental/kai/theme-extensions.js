@@ -48,8 +48,8 @@ module.exports = {
     // https://m3.material.io/styles/color/dynamic-color/overview
     colors: {
       appbar: {
-        header: colors.sky[500],
-        toolbar: colors.sky[300]
+        header: primary[500],
+        toolbar: primary[300]
       },
 
       paper: {
