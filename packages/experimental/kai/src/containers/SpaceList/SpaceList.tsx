@@ -42,18 +42,18 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
         selected && 'hover:bg-selection-bg bg-selection-bg border-selection-border'
       )}
     >
-      <div className={mx('flex w-full overflow-hidden px-4 items-center')}>
+      <div className={mx('flex w-full overflow-hidden px-0 items-center')}>
         <div
           className='flex flex-1 overflow-hidden font-mono cursor-pointer'
           onClick={() => onAction(SpaceItemAction.SELECT)}
         >
-          <div className={mx('flex my-2', selected && 'text-selection-text')}>
+          <div className={mx('flex m-2', selected && 'text-selection-text')}>
             <Icon className={getSize(6)} />
           </div>
 
           {/* TODO(burdon): Use <Input />. */}
           <input
-            className='w-full bg-transparent px-2 mx-4'
+            className='w-full bg-transparent px-2 mx-2'
             value={space.properties.name ?? humanize(space.key)}
             onChange={(event) => {
               space.properties.name = event.target.value;

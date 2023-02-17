@@ -112,7 +112,7 @@ export const Sidebar = () => {
       <div
         className={mx('flex flex-col-reverse h-toolbar', theme.classes?.toolbar, theme.panel === 'flat' && 'border-b')}
       >
-        <div className='flex justify-between px-4'>
+        <div className='flex justify-between px-2'>
           <div className='flex items-center'>
             {/* TODO(burdon): Remove initial focus. */}
             <Button compact variant='ghost' className='flex' title='Create new space' onClick={handleCreateSpace}>
