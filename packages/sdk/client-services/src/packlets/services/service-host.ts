@@ -2,6 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'node:assert';
+
+import { Event } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
@@ -9,17 +12,18 @@ import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { Status } from '@dxos/protocols/proto/dxos/client';
+import { Status } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
 
-import { SpaceServiceImpl, IdentityServiceImpl, TracingServiceImpl, SystemServiceImpl } from '../deprecated';
+import { SpaceServiceImpl, IdentityServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
+import { SystemServiceImpl } from '../system';
 import { VaultResourceLock } from '../vault';
 import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
@@ -48,6 +52,7 @@ export class ClientServicesHost implements ClientServicesProvider {
   private readonly _systemService: SystemServiceImpl;
 
   private readonly _config: Config;
+  private readonly _statusUpdate = new Event<void>();
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
   private readonly _storage: Storage;
@@ -82,20 +87,17 @@ export class ClientServicesHost implements ClientServicesProvider {
     this._systemService = new SystemServiceImpl({
       config: this._config,
 
-      onInit: async () => {
+      statusUpdate: this._statusUpdate,
+
+      onCreateSession: async () => {
         await this._resourceLock?.acquire();
       },
 
-      onStatus: async () => {
-        if (!this.isOpen) {
-          return { status: Status.INACTIVE };
-        }
-
-        return { status: Status.ACTIVE };
-      },
+      onStatusUpdate: () => (this.isOpen ? Status.ACTIVE : Status.INACTIVE),
 
       onReset: async () => {
-        await this._serviceContext?.reset();
+        assert(this._serviceContext, 'service host is closed');
+        await this._serviceContext.reset();
       }
     });
 
@@ -168,6 +170,7 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     await this._serviceContext.open();
     this._open = true;
+    this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
   }
@@ -182,6 +185,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._serviceContext.close();
     this._open = false;
+    this._statusUpdate.emit();
     log('closed', { deviceKey });
   }
 }

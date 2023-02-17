@@ -8,6 +8,7 @@ import React, { Component, PropsWithChildren } from 'react';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, fromHost, Status } from '@dxos/client';
+import { first } from '@dxos/client-services/testing';
 import { log } from '@dxos/log';
 import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
@@ -74,7 +75,7 @@ describe('Client hook', function () {
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
+      await waitForCondition(async () => (await first(client.queryStatus())) === Status.ACTIVE);
     });
     expect(result.current).toEqual(client);
   });
@@ -101,7 +102,7 @@ describe('ClientProvider', () => {
     );
 
     await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
+      await waitForCondition(async () => (await first(client.queryStatus())) === Status.ACTIVE);
     });
 
     expect(() => screen.getByText('Hello World')).not.toThrow();
@@ -115,7 +116,7 @@ describe('ClientProvider', () => {
     );
 
     await act(async () => {
-      await waitForCondition(async () => (await client.getStatus()).status === Status.ACTIVE);
+      await waitForCondition(async () => (await first(client.queryStatus())) === Status.ACTIVE);
     });
 
     expect(() => screen.getByText('Client is defined')).not.toThrow();

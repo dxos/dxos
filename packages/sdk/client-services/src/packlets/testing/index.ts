@@ -3,5 +3,6 @@
 //
 
 export * from './credential-utils';
-export * from './test-builder';
+export * from './first-value';
 export * from './invitation-utils';
+export * from './test-builder';

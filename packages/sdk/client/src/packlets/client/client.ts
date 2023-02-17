@@ -5,14 +5,14 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { synchronized } from '@dxos/async';
+import { Concast, synchronized, ZenObservable } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { StatusResponse } from '@dxos/protocols/proto/dxos/client';
+import { Status } from '@dxos/protocols/proto/dxos/client/services';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
@@ -154,7 +154,7 @@ export class Client {
     }
 
     assert(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services.SystemService.initSession();
+    await this._services.services.SystemService.createSession();
 
     // TODO(wittjosiah): Promise.all?
     await this._halo.open();
@@ -184,11 +184,23 @@ export class Client {
   }
 
   /**
-   * Get system status.
+   * Observe the system status.
    */
-  async getStatus(): Promise<StatusResponse> {
-    assert(this._services.services.SystemService, 'SystemService is not available.');
-    return this._services.services?.SystemService.getStatus();
+  queryStatus(): ZenObservable<Status> {
+    return new Concast([
+      // TODO(wittjosiah): Should codec-protobuf streams be observables?
+      //   This would make it simpler to pipe into Concast.
+      new ZenObservable((observer) => {
+        if (!this._services.services.SystemService) {
+          observer.error(new Error('SystemService is not available.'));
+          return;
+        }
+
+        this._services.services?.SystemService.queryStatus().subscribe(({ status }) => {
+          observer.next(status);
+        });
+      })
+    ]);
   }
 
   /**
@@ -198,7 +210,7 @@ export class Client {
    */
   async resumeHostServices(): Promise<void> {
     assert(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services.SystemService.initSession();
+    await this._services.services.SystemService.createSession();
   }
 
   /**

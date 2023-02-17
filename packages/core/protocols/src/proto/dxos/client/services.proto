@@ -23,12 +23,30 @@ package dxos.client.services;
 // - Normalize records for performance (e.g., Space members separate from Space metadata).
 //
 
+enum Status {
+  ACTIVE = 0;
+  INACTIVE = 1;
+}
+
+message StatusResponse {
+  Status status = 1;
+}
+
 //
 // System
 //
 
 service SystemService {
+  /// Get the static config of the client.
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
+
+  /// Called at the start of the session. Service should block until it is fully initialized.
+  rpc CreateSession(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  /// Stream the status of the client.
+  rpc QueryStatus(google.protobuf.Empty) returns (stream StatusResponse);
+
+  /// Reset the client.
   rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -70,6 +88,7 @@ message RecoverProfileRequest {
 }
 
 service HaloService {
+  // TODO(wittjosiah): Profile -> Identity?
   rpc RecoverProfile(RecoverProfileRequest) returns (Identity);
   rpc UpdateProfile(Identity) returns (google.protobuf.Empty);
   rpc QueryProfile(google.protobuf.Empty) returns (stream Identity);

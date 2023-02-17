@@ -4,7 +4,6 @@
 
 import React, { ReactNode, useState, Context, createContext, useContext, useEffect, FunctionComponent } from 'react';
 
-import { asyncTimeout } from '@dxos/async';
 import { Client, Status } from '@dxos/client';
 import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
 import { Config } from '@dxos/config';
@@ -95,30 +94,25 @@ export const ClientProvider = ({
       return;
     }
 
-    const interval = setInterval(async () => {
-      try {
-        const response = await asyncTimeout(client.getStatus(), 500);
-        log('status', response);
-        // TODO(wittjosiah): Remove fallback once HALO is live with new status RPC.
-        setStatus(response.status ?? Status.ACTIVE);
-      } catch (err) {
-        log.error('heartbeat stalled');
+    const subscription = client.queryStatus().subscribe(
+      (status) => {
+        setStatus(status);
+      },
+      (err) => {
+        log.error(err);
         setStatus(undefined);
       }
-    }, 1_000);
+    );
 
-    return () => clearInterval(interval);
+    return () => subscription.unsubscribe();
   }, [client]);
 
   useEffect(() => {
     const done = async (client: Client) => {
       log('client ready', { client });
       await onInitialize?.(client);
-      const response = await client.getStatus();
-      log('status', response);
       setClient(client);
-      // TODO(wittjosiah): Remove fallback once HALO is live with new status RPC.
-      setStatus(response.status ?? Status.ACTIVE);
+      setStatus(Status.ACTIVE);
       printBanner(client);
     };
 
