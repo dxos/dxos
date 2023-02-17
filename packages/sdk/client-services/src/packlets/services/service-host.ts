@@ -52,7 +52,10 @@ export class ClientServicesHost implements ClientServicesProvider {
   private readonly _networkManager: NetworkManager;
   private readonly _storage: Storage;
 
-  private _serviceContext!: ServiceContext;
+  /**
+   * @internal
+   */
+  _serviceContext!: ServiceContext;
   private _open = false;
 
   constructor({

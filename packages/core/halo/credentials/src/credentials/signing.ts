@@ -10,7 +10,7 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 /**
  * @returns The input message to be signed for a given credential.
  */
-export const getSignaturePayload = (credential: Credential): Uint8Array => {
+export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
   const copy = {
     ...credential,
     proof: {
