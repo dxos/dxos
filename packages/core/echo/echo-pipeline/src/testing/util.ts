@@ -4,18 +4,15 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
+import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
-import {
-  DatabaseBackendProxy,
-  ItemManager
-} from '@dxos/echo-db';
-import { DataPipelineControllerImpl } from '../space';
 import { DatabaseBackendHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
+import { DataPipelineControllerImpl } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();

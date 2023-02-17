@@ -14,8 +14,7 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
-import { SnapshotManager } from '../dbhost';
-import { SnapshotStore } from '../dbhost';
+import { SnapshotManager, SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { DataPipelineControllerImpl } from '../space/data-pipeline-controller';

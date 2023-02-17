@@ -4,8 +4,8 @@
 
 import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
-import { SnapshotStore } from '@dxos/echo-pipeline';
 import {
+  SnapshotStore,
   DataPipelineControllerImpl,
   MetadataStore,
   SigningContext,

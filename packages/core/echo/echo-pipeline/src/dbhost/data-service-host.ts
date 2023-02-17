@@ -5,16 +5,13 @@
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { tagMutationsInBatch, ItemDemuxer, ItemManager } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
-
-import { tagMutationsInBatch } from '@dxos/echo-db';
-import { ItemDemuxer } from '@dxos/echo-db';
-import { ItemManager } from '@dxos/echo-db';
-import { log } from '@dxos/log';
 
 /**
  * Provides methods for DataService for a single space.

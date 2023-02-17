@@ -8,6 +8,7 @@ import { Event, scheduleTask, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { ItemManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -16,10 +17,9 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
-import { ItemManager } from '@dxos/echo-db';
+import { DatabaseBackendHost, SnapshotManager } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
-import { DatabaseBackendHost, SnapshotManager } from '../dbhost';
 
 export type DataPipelineControllerContext = {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;

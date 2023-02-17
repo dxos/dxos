@@ -5,12 +5,12 @@
 import expect from 'expect';
 
 import { DocumentModel, MutationBuilder } from '@dxos/document-model';
+import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { test } from '@dxos/test';
 
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
-import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
 
 const createDatabase = async () => {
   // prettier-ignore

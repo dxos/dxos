@@ -15,7 +15,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
-import { valueEncoding } from '../common'
+import { valueEncoding } from '../common';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {

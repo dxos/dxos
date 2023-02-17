@@ -5,11 +5,11 @@
 import expect from 'expect';
 
 import { DocumentModel } from '@dxos/document-model';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { describe, test } from '@dxos/test';
 
 import { ItemConstructionOptions, ItemManager } from './item-manager';
-import { PublicKey } from '@dxos/keys';
 
 describe('ItemManager', () => {
   describe('basic', () => {

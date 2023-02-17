@@ -4,11 +4,10 @@
 
 import expect from 'expect';
 
+import { todo } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
-import { ModelFactory } from '@dxos/model-factory';
 import { describe, test } from '@dxos/test';
 
-import { todo } from '@dxos/debug';
 import { Schema, TYPE_SCHEMA } from './schema';
 
 const SCHEMA = 'example:type/schema/organization';
@@ -25,7 +24,7 @@ const createTestSchema = async (database: any) => {
 
 describe.skip('Schema', () => {
   const setupDatabase = async () => {
-    const modelFactory = new ModelFactory().registerModel(DocumentModel);
+    // const modelFactory = new ModelFactory().registerModel(DocumentModel);
     // const backend = await createMemoryDatabase(modelFactory);
     // afterTest(() => backend.destroy());
     return todo();

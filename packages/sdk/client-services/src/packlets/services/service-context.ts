@@ -11,7 +11,7 @@ import {
   SpaceManager,
   SigningContext,
   DataServiceSubscriptions,
-  SnapshotStore,
+  SnapshotStore
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';

@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 export * from './data-service-host';
 export * from './database-backend';
 export * from './snapshot-manager';
