@@ -9,7 +9,7 @@ import { Document, DocumentBase, EchoSchemaType, TypeFilter } from '@dxos/echo-s
 import { PublicKey, useQuery } from '@dxos/react-client';
 import { Table, Searchbar, Selector, SelectorOption } from '@dxos/react-components';
 
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { schema } from '../../proto';
 
 // UX field types.
@@ -62,7 +62,7 @@ const types: ColumnType<any>[] = generateTypes(schema.types);
 const getType = (id: string): ColumnType<any> => types.find((type) => type.id === id)!;
 
 export const TableFrame = () => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const [type, setType] = useState<ColumnType<any>>(types[0]);
   const [text, setText] = useState<string>();
   const objects = useQuery(space, type.filter).filter(type.subFilter?.(text) ?? Boolean);

@@ -10,7 +10,7 @@ import { Grid, GridLayout, Item, Location, TileContentProps } from '@dxos/mosaic
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize } from '@dxos/react-components';
 
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { Note, NoteBoard, Location as LocationProto } from '../../proto';
 
 const getItemLocation = (board: NoteBoard, id: string): LocationProto | undefined =>
@@ -76,14 +76,14 @@ export const TileContent = withReactor(({ item, selected, onDelete }: TileConten
 export const NoteFrame = () => {
   const range = { x: 2, y: 3 };
 
-  const space = useSpace();
+  const { space } = useFrameState();
   const boards = useQuery(space, NoteBoard.filter());
   const [board, setBoard] = useState<NoteBoard>(boards[0]);
   useEffect(() => {
     if (!board) {
       setTimeout(async () => {
         const board = new NoteBoard();
-        await space.db.add(board);
+        await space?.db.add(board);
         setBoard(board);
       });
     }
@@ -127,7 +127,7 @@ export const NoteFrame = () => {
 
   const handleCreate = async (location: Location) => {
     const note = new Note({ title: '' });
-    await space.db.add(note);
+    await space?.db.add(note);
     setItemLocation(board, note.id, location);
     return note.id;
   };
@@ -135,7 +135,7 @@ export const NoteFrame = () => {
   const handleDelete = (item: Item) => {
     const note = notes.find((note) => item.id === note.id);
     if (note) {
-      void space.db.remove(note);
+      void space?.db.remove(note);
     }
   };
 

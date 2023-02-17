@@ -12,10 +12,9 @@ import {
   EditableListProps,
   useEditableListKeyboardInteractions
 } from '@dxos/react-appkit';
-import { useQuery, useReactorContext, withReactor } from '@dxos/react-client';
+import { useCurrentSpace, useQuery, useReactorContext, withReactor } from '@dxos/react-client';
 import { randomString } from '@dxos/react-components';
 
-import { useSpace } from '../../hooks';
 import { Task } from '../../proto';
 
 // TODO(burdon): Generic header with create.
@@ -35,7 +34,7 @@ interface UnorderedTaskListProps extends Omit<TaskListProps, 'tasks' | 'unordere
 }
 
 export const UnorderedTaskList: FC<UnorderedTaskListProps> = ({ filter, ...props }) => {
-  const space = useSpace(); // TODO(burdon): Factor out.
+  const [space] = useCurrentSpace(); // TODO(burdon): Factor out.
   const tasks = useQuery(space, Task.filter(filter));
   return <TaskList unordered tasks={tasks} {...props} />;
 };

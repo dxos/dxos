@@ -9,18 +9,22 @@ import { useQuery } from '@dxos/react-client';
 import { Searchbar } from '@dxos/react-components';
 
 import { ProjectCard } from '../../containers';
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 import { Project, tags } from '../../proto';
 import { Kanban, KanbanColumnDef } from './Kanban';
 
 const ProjectContent: FC<{ object: EchoObject }> = ({ object }) => {
-  const space = useSpace();
+  const { space } = useFrameState();
+  if (!space) {
+    return null;
+  }
+
   return <ProjectCard space={space} project={object as Project} />;
 };
 
 // TODO(burdon): Generalize type and field.
 export const KanbanFrame: FC = () => {
-  const space = useSpace();
+  const { space } = useFrameState();
 
   const [text, setText] = useState<string>();
   const handleSearch = (text: string) => {
@@ -44,7 +48,7 @@ export const KanbanFrame: FC = () => {
 
   const handleCreate = async (column: KanbanColumnDef) => {
     const project = new Project({ tag: column.id });
-    await space.db.add(project);
+    await space?.db.add(project);
   };
 
   // TODO(burdon): Searchbar Input slots.

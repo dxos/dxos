@@ -8,9 +8,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { CancellableInvitationObservable } from '@dxos/client';
 import { DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appkit';
-import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
+import { useClient, useCurrentSpace, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
 import { Heading, Button, useTranslation, getSize } from '@dxos/react-components';
 
+import { defaultFrameId } from '../hooks';
+import { createSpacePath } from '../router';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from halo-app.
@@ -23,6 +25,7 @@ const IdentityPage = () => {
   const identity = useIdentity();
   const devices = useDevices();
   const invitations = useHaloInvitations();
+  const [space] = useCurrentSpace();
 
   const handleCreateInvitation = useCallback(() => {
     client.halo.createInvitation();
@@ -43,7 +46,11 @@ const IdentityPage = () => {
               <Plus className={getSize(5)} />
               {t('add device label')}
             </Button>
-            <Button variant='primary' onClick={() => navigate('/')} className='flex gap-1 items-center'>
+            <Button
+              variant='primary'
+              onClick={() => navigate(createSpacePath(space?.key, defaultFrameId))}
+              className='flex gap-1 items-center'
+            >
               <span>{t('back to app label')}</span>
               <XCircle className={getSize(5)} />
             </Button>

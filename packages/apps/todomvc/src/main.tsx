@@ -7,7 +7,21 @@ import '@dxos/client/shell.css';
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-import { App } from './App';
+import { Root, Todos } from './components';
 
-createRoot(document.getElementById('root')!).render(<App />);
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Root />,
+    children: [
+      { path: '/', element: <Todos /> },
+      { path: ':spaceKey', element: <Todos /> },
+      { path: ':spaceKey/:state', element: <Todos /> }
+    ]
+  }
+]);
+
+const root = createRoot(document.getElementById('root')!);
+root.render(<RouterProvider router={router} />);

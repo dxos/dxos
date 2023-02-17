@@ -11,7 +11,7 @@ import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from
 import { useQuery, withReactor } from '@dxos/react-client';
 import { Button, getSize, mx } from '@dxos/react-components';
 
-import { useSpace } from '../../hooks';
+import { useFrameState } from '../../hooks';
 
 const gridSize = 300;
 
@@ -31,11 +31,11 @@ const createChess = (game: Game) => {
 export const ChessFrame: FC = () => {
   const [pieces, setPieces] = useState(0);
   const [game, setGame] = useState<Game | undefined>();
-  const space = useSpace();
+  const { space } = useFrameState();
 
   const handleCreate = async () => {
     const game = new Game();
-    await space.db.add(game);
+    await space?.db.add(game);
     handleSelect(game);
   };
 
@@ -130,7 +130,7 @@ const Grid: FC<{ pieces: ChessPieces; onSelect: (game: Game) => void; onCreate: 
   onSelect,
   onCreate
 }) => {
-  const space = useSpace();
+  const { space } = useFrameState();
   const games = useQuery(space, Game.filter());
 
   const Placeholder: FC<{ onClick?: () => void }> = ({ onClick }) => (
