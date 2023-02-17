@@ -18,7 +18,7 @@ export const useDevDataGenerator = () => {
 
   useEffect(() => {
     if (!init && dev && !config.get('runtime.client.storage.persistent') && spaces[0]) {
-      void new Generator(spaces[0].experimental.db).generate();
+      void new Generator(spaces[0].db).generate();
       init = true;
     }
   }, [dev, config, spaces]);
