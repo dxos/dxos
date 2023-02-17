@@ -36,7 +36,7 @@ const CurrentSpaceView = ({
 }: { onShowAll: () => void } & SpacePanelProps) => {
   const { t } = useTranslation('os');
   const invitations = useSpaceInvitations(space?.key);
-  const spaceTitle = space?.getProperty('title');
+  const name = space?.properties.name;
 
   if (!space) {
     return null;
@@ -50,8 +50,8 @@ const CurrentSpaceView = ({
             <CaretLeft className={getSize(4)} weight='bold' />
           </Button>
         </Tooltip>
-        <h2 id={titleId} className={mx('grow font-system-medium', !spaceTitle && 'font-mono')}>
-          {spaceTitle ?? space.key.truncate()}
+        <h2 id={titleId} className={mx('grow font-system-medium', !name && 'font-mono')}>
+          {name ?? space.key.truncate()}
         </h2>
       </div>
       <div role='region' className={mx(defaultSurface, 'rounded-be-md p-2')}>

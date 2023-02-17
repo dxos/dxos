@@ -22,7 +22,7 @@ export const SpaceListItem = forwardRef(
             variant: 'circle',
             size: 9,
             fallbackValue: space.key.toHex(),
-            label: <p className='text-sm truncate'>{space.getProperty('title') ?? humanize(space.key)}</p>,
+            label: <p className='text-sm truncate'>{space.properties.name ?? humanize(space.key)}</p>,
             slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } }
           }}
         />

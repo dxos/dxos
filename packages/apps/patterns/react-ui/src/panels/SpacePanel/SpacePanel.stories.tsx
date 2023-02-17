@@ -29,7 +29,7 @@ const SpaceDecorator = (Story: StoryFn, { args }: StoryContext) => {
 
       await client.halo.createProfile();
       const space = await client.echo.createSpace();
-      await space?.setProperty('title', 'Q3 2022 Planning');
+      space.properties.name = 'Q3 2022 Planning';
       setSpace(space);
     });
 
