@@ -16,10 +16,10 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
-import { DatabaseBackendHost, ItemManager } from '@dxos/echo-db';
-import { SnapshotManager } from '@dxos/echo-db';
+import { ItemManager } from '@dxos/echo-db';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
+import { DatabaseBackendHost, SnapshotManager } from '../dbhost';
 
 export type DataPipelineControllerContext = {
   openPipeline: (start: Timeframe) => Promise<Pipeline>;

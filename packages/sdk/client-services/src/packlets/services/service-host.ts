@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
-import { DataServiceImpl } from '@dxos/echo-db';
+import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';

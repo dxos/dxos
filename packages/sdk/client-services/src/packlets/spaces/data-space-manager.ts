@@ -26,7 +26,7 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
-import { DataServiceSubscriptions, SnapshotManager, SnapshotStore } from '@dxos/echo-db';
+import { DataServiceSubscriptions, SnapshotManager, SnapshotStore } from '@dxos/echo-pipeline';
 
 const DATA_PIPELINE_READY_TIMEOUT = 3_000;
 

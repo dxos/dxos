@@ -6,13 +6,13 @@ import { trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
-import { SnapshotManager } from '@dxos/echo-db';
 import {
   DataPipelineControllerImpl,
   MetadataStore,
   Space,
   SigningContext,
-  createMappedFeedWriter
+  createMappedFeedWriter,
+  SnapshotManager
 } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';

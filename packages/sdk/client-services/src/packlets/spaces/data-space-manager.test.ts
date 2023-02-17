@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { DocumentModel } from '@dxos/document-model';
-import { AuthStatus } from '@dxos/echo-pipeline';
+import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -14,7 +14,6 @@ import { test, describe } from '@dxos/test';
 
 import { createSigningContext, syncItems, TestBuilder } from '../testing';
 import { DataSpaceManager } from './data-space-manager';
-import { DataServiceSubscriptions } from '@dxos/echo-db';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {

@@ -11,14 +11,11 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 import {
-  DatabaseBackendHost,
   DatabaseBackendProxy,
-  DataServiceHost,
-  DataServiceImpl,
-  DataServiceSubscriptions,
   ItemManager
 } from '@dxos/echo-db';
 import { DataPipelineControllerImpl } from '../space';
+import { DatabaseBackendHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<DataMessage>();

@@ -6,7 +6,7 @@ import { DocumentModel } from '@dxos/document-model';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { WebsocketSignalManager, MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -14,8 +14,8 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { Presence } from '@dxos/teleport-extension-presence';
 import { ComplexMap } from '@dxos/util';
 
-import { SnapshotStore } from '@dxos/echo-db';
-import { SnapshotManager } from '@dxos/echo-db';
+import { SnapshotManager } from '../dbhost';
+import { SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { DataPipelineControllerImpl } from '../space/data-pipeline-controller';

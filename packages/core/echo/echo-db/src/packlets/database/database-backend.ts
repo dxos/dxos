@@ -14,85 +14,10 @@ import { ModelFactory, MutationWriteReceipt } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
-import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { tagMutationsInBatch } from './builder';
-import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
-import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
-
-/**
- * Generic interface to represent a backend for the database.
- * Interfaces with ItemManager to maintain the collection of entities up-to-date.
- * Provides a way to query for the write stream to make mutations.
- * Creates data snapshots.
- * @deprecated
- */
-export interface DatabaseBackend {
-  isReadOnly: boolean;
-
-  open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>;
-  close(): Promise<void>;
-
-  /**
-   * @deprecated
-   */
-  getWriteStream(): FeedWriter<DataMessage> | undefined;
-  createSnapshot(): EchoSnapshot;
-  createDataServiceHost(): DataServiceHost;
-}
-
-/**
- * Database backend that operates on two streams: read and write.
- * Mutations are read from the incoming streams and applied to the ItemManager via ItemDemuxer.
- * Write operations result in mutations being written to the outgoing stream.
- */
-export class DatabaseBackendHost implements DatabaseBackend {
-  private _echoProcessor!: EchoProcessor;
-  private _itemManager!: ItemManager;
-  private _itemDemuxer!: ItemDemuxer;
-
-  constructor(
-    private readonly _outboundStream: FeedWriter<DataMessage> | undefined,
-    private readonly _snapshot?: EchoSnapshot,
-    private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
-  ) {}
-
-  get isReadOnly(): boolean {
-    return !!this._outboundStream;
-  }
-
-  get echoProcessor() {
-    return this._echoProcessor;
-  }
-
-  async open(itemManager: ItemManager, modelFactory: ModelFactory) {
-    this._itemManager = itemManager;
-    this._itemManager._debugLabel = 'host';
-
-    this._itemDemuxer = new ItemDemuxer(itemManager, modelFactory, this._options);
-    this._echoProcessor = this._itemDemuxer.open();
-
-    if (this._snapshot) {
-      await this._itemDemuxer.restoreFromSnapshot(this._snapshot);
-    }
-  }
-
-  async close() {}
-
-  getWriteStream(): FeedWriter<DataMessage> | undefined {
-    return this._outboundStream;
-  }
-
-  createSnapshot() {
-    return this._itemDemuxer.createSnapshot();
-  }
-
-  createDataServiceHost() {
-    return new DataServiceHost(this._itemManager, this._itemDemuxer, this._outboundStream ?? undefined);
-  }
-}
 
 export type MutateResult = {
   objectsCreated: Item<any>[];
@@ -106,7 +31,7 @@ const FLUSH_TIMEOUT = 5_000;
  * Database backend that is backed by the DataService instance.
  * Uses DataMirror to populate entities in ItemManager.
  */
-export class DatabaseBackendProxy implements DatabaseBackend {
+export class DatabaseBackendProxy {
   private _entities?: Stream<EchoEvent>;
 
   private readonly _ctx = new Context();
@@ -284,13 +209,5 @@ export class DatabaseBackendProxy implements DatabaseBackend {
         };
       }
     };
-  }
-
-  createSnapshot(): EchoSnapshot {
-    throw new Error('Method not supported.');
-  }
-
-  createDataServiceHost(): DataServiceHost {
-    throw new Error('Method not supported.');
   }
 }
