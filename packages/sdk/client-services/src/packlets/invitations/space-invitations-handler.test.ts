@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { asyncChain, latch, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { testLocalDatabase } from '@dxos/echo-db/testing';
+import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';

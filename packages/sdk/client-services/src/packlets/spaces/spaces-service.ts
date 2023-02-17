@@ -5,7 +5,7 @@
 import { scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
-import { SpaceManager, SpaceNotFoundError } from '@dxos/echo-db';
+import { SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
 import {
   QueryCredentialsRequest,
   QueryMembersRequest,
