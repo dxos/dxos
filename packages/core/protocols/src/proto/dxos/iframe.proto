@@ -47,6 +47,7 @@ enum ShellLayout {
   CURRENT_SPACE = 2;
   SPACE_LIST = 3;
   JOIN_SPACE = 4;
+  DEVICES_LIST = 5;
 }
 
 message LayoutRequest {

@@ -8,6 +8,7 @@ import { ShellRuntime } from '@dxos/client';
 import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { useClient, useSpace, useSpaces } from '@dxos/react-client';
 
+import { DevicesDialog } from '../DevicesDialog';
 import { JoinDialog } from '../JoinDialog';
 import { SpaceDialog } from '../SpaceDialog';
 
@@ -48,7 +49,8 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           space={space}
           initialState={layout === ShellLayout.SPACE_LIST ? 'space list' : 'current space'}
           createInvitationUrl={(invitationCode) => `${origin}?spaceInvitationCode=${invitationCode}`}
-          onClickJoinSpace={() => runtime.setLayout(ShellLayout.JOIN_SPACE)}
+          onClickJoinSpace={() => runtime.setLayout(ShellLayout.JOIN_SPACE, { spaceKey: space?.key })}
+          onClickMember={() => runtime.setLayout(ShellLayout.DEVICES_LIST, { spaceKey: space?.key })}
           onDone={async (space) => {
             // TODO(wittjosiah): If space is newly created the app won't yet know about it.
             //   This is a bug that needs to be fixed when upgrading the space service.
@@ -67,6 +69,17 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
             runtime.setLayout(ShellLayout.DEFAULT);
           }}
           onExit={async () => {
+            await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: runtime.spaceKey });
+            runtime.setLayout(ShellLayout.DEFAULT);
+          }}
+        />
+      );
+
+    case ShellLayout.DEVICES_LIST:
+      return (
+        <DevicesDialog
+          createInvitationUrl={(invitationCode) => `${origin}?haloInvitationCode=${invitationCode}`}
+          onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: runtime.spaceKey });
             runtime.setLayout(ShellLayout.DEFAULT);
           }}

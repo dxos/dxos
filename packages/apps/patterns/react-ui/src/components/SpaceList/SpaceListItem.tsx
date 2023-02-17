@@ -9,11 +9,11 @@ import { Avatar, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
 export const SpaceListItem = forwardRef(
-  ({ space, onSelect }: { space: Space; onSelect?: () => void }, ref: ForwardedRef<HTMLLIElement>) => {
+  ({ space, onClick }: { space: Space; onClick?: () => void }, ref: ForwardedRef<HTMLLIElement>) => {
     return (
       <li
-        className={mx('flex gap-2 items-center', onSelect && 'cursor-pointer')}
-        onClick={() => onSelect?.()}
+        className={mx('flex gap-2 items-center', onClick && 'cursor-pointer')}
+        onClick={() => onClick?.()}
         ref={ref}
         data-testid='space-list-item'
       >
