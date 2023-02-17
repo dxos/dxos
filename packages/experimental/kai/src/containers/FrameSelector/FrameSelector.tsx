@@ -8,7 +8,8 @@ import { Link, useParams } from 'react-router-dom';
 
 import { getSize, mx } from '@dxos/react-components';
 
-import { useFrames, createSpacePath, Section, useFrameState } from '../../hooks';
+import { useFrames, useFrameState } from '../../hooks';
+import { createSectionPath, createSpacePath, Section } from '../../router';
 
 // TODO(burdon): Floating buttons since main content isn't uniform for tabs.
 const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; compact: boolean }> = ({
@@ -50,7 +51,7 @@ export const FrameSelector: FC = () => {
                 selected={id === currentFrame}
                 label={displayName ?? ''}
                 Icon={Icon}
-                link={createSpacePath(space!.key, id)}
+                link={createSpacePath(space?.key, id)}
                 compact={activeFrames.length > maxTabs}
               />
             ))}
@@ -61,7 +62,7 @@ export const FrameSelector: FC = () => {
             selected={section === Section.REGISTRY}
             label='Registry'
             Icon={Globe}
-            link={Section.REGISTRY}
+            link={createSectionPath(space?.key, Section.REGISTRY)}
             compact={activeFrames.length > maxTabs}
           />
         </div>

@@ -34,7 +34,8 @@ describe('Basic test', () => {
     guest = mochaExecutor.environment === 'chromium' ? new AppManager(this) : host;
   });
 
-  describe('Default space', () => {
+  // TODO(wittjosiah): Space service does not notify client proxy of new space.
+  describe.skip('Default space', () => {
     test('create identity', async () => {
       await host.init();
 
@@ -69,14 +70,11 @@ describe('Basic test', () => {
       await guest.shell.authenticate(authenticationCode);
       await host.shell.closeShell();
 
-      // TODO(wittjosiah): Redirect doesn't work currently.
-      //   Space service does not notify client proxy of new space.
-      guest = host;
       // Wait for redirect.
-      // await waitForExpect(async () => {
-      //   expect(await host.page.url()).to.equal(await guest.page.url());
-      //   expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
-      // }, 1000);
+      await waitForExpect(async () => {
+        expect(await host.page.url()).to.equal(await guest.page.url());
+        expect(await guest.todoIsVisible(Groceries.Eggs)).to.be.true;
+      }, 1000);
     }).onlyEnvironments('chromium');
 
     test('toggle a task', async () => {

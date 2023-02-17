@@ -41,7 +41,7 @@
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^6.4.0",
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {

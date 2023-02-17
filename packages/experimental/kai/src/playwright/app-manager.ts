@@ -5,7 +5,8 @@
 import type { Context as MochaContext } from 'mocha';
 import type { ConsoleMessage, Page } from 'playwright';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
+import { ShellManager } from '@dxos/halo-app';
 import { setupPage } from '@dxos/test';
 
 // TODO(wittjosiah): Get this from executor.
@@ -13,6 +14,7 @@ const BASE_URL = 'http://localhost:4200';
 
 export class AppManager {
   page!: Page;
+  shell!: ShellManager;
 
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
@@ -27,11 +29,12 @@ export class AppManager {
 
     const { page } = await setupPage(this.mochaContext, {
       url: BASE_URL,
-      waitFor: (page) => page.isVisible(':has-text("KAI")'),
+      waitFor: (page) => page.getByTestId('create-identity').isVisible(),
       bridgeLogs: true
     });
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
+    this.shell = new ShellManager(this.page, false);
     this._initialized = true;
   }
 
@@ -48,32 +51,7 @@ export class AppManager {
 
   // Actions
 
-  async createIdentity(name: string) {
-    await this.page.click('data-testid=create-identity-button');
-    await this.page.keyboard.type(name);
-    await this.page.keyboard.press('Enter');
-    await sleep(500); // Allow time for redirect.
-  }
-
-  async shareSpace() {
-    this._invitationCode = new Trigger<string>();
-    await this.page.click('data-testid=space-settings');
-    await this.page.click('data-testid=create-invitation-button');
-    return await this._invitationCode.wait();
-  }
-
-  async getAuthenticationCode() {
-    this._authenticationCode = new Trigger<string>();
-    return await this._authenticationCode.wait();
-  }
-
-  async joinSpace(invitationCode: string) {
-    await this.page.goto(`${BASE_URL}/#/space/join?invitation=${invitationCode}`);
-  }
-
-  async authenticate(authenticationCode: string) {
-    await this.page.keyboard.type(authenticationCode);
-  }
+  // TODO
 
   private async _onConsoleMessage(message: ConsoleMessage) {
     try {

@@ -23,7 +23,7 @@ import { useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { useSpaces } from '@dxos/react-client';
+import { useCurrentSpace } from '@dxos/react-client';
 import { useModules } from '@dxos/react-metagraph';
 
 import {
@@ -266,10 +266,8 @@ export type FrameState = {
 // TODO(burdon): Combine frame hooks?
 // TODO(burdon): Better abstraction for app state hierarchy?
 export const useFrameState = (): FrameState => {
-  const { spaceKey, frame, objectId } = useParams();
-
-  const spaces = useSpaces();
-  const space = spaces.find((space) => space.key.truncate() === spaceKey);
+  const [space] = useCurrentSpace();
+  const { frame, objectId } = useParams();
 
   // TODO(burdon): Active is unsound.
   const { frames, active: activeFrames } = useFrames();

@@ -6,9 +6,11 @@ import { FrameCorners, Robot } from 'phosphor-react';
 import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useCurrentSpace } from '@dxos/react-client';
 import { getSize, mx, Searchbar, Button } from '@dxos/react-components';
 
-import { createSpacePath, useBots, useFrames, useSpace, BotDef, FrameDef, useAppReducer } from '../../hooks';
+import { useBots, useFrames, BotDef, FrameDef, useAppReducer } from '../../hooks';
+import { createSpacePath } from '../../router';
 
 // TODO(burdon): Move to DMG?
 enum ExtensionType {
@@ -57,7 +59,7 @@ const Tile: FC<{
 };
 
 export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }) => {
-  const space = useSpace();
+  const [space] = useCurrentSpace();
   const navigate = useNavigate();
   const [type, setType] = useState<ExtensionType>(ExtensionType.FRAME);
 
@@ -71,7 +73,7 @@ export const FrameRegistry: FC<{ slots?: FrameRegistrySlots }> = ({ slots = {} }
         const active = !activeFrames.find((frameId) => frameId === id);
         setActiveFrame(id, active);
         if (active) {
-          navigate(createSpacePath(space.key, id));
+          navigate(createSpacePath(space?.key, id));
         }
         break;
       }

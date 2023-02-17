@@ -80,7 +80,7 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
 
 export type SpaceListProps = {
   spaces: Space[];
-  selected: PublicKey;
+  selected?: PublicKey;
   onSelect: (spaceKey: PublicKey) => void;
   onShare: (spaceKey: PublicKey) => void;
 };
@@ -115,7 +115,7 @@ export const SpaceList = ({ spaces, selected, onSelect, onShare }: SpaceListProp
         <SpaceItem
           key={space.key.toHex()}
           space={space}
-          selected={space.key.equals(selected)}
+          selected={selected && space.key.equals(selected)}
           onAction={(action) => handleAction(space.key, action)}
         >
           {Tile && <Tile />}

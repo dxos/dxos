@@ -10,12 +10,12 @@ export class ShellManager {
   private _invitationCode = new Trigger<string>();
   private _authenticationCode = new Trigger<string>();
 
-  constructor(readonly page: Page) {
+  constructor(readonly page: Page, readonly inIFrame = true) {
     this.page.on('console', (message) => this._onConsoleMessage(message));
   }
 
   get shell() {
-    return this.page.frameLocator('data-testid=dxos-shell');
+    return this.inIFrame ? this.page.frameLocator('data-testid=dxos-shell') : this.page;
   }
 
   // Getters

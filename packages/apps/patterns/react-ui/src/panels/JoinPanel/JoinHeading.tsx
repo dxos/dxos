@@ -28,7 +28,7 @@ export const JoinHeading = forwardRef(
     const { t } = useTranslation('os');
 
     const space = useSpace(invitation?.invitation?.spaceKey);
-    const name = mode === 'halo-only' ? '(Unknown identity)' : space?.properties.name ?? '(Space not available)';
+    const name = mode === 'halo-only' ? '(Unknown identity)' : space?.properties.name ?? '(Space name not available)';
     const nameId = useId(mode === 'halo-only' ? 'identityDisplayName' : 'spaceDisplayName');
 
     const invitationKey =
