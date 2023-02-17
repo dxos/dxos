@@ -4,7 +4,7 @@
 
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseBackendProxy } from '@dxos/echo-db';
-import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-db/testing';
+import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { TextModel } from '@dxos/text-model';

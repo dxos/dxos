@@ -10,10 +10,10 @@ import {
   DataPipelineControllerImpl,
   MetadataStore,
   Space,
-  SnapshotManager,
   SigningContext,
-  createMappedFeedWriter
-} from '@dxos/echo-db';
+  createMappedFeedWriter,
+  SnapshotManager
+} from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';

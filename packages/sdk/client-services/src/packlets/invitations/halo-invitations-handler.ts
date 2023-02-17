@@ -85,8 +85,8 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     const complete = new Trigger<PublicKey>();
 
     // Called for every connecting peer.
-    const createExtension = (): HostHaloInvitationExtension => {
-      const hostInvitationExtension = new HostHaloInvitationExtension({
+    const createExtension = () =>
+      new HostHaloInvitationExtension({
         requestAdmission: async () => {
           log('responding with admission offer', {
             host: identity.deviceKey
@@ -152,8 +152,6 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
           });
         }
       });
-      return hostInvitationExtension;
-    };
 
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;

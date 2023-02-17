@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
-import { DataServiceImpl } from '@dxos/echo-db';
+import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -52,7 +52,10 @@ export class ClientServicesHost implements ClientServicesProvider {
   private readonly _networkManager: NetworkManager;
   private readonly _storage: Storage;
 
-  private _serviceContext!: ServiceContext;
+  /**
+   * @internal
+   */
+  _serviceContext!: ServiceContext;
   private _open = false;
 
   constructor({
