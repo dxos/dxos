@@ -17,18 +17,24 @@ Having established an [identity](./identity), a space can be created:
 import { Client } from '@dxos/client';
 
 const client = new Client();
-
-const space = await client.echo.createSpace();
+(async () => {
+  await client.initialize();
+  // ensure an identity exists:
+  if (!client.halo.profile) await client.halo.createProfile();
+  // create a space:
+  const space = await client.echo.createSpace();
+})();
 ```
 
 ## Listing spaces
-
-```ts file=./snippets/query-spaces.ts#L9-
+Obtain a list of [Space](/api/@dxos/client/interfaces/Space) objects:
+```ts file=./snippets/query-spaces.ts#L5-
 // get a list of all spaces
 const { value: spaces } = client.echo.querySpaces();
 ```
 
 ## Creating an invitation
+See [ECHO Spaces](../platform/#spaces) for a description of the way peers join spaces.
 
 ```ts file=./snippets/invite-to-space.ts#L5-
 import { Client, InvitationEncoder } from '@dxos/client';
@@ -53,6 +59,7 @@ const authCode = invitation?.authenticationCode!;
 ```
 
 ## Accepting invitations
+See [ECHO Spaces](../platform/#spaces) for a description of the way peers join spaces.
 
 ```ts file=./snippets/join-space.ts#L5-
 import { Client, InvitationEncoder } from '@dxos/client';
