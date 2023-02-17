@@ -57,7 +57,7 @@ You should be able to open two windows pointed at the dev server and see reactiv
 *   User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
 *   Everything works offline.
 *   Real-time collaboration is possible when online.
-*   There are **no servers** that store any data
+*   There are **no servers** that store any data.
 *   There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
 *   There is no need for an API tier. The app has everything it needs on the client.
 
@@ -74,8 +74,8 @@ You should be able to open two windows pointed at the dev server and see reactiv
 2.  Create and initialize a [Client](typescript) or use a [`<ClientProvider />`](react) in `react`.
 3.  Establish a HALO [identity](platform/halo).
 4.  Create or join a [space](platform/#spaces).
-5.  Find objects with [`useQuery`](react/queries).
-6.  Mutate objects as you would plain JavaScript objects.
+5.  Find objects with [`query`](typescript/queries) or [`useQuery`](react/queries) in `react`.
+6.  Mutate the objects as you would plain JavaScript objects, and they will replicate with other peers for you. 🚀
 
 ```tsx file=./react/snippets/create-client-react.tsx#L5-
 import React from 'react';
@@ -111,11 +111,9 @@ createRoot(document.body).render(<App />);
 To see an example without `react` see the [TypeScript Guide](./typescript/)
 :::
 
-Now you can manipulate [objects](./glossary#object) in the space directly and they will replicate with all members of the space in a peer-to-peer fashion.
-
 ### Mutations
 
-Any objects coming from `useQuery` are **tracked**. Manipulate them directly:
+Any objects coming from [`query`](typescript/queries) or [`useQuery`](react/queries) are **tracked**. Manipulate them directly:
 
 ```ts
 const objects = useQuery(space, {});
@@ -144,10 +142,12 @@ This will begin tracking further changes on the object and replicating them to o
 
 ### Recap
 
-*   Reading objects is as simple as `space.query()` in TypeScript or `useQuery()` in `react`.
+*   A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
+*   Reading objects is as simple as [`space.query()`](typescript/queries) in TypeScript or [`useQuery()`](react/queries) in `react`.
 *   The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
 ### Next steps
+Continue reading below about how to deploy and host the app, or jump to:
 
 *   ECHO with [React](./react)
 *   ECHO with [TypeScript](./typescript)
@@ -170,33 +170,26 @@ sudo kube start # start the service in the background
 kube status # verify it's running
 ```
 
-Once KUBE is running, you're ready to deploy to it. 🚀
+Once KUBE is running, applications can be deployed to it. 🚀
 
-Learn more about what [services](kube/README#kube-overview) KUBE runs.
+Learn more about what [services](platform/kube) KUBE provides.
 
-## Deploying your app to a KUBE
+## Deploying apps to KUBE
 
-To deploy to your local KUBE:
+To deploy to KUBE, first ensure a [KUBE](#starting-a-kube) is running as above.
 
-*   Ensure a [KUBE](#starting-a-kube) is running
-*   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
-*   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
-
-If you're using a DXOS application template (from `dx app create` or `npm init @dxos/*`):
-
+If using a [DXOS application template](#create-an-app):
 ```bash
 pnpm run deploy
 ```
+Otherwise, to deploy any static application:
+*   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
+*   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
+*   Run `dx app publish`
 
-To deploy any static app with a `dx.yml` file:
+The app will be accessible in a browser at `http://<app-name>.localhost` where `<app-name>` is found in `dx.yml`. 🚀
 
-```bash
-dx app publish
-```
-
-Your app will now be accessible in a browser at `http://<app-name>.localhost` where `<app-name>` is found in `dx.yml`. 🚀
-
-If you started with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost).
+For example, and app created with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost) by default.
 
 ::: warning Caution
 Your app will now always be available on your machine until KUBE or the specific app is stopped.
@@ -204,13 +197,13 @@ Your app will now always be available on your machine until KUBE or the specific
 
 ### Tunneling
 
-You can also ask KUBE to expose the app to the world wide web so you can share the URL with friends. Simply set `tunnel: true` in `dx.yml` and redeploy. Read more about KUBE [`tunneling`](./kube/tunneling).
+KUBE can expose apps to the world wide web and provide URLs that can be used to reach them from anywhere on the internet. 
+
+Simply set `tunnel: true` in `dx.yml` and redeploy. Read more about KUBE [`tunneling`](./kube/tunneling).
 
 ## Next steps
 
-In this guide we built a local-first, collaborative app using the ECHO database and HALO identity. We deployed it to a KUBE on the local network and exposed the app to the external web with tunneling.
-
-We hope you'll find the technology useful, and welcome your contributions. Happy building! 🚀
+This guide demonstrated how to create and deploy a local-first DXOS application.
 
 Using DXOS:
 
@@ -218,8 +211,11 @@ Using DXOS:
 *   ECHO with [TypeScript](./typescript/)
 *   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
-Get in touch and contribute:
 
+We hope you'll find the technology useful, and we welcome your ideas and contributions:
+
+*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
 *   DXOS [repository on GitHub](https:/github.com/dxos/dxos)
 *   File a bug or idea in [Issues](https:/github.com/dxos/dxos/issues)
-*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+
+Happy building! 🚀

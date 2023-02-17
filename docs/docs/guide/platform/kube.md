@@ -22,4 +22,4 @@ KUBE instances form and propagate the peer-to-peer [MESH](../glossary#mesh) netw
 ### Next steps
 
 *   KUBE [Installation](../kube)
-*   [Build an application](../getting-started) and [deploy to KUBE](../getting-started#deploying-your-app-to-a-kube)
+*   [Build an application](../getting-started) and [deploy to KUBE](../getting-started#deploying-apps-to-kube)

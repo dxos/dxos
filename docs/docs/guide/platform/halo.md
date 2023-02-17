@@ -35,7 +35,7 @@ Open <https://halo.dxos.org> and you will be guided through the options.
 
 ## Next steps
 
-How to establish HALO identity in code:
+How to read the HALO identity in code:
 
 *   Use the [`useIdetity` hook in react](../react/identity)
 *   Use the [`client.halo.profile` field in TypeScript](../typescript/identity)

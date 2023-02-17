@@ -52,7 +52,7 @@ Units of data are referred to as `objects` (like documents or rows in other data
 
 ## Glossary
 
-See the [glossary](glossary) for definitions of other terms you'll find in this guide.
+See the [glossary](../glossary) for definitions of other terms you'll find in this guide.
 
 ## How to use ECHO
 
@@ -60,9 +60,9 @@ See the [glossary](glossary) for definitions of other terms you'll find in this 
 *   Create a [Client](../typescript#configuration) (or a [ClientProvider](../react#cofiguration) in react)
 *   Set up an identity with [HALO](./halo)
 *   Create or Join a [Space](#spaces)
-*   [Query items](../typescript/queries) (in [react](../react/queries))
-*   [Create items](../typescript/mutations#creating-items) (in [react](../react/mutations))
-*   [Mutate items](../typescript/mutations#mutating-data) (in [react](../react/mutations))
+*   [Query objects](../typescript/queries) (in [react](../react/queries))
+*   [Create objects](../typescript/mutations#creating-objects) (in [react](../react/mutations))
+*   [Mutate objects](../typescript/mutations) (in [react](../react/mutations))
 
 ## Local Vault Topology
 
