@@ -208,6 +208,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-pipeline/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-schema/package.json",
           "jsonpath": "$.version"
         },

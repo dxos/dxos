@@ -1,0 +1,68 @@
+{
+  "sourceRoot": "packages/core/echo/echo-pipeline/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/echo/echo-pipeline/src/index.ts",
+        "outputPath": "packages/core/echo/echo-pipeline/dist/types",
+        "tsConfig": "packages/core/echo/echo-pipeline/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-pipeline/src/index.ts",
+          "packages/core/echo/echo-pipeline/src/testing/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/echo/echo-pipeline/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/echo/echo-pipeline/src/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/core/echo/echo-pipeline",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/core/echo/echo-pipeline",
+        "resultsPath": "test-results/packages/core/echo/echo-pipeline",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "testPatterns": [
+          "packages/core/echo/echo-pipeline/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/echo/echo-pipeline/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}
