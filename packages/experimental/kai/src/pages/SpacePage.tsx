@@ -23,6 +23,7 @@ const Toolbar = () => {
     <div
       className={mx(
         'flex flex-col-reverse bg-appbar-toolbar',
+        theme.classes?.toolbar,
         theme.panel === 'flat' && 'border-b',
         'fixed inline-end-0 block-start-appbar bs-toolbar transition-[inset-inline-start] duration-200 ease-in-out z-[1]',
         isOpen ? 'inline-start-0 lg:inline-start-sidebar' : 'inline-start-0'

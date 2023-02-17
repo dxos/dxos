@@ -229,10 +229,10 @@ export const defaultFrames = [
   'dxos.module.frame.stack',
   'dxos.module.frame.table',
   'dxos.module.frame.task',
-  'dxos.module.frame.document'
+  'dxos.module.frame.document',
+  'dxos.module.frame.kanban'
   // 'dxos.module.frame.chess',
   // 'dxos.module.frame.file',
-  // 'dxos.module.frame.kanban'
   // 'dxos.module.frame.explorer'
   // 'dxos.module.frame.notes'
 ];

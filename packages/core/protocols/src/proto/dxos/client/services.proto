@@ -110,7 +110,6 @@ service ContactsService {
 // TODO(burdon): Move to dxos.echo? Or rename dxos.echo => dxos.database?
 //
 
-// TODO(burdon): Preferences (in database).
 message Space {
   dxos.keys.PublicKey space_key = 1;
 }

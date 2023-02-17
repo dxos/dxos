@@ -39,11 +39,11 @@ export const OrganizationListItem: FC<{ organization: Organization }> = withReac
           onChange={({ target: { value } }) => (organization.name = value)}
           slots={{
             root: { className: 'm-0' },
-            input: { spellCheck: false, className: 'p-1 mbs-1' },
+            input: { spellCheck: false, className: 'p-2' },
             label: { className: 'sr-only' }
           }}
         />
-        <div className='mis-1'>
+        <div className='mis-2'>
           {organization.address && <p className='text-sm text-gray-800'>{address(organization.address)}</p>}
 
           {/* Contacts */}
