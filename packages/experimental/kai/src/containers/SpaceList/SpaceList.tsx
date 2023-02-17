@@ -53,7 +53,7 @@ const SpaceItem = withReactor(({ space, selected, children, onAction }: SpaceIte
 
           {/* TODO(burdon): Use <Input />. */}
           <input
-            className='w-full bg-transparent px-2 mx-2'
+            className='w-full px-1 mx-1 bg-transparent'
             value={space.properties.name ?? humanize(space.key)}
             onChange={(event) => {
               space.properties.name = event.target.value;

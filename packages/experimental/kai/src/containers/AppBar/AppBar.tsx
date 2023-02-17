@@ -35,8 +35,8 @@ export const AppBar = withReactor(() => {
       </div>
 
       {space && (
-        <div className='flex overflow-hidden mx-6'>
-          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-xl'>
+        <div className='flex overflow-hidden mx-4'>
+          <h2 className='overflow-hidden whitespace-nowrap text-ellipsis text-2xl'>
             {space.properties.name ?? humanize(space.key)}
           </h2>
         </div>
