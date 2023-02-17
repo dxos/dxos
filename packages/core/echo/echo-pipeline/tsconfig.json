@@ -1,7 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../echo-db copy/dist/types",
+    "outDir": "dist/types",
     "types": [
       "@dxos/test",
       "@dxos/typings"
@@ -9,9 +9,7 @@
   },
   "exclude": [],
   "include": [
-    "../echo-db copy/src/index.ts",
-    "../echo-db copy/src/packlets",
-    "../echo-db copy/src/packlets/api"
+    "src"
   ],
   "references": [
     {
