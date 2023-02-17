@@ -12,17 +12,24 @@ import { Client } from '@dxos/client';
 
 const client = new Client();
 
-// decide on a type for your items
-const type = 'yourdomain:type/some-type-identifier';
-
-// get a list of all spaces
-const { value: spaces } = client.echo.querySpaces();
-
-const space = spaces[0];
-
-// query items by selecting them
-const selection = space.experimental.db.query({ /* ... */ });
+async () => {
+  await client.initialize();
+  // get a list of all spaces
+  const { value: spaces } = client.echo.querySpaces();
+  // grab a space
+  const space = spaces[0];
+  // get all items
+  const allObjects = space.experimental.db.query();
+  // get items that match a filter
+  const tasks = space.experimental.db.query({ type: 'task' });
+};
 ```
 
 ## Typed Queries
-It's possible to receive strongly typed results from a `query`.
+
+It's possible to receive strongly typed results from a `query`. Pass a type argument to `query<T>` which descends from [`Document`](/api/@dxos/client/classes/Document):
+```ts file=./snippets/read-items-typed.ts#L5-
+
+```
+
+DXOS provides a tool for generating entity classes that work with the `query` 

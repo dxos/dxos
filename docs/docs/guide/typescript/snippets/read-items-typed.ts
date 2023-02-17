@@ -2,9 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { Client, Document } from '@dxos/client';
 
 const client = new Client();
+
+class Task extends Document {
+  public declare type: 'task';
+  public declare isCompleted: boolean;
+}
 
 async () => {
   await client.initialize();
@@ -15,9 +20,5 @@ async () => {
   // get all items
   const allObjects = space.experimental.db.query();
   // get items that match a filter
-  const tasks = space.experimental.db.query({ type: 'task' });
-  // get items that match a predicate
-  const finishedTasks = space.experimental.db.query(
-    (doc) => doc.type == 'task' && doc.isCompleted
-  );
+  const tasks = space.experimental.db.query<Task>({ type: 'task' });
 };
