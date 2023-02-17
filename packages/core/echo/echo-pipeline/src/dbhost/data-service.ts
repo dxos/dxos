@@ -17,7 +17,6 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
-import { SpaceNotFoundError } from '../errors';
 import { DataServiceHost } from './data-service-host';
 
 // TODO(burdon): Clear on close.
@@ -53,7 +52,7 @@ export class DataServiceImpl implements DataService {
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
     assert(request.spaceKey);
     const host =
-      this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
+      this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
     return host.subscribe();
   }
 
@@ -61,7 +60,7 @@ export class DataServiceImpl implements DataService {
     assert(request.spaceKey);
     assert(request.batch);
     const host =
-      this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
+      this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
     return host.write(request);
   }
 }

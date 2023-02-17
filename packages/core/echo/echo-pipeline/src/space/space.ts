@@ -29,17 +29,6 @@ export type SpaceParams = {
 };
 
 /**
- * Common interface with client.
- */
-// TODO(dmaretskyi): Move to client? Not referenced here.
-export interface ISpace {
-  key: PublicKey;
-  isOpen: boolean;
-  open(): Promise<void>;
-  close(): Promise<void>;
-}
-
-/**
  * Spaces are globally addressable databases with access control.
  */
 // TODO(dmaretskyi): Extract database stuff.
