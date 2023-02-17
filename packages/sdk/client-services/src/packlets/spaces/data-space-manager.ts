@@ -8,15 +8,12 @@ import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import {
-  DataServiceSubscriptions,
   MetadataStore,
   SigningContext,
-  SnapshotStore,
   Space,
   spaceGenesis,
   SpaceManager,
-  SnapshotManager
-} from '@dxos/echo-db';
+} from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -29,6 +26,7 @@ import { ComplexMap, deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
+import { DataServiceSubscriptions, SnapshotManager, SnapshotStore } from '@dxos/echo-db';
 
 const DATA_PIPELINE_READY_TIMEOUT = 3_000;
 

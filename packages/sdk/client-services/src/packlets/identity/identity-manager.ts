@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
-import { MetadataStore, SpaceManager, SwarmIdentity } from '@dxos/echo-db';
+import { MetadataStore, SpaceManager, SwarmIdentity } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';

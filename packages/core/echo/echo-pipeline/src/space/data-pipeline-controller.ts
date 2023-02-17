@@ -15,7 +15,7 @@ import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
-import { createMappedFeedWriter } from '@dxos/echo-db';
+import { createMappedFeedWriter } from '../common';
 import { DatabaseBackendHost, ItemManager } from '@dxos/echo-db';
 import { SnapshotManager } from '@dxos/echo-db';
 import { MetadataStore } from '../metadata';

@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-db';
+import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';

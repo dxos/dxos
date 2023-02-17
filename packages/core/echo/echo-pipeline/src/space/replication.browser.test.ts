@@ -14,7 +14,7 @@ import { createStorage } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
-import { valueEncoding } from '@dxos/echo-db';
+import { valueEncoding } from '../common';
 
 describe('replication', () => {
   test('replicates a feed through a direct stream', async () => {

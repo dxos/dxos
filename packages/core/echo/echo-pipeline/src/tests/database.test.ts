@@ -10,7 +10,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { test } from '@dxos/test';
 
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
-import { createModelMutation, encodeModelMutation, genesisMutation } from './builder';
+import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
 
 const createDatabase = async () => {
   // prettier-ignore

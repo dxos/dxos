@@ -13,7 +13,7 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
+import { DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -32,7 +32,7 @@ interface Internal {
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
-export interface Space extends ISpace {
+export interface Space {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;

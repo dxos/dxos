@@ -5,14 +5,13 @@
 import { Trigger } from '@dxos/async';
 import { CredentialConsumer, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { DataServiceSubscriptions, SnapshotStore } from '@dxos/echo-db';
 import {
   valueEncoding,
-  DataServiceSubscriptions,
   MetadataStore,
   SpaceManager,
   SigningContext,
-  SnapshotStore
-} from '@dxos/echo-db';
+} from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';

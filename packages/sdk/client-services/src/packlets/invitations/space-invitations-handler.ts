@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { scheduleTask, sleep, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createAdmissionCredentials, generatePasscode, getCredentialAssertion } from '@dxos/credentials';
-import { SigningContext } from '@dxos/echo-db';
+import { SigningContext } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';

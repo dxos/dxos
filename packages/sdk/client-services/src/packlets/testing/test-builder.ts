@@ -4,15 +4,15 @@
 
 import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
+import { SnapshotStore } from '@dxos/echo-db';
 import {
   DataPipelineControllerImpl,
   MetadataStore,
   SigningContext,
-  SnapshotStore,
   SpaceManager,
   valueEncoding
-} from '@dxos/echo-db';
-import { testLocalDatabase } from '@dxos/echo-db/testing';
+} from '@dxos/echo-pipeline';
+import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';

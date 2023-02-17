@@ -9,9 +9,7 @@
   },
   "exclude": [],
   "include": [
-    "src/index.ts",
-    "src/packlets",
-    "src/packlets/api"
+    "src"
   ],
   "references": [
     {
