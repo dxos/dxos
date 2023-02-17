@@ -6,20 +6,16 @@ import { Client, DocumentModel } from '@dxos/client';
 
 const client = new Client();
 
-// decide on a type for your items
-const type = 'yourdomain:type/some-type-identifier';
-
-// get a list of all spaces
-const { value: spaces } = client.echo.querySpaces();
-
-// create a regular DocumentModel item
-const item = await spaces[0].database.createItem({
-  type,
-  model: DocumentModel
-});
-
-// set a property value
-item.model.set('someKey', 'someValue');
-
-// query items
-const items = spaces[0].database.select({ type });
+(async () => {
+  await client.initialize();
+  if (!client.halo.profile) await client.halo.createProfile()
+  // get a list of all spaces
+  const { value: spaces } = client.echo.querySpaces();
+  // grab a space
+  const space = spaces[0];
+  // grab an object
+  const result = space.experimental.db.query({ type: 'task' });
+  const object = result.objects[0];
+  // mutate the object directly
+  object.isCompleted = true;
+})()

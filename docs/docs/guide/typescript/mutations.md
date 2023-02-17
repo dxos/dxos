@@ -29,3 +29,20 @@ item.model.set('someKey', 'someValue');
 // query items
 const items = spaces[0].database.select({ type });
 ```
+
+## Creating objects
+To insert an object into an ECHO space, simply construct it and call the `save` method to begin tracking it.
+
+### Untyped
+Without strong types, the generic `Document` class can be used:
+```tsx file=./snippets/create-objects.ts#L5-
+
+```
+
+### Typed
+If strong types are desired, an instance of a specific `Document` descendant should be used:
+```tsx file=./snippets/create-objects-typed.ts#L5-
+
+```
+
+## Deleting objects
