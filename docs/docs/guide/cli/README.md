@@ -40,19 +40,18 @@ Learn more about the [application templates](./app-templates.md) available.
 
 ## Deploying applications
 
-Once you have a [KUBE](../kube) running, you can deploy your applications to it:
+Static applications can be deployed to [KUBE](../kube/) with the `dx` CLI:
 
 ```bash
 dx app publish
 ```
 
-From within an application generated from a DXOS template, the npm script `deploy` is available:
+::: tip Tip
+If using a DXOS application template, the npm script `deploy` uses a locally installed, version locked `dx` CLI to do the deploy:
 
 ```bash
 pnpm run deploy
 ```
-
-:::tip
 Take care not to omit the term `run` as `pnpm` will assume `deploy` means something else otherwise
 :::
 

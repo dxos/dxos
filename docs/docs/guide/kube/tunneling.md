@@ -6,7 +6,7 @@ order: 9
 
 Any application on the KUBE can be exposed to the internet through automatic tunneling.
 
-Change property `modules.tunnel` to `true` in `dx.yml` and redeploy your application.
+Change property `modules.tunnel` to `true` in `dx.yml` and redeploy the application.
 
 ```yml{16} file=./snippets/app-tunneling.yml
 version: 1
@@ -33,12 +33,12 @@ Redeploy
 dx app publish
 ```
 
-The command will print the public URL of your application if tunneling is enabled. 🚀
+The command will print the public URL of the application if tunneling is enabled. 🚀
 
 To configure live tunnels on the KUBE directly, use the [`dx` CLI](../cli/tunneling).
 
 ::: info Tip
-If using a DXOS [application template](../cli/app-templates) this is available as a script `pnpm run deploy`.
+If using a DXOS [application template](../cli/app-templates) the deploy command is available as a script `pnpm run deploy`.
 :::
 
 ::: warning Caution

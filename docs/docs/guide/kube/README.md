@@ -15,20 +15,24 @@ To install KUBE:
 sudo bash -c "$(curl -fsSL https://install-kube.dxos.org)"
 ```
 
-Alternatively, you might want to install latest `dev` version of the kube
+::: details Installing from the latest dev branch
+The `dev` release of KUBE receives new features ahead of the production release. To install:
 
 ```bash file=../snippets/install-kube-dev.sh
 sudo ch=dev bash -c "$(curl -fsSL https://install-kube.dxos.org)"
 ```
+:::
 
-After that, `kube` becomes available:
+After installation completes, the `kube` executable becomes available:
 
 ```bash
 sudo kube start
 ```
 
-Once it's running it will report status
+Once running, KUBE reports status:
 
 ```bash
 kube status
 ```
+
+KUBE will [automatically stay up to date](./auto-update).
