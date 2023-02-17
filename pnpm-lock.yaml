@@ -1533,10 +1533,44 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/document-model': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/timeframe': workspace:*
+      '@dxos/typings': workspace:*
+      '@dxos/util': workspace:*
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/context': link:../../../common/context
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/document-model': link:../document-model
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/model-factory': link:../model-factory
+      '@dxos/node-std': link:../../../common/node-std
+      '@dxos/protocols': link:../../protocols
+      '@dxos/timeframe': link:../../../common/timeframe
+      '@dxos/util': link:../../../common/util
+    devDependencies:
+      '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/typings': link:../../../common/typings
+
+  packages/core/echo/echo-pipeline:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
+      '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
@@ -1569,6 +1603,7 @@ importers:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
+      '@dxos/echo-db': link:../echo-db
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/hypercore': link:../../../common/hypercore
       '@dxos/keyring': link:../../halo/keyring
@@ -1602,6 +1637,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/echo-pipeline': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/model-factory': workspace:*
@@ -1626,6 +1662,7 @@ importers:
       '@dxos/util': link:../../../common/util
       protobufjs: 6.11.3
     devDependencies:
+      '@dxos/echo-pipeline': link:../echo-pipeline
       wait-for-expect: 3.0.2
 
   packages/core/echo/echo-typegen:
@@ -3486,6 +3523,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/echo-pipeline': workspace:*
       '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keyring': workspace:*
@@ -3516,6 +3554,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/document-model': link:../../core/echo/document-model
       '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/echo-pipeline': link:../../core/echo/echo-pipeline
       '@dxos/errors': link:../errors
       '@dxos/feed-store': link:../../common/feed-store
       '@dxos/keyring': link:../../core/halo/keyring

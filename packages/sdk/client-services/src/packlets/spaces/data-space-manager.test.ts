@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { DocumentModel } from '@dxos/document-model';
-import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-db';
+import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';

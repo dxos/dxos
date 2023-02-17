@@ -8,15 +8,15 @@ import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import {
-  DataServiceSubscriptions,
   MetadataStore,
   SigningContext,
-  SnapshotStore,
   Space,
   spaceGenesis,
   SpaceManager,
-  SnapshotManager
-} from '@dxos/echo-db';
+  DataServiceSubscriptions,
+  SnapshotManager,
+  SnapshotStore
+} from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';

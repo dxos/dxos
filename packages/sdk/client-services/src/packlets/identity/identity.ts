@@ -15,7 +15,7 @@ import {
 } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { Space } from '@dxos/echo-db';
+import { Space } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

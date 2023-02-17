@@ -3,7 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { Space } from '@dxos/echo-db';
+import { Space } from '@dxos/echo-pipeline';
 import { SubscribeToSpacesRequest, SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
