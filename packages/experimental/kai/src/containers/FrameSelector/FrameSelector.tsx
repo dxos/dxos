@@ -31,7 +31,6 @@ const Tab: FC<{ selected: boolean; label?: string; Icon: FC<any>; link: string; 
 /**
  * Frame tabs.
  */
-// TODO(burdon): Factor out Caret.
 export const FrameSelector: FC = () => {
   const { space } = useFrameState();
   const { frames, active: activeFrames } = useFrames();
@@ -39,7 +38,7 @@ export const FrameSelector: FC = () => {
   const maxTabs = 8; // TODO(burdon): Media query?
 
   return (
-    <div className='flex flex-col-reverse w-full bg-appbar-toolbar'>
+    <div className='flex flex-col-reverse w-full'>
       <div className='flex justify-between'>
         <div className='flex items-center'>
           {Array.from(activeFrames)

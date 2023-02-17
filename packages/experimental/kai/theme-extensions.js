@@ -47,6 +47,11 @@ module.exports = {
     // https://m2.material.io/design/color/the-color-system.html#color-theme-creation
     // https://m3.material.io/styles/color/dynamic-color/overview
     colors: {
+      appbar: {
+        header: colors.sky[500],
+        toolbar: colors.sky[300]
+      },
+
       paper: {
         bg: 'white',
         text: 'black',
@@ -66,11 +71,6 @@ module.exports = {
           bg: neutral[300],
           text: neutral[400]
         }
-      },
-
-      appbar: {
-        header: primary[500],
-        toolbar: primary[300]
       },
 
       sidebar: {
