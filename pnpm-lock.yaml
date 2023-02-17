@@ -948,6 +948,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/lodash.merge': ^4.6.6
+      compress-json: ^2.1.2
       debug: ^4.3.3
       lodash.merge: ^4.6.2
       protobufjs: ^6.9.0
@@ -956,6 +957,7 @@ importers:
       '@dxos/context': link:../context
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
+      compress-json: 2.1.2
       debug: 4.3.4
       lodash.merge: 4.6.2
       protobufjs: 6.11.3
@@ -16916,6 +16918,10 @@ packages:
       normalize-path: 3.0.0
       readable-stream: 2.3.7
     dev: true
+
+  /compress-json/2.1.2:
+    resolution: {integrity: sha512-91247RD8bKQXzRmXUS4zGT250mhw86+J9X8w2L2SGtRE7g0CvzjOETFaFmsDdaXPWv8T7L9iiM7kdcnnH3BH7w==}
+    dev: false
 
   /compressible/2.0.18:
     resolution: {integrity: sha512-AF3r7P5dWxL8MxyITRMlORQNaOA2IkAFaTr4k7BUumjPtRpGDTZpl0Pb1XCO6JeDCBdp126Cgs9sMxqSjgYyRg==}

@@ -12,3 +12,4 @@ export * from './schema';
 export * from './service';
 export * from './stream';
 export * from './substitutions';
+export * from './compression';
