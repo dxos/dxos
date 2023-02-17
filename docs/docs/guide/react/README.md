@@ -24,11 +24,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
-  useClient,
   useIdentity,
   useOrCreateFirstSpace,
   useQuery,
-  id
 } from '@dxos/react-client';
 
 const Component = () => {
@@ -39,7 +37,7 @@ const Component = () => {
   // grab everything in the space
   const objects = useQuery(space, {});
   // show the id of the first object returned
-  return <>{objects?.[0]?.[id]}</>;
+  return <>{objects?.[0]?.id}</>;
 };
 
 const App = () => (
@@ -65,7 +63,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
-import { GenericFallback } from '@dxos/appkit';
+import { GenericFallback } from '@dxos/react-appkit';
 
 const client = new Client();
 

@@ -98,8 +98,7 @@ import {
   useSpaces,
   useSpace,
   useOrCreateFirstSpace,
-  useQuery,
-  id
+  useQuery
 } from '@dxos/react-client';
 
 export const App = () => {

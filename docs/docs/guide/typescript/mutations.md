@@ -25,6 +25,7 @@ const client = new Client();
   object.isCompleted = true;
 })()
 ```
+
 The mutation will queue up inside the `Client` and begin propagating to listening peers on the next tick.
 
 ## Creating objects

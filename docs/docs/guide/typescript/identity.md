@@ -6,7 +6,7 @@ order: 1
 
 This section describes how to obtain [HALO identity](../platform/halo) in TypeScript.
 
-To create or join a [space](./spaces) in ECHO, the user must first [establish their identity](../platform/halo#establishing-user-identity) in the [HALO](../platform/halo) app.
+To create or join a [space](./spaces) in ECHO, the user must first establish a HALO identity.
 
 ## Obtaining identity
 

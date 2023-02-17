@@ -82,11 +82,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
-  useClient,
   useIdentity,
   useOrCreateFirstSpace,
   useQuery,
-  id
 } from '@dxos/react-client';
 
 const Component = () => {
@@ -97,7 +95,7 @@ const Component = () => {
   // grab everything in the space
   const objects = useQuery(space, {});
   // show the id of the first object returned
-  return <>{objects?.[0]?.[id]}</>;
+  return <>{objects?.[0]?.id}</>;
 };
 
 const App = () => (
