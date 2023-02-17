@@ -65,7 +65,7 @@ export interface GenerateSchemaOptions {
   outDir: string;
   packageRoot: string;
   exportPath?: string;
-  compress?: boolean
+  compress?: boolean;
 }
 
 /**
@@ -95,7 +95,13 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
   }
 
   const source = printer.printFile(
-    createIndexSourceFile(options.substitutions?.module, options.schema, options.outDir, Array.from(namespaces.keys()), options.compress ?? false)
+    createIndexSourceFile(
+      options.substitutions?.module,
+      options.schema,
+      options.outDir,
+      Array.from(namespaces.keys()),
+      options.compress ?? false
+    )
   );
   writeFileSync(join(options.outDir, 'index.ts'), source);
 

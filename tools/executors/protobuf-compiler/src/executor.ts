@@ -22,7 +22,7 @@ export interface GenerateExecutorOptions {
    * @deprecated use package.json exports instead.
    */
   exportPath?: string;
-  compress: boolean
+  compress: boolean;
 }
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
