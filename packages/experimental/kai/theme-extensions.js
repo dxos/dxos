@@ -47,29 +47,30 @@ module.exports = {
     // https://m2.material.io/design/color/the-color-system.html#color-theme-creation
     // https://m3.material.io/styles/color/dynamic-color/overview
     colors: {
-      paper: {
-        bg: 'white',
-        1: {
-          bg: neutral[50],
-          text: 'black'
-        },
-        2: {
-          bg: neutral[100],
-          text: 'black'
-        },
-        3: {
-          bg: neutral[200],
-          text: 'black'
-        },
-        4: {
-          bg: neutral[300],
-          text: 'black'
-        }
-      },
-
       appbar: {
         header: primary[500],
         toolbar: primary[300]
+      },
+
+      paper: {
+        bg: 'white',
+        text: 'black',
+        1: {
+          bg: neutral[50],
+          text: neutral[700]
+        },
+        2: {
+          bg: neutral[100],
+          text: neutral[600]
+        },
+        3: {
+          bg: neutral[200],
+          text: neutral[500]
+        },
+        4: {
+          bg: neutral[300],
+          text: neutral[400]
+        }
       },
 
       sidebar: {

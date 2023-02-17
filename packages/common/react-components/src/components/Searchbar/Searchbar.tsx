@@ -8,18 +8,30 @@ import React, { FC, useState } from 'react';
 import { mx } from '../../util';
 import { Input } from '../Input';
 
+export type SearchbarSlots = {
+  input: {
+    className?: string;
+    variant?: string;
+  };
+};
+
+export type SearchbarProps = {
+  disabled?: boolean;
+  slots?: SearchbarSlots;
+  onSearch?: (text: string) => void;
+};
+
 /**
  * Search bar.
  */
-export const Searchbar: FC<{
-  disabled?: boolean;
-  onSearch?: (text: string) => void;
-}> = ({ disabled, onSearch }) => {
+export const Searchbar: FC<SearchbarProps> = ({ disabled, slots, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);
     onSearch?.(text);
   };
+
+  console.log(slots);
 
   return (
     <div className='flex flex-1 flex-col'>
@@ -35,8 +47,9 @@ export const Searchbar: FC<{
             },
             label: { className: 'sr-only' },
             input: {
-              className: 'flex flex-1',
-              spellCheck: false
+              className: mx('flex flex-1', slots?.input?.className),
+              spellCheck: false,
+              ...slots?.input
             }
           }}
         />

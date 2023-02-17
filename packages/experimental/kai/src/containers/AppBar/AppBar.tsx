@@ -22,7 +22,8 @@ export const AppBar = withReactor(() => {
       className={mx(
         'flex justify-between items-center px-4',
         'fixed inline-start-0 inline-end-0 block-start-0 z-[1]',
-        'bs-appbar bg-appbar-header',
+        'bs-appbar',
+        theme.classes?.header,
         theme.panel === 'flat' && 'border-b'
       )}
     >
