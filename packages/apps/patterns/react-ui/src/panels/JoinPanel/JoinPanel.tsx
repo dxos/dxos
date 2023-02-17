@@ -22,12 +22,14 @@ import {
 } from './view-states';
 
 export const JoinPanel = ({
+  mode,
   initialInvitationCode,
   titleId: propsTitleId,
   exitActionParent,
   onExit,
   doneActionParent,
-  onDone
+  onDone,
+  preventExit
 }: JoinPanelProps) => {
   const client = useClient();
   const internalTitleId = useId('joinPanel__title');
@@ -120,7 +122,7 @@ export const JoinPanel = ({
         nextState[action.from === 'halo' ? 'haloViewState' : 'spaceViewState'] = 'invitation input';
         break;
     }
-    log.debug('[join panel reducer]', { action, nextState });
+    log('[join panel reducer]', { action, nextState });
     return nextState;
   };
 
@@ -146,7 +148,7 @@ export const JoinPanel = ({
         : joinState.activeView === 'halo invitation acceptor'
         ? `${joinState.activeView}; ${joinState.haloViewState}`
         : joinState.activeView;
-    log.debug('[autofocus value]', { attrValue });
+    log('[autofocus value]', { attrValue });
     const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus="${attrValue}"]`);
     if ($nextAutofocus) {
       $nextAutofocus.focus();
@@ -177,7 +179,9 @@ export const JoinPanel = ({
 
   return (
     <>
-      <JoinHeading {...{ titleId, invitation: joinState.spaceInvitation, onExit, exitActionParent }} />
+      <JoinHeading
+        {...{ mode, titleId, invitation: joinState.spaceInvitation, onExit, exitActionParent, preventExit }}
+      />
       <div role='none' className='is-full overflow-hidden'>
         <div role='none' className='flex is-[1300%]' aria-live='polite'>
           <IdentitySelector
@@ -245,9 +249,12 @@ export const JoinPanel = ({
           />
           <IdentityAdded
             {...{
+              mode,
               dispatch,
               addedIdentity: joinState.selectedIdentity,
-              active: joinState.activeView === 'identity added'
+              active: joinState.activeView === 'identity added',
+              doneActionParent,
+              onDone
             }}
           />
           <InvitationInput

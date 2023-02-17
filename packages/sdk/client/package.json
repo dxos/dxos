@@ -17,7 +17,8 @@
     "testing.d.ts",
     "testing.js",
     "dist",
-    "src"
+    "src",
+    "shell.css"
   ],
   "scripts": {
     "prebuild": "dxtype src/packlets/proto/schema.proto src/packlets/proto/gen/schema.ts"

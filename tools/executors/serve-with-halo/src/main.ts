@@ -15,7 +15,7 @@ export interface ServeWithHaloExecutorOptions {
 export default async function* (
   options: ServeWithHaloExecutorOptions,
   context: ExecutorContext
-): AsyncGenerator<{ success: boolean }> {
+): AsyncGenerator<{ success: boolean; baseUrl?: string; haloBaseUrl?: string }> {
   const { serveProject: project = context.projectName, serveTarget: target, watch } = options;
   assert(project, 'serveProject is required');
   logger.info(`Serving ${target} with HALO...`);
@@ -34,7 +34,7 @@ export default async function* (
     yield haloResult.value;
   }
 
-  yield projectResult.value;
+  yield { ...projectResult.value, haloBaseUrl: haloResult.value.baseUrl };
 
   // This Promise intentionally never resolves, leaving the process running
   await new Promise<{ success: boolean }>(() => {});

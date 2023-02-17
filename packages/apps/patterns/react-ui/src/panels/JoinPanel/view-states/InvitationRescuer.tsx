@@ -35,7 +35,7 @@ const InvitationActions = ({
         <>
           <div role='none' className='grow' />
           <div className='flex gap-2'>
-            <Button disabled className='grow flex items-center gap-2 pli-2 order-2'>
+            <Button disabled className='grow flex items-center gap-2 pli-2 order-2' data-testid='next'>
               <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
               <span className='grow'>{t('next label')}</span>
               <CaretRight weight='bold' className={getSize(4)} />
@@ -45,6 +45,7 @@ const InvitationActions = ({
               className='flex items-center gap-2 pis-2 pie-4'
               onClick={cancel}
               data-autofocus={`${invitationType} invitation acceptor; invitation rescuer`}
+              data-testid='invitation-rescuer-cancel'
             >
               <CaretLeft weight='bold' className={getSize(4)} />
               <span>{t('cancel label')}</span>
@@ -62,6 +63,7 @@ const InvitationActions = ({
           className='grow flex items-center gap-2 pli-2'
           onClick={() => dispatch({ type: 'reset invitation', from: invitationType })}
           data-autofocus={`${invitationType} invitation acceptor; invitation rescuer`}
+          data-testid='invitation-rescuer-reset'
         >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
           <span className='grow'>{t('reset label')}</span>
@@ -82,6 +84,7 @@ export const InvitationRescuer = ({ invitationType, ...viewStateProps }: Invitat
           disabled={disabled}
           className='grow flex items-center gap-2 pli-2'
           data-autofocus='space invitation acceptor; invitation rescuer'
+          data-testid='invitation-rescuer-connect'
         >
           <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
           <span className='grow'>{t('connect label')}</span>
