@@ -51,6 +51,9 @@ message EchoObject {
 
   string object_id = 1;
 
+  /// Metadata for the genesis mutation.
+  optional MutationMeta meta = 2;
+
   /// Present in mutations creating new items and snapshots. 
   optional Genesis genesis = 10;
 

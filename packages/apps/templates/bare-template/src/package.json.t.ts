@@ -18,7 +18,7 @@ export namespace Features {
     dependencies: {
       '@dxos/react-client': depVersion,
       react: '^18.2.0',
-      'react-dom': '^18.2.0',
+      'react-dom': '^18.2.0'
       // 'react-router-dom': '^6.3.0'
     },
     devDependencies: {
@@ -52,15 +52,14 @@ export namespace Features {
     devDependencies: {
       '@babel/core': '^7.18.13',
       '@storybook/addon-actions': '^6.5.15',
-      '@storybook/addon-essentials': '7.0.0-beta.19',
-      '@storybook/addon-interactions': '7.0.0-beta.19',
-      '@storybook/addon-links': '7.0.0-beta.19',
-      '@storybook/builder-vite': '7.0.0-beta.19',
-      '@storybook/react': '7.0.0-beta.19',
+      '@storybook/addon-essentials': '7.0.0-beta.48',
+      '@storybook/addon-interactions': '7.0.0-beta.48',
+      '@storybook/addon-links': '7.0.0-beta.48',
+      '@storybook/builder-vite': '7.0.0-beta.48',
+      '@storybook/react': '7.0.0-beta.48',
       '@storybook/mdx2-csf': '^0.0.3',
       '@storybook/testing-library': '^0.0.13',
       'require-from-string': '^2.0.2',
-      'storybook-dark-mode': '^1.1.2',
       webpack: '^5.74.0'
     }
   });

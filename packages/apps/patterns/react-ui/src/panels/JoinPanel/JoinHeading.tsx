@@ -22,7 +22,7 @@ export const JoinHeading = forwardRef(
     const { t } = useTranslation('os');
 
     const space = useSpace(invitation?.invitation?.spaceKey);
-    const spaceTitle = space?.getProperty('title') ?? '(Space title not available)';
+    const spaceTitle = space?.properties.name ?? '(Space not available)';
 
     const nameId = useId('spaceDisplayName');
 

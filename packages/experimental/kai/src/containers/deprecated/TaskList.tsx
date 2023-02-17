@@ -5,7 +5,6 @@
 import React, { ComponentPropsWithoutRef, FC, KeyboardEvent, useState } from 'react';
 
 import { Space } from '@dxos/client';
-import { id } from '@dxos/echo-schema';
 import {
   EditableList,
   EditableListItem,
@@ -48,14 +47,14 @@ export const TaskList: FC<TaskListProps> = withReactor(
     const handleCreateTask = async () => {
       if (newTaskTitle.length) {
         const task = new Task({ title: newTaskTitle ?? '' });
-        await space.experimental.db.save(task);
+        await space.db.add(task);
         setNewTaskTitle('');
         onCreate?.(task);
       }
     };
 
     const handleDeleteTask = async (task: Task) => {
-      await space.experimental.db.delete(task);
+      await space.db.remove(task);
       onDelete?.(task);
     };
 
@@ -88,7 +87,7 @@ export const TaskList: FC<TaskListProps> = withReactor(
         variant={unordered ? 'unordered' : 'ordered-draggable'}
         id={listId}
         labelId='omitted'
-        itemIdOrder={tasks.map((task) => task[id])}
+        itemIdOrder={tasks.map((task) => task.id)}
         nextItemTitle={newTaskTitle}
         slots={{
           root: hostAttrs as ComponentPropsWithoutRef<'div'>,
@@ -99,7 +98,7 @@ export const TaskList: FC<TaskListProps> = withReactor(
         onClickAdd={handleCreateTask}
       >
         {tasks.map((task) => (
-          <TaskItem key={task[id]} task={task} onDelete={handleDeleteTask} slots={itemSlots} />
+          <TaskItem key={task.id} task={task} onDelete={handleDeleteTask} slots={itemSlots} />
         ))}
       </EditableList>
     );
@@ -121,7 +120,7 @@ export const TaskItem: FC<{
 
     return (
       <EditableListItem
-        id={task[id]}
+        id={task.id}
         completed={task.completed}
         title={task.title}
         slots={slots}

@@ -6,7 +6,6 @@ import { User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-import { id } from '@dxos/echo-schema';
 import { useQuery, withReactor } from '@dxos/react-client';
 import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, Input, mx } from '@dxos/react-components';
 
@@ -16,9 +15,9 @@ export const ContactList: FC<{ space: Space }> = ({ space }) => {
   const contacts: Contact[] = useQuery(space, Contact.filter());
 
   return (
-    <List labelId='todo' slots={{ root: { className: 'p-2' } }}>
+    <List labelId='todo' slots={{ root: { className: 'is-full' } }}>
       {contacts.map((contact) => (
-        <ContactListItem key={contact[id]} contact={contact} />
+        <ContactListItem key={contact.id} contact={contact} />
       ))}
     </List>
   );
@@ -28,7 +27,7 @@ export const ContactListItem: FC<{ contact: Contact }> = withReactor(({ contact 
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
-    <ListItem slots={{ root: { className: 'mbe-1' } }}>
+    <ListItem slots={{ root: { className: 'mbe-1 is-full' } }}>
       <ListItemEndcap>
         <User className={mx(getSize(5), 'mlb-2.5')} />
       </ListItemEndcap>
@@ -45,9 +44,9 @@ export const ContactListItem: FC<{ contact: Contact }> = withReactor(({ contact 
           }}
         />
         <div role='none' className='pis-1'>
-          {contact.username && <div className='flex text-sm text-secondary-text'>{contact.username}</div>}
-          {contact.email && <div className='flex text-sm text-secondary-text'>{contact.email}</div>}
-          {contact.address && <div className='flex text-sm text-secondary-text'>{address(contact.address)}</div>}
+          {contact.username && <p className='text-sm text-secondary-text truncate'>{contact.username}</p>}
+          {contact.email && <p className='text-sm text-secondary-text truncate'>{contact.email}</p>}
+          {contact.address && <p className='text-sm text-secondary-text truncate'>{address(contact.address)}</p>}
         </div>
       </ListItemHeading>
     </ListItem>

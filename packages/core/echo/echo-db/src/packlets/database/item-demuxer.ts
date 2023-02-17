@@ -2,21 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
-import { failUndefined } from '@dxos/debug';
-import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
+import { log } from '@dxos/log';
+import { ModelFactory } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { Item } from './item';
 import { ItemManager } from './item-manager';
-
-const log = debug('dxos:echo-db:item-demuxer');
 
 export interface ItemDemuxerOptions {
   snapshots?: boolean;
@@ -40,7 +35,7 @@ export class ItemDemuxer {
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
-        if (item._stateManager.modelType === model.meta.type) {
+        if (item.modelType === model.meta.type) {
           await this._itemManager.initializeModel(item.id);
         }
       }
@@ -50,9 +45,12 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the SpaceProcessor?
     return async (message: IEchoStream) => {
       const {
-        data: { objectId, genesis, mutations, snapshot },
+        data: { objectId, genesis, mutations },
         meta
       } = message;
+      if (mutations) {
+        assert(mutations.length <= 1); // TODO(dmaretskyi): Only 1 mutation per message is supported.
+      }
       const mutation = mutations?.length === 1 ? mutations?.[0] : undefined;
       assert(objectId);
 
@@ -63,19 +61,18 @@ export class ItemDemuxer {
         const { modelType } = genesis;
         assert(modelType);
 
-        // TODO(dmaretskyi): Support snapshot.
-        const entity = await this._itemManager.constructItem({
+        const entity = this._itemManager.constructItem({
           itemId: objectId,
-          modelType,
-          snapshot: {
-            objectId,
-            mutations:
-              mutations?.map((mutation) => ({
-                ...mutation,
-                meta
-              })) ?? []
-          },
-          parentId: mutation?.parentId
+          modelType
+        });
+        entity.resetToSnapshot({
+          ...message.data,
+          mutations:
+            mutations?.map((mutation) => ({
+              ...mutation,
+              meta
+            })) ?? [],
+          meta
         });
 
         assert(entity.id === objectId);
@@ -85,25 +82,11 @@ export class ItemDemuxer {
       // Model mutations.
       //
       if (mutation && !genesis) {
-        // TODO(dmaretskyi): Fix.
-        if (mutation.parentId || mutation.action) {
-          const item = this._itemManager.getItem(objectId);
-          assert(item);
-
-          item._processMutation(mutation, (objectId: ItemID) => this._itemManager.getItem(objectId));
-        }
-
-        if (mutation.model) {
-          assert(message.data.mutations);
-          const modelMessage: ModelMessage<Any> = { meta, mutation: mutation.model }; // TODO(mykola): Send google.protobuf.Any instead of Uint8Array.
-          // Forward mutations to the item's stream.
-          await this._itemManager.processModelMessage(objectId, modelMessage);
-        }
-      }
-
-      if (snapshot?.model) {
-        const entity = this._itemManager.entities.get(objectId) ?? failUndefined();
-        entity._stateManager.resetToSnapshot(message.data); // TODO(dmaretskyi): Fix.
+        // Forward mutations to the item's stream.
+        this._itemManager.processMutation(objectId, {
+          ...mutation,
+          meta
+        });
       }
 
       this.mutation.emit(message);
@@ -113,22 +96,7 @@ export class ItemDemuxer {
   createSnapshot(): EchoSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.items.map((item) => this.createItemSnapshot(item))
-    };
-  }
-
-  createItemSnapshot(item: Item<Model<any>>): EchoObject {
-    const { snapshot, ...model } = item._stateManager.createSnapshot();
-
-    return {
-      genesis: {
-        modelType: item.modelType
-      },
-      snapshot: {
-        parentId: item.parent?.id,
-        ...snapshot
-      },
-      ...model
+      items: this._itemManager.items.map((item) => item.createSnapshot())
     };
   }
 
@@ -141,12 +109,11 @@ export class ItemDemuxer {
       assert(item.genesis?.modelType);
       assert(item.snapshot);
 
-      await this._itemManager.constructItem({
+      const obj = this._itemManager.constructItem({
         itemId: item.objectId,
-        modelType: item.genesis.modelType,
-        parentId: item.snapshot?.parentId,
-        snapshot: item // TODO(mykola): Refactor to pass just EchoObject.
+        modelType: item.genesis.modelType
       });
+      obj.resetToSnapshot(item);
     }
   }
 }

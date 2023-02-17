@@ -29,7 +29,7 @@ describe('Item demuxer', () => {
     const modelFactory = new ModelFactory().registerModel(TestModel);
 
     const feedWriter = new MockFeedWriter<DataMessage>();
-    const itemManager = new ItemManager(modelFactory, PublicKey.random(), feedWriter);
+    const itemManager = new ItemManager(modelFactory);
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
     const inboundStream = itemDemuxer.open();
@@ -101,12 +101,7 @@ describe('Item demuxer', () => {
     const modelFactory = new ModelFactory().registerModel(DocumentModel);
 
     // TODO(burdon): Create mock.
-    const itemManager = new ItemManager(modelFactory, PublicKey.random(), {
-      write: async (message) => {
-        void processEchoMessage(message);
-        return { feedKey: PublicKey.random(), seq: 0 };
-      }
-    });
+    const itemManager = new ItemManager(modelFactory);
 
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
     const processor = itemDemuxer.open();

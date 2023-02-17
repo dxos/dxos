@@ -7,7 +7,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'phosphor-react';
 import React, { ComponentProps, Fragment, ReactNode, useState } from 'react';
 
-import { defaultDescription, defaultFocus, defaultHover, getSize } from '../../styles';
+import { defaultDescription, defaultFocus, hover, getSize } from '../../styles';
 import { mx } from '../../util';
 import { Tooltip } from '../Tooltip';
 import { defaultOverlay } from './dialogStyles';
@@ -117,7 +117,7 @@ export const Dialog = ({
                 className={mx(
                   'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
                   defaultFocus,
-                  defaultHover({}),
+                  hover(),
                   slots.close?.className
                 )}
               >

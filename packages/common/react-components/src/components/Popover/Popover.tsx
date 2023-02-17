@@ -7,7 +7,7 @@ import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import { X } from 'phosphor-react';
 import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
 
-import { defaultActive, defaultFocus, defaultHover, getSize } from '../../styles';
+import { defaultActive, defaultFocus, hover, getSize } from '../../styles';
 import { mx } from '../../util';
 
 export interface PopoverSlots {
@@ -71,7 +71,7 @@ export const Popover = ({
           className={mx(
             'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
             defaultFocus,
-            defaultHover({}),
+            hover(),
             slots.close?.className
           )}
           aria-label={closeLabel}
@@ -95,7 +95,7 @@ export const Popover = ({
       {...slots.trigger}
       onKeyUp={onKeyUp}
       data-keyupid='open'
-      className={mx(defaultHover({}), defaultFocus, defaultActive, slots.trigger?.className)}
+      className={mx(hover(), defaultFocus, defaultActive, slots.trigger?.className)}
     >
       {openTrigger}
     </PopoverPrimitive.Trigger>

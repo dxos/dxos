@@ -35,7 +35,7 @@ export const Actions = () => {
   const serializer = useMemo(() => new Serializer(), []);
 
   const handleExportSpace = async () => {
-    const json = await serializer.export(space.experimental.db);
+    const json = await serializer.export(space.db);
     download(new Blob([JSON.stringify(json, undefined, 2)], { type: 'text/plain' }), 'data.json');
   };
 
@@ -43,7 +43,7 @@ export const Actions = () => {
     const data = new Uint8Array(await files.arrayBuffer());
     const json = new TextDecoder('utf-8').decode(data);
     const space = await client.echo.createSpace();
-    await serializer.import(space.experimental.db, JSON.parse(json));
+    await serializer.import(space.db, JSON.parse(json));
     navigate(createSpacePath(space.key));
   };
 

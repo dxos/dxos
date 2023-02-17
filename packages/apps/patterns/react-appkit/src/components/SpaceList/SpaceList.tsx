@@ -9,7 +9,7 @@ import { Space } from '@dxos/client';
 import {
   Avatar,
   defaultGroup,
-  defaultHover,
+  hover,
   defaultFocus,
   useTranslation,
   defaultDisabled,
@@ -37,9 +37,9 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             role='group'
             key={keyHex}
             className={mx(
-              defaultGroup({ elevation: 1, rounding: 'rounded', spacing: 'p-2' }),
+              defaultGroup({ elevation: 'group', rounding: 'rounded', spacing: 'p-2' }),
               'flex items-stretch gap-2 mbe-2',
-              defaultHover({}),
+              hover(),
               defaultFocus
             )}
           >
@@ -63,7 +63,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
         children: t('empty spaces label'),
         className: mx('text-xl', defaultDisabled)
       }}
-      elevation={0}
+      elevation='base'
     >
       <p className={defaultDisabled}>{t('empty spaces message')}</p>
     </Group>

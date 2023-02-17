@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 
-import { base, id } from './defs';
+import { base } from './defs';
 import { Document } from './document';
 import { EchoObject } from './object';
 
@@ -321,7 +321,7 @@ export class EchoArray<T> implements Array<T> {
   private _encode(value: T) {
     if (value instanceof EchoObject) {
       void this._document!._linkObject(value);
-      return new Reference(value[id]);
+      return new Reference(value.id);
     } else if (
       typeof value === 'object' &&
       value !== null &&

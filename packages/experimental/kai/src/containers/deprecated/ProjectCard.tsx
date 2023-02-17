@@ -6,7 +6,6 @@ import { Archive, ArrowsOut, User } from 'phosphor-react';
 import React, { FC } from 'react';
 
 import { Space } from '@dxos/client';
-import { id } from '@dxos/echo-schema';
 import { withReactor } from '@dxos/react-client';
 import { getSize, List, ListItem, ListItemEndcap, ListItemHeading, mx, Input, Button } from '@dxos/react-components';
 
@@ -47,7 +46,7 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
       <div className='p-1.5'>
         <TaskList
           space={space}
-          id={project[id]}
+          id={project.id}
           tasks={project.tasks}
           onCreate={(task: Task) => {
             project.tasks.push(task);
@@ -62,7 +61,7 @@ export const ProjectCard: FC<{ space: Space; project: Project }> = withReactor((
           <h2 className='pl-2 text-xs'>Team</h2>
           <List labelId='todo' slots={{ root: { className: 'mlb-1' } }}>
             {project.team?.map((contact) => (
-              <ListItem key={contact[id]}>
+              <ListItem key={contact.id}>
                 <ListItemEndcap className={getSize(6)}>
                   <User className={mx(getSize(4), 'mbs-1')} />
                 </ListItemEndcap>

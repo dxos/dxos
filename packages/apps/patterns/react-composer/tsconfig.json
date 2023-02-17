@@ -19,6 +19,15 @@
   ],
   "references": [
     {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/react-async"
+    },
+    {
       "path": "../../../common/react-components"
     },
     {

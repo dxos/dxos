@@ -18,8 +18,8 @@ import { Loading } from '@dxos/react-components';
 // TODO(burdon): Move back to @dxos/react-client/testing after resolving ESM issues.
 
 export type ClientSpaceDecoratorOptions = {
-  count?: number;
   schema?: EchoSchema;
+  count?: number;
 };
 
 /**
@@ -30,7 +30,7 @@ export type ClientSpaceDecoratorOptions = {
  * @returns {DecoratorFunction}
  */
 export const ClientSpaceDecorator =
-  ({ count = 2, schema }: ClientSpaceDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> =>
+  ({ schema, count = 1 }: ClientSpaceDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> =>
   (Story, context) => {
     const clients = useMemo(() => {
       const testBuilder = new TestBuilder();

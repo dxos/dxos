@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { id, type } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Contact, Task } from './proto';
@@ -15,7 +14,7 @@ import { Contact, Task } from './proto';
 describe('schema', () => {
   test('keys', () => {
     const contact = new Contact({ name: 'Test User' });
-    expect(contact[id]).to.exist;
+    expect(contact.id).to.exist;
     expect(Object.keys(contact).length).to.eq(5);
     contact.email = 'test@example.com';
 
@@ -23,7 +22,7 @@ describe('schema', () => {
     // contact.address.zip = '11205';
 
     // TODO(burdon): Test after saved with test database.
-    expect(contact[id]).to.be.a('string'); // TODO(burdon): Expose as property.
+    expect(contact.id).to.be.a('string'); // TODO(burdon): Expose as property.
   });
 
   test('json', () => {
@@ -39,14 +38,14 @@ describe('schema', () => {
 
     task1.assignee = contact;
     expect(task1.assignee.name).to.eq('User 1');
-    expect(task1.toJSON()).to.deep.contain({ title: 'Task 1', assignee: { '@id': contact[id] } });
+    expect(task1.toJSON()).to.deep.contain({ title: 'Task 1', assignee: { '@id': contact.id } });
     expect(JSON.stringify(task1)).to.equal(
       JSON.stringify({
-        '@id': task1[id],
-        '@type': task1[type],
+        '@id': task1.id,
+        '@type': task1.__typename,
         subTasks: [],
         title: 'Task 1',
-        assignee: { '@id': contact[id] }
+        assignee: { '@id': contact.id }
       })
     );
   });
@@ -57,15 +56,15 @@ describe('schema', () => {
     contact.tasks.push(new Task({ title: 'Task 2', assignee: contact }));
 
     expect(contact.toJSON()).to.deep.eq({
-      '@id': contact[id],
-      '@type': contact[type],
+      '@id': contact.id,
+      '@type': contact.__typename,
       name: 'User 1',
       tasks: [
         {
-          '@id': contact.tasks[0][id]
+          '@id': contact.tasks[0].id
         },
         {
-          '@id': contact.tasks[1][id]
+          '@id': contact.tasks[1].id
         }
       ]
     });
