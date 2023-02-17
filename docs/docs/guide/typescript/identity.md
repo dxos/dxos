@@ -10,7 +10,7 @@ To create or join a [space](./spaces) in ECHO, the user must first [establish th
 
 ## Logging in
 
-```ts
+```ts file=./snippets/get-identity.ts#L5-
 import { Client } from "@dxos/client";
 
 const client = new Client();
@@ -20,12 +20,22 @@ const identity = client.halo.identity;
 
 The object returned is of type [`Identity`](/api/@dxos/client/interfaces/Identity).
 
-:::apidoc[@dxos/client.Halo]{level="2"}
-# Interface `Halo`
+## Creating an identity
+Create a new identity:
+```ts file=./snippets/create-identity.ts#L5-
 
-> Declared in [`packages/sdk/client/src/packlets/proxies/halo-proxy.ts`]()
-
-TODO(burdon): Public API (move comments here).
-
-## Properties
+```
+::: details Creating an identity with a display name
+Pass `displayName` to `createProfile`:
+```ts file=./snippets/create-identity-displayname.ts#L5-
+```
 :::
+
+::: details Creating an identity with a Seed Phrase
+Use `generateSeedPhrase`:
+```ts file=./snippets/create-identity-seedphrase.ts#L5-
+```
+:::
+
+
+
