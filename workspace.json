@@ -29,6 +29,7 @@
     "docs": "docs",
     "document-model": "packages/core/echo/document-model",
     "echo-db": "packages/core/echo/echo-db",
+    "echo-pipeline": "packages/core/echo/echo-pipeline",
     "echo-schema": "packages/core/echo/echo-schema",
     "echo-typegen": "packages/core/echo/echo-typegen",
     "errors": "packages/sdk/errors",
