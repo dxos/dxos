@@ -6,7 +6,6 @@ import debug from 'debug';
 import expect from 'expect';
 
 import { latch } from '@dxos/async';
-import { createId } from '@dxos/crypto';
 import { checkType, todo } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
@@ -51,7 +50,7 @@ describe('Item demuxer', () => {
       onUpdateItem();
     });
 
-    const objectId = createId();
+    const objectId = PublicKey.random().toHex();
     const message: DataMessage = {
       object: {
         objectId,

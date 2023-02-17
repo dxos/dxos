@@ -1531,7 +1531,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
-      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/feed-store': workspace:*
@@ -1540,46 +1539,25 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/teleport': workspace:*
-      '@dxos/teleport-extension-object-sync': workspace:*
-      '@dxos/teleport-extension-presence': workspace:*
-      '@dxos/teleport-extension-replicator': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      debug: ^4.3.3
-      hypercore-protocol: ^8.0.7
-      source-map-support: ^0.5.12
-      wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/context': link:../../../common/context
-      '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
-      '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/protocols': link:../../protocols
-      '@dxos/random-access-storage': link:../../../common/random-access-storage
-      '@dxos/teleport': link:../../mesh/teleport
-      '@dxos/teleport-extension-object-sync': link:../../mesh/teleport-extension-object-sync
-      '@dxos/teleport-extension-presence': link:../../mesh/teleport-extension-presence
-      '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
-      debug: 4.3.4
     devDependencies:
+      '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/typings': link:../../../common/typings
-      '@types/debug': 4.1.7
-      hypercore-protocol: 8.0.7
-      source-map-support: 0.5.21
-      wait-for-expect: 3.0.2
 
   packages/core/echo/echo-pipeline:
     specifiers:

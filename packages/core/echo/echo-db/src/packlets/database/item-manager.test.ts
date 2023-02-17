@@ -4,12 +4,12 @@
 
 import expect from 'expect';
 
-import { createId } from '@dxos/crypto';
 import { DocumentModel } from '@dxos/document-model';
 import { ModelFactory } from '@dxos/model-factory';
 import { describe, test } from '@dxos/test';
 
 import { ItemConstructionOptions, ItemManager } from './item-manager';
+import { PublicKey } from '@dxos/keys';
 
 describe('ItemManager', () => {
   describe('basic', () => {
@@ -17,7 +17,7 @@ describe('ItemManager', () => {
       const modelFactory = new ModelFactory().registerModel(DocumentModel);
       const itemManager = new ItemManager(modelFactory);
 
-      const itemId = createId();
+      const itemId = PublicKey.random().toHex();
       const item = await itemManager.constructItem({
         itemId,
         modelType: DocumentModel.meta.type
@@ -89,7 +89,7 @@ describe('ItemManager', () => {
 });
 
 const defaultOpts = (): ItemConstructionOptions => {
-  const itemId = createId();
+  const itemId = PublicKey.random().toHex();
   return {
     itemId,
     modelType: DocumentModel.meta.type

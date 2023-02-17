@@ -22,30 +22,19 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/document-model": "workspace:*",
-    "@dxos/feed-store": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/random-access-storage": "workspace:*",
-    "@dxos/teleport": "workspace:*",
-    "@dxos/teleport-extension-object-sync": "workspace:*",
-    "@dxos/teleport-extension-presence": "workspace:*",
-    "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "debug": "^4.3.3"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/typings": "workspace:*",
-    "@types/debug": "^4.1.7",
-    "hypercore-protocol": "^8.0.7",
-    "source-map-support": "^0.5.12",
-    "wait-for-expect": "^3.0.2"
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/typings": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

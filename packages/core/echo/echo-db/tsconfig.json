@@ -22,9 +22,6 @@
       "path": "../../../common/context"
     },
     {
-      "path": "../../../common/crypto"
-    },
-    {
       "path": "../../../common/debug"
     },
     {
@@ -40,9 +37,6 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/random-access-storage"
-    },
-    {
       "path": "../../../common/timeframe"
     },
     {
@@ -50,18 +44,6 @@
     },
     {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../mesh/teleport"
-    },
-    {
-      "path": "../../mesh/teleport-extension-object-sync"
-    },
-    {
-      "path": "../../mesh/teleport-extension-presence"
-    },
-    {
-      "path": "../../mesh/teleport-extension-replicator"
     },
     {
       "path": "../../protocols"

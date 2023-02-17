@@ -7,11 +7,9 @@ import assert from 'node:assert';
 import { Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory, MutationWriteReceipt } from '@dxos/model-factory';
-import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -189,25 +187,5 @@ export class DatabaseBackendProxy {
     }
 
     await this._entities?.close();
-  }
-
-  getWriteStream(): FeedWriter<DataMessage> | undefined {
-    return {
-      write: async (mutation) => {
-        log('write', mutation);
-        const { feedKey, seq } = await this._service.write({
-          batch: {
-            objects: [mutation.object]
-          },
-          spaceKey: this._spaceKey
-        });
-        assert(feedKey);
-        assert(seq !== undefined);
-        return {
-          feedKey,
-          seq
-        };
-      }
-    };
   }
 }
