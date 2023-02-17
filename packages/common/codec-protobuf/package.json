@@ -19,6 +19,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "compress-json": "^2.1.2",
     "debug": "^4.3.3",
     "lodash.merge": "^4.6.2",
     "protobufjs": "^6.9.0"

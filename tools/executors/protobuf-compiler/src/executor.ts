@@ -22,6 +22,7 @@ export interface GenerateExecutorOptions {
    * @deprecated use package.json exports instead.
    */
   exportPath?: string;
+  compress: boolean
 }
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -64,6 +65,7 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
     outDirPath,
     packageRoot,
     options.exportPath,
+    options.compress,
     context.isVerbose
   );
 
