@@ -4,16 +4,17 @@
 import React, { useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { useClient, useMembers } from '@dxos/react-client';
+import { SpaceMember, useClient, useMembers } from '@dxos/react-client';
 
 import { SpaceMemberList } from './SpaceMemberList';
 
 export interface SpaceMemberListContainerProps {
   spaceKey: PublicKey;
   includeSelf?: boolean;
+  onSelect?: (member: SpaceMember) => void;
 }
 
-export const SpaceMemberListContainer = ({ spaceKey, includeSelf }: SpaceMemberListContainerProps) => {
+export const SpaceMemberListContainer = ({ spaceKey, includeSelf, onSelect }: SpaceMemberListContainerProps) => {
   const client = useClient();
   const allUnsortedMembers = useMembers(spaceKey);
   const members = useMemo(
@@ -23,5 +24,5 @@ export const SpaceMemberListContainer = ({ spaceKey, includeSelf }: SpaceMemberL
         : allUnsortedMembers.filter((member) => !member.identityKey.equals(client.halo.profile!.identityKey)),
     [allUnsortedMembers]
   );
-  return <SpaceMemberList members={members} />;
+  return <SpaceMemberList members={members} onSelect={onSelect} />;
 };
