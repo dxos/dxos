@@ -1,9 +1,9 @@
-import { compress, decompress } from 'compress-json'
+//
+// Copyright 2023 DXOS.org
+//
 
-export function compressSchema(data: any): any {
-  return compress(data);
-}
+import { compress, decompress } from 'compress-json';
 
-export function decompressSchema(data: any): any {
-  return decompress(data);
-}
+export const compressSchema = (data: any): any => compress(data);
+
+export const decompressSchema = (data: any): any => decompress(data);
