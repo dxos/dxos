@@ -4,6 +4,8 @@ order: 6
 
 # Mutations
 
+Objects returned from `query` are automatically tracked by the `Client` and direct manipulation of them will result in writes being dispatched over the network to listening peers in the space.
+
 ```ts file=./snippets/write-items.ts#L5-
 import { Client, DocumentModel } from '@dxos/client';
 
