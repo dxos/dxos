@@ -11,6 +11,8 @@ This section describes how to create, join, and invite peers to [ECHO Spaces](..
 
 ## Creating spaces
 
+Having established an [identity](./identity), a space can be created:
+
 ```ts file=./snippets/create-space.ts#L5-
 import { Client } from '@dxos/client';
 
@@ -19,7 +21,7 @@ const client = new Client();
 const space = await client.echo.createSpace();
 ```
 
-## Querying for spaces
+## Listing spaces
 
 ```ts file=./snippets/query-spaces.ts#L9-
 // get a list of all spaces

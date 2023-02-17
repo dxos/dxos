@@ -1,9 +1,13 @@
 # Class `SpaceProxy`
 <<<<<<< HEAD
+<<<<<<< HEAD
 <sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:36]()</sub>
 =======
 <sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:62]()</sub>
 >>>>>>> ac192b194 (tunneling)
+=======
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:58]()</sub>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 
 
@@ -50,10 +54,16 @@ Type: <code>boolean</code>
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 ### [properties]()
 <<<<<<< HEAD
+<<<<<<< HEAD
 Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
 =======
 Type: <code>ObjectProperties</code>
 >>>>>>> ac192b194 (tunneling)
+=======
+Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
+
+Space Metadata stored in the database.
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 ## Methods
 ### [_setOpen(open)]()

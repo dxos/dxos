@@ -48,6 +48,7 @@ Arguments:
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Filter by type.
 
 Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;T&gt;</code>
@@ -59,6 +60,9 @@ Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;[Document](/api
 =======
 Returns: <code>[Query](/api/@dxos/react-client/types/Query)&lt;[Document](/api/@dxos/react-client/classes/Document)&gt;</code>
 >>>>>>> 5ed417652 (wip docs)
+=======
+Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;[Document](/api/@dxos/react-client/classes/Document)&gt;</code>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 Arguments: 
 

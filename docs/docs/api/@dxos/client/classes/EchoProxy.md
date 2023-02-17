@@ -36,10 +36,14 @@ Returns: <code>string</code>
 
 Arguments: none
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L218)
 =======
 ### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L229)
 >>>>>>> ac192b194 (tunneling)
+=======
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L218)
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 
 Initiates an interactive accept invitation flow.
@@ -65,14 +69,20 @@ Creates a new space.
 Returns: <code>Promise&lt;[Space](/api/@dxos/client/interfaces/Space)&gt;</code>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 Arguments: 
 
 `meta`: <code>[PropertiesOptions](/api/@dxos/client/types/PropertiesOptions)</code>
 ### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L204)
+<<<<<<< HEAD
 =======
 Arguments: none
 ### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L215)
 >>>>>>> ac192b194 (tunneling)
+=======
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 
 Returns an individual space by its key.
@@ -89,10 +99,14 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### [querySpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L211)
 =======
 ### [querySpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L222)
 >>>>>>> ac192b194 (tunneling)
+=======
+### [querySpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L211)
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 
 Query for all spaces.

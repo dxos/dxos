@@ -1,6 +1,7 @@
 # Class `Item`
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 <sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:25]()</sub>
 =======
 <sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:14]()</sub>
@@ -8,6 +9,9 @@
 =======
 <sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:13]()</sub>
 >>>>>>> ac192b194 (tunneling)
+=======
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/packlets/database/item.d.ts:25]()</sub>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 
 A globally addressable data item.
@@ -30,10 +34,14 @@ The state of the model is formed from the following components (in order):
 
 ## Constructors
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### [constructor(_itemManager, _id)]()
 =======
 ### [constructor(_itemManager, _id, _type, stateManager, \[_writeStream\], \[parent\])]()
 >>>>>>> 464c6e793 (docs wip)
+=======
+### [constructor(_itemManager, _id)]()
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 
 Items are constructed by the  `Database`  object.
@@ -48,6 +56,7 @@ Arguments:
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
 `_type`: <code>undefined | string</code>
 
 `stateManager`: <code>StateManager&lt;NonNullable&lt;M&gt;&gt;</code>
@@ -57,6 +66,8 @@ Arguments:
 `parent`: <code>"null" | [Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;</code>
 >>>>>>> 464c6e793 (docs wip)
 
+=======
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 ## Properties
 ### [_debugLabel]()
 Type: <code>undefined | string</code>
@@ -68,6 +79,7 @@ Type: <code>"null" | ModelMeta&lt;any, any, any&gt;</code>
 Type: <code>Event&lt;[Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;&gt;</code>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 ### [_stateManager]()
@@ -76,10 +88,13 @@ Type: <code>StateManager&lt;NonNullable&lt;M&gt;&gt;</code>
 ### [children]()
 Type: <code>[Item](/api/@dxos/react-client/classes/Item)&lt;any&gt;[]</code>
 >>>>>>> 464c6e793 (docs wip)
+=======
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 ### [deleted]()
 Type: <code>boolean</code>
 ### [id]()
 Type: <code>string</code>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 ### [initialized]()
@@ -90,11 +105,16 @@ Type: <code>M</code>
 >>>>>>> 464c6e793 (docs wip)
 =======
 >>>>>>> ac192b194 (tunneling)
+=======
+### [initialized]()
+Type: <code>boolean</code>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 ### [modelMeta]()
 Type: <code>undefined | ModelMeta&lt;any, any, any&gt;</code>
 ### [modelType]()
 Type: <code>string</code>
 ### [parent]()
+<<<<<<< HEAD
 <<<<<<< HEAD
 Type: <code>"null" | string</code>
 ### [state]()
@@ -106,6 +126,11 @@ Type: <code>boolean</code>
 ### [type]()
 Type: <code>undefined | string</code>
 >>>>>>> 464c6e793 (docs wip)
+=======
+Type: <code>"null" | string</code>
+### [state]()
+Type: <code>StateOf&lt;M&gt;</code>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 ## Methods
 ### [createSnapshot()]()
@@ -124,6 +149,7 @@ Perform late intitalization.
 Only possible if the modelContructor wasn't passed during StateManager's creation.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Returns: <code>void</code>
 =======
 Arguments: none
@@ -132,6 +158,9 @@ Arguments: none
 
 Returns: <code>Promise&lt;void&gt;</code>
 >>>>>>> ac192b194 (tunneling)
+=======
+Returns: <code>void</code>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 Arguments: 
 

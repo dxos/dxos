@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD:docs/docs/api/@dxos/react-client/types/Selection.md
 # Type `Selection`
+<<<<<<< HEAD
 <sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database.d.ts:13]()</sub>
 =======
 # Type `Query`
@@ -30,3 +31,6 @@ Arguments:
 # Type `Selection`
 <sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database.d.ts:12]()</sub>
 >>>>>>> ac192b194 (tunneling)
+=======
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/database.d.ts:13]()</sub>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)

@@ -34,10 +34,15 @@ Type: <code>ModelMeta&lt;any, any, any&gt;</code>
 ### [readOnly]()
 Type: <code>boolean</code>
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### [type]()
 Type: <code>undefined | string</code>
 =======
 >>>>>>> 151d945bb (wip docs)
+=======
+### [type]()
+Type: <code>undefined | string</code>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 ## Methods
 ### [addToSet(key, value)]()
@@ -144,10 +149,14 @@ Arguments: none
 Returns an immutable object.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Returns: <code>Record&lt;string, any&gt;</code>
 =======
 Returns: <code>DocumentModelState</code>
 >>>>>>> 151d945bb (wip docs)
+=======
+Returns: <code>Record&lt;string, any&gt;</code>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
 Arguments: none
 ### [toString()]()

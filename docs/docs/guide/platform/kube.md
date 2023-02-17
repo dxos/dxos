@@ -20,5 +20,6 @@ KUBE instances form and propagate the peer-to-peer [MESH](../glossary#mesh) netw
 | [STUN](https://en.wikipedia.org/wiki/STUN), [TURN](https://en.wikipedia.org/wiki/Traversal_Using_Relays_around_NAT), [ICE](https://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment) | Network hole punching, traversal, and relay services |
 
 ### Next steps
-- KUBE [Installation](../kube)
-- [Build an application](../getting-started) and [deploy to KUBE](../getting-started#deploying-your-app-to-a-kube)
+
+*   KUBE [Installation](../kube)
+*   [Build an application](../getting-started) and [deploy to KUBE](../getting-started#deploying-your-app-to-a-kube)

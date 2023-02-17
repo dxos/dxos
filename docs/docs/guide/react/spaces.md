@@ -13,13 +13,15 @@ This section describes how to create, join, and invite peers to [ECHO Spaces](..
 To create a space, call the `client.echo.createSpace()` API:
 
 :::apidoc[@dxos/react-client.EchoProxy.createSpace]
-### [createSpace()]()
+### [createSpace(\[meta\])]()
 
 Creates a new space.
 
 Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
 
-Arguments: none
+Arguments:
+
+`meta`: <code>[PropertiesOptions](/api/@dxos/react-client/types/PropertiesOptions)</code>
 :::
 
 ```tsx{10} file=./snippets/create-spaces.tsx#L5-

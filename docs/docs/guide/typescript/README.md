@@ -14,12 +14,22 @@ npm install --save @dxos/client
 ```
 
 # Configuration
+
 Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
+
 ```ts file=./snippets/create-client.ts#L5-
 import { Client } from '@dxos/client';
 
 // create a client
 const client = new Client();
+
+const main = async () => {
+  await client.initialize();
+  // use client here
+
+};
+
+main();
 ```
 
 An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](config).

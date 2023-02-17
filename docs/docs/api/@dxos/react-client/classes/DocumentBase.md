@@ -22,10 +22,13 @@ Type: <code>[DocumentBase](/api/@dxos/react-client/classes/DocumentBase)</code>
 
 Proxied object.
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 ### [_modelConstructor]()
 Type: <code>typeof [DocumentModel](/api/@dxos/react-client/classes/DocumentModel)</code>
 >>>>>>> 464c6e793 (docs wip)
+=======
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 ### [[data]]()
 Type: <code>any</code>
 ### [[db]]()
@@ -64,6 +67,7 @@ Arguments:
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Returns: <code>DocumentModelState</code>
 
 Arguments: none
@@ -89,6 +93,28 @@ Returns: <code>any</code>
 
 Arguments: none
 >>>>>>> ac192b194 (tunneling)
+=======
+Returns: <code>DocumentModelState</code>
+
+Arguments: none
+### [_isPersisted()]()
+
+
+Returns: <code>boolean</code>
+
+Arguments: none
+### [_mutate(mutation)]()
+
+
+Perform mutation on this object's state.
+Mutation is applied optimistically: calls to _getState() will return mutated state.
+
+Returns: <code>undefined | MutateResult</code>
+
+Arguments: 
+
+`mutation`: <code>ObjectMutationSet</code>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 ### [_onBind()]()
 
 

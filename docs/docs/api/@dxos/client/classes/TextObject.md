@@ -36,6 +36,7 @@ Type: <code>undefined | TextModel</code>
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Returns: <code>Doc</code>
 
 Arguments: none
@@ -61,6 +62,28 @@ Returns: <code>any</code>
 
 Arguments: none
 >>>>>>> ac192b194 (tunneling)
+=======
+Returns: <code>Doc</code>
+
+Arguments: none
+### [_isPersisted()]()
+
+
+Returns: <code>boolean</code>
+
+Arguments: none
+### [_mutate(mutation)]()
+
+
+Perform mutation on this object's state.
+Mutation is applied optimistically: calls to _getState() will return mutated state.
+
+Returns: <code>undefined | MutateResult</code>
+
+Arguments: 
+
+`mutation`: <code>Mutation</code>
+>>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 ### [_onBind()]()
 
 
