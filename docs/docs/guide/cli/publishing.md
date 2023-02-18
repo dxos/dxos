@@ -5,21 +5,21 @@ order: 5
 
 # Publishing Apps
 
-You can deploy your static (client-side) web applications to [KUBE](../kube) using the `dx` CLI.
+The `dx` CLI is used to deploy static apps to [KUBE](../kube).
 
-To do this, drop a [`dx.yml`](../kube/dx-yml-file) file at the root of your project, and run:
+Drop a [`dx.yml`](../kube/dx-yml-file) file at the root of the project, and run:
 
 ```bash
 dx publish
 ```
 
-If you're using an [application template](./app-templates.md) or sample from DXOS, a `dx.yml` file is provided by default and the npm script `deploy` is available:
+If using an [application template](./app-templates) or [sample](../samples) from DXOS, a `dx.yml` file is provided by default and the npm script `deploy` is available:
 
 ```bash
 pnpm run deploy
 ```
 
-:::tip
+::: tip Tip
 Take care not to omit the term `run` as `pnpm` will assume `deploy` means something else otherwise
 :::
 

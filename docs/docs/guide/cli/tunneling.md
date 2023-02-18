@@ -24,4 +24,4 @@ To list active tunnels:
 dx tunnel list
 ```
 
-[Learn more about `dx.yml` in the KUBE section](../kube/dx-yml-file)
+Learn more about how to configure [tunneling in `dx.yml`](../kube/tunneling).
