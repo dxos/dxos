@@ -1,5 +1,5 @@
 # Interface `Profile`
-> Declared in [`packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts`]()
+> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/client.d.ts`]()
 
 Defined in:
    file://./../../dxos/client.proto
@@ -11,6 +11,11 @@ Options:
   - proto3_optional = true
 ### [displayName]()
 Type: <code>string</code>
+
+Options:
+  - proto3_optional = true
+### [haloSpace]()
+Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 Options:
   - proto3_optional = true
