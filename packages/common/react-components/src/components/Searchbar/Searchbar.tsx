@@ -9,7 +9,7 @@ import { mx } from '../../util';
 import { Input } from '../Input';
 
 export type SearchbarSlots = {
-  input: {
+  input?: {
     className?: string;
     variant?: string;
   };
@@ -24,7 +24,7 @@ export type SearchbarProps = {
 /**
  * Search bar.
  */
-export const Searchbar: FC<SearchbarProps> = ({ disabled, slots, onSearch }) => {
+export const Searchbar: FC<SearchbarProps> = ({ disabled, slots = {}, onSearch }) => {
   const [text, setText] = useState('');
   const handleChange = (text: string) => {
     setText(text);

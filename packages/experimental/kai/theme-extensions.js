@@ -55,6 +55,7 @@ module.exports = {
       paper: {
         bg: 'white',
         text: 'black',
+        border: neutral[300],
         1: {
           bg: neutral[50],
           text: neutral[700]

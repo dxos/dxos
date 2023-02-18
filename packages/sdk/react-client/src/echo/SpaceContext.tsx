@@ -22,6 +22,10 @@ export type SpaceProviderProps = PropsWithChildren<{
   onSpaceChange?: (spaceKey?: PublicKey) => void;
 }>;
 
+/**
+ * Provider for apps (e.g., testing) where a single space is currently selected.
+ * @deprecated Move to patterns/testing.
+ */
 export const SpaceProvider = ({ initialSpaceKey, onSpaceChange, children }: SpaceProviderProps) => {
   const client = useClient();
   const spaces = useSpaces();

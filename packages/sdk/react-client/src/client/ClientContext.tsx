@@ -68,7 +68,9 @@ export interface ClientProviderProps {
    * Whether or not to include a SpaceProvider as a child.
    *
    * Default is true.
+   * @deprecated Move to patterns/testing.
    */
+  // TODO(burdon): Remove (testing only -- why not leave to user to inject?)
   spaceProvider?: boolean | SpaceProviderProps;
 
   /**

@@ -83,12 +83,20 @@ export const TableFrame = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden px-2'>
-      <div className='flex py-2'>
+      <div className='flex py-2 mb-2'>
         <div className='mr-4'>
-          <Selector options={types} value={type.id} onSelect={handleSelect} />
+          <Selector
+            slots={{ input: { className: 'border border-paper-border shadow-none' } }}
+            options={types}
+            value={type.id}
+            onSelect={handleSelect}
+          />
         </div>
         <div>
-          <Searchbar onSearch={handleSearch} />
+          <Searchbar
+            slots={{ input: { className: 'border border-paper-border shadow-none' } }}
+            onSearch={handleSearch}
+          />
         </div>
       </div>
 

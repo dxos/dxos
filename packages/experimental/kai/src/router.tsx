@@ -6,7 +6,7 @@ import type { Router } from '@remix-run/router';
 import React, { ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
-import { Invitation, InvitationEncoder, PublicKey } from '@dxos/client';
+import { Invitation, InvitationEncoder, PublicKey, Space } from '@dxos/client';
 
 import { Root } from './containers';
 import { AppState } from './hooks';
@@ -19,12 +19,16 @@ export enum Section {
   FRAME = 'frame'
 }
 
-// TODO(burdon): Use FrameDef?
+const truncateKey = (key: PublicKey) => key.toHex().slice(0, 8);
+
+export const findSpace = (spaces: Space[], spaceKey: string): Space | undefined =>
+  spaces.find((space) => truncateKey(space.key) === spaceKey);
+
 export const createSpacePath = (spaceKey?: PublicKey, frame?: string, objectId?: string) =>
-  `/${spaceKey ? spaceKey.truncate() + (frame ? `/frame/${frame}` + (objectId ? `/${objectId}` : '') : '') : ''}`;
+  `/${spaceKey ? truncateKey(spaceKey) + (frame ? `/frame/${frame}` + (objectId ? `/${objectId}` : '') : '') : ''}`;
 
 export const createSectionPath = (spaceKey?: PublicKey, section?: Section) =>
-  `/${spaceKey ? spaceKey.truncate() + (section ? `/${section}` : '') : ''}`;
+  `/${spaceKey ? truncateKey(spaceKey) + (section ? `/${section}` : '') : ''}`;
 
 export const createInvitationPath = (invitation: Invitation) =>
   `/?spaceInvitationCode=${InvitationEncoder.encode(invitation)}`;

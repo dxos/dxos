@@ -8,19 +8,28 @@ import React, { FC, KeyboardEvent, useState } from 'react';
 import { mx } from '../../util';
 import { Input } from '../Input';
 
+export type SelectorSlots = {
+  input?: {
+    className?: string;
+  };
+};
+
 export type SelectorOption = { id: string; title: string };
+
+export type SelectorProps = {
+  value?: string;
+  options?: SelectorOption[];
+  rows?: number;
+  slots?: SelectorSlots;
+  placeholder?: string;
+  onSelect?: (id?: string) => void;
+  onChange?: (text: string) => void;
+};
 
 /**
  * Options selector.
  */
-export const Selector: FC<{
-  value?: string;
-  options?: SelectorOption[];
-  rows?: number;
-  placeholder?: string;
-  onSelect?: (id?: string) => void;
-  onChange?: (text: string) => void;
-}> = ({ value, options, rows = 5, placeholder, onSelect }) => {
+export const Selector: FC<SelectorProps> = ({ value, options, rows = 5, slots = {}, placeholder, onSelect }) => {
   const getText = (id?: string) => {
     if (id === undefined) {
       return '';
@@ -92,7 +101,7 @@ export const Selector: FC<{
             },
             label: { className: 'sr-only' },
             input: {
-              className: 'flex flex-1',
+              className: mx('flex flex-1', slots.input?.className),
               onKeyDown: handleKeyDown,
               onBlur: () => setOpen(false)
             }
