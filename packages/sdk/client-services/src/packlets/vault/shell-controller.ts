@@ -36,6 +36,7 @@ export class ShellController {
   }
 
   async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
+    log('set layout', { layout, ...options });
     this._display = ShellDisplay.FULLSCREEN;
     this._emitUpdate();
     await this._shellRpc?.rpc.ShellService.setLayout({ layout, ...options });

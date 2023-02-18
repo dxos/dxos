@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 
 import { InvitationEncoder } from '@dxos/client';
 import { log } from '@dxos/log';
@@ -35,7 +35,7 @@ export const JoinPanel = ({
   const internalTitleId = useId('joinPanel__title');
   const titleId = propsTitleId ?? internalTitleId;
   const identity = useIdentity();
-
+  const [prevIdentity, setPrevIdentity] = useState(identity);
   const availableIdentities = identity ? [identity] : [];
 
   const reducer = (state: JoinState, action: JoinAction) => {
@@ -138,6 +138,11 @@ export const JoinPanel = ({
     spaceViewState: 'invitation input',
     haloViewState: 'invitation input'
   });
+
+  if (identity !== prevIdentity) {
+    setPrevIdentity(identity);
+    identity && !prevIdentity && dispatch({ type: 'added identity', identity });
+  }
 
   useEffect(() => {
     if (unredeemedHaloInvitationCode) {

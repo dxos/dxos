@@ -15,6 +15,7 @@ import { captureException } from '@dxos/sentry';
 import { AppState } from './hooks';
 import { createRouter } from './router';
 
+import '@dxos/client/shell.css';
 import '../style.css';
 
 const bool = (str?: string): boolean => (str ? /(true|1)/i.test(str) : false);

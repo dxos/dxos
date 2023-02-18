@@ -6,11 +6,8 @@ import type { Context as MochaContext } from 'mocha';
 import type { ConsoleMessage, Page } from 'playwright';
 
 import { Trigger } from '@dxos/async';
-import { ShellManager } from '@dxos/halo-app';
+import { ShellManager } from '@dxos/halo-app/testing';
 import { setupPage } from '@dxos/test';
-
-// TODO(wittjosiah): Get this from executor.
-const BASE_URL = 'http://localhost:4200';
 
 export class AppManager {
   page!: Page;
@@ -28,7 +25,7 @@ export class AppManager {
     }
 
     const { page } = await setupPage(this.mochaContext, {
-      url: BASE_URL,
+      url: mochaExecutor.executorResult.baseUrl,
       waitFor: (page) => page.getByTestId('create-identity').isVisible(),
       bridgeLogs: true
     });
