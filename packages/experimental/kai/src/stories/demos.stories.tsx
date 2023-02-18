@@ -44,7 +44,7 @@ const Card: FC<CardProps> = ({ className, square, selected, ...props }) => {
     <div
       className={mx(
         'flex m-1 p-2 rounded border',
-        selected ? 'bg-blue-100' : 'bg-paper-bg',
+        selected ? 'bg-blue-100' : 'bg-slate-300',
         square ? 'w-[160px] h-[160px]' : 'w-[160px]',
         className
       )}
@@ -157,7 +157,7 @@ export const MasterDetail = () => {
   return (
     <Frame>
       <div>
-        <div className='flex p-2 rounded border border-gray-400 bg-gray-200'>
+        <div className='flex p-2 rounded border border-slate-600 bg-gray-200'>
           <div>
             <Card>1</Card>
             <Card selected>2</Card>
@@ -165,7 +165,7 @@ export const MasterDetail = () => {
             <Card>4</Card>
             <Card>5</Card>
           </div>
-          <div className='flex w-[200px] m-1 ml-2 p-3 rounded border border-gray-400 bg-paper-bg text-sm'>
+          <div className='flex w-[200px] m-1 ml-2 p-3 rounded border border-slate-600 bg-slate-300 text-sm'>
             {faker.lorem.sentences(3)}
           </div>
         </div>

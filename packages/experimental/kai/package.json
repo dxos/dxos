@@ -52,6 +52,8 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@radix-ui/react-icons": "^1.2.0",
+    "@radix-ui/react-select": "^1.2.0",
     "@sentry/react": "^7.17.2",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",

@@ -42,6 +42,9 @@ export const Tooltip = ({
   const [isOpen, setIsOpen] = useState(false);
   const labelId = useId('tooltipLabel');
 
+  // TODO(burdon): Disable tooltips (currently show up before hover).
+  return null;
+
   const tooltipContent = (
     <TooltipPrimitive.Content
       forceMount
