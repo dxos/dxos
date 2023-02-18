@@ -1,0 +1,19 @@
+version: 1
+package:
+  modules:
+    - name: tasks-app-2
+      type: dxos:type/app
+      build:
+        command: npm run build
+        outdir: out/tasks-app-2
+runtime:
+  client:
+    remoteSource: http://localhost:3967/vault.html
+  services:
+    signal:
+      # server: ws://kube.dxos.org/.well-known/dx/signal
+      server: ws://localhost:8888/.well-known/dx/signal
+    ice:
+      - urls: turn:kube.dxos.org:3478
+        username: dxos
+        credential: dxos

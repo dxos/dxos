@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExecutorContext, runExecutor } from '@nrwl/devkit';
+import { ExecutorContext, logger, runExecutor } from '@nrwl/devkit';
 import chalk from 'chalk';
 import { resolve } from 'node:path';
 
@@ -17,16 +17,17 @@ export type MochaExecutorOptions = NodeOptions &
     devEnvironments: TestEnvironment[];
     ciEnvironments: TestEnvironment[];
     serve?: string;
+    serveOptions?: { [key: string]: string };
     setup?: string;
   };
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing mocha...');
+  logger.info('Executing mocha...');
   if (context.isVerbose) {
-    console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+    logger.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
-  const resolvedOptions = {
+  const resolvedOptions: RunTestsOptions = {
     ...options,
     environments: getEnvironments(options),
     setup: options.setup ? resolve(context.root, options.setup) : options.setup,
@@ -48,34 +49,75 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     resolvedOptions.setup && runSetup(resolvedOptions.setup)
   ]);
 
+  let success = false;
   if (options.serve) {
     const [project, target] = options.serve.split(':');
-    const iterator = await runExecutor({ project, target }, {}, context);
-    void iterator.next();
+
+    // TODO(wittjosiah): Provide base url to tests from executor?
+    // Based on https://github.com/nrwl/nx/blob/a5766a8/packages/cypress/src/executors/cypress/cypress.impl.ts#L63-L72.
+    for await (const _ of await runExecutor({ project, target }, options.serveOptions ?? {}, context)) {
+      try {
+        success = await runTests({ ...resolvedOptions, skipBrowserTests }, context);
+        if (!options.watch) {
+          break;
+        }
+      } catch (err: any) {
+        logger.error(err.message);
+        if (!options.watch) {
+          break;
+        }
+      }
+    }
+  } else {
+    success = await runTests({ ...resolvedOptions, skipBrowserTests }, context);
   }
 
-  // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
-  // TODO(wittjosiah): Run all even if there are failures.
+  return { success };
+};
+
+const getEnvironments = (options: MochaExecutorOptions): TestEnvironment[] => {
+  if (options.environments) {
+    return options.environments.includes('all')
+      ? Array.from(TestEnvironments)
+      : (options.environments as TestEnvironment[]);
+  } else if (process.env.CI) {
+    return options.playwright ? options.ciEnvironments.filter((env) => env !== 'nodejs') : options.ciEnvironments;
+  } else if (options.devEnvironments) {
+    return options.devEnvironments;
+  }
+
+  return options.playwright ? ['chromium'] : ['nodejs'];
+};
+
+// TODO(wittjosiah): Clean up the types used in this executor.
+export type RunTestsOptions = Omit<MochaExecutorOptions, 'environments'> & {
+  environments: TestEnvironment[];
+  skipBrowserTests?: boolean;
+};
+
+// TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
+// TODO(wittjosiah): Run all even if there are failures.
+const runTests = async (options: RunTestsOptions, context: ExecutorContext) => {
   let success = true;
-  for (const env of resolvedOptions.environments) {
+  for (const env of options.environments) {
     let exitCode: number | null;
 
     switch (env) {
       case 'chromium':
       case 'firefox':
       case 'webkit': {
-        if (skipBrowserTests) {
+        if (options.skipBrowserTests) {
           exitCode = -1;
           break;
         }
 
         const runBrowser = options.playwright ? runNode : runBrowserMocha;
-        exitCode = await runBrowser(context, { ...resolvedOptions, browser: env });
+        exitCode = await runBrowser(context, { ...options, browser: env });
         break;
       }
 
       case 'nodejs': {
-        exitCode = await runNode(context, resolvedOptions);
+        exitCode = await runNode(context, options);
         break;
       }
 
@@ -85,25 +127,13 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     }
 
     if (exitCode === 0) {
-      console.log(chalk`\n{green Passed in {blue {bold ${env}}}}\n`);
+      logger.log(chalk`\n{green Passed in {blue {bold ${env}}}}\n`);
     } else if (!exitCode || exitCode > 0) {
-      console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${env}}}}\n`);
+      logger.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${env}}}}\n`);
     }
 
     success &&= exitCode === null ? false : exitCode <= 0;
   }
 
-  return { success };
-};
-
-const getEnvironments = (options: MochaExecutorOptions) => {
-  if (options.environments) {
-    return options.environments.includes('all') ? TestEnvironments : (options.environments as TestEnvironment[]);
-  } else if (options.playwright) {
-    return BrowserTypes;
-  } else if (process.env.CI) {
-    return options.ciEnvironments;
-  }
-
-  return options.devEnvironments;
+  return success;
 };

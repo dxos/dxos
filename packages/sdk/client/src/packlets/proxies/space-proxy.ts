@@ -3,6 +3,7 @@
 //
 
 import isEqual from 'lodash.isequal';
+import assert from 'node:assert';
 
 import { Event, synchronized, Trigger } from '@dxos/async';
 import {
@@ -12,20 +13,22 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
-import { DatabaseRouter, EchoDatabase } from '@dxos/echo-schema';
+import { ISpace, DatabaseBackendProxy, ResultSet, ItemManager } from '@dxos/echo-db';
+import { DatabaseRouter, Document, EchoDatabase, Query } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { Properties } from '../proto';
+
+// TODO(burdon): Remove.
 export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
 
-interface Experimental {
-  get db(): EchoDatabase;
+interface Internal {
+  get db(): DatabaseBackendProxy;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
@@ -33,18 +36,10 @@ export interface Space extends ISpace {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
+  get db(): EchoDatabase;
+  get properties(): Document;
   get invitations(): CancellableInvitationObservable[];
-
-  // TODO(burdon): Remove and move accessors to proxy.
-  get database(): Database;
-
-  /**
-   * Next-gen database.
-   */
-  get experimental(): Experimental;
-
-  get select(): Database['select'];
-  get reduce(): Database['reduce'];
+  get internal(): Internal;
 
   open(): Promise<void>;
   close(): Promise<void>;
@@ -57,48 +52,20 @@ export interface Space extends ISpace {
   /**
    * @deprecated
    */
-  // TODO(burdon): Change to `space.properties.title`.
-  setTitle(title: string): Promise<void>;
-  /**
-   * @deprecated
-   */
-  getTitle(): string;
-  /**
-   * @deprecated
-   */
   getDetails(): Promise<SpaceDetails>;
-  /**
-   * @deprecated
-   */
-  get properties(): ObjectProperties;
-  /**
-   * @deprecated
-   */
-  setProperty(key: string, value?: any): Promise<void>;
-  /**
-   * @deprecated
-   */
-  getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<SpaceMember>;
-
   createInvitation(options?: InvitationsOptions): CancellableInvitationObservable;
   removeInvitation(id: string): void;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }
 
-export class SpaceProxy implements Space {
-  private readonly _database?: Database;
-  private readonly _experimental?: Experimental;
-  private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
-  private readonly _invitations: CancellableInvitationObservable[] = [];
+const META_LOAD_TIMEOUT = 3000;
 
+export class SpaceProxy implements Space {
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
-
-  private _initialized = false;
-  private _item?: Item<ObjectModel>; // TODO(burdon): Rename.
 
   /**
    * @internal
@@ -106,30 +73,41 @@ export class SpaceProxy implements Space {
    */
   public _databaseInitialized = new Trigger();
 
+  private readonly _db!: EchoDatabase;
+  private readonly _internal!: Internal;
+  private readonly _dbBackend?: DatabaseBackendProxy;
+  private readonly _itemManager?: ItemManager;
+  private readonly _invitationProxy: SpaceInvitationsProxy;
+
+  private _invitations: CancellableInvitationObservable[] = [];
+  private _properties?: Document;
+  private _initialized = false;
+
   // prettier-ignore
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     private _state: SpaceType,
-    databaseRouter: DatabaseRouter,
-    memberKey: PublicKey // TODO(burdon): Change to identityKey (see optimistic mutations)?
+    databaseRouter: DatabaseRouter
   ) {
+    assert(this._clientServices.services.SpaceInvitationsService, 'SpaceInvitationsService not available');
+    this._invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
+
     // TODO(burdon): Don't shadow properties.
     if (!this._state.isOpen) { // TODO(burdon): Assert?
       return;
     }
 
-    this._database = new Database(
-      this._modelFactory,
-      new DatabaseBackendProxy(this._clientServices.services.DataService, this.key),
-      memberKey
-    );
+    assert(this._clientServices.services.DataService, 'DataService not available');
+    this._dbBackend = new DatabaseBackendProxy(this._clientServices.services.DataService, this.key);
+    this._itemManager = new ItemManager(this._modelFactory);
 
-    this._experimental = {
-      db: new EchoDatabase(this._database, databaseRouter)
+    this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
+    this._internal = {
+      db: this._dbBackend
     };
 
-    databaseRouter.register(this.key, this._experimental.db);
+    databaseRouter.register(this.key, this._db);
   }
 
   get key() {
@@ -145,37 +123,21 @@ export class SpaceProxy implements Space {
     return this._state.isActive;
   }
 
-  get database(): Database {
-    if (!this._database) {
-      throw new ApiError('Space not open.');
-    }
-
-    return this._database;
+  get db() {
+    return this._db;
   }
 
-  // TODO(burdon): Add deprecated property.
-  get experimental(): Experimental {
-    if (!this._experimental) {
-      throw new ApiError('Space not open.');
-    }
-
-    return this._experimental;
+  get properties() {
+    return this._properties!;
   }
 
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   * @deprecated Use database accessor.
-   */
-  get select(): Database['select'] {
-    return this.database.select.bind(this.database);
+  get invitations() {
+    return this._invitations;
   }
 
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   * @deprecated Use database accessor.
-   */
-  get reduce(): Database['reduce'] {
-    return this.database.reduce.bind(this.database);
+  // TODO(burdon): Remove?
+  get internal(): Internal {
+    return this._internal;
   }
 
   /**
@@ -191,11 +153,34 @@ export class SpaceProxy implements Space {
     // TODO(burdon): Does this need to be set before method completes?
     this._initialized = true;
 
-    await this.database.initialize();
+    await this._dbBackend!.open(this._itemManager!, this._modelFactory);
     log('database ready');
     this._databaseInitialized.wake();
 
-    this._item = await this.database.waitForItem<ObjectModel>({ type: SPACE_ITEM_TYPE });
+    {
+      // Wait for Properties document.
+      const query = this._db.query(Properties.filter());
+      if (query.objects.length === 1) {
+        this._properties = query.objects[0];
+      } else {
+        const waitForSpaceMeta = new Trigger();
+        const subscription = query.subscribe((query: Query<Properties>) => {
+          if (query.objects.length === 1) {
+            this._properties = query.objects[0];
+            waitForSpaceMeta.wake();
+            subscription();
+          }
+        });
+
+        try {
+          await waitForSpaceMeta.wait({ timeout: META_LOAD_TIMEOUT });
+        } catch {
+          throw new ApiError('Properties not found.');
+        } finally {
+          subscription();
+        }
+      }
+    }
 
     this.stateUpdate.emit();
     log('initialized');
@@ -207,7 +192,8 @@ export class SpaceProxy implements Space {
   @synchronized
   async destroy() {
     log('destroying...');
-    await this.database.destroy();
+    await this._dbBackend?.close();
+    await this._itemManager?.destroy();
 
     log('destroyed');
   }
@@ -221,17 +207,11 @@ export class SpaceProxy implements Space {
   }
 
   async getDetails(): Promise<SpaceDetails> {
+    assert(this._clientServices.services.SpaceService, 'SpaceService not available');
+
     return this._clientServices.services.SpaceService.getSpaceDetails({
       spaceKey: this.key
     });
-  }
-
-  get properties(): ObjectProperties {
-    return this._item!.model;
-  }
-
-  get invitations() {
-    return this._invitations;
   }
 
   // TODO(burdon): Remove deprecated methods.
@@ -250,36 +230,8 @@ export class SpaceProxy implements Space {
   }
 
   /**
-   * @deprecated Use space.properties.
-   */
-  async setTitle(title: string) {
-    // await this.setProperty(SPACE_TITLE_PROPERTY, title);
-  }
-
-  /**
-   * @deprecated Use space.properties.
-   */
-  getTitle() {
-    return todo();
-    // return this.getProperty(SPACE_TITLE_PROPERTY);
-  }
-
-  /**
-   * @deprecated Use space.properties.
-   */
-  async setProperty(key: string, value?: any) {
-    await this.properties.set(key, value);
-  }
-
-  /**
-   * @deprecated Use space.properties.
-   */
-  getProperty(key: string, defaultValue?: any) {
-    return this.properties.get(key, defaultValue);
-  }
-
-  /**
    * Return set of space members.
+   * @deprecated
    */
   // TODO(burdon): Don't expose result object and provide type.
   queryMembers(): ResultSet<SpaceMember> {
@@ -292,7 +244,7 @@ export class SpaceProxy implements Space {
   createInvitation(options?: InvitationsOptions) {
     log('create invitation', options);
     const invitation = this._invitationProxy.createInvitation(this.key, options);
-    this._invitations.push(invitation);
+    this._invitations = [...this._invitations, invitation];
 
     const unsubscribe = invitation.subscribe({
       onConnecting: () => {
@@ -320,7 +272,7 @@ export class SpaceProxy implements Space {
     log('remove invitation', { id });
     const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
     void this._invitations[index]?.cancel();
-    this._invitations.splice(index, 1);
+    this._invitations = [...this._invitations.slice(0, index), ...this._invitations.slice(index + 1)];
     this.invitationsUpdate.emit();
   }
 
@@ -333,6 +285,8 @@ export class SpaceProxy implements Space {
   }
 
   async _setOpen(open: boolean) {
+    assert(this._clientServices.services.SpaceService, 'SpaceService not available');
+
     await this._clientServices.services.SpaceService.setSpaceState({
       spaceKey: this.key,
       open

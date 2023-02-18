@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { afterTest } from '@dxos/test';
 import { Provider } from '@dxos/util';
@@ -19,7 +20,7 @@ import { Topology } from '../topology';
 export const openAndCloseAfterTest = async (peers: TestPeer[]) => {
   await Promise.all(peers.map((peer) => peer.open()));
   afterTest(async () => {
-    await Promise.all(peers.map((peer) => peer.close()));
+    await asyncTimeout(Promise.all(peers.map((peer) => peer.close())), 1_000);
   });
 };
 

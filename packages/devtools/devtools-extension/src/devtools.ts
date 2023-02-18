@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import browser from 'webextension-polyfill';
 
-const log = debug('dxos:extension:devtools');
+import { log } from '@dxos/log';
 
 let panelCreated = false;
 
@@ -16,7 +15,7 @@ const createPanel = async () => {
   }
 
   log('Attempting to create panel...');
-  await browser.devtools.panels.create('DXOS', '', 'panel.html');
+  await browser.devtools.panels.create('DXOS', '', browser.runtime.getURL('/panel.html'));
   panelCreated = true;
   log('Panel created.');
 };

@@ -4,6 +4,7 @@
 
 export * from './AuthChoices';
 export * from './DeviceList';
+export * from './EditableList';
 export * from './ErrorProvider';
 export * from './Fallback';
 export * from './FatalError';
@@ -19,3 +20,4 @@ export * from './SingleInputStep';
 export * from './SpaceList';
 export * from './SpacesPage';
 export * from './StatusIndicator';
+export * from './Tile';

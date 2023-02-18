@@ -5,14 +5,9 @@
 import React, { ReactNode, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { Menubar, useSafeSpaceKey, StatusIndicator, Separator, ProfileMenu, SpacesLink } from '@dxos/react-appkit';
-import { useClient, useIdentity, useSpace, useStatus } from '@dxos/react-client';
+import { Menubar, useSafeSpaceKey, Separator, ProfileMenu, SpacesLink } from '@dxos/react-appkit';
+import { useClient, useIdentity, useSpace } from '@dxos/react-client';
 import { Button, useTranslation } from '@dxos/react-components';
-
-const StatusContainer = () => {
-  const status = useStatus();
-  return <StatusIndicator status={status} />;
-};
 
 export interface AppLayoutProps {
   spacesPath?: string;
@@ -63,7 +58,6 @@ export const AppLayout = ({ spacesPath = '/spaces', manageProfilePath, menubarCo
         {menubarContent}
         <Separator className='grow' />
       </Menubar>
-      <StatusContainer />
       <main className='max-is-5xl mli-auto pli-7 pbs-16'>
         <Outlet context={{ space }} />
       </main>

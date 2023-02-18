@@ -42,7 +42,7 @@ export const PendingInvitation = ({ wrapper, createInvitationUrl, onClickRemove 
   }, []);
 
   return (
-    <div role='group' className={mx(defaultGroup({ elevation: 1 }), 'mbe-2')}>
+    <div role='group' className={mx(defaultGroup({ elevation: 'group' }), 'mbe-2')}>
       {wrapper.invitation ? (
         <>
           <HeadingWithActions

@@ -13,6 +13,8 @@ package:
 
 runtime:
   client:
+    log:
+      filter: sdk:debug,warn
     storage:
       persistent: true
 

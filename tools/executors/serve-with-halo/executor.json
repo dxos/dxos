@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "run": {
+      "implementation": "./dist/src/main",
+      "schema": "./schema.json",
+      "description": "Runs another server alongside the HALO app."
+    }
+  }
+}

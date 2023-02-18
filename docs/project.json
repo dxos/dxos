@@ -3,7 +3,8 @@
   "targets": {
     "apidoc": {
       "dependsOn": [
-        "^build"
+        "^build",
+        "typedoc"
       ],
       "executor": "nx:run-script",
       "options": {
@@ -16,7 +17,8 @@
     "bundle": {
       "dependsOn": [
         "^build",
-        "^bundle"
+        "^bundle",
+        "prebuild"
       ],
       "executor": "nx:run-script",
       "options": {
@@ -47,24 +49,17 @@
         ]
       }
     },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "docs/src/proto/gen"
+      ]
+    },
     "prerelease": {
       "executor": "nx:run-script",
-      "inputs": [
-        {
-          "env": "DX_ENVIRONMENT"
-        },
-        {
-          "env": "NODE_ENV"
-        },
-        {
-          "env": "SENTRY_DESTINATION"
-        },
-        {
-          "env": "TELEMETRY_API_KEY"
-        },
-        "^production",
-        "default"
-      ],
       "options": {
         "script": "prerelease"
       },
@@ -86,6 +81,9 @@
       "executor": "@dxos/toolbox:exec"
     },
     "typedoc": {
+      "dependsOn": [
+        "^build"
+      ],
       "executor": "nx:run-script",
       "options": {
         "script": "typedoc"

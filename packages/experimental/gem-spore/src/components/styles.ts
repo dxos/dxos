@@ -4,6 +4,8 @@
 
 import { css } from '@emotion/css';
 
+// TODO(burdon): Replace with tailwind.
+
 export const defaultMarkerStyles = css`
   marker {
     &.arrow path {

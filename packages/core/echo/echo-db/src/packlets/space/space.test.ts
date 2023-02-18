@@ -6,11 +6,10 @@ import expect from 'expect';
 import assert from 'node:assert';
 
 import { CredentialGenerator } from '@dxos/credentials';
-import { ObjectModel } from '@dxos/object-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { TestAgentBuilder } from '../testing';
+import { TestAgentBuilder, testLocalDatabase } from '../testing';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
@@ -30,14 +29,13 @@ describe('space/space', () => {
       // Genesis
       const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
       const credentials = [
-        ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey)),
-        await generator.createFeedAdmission(space.key, space.dataFeedKey, AdmittedFeed.Designation.DATA)
+        ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
+        await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA)
       ];
 
       for (const credential of credentials) {
         await space.controlPipeline.writer.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
+          credential: { credential }
         });
       }
 
@@ -45,23 +43,8 @@ describe('space/space', () => {
       await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     }
 
-    {
-      assert(db.database);
-      const item1 = await db.database.createItem<ObjectModel>({
-        type: 'dxos.example'
-      });
-      const item2 = await db.database.createItem<ObjectModel>({
-        type: 'dxos.example'
-      });
-
-      await item1.model.set('key_1', 'value_1');
-      await item2.model.set('key_2', 'value_2');
-
-      expect(item1.model.get('key_1')).toEqual('value_1');
-      expect(item2.model.get('key_2')).toEqual('value_2');
-
-      expect(db.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2);
-    }
+    assert(db.databaseBackend);
+    await testLocalDatabase(db);
 
     await builder.close();
     expect(space.isOpen).toBeFalsy();
@@ -86,14 +69,13 @@ describe('space/space', () => {
         // Genesis
         const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
         const credentials = [
-          ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey)),
-          await generator.createFeedAdmission(space.key, space.dataFeedKey, AdmittedFeed.Designation.DATA)
+          ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
+          await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA)
         ];
 
         for (const credential of credentials) {
           await space.controlPipeline.writer.write({
-            '@type': 'dxos.echo.feed.CredentialsMessage',
-            credential
+            credential: { credential }
           });
         }
 
@@ -128,15 +110,14 @@ describe('space/space', () => {
         space1.key,
         agent2.identityKey,
         agent2.deviceKey,
-        space2.controlFeedKey,
-        space2.dataFeedKey,
+        space2.controlFeedKey!,
+        space2.dataFeedKey!,
         space1.genesisFeedKey
       );
 
       for (const credential of credentials) {
         await space1.controlPipeline.writer.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
+          credential: { credential }
         });
       }
     }
@@ -153,27 +134,8 @@ describe('space/space', () => {
 
     // TODO(burdon): Write multiple items (extract for all tests).
 
-    {
-      // Check item replicated from 1 => 2.
-      const item1 = await db1.database!.createItem({
-        type: 'dxos.example.1'
-      });
-      const item2 = await db2.database!.waitForItem({
-        type: 'dxos.example.1'
-      });
-      expect(item1.id).toEqual(item2.id);
-    }
-
-    {
-      // Check item replicated from 2 => 1.
-      const item1 = await db2.database!.createItem({
-        type: 'dxos.example.2'
-      });
-      const item2 = await db1.database!.waitForItem({
-        type: 'dxos.example.2'
-      });
-      expect(item1.id).toEqual(item2.id);
-    }
+    await testLocalDatabase(db1, db2);
+    await testLocalDatabase(db2, db1);
 
     await builder.close();
     expect(space1.isOpen).toBeFalsy();

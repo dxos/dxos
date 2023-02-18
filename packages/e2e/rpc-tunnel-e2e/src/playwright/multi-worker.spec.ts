@@ -20,8 +20,9 @@ describe('multi-worker', () => {
       return;
     }
 
-    const result = await setupPage(this, `${config.baseUrl}/multi-worker.html`, async (page) => {
-      return await page.isVisible(':has-text("value")');
+    const result = await setupPage(this, {
+      url: `${config.baseUrl}/multi-worker.html`,
+      waitFor: (page) => page.isVisible(':has-text("value")')
     });
 
     page = result.page;

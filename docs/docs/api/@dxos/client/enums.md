@@ -65,3 +65,11 @@ Values:
 - `IDENTITY`
 - `SPACE`
 - `UNKNOWN`
+### [`Status`]()
+
+Defined in:
+   file://./../../dxos/client.proto
+
+Values:
+- `ACTIVE`
+- `INACTIVE`

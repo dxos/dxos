@@ -93,7 +93,7 @@ const spaceList = ({}) => {
       <List disablePadding>
         {spaces.map((space) => (
           <ListItem button key={space.key}>
-            <ListItemText primary={space.getProperty('title')} />
+            <ListItemText primary={space.properties.name} />
           </ListItem>
         ))}
       </List>
@@ -121,7 +121,7 @@ const spaceSettings = ({ space_key = undefined, onClose }) => {
   const client = useClient();
   const space = usespace(space_key);
 
-  const [title, setTitle] = useState(space ? space.getProperty('title') : '');
+  const [title, setTitle] = useState(space ? space.properties.name : '');
 
   const handleSubmit = async () => {
     if (space) {
@@ -157,7 +157,7 @@ const spaceList = ({ onSelectspace }) => {
       <List disablePadding>
         {spaces.map((space) => (
           <ListItem button key={space.key} onClick={() => { onSelectspace(space.key) }}>
-            <ListItemText primary={space.getProperty('title')} />
+            <ListItemText primary={space.properties.name} />
 
             <ListItemSecondaryAction className='actions'>
               <IconButton

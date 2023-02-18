@@ -1,20 +1,18 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { Context, createContext, useContext } from 'react';
+import assert from 'assert';
+import { useParams } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
+import { useSpaces } from '@dxos/react-client';
 
-// TODO(burdon): Merge with AppState.
-
-export type SpaceContextType = {
-  space: Space;
-};
-
-// TODO(wittjosiah): Consider using react router outlet context (see tasks app).
-export const SpaceContext: Context<SpaceContextType | null> = createContext<SpaceContextType | null>(null);
-
-export const useSpace = (): SpaceContextType => {
-  return useContext(SpaceContext)!;
+// TODO(burdon): Reconcile with useFrameState.
+export const useSpace = (): Space => {
+  const spaces = useSpaces();
+  const { spaceKey } = useParams();
+  const space = spaces.find((space) => space.key.truncate() === spaceKey);
+  assert(space);
+  return space;
 };

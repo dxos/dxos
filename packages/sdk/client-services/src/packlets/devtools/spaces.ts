@@ -9,8 +9,8 @@ import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { ServiceContext } from '../services';
 
-export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) =>
-  new Stream<SubscribeToSpacesResponse>(({ next }) => {
+export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) => {
+  return new Stream<SubscribeToSpacesResponse>(({ next }) => {
     let unsubscribe: () => void;
 
     const update = async () => {
@@ -20,7 +20,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
       );
 
       next({
-        spaces: filteredSpaces.map((space) => {
+        spaces: filteredSpaces.map((space): SubscribeToSpacesResponse.SpaceInfo => {
           const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
             spaceMetadata.key.equals(space.key)
           );
@@ -28,10 +28,10 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
           return {
             key: space.key,
             isOpen: space.isOpen,
-            timeframe: spaceMetadata?.latestTimeframe,
+            timeframe: spaceMetadata?.dataTimeframe,
             genesisFeed: space.genesisFeedKey,
-            controlFeed: space.controlFeedKey,
-            dataFeed: space.dataFeedKey
+            controlFeed: space.controlFeedKey!, // TODO(dmaretskyi): Those keys may be missing.
+            dataFeed: space.dataFeedKey!
           };
         })
       });
@@ -50,3 +50,4 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
       clearTimeout(timeout);
     };
   });
+};

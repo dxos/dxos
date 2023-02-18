@@ -79,6 +79,11 @@ const main = async () => {
       requiresArg: false,
       type: 'boolean'
     })
+    .options('printMessage', {
+      description: 'whether to print the template message if any',
+      requiresArg: false,
+      type: 'boolean'
+    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
@@ -97,6 +102,7 @@ const main = async () => {
           interactive: boolean;
           executeFileTemplates: boolean;
           inheritance: boolean;
+          printMessage: boolean;
         } & any
       ) => {
         const tstart = Date.now();
@@ -114,6 +120,7 @@ const main = async () => {
           overwrite,
           interactive,
           executeFileTemplates,
+          printMessage,
           ...restArgs
         } = args;
         const debug = logger(verbose);
@@ -125,7 +132,7 @@ const main = async () => {
         debug('working directory', process.cwd());
         const extraArgs = { ...restArgs };
         delete extraArgs.$0; // yargs cruft
-        const files = await executeDirectoryTemplate({
+        const result = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
           input: input ? await catFiles(input?.split(',')) : extraArgs,
@@ -136,25 +143,13 @@ const main = async () => {
           exclude: exclude?.split(','),
           interactive,
           executeFileTemplates,
-          inheritance
+          inheritance,
+          printMessage
         });
-        let written = 0;
         debug(`output folder: ${output}`);
-        info(`template generated ${files.length} files ...`);
-        await Promise.all(
-          files.map(async (f) => {
-            try {
-              const saved = !dry && (await f.save());
-              info(saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
-              written += saved ? 1 : 0;
-            } catch (err: any) {
-              info('failed', f?.shortDescription(process.cwd()) ?? f);
-              info(err);
-            }
-          })
-        );
-        const now = Date.now();
-        info(`wrote ${written} files [${fmtDuration(now - tstart)}]`);
+        info(`template generated ${result.files.length} files ...`);
+        const { filesWritten } = await result.save({ dry, printMessage, printFiles: !quiet });
+        info(`wrote ${filesWritten} files [${fmtDuration(Date.now() - tstart)}]`);
       }
     }).argv;
 };

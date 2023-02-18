@@ -15,6 +15,7 @@ export class ResultSet<T> {
   private readonly _resultsUpdate = new Event<T[]>();
   private readonly _itemUpdate: ReadOnlyEvent;
   private readonly _getter: () => T[];
+  private _results: T[];
 
   /**
    * Triggered when `value` updates.
@@ -26,21 +27,22 @@ export class ResultSet<T> {
     assert(getter);
     this._itemUpdate = itemUpdate;
     this._getter = getter;
+    this._results = this._getter();
 
     this._resultsUpdate.addEffect(() =>
       this._itemUpdate.on(() => {
-        this._resultsUpdate.emit(this._getter());
+        this._results = this._getter();
+        this._resultsUpdate.emit(this._results);
       })
     );
   }
 
   get value(): T[] {
-    // TODO(dmaretskyi): Discuss whether this needs optimization.
-    return this._getter();
+    return this._results;
   }
 
   get first(): T {
-    const value = this._getter();
+    const value = this._results;
     assert(value.length);
     return value[0];
   }

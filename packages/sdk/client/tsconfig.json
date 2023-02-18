@@ -43,16 +43,19 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/document-model"
+    },
+    {
       "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/model-factory"
+      "path": "../../core/echo/echo-typegen"
     },
     {
-      "path": "../../core/echo/object-model"
+      "path": "../../core/echo/model-factory"
     },
     {
       "path": "../../core/echo/text-model"

@@ -4,14 +4,14 @@ Each space contains a number of object identified by a unique id within that spa
 
 Upon creation objects define a type (e.g. `example:task`) and a model.
 
-The default model is ObjectModel.
+The default model is DocumentModel.
 TextModel is another type of model that represents rich text with concurrent editing.
 Other custom models may be define: chat (log) model, chess model, etc.
 
-### ObjectModel
+### DocumentModel
 
-ObjectModel is the default model for objects.
-ObjectModel associates a protobuf message type to every object type.
+DocumentModel is the default model for objects.
+DocumentModel associates a protobuf message type to every object type.
 Objects must adhere to the schema defined in protobuf, following protobuf semantics.
 Unknown fields must be ignored by the application, but preserved in the serialized state.
 

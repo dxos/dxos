@@ -2,11 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-export const id = Symbol('id');
-export const schema = Symbol('schema');
-export const type = Symbol('type');
-export const proxy = Symbol('proxy');
-export const deleted = Symbol('deleted');
-export const base = Symbol('base');
-export const db = Symbol('db');
-export const data = Symbol('data');
+export const schema = Symbol.for('dxos.echo.schema');
+export const proxy = Symbol.for('dxos.echo.proxy');
+export const base = Symbol.for('dxos.echo.base');
+export const db = Symbol.for('dxos.echo.db');
+export const data = Symbol.for('dxos.echo.data');

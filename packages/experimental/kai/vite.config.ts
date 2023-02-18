@@ -3,7 +3,7 @@
 //
 
 import ReactPlugin from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
@@ -11,10 +11,10 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 import { ThemePlugin } from '@dxos/react-components/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
-import packageJson from './package.json';
-
-const env = (value?: string) => (value ? `"${value}"` : undefined);
-const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${packageJson.version}` : undefined;
+// @ts-ignore
+// NOTE: Vite requires uncompiled JS.
+import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 /**
  * https://vitejs.dev/config
@@ -31,50 +31,22 @@ export default defineConfig({
             cert: './cert.pem'
           }
         : false
+
+    // TODO(burdon): Disable HMR due to code size issues.
+    // TODO(burdon): If disabled then tailwind doesn't update.
+    // https://vitejs.dev/config/server-options.html#server-hmr
+    // hmr: false
   },
 
-  define: {
-    'process.env.DEBUG': env(process.env.DEBUG),
-    'process.env.DEMO': env(process.env.DEMO),
-    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.DX_RELEASE': env(DX_RELEASE),
-    'process.env.DX_VAULT': env(process.env.DX_VAULT),
-    'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX),
-    'process.env.LOG_FILTER': env(process.env.LOG_FILTER)
-  },
-
-  // TODO(burdon): Document.
-  optimizeDeps: {
-    force: true,
-    include: [
-      '@dxos/config',
-      '@dxos/keys',
-      '@dxos/log',
-      '@dxos/protocols',
-      '@dxos/protocols/proto/dxos/client',
-      '@dxos/protocols/proto/dxos/client/services',
-      '@dxos/protocols/proto/dxos/config',
-      '@dxos/protocols/proto/dxos/echo/feed',
-      '@dxos/protocols/proto/dxos/echo/model/object',
-      '@dxos/protocols/proto/dxos/halo/credentials',
-      '@dxos/protocols/proto/dxos/halo/invitations',
-      '@dxos/protocols/proto/dxos/halo/keys',
-      '@dxos/protocols/proto/dxos/mesh/bridge',
-      '@dxos/protocols/proto/dxos/rpc'
-    ]
-  },
-
-  // TODO(burdon): Document.
   build: {
-    outDir: 'out/kai',
     sourcemap: true,
-    commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    },
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom']
+          faker: ['faker'],
+          highlighter: ['react-syntax-highlighter'],
+          monaco: ['monaco-editor', '@monaco-editor/react'],
+          vendor: ['react', 'react-dom', 'react-router-dom']
         }
       }
     }
@@ -82,28 +54,30 @@ export default defineConfig({
 
   plugins: [
     // TODO(burdon): Document.
-    ConfigPlugin(),
+    ConfigPlugin({ env: ['DX_VAULT'] }),
 
-    // TODO(burdon): Document.
+    // Directories to scan for Tailwind classes.
     ThemePlugin({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
+        resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs')
-      ]
+      ],
+      extensions: [osThemeExtension, kaiThemeExtension]
     }),
 
-    // TODO(burdon): Document.
     ReactPlugin(),
 
-    // TODO(burdon): Document.
     // To reset, unregister service worker using devtools.
     VitePWA({
+      selfDestroying: true,
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },
@@ -156,6 +130,27 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // https://www.bundle-buddy.com/rollup
+    {
+      name: 'bundle-buddy',
+      buildEnd() {
+        const deps: { source: string; target: string }[] = [];
+        for (const id of this.getModuleIds()) {
+          const m = this.getModuleInfo(id);
+          if (m != null && !m.isExternal) {
+            for (const target of m.importedIds) {
+              deps.push({ source: m.id, target });
+            }
+          }
+        }
+
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+      }
+    }
   ]
 });

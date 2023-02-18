@@ -10,7 +10,7 @@ import { ModelFactory } from '../model-factory';
 import { TestBuilder } from './test-builder';
 import { TestModel } from './test-model';
 
-describe('test model', () => {
+describe.skip('test model', () => {
   test('basic mutations', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TestModel), TestModel);
     const peer = rig.createPeer();

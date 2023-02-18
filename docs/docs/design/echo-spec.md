@@ -125,14 +125,14 @@ However, when peers are partitioned, they start to diverge from each other.
     *   Each items outputs a snapshot from its corresponding model.
     *   If the model doesn't override the snapshot, then the list of messages is output.
 *   They allow compression by removing history.
-    *   The ObjectModel will just save the current state instead of the list of mutations.
+    *   The DocumentModel will just save the current state instead of the list of mutations.
 *   Peers participate in snapshot exchange protocol, similar to BitTorrent.
     *   Based on space policy a particular peer may be authorized to declare snapshots (e.g., a bot); otherwise a peer election may be implemented.
 *   Snapshots can be split into a tree of blobs as an optimization for more efficient storage/replication.
     *   This enables items to restore their models on demand (or for spaces to only partially hydrate specific items).
 *   Snapshots reference the hash of a previous snapshot, which may contain additional historical data.
     *   Certain models may decide to discard information when creating a snapshot.
-        *   Examples: the MessengerModel may discard old messages; the ObjectModel may discard deleted objects.
+        *   Examples: the MessengerModel may discard old messages; the DocumentModel may discard deleted objects.
     *   It may be possible for models to asynchronously load previous snapshots to retrieve historical information.
 *   Snapshots may be analogous to blocks in a blockchain.
 *   At the beginning of an epoch each model may decide to discard information (e.g., deleted items beyond a TTL);

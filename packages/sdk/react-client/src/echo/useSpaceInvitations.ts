@@ -2,27 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
-import { CancellableInvitationObservable, SpaceProxy } from '@dxos/client';
+import { SpaceProxy } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 
 import { useInvitationStatus } from '../invitations';
 import { useSpace } from './useSpaces';
 
-export const useSpaceInvitations = (spaceKey?: PublicKey): CancellableInvitationObservable[] => {
+export const useSpaceInvitations = (spaceKey?: PublicKey) => {
   const space = useSpace(spaceKey);
-  const [invitations, setInvitations] = useState<CancellableInvitationObservable[]>(space?.invitations ?? []);
-
-  useEffect(() => {
-    if (!(space instanceof SpaceProxy)) {
-      return;
-    }
-
-    return space.invitationsUpdate.on(() => {
-      setInvitations([...space.invitations]);
-    });
-  }, [space]);
+  const invitations =
+    useSyncExternalStore(
+      (listener) => (space instanceof SpaceProxy ? space.invitationsUpdate.on(() => listener()) : () => {}),
+      () => space?.invitations
+    ) ?? [];
 
   return invitations;
 };

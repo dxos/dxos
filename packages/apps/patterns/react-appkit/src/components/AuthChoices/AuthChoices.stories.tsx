@@ -22,7 +22,6 @@ export const Default = {
     const { t } = useTranslation('appkit');
     return (
       <Group
-        elevation={5}
         label={{
           level: 1,
           className: 'mb-4 text-3xl',

@@ -7,11 +7,12 @@ import React, { useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { Space } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
-import { ProfileInitializer, useTestSpace } from '@dxos/react-client-testing';
+import { useAsyncEffect } from '@dxos/react-async';
+import { ClientProvider, useClient } from '@dxos/react-client';
 import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components-deprecated';
 
 import { useSpaceSerializer } from '../src';
+import { ProfileInitializer } from './helpers';
 
 export default {
   title: 'KitchenSink/Serialization'
@@ -56,7 +57,12 @@ export const ImportSpace = () => (
 );
 
 const ExportStory = () => {
-  const space = useTestSpace();
+  const client = useClient();
+  const [space, setSpace] = useState<Space>();
+  useAsyncEffect(async () => {
+    setSpace(await client.echo.createSpace());
+  }, []);
+
   const spaceSerializer = useSpaceSerializer();
   const download = useFileDownload();
 

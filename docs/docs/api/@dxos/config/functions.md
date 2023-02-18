@@ -38,7 +38,7 @@ File storage.
 Returns: <code>T</code>
 
 Arguments: none
-### [mapFromKeyValues(spec, values)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L31)
+### [mapFromKeyValues(spec, values)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L33)
 
 
 Maps the given objects onto a flattened set of (key x values).
@@ -57,7 +57,7 @@ Arguments:
 `spec`: <code>MappingSpec</code>
 
 `values`: <code>Record&lt;string, any&gt;</code>
-### [mapToKeyValues(spec, values)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L77)
+### [mapToKeyValues(spec, values)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L79)
 
 
 Maps the given flattend set of (key x values) onto a JSON object.
@@ -69,3 +69,13 @@ Arguments:
 `spec`: <code>MappingSpec</code>
 
 `values`: <code>any</code>
+### [validateConfig(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/config.ts#L101)
+
+
+Validate config object.
+
+Returns: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
+
+Arguments: 
+
+`config`: <code>[Config](/api/@dxos/config/interfaces/Config)</code>

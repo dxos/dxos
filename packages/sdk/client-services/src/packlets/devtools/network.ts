@@ -3,15 +3,15 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { CommandTrace } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import {
   GetNetworkPeersRequest,
   GetNetworkPeersResponse,
   SubscribeToNetworkTopicsResponse,
   SubscribeToSignalStatusResponse,
-  SubscribeToSignalTraceResponse,
+  SignalResponse,
   SubscribeToSwarmInfoResponse
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
@@ -30,14 +30,25 @@ export const subscribeToNetworkStatus = ({ networkManager }: { networkManager: N
     update();
   });
 
-export const subscribeToSignalTrace = ({ networkManager }: { networkManager: NetworkManager }) =>
-  new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
-    next({ events: [] });
-    const trace: CommandTrace[] = [];
-    networkManager.signalManager.commandTrace.on((msg) => {
-      trace.push(msg);
-      next({ events: trace.map((msg) => JSON.stringify(msg)) });
+export const subscribeToSignal = ({ networkManager }: { networkManager: NetworkManager }) =>
+  new Stream<SignalResponse>(({ next }) => {
+    const ctx = new Context();
+    networkManager.signalManager.onMessage.on(ctx, (message) => {
+      next({
+        message: {
+          author: message.author.asUint8Array(),
+          recipient: message.recipient.asUint8Array(),
+          payload: message.payload
+        },
+        receivedAt: new Date()
+      });
     });
+    networkManager.signalManager.swarmEvent.on(ctx, (swarmEvent) => {
+      next({ swarmEvent: swarmEvent.swarmEvent, receivedAt: new Date() });
+    });
+    return () => {
+      return ctx.dispose();
+    };
   });
 
 export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: NetworkManager }) =>

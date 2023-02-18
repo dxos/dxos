@@ -8,13 +8,16 @@ export default defineTemplate(
       ? text`
       /** @type {import('tailwindcss').Config} */
       module.exports = {
-        content: ["./index.html", "./src/**/*.{js,ts,tsx,jsx}"],
+        content: ["./index.html", "./src/**/*.{js,ts,tsx,jsx}}"],
         theme: {
           extend: {},
         },
         plugins: [],
       }
-      ` : null;
+      `
+      : tailwind && dxosUi
+      ? text`// file left intentionally blank for tailwind detection`
+      : null;
   },
   { config }
 );

@@ -152,7 +152,7 @@ export class Swarm {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
     if (this._ctx.disposed) {
-      log.warn('ignored for offline swarm');
+      log('swarm event ignored for disposed swarm');
       return;
     }
 
@@ -181,7 +181,7 @@ export class Swarm {
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { message });
     if (this._ctx.disposed) {
-      log.info('ignored for offline swarm');
+      log('ignored for disposed swarm');
       return { accept: false };
     }
 

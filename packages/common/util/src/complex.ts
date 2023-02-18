@@ -2,11 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import { raise } from '@dxos/debug';
+import { inspect } from 'node:util';
+
+import { inspectObject, raise } from '@dxos/debug';
 
 export type Primitive = string | number | boolean | null | undefined;
 
 export type PrimitiveProjection<T> = (value: T) => Primitive;
+
+const MAX_SERIALIZATION_LENGTH = 10;
 
 /**
  * A set implementation that can hold complex values (like Buffer).
@@ -19,12 +23,30 @@ export type PrimitiveProjection<T> = (value: T) => Primitive;
 export class ComplexSet<T> implements Set<T> {
   private readonly _values = new Map<Primitive, T>();
 
-  constructor(private readonly _projection: PrimitiveProjection<T>, values?: Iterable<T> | null) {
+  // prettier-ignore
+  constructor(
+    private readonly _projection: PrimitiveProjection<T>,
+    values?: Iterable<T> | null
+  ) {
     if (values) {
       for (const value of values) {
         this.add(value);
       }
     }
+  }
+
+  toString() {
+    return inspectObject(this);
+  }
+
+  toJSON() {
+    return this._values.size > MAX_SERIALIZATION_LENGTH
+      ? { size: this._values.size }
+      : Array.from(this._values.values());
+  }
+
+  [inspect.custom]() {
+    return inspectObject(this);
   }
 
   add(value: T): this {
@@ -44,6 +66,7 @@ export class ComplexSet<T> implements Set<T> {
     if (thisArg) {
       callbackfn = callbackfn.bind(thisArg);
     }
+
     this._values.forEach((value) => callbackfn(value, value, this));
   }
 
@@ -83,12 +106,13 @@ export type ComplexSetConstructor<T> = new (values?: Iterable<T> | null) => Comp
 /**
  * Create a subclass of ComplexSet with predefined projection function.
  */
-export const makeSet = <T>(projection: PrimitiveProjection<T>): ComplexSetConstructor<T> =>
-  class BoundComplexSet extends ComplexSet<T> {
+export const makeSet = <T>(projection: PrimitiveProjection<T>): ComplexSetConstructor<T> => {
+  return class BoundComplexSet extends ComplexSet<T> {
     constructor(values?: Iterable<T> | null) {
       super(projection, values);
     }
   };
+};
 
 /**
  * A map implementation that can hold complex values (like Buffer) as keys.
@@ -100,12 +124,30 @@ export class ComplexMap<K, V> implements Map<K, V> {
   private readonly _keys = new Map<Primitive, K>();
   private readonly _values = new Map<Primitive, V>();
 
-  constructor(private readonly _keyProjection: PrimitiveProjection<K>, entries?: readonly (readonly [K, V])[] | null) {
+  // prettier-ignore
+  constructor(
+    private readonly _keyProjection: PrimitiveProjection<K>,
+    entries?: readonly (readonly [K, V])[] | null
+  ) {
     if (entries) {
       for (const [key, value] of entries) {
         this.set(key, value);
       }
     }
+  }
+
+  toString() {
+    return inspectObject(this);
+  }
+
+  toJSON() {
+    return this._values.size > MAX_SERIALIZATION_LENGTH
+      ? { size: this._values.size }
+      : Array.from(this._values.values());
+  }
+
+  [inspect.custom]() {
+    return inspectObject(this);
   }
 
   clear(): void {

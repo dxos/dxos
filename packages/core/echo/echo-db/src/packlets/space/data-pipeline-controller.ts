@@ -11,13 +11,12 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { TypedMessage } from '@dxos/protocols';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { DataMessage, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
-import { Database, DatabaseBackendHost } from '../database';
+import { DatabaseBackendHost, ItemManager } from '../database';
 import { SnapshotManager } from '../database/snapshot-manager';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
@@ -84,8 +83,8 @@ export class DataPipelineControllerImpl implements DataPipelineController {
 
   constructor(private readonly _params: DataPipelineControllerImplParams) {}
 
+  public _itemManager!: ItemManager;
   public databaseBackend?: DatabaseBackendHost;
-  public database?: Database;
 
   get pipelineState() {
     return this._pipeline?.state;
@@ -109,21 +108,18 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     this._pipeline = await this._spaceContext.openPipeline(this.getStartTimeframe());
 
     // Create database backend.
-    const feedWriter = createMappedFeedWriter<EchoEnvelope, TypedMessage>(
-      (msg) => ({
-        '@type': 'dxos.echo.feed.EchoEnvelope',
-        ...msg
-      }),
+    const feedWriter = createMappedFeedWriter<DataMessage, FeedMessage.Payload>(
+      (data: DataMessage) => ({ data }),
       this._pipeline.writer ?? failUndefined()
     );
 
     this.databaseBackend = new DatabaseBackendHost(feedWriter, this._snapshot?.database, {
       snapshots: true // TODO(burdon): Config.
     });
+    this._itemManager = new ItemManager(this._params.modelFactory);
 
     // Connect pipeline to the database.
-    this.database = new Database(this._params.modelFactory, this.databaseBackend, this._params.memberKey);
-    await this.database.initialize();
+    await this.databaseBackend.open(this._itemManager, this._params.modelFactory);
 
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
@@ -181,7 +177,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
     await this._ctx.dispose();
     await this._pipeline?.stop();
     await this.databaseBackend?.close();
-    await this.database?.destroy();
+    await this._itemManager?.destroy();
     await this._params.snapshotManager.close();
   }
 
@@ -200,8 +196,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
       log('processing message', { msg });
 
       try {
-        const payload = data.payload as TypedMessage;
-        if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
+        if (data.payload.data) {
           const feedInfo = this._params.feedInfoProvider(feedKey);
           if (!feedInfo) {
             log.error('Could not find feed.', { feedKey });
@@ -209,7 +204,7 @@ export class DataPipelineControllerImpl implements DataPipelineController {
           }
 
           await this.databaseBackend!.echoProcessor({
-            data: payload,
+            data: data.payload.data.object,
             meta: {
               feedKey,
               seq,

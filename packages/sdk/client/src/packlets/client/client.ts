@@ -9,14 +9,14 @@ import { synchronized } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
-import { ApiError, InvalidConfigError } from '@dxos/errors';
+import { ApiError } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { Status } from '@dxos/protocols/proto/dxos/client';
+import { StatusResponse } from '@dxos/protocols/proto/dxos/client';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
-import { EXPECTED_CONFIG_VERSION } from './config';
 import { SpaceSerializer } from './serializer';
 import { fromIFrame } from './utils';
 
@@ -68,11 +68,11 @@ export class Client {
     this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
     this._mesh = new MeshProxy(this._services);
 
-    // TODO(burdon): Reconcile with Config.sanitizer.
-    if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigError(
-        'Invalid config version', { current: this._config.values.version, expected: EXPECTED_CONFIG_VERSION }
-      );
+    // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
+    const filter = this.config.get('runtime.client.log.filter');
+    if (filter) {
+      const prefix = this.config.get('runtime.client.log.prefix');
+      log.config({ filter, prefix });
     }
   }
 
@@ -116,7 +116,11 @@ export class Client {
    * ECHO database.
    */
   get echo(): EchoProxy {
-    // assert(this._initialized, 'Client not initialized.');
+    assert(this._initialized, 'Client not initialized.');
+    // if (!this.halo.profile) {
+    //   throw new ApiError('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
+    // }
+
     return this._echo;
   }
 
@@ -142,6 +146,7 @@ export class Client {
       await createDevtoolsRpcServer(this, this._services);
     }
 
+    assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services.SystemService.initSession();
 
     await this._halo.open();
@@ -173,8 +178,19 @@ export class Client {
   /**
    * Get system status.
    */
-  async getStatus(): Promise<Status> {
+  async getStatus(): Promise<StatusResponse> {
+    assert(this._services.services.SystemService, 'SystemService is not available.');
     return this._services.services?.SystemService.getStatus();
+  }
+
+  /**
+   * Reinitialized the client session with the remote service host.
+   * This is useful when connecting to a host running behind a resource lock
+   * (e.g., HALO when SharedWorker is unavailable).
+   */
+  async resumeHostServices(): Promise<void> {
+    assert(this._services.services.SystemService, 'SystemService is not available.');
+    await this._services.services.SystemService.initSession();
   }
 
   /**
@@ -186,9 +202,10 @@ export class Client {
       throw new ApiError('Client not open.');
     }
 
+    assert(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services?.SystemService.reset();
     await this.destroy();
-    this._halo.profileChanged.emit();
+    // this._halo.profileChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
   }
 

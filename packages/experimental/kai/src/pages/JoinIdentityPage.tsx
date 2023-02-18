@@ -15,7 +15,7 @@ import { invitationCodeFromUrl } from '../util';
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const JoinIdentityPage = () => {
+const JoinIdentityPage = () => {
   const client = useClient();
   const { t } = useTranslation('appkit');
   const navigate = useNavigate();
@@ -43,3 +43,5 @@ export const JoinIdentityPage = () => {
     </main>
   );
 };
+
+export default JoinIdentityPage;

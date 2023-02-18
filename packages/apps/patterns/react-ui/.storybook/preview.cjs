@@ -1,7 +1,6 @@
 import React, { createElement, useEffect } from 'react';
-import { useDarkMode } from 'storybook-dark-mode';
 import { ThemeProvider } from '@dxos/react-components';
-import { ClientProvider } from '../src/testing';
+import {osTranslations} from '../src'
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -13,21 +12,34 @@ export const parameters = {
   }
 };
 
-const ThemeWrapper = ({ children }) => {
-  // render your custom theme provider
-  const darkMode = useDarkMode();
-  useEffect(() => {
-    document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
-  }, [darkMode]);
-  return children;
-};
+export const globalTypes = {
+  theme: {
+    name: 'Theme',
+    description: 'Global theme for components',
+    defaultValue: 'light',
+    toolbar: {
+      // The icon for the toolbar item
+      icon: 'circlehollow',
+      // Array of options
+      items: [
+        { value: 'light', icon: 'circlehollow', title: 'light' },
+        { value: 'dark', icon: 'circle', title: 'dark' },
+      ],
+      // Property that specifies if the name of the item will be displayed
+      showName: true,
+    },
+  },
+}
 
-export const decorators = [
-  (Story) => (
-    createElement(ThemeProvider, {
-      children: createElement(ThemeWrapper, {
-        children: createElement(Story)
-      })
-    })
-  )
-];
+const withTheme = (StoryFn, context) => {
+  const theme = context?.parameters?.theme || context?.globals?.theme;
+  useEffect(()=>{
+    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
+  }, [theme])
+  return createElement(ThemeProvider, {
+    resourceExtensions: [osTranslations],
+    children: createElement(StoryFn)
+  })
+}
+
+export const decorators = [withTheme];

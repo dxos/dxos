@@ -50,15 +50,25 @@ export class SpaceProtocol {
   private readonly _swarmIdentity: SwarmIdentity;
   private readonly _onSessionAuth?: (session: Teleport) => void;
 
+  @logInfo
   private readonly _topic: PublicKey;
+
+  private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
+  private readonly _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
 
   private _connection?: SwarmConnection;
 
-  private _feeds = new Set<FeedWrapper<FeedMessage>>();
-  private _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
-
   get sessions(): ReadonlyMap<PublicKey, SpaceProtocolSession> {
     return this._sessions;
+  }
+
+  get feeds(): ReadonlySet<FeedWrapper<FeedMessage>> {
+    return this._feeds;
+  }
+
+  @logInfo
+  private get _ownPeerKey() {
+    return this._swarmIdentity.peerKey;
   }
 
   constructor({ topic, swarmIdentity, networkManager, onSessionAuth }: SpaceProtocolOptions) {
@@ -71,6 +81,8 @@ export class SpaceProtocol {
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
   addFeed(feed: FeedWrapper<FeedMessage>) {
+    log('addFeed', { key: feed.key });
+
     this._feeds.add(feed);
     for (const session of this._sessions.values()) {
       session.replicator.addFeed(feed);

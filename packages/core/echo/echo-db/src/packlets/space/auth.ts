@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask } from '@dxos/async';
+import { runInContext, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { log } from '@dxos/log';
@@ -70,7 +70,7 @@ export class AuthExtension extends RpcExtension<Services, Services> {
         assert(credential?.length > 0, 'invalid credential');
         const success = await this._authParams.verifier(challenge, credential);
         assert(success, 'credential not verified');
-        this._authParams.onAuthSuccess();
+        runInContext(this._ctx, () => this._authParams.onAuthSuccess());
       } catch (err) {
         log.warn('auth failed', err);
         this.close();

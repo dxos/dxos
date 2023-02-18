@@ -9,8 +9,7 @@ module.exports = {
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-    'storybook-dark-mode'
+    '@storybook/addon-interactions'
   ],
   framework: {
     name: '@storybook/react-vite',
@@ -18,35 +17,13 @@ module.exports = {
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
-      optimizeDeps: {
-        force: true,
-        include: [
-          '@dxos/async',
-          '@dxos/client',
-          '@dxos/codec-protobuf',
-          '@dxos/config',
-          '@dxos/debug',
-          '@dxos/keys',
-          '@dxos/log',
-          '@dxos/messaging',
-          '@dxos/protocols',
-          '@dxos/react-async',
-          '@dxos/react-components',
-          '@dxos/rpc',
-          '@dxos/rpc-tunnel',
-          '@dxos/util',
-          'storybook-dark-mode'
-        ]
-      },
-      build: {
-        commonjsOptions: {
-          include: [/packages/, /node_modules/]
-        }
-      },
       plugins: [
         ConfigPlugin(),
         ThemePlugin({
-          content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
+          content: [
+            resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
+            resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.mjs')
+          ]
         })
       ]
     })

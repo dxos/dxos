@@ -15,9 +15,9 @@ import { Generator } from '../proto';
 // NOTE: Copied from halo-app.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const RecoverIdentityPage = () => {
+const RecoverIdentityPage = () => {
   const { t } = useTranslation('appkit');
-  const { demo } = useAppState();
+  const { dev } = useAppState();
   const client = useClient();
   const identity = useIdentity();
   const [seedphrase, setSeedphrase] = useState('');
@@ -38,14 +38,15 @@ export const RecoverIdentityPage = () => {
     try {
       await client.halo.createProfile({ seedphrase });
       const space = await client.echo.createSpace();
-      if (demo && !client.config.values.runtime?.client?.storage?.persistent) {
-        await new Generator(space.experimental.db).generate();
+      if (dev && !client.config.values.runtime?.client?.storage?.persistent) {
+        await new Generator(space.db).generate();
       }
+
       redirect();
     } catch {
       setPending(false);
     }
-  }, [seedphrase, redirect, demo]);
+  }, [seedphrase, redirect, dev]);
 
   useEffect(() => {
     if (identity) {
@@ -61,7 +62,7 @@ export const RecoverIdentityPage = () => {
           pending,
           inputLabel: t('seed phrase label'),
           inputPlaceholder: t('seed phrase placeholder'),
-          onChange: setSeedphrase,
+          onChange: ({ target: { value } }) => setSeedphrase(value),
           onNext,
           onBack: () => history.back()
         }}
@@ -69,3 +70,5 @@ export const RecoverIdentityPage = () => {
     </main>
   );
 };
+
+export default RecoverIdentityPage;

@@ -4,9 +4,9 @@
 
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { useId } from '../../hooks';
+import { useId, useButtonShadow } from '../../hooks';
 import { MessageValence } from '../../props';
-import { valenceAlertColors } from '../../styles';
+import { alertValence } from '../../styles';
 import { mx } from '../../util';
 
 export interface AlertSlots {
@@ -24,12 +24,13 @@ export interface AlertProps {
 
 export const Alert = ({ title, children, assertive, valence, slots = {} }: AlertProps) => {
   const labelId = useId('alertLabel');
+  const shadow = useButtonShadow();
   return (
     <div
       {...slots.root}
       role={assertive ? 'alert' : 'group'}
       aria-labelledby={labelId}
-      className={mx('p-3 border rounded-md', valenceAlertColors(valence), slots.root?.className)}
+      className={mx('p-3 rounded-md', shadow, alertValence(valence), slots.root?.className)}
     >
       <p {...slots.title} id={labelId} className={mx('font-medium mb-2', slots.title?.className)}>
         {title}

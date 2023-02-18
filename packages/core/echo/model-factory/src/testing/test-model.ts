@@ -7,7 +7,7 @@ import { schema } from '@dxos/protocols';
 import type { TestItemMutation, TestItemSnapshot } from '@dxos/protocols/proto/example/testing/data';
 
 import { Model } from '../model';
-import { ModelMeta, MutationProcessMeta, StateMachine } from '../types';
+import { ModelMeta, StateMachine } from '../types';
 
 class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutation, TestItemSnapshot> {
   private readonly _state = new Map();
@@ -16,7 +16,7 @@ class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutat
     return this._state;
   }
 
-  process(mutation: TestItemMutation, meta: MutationProcessMeta): void {
+  process(mutation: TestItemMutation): void {
     const { key, value } = mutation;
     this._state.set(key, value);
   }

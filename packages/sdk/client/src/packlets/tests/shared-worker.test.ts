@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { sleep } from '@dxos/async';
-import { ClientServicesProxy, IFrameRuntime, WorkerRuntime } from '@dxos/client-services';
+import { ClientServicesProxy, IFrameProxyRuntime, WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { describe, test, afterTest } from '@dxos/test';
@@ -27,7 +27,7 @@ describe('Shared worker', () => {
       systemPort: systemPorts[1],
       appPort: workerProxyPorts[1]
     });
-    const clientProxy = new IFrameRuntime({
+    const clientProxy = new IFrameProxyRuntime({
       systemPort: systemPorts[0],
       windowAppPort: proxyWindowPorts[0],
       workerAppPort: workerProxyPorts[0]
@@ -55,7 +55,7 @@ describe('Shared worker', () => {
       appPort: workerProxyPorts[1]
     });
 
-    const clientProxy = new IFrameRuntime({
+    const clientProxy = new IFrameProxyRuntime({
       systemPort: systemPorts[0],
       windowAppPort: proxyWindowPorts[0],
       workerAppPort: workerProxyPorts[0]

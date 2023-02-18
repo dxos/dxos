@@ -3,12 +3,14 @@
 //
 
 import expect from 'expect'; // TODO(burdon): Convert to chai.
+import { inspect } from 'node:util';
 import waitForExpect from 'wait-for-expect';
 
+import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { DatabaseRouter } from './database-router';
-import { id } from './defs';
+import { data } from './defs';
 import { Document } from './document';
 import { EchoArray } from './echo-array';
 import { createDatabase } from './testing';
@@ -24,10 +26,39 @@ describe('EchoDatabase', () => {
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
 
-    await db.save(obj);
+    await db.add(obj);
 
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
+    expect(obj[data]).toEqual({
+      '@id': obj.id,
+      '@type': undefined,
+      title: 'Test title',
+      description: 'Test description'
+    });
+  });
+
+  test('get/set properties after save', async () => {
+    const db = await createDatabase();
+
+    const obj = new Document();
+    await db.add(obj);
+
+    obj.title = 'Test title';
+    obj.description = 'Test description';
+
+    expect(obj.title).toEqual('Test title');
+    expect(obj.description).toEqual('Test description');
+  });
+
+  test('get/set reference after save', async () => {
+    const db = await createDatabase();
+
+    const obj = new Document();
+    await db.add(obj);
+
+    obj.nested = new Document({ title: 'Test title' });
+    expect(obj.nested.title).toEqual('Test title');
   });
 
   test('initializer', async () => {
@@ -37,7 +68,7 @@ describe('EchoDatabase', () => {
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
 
-    await db.save(obj);
+    await db.add(obj);
 
     expect(obj.title).toEqual('Test title');
     expect(obj.description).toEqual('Test description');
@@ -53,7 +84,7 @@ describe('EchoDatabase', () => {
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee).toEqual(john);
 
-    await db.save(task);
+    await db.add(task);
 
     expect(task.title).toEqual('Fix bugs');
     expect(task.assignee instanceof Document).toBeTruthy();
@@ -65,7 +96,7 @@ describe('EchoDatabase', () => {
     const db = await createDatabase();
 
     const task = new Document({ title: 'Fix bugs' });
-    await db.save(task);
+    await db.add(task);
 
     task.details = { priority: 'low' };
     task.details.deadline = '2021-01-01';
@@ -73,30 +104,53 @@ describe('EchoDatabase', () => {
     expect(task.details.deadline).toEqual('2021-01-01');
   });
 
-  test('select', async () => {
-    const router = new DatabaseRouter();
-    const db = await createDatabase(router);
+  describe('subscription', () => {
+    test('updates are propagated', async () => {
+      const router = new DatabaseRouter();
+      const db = await createDatabase(router);
 
-    const task = new Document();
-    await db.save(task);
+      const task = new Document();
+      await db.add(task);
 
-    let counter = 0;
-    const selection = router.createSubscription(() => {
-      counter++;
+      let counter = 0;
+      const selection = router.createSubscription(() => {
+        counter++;
+      });
+      selection.update([task]);
+
+      task.title = 'Test title';
+      await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(1));
+
+      task.assignee = new Document({ name: 'user-1' });
+      await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(2));
+
+      task.assignee.name = 'user-2';
+      selection.update([task, task.assignee]);
+
+      task.assignee.name = 'user-3';
+      await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(3));
     });
-    selection.update([task]);
 
-    task.title = 'Test title';
-    await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(1));
+    test('updates are synchronous', async () => {
+      const router = new DatabaseRouter();
+      const db = await createDatabase(router);
 
-    task.assignee = new Document({ name: 'user-1' });
-    await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(2));
+      const task = new Document();
+      await db.add(task);
 
-    task.assignee.name = 'user-2';
-    selection.update([task, task.assignee]);
+      const actions = [];
+      const selection = router.createSubscription(() => {
+        actions.push('update');
+      });
+      selection.update([task]);
 
-    task.assignee.name = 'user-3';
-    await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(3));
+      actions.push('before');
+      task.title = 'Test title';
+      actions.push('after');
+
+      // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
+      expect(actions).toEqual(['before', 'update', 'after']);
+    });
   });
 
   test('query', async () => {
@@ -107,24 +161,20 @@ describe('EchoDatabase', () => {
     query.subscribe(() => {
       ++counter;
     });
-    expect(query.getObjects()).toEqual([]);
+    expect(query.objects).toEqual([]);
 
     const task1 = new Document({ category: 'eng', title: 'Task 1' });
-    await db.save(task1);
-    await waitForExpect(() => {
-      expect(query.getObjects()).toEqual([task1]);
-      expect(counter).toBeGreaterThanOrEqual(1);
-    });
+    await db.add(task1);
+    expect(query.objects).toEqual([task1]);
+    expect(counter).toBeGreaterThanOrEqual(1);
 
     const task2 = new Document({ category: 'legal', title: 'Task 2' });
-    await db.save(task2);
-    expect(query.getObjects()).toEqual([task1]);
+    await db.add(task2);
+    expect(query.objects).toEqual([task1]);
 
     task2.category = 'eng';
-    await waitForExpect(() => {
-      expect(query.getObjects()).toEqual([task1, task2]);
-      expect(counter).toBeGreaterThanOrEqual(2);
-    });
+    expect(query.objects).toEqual([task1, task2]);
+    expect(counter).toBeGreaterThanOrEqual(2);
   });
 
   test('toJSON', async () => {
@@ -135,15 +185,15 @@ describe('EchoDatabase', () => {
       tags: ['red', 'green'],
       assignee: new Document({ name: 'Bob' })
     });
-    await db.save(task);
+    await db.add(task);
 
     expect(task.toJSON()).toEqual({
-      '@id': task[id],
-      '@type': null,
+      '@id': task.id,
+      '@type': undefined,
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: {
-        '@id': task.assignee[id]
+        '@id': task.assignee.id
       }
     });
   });
@@ -156,9 +206,10 @@ describe('EchoDatabase', () => {
       tags: ['red', 'green'],
       assignee: new Document({ name: 'Bob' })
     });
-    await db.save(task);
+    await db.add(task);
 
-    console.log(task);
+    inspect(task);
+    // console.log(task);
   });
 
   describe('ordered arrays', () => {
@@ -166,7 +217,7 @@ describe('EchoDatabase', () => {
       const db = await createDatabase();
 
       const task = new Document({ title: 'Main task' });
-      await db.save(task);
+      await db.add(task);
 
       task.tags = new EchoArray();
       task.tags.push('red');
@@ -193,7 +244,7 @@ describe('EchoDatabase', () => {
       const db = await createDatabase();
 
       const task = new Document({ title: 'Main task' });
-      await db.save(task);
+      await db.add(task);
 
       task.subtasks = new EchoArray();
       task.subtasks.push(new Document({ title: 'Subtask 1' }));
@@ -220,7 +271,7 @@ describe('EchoDatabase', () => {
       const db = await createDatabase();
 
       const task = new Document({ title: 'Main task' });
-      await db.save(task);
+      await db.add(task);
 
       task.tags = ['red', 'green', 'blue'];
       expect(task.tags instanceof EchoArray).toBeTruthy();
@@ -235,11 +286,42 @@ describe('EchoDatabase', () => {
       const db = await createDatabase();
 
       const task = new Document({ title: 'Main task' });
-      await db.save(task);
+      await db.add(task);
 
       task.tags = [];
       expect(task.tags instanceof EchoArray).toBeTruthy();
       expect(task.tags.length).toEqual(0);
+    });
+
+    test('importing arrays into a database', async () => {
+      const db = await createDatabase();
+
+      const root = new Document({ title: 'Main task' });
+      root.array = [new Document({ title: 'Subtask 1' }), 'red'];
+      expect(root.array.length).toEqual(2);
+      expect(root.array[0].title).toEqual('Subtask 1');
+      expect(root.array[1]).toEqual('red');
+
+      await db.add(root);
+
+      expect(root.array.length).toEqual(2);
+      expect(root.array[0].title).toEqual('Subtask 1');
+      expect(root.array[1]).toEqual('red');
+
+      const { objects } = db.query();
+      expect(objects).toContain(root.array[0]);
+    });
+
+    test('importing empty arrays into a database', async () => {
+      const db = await createDatabase();
+
+      const root = new Document();
+      root.array = [];
+      expect(root.array.length).toEqual(0);
+
+      await db.add(root);
+
+      expect(root.array.length).toEqual(0);
     });
   });
 
@@ -247,7 +329,7 @@ describe('EchoDatabase', () => {
     test('basic', async () => {
       const db = await createDatabase();
       const text = new TextObject();
-      await db.save(text);
+      await db.add(text);
 
       expect(text.doc).toBeDefined();
       expect(text.model).toBeDefined();
@@ -260,15 +342,11 @@ describe('EchoDatabase', () => {
     test('text property', async () => {
       const db = await createDatabase();
       const task = new Document();
-      await db.save(task);
-
+      await db.add(task);
       task.text = new TextObject();
-
-      // Populating the model is done asynchronously for now.
-      await waitForExpect(() => {
-        expect(task.text.doc).toBeDefined();
-        expect(task.text.model).toBeDefined();
-      });
+      await sleep(10);
+      expect(task.text.doc).toBeDefined();
+      expect(task.text.model).toBeDefined();
       expect(task.text.model!.textContent).toEqual('');
 
       task.text.model!.insert('Hello world', 0);

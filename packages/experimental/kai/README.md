@@ -6,25 +6,41 @@ The word kai (貝) is the Japanese word for shell.
 ## Development
 
 ```bash
-p serve
+pnpm nx serve kai
 ```
 
-## Deploying the App
-
-- Published when committed to `main`.
-- TODO(burdon): How to manually publish?
-- TODO(burdon): Publish to local machine (or dxos.net? later). With tunneling.
+To run with automatic profile creation and simplified invitation flows:
 
 ```bash
-dx app publish
+VITE_DEV=1 pnpm nx serve kai
 ```
+
+## Deployment
+
+Automatically published to the KUBE network via CI (using KUBE access token) when committed to `main`.
+- https://kai.dev.dxos.org (w/ PWA; via Cloudflare)
+- https://kai-web.dev.kube.dxos.org (no PWA; direct from KUBE)
+
+To manually publish to a local KUBE (via custom `dx.yml`):
+
+```bash
+dx app publish --config_path=./dx-local.yml
+```
+
+
+## Troubleshooting
+
+See the [development guide](./docs/development.md).
+
 
 ## Roadmap
 
+- TODO(burdon): Move to Milestone.
+
 - [ ] Deprecate Kitchen Sink.
 - [ ] Playwright tests/demo.
-- [ ] Deploy mobile app.
-- [ ] Import/export JSON.
+- [x] Deploy mobile app.
+- [x] Import/export JSON.
 - [ ] OpenAI bot demo (e.g., fill in background information on Orgs).
 
 - [ ] Kanban column width on mobile (change breakpoint dep on phone).
@@ -50,6 +66,8 @@ dx app publish
 
 ### UX Issues.
 
+- [ ] Controlled vs. non-controlled (`itmems` and `value` property.)
+- [ ] Getters (decouple from ECHO objects).
 - [ ] Theme: 
   - [ ] Mobile font size.
   - [ ] AppBar/Accent colors.
@@ -57,16 +75,27 @@ dx app publish
 - [ ] Styling slots?
 - [ ] i18n Text properties (e.g., placeholder.)
 
+### UX Framework
+
+- [ ] Containers and Responsive Cards
+
 ### Framework/ECHO Issues
 
-- [ ] dxtype build rule.
+- [ ] Set undefined value.
+- [ ] Don't throw undefined if access unset value (e.g., org.address.city).
 - [ ] Can't set complex value (see echo-typegen tests)
-- [ ] Reset.
 - [ ] Splice (drag and drop).
 - [ ] Scalar sets (e.g., Project tags for kanban).
 - [ ] Materialized links (referential integrity).
 - [ ] Device management.
 - [ ] Save space credentials (membership) to HALO.
+- [ ] Introspect types (see meta table).
+- [ ] Reset (data services).
+
+### SDK
+
+- [ ] dxtype build rule.
+- [ ] Schema docs
 
 ## Refs
 

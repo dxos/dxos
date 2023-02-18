@@ -53,7 +53,7 @@ yarn book
 
 TODO update template frame so that this section can be omitted from this basic tutorial
 
-The first thing we need to do is add a couple of additional DXOS dependencies that we will need: `@dxos/object-model` and `@dxos/echo-db`. We want to match the version of the `@dxos/react-client` for these dependencies and they should be added to the `devDependencies` and `peerDependencies`. The reason we aren't adding these to the regular dependencies list is that we expect that they will be provided by the frame host whenever the frame is loaded. If they were non-standard dependencies we would want to add them to the `dependencies` list and bundle them with the frame.
+The first thing we need to do is add a couple of additional DXOS dependencies that we will need: `@dxos/document-model` and `@dxos/echo-db`. We want to match the version of the `@dxos/react-client` for these dependencies and they should be added to the `devDependencies` and `peerDependencies`. The reason we aren't adding these to the regular dependencies list is that we expect that they will be provided by the frame host whenever the frame is loaded. If they were non-standard dependencies we would want to add them to the `dependencies` list and bundle them with the frame.
 
 After adding those dependencies to the `package.json`, don't forget to run `yarn` again to install them.
 
@@ -77,15 +77,15 @@ export const manifest: FrameManifest = {
 };
 ```
 
-In order to make an interactive frame we need to implement the `register` and `createRootItem` functions in the manifest -- we'll start with `register`. The `register` function registers ECHO models that our frames rely on, but creating your own models is a more advanced ECHO topic. To get started we can simply always register the `ObjectModel` which causes the items in ECHO to behave the same as Javascript objects. 
+In order to make an interactive frame we need to implement the `register` and `createRootItem` functions in the manifest -- we'll start with `register`. The `register` function registers ECHO models that our frames rely on, but creating your own models is a more advanced ECHO topic. To get started we can simply always register the `DocumentModel` which causes the items in ECHO to behave the same as Javascript objects. 
 
 ```ts
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 
 export const manifest: FrameManifest = {
   component: createDynamicFrame(Main),
   register: async (client) => {
-    client.registerModel(ObjectModel);
+    client.registerModel(DocumentModel);
   }
 };
 ```
@@ -97,7 +97,7 @@ TODO link to ECHO docs on spaces/items.
 We need to pass a few options to `createItem`, let's walk through what those are:
 
 - `type`: a string defined by us which will we can use to query for items later.
-- `model`: defines the structure of the item (`ObjectModel` is the most common model, it behaves analogously to a Javascript object).
+- `model`: defines the structure of the item (`DocumentModel` is the most common model, it behaves analogously to a Javascript object).
 - `props`: initial state of the item.
 
 Finally, we need to return the item we've created.
@@ -110,12 +110,12 @@ const TYPE_TASKS_LIST = 'example:type.tasks.list';
 export const manifest: FrameManifest = {
   component: createFrame(Main),
   register: async (client) => {
-    client.registerModel(ObjectModel);
+    client.registerModel(DocumentModel);
   },
   createRootItem: async (space, props) => {
     const item = await space.database.createItem({
       type: TYPE_TASKS_LIST,
-      model: ObjectModel,
+      model: DocumentModel,
       props
     });
 
@@ -172,7 +172,7 @@ There's also one other piece of state we need and that will be used to manage th
 The last piece is an event handler which will create a new item in the space. The aside from using a different type, the only difference between this and the root item is that this item references the root item as it's parent.
 
 ```tsx
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { useFrameContext } from '@dxos/react-framekit';
 
 const TYPE_TASKS_TASK = 'example:type.tasks.task';
@@ -193,7 +193,7 @@ const handleCreateTask = async () => {
 
   await space.database.createItem({
     type: TYPE_TASKS_TASK,
-    model: ObjectModel,
+    model: DocumentModel,
     parent: item.id,
     props: {
       title: newTask
@@ -276,7 +276,7 @@ import type { Item } from '@dxos/echo-db';
 
 // ...
 
-const handleToggleComplete = async (item: Item<ObjectModel>, complete: boolean) => {
+const handleToggleComplete = async (item: Item<DocumentModel>, complete: boolean) => {
   await item.model.setProperty('complete', complete);
 };
 

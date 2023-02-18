@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { DocumentModel } from '@dxos/document-model';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager, MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { Presence } from '@dxos/teleport-extension-presence';
@@ -139,9 +139,11 @@ export class TestAgent {
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
     const snapshotManager = new SnapshotManager(new SnapshotStore(createStorage().createDirectory('snapshots')));
 
+    const metadataStore = new MetadataStore(createStorage().createDirectory('metadata'));
+    await metadataStore.addSpace({ key: spaceKey });
     const dataPipelineController: DataPipelineControllerImpl = new DataPipelineControllerImpl({
-      modelFactory: new ModelFactory().registerModel(ObjectModel),
-      metadataStore: new MetadataStore(createStorage().createDirectory('metadata')),
+      modelFactory: new ModelFactory().registerModel(DocumentModel),
+      metadataStore,
       snapshotManager,
       memberKey: identityKey,
       spaceKey,
@@ -152,10 +154,10 @@ export class TestAgent {
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
       genesisFeed,
-      controlFeed,
-      dataFeed,
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey)
-    });
+    })
+      .setControlFeed(controlFeed)
+      .setDataFeed(dataFeed);
     await space.open();
     await space.initDataPipeline(dataPipelineController);
 

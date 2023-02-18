@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/sdk/client-services/src/index.ts"
+          "packages/sdk/client-services/src/index.ts",
+          "packages/sdk/client-services/src/packlets/testing/index.ts"
         ],
         "injectGlobals": true,
         "outputPath": "packages/sdk/client-services/dist/lib"

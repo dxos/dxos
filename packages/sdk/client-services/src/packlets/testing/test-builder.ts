@@ -2,11 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
-
 import { Config } from '@dxos/config';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
-import { ISpace, MetadataStore, SigningContext, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-db';
+import {
+  DataPipelineControllerImpl,
+  MetadataStore,
+  SigningContext,
+  SnapshotStore,
+  SpaceManager,
+  valueEncoding
+} from '@dxos/echo-db';
+import { testLocalDatabase } from '@dxos/echo-db/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -66,20 +72,9 @@ export const createIdentity = async (peer: ServiceContext) => {
 
 // TODO(burdon): Remove @dxos/client-testing.
 // TODO(burdon): Create builder and make configurable.
-export const syncItems = async (space1: ISpace, space2: ISpace) => {
-  {
-    // Check item replicated from 1 => 2.
-    const item1 = await space1.database!.createItem({ type: 'type-1' });
-    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
-    expect(item1.id).to.eq(item2.id);
-  }
-
-  {
-    // Check item replicated from 2 => 1.
-    const item1 = await space2.database!.createItem({ type: 'type-2' });
-    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
-    expect(item1.id).to.eq(item2.id);
-  }
+export const syncItems = async (db1: DataPipelineControllerImpl, db2: DataPipelineControllerImpl) => {
+  await testLocalDatabase(db1, db2);
+  await testLocalDatabase(db2, db1);
 };
 
 export class TestBuilder {
@@ -161,6 +156,7 @@ export const createSigningContext = async (keyring: Keyring): Promise<SigningCon
         credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey)
       },
       deviceKey
-    )
+    ),
+    recordCredential: async () => {} // No-op.
   };
 };
