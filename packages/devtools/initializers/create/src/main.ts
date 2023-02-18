@@ -10,11 +10,11 @@ void (async () => {
     boolean: ['interactive', 'verbose', 'monorepo']
   });
   const { monorepo, interactive, verbose } = { interactive: false, verbose: false, monorepo: false, ...args };
-  const files = await template.execute({
+  const result = await template.execute({
     verbose,
     input: interactive
       ? { monorepo }
       : { pwa: true, dxosUi: true, tailwind: true, react: true, monorepo, storybook: false }
   });
-  await Promise.all(files.map((file) => file.save()));
+  await result.save();
 })();

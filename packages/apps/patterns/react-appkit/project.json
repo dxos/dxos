@@ -40,6 +40,15 @@
         "{options.outputFile}"
       ]
     },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/apps/patterns/react-appkit/src/proto/gen"
+      ]
+    },
     "storybook": {
       "configurations": {
         "ci": {

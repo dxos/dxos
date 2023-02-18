@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ComponentProps } from 'react';
+import { ComponentPropsWithRef } from 'react';
 
-export interface ButtonProps extends ComponentProps<'button'> {
+export interface ButtonProps extends ComponentPropsWithRef<'button'> {
   variant?: 'default' | 'primary' | 'outline' | 'ghost';
-  compact?: boolean;
+  compact?: boolean; // TODO(burdon): Global size variant.
   disabled?: boolean;
 }

@@ -195,4 +195,4 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`key`: <code>Uint8Array | Buffer</code>
+`key`: <code>Uint8Array | ArrayBuffer | Buffer</code>

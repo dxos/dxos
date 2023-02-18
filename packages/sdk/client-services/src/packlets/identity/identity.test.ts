@@ -60,10 +60,10 @@ describe('identity/identity', () => {
       spaceKey,
       protocol,
       genesisFeed: controlFeed,
-      controlFeed,
-      dataFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-    });
+    })
+      .setControlFeed(controlFeed)
+      .setDataFeed(dataFeed);
 
     const identity = new Identity({
       signer: keyring,
@@ -88,8 +88,7 @@ describe('identity/identity', () => {
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
+          credential: { credential }
         });
       }
     }
@@ -166,10 +165,10 @@ describe('identity/identity', () => {
         spaceKey,
         protocol,
         genesisFeed: controlFeed,
-        controlFeed,
-        dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-      });
+      })
+        .setControlFeed(controlFeed)
+        .setDataFeed(dataFeed);
 
       const identity = (identity1 = new Identity({
         signer: keyring,
@@ -194,8 +193,7 @@ describe('identity/identity', () => {
 
         for (const credential of credentials) {
           await identity.controlPipeline.writer.write({
-            '@type': 'dxos.echo.feed.CredentialsMessage',
-            credential
+            credential: { credential }
           });
         }
       }
@@ -246,10 +244,10 @@ describe('identity/identity', () => {
         spaceKey,
         protocol,
         genesisFeed: await feedStore.openFeed(genesisFeedKey),
-        controlFeed,
-        dataFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey)
-      });
+      })
+        .setControlFeed(controlFeed)
+        .setDataFeed(dataFeed);
 
       const identity = (identity2 = new Identity({
         signer: keyring,
@@ -268,15 +266,16 @@ describe('identity/identity', () => {
     {
       const signer = identity1.getIdentityCredentialSigner();
       void identity1.controlPipeline.writer.write({
-        '@type': 'dxos.echo.feed.CredentialsMessage',
-        credential: await signer.createCredential({
-          subject: identity2.deviceKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            identityKey: identity1.identityKey,
-            deviceKey: identity2.deviceKey
-          }
-        })
+        credential: {
+          credential: await signer.createCredential({
+            subject: identity2.deviceKey,
+            assertion: {
+              '@type': 'dxos.halo.credentials.AuthorizedDevice',
+              identityKey: identity1.identityKey,
+              deviceKey: identity2.deviceKey
+            }
+          })
+        }
       });
 
       await identity2.ready();

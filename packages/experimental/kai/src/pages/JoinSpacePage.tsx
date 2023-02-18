@@ -15,7 +15,7 @@ import { invitationCodeFromUrl } from '../util';
 /**
  * Join space via invitation URL.
  */
-export const JoinSpacePage = () => {
+const JoinSpacePage = () => {
   const { t } = useTranslation('appkit');
   const client = useClient();
   const navigate = useNavigate();
@@ -26,15 +26,15 @@ export const JoinSpacePage = () => {
   const handleJoin = ({ spaceKey }: InvitationResult) => navigate(`/${spaceKey!.truncate()}`);
 
   return (
-    <div className='full-screen'>
+    <div className='flex overflow-hidden w-full h-full'>
       <div className='flex flex-1 items-center'>
         <div className='my-8 mx-auto p-2 w-screen md:w-2/3 lg:w-1/2'>
           <Group label={{ children: t('join space label') }}>
             <JoinPanel
               initialInvitationCode={invitationParam ?? undefined}
-              parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-              onJoin={handleJoin}
+              parseInvitation={(invitation) => invitationCodeFromUrl(invitation)}
               acceptInvitation={acceptInvitation}
+              onJoin={handleJoin}
             />
           </Group>
         </div>
@@ -42,3 +42,5 @@ export const JoinSpacePage = () => {
     </div>
   );
 };
+
+export default JoinSpacePage;

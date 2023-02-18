@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hello-template",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "An application template for local-first progressive web apps",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +9,7 @@
   "main": "dist/src/config.t.js",
   "scripts": {
     "build": "tsc && plate --inheritance=false --executeFileTemplates=false --output=dist/src src",
-    "build-resources": "plate --inheritance=false --executeFileTemplates=false --output=dist/src src",
+    "build-resources": "plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
     "build-tsc": "tsc",
     "clean": "rm -rf test/out",
     "gen": "test/generate",

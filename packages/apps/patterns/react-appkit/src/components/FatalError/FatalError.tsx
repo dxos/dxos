@@ -7,15 +7,10 @@ import React, { useCallback } from 'react';
 
 import { Alert, Button, Dialog, Tooltip, useTranslation } from '@dxos/react-components';
 
-export interface FatalErrorProps {
-  error: Error;
-}
-
-export const FatalError = ({ error }: FatalErrorProps) => {
-  const { t } = useTranslation('appkit');
-  const isDev = process.env.NODE_ENV === 'development';
-
+// TODO(burdon): Factor out.
+const parseError = (error: Error) => {
   const message = String(error); // Error.name + Error.message
+
   let stack = String(error?.stack);
   if (stack.indexOf(message) === 0) {
     stack = stack.substr(message.length).trim();
@@ -27,15 +22,29 @@ export const FatalError = ({ error }: FatalErrorProps) => {
     .map((text) => text.trim())
     .join('\n');
 
+  return { message, stack };
+};
+
+export interface FatalErrorProps {
+  error: Error;
+}
+
+export const FatalError = ({ error }: FatalErrorProps) => {
+  const { t } = useTranslation('appkit');
+  // TODO(wittjosiah): process.env.NODE_ENV not available. Make a prop and determine from config?
+  const isDev = process.env.NODE_ENV === 'development';
+
+  const { message, stack } = parseError(error);
   const onCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify({ message, stack }));
   }, [message, stack]);
 
+  // TODO(burdon): Responsive
   return (
-    <Dialog title={t('fatal error label')} initiallyOpen>
+    <Dialog title={t('fatal error label')} slots={{ content: { className: 'w-full md:w-[500px]' } }} initiallyOpen>
       {isDev ? (
         <Alert title={message} valence={'error'} slots={{ root: { className: 'mlb-4' } }}>
-          <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
+          <pre className='text-xs overflow-auto max-w-72 max-h-72 overflow-hidden'>{stack}</pre>
         </Alert>
       ) : (
         <p>{t('fatal error message')}</p>

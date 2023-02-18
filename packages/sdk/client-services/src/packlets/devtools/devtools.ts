@@ -33,14 +33,14 @@ import {
   SubscribeToSpacesRequest,
   SubscribeToSpacesResponse,
   SubscribeToSignalStatusResponse,
-  SubscribeToSignalTraceResponse,
+  SignalResponse,
   SubscribeToSwarmInfoResponse
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { ServiceContext } from '../services';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToKeyringKeys } from './keys';
-import { subscribeToNetworkStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from './network';
+import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
 
 export class DevtoolsHostEvents {
@@ -133,8 +133,8 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     return subscribeToNetworkStatus({ networkManager: this.params.context.networkManager });
   }
 
-  subscribeToSignalTrace(): Stream<SubscribeToSignalTraceResponse> {
-    return subscribeToSignalTrace({ networkManager: this.params.context.networkManager });
+  subscribeToSignal(): Stream<SignalResponse> {
+    return subscribeToSignal({ networkManager: this.params.context.networkManager });
   }
 
   subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {

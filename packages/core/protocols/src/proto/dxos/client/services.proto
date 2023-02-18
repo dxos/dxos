@@ -27,7 +27,7 @@ package dxos.client.services;
 //
 
 service SystemService {
-  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config); // TODO(burdon): Stream?
+  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
   rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -110,7 +110,6 @@ service ContactsService {
 // TODO(burdon): Move to dxos.echo? Or rename dxos.echo => dxos.database?
 //
 
-// TODO(burdon): Preferences (in database).
 message Space {
   dxos.keys.PublicKey space_key = 1;
 }
@@ -118,6 +117,11 @@ message Space {
 message QueryMembersRequest {}
 message QueryMembersResponse {
   dxos.halo.credentials.IdentityProfile members = 1;
+}
+
+message WriteCredentialsRequest {
+  dxos.keys.PublicKey space_key = 1;
+  repeated dxos.halo.credentials.Credential credentials = 2;
 }
 
 message QueryCredentialsRequest {
@@ -130,7 +134,8 @@ service SpacesService {
 
   // TODO(dmaretskyi): I dont think we need a separate method here. We can include members in the Space object.
   rpc QueryMembers(QueryMembersRequest) returns (stream QueryMembersResponse);
-
+  
+  rpc WriteCredentials(WriteCredentialsRequest) returns (google.protobuf.Empty);
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 }
 

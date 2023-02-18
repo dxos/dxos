@@ -15,8 +15,16 @@ message Frame {
 }
 
 message Artifact {
+  message Import {
+    string module_url = 1;
+    
+    repeated string named_imports = 2;
+    bool default_import = 3;
+  }
+
   bytes sourceHash = 1;
   string bundle = 2;
+  repeated Import imports = 3;
 }
 
 // TODO(dmaretskyi): Move to separate file.

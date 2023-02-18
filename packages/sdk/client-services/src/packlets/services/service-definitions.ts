@@ -42,7 +42,7 @@ export type ClientServices = {
  */
 export interface ClientServicesProvider {
   descriptors: ServiceBundle<ClientServices>;
-  services: ClientServices;
+  services: Partial<ClientServices>;
 
   open(): Promise<void>;
   close(): Promise<void>;

@@ -1,20 +1,32 @@
 formatter:
-  column: 100
+  column: 60
 
 # processor: debug
 
 filter:
   - warn
   - info
+  # - test.ts:debug
+  # - database:debug
+  # - notarization:debug
+  # - feed-store:debug
+  # - control-pipeline:debug
+  # - state-manager:debug
+  - feed-store:debug
+  - client-services:debug
   # - debug
-  - space-invitations-handler.ts:debug
-  - entity:debug
-  - database:debug
-  - service-host:debug
-  - service:debug
-  - data:debug
-  - identity:debug
-  - sync:debug
+  # - space-invitations-handler.ts:debug
+  # - entity:debug
+  # - database:debug
+  # - service-host:debug
+  # - service:debug
+  # - data:debug
+  # - identity:debug
+  # - sync:debug
+  # - auth:debug
+  # - control-pipeline:debug
+  # - notarization:debug
+  # - pipeline:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug
@@ -22,8 +34,7 @@ filter:
   # - peer:debug
   # - connection:debug
   # - test:debug
-  - auth:debug
-  - space:debug
+  # - space:debug
   # - client-services:debug
   # - framer:debug
   # - feed-wrapper:debug

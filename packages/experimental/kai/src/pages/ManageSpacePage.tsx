@@ -11,17 +11,16 @@ import { HeadingWithActions, InvitationList, ProfileList } from '@dxos/react-app
 import { useMembers, useSpaceInvitations } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-components';
 
-import { createSpacePath } from '../app';
-import { FrameID, useSpace } from '../hooks';
+import { createSpacePath, defaultFrameId, useSpace } from '../hooks';
 import { createInvitationUrl } from '../util';
 
 // NOTE: Copied from react-appkit.
 // TODO(wittjosiah): Utilize @dxos/react-ui patterns.
 
-export const ManageSpacePage = () => {
+const ManageSpacePage = () => {
   const { t } = useTranslation('kai');
   const navigate = useNavigate();
-  const { space } = useSpace();
+  const space = useSpace();
   const invitations = useSpaceInvitations(space?.key);
   const members = useMembers(space.key);
   const memberProfiles = useMemo(
@@ -51,13 +50,14 @@ export const ManageSpacePage = () => {
               onClick={handleCreateInvitation}
               className='flex gap-1 items-center'
               disabled={!space}
+              data-testid='create-invitation-button'
             >
               <span>{t('create invitation label', { ns: 'appkit' })}</span>
               <UserPlus className={getSize(5)} />
             </Button>
             <Button
               variant='primary'
-              onClick={() => navigate(createSpacePath(space.key, FrameID.DASHBOARD))}
+              onClick={() => navigate(createSpacePath(space.key, defaultFrameId))}
               className='flex gap-1 items-center'
             >
               <span>{t('back to space label')}</span>
@@ -75,3 +75,5 @@ export const ManageSpacePage = () => {
     </div>
   );
 };
+
+export default ManageSpacePage;

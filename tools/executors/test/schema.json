@@ -19,8 +19,7 @@
     },
     "devEnvironments": {
       "type": "array",
-      "description": "Environments to run tests in during development",
-      "default": ["nodejs"]
+      "description": "Environments to run tests in during development"
     },
     "ciEnvironments": {
       "type": "array",
@@ -36,6 +35,10 @@
       "type": "string",
       "description": "Project target to run concurrently alongside the tests",
       "examples": ["halo-app:preview", "react-client:storybook"]
+    },
+    "serveOptions": {
+      "type": "object",
+      "description": "Options to pass to the serve executor"
     },
     "setup": {
       "type": "string",

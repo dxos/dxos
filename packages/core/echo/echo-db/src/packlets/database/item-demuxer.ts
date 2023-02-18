@@ -2,21 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { failUndefined } from '@dxos/debug';
-import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
+import { log } from '@dxos/log';
+import { ModelFactory } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
-import { DatabaseSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
+import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { Entity } from './entity';
-import { Item } from './item';
-import { ItemManager, ModelConstructionOptions } from './item-manager';
-import { Link } from './link';
-
-const log = debug('dxos:echo-db:item-demuxer');
+import { ItemManager } from './item-manager';
 
 export interface ItemDemuxerOptions {
   snapshots?: boolean;
@@ -40,7 +35,7 @@ export class ItemDemuxer {
   open(): EchoProcessor {
     this._modelFactory.registered.on(async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
-        if (item._stateManager.modelType === model.meta.type) {
+        if (item.modelType === model.meta.type) {
           await this._itemManager.initializeModel(item.id);
         }
       }
@@ -50,140 +45,75 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the SpaceProcessor?
     return async (message: IEchoStream) => {
       const {
-        data: { itemId, genesis, itemMutation, mutation, snapshot },
+        data: { objectId, genesis, mutations },
         meta
       } = message;
-      assert(itemId);
+      if (mutations) {
+        assert(mutations.length <= 1); // TODO(dmaretskyi): Only 1 mutation per message is supported.
+      }
+      const mutation = mutations?.length === 1 ? mutations?.[0] : undefined;
+      assert(objectId);
 
       //
       // New item.
       //
       if (genesis) {
-        const { itemType, modelType } = genesis;
+        const { modelType } = genesis;
         assert(modelType);
 
-        const modelOpts: ModelConstructionOptions = {
-          itemId,
-          modelType,
-          snapshot: {
-            mutations: mutation ? [{ mutation, meta }] : undefined
-          }
-        };
+        const entity = this._itemManager.constructItem({
+          itemId: objectId,
+          modelType
+        });
+        entity.resetToSnapshot({
+          ...message.data,
+          mutations:
+            mutations?.map((mutation) => ({
+              ...mutation,
+              meta
+            })) ?? [],
+          meta
+        });
 
-        let entity: Entity<any>;
-        if (genesis.link) {
-          entity = await this._itemManager.constructLink({
-            ...modelOpts,
-            itemType,
-            source: genesis.link.source ?? failUndefined(),
-            target: genesis.link.target ?? failUndefined()
-          });
-        } else {
-          entity = await this._itemManager.constructItem({
-            ...modelOpts,
-            parentId: itemMutation?.parentId,
-            itemType
-          });
-        }
-
-        assert(entity.id === itemId);
-      }
-
-      //
-      // Set parent item references.
-      //
-      if (itemMutation) {
-        const item = this._itemManager.getItem(itemId);
-        assert(item);
-
-        item._processMutation(itemMutation, (itemId: ItemID) => this._itemManager.getItem(itemId));
+        assert(entity.id === objectId);
       }
 
       //
       // Model mutations.
       //
       if (mutation && !genesis) {
-        assert(message.data.mutation);
-        const modelMessage: ModelMessage<Uint8Array> = { meta, mutation };
-
         // Forward mutations to the item's stream.
-        await this._itemManager.processModelMessage(itemId, modelMessage);
-      }
-
-      if (snapshot) {
-        const entity = this._itemManager.entities.get(itemId) ?? failUndefined();
-        entity._stateManager.resetToSnapshot(snapshot);
+        this._itemManager.processMutation(objectId, {
+          ...mutation,
+          meta
+        });
       }
 
       this.mutation.emit(message);
     };
   }
 
-  createSnapshot(): DatabaseSnapshot {
+  createSnapshot(): EchoSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.items.map((item) => this.createItemSnapshot(item)),
-      links: this._itemManager.links.map((link) => this.createLinkSnapshot(link))
+      items: this._itemManager.items.map((item) => item.createSnapshot())
     };
   }
 
-  createItemSnapshot(item: Item<Model<any>>): ItemSnapshot {
-    const model = item._stateManager.createSnapshot();
-
-    return {
-      itemId: item.id,
-      itemType: item.type,
-      modelType: item.modelType,
-      parentId: item.parent?.id,
-      model
-    };
-  }
-
-  createLinkSnapshot(link: Link<Model<any>>): LinkSnapshot {
-    const model = link._stateManager.createSnapshot();
-
-    return {
-      linkId: link.id,
-      linkType: link.type,
-      modelType: link.modelMeta.type,
-      source: link.source.id,
-      target: link.target.id,
-      model
-    };
-  }
-
-  async restoreFromSnapshot(snapshot: DatabaseSnapshot) {
-    const { items = [], links = [] } = snapshot;
+  async restoreFromSnapshot(snapshot: EchoSnapshot) {
+    const { items = [] } = snapshot;
 
     log(`Restoring ${items.length} items from snapshot.`);
     for (const item of sortItemsTopologically(items)) {
-      assert(item.itemId);
-      assert(item.modelType);
-      assert(item.model);
+      assert(item.objectId);
+      assert(item.genesis?.modelType);
+      assert(item.snapshot);
 
-      await this._itemManager.constructItem({
-        itemId: item.itemId,
-        modelType: item.modelType,
-        itemType: item.itemType,
-        parentId: item.parentId,
-        snapshot: item.model
+      const obj = this._itemManager.constructItem({
+        itemId: item.objectId,
+        modelType: item.genesis.modelType
       });
-    }
-
-    log(`Restoring ${links.length} links from snapshot.`);
-    for (const link of links) {
-      assert(link.linkId);
-      assert(link.modelType);
-      assert(link.model);
-
-      await this._itemManager.constructLink({
-        itemId: link.linkId,
-        itemType: link.linkType,
-        modelType: link.modelType,
-        source: link.source,
-        target: link.target,
-        snapshot: link.model
-      });
+      obj.resetToSnapshot(item);
     }
   }
 }
@@ -192,17 +122,17 @@ export class ItemDemuxer {
  * Sort based on parents.
  * @param items
  */
-export const sortItemsTopologically = (items: ItemSnapshot[]): ItemSnapshot[] => {
-  const snapshots: ItemSnapshot[] = [];
+export const sortItemsTopologically = (items: EchoObject[]): EchoObject[] => {
+  const snapshots: EchoObject[] = [];
   const seenIds = new Set<ItemID>();
 
   while (snapshots.length !== items.length) {
     const prevLength = snapshots.length;
     for (const item of items) {
-      assert(item.itemId);
-      if (!seenIds.has(item.itemId) && (item.parentId == null || seenIds.has(item.parentId))) {
+      assert(item.objectId);
+      if (!seenIds.has(item.objectId) && (!item.snapshot?.parentId || seenIds.has(item.snapshot.parentId))) {
         snapshots.push(item);
-        seenIds.add(item.itemId);
+        seenIds.add(item.objectId);
       }
     }
     if (prevLength === snapshots.length && snapshots.length !== items.length) {

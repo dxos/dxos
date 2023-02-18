@@ -5,7 +5,8 @@
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
-import { defaultFocus, defaultHover, defaultInlineSeparator } from '../../styles';
+import { useButtonShadow } from '../../hooks';
+import { defaultFocus, hover, defaultInlineSeparator } from '../../styles';
 import { mx } from '../../util';
 import { defaultAppButtonColors, primaryAppButtonColors } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
@@ -51,6 +52,7 @@ export interface NavMenuSlots {
 export interface NavMenuProps {
   items: NavMenuItem[];
   slots?: NavMenuSlots;
+  variant?: 'horizontal' | 'vertical';
 }
 
 const NavMenuInvokerItem = forwardRef(
@@ -62,7 +64,7 @@ const NavMenuInvokerItem = forwardRef(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryAppButtonColors : defaultAppButtonColors,
             defaultFocus,
-            defaultHover({})
+            hover()
           )}
         >
           {children}
@@ -94,7 +96,7 @@ const NavMenuLinkItem = forwardRef(
           active ? primaryAppButtonColors : defaultAppButtonColors,
           active ? 'font-medium' : 'font-normal',
           defaultFocus,
-          defaultHover({}),
+          hover(),
           triggerLinkProps.className
         )}
       >
@@ -117,7 +119,7 @@ const NavMenuTooltipLinkItem = forwardRef(
             active ? primaryAppButtonColors : defaultAppButtonColors,
             active ? 'font-medium' : 'font-normal',
             defaultFocus,
-            defaultHover({}),
+            hover(),
             triggerLinkProps.className
           )}
         >
@@ -138,13 +140,24 @@ const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps => 'tooltip
 const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in o;
 const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
 
-export const NavMenu = ({ items, slots = {} }: NavMenuProps) => {
+export const NavMenu = ({ items, slots = {}, variant = 'horizontal' }: NavMenuProps) => {
+  const shadow = useButtonShadow();
   return (
-    <NavigationMenuPrimitive.Root {...slots.root} className={mx('flex justify-center', slots.root?.className)}>
+    <NavigationMenuPrimitive.Root
+      {...slots.root}
+      orientation={variant}
+      className={mx(
+        'rounded-lg bg-white dark:bg-neutral-750',
+        variant === 'vertical' ? 'max-bs-full overflow-y-auto' : 'max-is-full overflow-x-auto',
+        slots.root?.className
+      )}
+    >
       <NavigationMenuPrimitive.List
         {...slots.list}
         className={mx(
-          'relative flex flex-row items-center gap-1 rounded-lg bg-white dark:bg-neutral-750 p-1 button-elevation overflow-x-auto',
+          shadow,
+          'relative flex gap-1 p-1',
+          variant === 'vertical' ? 'flex-col items-stretch' : 'flex-row items-center',
           slots.list?.className
         )}
       >

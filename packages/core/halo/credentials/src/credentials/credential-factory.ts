@@ -4,12 +4,12 @@
 
 import assert from 'node:assert';
 
-import { Signer } from '@dxos/crypto';
+import { Signer, subtleCrypto } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { getSignaturePayload } from './signing';
+import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
 export type CreateCredentialSignerParams = {
@@ -68,11 +68,13 @@ export const createCredential = async ({
   };
 
   // Set proof after creating signature.
-  const signedPayload = getSignaturePayload(credential);
+  const signedPayload = getCredentialProofPayload(credential);
   credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
   if (chain) {
     credential.proof.chain = chain;
   }
+
+  credential.id = PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload));
 
   return credential;
 };

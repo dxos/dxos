@@ -1,0 +1,17 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.app.composer;
+
+// TODO(dmaretskyi): Move to separate file.
+message TextObject {}
+
+message Document {
+  option (object) = true;
+
+  string title = 1;
+  TextObject content = 2;
+}

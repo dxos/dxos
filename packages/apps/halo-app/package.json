@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-app",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
@@ -21,6 +21,7 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
+    "@dxos/react-metagraph": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
@@ -38,7 +39,6 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@dxos/react-client-testing": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",

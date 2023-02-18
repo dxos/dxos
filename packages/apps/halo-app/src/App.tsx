@@ -8,20 +8,19 @@ import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromHost, fromIFrame } from '@dxos/client';
-import { Config, Defaults, Dynamics } from '@dxos/config';
-import { log } from '@dxos/log';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import {
+  appkitTranslations,
+  ClientFallback,
   ErrorProvider,
   Fallback,
   FatalError,
-  GenericFallback,
   ServiceWorkerToast,
-  useTelemetry,
-  appkitTranslations,
-  StatusIndicator
+  useTelemetry
 } from '@dxos/react-appkit';
-import { ClientProvider, useStatus } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
 import { ThemeProvider } from '@dxos/react-components';
+import { MetagraphProvider } from '@dxos/react-metagraph';
 import { captureException } from '@dxos/sentry';
 
 import { NavMenu } from './components';
@@ -40,22 +39,13 @@ const RequireIdentity = React.lazy(() => import('./pages/RequireIdentity'));
 const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
-// prettier-ignore
-log.config({
-  filter: process.env.LOG_FILTER ?? 'halo-app:debug,client:debug,config:debug,warn',
-  prefix: process.env.LOG_BROWSER_PREFIX
-});
-
-const configProvider = async () => new Config(await Dynamics(), Defaults());
-const serviceProvider = (config: Config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config));
-
-const StatusContainer = () => {
-  const status = useStatus();
-  return <StatusIndicator status={status} />;
-};
+export const namespace = 'halo-app';
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+const serviceProvider = (config?: Config) =>
+  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 const Routes = () => {
-  useTelemetry({ namespace: 'halo-app' });
+  useTelemetry({ namespace });
 
   return useRoutes([
     {
@@ -114,18 +104,19 @@ export const App = () => {
       appNs='halo'
     >
       <ErrorProvider>
-        {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
+        {/* TODO(wittjosiah): Hook-up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider config={configProvider} services={serviceProvider} fallback={<GenericFallback />}>
-            <HashRouter>
-              <StatusContainer />
-              <Routes />
-              {needRefresh ? (
-                <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
-              ) : offlineReady ? (
-                <ServiceWorkerToast variant='offlineReady' />
-              ) : null}
-            </HashRouter>
+          <ClientProvider config={configProvider} services={serviceProvider} fallback={ClientFallback}>
+            <MetagraphProvider>
+              <HashRouter>
+                <Routes />
+                {needRefresh ? (
+                  <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+                ) : offlineReady ? (
+                  <ServiceWorkerToast variant='offlineReady' />
+                ) : null}
+              </HashRouter>
+            </MetagraphProvider>
           </ClientProvider>
         </ErrorBoundary>
       </ErrorProvider>

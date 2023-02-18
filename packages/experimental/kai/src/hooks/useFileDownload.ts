@@ -12,13 +12,16 @@ import { useMemo } from 'react';
  *   download(new Blob([data], { type: 'text/plain' }), 'test.txt');
  * };
  */
-export const useFileDownload = (): ((data: Blob, filename: string) => void) =>
-  useMemo(
-    () => (data: Blob, filename: string) => {
+export const useFileDownload = (): ((data: Blob | string, filename: string) => void) => {
+  return useMemo(
+    () => (data: Blob | string, filename: string) => {
+      const url = typeof data === 'string' ? data : URL.createObjectURL(data);
       const element = document.createElement('a');
-      element.setAttribute('href', URL.createObjectURL(data));
+      element.setAttribute('href', url);
       element.setAttribute('download', filename);
+      element.setAttribute('target', 'download');
       element.click();
     },
     []
   );
+};

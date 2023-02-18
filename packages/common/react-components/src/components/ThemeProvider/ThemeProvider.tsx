@@ -13,10 +13,13 @@ import React, { createContext, PropsWithChildren } from 'react';
 
 import { defaultFocus } from '../../styles';
 import { hasIosKeyboard, mx } from '../../util';
+import { ElevationProvider } from '../ElevationProvider';
 import { TranslationsProvider, TranslationsProviderProps } from './TranslationsProvider';
 
+export type ThemeVariant = 'app' | 'os';
+
 export interface ThemeContextValue {
-  themeVariant: 'app' | 'os';
+  themeVariant: ThemeVariant;
   hasIosKeyboard?: boolean;
 }
 
@@ -35,7 +38,7 @@ export const ThemeProvider = ({
   tooltipProviderProps,
   toastProviderProps,
   toastViewportProps,
-  fallback,
+  fallback = null,
   resourceExtensions,
   appNs,
   themeVariant = 'app'
@@ -51,7 +54,7 @@ export const ThemeProvider = ({
       >
         <ToastProvider {...toastProviderProps}>
           <TooltipProvider delayDuration={0} {...tooltipProviderProps}>
-            {children}
+            <ElevationProvider elevation='base'>{children}</ElevationProvider>
           </TooltipProvider>
           <ToastViewport
             {...toastViewportProps}

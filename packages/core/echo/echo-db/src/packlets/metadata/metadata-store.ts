@@ -142,7 +142,7 @@ export class MetadataStore {
     const space = this.spaces.find((space) => space.key === spaceKey);
     assert(space, 'Space not found');
 
-    space.latestTimeframe = timeframe;
+    space.dataTimeframe = timeframe;
     await this._save();
   }
 
@@ -151,6 +151,15 @@ export class MetadataStore {
     assert(space, 'Space not found');
 
     space.snapshot = snapshot;
+    await this._save();
+  }
+
+  async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey) {
+    const space = this.spaces.find((space) => space.key === spaceKey);
+    assert(space, 'Space not found');
+
+    space.controlFeedKey = controlFeedKey;
+    space.dataFeedKey = dataFeedKey;
     await this._save();
   }
 }

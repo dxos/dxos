@@ -231,6 +231,10 @@ declare module 'hypercore' {
     // Define custom messages paths (unrelated to hypercore exchange), which are multiplexed on the stream.
     // https://github.com/hypercore-protocol/hypercore-protocol#stream-message-extensions
     registerExtension(name: string, handlers?: StreamExtensionHandlers<T>): StreamExtension;
+
+    // TODO(dmaretskyi): Add other events.
+    on(event: string, cb: (...args: any) => void): void;
+    on(event: 'download', cb: (index: number, data: any) => void): void;
   }
 
   export type HypercoreConstructor = (

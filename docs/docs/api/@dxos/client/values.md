@@ -7,11 +7,23 @@ title: Values
 Type: "https://halo.dxos.org/vault.html"
 ### [`DEFAULT_CONFIG_CHANNEL`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L7)
 Type: "dxos:app"
+### [`DEFAULT_VISITORS`]()
+Type: [ConvertVisitors](/api/@dxos/client/types/ConvertVisitors)
 ### [`EXPECTED_CONFIG_VERSION`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L12)
 Type: "1"
-### [`SPACE_ITEM_TYPE`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L25)
+### [`SPACE_ITEM_TYPE`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L28)
 Type: "dxos:item/space"
 ### [`TYPE_SCHEMA`]()
 Type: "dxos:type/schema"
+### [`base`]()
+Type: unique symbol
+### [`data`]()
+Type: unique symbol
+### [`db`]()
+Type: unique symbol
 ### [`defaultConfig`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L14)
 Type: ConfigProto
+### [`proxy`]()
+Type: unique symbol
+### [`schema`]()
+Type: unique symbol

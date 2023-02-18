@@ -12,15 +12,14 @@ import { getCredentialAssertion } from '../credentials';
 
 export interface FeedInfo {
   key: PublicKey;
-  credential: Credential;
-  assertion: AdmittedFeed;
   /**
    * Parent feed from the feed tree.
    * This is the feed where the AdmittedFeed assertion is written.
-   *
    * The genesis feed will have itself as a parent.
    */
   parent: PublicKey;
+  credential: Credential;
+  assertion: AdmittedFeed;
 }
 
 /**
@@ -51,7 +50,6 @@ export class FeedStateMachine {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
     assert(assertion.spaceKey.equals(this._spaceKey));
-    assert(!this._feeds.has(credential.subject.id));
 
     const info: FeedInfo = {
       key: credential.subject.id,
@@ -59,6 +57,7 @@ export class FeedStateMachine {
       assertion,
       parent: fromFeed
     };
+
     this._feeds.set(credential.subject.id, info);
     await this.onFeedAdmitted.callIfSet(info);
   }

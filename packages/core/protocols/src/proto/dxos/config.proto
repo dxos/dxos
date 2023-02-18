@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/struct.proto";
 
 package dxos.config;
 
@@ -43,11 +44,14 @@ message Module {
     optional string outdir = 2;
     optional string version = 3;
     optional string tag = 4;
+
+    optional google.protobuf.Struct env = 10;
   }
 
-  // TODO(burdon): Requires publicKey.
-  optional string name = 1;
-  optional string type = 2;
+  optional string name = 1;   // TODO(burdon): Replace with id (or key?)
+  optional string id = 8;     // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
+  optional string type = 2;   // TODO(burdon): Define namespace (e.g., 'dxos:type/frame' vs. 'dxos.type.frame')
+
   optional string display_name = 3;
   optional string description = 4;
   repeated string tags = 5;
@@ -83,7 +87,12 @@ message Runtime {
       optional string path = 4;                   // TODO(burdon): Rename data_path.
     }
 
-    optional string debug = 1 [(env) = "DEBUG"];  // TODO(burdon): Change to LOG.
+    message Log {
+      optional string filter = 1 [(env) = "LOG_FILTER"];
+      optional string prefix = 2 [(env) = "LOG_PREFIX"];
+    }
+
+    optional Log log = 1;
     optional Storage storage = 2;
 
     // TODO(burdon): Structure snapshot/epoch related props.
@@ -95,15 +104,25 @@ message Runtime {
     /// Milliseconds
     optional int32 invitation_expiration = 5;
 
-    // TODO(burdon): Remove?
     optional string remote_source = 6;
   }
 
   message App {
+    message BuildInfo {
+      /// RFC-3339 datetime string.
+      optional string timestamp = 1;
+      optional string commit_hash = 2;
+      /// Version from package.json.
+      optional string version = 3;
+    }
+
     optional string org = 1;
     optional string theme = 2;
     optional string website = 3;
     optional string public_url = 4 [(env) = "PUBLIC_URL"];
+
+    optional BuildInfo build = 100;
+    optional google.protobuf.Struct env = 101;
   }
 
   // CLI configuration
@@ -303,6 +322,11 @@ message Runtime {
     optional Publisher publisher = 9;
   }
 
+  message Keys {
+    optional string name = 1;
+    optional string value = 2;
+  }
+
   optional Client client = 1;
   optional App app = 2;
   optional CLI cli = 3;
@@ -310,4 +334,5 @@ message Runtime {
   optional Services services = 5;
   optional System system = 6;
   optional Kube kube = 7;
+  repeated Keys keys = 8;
 }

@@ -9,7 +9,7 @@ description:
 We should add now some more code to be able to see the created tasks. For this we will use the `useSelection` hook provided by `@dxos/react-client` that will allow us to filter items by some criteria:
 
 ```jsx:title=src/components/TaskList.js
-import { ObjectModel } from '@dxos/object-model';
+import { DocumentModel } from '@dxos/document-model';
 import { usespace, useSelection } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';

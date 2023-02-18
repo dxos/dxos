@@ -115,7 +115,12 @@ export const AlertDialog = ({
 
           {children}
 
-          {destructiveConfirmInputProps && <Input {...destructiveConfirmInputProps} onChange={setConfirmStringValue} />}
+          {destructiveConfirmInputProps && (
+            <Input
+              {...destructiveConfirmInputProps}
+              onChange={({ target: { value } }) => setConfirmStringValue(value)}
+            />
+          )}
 
           <div {...slots.actions} className={mx('flex flex-wrap justify-end gap-4', slots.actions?.className)}>
             {cancelTrigger && (

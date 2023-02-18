@@ -5,16 +5,14 @@
 import React, { useState } from 'react';
 import urlJoin from 'url-join';
 
-import { Face as NewIcon, Contacts as AddressIcon, Adb as BotIcon } from '@mui/icons-material';
+import { Face as NewIcon } from '@mui/icons-material';
 import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
 import { InvitationEncoder, Invitation, SpaceMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components-deprecated';
-import { ResourceSet } from '@dxos/registry-client';
 
 import { MemberRow } from './MemberRow';
 import { PendingInvitation } from './PendingInvitation';
-import { SpawnBotPanel } from './SpawnBotPanel';
 
 const defaultCreateUrl = (invitation: Invitation) => {
   // TODO(burdon): By-pass keyhole with fake code.
@@ -41,7 +39,6 @@ export interface SharingDialogProps {
   onCreateInvitation: () => void;
   onCreateOfflineInvitation?: () => void; // TODO(burdon): Pass type/identityKey into onCreateInvitation.
   onCancelInvitation: (invitation: Invitation) => void;
-  onCreateBotInvitation?: (resource: ResourceSet) => void;
   onClose?: () => void;
 }
 
@@ -61,13 +58,11 @@ export const SharingDialog = ({
   onCreateInvitation,
   onCancelInvitation,
   onCreateOfflineInvitation,
-  onCreateBotInvitation,
   onClose
 }: SharingDialogProps) => {
   const [memberType, setMemberType] = useState(MemberType.ONLINE);
-  const [bot, setBot] = useState<ResourceSet>();
 
-  const active = memberType === MemberType.ONLINE || (memberType === MemberType.BOT && bot);
+  const active = memberType === MemberType.ONLINE;
 
   const handleInvitation = () => {
     switch (memberType) {
@@ -82,7 +77,6 @@ export const SharingDialog = ({
       }
 
       case MemberType.BOT: {
-        onCreateBotInvitation?.(bot!);
         break;
       }
     }
@@ -97,7 +91,7 @@ export const SharingDialog = ({
       content={
         <>
           <Typography variant='body2' sx={{ marginBottom: 2 }}>
-            {`Add collaborators ${onCreateBotInvitation ? 'and bots' : ''} to the space.`}
+            {'Add collaborators to the space.'}
           </Typography>
 
           <Box
@@ -108,7 +102,7 @@ export const SharingDialog = ({
               marginBottom: 3
             }}
           >
-            {(onCreateOfflineInvitation || onCreateBotInvitation) && (
+            {onCreateOfflineInvitation && (
               <>
                 <ToggleButtonGroup
                   exclusive
@@ -120,22 +114,7 @@ export const SharingDialog = ({
                   <ToggleButton value={MemberType.ONLINE} title='New invitation'>
                     <NewIcon />
                   </ToggleButton>
-                  {/* TODO(burdon): Address book for offline invitations. */}
-                  {onCreateOfflineInvitation && (
-                    <ToggleButton value={MemberType.OFFLINE} title='Addresss book'>
-                      <AddressIcon />
-                    </ToggleButton>
-                  )}
-                  {onCreateBotInvitation && (
-                    <ToggleButton value={MemberType.BOT} title='Bot registry'>
-                      <BotIcon />
-                    </ToggleButton>
-                  )}
                 </ToggleButtonGroup>
-
-                <Box sx={{ flex: 1, paddingLeft: 3, paddingRight: 3 }}>
-                  {memberType === MemberType.BOT && <SpawnBotPanel onSelect={(resource) => setBot(resource)} />}
-                </Box>
               </>
             )}
 

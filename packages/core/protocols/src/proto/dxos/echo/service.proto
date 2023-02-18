@@ -4,51 +4,35 @@
 
 syntax = "proto3";
 
-import "dxos/echo/feed.proto";
+import "dxos/echo/object.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/keys.proto";
 
 package dxos.echo.service;
 
-message SubscribeEntitySetRequest {
+message SubscribeRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
-message SubscribeEntitySetResponse {
-  // TODO(dmaretskyi): This is wrong, the first one should use item snapshot, and deleted should be just list of ids.
-  repeated feed.EchoEnvelope added = 1;
-  repeated feed.EchoEnvelope deleted = 2;
-}
+message EchoEvent {
+  /// If this event comes as a response to this client wirting the mutation, this field will be set to the tag in the mutation.
+  optional string client_tag = 1;
 
-message SubscribeEntityStreamRequest {
-  dxos.keys.PublicKey space_key = 1;
-  string item_id = 2;
-}
+  /// For mutations read from the feed store those fields will be set to the position of the mutation in the feed.
+  optional dxos.keys.PublicKey feed_key = 2;
+  optional int32 seq = 3;
 
-message SubscribeEntityStreamResponse {
-  message Mutation {
-    message Metadata {
-     dxos.keys.PublicKey feed_key = 1;
-     dxos.keys.PublicKey member_key = 2;
-      int32 seq = 3;
-      timeframe.TimeframeVector timeframe = 4;
-    }
-
-    feed.EchoEnvelope data = 1;
-    Metadata meta = 2;
-  }
-
-  oneof kind {
-    // TODO(dmaretskyi): Move snapshot into EchoEnvelope?
-    snapshot.ItemSnapshot snapshot = 1;
-    Mutation mutation = 2;
-  }
+  dxos.echo.object.EchoObjectBatch batch = 10;
 }
 
 message WriteRequest {
   dxos.keys.PublicKey space_key = 1;
-  feed.EchoEnvelope mutation = 2;
+  
+  /// Ephermal tag to correlate events in the subscription.
+  optional string client_tag = 2;
+
+  dxos.echo.object.EchoObjectBatch batch = 10;
 }
 
 message MutationReceipt {
@@ -57,7 +41,6 @@ message MutationReceipt {
 }
 
 service DataService {
-  rpc SubscribeEntitySet(SubscribeEntitySetRequest) returns (stream SubscribeEntitySetResponse);
-  rpc SubscribeEntityStream(SubscribeEntityStreamRequest) returns (stream SubscribeEntityStreamResponse);
+  rpc Subscribe(SubscribeRequest) returns (stream EchoEvent);
   rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
 }

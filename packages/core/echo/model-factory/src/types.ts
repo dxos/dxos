@@ -6,7 +6,6 @@ import assert from 'node:assert';
 
 import type { Codec } from '@dxos/codec-protobuf';
 import type { WriteReceipt } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
 import type { ItemID, MutationMetaWithTimeframe } from '@dxos/protocols';
 
 import { Model } from './model';
@@ -35,20 +34,12 @@ export interface MutationWriteReceipt extends WriteReceipt {
 export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>;
 
 /**
- *
- */
-// TODO(burdon): Rename and document.
-export interface MutationProcessMeta {
-  author: PublicKey;
-}
-
-/**
  * Manages state and state transitions vis mutations.
  */
 export interface StateMachine<TState, TMutation, TSnapshot> {
   getState(): TState;
   reset(snapshot: TSnapshot): void;
-  process(mutation: TMutation, meta: MutationProcessMeta): void;
+  process(mutation: TMutation): void;
   snapshot(): TSnapshot;
 }
 
@@ -77,7 +68,7 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
    * @returns A mutation to be included in the same message as item creation, or null if no initialization is required.
    */
   // TODO(burdon): Remove from meta? Make generic.
-  getInitMutation?(props: any): Promise<any | null>;
+  getInitMutation?(props: any): any | null;
 };
 
 /**

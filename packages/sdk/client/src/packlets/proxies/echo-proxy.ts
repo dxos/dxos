@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
@@ -19,13 +20,13 @@ import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
+import { Properties, PropertiesOptions } from '../proto';
 import { HaloProxy } from './halo-proxy';
-import { Space, SpaceProxy, SPACE_ITEM_TYPE } from './space-proxy';
+import { Space, SpaceProxy } from './space-proxy';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -44,7 +45,7 @@ export class EchoProxy implements Echo {
   private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event();
-  private readonly _spacesInitialized = new Event<PublicKey>();
+  private readonly _spaceCreated = new Event<PublicKey>();
 
   public readonly dbRouter = new DatabaseRouter();
 
@@ -94,6 +95,8 @@ export class EchoProxy implements Echo {
   }
 
   async open() {
+    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
+    assert(this._serviceProvider.services.SpaceInvitationsService, 'SpaceInvitationsService is not available.');
     this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
 
     const gotInitialUpdate = new Trigger();
@@ -108,18 +111,14 @@ export class EchoProxy implements Echo {
             return;
           }
 
-          const spaceProxy = new SpaceProxy(
-            this._serviceProvider,
-            this._modelFactory,
-            space,
-            this.dbRouter,
-            this._haloProxy.profile!.identityKey
-          );
+          const spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // NOTE: Must set in a map before initializing.
+          // TODO(dmaretskyi): Filter out uninitialized spaces.
           this._spaces.set(spaceProxy.key, spaceProxy);
+          this._spaceCreated.emit(spaceProxy.key);
+
           await spaceProxy.initialize();
-          this._spacesInitialized.emit(spaceProxy.key);
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
           // spaceProxy.database.entityUpdate.on((entity) => {
@@ -162,16 +161,17 @@ export class EchoProxy implements Echo {
   /**
    * Creates a new space.
    */
-  async createSpace(): Promise<Space> {
+  async createSpace(meta?: PropertiesOptions): Promise<Space> {
+    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
     const space = await this._serviceProvider.services.SpaceService.createSpace();
 
-    await this._spacesInitialized.waitForCondition(() => {
+    await this._spaceCreated.waitForCondition(() => {
       return this._spaces.has(space.publicKey);
     });
     const spaceProxy = this._spaces.get(space.publicKey) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
-    await spaceProxy.database.createItem<ObjectModel>({ type: SPACE_ITEM_TYPE });
+    await spaceProxy.db.add(new Properties(meta));
     await spaceProxy.initialize(); // Idempotent.
 
     return spaceProxy;
@@ -182,10 +182,11 @@ export class EchoProxy implements Echo {
    * @internal
    */
   async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
+    assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
     const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
 
     const proxy = new Trigger<SpaceProxy>();
-    const unsubscribe = this._spacesInitialized.on((spaceKey) => {
+    const unsubscribe = this._spaceCreated.on((spaceKey) => {
       if (spaceKey.equals(space.publicKey)) {
         const spaceProxy = this._spaces.get(space.publicKey)!;
         proxy.wake(spaceProxy);

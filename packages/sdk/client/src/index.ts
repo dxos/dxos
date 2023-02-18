@@ -9,12 +9,7 @@ export { generateSeedPhrase } from '@dxos/credentials';
 
 export {
   TYPE_SCHEMA,
-  Entity,
   Item,
-  Link,
-  Database,
-  Selection,
-  SelectionResult,
   ItemFilterDeleted,
   ResultSet,
   Schema,
@@ -23,10 +18,12 @@ export {
   type SchemaRef
 } from '@dxos/echo-db';
 
+export * from '@dxos/echo-schema';
+
 export { PublicKey } from '@dxos/keys';
 
 // TODO(burdon): Export form `@dxos/echo-db`.
-export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
+export { type ItemID, DocumentModel } from '@dxos/document-model';
 
 export {
   type InvitationEvents,
@@ -36,22 +33,25 @@ export {
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
   type ClientServicesProvider,
-  IFrameRuntime,
+  IFrameHostRuntime,
+  IFrameProxyRuntime,
   WorkerRuntime,
   WorkerSession
 } from '@dxos/client-services';
 
 export { ApiError } from '@dxos/errors';
 
-export { Contact, SpaceMember, Profile } from '@dxos/protocols/proto/dxos/client';
+export { type Contact, type Profile, SpaceMember, Status } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Remove.
-export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
-export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
+export { type KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+export type { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';
+
+export { Properties, PropertiesOptions } from './packlets/proto';
 
 // TODO(burdon): Remove (currently required for @dxos/client-testing).
 export * from './packlets/proxies';

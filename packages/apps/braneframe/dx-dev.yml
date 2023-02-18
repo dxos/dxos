@@ -1,0 +1,9 @@
+version: 1
+
+runtime:
+  client:
+    remoteSource: http://localhost:3967/vault.html
+
+  services:
+    signal:
+      server: ws://localhost:8888/.well-known/dx/signal

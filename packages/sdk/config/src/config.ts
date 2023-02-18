@@ -7,12 +7,14 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
+import { InvalidConfigError } from '@dxos/errors';
+import { schema } from '@dxos/protocols';
 import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
-import { sanitizeConfig } from './sanitizer';
 import { ConfigKey, DeepIndex, ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string; type?: string }>;
+const configRootType = schema.getCodecForType('dxos.config.Config');
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
@@ -94,6 +96,26 @@ export const mapToKeyValues = (spec: MappingSpec, values: any) => {
 };
 
 /**
+ * Validate config object.
+ */
+export const validateConfig = (config: ConfigProto): ConfigProto => {
+  if (!('version' in config)) {
+    throw new InvalidConfigError('Version not specified');
+  }
+
+  if (config?.version !== 1) {
+    throw new InvalidConfigError(`Invalid config version: ${config.version}`);
+  }
+
+  const error = configRootType.protoType.verify(config);
+  if (error) {
+    throw new InvalidConfigError(error);
+  }
+
+  return config;
+};
+
+/**
  * Global configuration object.
  * NOTE: Config objects are immutable.
  */
@@ -106,7 +128,7 @@ export class Config {
    * @param objects
    */
   constructor(config: ConfigProto = {}, ...objects: ConfigProto[]) {
-    this._config = sanitizeConfig(defaultsDeep(config, ...objects, { version: 1 }));
+    this._config = validateConfig(defaultsDeep(config, ...objects, { version: 1 }));
   }
 
   /**

@@ -27,6 +27,6 @@ message ConnectionInfo {
 
 message ConnectionEvent {
   string type = 1;
-  optional string newState = 2;
+  optional string new_state = 2;
   optional string error = 3;
 }

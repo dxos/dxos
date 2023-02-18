@@ -3,12 +3,12 @@
   "projectType": "application",
   "targets": {
     "bundle": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/vite:build",
       "options": {
-        "script": "bundle"
+        "outputPath": "packages/devtools/devtools-extension/out/devtools-extension"
       },
       "outputs": [
-        "packages/devtools/devtools-extension/dist"
+        "{options.outputPath}"
       ]
     },
     "lint": {

@@ -1,0 +1,45 @@
+{
+  "sourceRoot": "packages/experimental/react-metagraph/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/react-metagraph/src/index.ts",
+        "outputPath": "packages/experimental/react-metagraph/dist/types",
+        "tsConfig": "packages/experimental/react-metagraph/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/experimental/react-metagraph/src/index.ts"
+        ],
+        "outputPath": "packages/experimental/react-metagraph/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/experimental/react-metagraph/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

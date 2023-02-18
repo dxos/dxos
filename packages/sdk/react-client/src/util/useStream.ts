@@ -22,6 +22,7 @@ export const useStream = <T>(streamFactory: () => Stream<T>, defaultValue: T, de
         }
       }
     );
+
     return () => {
       stream.close();
     };

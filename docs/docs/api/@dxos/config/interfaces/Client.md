@@ -1,15 +1,9 @@
 # Interface `Client`
-> Declared in [`packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts`]()
+> Declared in [`packages/core/protocols/dist/esm/src/proto/gen/dxos/config.d.ts`]()
 
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [debug]()
-Type: <code>string</code>
-
-Options:
-  - (env) = "DEBUG"
-  - proto3_optional = true
 ### [enableSnapshots]()
 Type: <code>boolean</code>
 
@@ -19,6 +13,11 @@ Options:
 Type: <code>number</code>
 
 Milliseconds
+
+Options:
+  - proto3_optional = true
+### [log]()
+Type: <code>[Log](/api/@dxos/config/interfaces/Log)</code>
 
 Options:
   - proto3_optional = true

@@ -15,7 +15,16 @@
       "path": "../../apps/patterns/react-appkit"
     },
     {
+      "path": "../../apps/patterns/react-composer"
+    },
+    {
+      "path": "../../apps/patterns/react-ui"
+    },
+    {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
     },
     {
       "path": "../../common/debug"
@@ -27,22 +36,25 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/timeframe"
+      "path": "../../common/react-components"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/document-model"
     },
     {
       "path": "../../core/echo/messenger-model"
     },
     {
       "path": "../../core/echo/model-factory"
-    },
-    {
-      "path": "../../core/echo/object-model"
     },
     {
       "path": "../../core/echo/text-model"
@@ -54,19 +66,25 @@
       "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../core/mesh/rpc"
     },
     {
-      "path": "../../deprecated/react-components-deprecated"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../deprecated/react-toolkit"
     },
     {
-      "path": "../../experimental/react-registry-client"
+      "path": "../../experimental/gem-spore"
     },
     {
-      "path": "../../experimental/registry-client"
+      "path": "../../experimental/kai"
+    },
+    {
+      "path": "../../experimental/mosaic"
+    },
+    {
+      "path": "../../experimental/plexus"
     },
     {
       "path": "../../sdk/client"
@@ -79,9 +97,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../devtools-mesh"
     }
   ]
 }

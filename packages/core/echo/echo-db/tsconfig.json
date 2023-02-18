@@ -87,10 +87,10 @@
       "path": "../../protocols"
     },
     {
-      "path": "../model-factory"
+      "path": "../document-model"
     },
     {
-      "path": "../object-model"
+      "path": "../model-factory"
     }
   ]
 }

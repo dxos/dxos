@@ -42,15 +42,13 @@ export type TrustedKeySetAuthVerifierParams = {
 export class TrustedKeySetAuthVerifier {
   private _ctx = new Context();
 
-  constructor(private readonly _params: TrustedKeySetAuthVerifierParams) {}
+  // prettier-ignore
+  constructor(
+    private readonly _params: TrustedKeySetAuthVerifierParams
+  ) {}
 
   async close() {
     await this._ctx.dispose();
-  }
-
-  private _isTrustedKey(deviceKey: PublicKey) {
-    const deviceSet = this._params.trustedKeysProvider();
-    return deviceSet.has(deviceKey);
   }
 
   get verifier(): AuthVerifier {
@@ -78,6 +76,7 @@ export class TrustedKeySetAuthVerifier {
       this._ctx.onDispose(() => {
         trigger.wake(false);
       });
+
       const clear = this._params.update.on(this._ctx, () => {
         if (this._isTrustedKey(credential.issuer)) {
           log('auth success', { key: credential.issuer });
@@ -86,6 +85,7 @@ export class TrustedKeySetAuthVerifier {
           log('key is not currently in trusted set, waiting...', { key: credential.issuer });
         }
       });
+
       try {
         return await trigger.wait({ timeout: this._params.authTimeout });
       } catch {
@@ -94,5 +94,10 @@ export class TrustedKeySetAuthVerifier {
         clear();
       }
     };
+  }
+
+  private _isTrustedKey(deviceKey: PublicKey) {
+    const deviceSet = this._params.trustedKeysProvider();
+    return deviceSet.has(deviceKey);
   }
 }
