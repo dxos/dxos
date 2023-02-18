@@ -13,14 +13,14 @@ import { JoinDialog } from '../JoinDialog';
 import { SpaceDialog } from '../SpaceDialog';
 
 export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: string }) => {
-  const client = useClient();
-  const spaces = useSpaces();
-
   const [{ layout, invitationCode, spaceKey }, setLayout] = useState<LayoutRequest>({
     layout: runtime.layout,
     invitationCode: runtime.invitationCode,
     spaceKey: runtime.spaceKey
   });
+
+  const client = useClient();
+  const spaces = useSpaces();
   const space = useSpace(spaceKey);
 
   useEffect(() => {

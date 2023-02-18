@@ -19,7 +19,6 @@ import { ShellContext } from '../../hooks';
 // TODO(wittjosiah): Factor out?
 export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   const config = useConfig();
-  const vaultEnabled = config.get('runtime.app.env.DX_VAULT') === 'true';
   const identity = useIdentity();
   const [space, setSpace] = useCurrentSpace();
   const [searchParams] = useSearchParams();
@@ -29,6 +28,10 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
     !identity || spaceInvitationCode || haloInvitationCode ? ShellDisplay.FULLSCREEN : ShellDisplay.NONE
   );
   const shellRuntime = useMemo(() => {
+    if (config.get('runtime.app.env.DX_VAULT') === 'true') {
+      return;
+    }
+
     if (spaceInvitationCode) {
       return new MemoryShellRuntime({
         layout: ShellLayout.JOIN_SPACE,
@@ -44,7 +47,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (!space) {
+      if (!space || !shellRuntime) {
         return;
       }
 
@@ -57,11 +60,11 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
         setDisplay(ShellDisplay.FULLSCREEN);
       }
     },
-    [space]
+    [space, shellRuntime]
   );
 
   useEffect(() => {
-    if (vaultEnabled) {
+    if (!shellRuntime) {
       return;
     }
 
@@ -70,7 +73,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   }, [space]);
 
   useEffect(() => {
-    if (vaultEnabled) {
+    if (!shellRuntime) {
       return;
     }
 
@@ -82,7 +85,7 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
 
   return (
     <>
-      {!vaultEnabled && (
+      {shellRuntime && (
         <div className={mx(display === ShellDisplay.NONE ? 'hidden' : '')}>
           <Shell runtime={shellRuntime} origin={window.location.origin} />
         </div>
