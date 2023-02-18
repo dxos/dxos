@@ -65,6 +65,26 @@ Values:
 - `IDENTITY`
 - `SPACE`
 - `UNKNOWN`
+### [`ShellDisplay`]()
+
+Defined in:
+   file://./../../dxos/iframe.proto
+
+Values:
+- `FULLSCREEN`
+- `NONE`
+### [`ShellLayout`]()
+
+Defined in:
+   file://./../../dxos/iframe.proto
+
+Values:
+- `AUTH`
+- `CURRENT_SPACE`
+- `DEFAULT`
+- `DEVICES_LIST`
+- `JOIN_SPACE`
+- `SPACE_LIST`
 ### [`Status`]()
 
 Defined in:

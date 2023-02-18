@@ -23,20 +23,24 @@ The version of this client API
 Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
 Current configuration object
-### [echo](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L118)
+### [echo](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L125)
 Type: <code>[EchoProxy](/api/@dxos/client/classes/EchoProxy)</code>
 
 ECHO database.
-### [halo](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L110)
+### [halo](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L117)
 Type: <code>[HaloProxy](/api/@dxos/client/classes/HaloProxy)</code>
 
 HALO credentials.
-### [initialized](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L103)
+### [initialized](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L110)
 Type: <code>boolean</code>
 
 Returns true if the client has been initialized. Initialize by calling  `.initialize()`
-### [mesh](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L127)
+### [mesh](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L134)
 Type: <code>[MeshProxy](/api/@dxos/client/classes/MeshProxy)</code>
+### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L102)
+Type: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+
+Current client services provider.
 
 ## Methods
 ### [\[custom\]()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L79)
@@ -45,13 +49,13 @@ Type: <code>[MeshProxy](/api/@dxos/client/classes/MeshProxy)</code>
 Returns: <code>string</code>
 
 Arguments: none
-### [createSerializer()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L212)
+### [createSerializer()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L220)
 
 
 Returns: <code>[SpaceSerializer](/api/@dxos/client/classes/SpaceSerializer)</code>
 
 Arguments: none
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L164)
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L172)
 
 
 Cleanup, release resources.
@@ -60,7 +64,7 @@ Open/close is re-entrant.
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [getStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L181)
+### [getStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L189)
 
 
 Get system status.
@@ -68,7 +72,7 @@ Get system status.
 Returns: <code>Promise&lt;StatusResponse&gt;</code>
 
 Arguments: none
-### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L137)
+### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L144)
 
 
 Initializes internal resources in an idempotent way.
@@ -77,7 +81,7 @@ Required before using the Client instance.
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L200)
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L208)
 
 
 Resets and destroys client storage.
@@ -86,7 +90,7 @@ Warning: Inconsistent state after reset, do not continue to use this client inst
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L191)
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L199)
 
 
 Reinitialized the client session with the remote service host.

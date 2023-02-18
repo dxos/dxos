@@ -90,7 +90,7 @@ Arguments: none
 
 ### Example
 
-```tsx{14,17,21} file=./snippets/use-spaces.tsx#L5-
+```tsx{13,16,20} file=./snippets/use-spaces.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
@@ -133,7 +133,7 @@ See [the platform overview](../platform/#spaces) describing the general process 
 In `react` the package `@dxos/react-appkit` offers components that implement the entire join flow. See [how to include DXOS UI packages]() in your project, or use one of the DXOS [application templates](../cli/app-templates) which have DXOS UI pre-configured.
 
 ::: note Tip
-To implement invitation flows manually, see the TypeScript API about [joining spaces](../typescript/spaces).
+To implement invitation flows manually, see the TypeScript API about [joining spaces](../typescript/spaces#creating-an-invitation).
 :::
 
 The pre-built space join flow is contained in the `SpacesPage` component for `react`. This is designed to be a panel or a full-screen page.
@@ -173,3 +173,5 @@ root.render(
 ```
 
 See a more detailed example in the [`Tasks` application sample](../samples#tasks).
+
+Learn more about the other react [UI Components](./ui) available from DXOS.

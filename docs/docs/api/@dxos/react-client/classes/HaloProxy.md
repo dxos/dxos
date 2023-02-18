@@ -1,9 +1,13 @@
 # Class `HaloProxy`
 <<<<<<< HEAD
+<<<<<<< HEAD
 <sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:36]()</sub>
 =======
 <sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:35]()</sub>
 >>>>>>> 464c6e793 (docs wip)
+=======
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/halo-proxy.d.ts:36]()</sub>
+>>>>>>> 4df9c9ec7 (wip docs)
 
 
 TODO(burdon): Public API (move comments here).

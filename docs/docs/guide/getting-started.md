@@ -63,7 +63,6 @@ You should be able to open two windows pointed at the dev server and see reactiv
 
 :::
 
-
 ## ECHO State Consensus
 
 [ECHO](./#echo) is a peer-to-peer graph database designed for offline-first and real-time collaboration. There is no central server, peers exchange data directly over p2p connections.
@@ -147,6 +146,7 @@ This will begin tracking further changes on the object and replicating them to o
 *   The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
 ### Next steps
+
 Continue reading below about how to deploy and host the app, or jump to:
 
 *   ECHO with [React](./react)
@@ -179,10 +179,13 @@ Learn more about what [services](platform/kube) KUBE provides.
 To deploy to KUBE, first ensure a [KUBE](#starting-a-kube) is running as above.
 
 If using a [DXOS application template](#create-an-app):
+
 ```bash
 pnpm run deploy
 ```
+
 Otherwise, to deploy any static application:
+
 *   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
 *   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
 *   Run `dx app publish`
@@ -197,7 +200,7 @@ Your app will now always be available on your machine until KUBE or the specific
 
 ### Tunneling
 
-KUBE can expose apps to the world wide web and provide URLs that can be used to reach them from anywhere on the internet. 
+KUBE can expose apps to the world wide web and provide URLs that can be used to reach them from anywhere on the internet.
 
 Simply set `tunnel: true` in `dx.yml` and redeploy. Read more about KUBE [`tunneling`](./kube/tunneling).
 
@@ -210,7 +213,6 @@ Using DXOS:
 *   ECHO with [React](./react/)
 *   ECHO with [TypeScript](./typescript/)
 *   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
-
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 

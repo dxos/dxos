@@ -12,7 +12,7 @@ Arguments:
 `client`: <code>[Client](/api/@dxos/client/classes/Client)</code>
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
-### [fromHost(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L35)
+### [fromHost(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L36)
 
 
 Creates stand-alone services without rpc.
@@ -22,7 +22,7 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServi
 Arguments: 
 
 `config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
-### [fromIFrame(config, channel)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L23)
+### [fromIFrame(config, \[shell\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L22)
 
 
 Create services provider proxy connected via iFrame to host.
@@ -33,7 +33,7 @@ Arguments:
 
 `config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
-`channel`: <code>string</code>
+`shell`: <code>boolean</code>
 ### [generateSeedPhrase()]()
 
 

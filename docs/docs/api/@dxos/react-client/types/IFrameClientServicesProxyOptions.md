@@ -1,5 +1,5 @@
 # Type `IFrameClientServicesProxyOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:3]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:4]()</sub>
 
 
 
@@ -8,8 +8,11 @@
 ### [channel]()
 Type: <code>string</code>
 
-### [config]()
-Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+### [shell]()
+Type: <code>boolean | string</code>
+
+### [source]()
+Type: <code>string</code>
 
 ### [timeout]()
 Type: <code>number</code>

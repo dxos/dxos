@@ -37,6 +37,10 @@ Type: <code>boolean</code>
 Returns true if the client has been initialized. Initialize by calling  `.initialize()`
 ### [mesh]()
 Type: <code>[MeshProxy](/api/@dxos/react-client/classes/MeshProxy)</code>
+### [services]()
+Type: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+
+Current client services provider.
 
 ## Methods
 ### [\[custom\]()]()

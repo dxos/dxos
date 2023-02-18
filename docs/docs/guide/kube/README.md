@@ -21,6 +21,7 @@ The `dev` release of KUBE receives new features ahead of the production release.
 ```bash file=../snippets/install-kube-dev.sh
 sudo ch=dev bash -c "$(curl -fsSL https://install-kube.dxos.org)"
 ```
+
 :::
 
 After installation completes, the `kube` executable becomes available:

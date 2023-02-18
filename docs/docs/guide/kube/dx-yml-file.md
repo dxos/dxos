@@ -39,6 +39,7 @@ The hostname is the part of a URL between the protocol and the port: e.g.: `http
 :::
 
 Example `~/.config/dx/config.yml` configuration file which instructs `dx` CLI to use the local KUBE:
+
 ```yml file=./snippets/dx-cli-config-local.yml
 version: 1
 

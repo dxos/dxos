@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L78)
+### [ClientProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L86)
 
 
 Root component that provides the DXOS client instance to child components.
@@ -13,6 +13,14 @@ Returns: <code>Element</code>
 Arguments: 
 
 `options`: <code>[ClientProviderProps](/api/@dxos/react-client/interfaces/ClientProviderProps)</code>
+### [SpaceProvider(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/SpaceContext.tsx#L25)
+
+
+Returns: <code>Element</code>
+
+Arguments: 
+
+`options`: <code>[SpaceProviderProps](/api/@dxos/react-client/types/SpaceProviderProps)</code>
 ### [createDevtoolsRpcServer(client, clientServices)]()
 
 
@@ -33,7 +41,7 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/Clien
 Arguments: 
 
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
-### [fromIFrame(\[config\], \[channel\])]()
+### [fromIFrame(\[config\], \[shell\])]()
 
 
 Create services provider proxy connected via iFrame to host.
@@ -44,7 +52,7 @@ Arguments:
 
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
-`channel`: <code>string</code>
+`shell`: <code>boolean</code>
 ### [generateSeedPhrase()]()
 
 
@@ -79,7 +87,7 @@ Returns: <code>any</code>
 Arguments: 
 
 `obj`: <code>any</code>
-### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L34)
+### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L35)
 
 
 Hook returning instance of DXOS client.
@@ -111,6 +119,14 @@ Contacts are known members of a common Space.
 Requires ClientContext to be set via ClientProvider.
 
 Returns: <code>[Contact](/api/@dxos/react-client/interfaces/Contact)[]</code>
+
+Arguments: none
+### [useCurrentSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/SpaceContext.tsx#L58)
+
+
+Uses space state from the space context.
+
+Returns: <code>[undefined | [Space](/api/@dxos/react-client/interfaces/Space), function]</code>
 
 Arguments: none
 ### [useDevices()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/halo/useDevices.ts#L11)

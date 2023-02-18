@@ -52,6 +52,7 @@ If using a DXOS application template, the npm script `deploy` uses a locally ins
 ```bash
 pnpm run deploy
 ```
+
 Take care not to omit the term `run` as `pnpm` will assume `deploy` means something else otherwise
 :::
 

@@ -1,6 +1,7 @@
 # Class `SpaceProxy`
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 <sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:36]()</sub>
 =======
 <sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:62]()</sub>
@@ -8,6 +9,9 @@
 =======
 <sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:58]()</sub>
 >>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
+=======
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:36]()</sub>
+>>>>>>> 4df9c9ec7 (wip docs)
 
 
 
@@ -34,6 +38,7 @@ Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/react-c
 ### [stateUpdate]()
 Type: <code>Event&lt;void&gt;</code>
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### [db]()
 Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
 =======
@@ -42,6 +47,10 @@ Type: <code>Experimental</code>
 
 Next-gen database.
 >>>>>>> ac192b194 (tunneling)
+=======
+### [db]()
+Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
+>>>>>>> 4df9c9ec7 (wip docs)
 ### [internal]()
 Type: <code>Internal</code>
 ### [invitations]()
@@ -62,9 +71,12 @@ Type: <code>ObjectProperties</code>
 =======
 Type: <code>[Document](/api/@dxos/react-client/classes/Document)</code>
 
+<<<<<<< HEAD
 Space Metadata stored in the database.
 >>>>>>> 446e8e253 (docs: regen apidoc and ts guide)
 
+=======
+>>>>>>> 4df9c9ec7 (wip docs)
 ## Methods
 ### [_setOpen(open)]()
 

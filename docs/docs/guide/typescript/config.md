@@ -6,7 +6,7 @@ order: 20
 
 ### Custom signaling server
 
-To use a local [KUBE](glossary#kube) [signaling server](glossary#signaling-service) instead of the public default:
+To use a local [KUBE](../glossary#kube) [signaling server](../glossary#signaling-service) instead of the public default:
 
 ```ts file=./snippets/create-with-signal-server.ts#L5-
 import { Client, Config } from '@dxos/client';
