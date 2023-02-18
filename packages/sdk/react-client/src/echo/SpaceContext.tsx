@@ -17,6 +17,7 @@ export type SpaceContextProps = {
 
 export const SpaceContext: Context<SpaceContextProps> = createContext<SpaceContextProps>({ setSpaceKey: () => {} });
 
+// TODO(burdon): spaceKey, onChange.
 export type SpaceProviderProps = PropsWithChildren<{
   initialSpaceKey?: PublicKey | ((spaces: Space[]) => PublicKey);
   onSpaceChange?: (spaceKey?: PublicKey) => void;
@@ -24,8 +25,8 @@ export type SpaceProviderProps = PropsWithChildren<{
 
 /**
  * Provider for apps (e.g., testing) where a single space is currently selected.
- * @deprecated Move to patterns/testing.
  */
+// TODO(burdon): Move to patterns/testing or replace with reducer or tie to required framework functionality.
 export const SpaceProvider = ({ initialSpaceKey, onSpaceChange, children }: SpaceProviderProps) => {
   const client = useClient();
   const spaces = useSpaces();

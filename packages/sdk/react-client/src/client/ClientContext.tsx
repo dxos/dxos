@@ -70,7 +70,7 @@ export interface ClientProviderProps {
    * Default is true.
    * @deprecated Move to patterns/testing.
    */
-  // TODO(burdon): Remove (testing only -- why not leave to user to inject?)
+  // TODO(burdon): Consider changing to reducer pattern.
   spaceProvider?: boolean | SpaceProviderProps;
 
   /**

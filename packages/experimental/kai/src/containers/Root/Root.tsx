@@ -47,7 +47,7 @@ export const Root: FC<PropsWithChildren<{ initialState?: AppState }>> = ({ initi
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={clientProvider}>
             <SpaceProvider
-              initialSpaceKey={(spaces) => (spaceKey ? findSpace(spaces, spaceKey)?.key : undefined) ?? spaces[0].key}
+              initialSpaceKey={(spaces) => (spaceKey ? findSpace(spaces, spaceKey)?.key : undefined) ?? spaces[0]?.key}
               onSpaceChange={(spaceKey) => navigate(createSpacePath(spaceKey, frame ?? defaultFrameId))}
             >
               <MetagraphProvider value={metagraphContext}>

@@ -19,7 +19,6 @@ export enum Section {
   FRAME = 'frame'
 }
 
-<<<<<<< HEAD
 const truncateKey = (key: PublicKey) => key.toHex().slice(0, 8);
 
 export const findSpace = (spaces: Space[], spaceKey: string): Space | undefined =>
@@ -27,18 +26,6 @@ export const findSpace = (spaces: Space[], spaceKey: string): Space | undefined 
 
 export const createSpacePath = (spaceKey?: PublicKey, frame?: string, objectId?: string) =>
   `/${spaceKey ? truncateKey(spaceKey) + (frame ? `/frame/${frame}` + (objectId ? `/${objectId}` : '') : '') : ''}`;
-=======
-// NOTE: Periods are not supported in the URL path.
-const encodeFrameDef = (frameId: string) => frameId.replaceAll('.', '-');
-
-// TODO(burdon): Use FrameDef?
-export const createSpacePath = (spaceKey?: PublicKey, frame?: string, objectId?: string) =>
-  `/${
-    spaceKey
-      ? spaceKey.truncate() + (frame ? `/frame/${encodeFrameDef(frame)}` + (objectId ? `/${objectId}` : '') : '')
-      : ''
-  }`;
->>>>>>> main
 
 export const createSectionPath = (spaceKey?: PublicKey, section?: Section) =>
   `/${spaceKey ? truncateKey(spaceKey) + (section ? `/${section}` : '') : ''}`;
