@@ -1,5 +1,5 @@
 # Class `DocumentModel`
-<sub>Declared in [packages/core/echo/document-model/dist/types/src/document-model.d.ts:29]()</sub>
+<sub>Declared in [packages/core/echo/document-model/dist/types/src/document-model.d.ts:33]()</sub>
 
 
 Object mutation model.
@@ -24,7 +24,7 @@ Arguments:
 ### [_getState]()
 Type: <code>function</code>
 ### [update]()
-Type: <code>Event&lt;Model&lt;ObjectModelState, ObjectMutationSet&gt;&gt;</code>
+Type: <code>Event&lt;Model&lt;DocumentModelState, ObjectMutationSet&gt;&gt;</code>
 ### [meta]()
 Type: <code>ModelMeta&lt;any, any, any&gt;</code>
 ### [itemId]()
@@ -33,6 +33,8 @@ Type: <code>string</code>
 Type: <code>ModelMeta&lt;any, any, any&gt;</code>
 ### [readOnly]()
 Type: <code>boolean</code>
+### [type]()
+Type: <code>undefined | string</code>
 
 ## Methods
 ### [addToSet(key, value)]()
@@ -138,7 +140,7 @@ Arguments: none
 
 Returns an immutable object.
 
-Returns: <code>ObjectModelState</code>
+Returns: <code>Record&lt;string, any&gt;</code>
 
 Arguments: none
 ### [toString()]()

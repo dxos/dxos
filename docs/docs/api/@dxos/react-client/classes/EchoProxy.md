@@ -1,5 +1,5 @@
 # Class `EchoProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:21]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:22]()</sub>
 
 
 TODO(burdon): Public API (move comments here).
@@ -53,14 +53,16 @@ Arguments:
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [createSpace()]()
+### [createSpace(\[meta\])]()
 
 
 Creates a new space.
 
 Returns: <code>Promise&lt;[Space](/api/@dxos/react-client/interfaces/Space)&gt;</code>
 
-Arguments: none
+Arguments: 
+
+`meta`: <code>[PropertiesOptions](/api/@dxos/react-client/types/PropertiesOptions)</code>
 ### [getSpace(spaceKey)]()
 
 

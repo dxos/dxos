@@ -58,7 +58,9 @@ Data in ECHO and HALO identity is physically stored in browser storage on the HA
 A running instance of the DXOS `Client` represents a device on the network. Every browser profile acts as a device. A CLI application is it's own device. HALO replicates identity and credential information across devices securely and automatically and supports device revocation.
 
 ### Seed Phrase
+
 Also known as a paper key. A string of values that make it possible to recover an identity in case of a lost device.
 
 ### PWA
+
 [Progressive Web App](https://en.wikipedia.org/wiki/Progressive_web_app)
