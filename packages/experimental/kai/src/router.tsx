@@ -19,9 +19,16 @@ export enum Section {
   FRAME = 'frame'
 }
 
+// NOTE: Periods are not supported in the URL path.
+const encodeFrameDef = (frameId: string) => frameId.replaceAll('.', '-');
+
 // TODO(burdon): Use FrameDef?
 export const createSpacePath = (spaceKey?: PublicKey, frame?: string, objectId?: string) =>
-  `/${spaceKey ? spaceKey.truncate() + (frame ? `/frame/${frame}` + (objectId ? `/${objectId}` : '') : '') : ''}`;
+  `/${
+    spaceKey
+      ? spaceKey.truncate() + (frame ? `/frame/${encodeFrameDef(frame)}` + (objectId ? `/${objectId}` : '') : '')
+      : ''
+  }`;
 
 export const createSectionPath = (spaceKey?: PublicKey, section?: Section) =>
   `/${spaceKey ? spaceKey.truncate() + (section ? `/${section}` : '') : ''}`;
