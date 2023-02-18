@@ -164,11 +164,6 @@ class Toolbox {
           'extra-files': [
             // TODO(wittjosiah): Move extra files to toolbox config.
             'packages/sdk/client/src/version.ts',
-            {
-              type: 'json',
-              path: 'packages/devtools/devtools-extension/public/manifest.json',
-              jsonpath: '$.version'
-            },
             ...this.projects
               .sort((projectA, projectB) => projectA.path.localeCompare(projectB.path))
               .map((project) => ({
