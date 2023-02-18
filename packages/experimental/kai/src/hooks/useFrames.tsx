@@ -271,7 +271,11 @@ export const useFrameState = (): FrameState => {
 
   // TODO(burdon): Active is unsound.
   const { frames, active: activeFrames } = useFrames();
-  const frameDef = frame && activeFrames.find((frameId) => frameId === frame) ? frames.get(frame) : undefined;
+  const currentFrameId = frame?.replaceAll('-', '.');
+  const frameDef =
+    currentFrameId && activeFrames.find((frameId) => frameId === currentFrameId)
+      ? frames.get(currentFrameId)
+      : undefined;
 
   return { space, frame: frameDef, objectId };
 };
