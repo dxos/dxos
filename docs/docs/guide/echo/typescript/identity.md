@@ -28,12 +28,12 @@ const identity = client.halo.profile;
 
 The object returned is of type [`Profile`](/api/@dxos/client/interfaces/Profile).
 
-:::apidoc[@dxos/client.Halo]{level=2}
-## Interface `Halo`
+:::apidoc[@dxos/client.Halo]{level="2"}
+# Interface `Halo`
 
 > Declared in [`packages/sdk/client/src/packlets/proxies/halo-proxy.ts`]()
 
 TODO(burdon): Public API (move comments here).
 
-### Properties
+## Properties
 :::
