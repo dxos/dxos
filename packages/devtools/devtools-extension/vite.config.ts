@@ -13,6 +13,8 @@ import { ThemePlugin } from '@dxos/react-components/plugin';
 import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
 import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
 
+import packageJson from './package.json';
+
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 
 // https://vitejs.dev/config/
@@ -52,7 +54,7 @@ export default defineConfig({
     chromeExtensionPlugin({
       manifest: {
         manifest_version: 3,
-        version: '0.1.23',
+        version: packageJson.version,
         author: 'DXOS.org',
         name: 'DXOS Client Developer Tools',
         short_name: 'DXOS DevTools',
