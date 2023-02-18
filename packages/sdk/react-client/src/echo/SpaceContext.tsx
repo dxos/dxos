@@ -58,6 +58,6 @@ export const SpaceProvider = ({ initialSpaceKey, onSpaceChange, children }: Spac
 export const useCurrentSpace = (): [Space | undefined, (spaceKey?: PublicKey) => void] => {
   const { spaceKey, setSpaceKey } = useContext(SpaceContext) ?? raise(new Error('No space context'));
   const spaces = useSpaces();
-  const space = useMemo(() => spaces.find((space) => spaceKey?.equals(space.key)), [spaceKey]);
+  const space = useMemo(() => spaces.find((space) => spaceKey?.equals(space.key)), [spaces, spaceKey]);
   return [space, setSpaceKey];
 };

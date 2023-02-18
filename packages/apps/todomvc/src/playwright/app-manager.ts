@@ -6,7 +6,7 @@ import type { Context as MochaContext } from 'mocha';
 import type { ConsoleMessage, Page } from 'playwright';
 
 import { sleep, Trigger } from '@dxos/async';
-import { ShellManager } from '@dxos/halo-app';
+import { ShellManager } from '@dxos/halo-app/testing';
 import { setupPage } from '@dxos/test';
 
 import { FILTER } from '../constants';

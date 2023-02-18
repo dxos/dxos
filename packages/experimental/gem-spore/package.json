@@ -21,6 +21,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.9.0",
